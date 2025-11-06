@@ -10,6 +10,7 @@ export type VariationCardStyle = 'clean-frames' | 'image-focus' | 'subtle-accent
 export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-terminal';
 
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
+export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout';
 
 interface MekProfileLightboxProps {
   isOpen: boolean;
@@ -24,6 +25,8 @@ interface MekProfileLightboxProps {
   onVariationCardStyleChange?: (style: VariationCardStyle) => void;
   designationCardStyle?: DesignationCardStyle;
   onDesignationCardStyleChange?: (style: DesignationCardStyle) => void;
+  cumulativeGoldStyle?: CumulativeGoldStyle;
+  onCumulativeGoldStyleChange?: (style: CumulativeGoldStyle) => void;
   backdropDarkness?: number;
   onBackdropDarknessChange?: (value: number) => void;
   cardDarkness?: number;
@@ -54,6 +57,8 @@ export default function MekProfileLightbox({
   onVariationCardStyleChange,
   designationCardStyle = 'corner-brackets',
   onDesignationCardStyleChange,
+  cumulativeGoldStyle = 'stacked-emphasis',
+  onCumulativeGoldStyleChange,
   backdropDarkness = 40,
   onBackdropDarknessChange,
   cardDarkness = 20,
@@ -429,6 +434,258 @@ export default function MekProfileLightbox({
                 <div className="text-white text-base font-mono font-bold tracking-wide">
                   {mekData.employeeId}
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  // Render Cumulative Gold Card with 5 different styles
+  const renderCumulativeGoldCard = () => {
+    // Data with whole numbers (no decimals)
+    const currentOwnerGold = Math.floor(12869);
+    const allTimeGold = Math.floor(458414);
+
+    // Format with commas and "G" suffix
+    const formatGold = (num: number) => num.toLocaleString('en-US') + ' G';
+
+    // Dynamic colors based on useYellowGlow
+    const accentColor = useYellowGlow ? 'text-yellow-400' : 'text-cyan-400';
+    const accentColorDim = useYellowGlow ? 'text-yellow-400/60' : 'text-cyan-400/60';
+    const borderColor = useYellowGlow ? 'border-yellow-400/50' : 'border-cyan-400/50';
+    const glowRgba = useYellowGlow ? 'rgba(250, 182, 23, 0.3)' : 'rgba(0, 212, 255, 0.3)';
+    const glowRgbaInset = useYellowGlow ? 'rgba(250, 182, 23, 0.1)' : 'rgba(0, 212, 255, 0.1)';
+    const textShadowGlow = useYellowGlow ? '0 0 15px rgba(250, 182, 23, 0.8)' : '0 0 15px rgba(0, 212, 255, 0.8)';
+    const bgGradientFrom = useYellowGlow ? 'from-yellow-500/10' : 'from-cyan-500/10';
+
+    // Style 1: Stacked Emphasis
+    if (cumulativeGoldStyle === 'stacked-emphasis') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm border border-yellow-500/40">
+          {/* Border glow effect */}
+          <div
+            className={`absolute inset-0 border ${borderColor} pointer-events-none`}
+            style={{ boxShadow: `0 0 20px ${glowRgba}, inset 0 0 20px ${glowRgbaInset}` }}
+          />
+
+          {/* Content */}
+          <div className="relative z-10 space-y-3">
+            {/* Title */}
+            <div className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono text-center mb-2`}>
+              CUMULATIVE GOLD
+            </div>
+
+            {/* Current Owner - BIG and prominent */}
+            <div className="text-center">
+              <div
+                className={`${accentColor} text-3xl font-mono font-black`}
+                style={{ textShadow: textShadowGlow }}
+              >
+                {formatGold(currentOwnerGold)}
+              </div>
+            </div>
+
+            {/* All-time - smaller, subdued */}
+            <div className="text-center pt-2 border-t border-yellow-500/20">
+              <div className="text-[9px] text-gray-500 uppercase tracking-wider font-mono mb-1">
+                all-time
+              </div>
+              <div className="text-white text-base font-mono font-semibold">
+                {formatGold(allTimeGold)}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Style 2: Side Split
+    if (cumulativeGoldStyle === 'side-split') {
+      const dividerColor = useYellowGlow ? 'via-yellow-500/50' : 'via-cyan-500/50';
+      const dividerShadow = useYellowGlow ? '0 0 10px rgba(250, 182, 23, 0.5)' : '0 0 10px rgba(0, 212, 255, 0.5)';
+
+      return (
+        <div className={`relative p-4 bg-gradient-to-r from-black/60 via-black/40 to-black/60 backdrop-blur-sm border ${borderColor}`}>
+          {/* Title spanning full width */}
+          <div className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono text-center mb-4`}>
+            CUMULATIVE GOLD
+          </div>
+
+          {/* Split layout */}
+          <div className="relative z-10 grid grid-cols-2 gap-4">
+            {/* Left: Current Owner - BIG */}
+            <div className="text-center">
+              <div
+                className={`${accentColor} text-2xl font-mono font-black`}
+                style={{ textShadow: textShadowGlow }}
+              >
+                {formatGold(currentOwnerGold)}
+              </div>
+              <div className={`text-[9px] ${accentColorDim} uppercase tracking-wider font-mono mt-1`}>
+                current
+              </div>
+            </div>
+
+            {/* Vertical Divider with glow */}
+            <div className="absolute left-1/2 top-8 bottom-0 w-px bg-gradient-to-b from-transparent ${dividerColor} to-transparent -translate-x-1/2"
+                 style={{ boxShadow: dividerShadow }}
+            />
+
+            {/* Right: All-time - smaller */}
+            <div className="text-center">
+              <div className="text-white text-lg font-mono font-semibold">
+                {formatGold(allTimeGold)}
+              </div>
+              <div className="text-[9px] text-gray-500 uppercase tracking-wider font-mono mt-1">
+                all-time
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Style 3: Badge Style
+    if (cumulativeGoldStyle === 'badge-style') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm border border-yellow-500/40">
+          {/* Border glow effect */}
+          <div
+            className={`absolute inset-0 border ${borderColor} pointer-events-none`}
+            style={{ boxShadow: `0 0 20px ${glowRgba}, inset 0 0 20px ${glowRgbaInset}` }}
+          />
+
+          {/* Content */}
+          <div className="relative z-10 space-y-4">
+            {/* Title as glowing badge */}
+            <div className="flex justify-center">
+              <div className={`inline-block bg-gradient-to-r ${bgGradientFrom} to-transparent border ${borderColor} px-3 py-1 text-[10px] ${accentColor} uppercase tracking-widest font-mono`}>
+                CUMULATIVE GOLD
+              </div>
+            </div>
+
+            {/* Current Owner - BIG centered number */}
+            <div className="text-center">
+              <div
+                className={`${accentColor} text-4xl font-mono font-black`}
+                style={{ textShadow: textShadowGlow }}
+              >
+                {formatGold(currentOwnerGold)}
+              </div>
+            </div>
+
+            {/* All-time as small badge */}
+            <div className="flex justify-center">
+              <div className="inline-flex items-center gap-2 bg-black/60 border border-gray-600/40 px-3 py-1.5 rounded-sm">
+                <span className="text-[9px] text-gray-500 uppercase tracking-wider font-mono">
+                  all-time
+                </span>
+                <span className="text-white text-sm font-mono font-semibold">
+                  {formatGold(allTimeGold)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Style 4: Horizontal Bar
+    if (cumulativeGoldStyle === 'horizontal-bar') {
+      const borderLeftColor = useYellowGlow ? 'border-yellow-500' : 'border-cyan-500';
+
+      return (
+        <div className={`relative p-4 bg-black/40 backdrop-blur-sm border ${borderColor} border-l-4 ${borderLeftColor}`}>
+          {/* Horizontal layout */}
+          <div className="flex items-center gap-6">
+            {/* Title on left */}
+            <div className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono whitespace-nowrap`}>
+              CUMULATIVE<br />GOLD
+            </div>
+
+            {/* Separator */}
+            <div className="w-px h-12 bg-gradient-to-b from-transparent via-yellow-500/50 to-transparent"></div>
+
+            {/* Current in center - BIG */}
+            <div className="flex-1 text-center">
+              <div
+                className={`${accentColor} text-2xl font-mono font-black`}
+                style={{ textShadow: textShadowGlow }}
+              >
+                {formatGold(currentOwnerGold)}
+              </div>
+              <div className={`text-[9px] ${accentColorDim} uppercase tracking-wider font-mono mt-0.5`}>
+                current
+              </div>
+            </div>
+
+            {/* Separator */}
+            <div className="w-px h-12 bg-gradient-to-b from-transparent via-yellow-500/50 to-transparent"></div>
+
+            {/* All-time on right - small */}
+            <div className="text-right">
+              <div className="text-white text-base font-mono font-semibold">
+                {formatGold(allTimeGold)}
+              </div>
+              <div className="text-[9px] text-gray-500 uppercase tracking-wider font-mono mt-0.5">
+                all-time
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Style 5: Diagonal Layout
+    if (cumulativeGoldStyle === 'diagonal-layout') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm border border-yellow-500/40 overflow-hidden">
+          {/* Border glow effect */}
+          <div
+            className={`absolute inset-0 border ${borderColor} pointer-events-none`}
+            style={{ boxShadow: `0 0 20px ${glowRgba}, inset 0 0 20px ${glowRgbaInset}` }}
+          />
+
+          {/* Diagonal background element */}
+          <div
+            className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${bgGradientFrom} to-transparent opacity-20`}
+            style={{ transform: 'rotate(25deg) translateX(20px) translateY(-40px)' }}
+          />
+
+          {/* Content */}
+          <div className="relative z-10 space-y-4">
+            {/* Title at angle */}
+            <div
+              className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono inline-block`}
+              style={{ transform: 'skewX(-5deg)' }}
+            >
+              CUMULATIVE GOLD
+            </div>
+
+            {/* Current Owner - large and tilted slightly */}
+            <div className="text-center">
+              <div
+                className={`${accentColor} text-3xl font-mono font-black inline-block`}
+                style={{
+                  textShadow: textShadowGlow,
+                  transform: 'skewX(-2deg)'
+                }}
+              >
+                {formatGold(currentOwnerGold)}
+              </div>
+            </div>
+
+            {/* All-time tucked in corner */}
+            <div className="absolute bottom-2 right-2 text-right bg-black/60 px-2 py-1 border-l-2 border-gray-600/40">
+              <div className="text-[8px] text-gray-500 uppercase tracking-wider font-mono">
+                all-time
+              </div>
+              <div className="text-white text-xs font-mono font-semibold">
+                {formatGold(allTimeGold)}
               </div>
             </div>
           </div>
@@ -820,8 +1077,8 @@ export default function MekProfileLightbox({
                       </div>
                     </div>
 
-                    {/* Gold Produced */}
-                    {renderGoldProducedCard()}
+                    {/* Cumulative Gold */}
+                    {renderCumulativeGoldCard()}
                   </div>
                 </div>
 

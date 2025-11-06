@@ -13,6 +13,7 @@ export default function MekLayoutsPage() {
   const [buffDetailsLayout, setBuffDetailsLayout] = useState<'classic' | 'compact-grid' | 'detailed-cards' | 'minimal'>('classic');
   const [variationCardStyle, setVariationCardStyle] = useState<'clean-frames' | 'image-focus' | 'subtle-accent' | 'no-cards-direct'>('clean-frames');
   const [designationCardStyle, setDesignationCardStyle] = useState<DesignationCardStyle>('corner-brackets');
+  const [cumulativeGoldStyle, setCumulativeGoldStyle] = useState<'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout'>('stacked-emphasis');
   const [useYellowGlow, setUseYellowGlow] = useState(false);
   const [backdropDarkness, setBackdropDarkness] = useState(22);
   const [cardDarkness, setCardDarkness] = useState(7);
@@ -172,6 +173,24 @@ export default function MekLayoutsPage() {
                 <option value="corner-brackets">Corner Brackets</option>
                 <option value="split-hud">Split HUD</option>
                 <option value="data-terminal">Data Terminal</option>
+              </select>
+            </div>
+
+            {/* Dropdown 6: Cumulative Gold Style */}
+            <div className="mb-3">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                Cumulative Gold Style
+              </label>
+              <select
+                value={cumulativeGoldStyle}
+                onChange={(e) => setCumulativeGoldStyle(e.target.value as 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout')}
+                className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
+              >
+                <option value="stacked-emphasis">Stacked Emphasis</option>
+                <option value="side-split">Side Split</option>
+                <option value="badge-style">Badge Style</option>
+                <option value="horizontal-bar">Horizontal Bar</option>
+                <option value="diagonal-layout">Diagonal Layout</option>
               </select>
             </div>
 
@@ -369,6 +388,7 @@ export default function MekLayoutsPage() {
         onVariationCardStyleChange={setVariationCardStyle}
         designationCardStyle={designationCardStyle}
         onDesignationCardStyleChange={setDesignationCardStyle}
+        cumulativeGoldStyle={cumulativeGoldStyle}
         useYellowGlow={useYellowGlow}
         backdropDarkness={backdropDarkness}
         onBackdropDarknessChange={setBackdropDarkness}
