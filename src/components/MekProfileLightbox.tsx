@@ -1638,7 +1638,7 @@ function VariationCard({
       <div className="relative mb-3">
         {imagePath ? (
           <div className="relative w-full h-48">
-            {/* Background glow layer - replaces drop-shadow so we can apply noise to it */}
+            {/* Background glow layer */}
             <div
               className="absolute inset-0 pointer-events-none"
               style={{
