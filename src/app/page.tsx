@@ -1750,18 +1750,65 @@ export default function MekRateLoggingPage() {
               console.log('[Wallet Connect] Generating secure nonce...');
 
               // Get a payment address for signing (signData requires bech32 format, not hex)
+              // Try multiple methods since new/unused wallets may not have "used" addresses
               console.log('[🔑ADDR] Fetching addresses from wallet...');
-              const usedAddressesHex = await walletApi.getUsedAddresses();
 
-              if (!usedAddressesHex || usedAddressesHex.length === 0) {
-                throw new Error('No addresses found in wallet. Please ensure your wallet has at least one address.');
+              let addressHex: string | null = null;
+              let addressSource = '';
+
+              // Method 1: Try getUsedAddresses() first (addresses with transaction history)
+              try {
+                const usedAddressesHex = await walletApi.getUsedAddresses();
+                if (usedAddressesHex && usedAddressesHex.length > 0) {
+                  addressHex = usedAddressesHex[0];
+                  addressSource = 'used addresses';
+                  console.log('[🔑ADDR] Found address via getUsedAddresses()');
+                  console.log('[🔑ADDR] Total used addresses:', usedAddressesHex.length);
+                } else {
+                  console.log('[🔑ADDR] No used addresses found - trying unused addresses...');
+                }
+              } catch (err) {
+                console.log('[🔑ADDR] getUsedAddresses() failed:', err);
               }
 
-              console.log('[🔑ADDR] Raw address from wallet (CBOR hex):', usedAddressesHex[0].substring(0, 40) + '...');
-              console.log('[🔑ADDR] Total addresses found:', usedAddressesHex.length);
+              // Method 2: Try getUnusedAddresses() (addresses generated but not yet used on-chain)
+              if (!addressHex) {
+                try {
+                  const unusedAddressesHex = await walletApi.getUnusedAddresses();
+                  if (unusedAddressesHex && unusedAddressesHex.length > 0) {
+                    addressHex = unusedAddressesHex[0];
+                    addressSource = 'unused addresses';
+                    console.log('[🔑ADDR] Found address via getUnusedAddresses()');
+                    console.log('[🔑ADDR] Total unused addresses:', unusedAddressesHex.length);
+                  } else {
+                    console.log('[🔑ADDR] No unused addresses found - trying change address...');
+                  }
+                } catch (err) {
+                  console.log('[🔑ADDR] getUnusedAddresses() failed:', err);
+                }
+              }
+
+              // Method 3: Fall back to getChangeAddress() (always available, current receiving address)
+              if (!addressHex) {
+                try {
+                  addressHex = await walletApi.getChangeAddress();
+                  addressSource = 'change address';
+                  console.log('[🔑ADDR] Found address via getChangeAddress()');
+                } catch (err) {
+                  console.log('[🔑ADDR] getChangeAddress() failed:', err);
+                }
+              }
+
+              // Final check - if still no address, throw error
+              if (!addressHex) {
+                throw new Error('Unable to retrieve any address from wallet. Please ensure your wallet is properly initialized and has at least one account.');
+              }
+
+              console.log('[🔑ADDR] Successfully retrieved address from:', addressSource);
+              console.log('[🔑ADDR] Raw address (CBOR hex):', addressHex.substring(0, 40) + '...');
 
               // Convert from CBOR hex to bech32 format (CIP-30 requirement for signData)
-              const paymentAddress = hexToBech32(usedAddressesHex[0]);
+              const paymentAddress = hexToBech32(addressHex);
               console.log('[🔑ADDR] Converted to bech32:', paymentAddress.substring(0, 20) + '...');
               console.log('[🔑ADDR] Network:', paymentAddress.startsWith('addr1') ? 'mainnet' : 'testnet');
 
@@ -1883,20 +1930,51 @@ export default function MekRateLoggingPage() {
         console.log('[Wallet Connect] Connection successful');
         const nonce = verifiedNonce;
 
-      // Also get payment addresses as backup
-      const paymentAddressesHex = await walletApi.getUsedAddresses();
-      console.log('[Wallet Connect] Retrieved payment addresses (hex format)');
+      // Also get payment addresses as backup (try multiple methods)
+      console.log('[Wallet Connect] Retrieving payment address...');
+      let paymentAddressHex: string | null = null;
+
+      try {
+        const usedAddressesHex = await walletApi.getUsedAddresses();
+        if (usedAddressesHex && usedAddressesHex.length > 0) {
+          paymentAddressHex = usedAddressesHex[0];
+          console.log('[Wallet Connect] Found payment address via getUsedAddresses()');
+        }
+      } catch (err) {
+        console.log('[Wallet Connect] getUsedAddresses() failed:', err);
+      }
+
+      if (!paymentAddressHex) {
+        try {
+          const unusedAddressesHex = await walletApi.getUnusedAddresses();
+          if (unusedAddressesHex && unusedAddressesHex.length > 0) {
+            paymentAddressHex = unusedAddressesHex[0];
+            console.log('[Wallet Connect] Found payment address via getUnusedAddresses()');
+          }
+        } catch (err) {
+          console.log('[Wallet Connect] getUnusedAddresses() failed:', err);
+        }
+      }
+
+      if (!paymentAddressHex) {
+        try {
+          paymentAddressHex = await walletApi.getChangeAddress();
+          console.log('[Wallet Connect] Found payment address via getChangeAddress()');
+        } catch (err) {
+          console.log('[Wallet Connect] getChangeAddress() failed:', err);
+        }
+      }
 
       if (!stakeAddress) {
         throw new Error("Could not get stake address from wallet");
       }
 
       // Convert payment address from hex to bech32 and store for blockchain verification
-      if (!paymentAddressesHex || paymentAddressesHex.length === 0) {
+      if (!paymentAddressHex) {
         console.warn('[Wallet Connect] No payment addresses found in wallet');
         setPaymentAddress('');
       } else {
-        const primaryPaymentAddress = hexToBech32(paymentAddressesHex[0]);
+        const primaryPaymentAddress = hexToBech32(paymentAddressHex);
         setPaymentAddress(primaryPaymentAddress);
         console.log('[Wallet Connect] Stored payment address for verification:', primaryPaymentAddress.substring(0, 20) + '...');
       }
@@ -2609,12 +2687,50 @@ export default function MekRateLoggingPage() {
       console.log(`[AddWallet] Using ${connectedWalletName} for signature. If this is the wrong wallet, the signature will fail and you can try again.`);
 
       // Get payment address from connected wallet (signData requires payment address, not stake address)
+      // Try multiple methods since new/unused wallets may not have "used" addresses
       console.log('[🔑ADDR] Getting payment address from connected wallet...');
-      const usedAddressesHex = await walletApi.getUsedAddresses();
-      if (!usedAddressesHex || usedAddressesHex.length === 0) {
-        throw new Error('No addresses found in connected wallet');
+
+      let addressHex: string | null = null;
+
+      // Try getUsedAddresses first
+      try {
+        const usedAddressesHex = await walletApi.getUsedAddresses();
+        if (usedAddressesHex && usedAddressesHex.length > 0) {
+          addressHex = usedAddressesHex[0];
+          console.log('[🔑ADDR] Found address via getUsedAddresses()');
+        }
+      } catch (err) {
+        console.log('[🔑ADDR] getUsedAddresses() failed:', err);
       }
-      const paymentAddressForSigning = hexToBech32(usedAddressesHex[0]);
+
+      // Try getUnusedAddresses if needed
+      if (!addressHex) {
+        try {
+          const unusedAddressesHex = await walletApi.getUnusedAddresses();
+          if (unusedAddressesHex && unusedAddressesHex.length > 0) {
+            addressHex = unusedAddressesHex[0];
+            console.log('[🔑ADDR] Found address via getUnusedAddresses()');
+          }
+        } catch (err) {
+          console.log('[🔑ADDR] getUnusedAddresses() failed:', err);
+        }
+      }
+
+      // Fall back to getChangeAddress
+      if (!addressHex) {
+        try {
+          addressHex = await walletApi.getChangeAddress();
+          console.log('[🔑ADDR] Found address via getChangeAddress()');
+        } catch (err) {
+          console.log('[🔑ADDR] getChangeAddress() failed:', err);
+        }
+      }
+
+      if (!addressHex) {
+        throw new Error('No addresses found in connected wallet. Please ensure your wallet is properly initialized.');
+      }
+
+      const paymentAddressForSigning = hexToBech32(addressHex);
       console.log('[🔑ADDR] Payment address for signing:', paymentAddressForSigning.substring(0, 30) + '...');
 
       // Request signature using payment address (NOT stake address)

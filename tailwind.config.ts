@@ -35,6 +35,10 @@ const config: Config = {
         'float': 'float 3s ease-in-out infinite',
         'shimmer': 'shimmer 2s linear infinite',
         'float-up': 'float-up 3s ease-out infinite',
+        'border-top': 'border-top 2s linear infinite 1s',
+        'border-right': 'border-right 2s linear infinite 2s',
+        'border-bottom': 'border-bottom 2s linear infinite 3s',
+        'border-left': 'border-left 2s linear infinite 4s',
       },
       keyframes: {
         'pulse-glow': {
@@ -53,6 +57,22 @@ const config: Config = {
           '0%': { transform: 'translateY(0) translateX(0)', opacity: '1' },
           '50%': { transform: 'translateY(-30px) translateX(10px)', opacity: '0.8' },
           '100%': { transform: 'translateY(-60px) translateX(-5px)', opacity: '0' },
+        },
+        'border-top': {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+        'border-right': {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(100%)' },
+        },
+        'border-bottom': {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(-100%)' },
+        },
+        'border-left': {
+          '0%': { transform: 'translateY(100%)' },
+          '100%': { transform: 'translateY(-100%)' },
         },
       },
     },
