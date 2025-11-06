@@ -105,7 +105,7 @@ export default function PowerSwitchToggle({
             `}
             style={{
               strokeDasharray: 220,
-              strokeDashoffset: checked ? 40 : 220,
+              strokeDashoffset: 40,
               transform: checked ? 'rotate(302deg)' : 'rotate(-58deg)',
               transitionProperty: 'transform, stroke-dashoffset',
               transitionDuration: checked ? '0.4s' : '1s',
