@@ -471,6 +471,11 @@ export default function MekLayoutsPage() {
                 <option value="diagonal-split">Diagonal Split (2 Fields)</option>
                 <option value="compact-density">Compact Density (2 Fields)</option>
                 <option value="overlapping-layers">Overlapping Layers (2 Fields)</option>
+                <option value="compact-density-v1">Compact Density V1 (Size Contrast)</option>
+                <option value="compact-density-v2">Compact Density V2 (Color Contrast)</option>
+                <option value="compact-density-v3">Compact Density V3 (Weight Contrast)</option>
+                <option value="compact-density-v4">Compact Density V4 (Spacing Contrast)</option>
+                <option value="compact-density-v5">Compact Density V5 (Mixed Contrast)</option>
               </select>
             </div>
 

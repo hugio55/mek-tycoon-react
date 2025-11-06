@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import "@/styles/global-design-system.css";
-import MechanicalToggle from "@/components/controls/MechanicalToggle";
+import DottedToggleSwitch from "@/components/controls/DottedToggleSwitch";
 import CloseButton from "@/components/controls/CloseButton";
 import LevelProgress, { LevelProgressStyle } from "@/components/LevelProgress";
 import { DEFAULT_LEVEL_COLORS } from "@/components/MekCard/types";
@@ -3235,6 +3235,403 @@ export default function MekProfileLightbox({
       );
     }
 
+    // COMPACT DENSITY V1 - Size Contrast (BIG income vs small cumulative)
+    if (combinedGoldCardStyle === 'compact-density-v1') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? '#fab617' : '#00d4ff'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-2">
+            {/* Income Rate - DOMINANT (huge size) */}
+            <div className="flex items-baseline justify-between">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                INCOME RATE
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span
+                  className={`${accentColor} text-5xl leading-none`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 200,
+                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`
+                  }}
+                >
+                  {goldGenData.total.toLocaleString('en-US')}
+                </span>
+                <span
+                  className="text-xs text-white/50"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 200 }}
+                >
+                  g/hr
+                </span>
+              </div>
+            </div>
+
+            <div className="relative h-px">
+              <div className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400/30' : 'via-cyan-400/30'} to-transparent`} />
+            </div>
+
+            {/* Cumulative - subdued (small size) */}
+            <div className="flex items-baseline justify-between">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                CUMULATIVE
+              </div>
+              <div className="flex items-baseline">
+                <span
+                  className="text-white text-xl leading-none"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 200 }}
+                >
+                  {currentOwnerGold.toLocaleString('en-US')}
+                </span>
+                <span
+                  className="text-xs text-white/50"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 200 }}
+                >
+                  g
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // COMPACT DENSITY V2 - Color Contrast (glowing income vs plain cumulative)
+    if (combinedGoldCardStyle === 'compact-density-v2') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? '#fab617' : '#00d4ff'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-2">
+            {/* Income Rate - DOMINANT (accent color with glow) */}
+            <div className="flex items-baseline justify-between">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                INCOME RATE
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span
+                  className={`${accentColor} text-4xl leading-none`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 200,
+                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`
+                  }}
+                >
+                  {goldGenData.total.toLocaleString('en-US')}
+                </span>
+                <span
+                  className="text-sm text-white/40"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 200 }}
+                >
+                  g/hr
+                </span>
+              </div>
+            </div>
+
+            <div className="relative h-px">
+              <div className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400/30' : 'via-cyan-400/30'} to-transparent`} />
+            </div>
+
+            {/* Cumulative - subdued (white, no glow) */}
+            <div className="flex items-baseline justify-between">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                CUMULATIVE
+              </div>
+              <div className="flex items-baseline">
+                <span
+                  className="text-white/60 text-2xl leading-none"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                >
+                  {currentOwnerGold.toLocaleString('en-US')}
+                </span>
+                <span
+                  className="text-xs text-white/40"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                >
+                  g
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // COMPACT DENSITY V3 - Weight Contrast (bold income vs thin cumulative)
+    if (combinedGoldCardStyle === 'compact-density-v3') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? '#fab617' : '#00d4ff'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-2">
+            {/* Income Rate - DOMINANT (thick/bold) */}
+            <div className="flex items-baseline justify-between">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                INCOME RATE
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span
+                  className={`${accentColor} text-4xl leading-none`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 700,
+                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`
+                  }}
+                >
+                  {goldGenData.total.toLocaleString('en-US')}
+                </span>
+                <span
+                  className="text-sm text-white/50"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                >
+                  g/hr
+                </span>
+              </div>
+            </div>
+
+            <div className="relative h-px">
+              <div className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400/30' : 'via-cyan-400/30'} to-transparent`} />
+            </div>
+
+            {/* Cumulative - subdued (ultra thin) */}
+            <div className="flex items-baseline justify-between">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                CUMULATIVE
+              </div>
+              <div className="flex items-baseline">
+                <span
+                  className={`${accentColor} text-2xl leading-none`}
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 100 }}
+                >
+                  {currentOwnerGold.toLocaleString('en-US')}
+                </span>
+                <span
+                  className="text-xs text-white/50"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 100 }}
+                >
+                  g
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // COMPACT DENSITY V4 - Spacing Contrast (spacious income vs tight cumulative)
+    if (combinedGoldCardStyle === 'compact-density-v4') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? '#fab617' : '#00d4ff'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10">
+            {/* Income Rate - DOMINANT (spacious padding) */}
+            <div className="flex items-baseline justify-between py-3">
+              <div
+                className="text-[10px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                INCOME RATE
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span
+                  className={`${accentColor} text-5xl leading-none`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 200,
+                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
+                    letterSpacing: '0.02em'
+                  }}
+                >
+                  {goldGenData.total.toLocaleString('en-US')}
+                </span>
+                <span
+                  className="text-sm text-white/50"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 200 }}
+                >
+                  g/hr
+                </span>
+              </div>
+            </div>
+
+            <div className="relative h-px my-3">
+              <div className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400/30' : 'via-cyan-400/30'} to-transparent`} />
+            </div>
+
+            {/* Cumulative - subdued (tight spacing) */}
+            <div className="flex items-baseline justify-between py-1">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                CUMULATIVE
+              </div>
+              <div className="flex items-baseline gap-0.5">
+                <span
+                  className="text-white/70 text-xl leading-none"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 200 }}
+                >
+                  {currentOwnerGold.toLocaleString('en-US')}
+                </span>
+                <span
+                  className="text-xs text-white/50"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 200 }}
+                >
+                  g
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // COMPACT DENSITY V5 - Mixed Contrast (combine multiple approaches)
+    if (combinedGoldCardStyle === 'compact-density-v5') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? '#fab617' : '#00d4ff'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10">
+            {/* Income Rate - DOMINANT (big, colored, bold, spacious) */}
+            <div className="flex items-baseline justify-between py-3">
+              <div
+                className="text-[10px] text-white/50 uppercase tracking-[0.15em]"
+                style={{ fontFamily: 'Inter', fontWeight: 500 }}
+              >
+                INCOME RATE
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span
+                  className={`${accentColor} text-6xl leading-none`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 600,
+                    textShadow: `0 0 25px ${textShadowPrimary}, 0 0 50px ${textShadowSecondary}`,
+                    letterSpacing: '0.03em'
+                  }}
+                >
+                  {goldGenData.total.toLocaleString('en-US')}
+                </span>
+                <span
+                  className="text-xs text-white/40"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 200 }}
+                >
+                  g/hr
+                </span>
+              </div>
+            </div>
+
+            <div className="relative h-px my-2">
+              <div className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400/30' : 'via-cyan-400/30'} to-transparent`} />
+            </div>
+
+            {/* Cumulative - subdued (small, white, thin, tight) */}
+            <div className="flex items-baseline justify-between py-0.5">
+              <div
+                className="text-[8px] text-white/30 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                CUMULATIVE
+              </div>
+              <div className="flex items-baseline">
+                <span
+                  className="text-white/50 text-lg leading-none"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 100 }}
+                >
+                  {currentOwnerGold.toLocaleString('en-US')}
+                </span>
+                <span
+                  className="text-[10px] text-white/40"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 100 }}
+                >
+                  g
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     // OVERLAPPING LAYERS - Cards that overlap with depth/layering effect
     if (combinedGoldCardStyle === 'overlapping-layers') {
       return (
@@ -4356,13 +4753,13 @@ export default function MekProfileLightbox({
                         <div className="text-white font-bold uppercase tracking-wider">
                           {isEmployed ? 'EMPLOYED' : 'IDLE'}
                         </div>
-                        <div className="scale-75">
-                          <MechanicalToggle
+                        <div className="scale-150">
+                          <DottedToggleSwitch
                             checked={isEmployed}
                             onChange={setIsEmployed}
                           />
                         </div>
-                        <div className="text-xs text-gray-400 uppercase">Mechanical Toggle</div>
+                        <div className="text-xs text-gray-400 uppercase">Dotted Toggle</div>
                       </div>
                     </div>
                   </div>

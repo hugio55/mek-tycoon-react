@@ -1808,7 +1808,7 @@ export default function MekRateLoggingPage() {
               console.log('[🔑ADDR] Raw address (CBOR hex):', addressHex.substring(0, 40) + '...');
 
               // Convert from CBOR hex to bech32 format (CIP-30 requirement for signData)
-              const paymentAddress = hexToBech32(addressHex);
+              const paymentAddress = await hexToBech32(addressHex);
               console.log('[🔑ADDR] Converted to bech32:', paymentAddress.substring(0, 20) + '...');
               console.log('[🔑ADDR] Network:', paymentAddress.startsWith('addr1') ? 'mainnet' : 'testnet');
 
@@ -2731,7 +2731,7 @@ export default function MekRateLoggingPage() {
         throw new Error('No addresses found in connected wallet. Please ensure your wallet is properly initialized.');
       }
 
-      const paymentAddressForSigning = hexToBech32(addressHex);
+      const paymentAddressForSigning = await hexToBech32(addressHex);
       console.log('[🔑ADDR] Payment address for signing:', paymentAddressForSigning.substring(0, 30) + '...');
 
       // Request signature using payment address (NOT stake address)
