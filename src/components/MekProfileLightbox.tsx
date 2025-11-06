@@ -485,10 +485,12 @@ export default function MekProfileLightbox({
             {/* Current Owner - BIG and prominent */}
             <div className="text-center">
               <div
-                className={`${accentColor} text-3xl font-mono font-black`}
+                className={`${accentColor} text-3xl`}
                 style={{
                   textShadow: textShadowGlow,
-                  fontFamily: cumulativeGoldFont
+                  fontFamily: cumulativeGoldFont,
+                  fontWeight: ['Exo 2', 'Saira Condensed', 'Josefin Sans', 'Advent Pro'].includes(cumulativeGoldFont) ? 200 :
+                             ['Rajdhani', 'Space Grotesk', 'Teko'].includes(cumulativeGoldFont) ? 300 : 600
                 }}
               >
                 {formatGold(currentOwnerGold)}
@@ -500,7 +502,11 @@ export default function MekProfileLightbox({
               <div className="text-[9px] text-gray-500 uppercase tracking-wider font-mono mb-1">
                 all-time
               </div>
-              <div className="text-white text-base font-mono font-semibold" style={{ fontFamily: cumulativeGoldFont }}>
+              <div className="text-white text-base" style={{
+                fontFamily: cumulativeGoldFont,
+                fontWeight: ['Exo 2', 'Saira Condensed', 'Josefin Sans', 'Advent Pro'].includes(cumulativeGoldFont) ? 200 :
+                           ['Rajdhani', 'Space Grotesk', 'Teko'].includes(cumulativeGoldFont) ? 300 : 500
+              }}>
                 {formatGold(allTimeGold)}
               </div>
             </div>

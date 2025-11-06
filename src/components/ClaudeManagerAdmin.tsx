@@ -68,6 +68,20 @@ export default function ClaudeManagerAdmin() {
           </div>
         </div>
 
+        {/* Copy Path Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(file.path);
+            // Visual feedback could be added here
+          }}
+          className="px-3 py-2 bg-blue-900/20 hover:bg-blue-900/40 border border-blue-700 text-blue-400 rounded transition-colors flex items-center gap-2"
+          title="Copy file path"
+        >
+          <span className="text-lg">📋</span>
+          <span className="text-xs">COPY PATH</span>
+        </button>
+
         {/* Delete Button */}
         <button
           onClick={(e) => {
