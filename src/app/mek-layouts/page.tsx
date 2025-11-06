@@ -464,6 +464,9 @@ export default function MekLayoutsPage() {
                 <option value="clean-horizontal">Clean Horizontal (2 Fields)</option>
                 <option value="stacked-minimal">Stacked Minimal (2 Fields)</option>
                 <option value="badge-pair">Badge Pair (2 Fields)</option>
+                <option value="diagonal-split">Diagonal Split (2 Fields)</option>
+                <option value="compact-density">Compact Density (2 Fields)</option>
+                <option value="overlapping-layers">Overlapping Layers (2 Fields)</option>
               </select>
             </div>
 
