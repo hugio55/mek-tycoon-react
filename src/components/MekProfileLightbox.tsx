@@ -11,6 +11,7 @@ export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-termi
 
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
 export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout' | 'stacked-compact' | 'stacked-wide' | 'stacked-minimal';
+export type GoldGenerationStyle = 'pulsing-button' | 'interactive-cards' | 'progress-bar' | 'floating-panel' | 'tech-grid' | 'command-line' | 'matrix-badge';
 
 interface MekProfileLightboxProps {
   isOpen: boolean;
@@ -26,6 +27,8 @@ interface MekProfileLightboxProps {
   cumulativeGoldStyle?: CumulativeGoldStyle;
   onCumulativeGoldStyleChange?: (style: CumulativeGoldStyle) => void;
   cumulativeGoldFont?: string;
+  goldGenerationStyle?: GoldGenerationStyle;
+  onGoldGenerationStyleChange?: (style: GoldGenerationStyle) => void;
   backdropDarkness?: number;
   onBackdropDarknessChange?: (value: number) => void;
   cardDarkness?: number;
@@ -59,6 +62,8 @@ export default function MekProfileLightbox({
   cumulativeGoldStyle = 'stacked-emphasis',
   onCumulativeGoldStyleChange,
   cumulativeGoldFont = 'Orbitron',
+  goldGenerationStyle = 'pulsing-button',
+  onGoldGenerationStyleChange,
   backdropDarkness = 40,
   onBackdropDarknessChange,
   cardDarkness = 20,
@@ -1244,12 +1249,17 @@ export default function MekProfileLightbox({
     return null;
   };
 
-  // Render Gold Produced Card based on selected style
+  // Render Gold Generation Card (Base + Bonus + Total) with 7 different styles
   const renderGoldProducedCard = () => {
-    const goldData = {
-      currentOwner: '12,869.015',
-      allTime: '458,414.324'
+    // Sample gold generation data (G/hr)
+    const goldGenData = {
+      base: 1250,
+      bonus: 875,
+      total: 2125
     };
+
+    // Format gold numbers with commas
+    const formatGold = (num: number) => num.toLocaleString('en-US') + ' G/hr';
 
     // Dynamic colors based on useYellowGlow
     const accentColor = useYellowGlow ? 'text-yellow-400' : 'text-cyan-400';
@@ -1259,56 +1269,63 @@ export default function MekProfileLightbox({
     const glowRgbaInset = useYellowGlow ? 'rgba(250, 182, 23, 0.1)' : 'rgba(0, 212, 255, 0.1)';
     const textShadowGlow = useYellowGlow ? '0 0 15px rgba(250, 182, 23, 0.8)' : '0 0 15px rgba(0, 212, 255, 0.8)';
 
-    // Option 1: Corner Brackets
-    if (designationCardStyle === 'corner-brackets') {
+    // Style 1: Pulsing Button Center - Bonus as glowing, pulsing button between Base/Total
+    if (goldGenerationStyle === 'pulsing-button') {
       return (
-        <div className="relative p-6 bg-black/40 backdrop-blur-sm">
-          {/* Corner Bracket SVG Elements */}
-          <svg className={`absolute top-0 left-0 w-8 h-8 ${accentColor}`} viewBox="0 0 32 32">
-            <path d="M 0 8 L 0 0 L 8 0" stroke="currentColor" strokeWidth="2" fill="none" />
-            <path d="M 0 0 L 8 8" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="none" />
-          </svg>
-          <svg className={`absolute top-0 right-0 w-8 h-8 ${accentColor}`} viewBox="0 0 32 32">
-            <path d="M 32 8 L 32 0 L 24 0" stroke="currentColor" strokeWidth="2" fill="none" />
-            <path d="M 32 0 L 24 8" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="none" />
-          </svg>
-          <svg className={`absolute bottom-0 left-0 w-8 h-8 ${accentColor}`} viewBox="0 0 32 32">
-            <path d="M 0 24 L 0 32 L 8 32" stroke="currentColor" strokeWidth="2" fill="none" />
-            <path d="M 0 32 L 8 24" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="none" />
-          </svg>
-          <svg className={`absolute bottom-0 right-0 w-8 h-8 ${accentColor}`} viewBox="0 0 32 32">
-            <path d="M 32 24 L 32 32 L 24 32" stroke="currentColor" strokeWidth="2" fill="none" />
-            <path d="M 32 32 L 24 24" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="none" />
-          </svg>
-
-          {/* Border glow effect */}
-          <div
-            className={`absolute inset-0 border ${borderColor} pointer-events-none`}
-            style={{ boxShadow: `0 0 20px ${glowRgba}, inset 0 0 20px ${glowRgbaInset}` }}
-          />
-
-          {/* Content */}
-          <div className="relative z-10 space-y-4">
-            {/* Current Owner - Prominent with glow */}
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm border border-gray-700/50">
+          <div className="space-y-4">
+            {/* Base - Top */}
             <div>
-              <div className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono mb-1`}>
-                CURRENT OWNER
+              <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                Base
               </div>
-              <div
-                className={`${accentColor} text-2xl font-mono font-black`}
-                style={{ textShadow: textShadowGlow }}
-              >
-                {goldData.currentOwner}
+              <div className="text-white text-xl" style={{ fontFamily: 'Saira Condensed', fontWeight: 200 }}>
+                {formatGold(goldGenData.base)}
               </div>
             </div>
 
-            {/* All Time */}
-            <div>
-              <div className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono mb-1`}>
-                ALL TIME
+            {/* Bonus - Clickable Pulsing Button */}
+            <button
+              className={`w-full p-4 bg-gradient-to-r ${useYellowGlow ? 'from-yellow-500/20 to-yellow-600/10' : 'from-cyan-500/20 to-cyan-600/10'} border-2 ${borderColor} rounded cursor-pointer transition-all hover:scale-105 active:scale-95`}
+              style={{
+                boxShadow: `0 0 20px ${glowRgba}, inset 0 0 15px ${glowRgbaInset}`,
+                animation: 'pulse 2s ease-in-out infinite'
+              }}
+            >
+              <div className="text-center">
+                <div className={`text-[10px] ${accentColorDim} uppercase tracking-wider mb-2`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  Bonus
+                </div>
+                <div
+                  className={`${accentColor} text-3xl mb-1`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 200,
+                    textShadow: textShadowGlow
+                  }}
+                >
+                  +{formatGold(goldGenData.bonus)}
+                </div>
+                <div className={`text-[9px] ${accentColorDim} uppercase tracking-widest`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  ▸ TAP FOR DETAILS ◂
+                </div>
               </div>
-              <div className="text-white text-xl font-mono font-bold">
-                {goldData.allTime}
+            </button>
+
+            {/* Total - Bottom */}
+            <div className="pt-3 border-t border-gray-700/50">
+              <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                Total
+              </div>
+              <div
+                className={`${accentColor} text-2xl`}
+                style={{
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200,
+                  textShadow: `0 0 10px ${useYellowGlow ? 'rgba(250, 182, 23, 0.6)' : 'rgba(0, 212, 255, 0.6)'}`
+                }}
+              >
+                {formatGold(goldGenData.total)}
               </div>
             </div>
           </div>
@@ -1316,8 +1333,8 @@ export default function MekProfileLightbox({
       );
     }
 
-    // Option 2: Split HUD
-    if (designationCardStyle === 'split-hud') {
+    // Style 2: Interactive Cards - Three cards side-by-side, Bonus lifts on hover
+    if (goldGenerationStyle === 'interactive-cards') {
       const borderLeftColor = useYellowGlow ? 'border-yellow-500' : 'border-cyan-500';
       const bgGradientFrom = useYellowGlow ? 'from-yellow-500/20' : 'from-cyan-500/20';
       const bgGradientTo = useYellowGlow ? 'to-yellow-700/10' : 'to-cyan-700/10';
