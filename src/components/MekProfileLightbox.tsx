@@ -1267,6 +1267,70 @@ export default function MekProfileLightbox({
     return null;
   };
 
+  const renderCombinedGoldCard = () => {
+    const goldGenData = { base: 1250, bonus: 875, total: 2125 };
+    const currentOwnerGold = Math.floor(12869);
+    const allTimeGold = Math.floor(458414);
+    const formatGoldRate = (num: number) => num.toLocaleString('en-US') + ' G/hr';
+    const formatGold = (num: number) => num.toLocaleString('en-US') + ' G';
+    const accentColor = useYellowGlow ? 'text-yellow-400' : 'text-cyan-400';
+    const accentColorDim = useYellowGlow ? 'text-yellow-400/60' : 'text-cyan-400/60';
+    const borderColor = useYellowGlow ? 'border-yellow-400/50' : 'border-cyan-400/50';
+    const glowRgba = useYellowGlow ? 'rgba(250, 182, 23, 0.3)' : 'rgba(0, 212, 255, 0.3)';
+    const glowRgbaInset = useYellowGlow ? 'rgba(250, 182, 23, 0.1)' : 'rgba(0, 212, 255, 0.1)';
+    const textShadowPrimary = useYellowGlow ? 'rgba(250, 182, 23, 0.8)' : 'rgba(0, 212, 255, 0.8)';
+    const textShadowSecondary = useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)';
+
+    if (combinedGoldCardStyle === 'vertical-stacked') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          <div className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`} style={{ boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`, filter: 'blur(0.5px)' }} />
+          <div className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none" style={{ background: `linear-gradient(180deg, ${useYellowGlow ? '#fab617' : '#00d4ff'} 0%, transparent 100%)` }} />
+          <div className="relative z-10 space-y-6">
+            <div className={`text-[10px] ${accentColorDim} uppercase tracking-widest text-center mb-4`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>◆ GOLD MASTER CARD ◆</div>
+            <div className="border-b border-gray-600/50 pb-4"><div className={`text-[10px] ${accentColor} uppercase tracking-widest mb-3`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>Rate</div><div className="grid grid-cols-3 gap-3"><div className="text-center"><div className="text-[9px] text-gray-400 uppercase tracking-wider mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>Base</div><div className="text-white text-sm" style={{ fontFamily: 'Saira Condensed', fontWeight: 200 }}>{formatGoldRate(goldGenData.base)}</div></div><div className="text-center"><div className="text-[9px] text-green-400 uppercase tracking-wider mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>Bonus</div><div className="text-green-400 text-sm" style={{ fontFamily: 'Saira Condensed', fontWeight: 200, textShadow: '0 0 10px rgba(0, 255, 0, 0.6)' }}>+{formatGoldRate(goldGenData.bonus)}</div></div><div className="text-center"><div className={`text-[9px] ${accentColor} uppercase tracking-wider mb-1`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>Total</div><div className={`${accentColor} text-lg`} style={{ fontFamily: 'Saira Condensed', fontWeight: 200, textShadow: `0 0 15px ${textShadowPrimary}` }}>{formatGoldRate(goldGenData.total)}</div></div></div></div>
+            <div><div className={`text-[10px] ${accentColor} uppercase tracking-widest mb-3`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>Cumulative</div><div className="grid grid-cols-2 gap-4"><div className="text-center"><div className="text-[9px] text-gray-400 uppercase tracking-wider mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>Current Corp</div><div className={`${accentColor} text-2xl`} style={{ fontFamily: 'Saira Condensed', fontWeight: 200, textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}` }}>{formatGold(currentOwnerGold)}</div></div><div className="text-center"><div className="text-[9px] text-gray-400 uppercase tracking-wider mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>All-Time</div><div className="text-white text-base" style={{ fontFamily: 'Inter', fontWeight: 400 }}>{formatGold(allTimeGold)}</div></div></div></div>
+          </div>
+        </div>
+      );
+    }
+
+    if (combinedGoldCardStyle === 'side-by-side') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          <div className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`} style={{ boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`, filter: 'blur(0.5px)' }} />
+          <div className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none" style={{ background: `linear-gradient(180deg, ${useYellowGlow ? '#fab617' : '#00d4ff'} 0%, transparent 100%)` }} />
+          <div className="relative z-10">
+            <div className={`text-[10px] ${accentColorDim} uppercase tracking-widest text-center mb-4`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>◆ GOLD MASTER CARD ◆</div>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="border-r border-gray-600/50 pr-4"><div className={`text-[10px] ${accentColor} uppercase tracking-widest mb-3`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>Rate</div><div className="space-y-2"><div className="flex justify-between items-center"><span className="text-[9px] text-gray-400 uppercase tracking-wider" style={{ fontFamily: 'Inter', fontWeight: 400 }}>Base</span><span className="text-white text-sm" style={{ fontFamily: 'Saira Condensed', fontWeight: 200 }}>{formatGoldRate(goldGenData.base)}</span></div><div className="flex justify-between items-center"><span className="text-[9px] text-green-400 uppercase tracking-wider" style={{ fontFamily: 'Inter', fontWeight: 400 }}>Bonus</span><span className="text-green-400 text-sm" style={{ fontFamily: 'Saira Condensed', fontWeight: 200, textShadow: '0 0 10px rgba(0, 255, 0, 0.6)' }}>+{formatGoldRate(goldGenData.bonus)}</span></div><div className="flex justify-between items-center pt-2 border-t border-gray-700/30"><span className={`text-[9px] ${accentColor} uppercase tracking-wider font-bold`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>Total</span><span className={`${accentColor} text-lg font-bold`} style={{ fontFamily: 'Saira Condensed', fontWeight: 200, textShadow: `0 0 15px ${textShadowPrimary}` }}>{formatGoldRate(goldGenData.total)}</span></div></div></div>
+              <div><div className={`text-[10px] ${accentColor} uppercase tracking-widest mb-3`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>Cumulative</div><div className="space-y-3"><div className="text-center"><div className="text-[9px] text-gray-400 uppercase tracking-wider mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>Current Corp</div><div className={`${accentColor} text-2xl`} style={{ fontFamily: 'Saira Condensed', fontWeight: 200, textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}` }}>{formatGold(currentOwnerGold)}</div></div><div className="text-center pt-2 border-t border-gray-700/30"><div className="text-[9px] text-gray-400 uppercase tracking-wider mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>All-Time</div><div className="text-white text-base" style={{ fontFamily: 'Inter', fontWeight: 400 }}>{formatGold(allTimeGold)}</div></div></div></div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (combinedGoldCardStyle === 'dashboard-grid') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          <div className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`} style={{ boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`, filter: 'blur(0.5px)' }} />
+          <div className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none" style={{ background: `linear-gradient(180deg, ${useYellowGlow ? '#fab617' : '#00d4ff'} 0%, transparent 100%)` }} />
+          <div className="relative z-10">
+            <div className={`text-[10px] ${accentColorDim} uppercase tracking-widest text-center mb-4`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>◆ GOLD MASTER CARD ◆</div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-black/30 p-3 border border-gray-600/40"><div className={`text-[9px] ${accentColor} uppercase tracking-widest mb-2`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>Rate</div><div className="space-y-1.5"><div className="flex justify-between"><span className="text-[8px] text-gray-400 uppercase" style={{ fontFamily: 'Inter', fontWeight: 400 }}>Base</span><span className="text-white text-xs" style={{ fontFamily: 'Saira Condensed', fontWeight: 200 }}>{formatGoldRate(goldGenData.base)}</span></div><div className="flex justify-between"><span className="text-[8px] text-green-400 uppercase" style={{ fontFamily: 'Inter', fontWeight: 400 }}>Bonus</span><span className="text-green-400 text-xs" style={{ fontFamily: 'Saira Condensed', fontWeight: 200, textShadow: '0 0 8px rgba(0, 255, 0, 0.6)' }}>+{formatGoldRate(goldGenData.bonus)}</span></div><div className="flex justify-between pt-1 border-t border-gray-700/30"><span className={`text-[8px] ${accentColor} uppercase font-bold`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>Total</span><span className={`${accentColor} text-sm font-bold`} style={{ fontFamily: 'Saira Condensed', fontWeight: 200, textShadow: `0 0 12px ${textShadowPrimary}` }}>{formatGoldRate(goldGenData.total)}</span></div></div></div>
+              <div className="bg-black/30 p-3 border border-gray-600/40"><div className={`text-[9px] ${accentColor} uppercase tracking-widest mb-2`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>Current Corp</div><div className={`${accentColor} text-xl text-center`} style={{ fontFamily: 'Saira Condensed', fontWeight: 200, textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}` }}>{formatGold(currentOwnerGold)}</div></div>
+              <div className="col-span-2 bg-black/30 p-3 border border-gray-600/40"><div className={`text-[9px] ${accentColor} uppercase tracking-widest mb-2`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>All-Time Total</div><div className="text-white text-lg text-center" style={{ fontFamily: 'Inter', fontWeight: 400 }}>{formatGold(allTimeGold)}</div></div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   // Render Gold Generation Card (Base + Bonus + Total) with 7 different styles
   const renderGoldProducedCard = () => {
     // Sample gold generation data (G/hr)
@@ -1575,11 +1639,18 @@ export default function MekProfileLightbox({
                       />
                     </div>
 
-                    {/* Gold Generation */}
-                    {renderGoldProducedCard()}
+                    {/* Gold Cards - Combined or Individual */}
+                    {showCombinedGoldCard ? (
+                      renderCombinedGoldCard()
+                    ) : (
+                      <>
+                        {/* Gold Generation */}
+                        {renderGoldProducedCard()}
 
-                    {/* Cumulative Gold */}
-                    {renderCumulativeGoldCard()}
+                        {/* Cumulative Gold */}
+                        {renderCumulativeGoldCard()}
+                      </>
+                    )}
                   </div>
                 </div>
 

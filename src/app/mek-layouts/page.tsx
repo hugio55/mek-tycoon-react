@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import MekProfileLightbox, { CardInteriorStyle, DesignationCardStyle, GoldGenerationStyle, LevelProgressStyle } from '@/components/MekProfileLightbox';
+import MekProfileLightbox, { CardInteriorStyle, DesignationCardStyle, GoldGenerationStyle, CombinedGoldCardStyle, LevelProgressStyle } from '@/components/MekProfileLightbox';
 import GoldGenerationDetailsLightbox from '@/components/GoldGenerationDetailsLightbox';
 
 export default function MekLayoutsPage() {
@@ -15,6 +15,8 @@ export default function MekLayoutsPage() {
   const [cumulativeGoldStyle, setCumulativeGoldStyle] = useState<'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout'>('stacked-emphasis');
   const [cumulativeGoldFont, setCumulativeGoldFont] = useState('Orbitron');
   const [goldGenerationStyle, setGoldGenerationStyle] = useState<GoldGenerationStyle>('matrix-badge');
+  const [combinedGoldCardStyle, setCombinedGoldCardStyle] = useState<CombinedGoldCardStyle>('vertical-stacked');
+  const [showCombinedGoldCard, setShowCombinedGoldCard] = useState(false);
   const [levelProgressStyle, setLevelProgressStyle] = useState<LevelProgressStyle>('flat-bar');
   const [useYellowGlow, setUseYellowGlow] = useState(false);
   const [backdropDarkness, setBackdropDarkness] = useState(22);
@@ -362,6 +364,39 @@ export default function MekLayoutsPage() {
               </select>
             </div>
 
+            {/* Dropdown 8: Combined Gold Card Style */}
+            <div className="mb-3">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                Combined Gold Card Style
+              </label>
+              <select
+                value={combinedGoldCardStyle}
+                onChange={(e) => setCombinedGoldCardStyle(e.target.value as CombinedGoldCardStyle)}
+                className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
+              >
+                <option value="vertical-stacked">Vertical Stacked</option>
+                <option value="side-by-side">Side by Side</option>
+                <option value="dashboard-grid">Dashboard Grid</option>
+              </select>
+            </div>
+
+            {/* Toggle: Show Combined vs Individual Cards */}
+            <div className="mb-3">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                Gold Card Display
+              </label>
+              <button
+                onClick={() => setShowCombinedGoldCard(!showCombinedGoldCard)}
+                className={`w-full px-3 py-2 rounded text-xs font-bold uppercase tracking-wider transition-all ${
+                  showCombinedGoldCard
+                    ? 'bg-purple-500/20 border-2 border-purple-500 text-purple-400'
+                    : 'bg-gray-500/20 border-2 border-gray-500 text-gray-400'
+                }`}
+              >
+                {showCombinedGoldCard ? '🔗 Combined Card' : '📊 Individual Cards'}
+              </button>
+            </div>
+
             {/* Toggle: Glow Color */}
             <div className="mb-3">
               <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
@@ -553,6 +588,9 @@ export default function MekLayoutsPage() {
         cumulativeGoldFont={cumulativeGoldFont}
         goldGenerationStyle={goldGenerationStyle}
         onGoldGenerationStyleChange={setGoldGenerationStyle}
+        combinedGoldCardStyle={combinedGoldCardStyle}
+        onCombinedGoldCardStyleChange={setCombinedGoldCardStyle}
+        showCombinedGoldCard={showCombinedGoldCard}
         levelProgressStyle={levelProgressStyle}
         onLevelProgressStyleChange={setLevelProgressStyle}
         useYellowGlow={useYellowGlow}
