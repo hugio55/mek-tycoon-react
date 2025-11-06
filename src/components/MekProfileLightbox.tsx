@@ -11,7 +11,7 @@ export type VariationCardStyle = 'clean-frames' | 'image-focus' | 'subtle-accent
 export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-terminal';
 
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
-export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout';
+export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout' | 'stacked-compact' | 'stacked-wide' | 'stacked-minimal';
 
 interface MekProfileLightboxProps {
   isOpen: boolean;
@@ -465,7 +465,7 @@ export default function MekProfileLightbox({
     const textShadowGlow = useYellowGlow ? '0 0 15px rgba(250, 182, 23, 0.8)' : '0 0 15px rgba(0, 212, 255, 0.8)';
     const bgGradientFrom = useYellowGlow ? 'from-yellow-500/10' : 'from-cyan-500/10';
 
-    // Style 1: Stacked Emphasis
+    // Style 1: Stacked Emphasis (locked fonts: Saira Condensed for current, Inter for all-time)
     if (cumulativeGoldStyle === 'stacked-emphasis') {
       return (
         <div className="relative p-6 bg-black/40 backdrop-blur-sm border border-yellow-500/40">
@@ -482,15 +482,17 @@ export default function MekProfileLightbox({
               CUMULATIVE GOLD
             </div>
 
-            {/* Current Owner - BIG and prominent */}
+            {/* Current Corp - BIG and prominent */}
             <div className="text-center">
+              <div className="text-[9px] text-gray-400 uppercase tracking-wider font-mono mb-1">
+                Current Corp
+              </div>
               <div
                 className={`${accentColor} text-3xl`}
                 style={{
                   textShadow: textShadowGlow,
-                  fontFamily: cumulativeGoldFont,
-                  fontWeight: ['Exo 2', 'Saira Condensed', 'Josefin Sans', 'Advent Pro'].includes(cumulativeGoldFont) ? 200 :
-                             ['Rajdhani', 'Space Grotesk', 'Teko'].includes(cumulativeGoldFont) ? 300 : 600
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200
                 }}
               >
                 {formatGold(currentOwnerGold)}
@@ -503,9 +505,8 @@ export default function MekProfileLightbox({
                 all-time
               </div>
               <div className="text-white text-base" style={{
-                fontFamily: cumulativeGoldFont,
-                fontWeight: ['Exo 2', 'Saira Condensed', 'Josefin Sans', 'Advent Pro'].includes(cumulativeGoldFont) ? 200 :
-                           ['Rajdhani', 'Space Grotesk', 'Teko'].includes(cumulativeGoldFont) ? 300 : 500
+                fontFamily: 'Inter',
+                fontWeight: 400
               }}>
                 {formatGold(allTimeGold)}
               </div>
@@ -697,6 +698,152 @@ export default function MekProfileLightbox({
                 all-time
               </div>
               <div className="text-white text-xs font-mono font-semibold">
+                {formatGold(allTimeGold)}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // NEW Style 6: Stacked Compact - tighter spacing, smaller overall
+    if (cumulativeGoldStyle === 'stacked-compact') {
+      return (
+        <div className="relative p-4 bg-black/40 backdrop-blur-sm border border-yellow-500/40">
+          {/* Border glow effect */}
+          <div
+            className={`absolute inset-0 border ${borderColor} pointer-events-none`}
+            style={{ boxShadow: `0 0 15px ${glowRgba}, inset 0 0 15px ${glowRgbaInset}` }}
+          />
+
+          {/* Content */}
+          <div className="relative z-10 space-y-2">
+            {/* Title */}
+            <div className={`text-[9px] ${accentColorDim} uppercase tracking-widest font-mono text-center mb-1`}>
+              CUMULATIVE GOLD
+            </div>
+
+            {/* Current Corp - BIG and prominent */}
+            <div className="text-center">
+              <div className="text-[8px] text-gray-400 uppercase tracking-wider font-mono mb-0.5">
+                Current Corp
+              </div>
+              <div
+                className={`${accentColor} text-2xl`}
+                style={{
+                  textShadow: textShadowGlow,
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200
+                }}
+              >
+                {formatGold(currentOwnerGold)}
+              </div>
+            </div>
+
+            {/* All-time - smaller, subdued */}
+            <div className="text-center pt-1.5 border-t border-yellow-500/20">
+              <div className="text-[8px] text-gray-500 uppercase tracking-wider font-mono mb-0.5">
+                all-time
+              </div>
+              <div className="text-white text-sm" style={{
+                fontFamily: 'Inter',
+                fontWeight: 400
+              }}>
+                {formatGold(allTimeGold)}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // NEW Style 7: Stacked Wide - wider layout with more breathing room
+    if (cumulativeGoldStyle === 'stacked-wide') {
+      return (
+        <div className="relative p-8 bg-black/40 backdrop-blur-sm border border-yellow-500/40">
+          {/* Border glow effect */}
+          <div
+            className={`absolute inset-0 border ${borderColor} pointer-events-none`}
+            style={{ boxShadow: `0 0 25px ${glowRgba}, inset 0 0 25px ${glowRgbaInset}` }}
+          />
+
+          {/* Content */}
+          <div className="relative z-10 space-y-4">
+            {/* Title */}
+            <div className={`text-[11px] ${accentColorDim} uppercase tracking-widest font-mono text-center mb-3`}>
+              CUMULATIVE GOLD
+            </div>
+
+            {/* Current Corp - BIG and prominent */}
+            <div className="text-center">
+              <div className="text-[10px] text-gray-400 uppercase tracking-wider font-mono mb-2">
+                Current Corp
+              </div>
+              <div
+                className={`${accentColor} text-4xl`}
+                style={{
+                  textShadow: textShadowGlow,
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200
+                }}
+              >
+                {formatGold(currentOwnerGold)}
+              </div>
+            </div>
+
+            {/* All-time - smaller, subdued */}
+            <div className="text-center pt-3 border-t border-yellow-500/20">
+              <div className="text-[10px] text-gray-500 uppercase tracking-wider font-mono mb-1.5">
+                all-time
+              </div>
+              <div className="text-white text-lg" style={{
+                fontFamily: 'Inter',
+                fontWeight: 400
+              }}>
+                {formatGold(allTimeGold)}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // NEW Style 8: Stacked Minimal - very clean, minimal borders and effects
+    if (cumulativeGoldStyle === 'stacked-minimal') {
+      return (
+        <div className="relative p-6 bg-black/20 backdrop-blur-sm border border-yellow-500/20">
+          {/* Content */}
+          <div className="space-y-3">
+            {/* Title */}
+            <div className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono text-center mb-2 opacity-60`}>
+              CUMULATIVE GOLD
+            </div>
+
+            {/* Current Corp - BIG and prominent */}
+            <div className="text-center">
+              <div className="text-[9px] text-gray-400 uppercase tracking-wider font-mono mb-1 opacity-50">
+                Current Corp
+              </div>
+              <div
+                className={`${accentColor} text-3xl`}
+                style={{
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200
+                }}
+              >
+                {formatGold(currentOwnerGold)}
+              </div>
+            </div>
+
+            {/* All-time - smaller, subdued */}
+            <div className="text-center pt-2 border-t border-yellow-500/10">
+              <div className="text-[9px] text-gray-500 uppercase tracking-wider font-mono mb-1 opacity-50">
+                all-time
+              </div>
+              <div className="text-white/80 text-base" style={{
+                fontFamily: 'Inter',
+                fontWeight: 400
+              }}>
                 {formatGold(allTimeGold)}
               </div>
             </div>
