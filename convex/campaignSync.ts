@@ -250,7 +250,6 @@ export const syncCampaign = internalAction({
       freeNFTs.forEach((nft: any) => nmkrNFTMap.set(nft.uid, "available"));
       reservedNFTs.forEach((nft: any) => nmkrNFTMap.set(nft.uid, "reserved"));
       soldNFTs.forEach((nft: any) => nmkrNFTMap.set(nft.uid, "sold"));
-      mintedNFTs.forEach((nft: any) => nmkrNFTMap.set(nft.uid, "sold")); // Minted = sold in our system
 
       // Check each inventory item
       for (const inventoryItem of inventory) {
@@ -333,6 +332,20 @@ export const syncCampaign = internalAction({
 
       console.log("[SYNC] Campaign counters refreshed");
 
+      // ===== STEP 6B: RE-FETCH DATABASE STATS AFTER UPDATES =====
+      const updatedInventory = await ctx.runQuery(api.commemorativeCampaigns.getCampaignInventory, {
+        campaignId: args.campaignId,
+      });
+
+      const updatedDbStats = {
+        total: updatedInventory.length,
+        available: updatedInventory.filter((nft) => nft.status === "available").length,
+        reserved: updatedInventory.filter((nft) => nft.status === "reserved").length,
+        sold: updatedInventory.filter((nft) => nft.status === "sold").length,
+      };
+
+      console.log("[SYNC] Updated database stats after mutations:", updatedDbStats);
+
       // ===== STEP 7: GET WEBHOOK ACTIVITY =====
       const webhookLogs = await ctx.runQuery(api.nmkrSync.getRecentSyncLogs, {
         nmkrProjectId: campaign.nmkrProjectId,
@@ -363,11 +376,10 @@ export const syncCampaign = internalAction({
         const nftsToVerify = [];
 
         for (const nft of soldInventory) {
-          // Extract tokenname from sold/minted NFTs data (check both arrays)
-          const allSoldNFTs = [...soldNFTs, ...mintedNFTs];
-          const soldNFT = allSoldNFTs.find((n: any) => n.uid === nft.nftUid);
+          // Extract tokenname from soldNFTs data
+          const soldNFT = soldNFTs.find((n: any) => n.uid === nft.nftUid);
           if (!soldNFT || !soldNFT.tokenname) {
-            console.warn(`[SYNC] Skipping ${nft.name} - no tokenname found in sold/minted NFTs`);
+            console.warn(`[SYNC] Skipping ${nft.name} - no tokenname found in sold NFTs`);
             blockchainResults.push({
               nftName: nft.name,
               nftUid: nft.nftUid,
