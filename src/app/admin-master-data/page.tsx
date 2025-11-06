@@ -3318,7 +3318,7 @@ export default function AdminMasterDataPage() {
                     </div>
 
                     {/* Component Preview */}
-                    <div className="bg-black rounded-lg flex items-center justify-center min-h-[300px] overflow-hidden">
+                    <div className="relative bg-black rounded-lg flex items-center justify-center min-h-[300px] overflow-hidden">
                       <div className="w-full h-[300px]">
                         <PreLoader />
                       </div>

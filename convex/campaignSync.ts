@@ -22,7 +22,7 @@ const NMKR_API_BASE = "https://studio-api.nmkr.io";
 // HELPER: FETCH NFTs FROM NMKR BY STATUS
 // ==========================================
 
-async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" | "sold" | "minted") {
+async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" | "sold") {
   // Access environment variable inside the function (Convex requirement)
   const NMKR_API_KEY = process.env.NMKR_API_KEY;
 
@@ -169,7 +169,6 @@ export const syncCampaign = internalAction({
       let freeNFTs: any[] = [];
       let reservedNFTs: any[] = [];
       let soldNFTs: any[] = [];
-      let mintedNFTs: any[] = [];
       const nmkrErrors: string[] = [];
 
       try {
@@ -178,7 +177,6 @@ export const syncCampaign = internalAction({
           fetchNFTsFromNMKR(campaign.nmkrProjectId, "free"),
           fetchNFTsFromNMKR(campaign.nmkrProjectId, "reserved"),
           fetchNFTsFromNMKR(campaign.nmkrProjectId, "sold"),
-          fetchNFTsFromNMKR(campaign.nmkrProjectId, "minted"),
         ]);
 
         // Extract results or capture errors
@@ -210,22 +208,11 @@ export const syncCampaign = internalAction({
           console.error("[SYNC] Sold NFTs error:", results[3].reason);
         }
 
-        if (results[4].status === "fulfilled") {
-          mintedNFTs = results[4].value;
-        } else {
-          nmkrErrors.push(`Failed to fetch minted NFTs: ${results[4].reason}`);
-          console.error("[SYNC] Minted NFTs error:", results[4].reason);
-        }
-
-        // Combine soldNFTs and mintedNFTs - both count as "sold" in our system
-        const allSoldNFTs = [...soldNFTs, ...mintedNFTs];
-        console.log(`[SYNC] Total sold/minted NFTs: ${allSoldNFTs.length} (sold: ${soldNFTs.length}, minted: ${mintedNFTs.length})`);
-
         nmkrStats = {
-          total: freeNFTs.length + reservedNFTs.length + allSoldNFTs.length,
+          total: freeNFTs.length + reservedNFTs.length + soldNFTs.length,
           available: freeNFTs.length,
           reserved: reservedNFTs.length,
-          sold: allSoldNFTs.length,
+          sold: soldNFTs.length,
         };
 
         console.log("[SYNC] NMKR stats:", nmkrStats);
