@@ -3674,8 +3674,128 @@ function VariationCard({
         );
 
       case 'minimal-labels':
-        // Style 3: Ultra-compact with tiny labels
+        // Style 3: Ultra-compact with tiny labels and two-column stats layout
         const percentage = ((count / total) * 100).toFixed(3);
+
+        // Render stats in two-column layout based on selected style
+        const renderTwoColumnStats = () => {
+          switch (statsLayoutStyle) {
+            case 'inline-dot':
+              // Option 1: Simple inline with bullet separator
+              return (
+                <div className="flex items-center justify-center gap-2 text-sm text-white/80" style={{ fontFamily: 'Saira Condensed' }}>
+                  <span>Total Copies: {count}</span>
+                  <span className="text-white/40">•</span>
+                  <span>{percentage}%</span>
+                </div>
+              );
+
+            case 'vertical-divider':
+              // Option 2: Two columns with vertical line divider
+              return (
+                <div className="flex items-center justify-center gap-3">
+                  <div className="text-center">
+                    <div className="text-[9px] text-white/40 uppercase tracking-wider mb-0.5" style={{ fontFamily: 'Inter' }}>
+                      Total Copies
+                    </div>
+                    <div className="text-sm text-white font-semibold" style={{ fontFamily: 'Saira Condensed' }}>
+                      {count}
+                    </div>
+                  </div>
+                  <div className="h-8 w-px bg-white/20"></div>
+                  <div className="text-center">
+                    <div className="text-[9px] text-white/40 uppercase tracking-wider mb-0.5" style={{ fontFamily: 'Inter' }}>
+                      Percentage
+                    </div>
+                    <div className="text-sm text-white font-semibold" style={{ fontFamily: 'Saira Condensed' }}>
+                      {percentage}%
+                    </div>
+                  </div>
+                </div>
+              );
+
+            case 'badge-pills':
+              // Option 3: Each stat in its own badge/pill
+              return (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/40 border border-white/20 rounded-full">
+                    <span className="text-[9px] text-white/40 uppercase tracking-wider" style={{ fontFamily: 'Inter' }}>
+                      Copies
+                    </span>
+                    <span className="text-sm text-white font-semibold" style={{ fontFamily: 'Saira Condensed' }}>
+                      {count}
+                    </span>
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/40 border border-white/20 rounded-full">
+                    <span className="text-[9px] text-white/40 uppercase tracking-wider" style={{ fontFamily: 'Inter' }}>
+                      %
+                    </span>
+                    <span className="text-sm text-white font-semibold" style={{ fontFamily: 'Saira Condensed' }}>
+                      {percentage}
+                    </span>
+                  </div>
+                </div>
+              );
+
+            case 'label-above':
+              // Option 4: Labels above each value, side by side
+              return (
+                <div className="flex items-start justify-center gap-6">
+                  <div className="text-center">
+                    <div className="text-[9px] text-white/40 uppercase tracking-wider mb-1" style={{ fontFamily: 'Inter', letterSpacing: '0.2em' }}>
+                      Total Copies
+                    </div>
+                    <div className="text-base text-white font-bold" style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}>
+                      {count}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-[9px] text-white/40 uppercase tracking-wider mb-1" style={{ fontFamily: 'Inter', letterSpacing: '0.2em' }}>
+                      Percentage
+                    </div>
+                    <div className="text-base text-white font-bold" style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}>
+                      {percentage}%
+                    </div>
+                  </div>
+                </div>
+              );
+
+            case 'glow-separator':
+              // Option 5: Two columns with small glowing accent separator
+              const glowColor = useYellowGlow ? 'rgb(250, 182, 23)' : 'rgb(0, 212, 255)';
+              return (
+                <div className="flex items-center justify-center gap-3">
+                  <div className="text-right">
+                    <div className="text-[9px] text-white/40 uppercase tracking-wider mb-0.5" style={{ fontFamily: 'Inter' }}>
+                      Total
+                    </div>
+                    <div className="text-sm text-white font-semibold" style={{ fontFamily: 'Saira Condensed' }}>
+                      {count}
+                    </div>
+                  </div>
+                  <div
+                    className="w-1 h-1 rounded-full"
+                    style={{
+                      backgroundColor: glowColor,
+                      boxShadow: `0 0 8px ${glowColor}, 0 0 16px ${glowColor}`
+                    }}
+                  ></div>
+                  <div className="text-left">
+                    <div className="text-[9px] text-white/40 uppercase tracking-wider mb-0.5" style={{ fontFamily: 'Inter' }}>
+                      Percent
+                    </div>
+                    <div className="text-sm text-white font-semibold" style={{ fontFamily: 'Saira Condensed' }}>
+                      {percentage}%
+                    </div>
+                  </div>
+                </div>
+              );
+
+            default:
+              return null;
+          }
+        };
+
         return (
           <div className="text-center w-full space-y-2">
             <div className="text-lg text-white font-semibold" style={{ fontFamily: 'Inter' }}>
@@ -3687,10 +3807,7 @@ function VariationCard({
             >
               {title}
             </div>
-            <div className="text-sm text-white/80" style={{ fontFamily: 'Saira Condensed' }}>
-              {percentage}%
-            </div>
-            <div className="text-[10px] text-white/60">Total Copies: {count}</div>
+            {renderTwoColumnStats()}
             <div className="flex flex-col items-center justify-center gap-1 mt-3">
               <div
                 className={`${accentColor} text-4xl font-bold`}

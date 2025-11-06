@@ -13,9 +13,9 @@ export default function DiagnosticCampaignsPage() {
       <div className="mb-4 p-4 bg-gray-800 rounded">
         <h2 className="font-semibold mb-2">Environment Variable:</h2>
         <p className="font-mono text-sm">
-          NEXT_PUBLIC_NMKR_PROJECT_ID = c68dc8e9b2ca4e0e09c4a57ef85a794d
+          NEXT_PUBLIC_NMKR_PROJECT_ID = c68dc0e9-b2ca-4e0e-b9c4-a57ef85a794d
         </p>
-        <p className="text-xs text-gray-400 mt-1">Length: 32 characters</p>
+        <p className="text-xs text-gray-400 mt-1">Length: 36 characters (with hyphens)</p>
       </div>
 
       <div className="space-y-4">
@@ -49,7 +49,7 @@ export default function DiagnosticCampaignsPage() {
 
               <div className="font-semibold col-span-2 mt-2">Match with ENV?</div>
               <div className="col-span-2">
-                {campaign.nmkrProjectId === "c68dc8e9b2ca4e0e09c4a57ef85a794d" ? (
+                {campaign.nmkrProjectId === "c68dc0e9-b2ca-4e0e-b9c4-a57ef85a794d" ? (
                   <span className="text-green-500">✅ MATCHES</span>
                 ) : (
                   <span className="text-red-500">❌ DOES NOT MATCH</span>
