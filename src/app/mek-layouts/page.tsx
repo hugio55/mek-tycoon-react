@@ -158,7 +158,7 @@ export default function MekLayoutsPage() {
           {/* Separator */}
           <div className="my-4 border-t border-purple-500/30" />
           <h4 className="text-purple-400 text-[9px] font-bold uppercase tracking-wider mb-3">
-            Level Progress Style
+            Level
           </h4>
 
           {/* Dropdown: Level Progress Style */}
