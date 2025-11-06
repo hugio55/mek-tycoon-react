@@ -185,6 +185,231 @@ export default function MekProfileLightbox({
     }
   };
 
+  // Render Designation Card based on selected style
+  const renderDesignationCard = () => {
+    const mekData = {
+      mekNumber: '1234',
+      rank: '2985',
+      corporation: 'Apex Industries',
+      employeeId: 'Golden Striker'
+    };
+
+    // Option 1: Corner Brackets - Angular framing with glowing cyan borders
+    if (designationCardStyle === 'corner-brackets') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm">
+          {/* Corner Bracket SVG Elements */}
+          <svg className="absolute top-0 left-0 w-8 h-8 text-cyan-400" viewBox="0 0 32 32">
+            <path d="M 0 8 L 0 0 L 8 0" stroke="currentColor" strokeWidth="2" fill="none" />
+            <path d="M 0 0 L 8 8" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="none" />
+          </svg>
+          <svg className="absolute top-0 right-0 w-8 h-8 text-cyan-400" viewBox="0 0 32 32">
+            <path d="M 32 8 L 32 0 L 24 0" stroke="currentColor" strokeWidth="2" fill="none" />
+            <path d="M 32 0 L 24 8" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="none" />
+          </svg>
+          <svg className="absolute bottom-0 left-0 w-8 h-8 text-cyan-400" viewBox="0 0 32 32">
+            <path d="M 0 24 L 0 32 L 8 32" stroke="currentColor" strokeWidth="2" fill="none" />
+            <path d="M 0 32 L 8 24" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="none" />
+          </svg>
+          <svg className="absolute bottom-0 right-0 w-8 h-8 text-cyan-400" viewBox="0 0 32 32">
+            <path d="M 32 24 L 32 32 L 24 32" stroke="currentColor" strokeWidth="2" fill="none" />
+            <path d="M 32 32 L 24 24" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="none" />
+          </svg>
+
+          {/* Border glow effect */}
+          <div
+            className="absolute inset-0 border border-cyan-400/50 pointer-events-none"
+            style={{ boxShadow: '0 0 20px rgba(0, 212, 255, 0.3), inset 0 0 20px rgba(0, 212, 255, 0.1)' }}
+          />
+
+          {/* Content Grid */}
+          <div className="relative z-10 grid grid-cols-2 gap-3">
+            {/* Mekanism Number */}
+            <div>
+              <div className="text-[10px] text-cyan-400/60 uppercase tracking-widest font-mono mb-1">
+                MEKANISM
+              </div>
+              <div className="text-white text-xl font-mono font-bold">
+                #{mekData.mekNumber}
+              </div>
+            </div>
+
+            {/* Rank - Prominent with glow */}
+            <div className="text-right">
+              <div className="text-[10px] text-cyan-400/60 uppercase tracking-widest font-mono mb-1">
+                RANK
+              </div>
+              <div
+                className="text-cyan-400 text-2xl font-mono font-black"
+                style={{ textShadow: '0 0 15px rgba(0, 212, 255, 0.8)' }}
+              >
+                {mekData.rank}
+              </div>
+            </div>
+
+            {/* Corporation */}
+            <div className="col-span-2">
+              <div className="text-[10px] text-cyan-400/60 uppercase tracking-widest font-mono mb-1">
+                CORPORATION
+              </div>
+              <div className="text-white text-sm font-semibold">
+                {mekData.corporation}
+              </div>
+            </div>
+
+            {/* Employee ID */}
+            <div className="col-span-2">
+              <div className="text-[10px] text-cyan-400/60 uppercase tracking-widest font-mono mb-1">
+                EMPLOYEE ID
+              </div>
+              <div className="text-white text-base font-bold tracking-wide">
+                {mekData.employeeId}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Option 2: Split HUD - Left side large rank, right side stacked data
+    if (designationCardStyle === 'split-hud') {
+      return (
+        <div className="relative p-4 bg-gradient-to-r from-black/60 via-black/40 to-black/60 backdrop-blur-sm border border-purple-500/30">
+          {/* Background grid pattern */}
+          <div className="absolute inset-0 opacity-5" style={{
+            backgroundImage: 'linear-gradient(rgba(123, 47, 247, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(123, 47, 247, 0.3) 1px, transparent 1px)',
+            backgroundSize: '20px 20px'
+          }} />
+
+          <div className="relative z-10 flex gap-4">
+            {/* Left: Large Rank Display */}
+            <div className="flex-shrink-0 flex flex-col items-center justify-center px-6 py-4 bg-gradient-to-br from-purple-500/20 to-purple-700/10 border-l-4 border-purple-500">
+              <div className="text-[9px] text-purple-400 uppercase tracking-widest font-mono mb-2">
+                RANK
+              </div>
+              <div
+                className="text-5xl font-mono font-black bg-gradient-to-b from-purple-400 to-purple-600 bg-clip-text text-transparent"
+                style={{ textShadow: '0 0 20px rgba(123, 47, 247, 0.6)' }}
+              >
+                {mekData.rank}
+              </div>
+            </div>
+
+            {/* Vertical Divider with glow */}
+            <div className="w-px bg-gradient-to-b from-transparent via-purple-500/50 to-transparent"
+                 style={{ boxShadow: '0 0 10px rgba(123, 47, 247, 0.5)' }}
+            />
+
+            {/* Right: Stacked Technical Data */}
+            <div className="flex-1 space-y-3 py-2">
+              {/* Mekanism */}
+              <div className="flex items-baseline gap-2">
+                <div className="text-[9px] text-purple-400/70 uppercase tracking-widest font-mono w-24">
+                  MEKANISM
+                </div>
+                <div className="text-white text-lg font-mono font-bold">
+                  #{mekData.mekNumber}
+                </div>
+              </div>
+
+              {/* Corporation */}
+              <div className="flex items-baseline gap-2">
+                <div className="text-[9px] text-purple-400/70 uppercase tracking-widest font-mono w-24">
+                  CORP
+                </div>
+                <div className="text-white text-sm font-semibold">
+                  {mekData.corporation}
+                </div>
+              </div>
+
+              {/* Employee ID */}
+              <div className="flex items-baseline gap-2">
+                <div className="text-[9px] text-purple-400/70 uppercase tracking-widest font-mono w-24">
+                  EMPLOYEE
+                </div>
+                <div className="text-white text-sm font-bold">
+                  {mekData.employeeId}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Option 3: Data Terminal - Full-width horizontal bars with scanline overlay
+    if (designationCardStyle === 'data-terminal') {
+      return (
+        <div className="relative p-0 bg-black/50 backdrop-blur-sm border border-cyan-500/20 overflow-hidden">
+          {/* Scanline overlay effect */}
+          <div className="absolute inset-0 pointer-events-none" style={{
+            backgroundImage: 'repeating-linear-gradient(0deg, rgba(0, 212, 255, 0.03) 0px, transparent 1px, transparent 2px, rgba(0, 212, 255, 0.03) 3px)',
+            animation: 'scanline 8s linear infinite'
+          }} />
+
+          <div className="relative z-10">
+            {/* Mekanism Number Bar */}
+            <div className="flex items-center border-b border-cyan-500/20 px-4 py-3 bg-black/20 hover:bg-cyan-500/5 transition-colors">
+              <div className="w-1 h-8 bg-cyan-400 mr-3" style={{ boxShadow: '0 0 10px rgba(0, 212, 255, 0.5)' }} />
+              <div className="flex-1">
+                <div className="text-[9px] text-cyan-400/60 uppercase tracking-widest font-mono mb-0.5">
+                  MEKANISM
+                </div>
+                <div className="text-white text-base font-mono font-bold">
+                  #{mekData.mekNumber}
+                </div>
+              </div>
+            </div>
+
+            {/* Rank Bar - Emphasized */}
+            <div className="flex items-center border-b border-cyan-500/20 px-4 py-3 bg-gradient-to-r from-cyan-500/10 to-transparent hover:from-cyan-500/15 transition-colors">
+              <div className="w-1 h-8 bg-cyan-400 mr-3" style={{ boxShadow: '0 0 10px rgba(0, 212, 255, 0.5)' }} />
+              <div className="flex-1">
+                <div className="text-[9px] text-cyan-400/60 uppercase tracking-widest font-mono mb-0.5">
+                  RANK
+                </div>
+                <div
+                  className="text-cyan-400 text-2xl font-mono font-black"
+                  style={{ textShadow: '0 0 15px rgba(0, 212, 255, 0.8)' }}
+                >
+                  {mekData.rank}
+                </div>
+              </div>
+            </div>
+
+            {/* Corporation Bar */}
+            <div className="flex items-center border-b border-cyan-500/20 px-4 py-3 bg-black/20 hover:bg-cyan-500/5 transition-colors">
+              <div className="w-1 h-8 bg-cyan-400 mr-3" style={{ boxShadow: '0 0 10px rgba(0, 212, 255, 0.5)' }} />
+              <div className="flex-1">
+                <div className="text-[9px] text-cyan-400/60 uppercase tracking-widest font-mono mb-0.5">
+                  CORPORATION
+                </div>
+                <div className="text-white text-sm font-mono font-semibold">
+                  {mekData.corporation}
+                </div>
+              </div>
+            </div>
+
+            {/* Employee ID Bar */}
+            <div className="flex items-center px-4 py-3 bg-black/20 hover:bg-cyan-500/5 transition-colors">
+              <div className="w-1 h-8 bg-cyan-400 mr-3" style={{ boxShadow: '0 0 10px rgba(0, 212, 255, 0.5)' }} />
+              <div className="flex-1">
+                <div className="text-[9px] text-cyan-400/60 uppercase tracking-widest font-mono mb-0.5">
+                  EMPLOYEE ID
+                </div>
+                <div className="text-white text-base font-mono font-bold tracking-wide">
+                  {mekData.employeeId}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   // Mount portal and lock body scroll
   useEffect(() => {
     setMounted(true);
@@ -264,75 +489,9 @@ export default function MekProfileLightbox({
                   />
                 </div>
 
-                {/* MOBILE: Primary Info Panel (Designation - Industrial ID Card) */}
-                <div className="lg:hidden mek-card-industrial mek-border-sharp-gold">
-                  <div className="relative overflow-hidden">
-                    {/* Hazard stripe header */}
-                    <div className="h-8 relative overflow-hidden mb-4" style={{
-                      backgroundImage: 'repeating-linear-gradient(45deg, #fab617 0, #fab617 10px, #000 10px, #000 20px)',
-                    }}>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-black font-black text-xs tracking-widest bg-yellow-400/90 px-3 py-0.5">
-                          MEK DESIGNATION
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Main content area with scratches overlay */}
-                    <div className="relative px-4 pb-4">
-                      <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-
-                      {/* Top row: Mekanism # and Rank side-by-side */}
-                      <div className="grid grid-cols-2 gap-2 mb-3">
-                        {/* Mekanism Number - Badge Style */}
-                        <div className="bg-black/60 border-l-4 border-yellow-500 p-2 relative">
-                          <div className="text-[9px] text-yellow-400 uppercase tracking-widest font-bold mb-0.5">
-                            UNIT
-                          </div>
-                          <div className="text-white font-bold text-base font-mono">
-                            #1234
-                          </div>
-                        </div>
-
-                        {/* Rank - Prominent Badge */}
-                        <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border-2 border-yellow-500/50 p-2 relative">
-                          <div className="text-[9px] text-yellow-300 uppercase tracking-widest font-bold mb-0.5">
-                            RANK
-                          </div>
-                          <div className="text-yellow-400 font-black text-xl leading-none font-mono" style={{
-                            textShadow: '0 0 10px rgba(250, 182, 23, 0.5)'
-                          }}>
-                            2985
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Corporation - Full width bar */}
-                      <div className="bg-black/40 border border-yellow-500/30 border-dashed p-2 mb-3 relative">
-                        <div className="flex items-center justify-between">
-                          <div className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">
-                            CORPORATION
-                          </div>
-                          <div className="text-white text-sm font-semibold">
-                            Apex Industries
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Employee ID - Name plate style */}
-                      <div className="relative">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500"></div>
-                        <div className="bg-gradient-to-r from-yellow-500/10 to-transparent border border-yellow-500/20 p-2.5 pl-3">
-                          <div className="text-[9px] text-yellow-400 uppercase tracking-widest font-bold mb-1">
-                            EMPLOYEE ID
-                          </div>
-                          <div className="text-white font-bold text-sm tracking-wide">
-                            Golden Striker
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                {/* MOBILE: Primary Info Panel (Designation - Dynamic Style) */}
+                <div className="lg:hidden">
+                  {renderDesignationCard()}
                 </div>
 
                 {/* MOBILE: Level & Gold Panel (grouped together) */}
@@ -394,76 +553,8 @@ export default function MekProfileLightbox({
 
                   {/* LEFT SIDEBAR */}
                   <div className="lg:col-span-3 space-y-4">
-                    {/* Designation Section - Industrial ID Card Design */}
-                    <div className={getCardClasses()}>
-                      <div className="relative overflow-hidden">
-                        {/* Hazard stripe header */}
-                        <div className="h-8 relative overflow-hidden mb-4" style={{
-                          backgroundImage: 'repeating-linear-gradient(45deg, #fab617 0, #fab617 10px, #000 10px, #000 20px)',
-                        }}>
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-black font-black text-xs tracking-widest bg-yellow-400/90 px-3 py-0.5">
-                              MEK DESIGNATION
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Main content area with scratches overlay */}
-                        <div className="relative">
-                          <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-
-                          {/* Top row: Mekanism # and Rank side-by-side */}
-                          <div className="grid grid-cols-2 gap-2 mb-3">
-                            {/* Mekanism Number - Badge Style */}
-                            <div className="bg-black/60 border-l-4 border-yellow-500 p-2 relative">
-                              <div className="text-[9px] text-yellow-400 uppercase tracking-widest font-bold mb-0.5">
-                                UNIT
-                              </div>
-                              <div className="text-white font-bold text-base font-mono">
-                                #1234
-                              </div>
-                            </div>
-
-                            {/* Rank - Prominent Badge */}
-                            <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border-2 border-yellow-500/50 p-2 relative">
-                              <div className="text-[9px] text-yellow-300 uppercase tracking-widest font-bold mb-0.5">
-                                RANK
-                              </div>
-                              <div className="text-yellow-400 font-black text-2xl leading-none font-mono" style={{
-                                textShadow: '0 0 10px rgba(250, 182, 23, 0.5)'
-                              }}>
-                                2985
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Corporation - Full width bar */}
-                          <div className="bg-black/40 border border-yellow-500/30 border-dashed p-2 mb-3 relative">
-                            <div className="flex items-center justify-between">
-                              <div className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">
-                                CORPORATION
-                              </div>
-                              <div className="text-white text-sm font-semibold">
-                                Apex Industries
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Employee ID - Name plate style */}
-                          <div className="relative">
-                            <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500"></div>
-                            <div className="bg-gradient-to-r from-yellow-500/10 to-transparent border border-yellow-500/20 p-2.5 pl-3">
-                              <div className="text-[9px] text-yellow-400 uppercase tracking-widest font-bold mb-1">
-                                EMPLOYEE ID
-                              </div>
-                              <div className="text-white font-bold text-sm tracking-wide">
-                                Golden Striker
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    {/* Designation Section - Dynamic Style */}
+                    {renderDesignationCard()}
 
                     {/* Employment Status Toggle */}
                     <div className={getCardClasses()}>

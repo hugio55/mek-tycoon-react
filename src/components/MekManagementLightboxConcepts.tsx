@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import MekProfileLightbox, { DesignationCardStyle } from "@/components/MekProfileLightbox";
 
 // Mock data for demonstration
 const mockMekData = {
@@ -185,16 +186,16 @@ function MekManagementConcept2({ onClose }: { onClose: () => void }) {
 
 // CONCEPT 3: Centered Minimalism (User's Current Favorite - IMPROVED)
 // Clean, centered, balanced design with medium transparency
-function MekManagementConcept3({ onClose }: { onClose: () => void }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, []);
+// Now uses MekProfileLightbox with designation card style selection
+function MekManagementConcept3({ onClose, designationCardStyle }: { onClose: () => void; designationCardStyle?: DesignationCardStyle }) {
+  return (
+    <MekProfileLightbox
+      isOpen={true}
+      onClose={onClose}
+      designationCardStyle={designationCardStyle || 'corner-brackets'}
+    />
+  );
+}
 
   const modalContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center" onClick={onClose}>
@@ -881,6 +882,7 @@ function MekManagementConcept6({ onClose }: { onClose: () => void }) {
 export default function MekManagementLightboxConcepts() {
   const [showConcepts, setShowConcepts] = useState(false);
   const [activeConcept, setActiveConcept] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(3);
+  const [designationCardStyle, setDesignationCardStyle] = useState<'corner-brackets' | 'split-hud' | 'data-terminal'>('corner-brackets');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -976,6 +978,22 @@ export default function MekManagementLightboxConcepts() {
             >
               Concept 7: Cards
             </button>
+
+            {/* Designation Card Style Selector */}
+            <div className="mt-4 pt-4 border-t border-gray-600/50">
+              <div className="text-[9px] text-gray-400 uppercase tracking-wider mb-2 px-2">
+                Designation Card Style
+              </div>
+              <select
+                value={designationCardStyle}
+                onChange={(e) => setDesignationCardStyle(e.target.value as 'corner-brackets' | 'split-hud' | 'data-terminal')}
+                className="w-full px-3 py-2 text-xs font-bold uppercase bg-black/80 text-cyan-400 border-2 border-cyan-500/50 rounded hover:border-cyan-400 transition-all cursor-pointer"
+              >
+                <option value="corner-brackets">Corner Brackets</option>
+                <option value="split-hud">Split HUD</option>
+                <option value="data-terminal">Data Terminal</option>
+              </select>
+            </div>
           </div>
         )}
       </div>
@@ -994,7 +1012,7 @@ export default function MekManagementLightboxConcepts() {
         <>
           {activeConcept === 1 && <MekManagementConcept1 onClose={() => setShowConcepts(false)} />}
           {activeConcept === 2 && <MekManagementConcept2 onClose={() => setShowConcepts(false)} />}
-          {activeConcept === 3 && <MekManagementConcept3 onClose={() => setShowConcepts(false)} />}
+          {activeConcept === 3 && <MekManagementConcept3 onClose={() => setShowConcepts(false)} designationCardStyle={designationCardStyle} />}
           {activeConcept === 4 && <MekManagementConcept4 onClose={() => setShowConcepts(false)} />}
           {activeConcept === 5 && <MekManagementConcept5 onClose={() => setShowConcepts(false)} />}
           {activeConcept === 6 && <MekManagementConcept6 onClose={() => setShowConcepts(false)} />}
