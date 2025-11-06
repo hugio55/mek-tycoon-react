@@ -38,6 +38,8 @@ export default function ClaudeManagerAdmin() {
   const [filterLocation, setFilterLocation] = useState<'all' | 'project' | 'parent' | 'computer'>('all');
   const [deleteConfirm, setDeleteConfirm] = useState<{ path: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'name'>('newest');
 
   // FileCard component for rendering individual files
   const FileCard = ({ file }: { file: ClaudeFile }) => (
