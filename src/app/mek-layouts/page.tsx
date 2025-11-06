@@ -217,6 +217,16 @@ export default function MekLayoutsPage() {
                 <option value="Michroma">Michroma</option>
                 <option value="Saira Condensed">Saira Condensed</option>
                 <option value="Teko">Teko</option>
+                <option value="Poiret One">Poiret One (Ultra Thin)</option>
+                <option value="Abel">Abel (Condensed Thin)</option>
+                <option value="Josefin Sans">Josefin Sans (Elegant)</option>
+                <option value="Economica">Economica (Very Thin)</option>
+                <option value="Advent Pro">Advent Pro (Modern Thin)</option>
+                <option value="Pathway Gothic One">Pathway Gothic One</option>
+                <option value="Yanone Kaffeesatz">Yanone Kaffeesatz</option>
+                <option value="Armata">Armata (Futuristic)</option>
+                <option value="Archivo Narrow">Archivo Narrow</option>
+                <option value="Julius Sans One">Julius Sans One</option>
               </select>
             </div>
 

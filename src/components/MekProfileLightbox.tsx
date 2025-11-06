@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import "@/styles/global-design-system.css";
 import MechanicalToggle from "@/components/controls/MechanicalToggle";
+import CloseButton from "@/components/controls/CloseButton";
 
 export type CardInteriorStyle = 'compact' | 'spacious' | 'modern' | 'tech-badge' | 'cyber-compact' | 'tactical-display';
 export type VariationCardStyle = 'clean-frames' | 'image-focus' | 'subtle-accent' | 'no-cards-direct';
@@ -909,12 +910,9 @@ export default function MekProfileLightbox({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-50 flex items-center justify-center hover:scale-110 transition-transform"
-        >
-          <span className={`${getPrimaryColor()} text-3xl font-bold`} style={{ textShadow: `0 0 10px ${styleVariation === 'variation1' ? 'rgba(59, 130, 246, 0.5)' : styleVariation === 'variation2' ? 'rgba(168, 85, 247, 0.5)' : 'rgba(250, 182, 23, 0.5)'}` }}>×</span>
-        </button>
+        <div className="absolute top-4 right-4 z-50">
+          <CloseButton onClick={onClose} />
+        </div>
 
         {/* Scrollable Content */}
         <div className="w-full flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
