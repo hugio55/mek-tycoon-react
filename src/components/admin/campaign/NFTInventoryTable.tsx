@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
@@ -20,6 +20,25 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
     api.commemorativeCampaigns.getCampaignInventory,
     { campaignId }
   );
+
+  // DEBUG: Log when inventory data changes
+  useEffect(() => {
+    if (inventory) {
+      const timestamp = new Date().toISOString().split('T')[1].slice(0, -1);
+      console.log(`[🔄INVENTORY-UI ${timestamp}] Inventory data received:`, {
+        total: inventory.length,
+        statuses: {
+          available: inventory.filter(n => n.status === 'available').length,
+          reserved: inventory.filter(n => n.status === 'reserved').length,
+          sold: inventory.filter(n => n.status === 'sold').length,
+        },
+        sample: inventory.slice(0, 3).map(n => ({
+          name: n.name,
+          status: n.status,
+        }))
+      });
+    }
+  }, [inventory]);
 
   const batchUpdateImages = useMutation(api.commemorativeCampaigns.batchUpdateNFTImages);
 

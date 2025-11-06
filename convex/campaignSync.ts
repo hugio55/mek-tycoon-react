@@ -325,26 +325,30 @@ export const syncCampaign = internalAction({
 
       console.log(`[SYNC] === UPDATES COMPLETE: ${updateResults.filter(r => r.success).length} succeeded, ${updateResults.filter(r => !r.success).length} failed ===`);
 
-      // ===== STEP 6: REFRESH CAMPAIGN COUNTERS =====
-      await ctx.runMutation(api.commemorativeCampaigns.syncCampaignCounters, {
+      // ===== STEP 6: REFRESH CAMPAIGN COUNTERS AND GET UPDATED STATS =====
+      // The mutation returns the fresh counters it just calculated within its own transaction
+      const counterResult = await ctx.runMutation(api.commemorativeCampaigns.syncCampaignCounters, {
         campaignId: args.campaignId,
       });
 
-      console.log("[SYNC] Campaign counters refreshed");
+      console.log("[SYNC] Campaign counters refreshed and returned from mutation");
+      console.log("[SYNC] Raw counter result:", counterResult);
 
-      // ===== STEP 6B: RE-FETCH DATABASE STATS AFTER UPDATES =====
-      const updatedInventory = await ctx.runQuery(api.commemorativeCampaigns.getCampaignInventory, {
-        campaignId: args.campaignId,
-      });
-
+      // Use the stats returned directly from the mutation (same transaction as calculation)
       const updatedDbStats = {
-        total: updatedInventory.length,
-        available: updatedInventory.filter((nft) => nft.status === "available").length,
-        reserved: updatedInventory.filter((nft) => nft.status === "reserved").length,
-        sold: updatedInventory.filter((nft) => nft.status === "sold").length,
+        total: counterResult.counters.totalNFTs,
+        available: counterResult.counters.availableNFTs,
+        reserved: counterResult.counters.reservedNFTs,
+        sold: counterResult.counters.soldNFTs,
       };
 
-      console.log("[SYNC] Updated database stats after mutations:", updatedDbStats);
+      console.log("[SYNC] Updated database stats from mutation result:", updatedDbStats);
+      console.log("[SYNC] Comparison - Before updates:", dbStats);
+      console.log("[SYNC] Comparison - After updates:", updatedDbStats);
+      console.log("[SYNC] Changes detected:", {
+        availableChange: updatedDbStats.available - dbStats.available,
+        soldChange: updatedDbStats.sold - dbStats.sold,
+      });
 
       // ===== STEP 7: GET WEBHOOK ACTIVITY =====
       const webhookLogs = await ctx.runQuery(api.nmkrSync.getRecentSyncLogs, {
@@ -498,7 +502,8 @@ export const syncCampaign = internalAction({
         // NMKR Comparison
         nmkrStats,
         nmkrErrors: nmkrErrors.length > 0 ? nmkrErrors : undefined, // Include NMKR errors if any
-        dbStats,
+        dbStats: updatedDbStats, // Use updated stats from mutation, not pre-sync stats
+        dbStatsBeforeSync: dbStats, // Include pre-sync stats for comparison
         discrepancies,
 
         // Sync Actions
