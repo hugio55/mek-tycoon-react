@@ -1970,11 +1970,12 @@ export default function MekRateLoggingPage() {
       }
 
       // Convert payment address from hex to bech32 and store for blockchain verification
+      let primaryPaymentAddress = '';
       if (!paymentAddressHex) {
         console.warn('[Wallet Connect] No payment addresses found in wallet');
         setPaymentAddress('');
       } else {
-        const primaryPaymentAddress = hexToBech32(paymentAddressHex);
+        primaryPaymentAddress = hexToBech32(paymentAddressHex);
         setPaymentAddress(primaryPaymentAddress);
         console.log('[Wallet Connect] Stored payment address for verification:', primaryPaymentAddress.substring(0, 20) + '...');
       }
@@ -2067,13 +2068,13 @@ export default function MekRateLoggingPage() {
       console.log('[TRACE-CALL-SAVE] About to call saveSessionSecurely with:', {
         walletAddress: stakeAddress?.slice(0, 12) + '...',
         stakeAddress: stakeAddress?.slice(0, 12) + '...',
-        paymentAddress: primaryPaymentAddress?.slice(0, 12) + '...',
+        paymentAddress: paymentAddress?.slice(0, 12) + '...',
         walletName: wallet.name,
         hasNonce: !!(nonce || ''),
         hasSessionId: !!sessionId,
         walletAddressIsUndefined: stakeAddress === undefined,
         stakeAddressIsUndefined: stakeAddress === undefined,
-        paymentAddressIsUndefined: primaryPaymentAddress === undefined,
+        paymentAddressIsUndefined: paymentAddress === undefined,
         timestamp: new Date().toISOString()
       });
       await saveSessionSecurely({
@@ -2082,7 +2083,7 @@ export default function MekRateLoggingPage() {
         walletName: wallet.name,
         sessionId,
         nonce: nonce || '', // Use nonce from verification
-        paymentAddress: primaryPaymentAddress,
+        paymentAddress: paymentAddress,
         cachedMeks: meks,
         updateState: (update) => {
           if (update.sessionEncrypted) {

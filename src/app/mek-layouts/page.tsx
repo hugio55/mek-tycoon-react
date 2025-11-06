@@ -279,6 +279,10 @@ export default function MekLayoutsPage() {
               <option value="hero-level-v1">Hero Level V1 (Massive Glow)</option>
               <option value="hero-level-v2">LVL Display</option>
               <option value="hero-level-v3">Hero Level V3 (Asymmetric)</option>
+              <option value="card-slide-up">Card: Slide-Up</option>
+              <option value="card-floating-badge">Card: Floating Badge</option>
+              <option value="card-inset-panel">Card: Inset Panel</option>
+              <option value="card-tech-plate">Card: Tech Plate</option>
             </select>
           </div>
         </div>
