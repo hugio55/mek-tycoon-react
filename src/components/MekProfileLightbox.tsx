@@ -7,7 +7,6 @@ import MechanicalToggle from "@/components/controls/MechanicalToggle";
 import CloseButton from "@/components/controls/CloseButton";
 
 export type CardInteriorStyle = 'compact' | 'spacious' | 'modern' | 'tech-badge' | 'cyber-compact' | 'tactical-display';
-export type VariationCardStyle = 'clean-frames' | 'image-focus' | 'subtle-accent' | 'no-cards-direct';
 export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-terminal';
 
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
@@ -22,8 +21,6 @@ interface MekProfileLightboxProps {
   onCardInteriorStyleChange?: (style: CardInteriorStyle) => void;
   buffDetailsLayout?: BuffDetailsLayout;
   onBuffDetailsLayoutChange?: (layout: BuffDetailsLayout) => void;
-  variationCardStyle?: VariationCardStyle;
-  onVariationCardStyleChange?: (style: VariationCardStyle) => void;
   designationCardStyle?: DesignationCardStyle;
   onDesignationCardStyleChange?: (style: DesignationCardStyle) => void;
   cumulativeGoldStyle?: CumulativeGoldStyle;
@@ -55,8 +52,6 @@ export default function MekProfileLightbox({
   onCardInteriorStyleChange,
   buffDetailsLayout = 'classic',
   onBuffDetailsLayoutChange,
-  variationCardStyle = 'clean-frames',
-  onVariationCardStyleChange,
   designationCardStyle = 'corner-brackets',
   onDesignationCardStyleChange,
   cumulativeGoldStyle = 'stacked-emphasis',
@@ -581,11 +576,18 @@ export default function MekProfileLightbox({
               </div>
             </div>
 
-            {/* Current Owner - BIG centered number */}
+            {/* Current Corp - BIG centered number */}
             <div className="text-center">
+              <div className="text-[9px] text-gray-400 uppercase tracking-wider font-mono mb-1">
+                Current Corp
+              </div>
               <div
-                className={`${accentColor} text-4xl font-mono font-black`}
-                style={{ textShadow: textShadowGlow }}
+                className={`${accentColor} text-4xl`}
+                style={{
+                  textShadow: textShadowGlow,
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200
+                }}
               >
                 {formatGold(currentOwnerGold)}
               </div>
@@ -597,7 +599,10 @@ export default function MekProfileLightbox({
                 <span className="text-[9px] text-gray-500 uppercase tracking-wider font-mono">
                   all-time
                 </span>
-                <span className="text-white text-sm font-mono font-semibold">
+                <span className="text-white text-sm" style={{
+                  fontFamily: 'Inter',
+                  fontWeight: 400
+                }}>
                   {formatGold(allTimeGold)}
                 </span>
               </div>
@@ -1238,28 +1243,20 @@ export default function MekProfileLightbox({
                   </div>
                 </div>
 
-                {/* Variation Cards - Responsive Grid */}
-                <div className={variationCardStyle === 'no-cards-direct' ? '' : 'mek-card-industrial mek-border-sharp-gold p-4'}>
-                  {variationCardStyle !== 'no-cards-direct' && (
-                    <div className="mek-label-uppercase mb-3">VARIATION CARDS</div>
-                  )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    <VariationCard
-                      title="HEAD VARIATION"
-                      imagePath="/variation-images-art-400px/ae1-gn3-ev1.png"
-                      cardStyle={variationCardStyle}
-                    />
-                    <VariationCard
-                      title="BODY VARIATION"
-                      imagePath="/variation-images-art-400px/ak3-aa5-mo1.png"
-                      cardStyle={variationCardStyle}
-                    />
-                    <VariationCard
-                      title="TRAIT VARIATION"
-                      imagePath="/variation-images-art-400px/ar1-at1-nm1.png"
-                      cardStyle={variationCardStyle}
-                    />
-                  </div>
+                {/* Variation Cards - Responsive Grid - Direct on Lightbox Style (no outer card) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  <VariationCard
+                    title="HEAD VARIATION"
+                    imagePath="/variation-images-art-400px/ae1-gn3-ev1.png"
+                  />
+                  <VariationCard
+                    title="BODY VARIATION"
+                    imagePath="/variation-images-art-400px/ak3-aa5-mo1.png"
+                  />
+                  <VariationCard
+                    title="TRAIT VARIATION"
+                    imagePath="/variation-images-art-400px/ar1-at1-nm1.png"
+                  />
                 </div>
 
                 {/* Abilities Tree */}
@@ -1283,194 +1280,49 @@ export default function MekProfileLightbox({
   return createPortal(modalContent, document.body);
 }
 
-// Reusable Variation Card Component with 3 Style Options
-// All styles now have images floating directly on the base card, no inner containers
-function VariationCard({ title, imagePath, cardStyle = 'clean-frames' }: { title: string; imagePath?: string; cardStyle?: VariationCardStyle }) {
-
-  // Option 1: Elevated Float - Image overlays card with drop shadow, creating floating effect
-  if (cardStyle === 'clean-frames') {
-    return (
-      <div className="bg-black/30 border-2 border-yellow-500/40 p-4 relative overflow-visible">
-        {/* Scratches overlay on base card */}
-        <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-
-        {/* Image floating ON the card with drop shadow */}
-        <div className="relative -mt-2 mb-3">
-          {imagePath ? (
-            <img
-              src={imagePath}
-              alt={title}
-              className="w-full h-44 object-contain relative z-20"
-              style={{
-                filter: 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.7))'
-              }}
-            />
-          ) : (
-            <div className="w-full h-44 flex items-center justify-center">
-              <span className="text-gray-500 text-xs">Image</span>
-            </div>
-          )}
-        </div>
-
-        <div className="mek-label-uppercase mb-2 text-[10px] relative z-10">{title}</div>
-        <div className="text-white text-sm mb-1 relative z-10">Variation Name</div>
-        <div className="text-gray-400 text-xs mb-3 relative z-10">3 of 4000</div>
-
-        <div className="space-y-1 text-xs relative z-10">
-          <div className="flex justify-between">
-            <span className="text-gray-400">Base:</span>
-            <span className="text-white">100</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Bonus:</span>
-            <span className="text-green-400">+25</span>
-          </div>
-          <div className="flex justify-between border-t border-yellow-500/20 pt-1 mt-1">
-            <span className="text-gray-400">Total:</span>
-            <span className="mek-value-primary font-bold">125</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Option 2: Centered Overlay - Image positioned in center of card with glow
-  if (cardStyle === 'image-focus') {
-    return (
-      <div className="bg-gradient-to-b from-black/20 via-black/40 to-black/20 border border-yellow-500/30 p-4 relative overflow-hidden min-h-[360px] flex flex-col">
-        {/* Hazard stripe accent at top */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent"></div>
-
-        {/* Image positioned directly on card with glow */}
-        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-          {imagePath ? (
-            <img
-              src={imagePath}
-              alt={title}
-              className="w-full max-w-[85%] h-auto object-contain"
-              style={{
-                filter: 'drop-shadow(0 0 20px rgba(250, 182, 23, 0.4))'
-              }}
-            />
-          ) : (
+// Reusable Variation Card Component - Direct on Lightbox Style with Yellow Glow
+// Images and text float directly on lightbox base layer, NO card containers
+function VariationCard({ title, imagePath }: { title: string; imagePath?: string }) {
+  return (
+    <div className="flex flex-col items-center relative">
+      {/* Image floating directly on lightbox background with yellow glow behind */}
+      <div className="relative mb-3">
+        {imagePath ? (
+          <img
+            src={imagePath}
+            alt={title}
+            className="w-full h-48 object-contain scale-[0.7]"
+            style={{
+              filter: 'drop-shadow(0 0 25px rgba(250, 182, 23, 0.6)) drop-shadow(0 0 40px rgba(250, 182, 23, 0.3))'
+            }}
+          />
+        ) : (
+          <div className="w-full h-48 flex items-center justify-center">
             <span className="text-gray-500 text-xs">Image</span>
-          )}
-        </div>
-
-        {/* Info at bottom of card */}
-        <div className="mt-auto relative z-20 bg-black/60 backdrop-blur-sm p-3 -m-4 border-t border-yellow-500/30">
-          <div className="mek-label-uppercase mb-1 text-[10px] text-center">{title}</div>
-          <div className="text-white text-sm mb-1 text-center">Variation Name</div>
-          <div className="text-gray-400 text-xs mb-2 text-center">3 of 4000</div>
-
-          <div className="space-y-1 text-xs">
-            <div className="flex justify-between">
-              <span className="text-gray-400">Base:</span>
-              <span className="text-white">100</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Bonus:</span>
-              <span className="text-green-400">+25</span>
-            </div>
-            <div className="flex justify-between border-t border-yellow-500/20 pt-1 mt-1">
-              <span className="text-gray-400">Total:</span>
-              <span className="mek-value-primary font-bold">125</span>
-            </div>
           </div>
+        )}
+      </div>
+
+      {/* All text content sitting directly on lightbox surface - no card background */}
+      <div className="mek-label-uppercase mb-1 text-[10px] text-center text-yellow-400">{title}</div>
+      <div className="text-white text-sm mb-1 text-center">Variation Name</div>
+      <div className="text-gray-400 text-xs mb-3 text-center">3 of 4000</div>
+
+      {/* Stats section - minimal styling, floating on lightbox */}
+      <div className="space-y-1 text-xs w-full max-w-[200px]">
+        <div className="flex justify-between">
+          <span className="text-gray-400">Base:</span>
+          <span className="text-white">100</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-gray-400">Bonus:</span>
+          <span className="text-green-400">+25</span>
+        </div>
+        <div className="flex justify-between border-t border-yellow-500/20 pt-1 mt-1">
+          <span className="text-gray-400">Total:</span>
+          <span className="text-yellow-400 font-bold">125</span>
         </div>
       </div>
-    );
-  }
-
-  // Option 3: Borderless Float - Minimal card with image sitting directly on surface
-  if (cardStyle === 'subtle-accent') {
-    return (
-      <div className="bg-black/15 backdrop-blur-sm border border-yellow-500/15 p-3 relative overflow-hidden rounded-lg">
-        {/* Subtle gradient wash */}
-        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/3 via-transparent to-black/20 pointer-events-none"></div>
-
-        {/* Image sits directly on card surface, no container */}
-        <div className="relative mb-3">
-          {imagePath ? (
-            <img
-              src={imagePath}
-              alt={title}
-              className="w-full h-40 object-contain relative z-10 opacity-95"
-            />
-          ) : (
-            <div className="w-full h-40 flex items-center justify-center">
-              <span className="text-gray-500 text-xs">Image</span>
-            </div>
-          )}
-        </div>
-
-        <div className="mek-label-uppercase mb-2 text-[10px] relative z-10 text-yellow-400/60">{title}</div>
-        <div className="text-white/90 text-sm mb-1 relative z-10">Variation Name</div>
-        <div className="text-gray-400/60 text-xs mb-3 relative z-10">3 of 4000</div>
-
-        <div className="space-y-1 text-xs relative z-10">
-          <div className="flex justify-between">
-            <span className="text-gray-400/60">Base:</span>
-            <span className="text-white/90">100</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400/60">Bonus:</span>
-            <span className="text-green-400/80">+25</span>
-          </div>
-          <div className="flex justify-between border-t border-yellow-500/15 pt-1 mt-1">
-            <span className="text-gray-400/60">Total:</span>
-            <span className="text-yellow-400/90 font-bold">125</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Option 4: No Cards Direct - Images and text float directly on lightbox base layer, NO card containers
-  if (cardStyle === 'no-cards-direct') {
-    return (
-      <div className="flex flex-col items-center relative">
-        {/* Image floating directly on lightbox background - no card wrapper at all */}
-        <div className="relative mb-3">
-          {imagePath ? (
-            <img
-              src={imagePath}
-              alt={title}
-              className="w-full h-48 object-contain scale-[0.7]"
-              style={{
-                filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))'
-              }}
-            />
-          ) : (
-            <div className="w-full h-48 flex items-center justify-center">
-              <span className="text-gray-500 text-xs">Image</span>
-            </div>
-          )}
-        </div>
-
-        {/* All text content sitting directly on lightbox surface - no card background */}
-        <div className="mek-label-uppercase mb-1 text-[10px] text-center text-yellow-400">{title}</div>
-        <div className="text-white text-sm mb-1 text-center">Variation Name</div>
-        <div className="text-gray-400 text-xs mb-3 text-center">3 of 4000</div>
-
-        {/* Stats section - minimal styling, floating on lightbox */}
-        <div className="space-y-1 text-xs w-full max-w-[200px]">
-          <div className="flex justify-between">
-            <span className="text-gray-400">Base:</span>
-            <span className="text-white">100</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Bonus:</span>
-            <span className="text-green-400">+25</span>
-          </div>
-          <div className="flex justify-between border-t border-yellow-500/20 pt-1 mt-1">
-            <span className="text-gray-400">Total:</span>
-            <span className="text-yellow-400 font-bold">125</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 }
