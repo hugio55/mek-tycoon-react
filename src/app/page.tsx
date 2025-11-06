@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useAction, useConvex } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useRouter } from 'next/navigation';
 import { getMekDataByNumber, getMekImageUrl, parseMekNumber } from "@/lib/mekNumberToVariation";
 import { getVariationInfoFromFullKey } from "@/lib/variationNameLookup";
 import BlockchainVerificationPanel from "@/components/BlockchainVerificationPanel";
@@ -254,6 +255,9 @@ const DEMO_MEKS: MekAsset[] = [
 ];
 
 export default function MekRateLoggingPage() {
+  // Next.js router for navigation
+  const router = useRouter();
+
   // Convex client for direct queries
   const convex = useConvex();
 
@@ -274,20 +278,52 @@ export default function MekRateLoggingPage() {
 
   // Check for valid session and redirect to home if authenticated
   useEffect(() => {
+    let cancelled = false;
+    const SESSION_CHECK_TIMEOUT = 3000; // 3 seconds max for session check
+
     async function checkSessionAndRedirect() {
       try {
-        const session = await restoreWalletSession();
+        // Create timeout promise that rejects after 3 seconds
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Session check timeout')), SESSION_CHECK_TIMEOUT)
+        );
+
+        // Race between session restoration and timeout
+        const session = await Promise.race([
+          restoreWalletSession(),
+          timeoutPromise
+        ]);
+
+        // Check if component was unmounted during async operation
+        if (cancelled) return;
+
         if (session && session.stakeAddress) {
           console.log('[Root Page] Valid session found, redirecting to /home');
-          window.location.href = '/home';
+
+          // Small delay to ensure state updates propagate
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+          // Use Next.js router for smooth client-side navigation
+          router.push('/home');
+        } else {
+          console.log('[Root Page] No valid session found');
+          setIsAutoReconnecting(false);
         }
       } catch (error) {
-        console.error('[Root Page] Error checking session:', error);
+        if (!cancelled) {
+          console.error('[Root Page] Error checking session:', error);
+          setIsAutoReconnecting(false);
+        }
       }
     }
 
     checkSessionAndRedirect();
-  }, []);
+
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   // Wallet state
   const [isConnecting, setIsConnecting] = useState(false);
