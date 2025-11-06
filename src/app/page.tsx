@@ -1749,16 +1749,21 @@ export default function MekRateLoggingPage() {
             try {
               console.log('[Wallet Connect] Generating secure nonce...');
 
-              // Get a payment address for signing (signData doesn't work with stake addresses directly)
+              // Get a payment address for signing (signData requires bech32 format, not hex)
+              console.log('[🔑ADDR] Fetching addresses from wallet...');
               const usedAddressesHex = await walletApi.getUsedAddresses();
 
               if (!usedAddressesHex || usedAddressesHex.length === 0) {
                 throw new Error('No addresses found in wallet. Please ensure your wallet has at least one address.');
               }
 
-              // Convert from hex to bech32 format (required by signData)
+              console.log('[🔑ADDR] Raw address from wallet (CBOR hex):', usedAddressesHex[0].substring(0, 40) + '...');
+              console.log('[🔑ADDR] Total addresses found:', usedAddressesHex.length);
+
+              // Convert from CBOR hex to bech32 format (CIP-30 requirement for signData)
               const paymentAddress = hexToBech32(usedAddressesHex[0]);
-              console.log('[Wallet Connect] Payment address for signing:', paymentAddress.substring(0, 20) + '...');
+              console.log('[🔑ADDR] Converted to bech32:', paymentAddress.substring(0, 20) + '...');
+              console.log('[🔑ADDR] Network:', paymentAddress.startsWith('addr1') ? 'mainnet' : 'testnet');
 
               // Use secure nonce generation
               const nonceResult = await generateSecureNonce({
@@ -1779,6 +1784,9 @@ export default function MekRateLoggingPage() {
 
             // Request signature from wallet with 60 second timeout - MANDATORY (using payment address)
             console.log('[Wallet Connect] Requesting signature from user...');
+            console.log('[🔑SIGN] Address parameter:', paymentAddress.substring(0, 30) + '...');
+            console.log('[🔑SIGN] Message hex:', Buffer.from(nonceResult.message).toString('hex').substring(0, 60) + '...');
+            console.log('[🔑SIGN] Calling walletApi.signData()...');
             setConnectionStatus('Awaiting signature from wallet...');
             const signature = await Promise.race([
               walletApi.signData(
@@ -2600,9 +2608,19 @@ export default function MekRateLoggingPage() {
 
       console.log(`[AddWallet] Using ${connectedWalletName} for signature. If this is the wrong wallet, the signature will fail and you can try again.`);
 
-      // Request signature
+      // Get payment address from connected wallet (signData requires payment address, not stake address)
+      console.log('[🔑ADDR] Getting payment address from connected wallet...');
+      const usedAddressesHex = await walletApi.getUsedAddresses();
+      if (!usedAddressesHex || usedAddressesHex.length === 0) {
+        throw new Error('No addresses found in connected wallet');
+      }
+      const paymentAddressForSigning = hexToBech32(usedAddressesHex[0]);
+      console.log('[🔑ADDR] Payment address for signing:', paymentAddressForSigning.substring(0, 30) + '...');
+
+      // Request signature using payment address (NOT stake address)
       const messageHex = Buffer.from(addWalletMessage).toString('hex');
-      const signature = await walletApi.signData(newWalletAddress.trim(), messageHex);
+      console.log('[🔑SIGN] Requesting signature for adding wallet...');
+      const signature = await walletApi.signData(paymentAddressForSigning, messageHex);
 
       console.log('[AddWallet] Signature received, verifying...');
 
