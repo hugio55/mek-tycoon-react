@@ -3487,8 +3487,8 @@ export default function MekProfileLightbox({
           </div>
           {renderBars()}
           <div className="flex flex-col items-center gap-0.5 shrink-0">
-            <div className="mek-label-uppercase text-[9px]">LEVEL</div>
-            <div className="text-white text-sm font-bold">{levelValue}</div>
+            <div className="mek-label-uppercase text-[9px] text-center">LEVEL</div>
+            <div className="text-white text-sm font-bold text-center">{levelValue}</div>
           </div>
         </div>
       );
@@ -3628,10 +3628,10 @@ export default function MekProfileLightbox({
           {renderBars()}
 
           {/* Level - Bold tech display with number on top, label below */}
-          <div className="flex flex-col items-end justify-center shrink-0 h-12 sm:h-10">
+          <div className="flex flex-col items-center justify-center shrink-0 h-12 sm:h-10">
             {/* Large level number on top */}
             <div
-              className="font-bold leading-none"
+              className="font-bold leading-none text-center"
               style={{
                 fontSize: '2rem',
                 fontFamily: 'Orbitron',
@@ -3648,8 +3648,8 @@ export default function MekProfileLightbox({
             >
               {levelValue}
             </div>
-            {/* LEVEL label below */}
-            <div className="text-gray-400 text-[8px] uppercase tracking-[0.2em] font-mono mt-0.5">LEVEL</div>
+            {/* LVL label below */}
+            <div className="text-gray-400 text-[8px] uppercase tracking-[0.2em] font-mono mt-0.5 text-center">LVL</div>
           </div>
         </div>
       );
@@ -4011,17 +4011,6 @@ export default function MekProfileLightbox({
 
                   {/* RIGHT SIDEBAR */}
                   <div className="lg:col-span-3 space-y-4">
-                    {/* Level Progress */}
-                    <div className={getCardClasses()}>
-                      <LevelProgress
-                        currentLevel={8}
-                        currentXP={6720}
-                        requiredXP={10000}
-                        style={levelProgressStyle}
-                        useYellowGlow={useYellowGlow}
-                      />
-                    </div>
-
                     {/* Gold Cards - Combined or Individual */}
                     {showCombinedGoldCard ? (
                       renderCombinedGoldCard()
