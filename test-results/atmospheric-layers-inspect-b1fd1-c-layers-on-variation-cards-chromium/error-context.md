@@ -1,7 +1,7 @@
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
+- generic [ref=e1]:
   - generic [ref=e8]:
     - button "0 MEKS ▼" [ref=e11] [cursor=pointer]:
       - generic [ref=e12]: 0 MEKS
@@ -27,7 +27,7 @@
           - generic: "000"
       - generic [ref=e30]:
         - heading "Mek Profile" [level=1] [ref=e31]
-        - button "View Mek Details" [ref=e32] [cursor=pointer]
+        - button "View Mek Details" [active] [ref=e32] [cursor=pointer]
         - generic [ref=e33]:
           - heading "Gold Generation" [level=2] [ref=e37]
           - generic [ref=e38]:
@@ -60,6 +60,9 @@
               - option "Segmented"
               - option "Orbital"
               - option "Diagonal"
+              - option "Segmented Vertical"
+              - option "Segmented Hex"
+              - option "Segmented Dual Row"
           - heading "Variation PNG Glow" [level=4] [ref=e66]
           - generic [ref=e67]:
             - generic [ref=e68]: "Glow Intensity: 60%"
@@ -69,7 +72,7 @@
             - slider [ref=e72] [cursor=pointer]: "25"
           - generic [ref=e73]:
             - generic [ref=e74]: "Atmospheric Noise: 15%"
-            - slider [ref=e75] [cursor=pointer]: "0.15"
+            - slider [ref=e75] [cursor=pointer]: "0.5"
         - generic [ref=e77]:
           - heading "Style Controls" [level=3] [ref=e78]
           - generic [ref=e79]:
@@ -192,5 +195,113 @@
               - generic [ref=e137]: Corner Brackets
   - button "Open Next.js Dev Tools" [ref=e143] [cursor=pointer]:
     - img [ref=e144]
-  - alert [ref=e147]: MEK PROFILE
+  - alert [ref=e147]
+  - generic [ref=e150]:
+    - generic [ref=e155]:
+      - button "Close" [ref=e157] [cursor=pointer]:
+        - generic [ref=e160]: close
+      - heading "MEK PROFILE" [level=1] [ref=e161]
+      - paragraph [ref=e162]: Detailed information about your Mekanism unit including stats, variations, and abilities.
+    - generic [ref=e164]:
+      - generic [ref=e165]:
+        - generic [ref=e166]:
+          - generic [ref=e167]:
+            - img [ref=e168]
+            - img [ref=e171]
+            - img [ref=e174]
+            - img [ref=e177]
+            - generic [ref=e180]:
+              - generic [ref=e181]:
+                - generic [ref=e182]: MEKANISM
+                - generic [ref=e183]: "#1234"
+              - generic [ref=e184]:
+                - generic [ref=e185]: RANK
+                - generic [ref=e186]: "2985"
+              - generic [ref=e187]:
+                - generic [ref=e188]: CORPORATION
+                - generic [ref=e189]: Apex Industries
+              - generic [ref=e190]:
+                - generic [ref=e191]: EMPLOYEE ID
+                - generic [ref=e192]: Golden Striker
+          - generic [ref=e193]:
+            - generic [ref=e194]: STATUS
+            - generic [ref=e195]:
+              - generic [ref=e196]: IDLE
+              - checkbox [ref=e199] [cursor=pointer]
+              - generic [ref=e207]: Mechanical Toggle
+        - img "Mek Profile" [ref=e210]
+        - generic [ref=e211]:
+          - generic [ref=e213]:
+            - generic [ref=e214]: LEVEL
+            - generic [ref=e215]:
+              - generic [ref=e216]: "12"
+              - generic [ref=e217]: "13"
+            - generic [ref=e220]: TENURE
+          - generic [ref=e222]:
+            - generic [ref=e223]:
+              - generic [ref=e224]: Base
+              - generic [ref=e225]: 1,250 G/hr
+            - generic [ref=e231]:
+              - generic [ref=e232]: Bonus Generation
+              - generic [ref=e233]: +875 G/hr
+            - generic [ref=e234]:
+              - generic [ref=e235]: Total
+              - generic [ref=e236]: 2,125 G/hr
+          - generic [ref=e238]:
+            - generic [ref=e239]: CUMULATIVE GOLD
+            - generic [ref=e240]:
+              - generic [ref=e241]: Current Corp
+              - generic [ref=e242]: 12,869 G
+            - generic [ref=e243]:
+              - generic [ref=e244]: all-time
+              - generic [ref=e245]: 458,414 G
+      - generic [ref=e246]:
+        - generic [ref=e247]:
+          - img "HEAD VARIATION" [ref=e250]
+          - generic [ref=e251]: HEAD VARIATION
+          - generic [ref=e252]: Variation Name
+          - generic [ref=e253]: 3 of 4000
+          - generic [ref=e254]:
+            - generic [ref=e255]:
+              - generic [ref=e256]: "Base:"
+              - generic [ref=e257]: "100"
+            - generic [ref=e258]:
+              - generic [ref=e259]: "Bonus:"
+              - generic [ref=e260]: "+25"
+            - generic [ref=e261]:
+              - generic [ref=e262]: "Total:"
+              - generic [ref=e263]: "125"
+        - generic [ref=e264]:
+          - img "BODY VARIATION" [ref=e267]
+          - generic [ref=e268]: BODY VARIATION
+          - generic [ref=e269]: Variation Name
+          - generic [ref=e270]: 3 of 4000
+          - generic [ref=e271]:
+            - generic [ref=e272]:
+              - generic [ref=e273]: "Base:"
+              - generic [ref=e274]: "100"
+            - generic [ref=e275]:
+              - generic [ref=e276]: "Bonus:"
+              - generic [ref=e277]: "+25"
+            - generic [ref=e278]:
+              - generic [ref=e279]: "Total:"
+              - generic [ref=e280]: "125"
+        - generic [ref=e281]:
+          - img "TRAIT VARIATION" [ref=e284]
+          - generic [ref=e285]: TRAIT VARIATION
+          - generic [ref=e286]: Variation Name
+          - generic [ref=e287]: 3 of 4000
+          - generic [ref=e288]:
+            - generic [ref=e289]:
+              - generic [ref=e290]: "Base:"
+              - generic [ref=e291]: "100"
+            - generic [ref=e292]:
+              - generic [ref=e293]: "Bonus:"
+              - generic [ref=e294]: "+25"
+            - generic [ref=e295]:
+              - generic [ref=e296]: "Total:"
+              - generic [ref=e297]: "125"
+      - generic [ref=e298]:
+        - generic [ref=e299]: ABILITIES TREE
+        - generic [ref=e301]: Node Tree / Talent Tree Area
 ```

@@ -5,7 +5,10 @@ export type LevelProgressStyle =
   | 'arch'
   | 'segmented'
   | 'orbital'
-  | 'diagonal';
+  | 'diagonal'
+  | 'segmented-vertical'
+  | 'segmented-hex'
+  | 'segmented-dual-row';
 
 interface LevelProgressProps {
   currentLevel: number;
@@ -283,6 +286,191 @@ export default function LevelProgress({
     </div>
   );
 
+  // Segmented Vertical Style
+  const renderSegmentedVertical = () => {
+    const segments = 10;
+    const filledSegments = Math.floor((progress / 100) * segments);
+
+    return (
+      <div className="space-y-2">
+        {/* Title */}
+        <div className={`${labelFont} text-xs ${textColor} uppercase tracking-widest text-center font-bold`}>
+          LEVEL
+        </div>
+
+        {/* Main Container */}
+        <div className="flex items-center justify-between gap-3">
+          {/* Current Level */}
+          <div className="flex flex-col items-center">
+            <span className={`${numberFont} text-4xl font-thin ${textColor}`}>{currentLevel}</span>
+            <span className={`${labelFont} text-[9px] text-gray-400 uppercase tracking-wider`}>LVL</span>
+          </div>
+
+          {/* Vertical Segments */}
+          <div className="flex-1 flex items-end justify-center gap-1 h-16">
+            {Array.from({ length: segments }).map((_, i) => (
+              <div
+                key={i}
+                className={`w-full ${borderColor} border transition-all duration-300`}
+                style={{
+                  height: `${((i + 1) / segments) * 100}%`,
+                  backgroundColor: i < filledSegments
+                    ? primaryHex
+                    : 'rgba(0, 0, 0, 0.6)',
+                  boxShadow: i < filledSegments
+                    ? `0 0 8px rgba(${primaryRGB}, 0.5)`
+                    : 'none'
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Next Level */}
+          <div className="flex flex-col items-center">
+            <span className={`${numberFont} text-4xl font-thin text-gray-500`}>{nextLevel}</span>
+            <span className={`${labelFont} text-[9px] text-gray-500 uppercase tracking-wider`}>LVL</span>
+          </div>
+        </div>
+
+        {/* Label */}
+        <div className={`${labelFont} text-[10px] text-gray-400 uppercase tracking-widest text-center`}>
+          TENURE
+        </div>
+      </div>
+    );
+  };
+
+  // Segmented Hex Style
+  const renderSegmentedHex = () => {
+    const segments = 8;
+    const filledSegments = Math.floor((progress / 100) * segments);
+
+    return (
+      <div className="space-y-2">
+        {/* Title */}
+        <div className={`${labelFont} text-xs ${textColor} uppercase tracking-widest text-center font-bold`}>
+          LEVEL
+        </div>
+
+        {/* Main Container */}
+        <div className="space-y-3">
+          {/* Level Numbers */}
+          <div className="flex justify-between items-center px-2">
+            <div className="flex flex-col items-center">
+              <span className={`${numberFont} text-3xl font-thin ${textColor}`}>{currentLevel}</span>
+              <span className={`${labelFont} text-[9px] text-gray-400 uppercase tracking-wider`}>LVL</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className={`${numberFont} text-3xl font-thin text-gray-500`}>{nextLevel}</span>
+              <span className={`${labelFont} text-[9px] text-gray-500 uppercase tracking-wider`}>LVL</span>
+            </div>
+          </div>
+
+          {/* Hexagonal Segments */}
+          <div className="flex gap-1 justify-center">
+            {Array.from({ length: segments }).map((_, i) => (
+              <div
+                key={i}
+                className={`w-6 h-7 ${borderColor} border transition-all duration-300 relative`}
+                style={{
+                  clipPath: 'polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%)',
+                  backgroundColor: i < filledSegments
+                    ? primaryHex
+                    : 'rgba(0, 0, 0, 0.6)',
+                  boxShadow: i < filledSegments
+                    ? `0 0 10px rgba(${primaryRGB}, 0.6)`
+                    : 'none'
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Label */}
+        <div className={`${labelFont} text-[10px] text-gray-400 uppercase tracking-widest text-center`}>
+          TENURE
+        </div>
+      </div>
+    );
+  };
+
+  // Segmented Dual Row Style
+  const renderSegmentedDualRow = () => {
+    const segmentsPerRow = 5;
+    const totalSegments = segmentsPerRow * 2;
+    const filledSegments = Math.floor((progress / 100) * totalSegments);
+
+    return (
+      <div className="space-y-2">
+        {/* Title */}
+        <div className={`${labelFont} text-xs ${textColor} uppercase tracking-widest text-center font-bold`}>
+          LEVEL
+        </div>
+
+        {/* Main Container */}
+        <div className="space-y-2">
+          {/* Level Numbers */}
+          <div className="flex justify-between items-center">
+            <div className="flex flex-col items-center">
+              <span className={`${numberFont} text-3xl font-thin ${textColor}`}>{currentLevel}</span>
+              <span className={`${labelFont} text-[9px] text-gray-400 uppercase tracking-wider`}>LVL</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className={`${numberFont} text-3xl font-thin text-gray-500`}>{nextLevel}</span>
+              <span className={`${labelFont} text-[9px] text-gray-500 uppercase tracking-wider`}>LVL</span>
+            </div>
+          </div>
+
+          {/* Dual Row Segments */}
+          <div className="space-y-1">
+            {/* First Row */}
+            <div className="flex gap-1">
+              {Array.from({ length: segmentsPerRow }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`flex-1 h-3 ${borderColor} border transition-all duration-300`}
+                  style={{
+                    backgroundColor: i < filledSegments
+                      ? primaryHex
+                      : 'rgba(0, 0, 0, 0.6)',
+                    boxShadow: i < filledSegments
+                      ? `0 0 8px rgba(${primaryRGB}, 0.5)`
+                      : 'none'
+                  }}
+                />
+              ))}
+            </div>
+            {/* Second Row */}
+            <div className="flex gap-1">
+              {Array.from({ length: segmentsPerRow }).map((_, i) => {
+                const segmentIndex = i + segmentsPerRow;
+                return (
+                  <div
+                    key={segmentIndex}
+                    className={`flex-1 h-3 ${borderColor} border transition-all duration-300`}
+                    style={{
+                      backgroundColor: segmentIndex < filledSegments
+                        ? primaryHex
+                        : 'rgba(0, 0, 0, 0.6)',
+                      boxShadow: segmentIndex < filledSegments
+                        ? `0 0 8px rgba(${primaryRGB}, 0.5)`
+                        : 'none'
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Label */}
+        <div className={`${labelFont} text-[10px] text-gray-400 uppercase tracking-widest text-center`}>
+          TENURE
+        </div>
+      </div>
+    );
+  };
+
   // Render based on style prop
   switch (style) {
     case 'arch':
@@ -293,6 +481,12 @@ export default function LevelProgress({
       return renderOrbital();
     case 'diagonal':
       return renderDiagonal();
+    case 'segmented-vertical':
+      return renderSegmentedVertical();
+    case 'segmented-hex':
+      return renderSegmentedHex();
+    case 'segmented-dual-row':
+      return renderSegmentedDualRow();
     case 'flat-bar':
     default:
       return renderFlatBar();
