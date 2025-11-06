@@ -379,6 +379,8 @@ export default function MekLayoutsPage() {
                 <option value="dashboard-grid">Dashboard Grid</option>
                 <option value="hero-emphasis">Hero Emphasis</option>
                 <option value="elegant-split">Elegant Split</option>
+                <option value="cascade-accumulation">Cascade Accumulation</option>
+                <option value="energy-conduit">Energy Conduit</option>
               </select>
             </div>
 

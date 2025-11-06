@@ -59,6 +59,7 @@ export const populateInventoryManually = mutation({
         nftUid: v.string(),
         nftNumber: v.number(),
         name: v.string(),
+        paymentUrl: v.optional(v.string()), // Optional: use from CSV if provided
       })
     ),
   },
@@ -87,9 +88,18 @@ export const populateInventoryManually = mutation({
 
     // Insert all NFTs
     for (const nft of args.nfts) {
-      // CRITICAL FIX: Strip dashes from UUID - NMKR expects dashless format
-      const dashlessUid = nft.nftUid.replace(/-/g, '');
-      const paymentUrl = `${basePaymentUrl}/?p=${projectId}&n=${dashlessUid}`;
+      // Use payment URL from CSV if provided, otherwise build it
+      let paymentUrl: string;
+      if (nft.paymentUrl) {
+        // PREFERRED: Use payment URL directly from CSV (already correct format)
+        paymentUrl = nft.paymentUrl;
+        console.log('[INVENTORY SETUP] Using payment URL from CSV for', nft.name);
+      } else {
+        // FALLBACK: Build payment URL (strip dashes from UUID - NMKR expects dashless format)
+        const dashlessUid = nft.nftUid.replace(/-/g, '');
+        paymentUrl = `${basePaymentUrl}/?p=${projectId}&n=${dashlessUid}`;
+        console.log('[INVENTORY SETUP] Built payment URL for', nft.name);
+      }
 
       await ctx.db.insert("commemorativeNFTInventory", {
         nftUid: nft.nftUid,
@@ -378,6 +388,14 @@ export const initializeFromCSV = action({
       const displayname = values[headers.indexOf('displayname')]?.trim() || '';
       const state = values[headers.indexOf('state')]?.trim()?.toLowerCase() || '';
 
+      // CRITICAL FIX: Extract payment URL from CSV if available
+      // Check multiple possible column names for payment URL
+      const paymentUrlFromCSV =
+        values[headers.indexOf('paymenturl')]?.trim() ||
+        values[headers.indexOf('iagonlink')]?.trim() ||
+        values[headers.indexOf('assetlink')]?.trim() ||
+        '';
+
       // Use tokenname first, fall back to displayname
       const name = tokenname || displayname;
 
@@ -401,12 +419,19 @@ export const initializeFromCSV = action({
       }
 
       if (nftNumber > 0) {
-        nfts.push({
+        const nftData: any = {
           nftUid: uid,
           name: name,
           nftNumber: nftNumber,
-        });
-        console.log('[CSV INIT] Parsed NFT:', { uid, name, nftNumber, state });
+        };
+
+        // Include payment URL if found in CSV (preferred!)
+        if (paymentUrlFromCSV) {
+          nftData.paymentUrl = paymentUrlFromCSV;
+        }
+
+        nfts.push(nftData);
+        console.log('[CSV INIT] Parsed NFT:', { uid, name, nftNumber, state, hasPaymentUrl: !!paymentUrlFromCSV });
       }
     }
 
