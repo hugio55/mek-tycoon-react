@@ -8,6 +8,7 @@ import { getVariationInfoFromFullKey } from "@/lib/variationNameLookup";
 import BlockchainVerificationPanel from "@/components/BlockchainVerificationPanel";
 import HolographicButton from "@/components/ui/IndustrialButtons/HolographicButton";
 import { ensureBech32StakeAddress } from "@/lib/cardanoAddressConverter";
+import { hexToBech32 } from "@/lib/cardano-addresses";
 // MekLevelUpgrade component removed - using inline upgrade UI from demo
 import GoldLeaderboard from "@/components/GoldLeaderboard";
 import { CompanyNameModal } from "@/components/CompanyNameModal";
@@ -1749,8 +1750,15 @@ export default function MekRateLoggingPage() {
               console.log('[Wallet Connect] Generating secure nonce...');
 
               // Get a payment address for signing (signData doesn't work with stake addresses directly)
-              const usedAddresses = await walletApi.getUsedAddresses();
-              const paymentAddress = usedAddresses[0];
+              const usedAddressesHex = await walletApi.getUsedAddresses();
+
+              if (!usedAddressesHex || usedAddressesHex.length === 0) {
+                throw new Error('No addresses found in wallet. Please ensure your wallet has at least one address.');
+              }
+
+              // Convert from hex to bech32 format (required by signData)
+              const paymentAddress = hexToBech32(usedAddressesHex[0]);
+              console.log('[Wallet Connect] Payment address for signing:', paymentAddress.substring(0, 20) + '...');
 
               // Use secure nonce generation
               const nonceResult = await generateSecureNonce({
@@ -1868,17 +1876,22 @@ export default function MekRateLoggingPage() {
         const nonce = verifiedNonce;
 
       // Also get payment addresses as backup
-      const paymentAddresses = await walletApi.getUsedAddresses();
-      console.log('Payment addresses:', paymentAddresses);
+      const paymentAddressesHex = await walletApi.getUsedAddresses();
+      console.log('[Wallet Connect] Retrieved payment addresses (hex format)');
 
       if (!stakeAddress) {
         throw new Error("Could not get stake address from wallet");
       }
 
-      // Store the first payment address for blockchain verification
-      const primaryPaymentAddress = paymentAddresses[0];
-      setPaymentAddress(primaryPaymentAddress);
-      console.log('Stored payment address for verification:', primaryPaymentAddress?.substring(0, 20) + '...');
+      // Convert payment address from hex to bech32 and store for blockchain verification
+      if (!paymentAddressesHex || paymentAddressesHex.length === 0) {
+        console.warn('[Wallet Connect] No payment addresses found in wallet');
+        setPaymentAddress('');
+      } else {
+        const primaryPaymentAddress = hexToBech32(paymentAddressesHex[0]);
+        setPaymentAddress(primaryPaymentAddress);
+        console.log('[Wallet Connect] Stored payment address for verification:', primaryPaymentAddress.substring(0, 20) + '...');
+      }
 
       // Server-side NFT fetching with Blockfrost
       console.log('Fetching NFTs from blockchain via Blockfrost...');
