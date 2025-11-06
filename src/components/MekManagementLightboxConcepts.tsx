@@ -64,6 +64,47 @@ function MekManagementConcept1({ onClose }: { onClose: () => void }) {
               />
             </div>
 
+            {/* Level Bar - 10 segments with label beneath current level */}
+            <div className="bg-black/40 rounded-lg p-4 mb-4 border border-yellow-500/20">
+              <div className="flex gap-1.5 h-10">
+                {Array.from({ length: 10 }, (_, i) => {
+                  const level = i + 1;
+                  const currentLevel = 4; // TODO: Get from actual Mek data
+                  const isActive = level <= currentLevel;
+                  const isCurrent = level === currentLevel;
+
+                  return (
+                    <div key={level} className="flex-1 flex flex-col items-center gap-1">
+                      <div
+                        className="w-full flex-1 transition-all duration-500 rounded-sm"
+                        style={{
+                          backgroundColor: isActive ? '#a855f7' : '#1a1a1a',
+                          backgroundImage: isActive
+                            ? 'none'
+                            : 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(102, 102, 102, 0.1) 2px, rgba(102, 102, 102, 0.1) 4px)',
+                          border: isActive
+                            ? '1px solid #a855f7'
+                            : '1px solid #666',
+                          boxShadow: isActive
+                            ? '0 0 12px #a855f780, inset 0 -4px 8px rgba(0,0,0,0.4)'
+                            : 'inset 0 2px 4px rgba(0,0,0,0.8)',
+                          opacity: isActive ? 1 : 0.5,
+                        }}
+                      />
+                      {isCurrent && (
+                        <div
+                          className="text-[9px] font-bold uppercase tracking-wider"
+                          style={{ color: '#a855f7' }}
+                        >
+                          LVL{level}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Name Section */}
             <div className="bg-black/40 rounded-lg p-4 mb-4 border border-yellow-500/20">
               <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Name</div>

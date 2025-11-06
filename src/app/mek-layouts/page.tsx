@@ -26,8 +26,8 @@ export default function MekLayoutsPage() {
   const [contentSpacing, setContentSpacing] = useState(16);
   const [slidersCollapsed, setSlidersCollapsed] = useState(false);
   const [showLeftDebugPanel, setShowLeftDebugPanel] = useState(true);
-  const [headerDarkness, setHeaderDarkness] = useState(80);
-  const [headerBlur, setHeaderBlur] = useState(12);
+  const [headerDarkness, setHeaderDarkness] = useState(29);
+  const [headerBlur, setHeaderBlur] = useState(13);
   const [variationGlowIntensity, setVariationGlowIntensity] = useState(0.6);
   const [variationGlowSize, setVariationGlowSize] = useState(25);
 

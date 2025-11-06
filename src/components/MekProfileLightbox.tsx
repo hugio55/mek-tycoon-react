@@ -1637,32 +1637,20 @@ function VariationCard({
       {/* Image floating directly on lightbox background with yellow glow behind */}
       <div className="relative mb-3">
         {imagePath ? (
-          <div className="relative w-full h-48">
-            {/* Background glow layer */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: `
-                  radial-gradient(ellipse 60% 60% at 50% 50%,
-                    rgba(250, 182, 23, ${glowIntensity}) 0%,
-                    rgba(250, 182, 23, ${glowIntensity * 0.8}) ${glowSize * 0.5}px,
-                    rgba(250, 182, 23, ${glowIntensity * 0.6}) ${glowSize}px,
-                    rgba(250, 182, 23, ${glowIntensity * 0.4}) ${glowSize * 1.3}px,
-                    rgba(250, 182, 23, ${glowIntensity * 0.2}) ${glowSize * 1.6}px,
-                    rgba(250, 182, 23, 0) ${glowSize * 2}px
-                  )
-                `,
-                transform: 'scale(0.7)'
-              }}
-            />
-
-            {/* Image on top of glow */}
-            <img
-              src={imagePath}
-              alt={title}
-              className="relative w-full h-48 object-contain scale-[0.7]"
-            />
-          </div>
+          <img
+            src={imagePath}
+            alt={title}
+            className="w-full h-48 object-contain scale-[0.7]"
+            style={{
+              filter: `
+                drop-shadow(0 0 ${glowSize * 0.5}px rgba(250, 182, 23, ${glowIntensity}))
+                drop-shadow(0 0 ${glowSize}px rgba(250, 182, 23, ${glowIntensity * 0.8}))
+                drop-shadow(0 0 ${glowSize * 1.3}px rgba(250, 182, 23, ${glowIntensity * 0.6}))
+                drop-shadow(0 0 ${glowSize * 1.6}px rgba(250, 182, 23, ${glowIntensity * 0.4}))
+                drop-shadow(0 0 ${glowSize * 2}px rgba(250, 182, 23, ${glowIntensity * 0.2}))
+              `.trim()
+            }}
+          />
         ) : (
           <div className="w-full h-48 flex items-center justify-center">
             <span className="text-gray-500 text-xs">Image</span>
