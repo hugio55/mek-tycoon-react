@@ -32,8 +32,8 @@ export default function MekLayoutsPage() {
   const [headerBlur, setHeaderBlur] = useState(13);
   const [variationGlowIntensity, setVariationGlowIntensity] = useState(0.1);
   const [variationGlowSize, setVariationGlowSize] = useState(29);
-  const [variationTextStyle, setVariationTextStyle] = useState<'hero-focus' | 'tech-readout' | 'minimal-labels' | 'data-grid' | 'compact-badge'>('hero-focus');
-  const [statsLayoutStyle, setStatsLayoutStyle] = useState<StatsLayoutStyle>('inline-dot');
+  const [variationTextStyle, setVariationTextStyle] = useState<'hero-focus' | 'tech-readout' | 'minimal-labels' | 'data-grid' | 'compact-badge'>('minimal-labels');
+  const [statsLayoutStyle, setStatsLayoutStyle] = useState<StatsLayoutStyle>('vertical-divider');
   const [tenureLevelStyle, setTenureLevelStyle] = useState<TenureLevelStyle>('classic-side-labels');
 
   return (
