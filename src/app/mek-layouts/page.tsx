@@ -673,6 +673,8 @@ export default function MekLayoutsPage() {
         variationGlowSize={variationGlowSize}
         variationTextStyle={variationTextStyle}
         onVariationTextStyleChange={setVariationTextStyle}
+        statsLayoutStyle={statsLayoutStyle}
+        onStatsLayoutStyleChange={setStatsLayoutStyle}
       />
 
       {/* Gold Generation Details Lightbox */}
