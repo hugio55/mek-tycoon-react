@@ -303,13 +303,8 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
             <Button
               type="submit"
               className="flex-1 mek-button-primary"
-              disabled={
-                isSubmitting ||
-                !companyName.trim() ||
-                companyName.trim().length < 2 ||
-                (!isDemoMode && checkAvailability && !checkAvailability.available) ||
-                isChecking
-              }
+              disabled={buttonDisabled}
+              onClick={() => console.log('[CompanyNameModal] Create button clicked')}
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">
