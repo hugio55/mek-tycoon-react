@@ -911,7 +911,7 @@ export default function MekProfileLightbox({
       >
         {/* Close Button */}
         <div className="absolute top-4 right-4 z-50">
-          <CloseButton onClick={onClose} />
+          <CloseButton onClick={onClose} className="!mt-0" />
         </div>
 
         {/* Scrollable Content */}

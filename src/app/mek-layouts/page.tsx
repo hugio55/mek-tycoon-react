@@ -206,27 +206,22 @@ export default function MekLayoutsPage() {
                 className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
               >
                 <option value="Orbitron">Orbitron</option>
-                <option value="Rajdhani">Rajdhani</option>
-                <option value="Space Grotesk">Space Grotesk</option>
-                <option value="Exo 2">Exo 2</option>
+                <option value="Rajdhani">Rajdhani (Light)</option>
+                <option value="Space Grotesk">Space Grotesk (Elegant)</option>
+                <option value="Exo 2">Exo 2 (Ultra Thin)</option>
                 <option value="JetBrains Mono">JetBrains Mono</option>
                 <option value="IBM Plex Mono">IBM Plex Mono</option>
                 <option value="Share Tech Mono">Share Tech Mono</option>
                 <option value="Inter">Inter</option>
                 <option value="Roboto Mono">Roboto Mono</option>
                 <option value="Michroma">Michroma</option>
-                <option value="Saira Condensed">Saira Condensed</option>
-                <option value="Teko">Teko</option>
-                <option value="Poiret One">Poiret One (Ultra Thin)</option>
-                <option value="Abel">Abel (Condensed Thin)</option>
-                <option value="Josefin Sans">Josefin Sans (Elegant)</option>
-                <option value="Economica">Economica (Very Thin)</option>
-                <option value="Advent Pro">Advent Pro (Modern Thin)</option>
-                <option value="Pathway Gothic One">Pathway Gothic One</option>
-                <option value="Yanone Kaffeesatz">Yanone Kaffeesatz</option>
-                <option value="Armata">Armata (Futuristic)</option>
-                <option value="Archivo Narrow">Archivo Narrow</option>
-                <option value="Julius Sans One">Julius Sans One</option>
+                <option value="Saira Condensed">Saira Condensed (Thin)</option>
+                <option value="Teko">Teko (Light)</option>
+                <option value="Abel">Abel (Condensed)</option>
+                <option value="Josefin Sans">Josefin Sans (Thin)</option>
+                <option value="Economica">Economica (Condensed)</option>
+                <option value="Advent Pro">Advent Pro (Thin)</option>
+                <option value="Archivo Narrow">Archivo Narrow (Condensed)</option>
               </select>
             </div>
 
