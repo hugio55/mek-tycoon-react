@@ -511,14 +511,29 @@ export const getCampaignInventory = query({
     campaignId: v.id("commemorativeCampaigns"),
   },
   handler: async (ctx, args) => {
+    console.log('[📊QUERY] getCampaignInventory called for campaign:', args.campaignId);
+
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
       .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
       .order("asc") // Sort by nftNumber ascending
       .collect();
 
+    console.log('[📊QUERY] Found', inventory.length, 'inventory items');
+
+    // Log first few items to see their status
+    const sample = inventory.slice(0, 3);
+    console.log('[📊QUERY] Sample items:', sample.map(nft => ({
+      name: nft.name,
+      nftUid: nft.nftUid,
+      status: nft.status,
+    })));
+
     // Sort by nftNumber to ensure correct ordering
-    return inventory.sort((a, b) => a.nftNumber - b.nftNumber);
+    const sorted = inventory.sort((a, b) => a.nftNumber - b.nftNumber);
+
+    console.log('[📊QUERY] Returning sorted inventory');
+    return sorted;
   },
 });
 
@@ -571,21 +586,53 @@ export const updateNFTStatus = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    console.log('[🔄SYNC-MUTATION] === updateNFTStatus called ===');
+    console.log('[🔄SYNC-MUTATION] Args:', { nftUid: args.nftUid, status: args.status });
+
     const nft = await ctx.db
       .query("commemorativeNFTInventory")
       .withIndex("by_uid", (q) => q.eq("nftUid", args.nftUid))
       .first();
 
+    console.log('[🔄SYNC-MUTATION] NFT found in DB:', nft ? 'YES' : 'NO');
+    if (nft) {
+      console.log('[🔄SYNC-MUTATION] NFT details:', {
+        id: nft._id,
+        name: nft.name,
+        currentStatus: nft.status,
+        targetStatus: args.status,
+      });
+    }
+
     if (!nft) {
+      console.error('[🔄SYNC-MUTATION] ❌ NFT not found in database!');
       throw new Error(`NFT not found: ${args.nftUid}`);
     }
 
+    console.log('[🔄SYNC-MUTATION] 🔧 Patching database record...');
     await ctx.db.patch(nft._id, {
       status: args.status,
     });
 
-    console.log('[CAMPAIGN] Updated NFT status:', nft.name, '→', args.status);
+    console.log('[🔄SYNC-MUTATION] ✅ Database patch completed');
+    console.log('[🔄SYNC-MUTATION] Updated NFT status:', nft.name, nft.status, '→', args.status);
 
+    // Verify the update actually stuck
+    const updatedNft = await ctx.db.get(nft._id);
+    console.log('[🔄SYNC-MUTATION] 🔍 Post-update verification:', {
+      id: updatedNft?._id,
+      name: updatedNft?.name,
+      status: updatedNft?.status,
+      expectedStatus: args.status,
+      statusMatch: updatedNft?.status === args.status,
+    });
+
+    if (updatedNft?.status !== args.status) {
+      console.error('[🔄SYNC-MUTATION] ❌❌❌ UPDATE DID NOT PERSIST! Status is still:', updatedNft?.status);
+      throw new Error(`Update failed to persist. Expected ${args.status}, got ${updatedNft?.status}`);
+    }
+
+    console.log('[🔄SYNC-MUTATION] ✅ Update verified and persisted successfully');
     return { success: true };
   },
 });
