@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import MekProfileLightbox, { CardInteriorStyle, DesignationCardStyle, GoldGenerationStyle } from '@/components/MekProfileLightbox';
+import MekProfileLightbox, { CardInteriorStyle, DesignationCardStyle, GoldGenerationStyle, LevelProgressStyle } from '@/components/MekProfileLightbox';
 import GoldGenerationDetailsLightbox from '@/components/GoldGenerationDetailsLightbox';
 
 export default function MekLayoutsPage() {
@@ -15,6 +15,7 @@ export default function MekLayoutsPage() {
   const [cumulativeGoldStyle, setCumulativeGoldStyle] = useState<'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout'>('stacked-emphasis');
   const [cumulativeGoldFont, setCumulativeGoldFont] = useState('Orbitron');
   const [goldGenerationStyle, setGoldGenerationStyle] = useState<GoldGenerationStyle>('pulsing-button');
+  const [levelProgressStyle, setLevelProgressStyle] = useState<LevelProgressStyle>('flat-bar');
   const [useYellowGlow, setUseYellowGlow] = useState(false);
   const [backdropDarkness, setBackdropDarkness] = useState(22);
   const [cardDarkness, setCardDarkness] = useState(7);
@@ -152,6 +153,30 @@ export default function MekLayoutsPage() {
             >
               {useForwardBlur ? '🌑 Opacity Fade' : '🔙 Backdrop Blur'}
             </button>
+          </div>
+
+          {/* Separator */}
+          <div className="my-4 border-t border-purple-500/30" />
+          <h4 className="text-purple-400 text-[9px] font-bold uppercase tracking-wider mb-3">
+            Level Progress Style
+          </h4>
+
+          {/* Dropdown: Level Progress Style */}
+          <div className="mb-3">
+            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+              Progress Display
+            </label>
+            <select
+              value={levelProgressStyle}
+              onChange={(e) => setLevelProgressStyle(e.target.value as LevelProgressStyle)}
+              className="w-full bg-black/60 border border-purple-500/50 rounded px-2 py-1.5 text-purple-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-purple-500 focus:outline-none focus:border-purple-400 transition-all"
+            >
+              <option value="flat-bar">Flat Bar</option>
+              <option value="arch">Arch</option>
+              <option value="segmented">Segmented</option>
+              <option value="orbital">Orbital</option>
+              <option value="diagonal">Diagonal</option>
+            </select>
           </div>
 
           {/* Separator */}
@@ -553,6 +578,8 @@ export default function MekLayoutsPage() {
         cumulativeGoldFont={cumulativeGoldFont}
         goldGenerationStyle={goldGenerationStyle}
         onGoldGenerationStyleChange={setGoldGenerationStyle}
+        levelProgressStyle={levelProgressStyle}
+        onLevelProgressStyleChange={setLevelProgressStyle}
         useYellowGlow={useYellowGlow}
         backdropDarkness={backdropDarkness}
         onBackdropDarknessChange={setBackdropDarkness}
