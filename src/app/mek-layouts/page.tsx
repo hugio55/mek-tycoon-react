@@ -14,6 +14,7 @@ export default function MekLayoutsPage() {
   const [variationCardStyle, setVariationCardStyle] = useState<'clean-frames' | 'image-focus' | 'subtle-accent' | 'no-cards-direct'>('clean-frames');
   const [designationCardStyle, setDesignationCardStyle] = useState<DesignationCardStyle>('corner-brackets');
   const [cumulativeGoldStyle, setCumulativeGoldStyle] = useState<'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout'>('stacked-emphasis');
+  const [cumulativeGoldFont, setCumulativeGoldFont] = useState('Orbitron');
   const [useYellowGlow, setUseYellowGlow] = useState(false);
   const [backdropDarkness, setBackdropDarkness] = useState(22);
   const [cardDarkness, setCardDarkness] = useState(7);
@@ -191,6 +192,31 @@ export default function MekLayoutsPage() {
                 <option value="badge-style">Badge Style</option>
                 <option value="horizontal-bar">Horizontal Bar</option>
                 <option value="diagonal-layout">Diagonal Layout</option>
+              </select>
+            </div>
+
+            {/* Dropdown 7: Cumulative Gold Font */}
+            <div className="mb-3">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                Gold Card Font
+              </label>
+              <select
+                value={cumulativeGoldFont}
+                onChange={(e) => setCumulativeGoldFont(e.target.value)}
+                className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
+              >
+                <option value="Orbitron">Orbitron</option>
+                <option value="Rajdhani">Rajdhani</option>
+                <option value="Space Grotesk">Space Grotesk</option>
+                <option value="Exo 2">Exo 2</option>
+                <option value="JetBrains Mono">JetBrains Mono</option>
+                <option value="IBM Plex Mono">IBM Plex Mono</option>
+                <option value="Share Tech Mono">Share Tech Mono</option>
+                <option value="Inter">Inter</option>
+                <option value="Roboto Mono">Roboto Mono</option>
+                <option value="Michroma">Michroma</option>
+                <option value="Saira Condensed">Saira Condensed</option>
+                <option value="Teko">Teko</option>
               </select>
             </div>
 
@@ -389,6 +415,7 @@ export default function MekLayoutsPage() {
         designationCardStyle={designationCardStyle}
         onDesignationCardStyleChange={setDesignationCardStyle}
         cumulativeGoldStyle={cumulativeGoldStyle}
+        cumulativeGoldFont={cumulativeGoldFont}
         useYellowGlow={useYellowGlow}
         backdropDarkness={backdropDarkness}
         onBackdropDarknessChange={setBackdropDarkness}
