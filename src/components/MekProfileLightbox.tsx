@@ -60,6 +60,8 @@ interface MekProfileLightboxProps {
   headerBlur?: number;
   variationGlowIntensity?: number;
   variationGlowSize?: number;
+  variationTextStyle?: 'hero-focus' | 'tech-readout' | 'minimal-labels' | 'data-grid' | 'compact-badge';
+  onVariationTextStyleChange?: (style: 'hero-focus' | 'tech-readout' | 'minimal-labels' | 'data-grid' | 'compact-badge') => void;
 }
 
 export default function MekProfileLightbox({
@@ -101,7 +103,9 @@ export default function MekProfileLightbox({
   headerDarkness = 50,
   headerBlur = 8,
   variationGlowIntensity = 0.6,
-  variationGlowSize = 25
+  variationGlowSize = 25,
+  variationTextStyle = 'hero-focus',
+  onVariationTextStyleChange
 }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
@@ -2833,6 +2837,236 @@ export default function MekProfileLightbox({
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // SIMPLIFIED DESIGN 1: CLEAN HORIZONTAL
+    // Layout: Horizontal side-by-side, total rate left, current corp right
+    if (combinedGoldCardStyle === 'clean-horizontal') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          {/* Glowing border effect */}
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+
+          {/* Gradient overlay accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10">
+            {/* Two columns side by side */}
+            <div className="grid grid-cols-2 gap-8">
+              {/* LEFT: Total Rate */}
+              <div className="text-center space-y-4">
+                <div
+                  className="text-[9px] text-white/40 uppercase tracking-[0.3em]"
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  TOTAL RATE
+                </div>
+                <div
+                  className={`${accentColor} text-5xl leading-none`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 200,
+                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
+                    letterSpacing: '0.05em'
+                  }}
+                >
+                  {formatGoldRate(goldGenData.total)}
+                </div>
+              </div>
+
+              {/* Vertical divider */}
+              <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2">
+                <div
+                  className={`absolute inset-0 bg-gradient-to-b from-transparent ${useYellowGlow ? 'via-yellow-400' : 'via-cyan-400'} to-transparent`}
+                  style={{ filter: 'blur(1px)' }}
+                />
+              </div>
+
+              {/* RIGHT: Current Corp Cumulative */}
+              <div className="text-center space-y-4">
+                <div
+                  className="text-[9px] text-white/40 uppercase tracking-[0.3em]"
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  CURRENT CORP
+                </div>
+                <div
+                  className={`${accentColor} text-5xl leading-none`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 200,
+                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
+                    letterSpacing: '0.05em'
+                  }}
+                >
+                  {formatGold(currentOwnerGold)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // SIMPLIFIED DESIGN 2: STACKED MINIMAL
+    // Layout: Vertical stack with generous spacing, rate on top, corp below
+    if (combinedGoldCardStyle === 'stacked-minimal') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          {/* Glowing border effect */}
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+
+          {/* Gradient overlay accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-6">
+            {/* TOP: Total Rate */}
+            <div className="text-center space-y-2">
+              <div
+                className="text-[10px] text-white/40 uppercase tracking-[0.3em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                TOTAL RATE
+              </div>
+              <div
+                className={`${accentColor} text-6xl leading-none`}
+                style={{
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200,
+                  textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
+                  letterSpacing: '0.1em'
+                }}
+              >
+                {formatGoldRate(goldGenData.total)}
+              </div>
+            </div>
+
+            {/* Horizontal divider with glow */}
+            <div className="relative h-px">
+              <div
+                className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400' : 'via-cyan-400'} to-transparent`}
+                style={{ filter: 'blur(1px)' }}
+              />
+            </div>
+
+            {/* BOTTOM: Current Corp Cumulative */}
+            <div className="text-center space-y-2">
+              <div
+                className="text-[10px] text-white/40 uppercase tracking-[0.3em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                CURRENT CORP
+              </div>
+              <div
+                className={`${accentColor} text-6xl leading-none`}
+                style={{
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200,
+                  textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
+                  letterSpacing: '0.1em'
+                }}
+              >
+                {formatGold(currentOwnerGold)}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // SIMPLIFIED DESIGN 3: BADGE PAIR
+    // Layout: Two badge-style elements in a centered row
+    if (combinedGoldCardStyle === 'badge-pair') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          {/* Glowing border effect */}
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+
+          {/* Gradient overlay accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-4">
+            {/* Total Rate Badge */}
+            <div className="flex justify-center">
+              <div className={`inline-flex flex-col items-center gap-3 px-6 py-4 bg-black/60 border ${borderColor} rounded-sm min-w-[200px]`}>
+                <div
+                  className="text-[9px] text-white/40 uppercase tracking-[0.3em]"
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  TOTAL RATE
+                </div>
+                <div
+                  className={`${accentColor} text-4xl leading-none`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 200,
+                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
+                    letterSpacing: '0.05em'
+                  }}
+                >
+                  {formatGoldRate(goldGenData.total)}
+                </div>
+              </div>
+            </div>
+
+            {/* Current Corp Badge */}
+            <div className="flex justify-center">
+              <div className={`inline-flex flex-col items-center gap-3 px-6 py-4 bg-black/60 border ${borderColor} rounded-sm min-w-[200px]`}>
+                <div
+                  className="text-[9px] text-white/40 uppercase tracking-[0.3em]"
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  CURRENT CORP
+                </div>
+                <div
+                  className={`${accentColor} text-4xl leading-none`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 200,
+                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
+                    letterSpacing: '0.05em'
+                  }}
+                >
+                  {formatGold(currentOwnerGold)}
                 </div>
               </div>
             </div>
