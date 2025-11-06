@@ -16,7 +16,7 @@ export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-termi
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
 export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout' | 'stacked-compact' | 'stacked-wide' | 'stacked-minimal';
 export type GoldGenerationStyle = 'matrix-badge' | 'command-line' | 'energy-display' | 'split-panels' | 'holographic-readout' | 'tech-metrics' | 'data-stream' | 'compact-table' | 'inline-metrics' | 'dense-grid' | 'stat-bar' | 'compact-table-v2' | 'compact-table-v3' | 'compact-table-v4';
-export type CombinedGoldCardStyle = 'vertical-stacked' | 'side-by-side' | 'dashboard-grid' | 'hero-emphasis' | 'elegant-split' | 'cascade-accumulation' | 'energy-conduit' | 'clean-horizontal' | 'stacked-minimal' | 'badge-pair';
+export type CombinedGoldCardStyle = 'vertical-stacked' | 'side-by-side' | 'dashboard-grid' | 'hero-emphasis' | 'elegant-split' | 'cascade-accumulation' | 'energy-conduit' | 'clean-horizontal' | 'stacked-minimal' | 'badge-pair' | 'diagonal-split' | 'compact-density' | 'overlapping-layers';
 export type StatsLayoutStyle = 'inline-dot' | 'vertical-divider' | 'badge-pills' | 'label-above' | 'glow-separator';
 export type TenureLevelStyle = 'classic-side-labels' | 'stacked-compact' | 'inline-badges' | 'vertical-emphasis' | 'minimal-centered' | 'hero-level-v1' | 'hero-level-v2' | 'hero-level-v3';
 
@@ -3079,6 +3079,239 @@ export default function MekProfileLightbox({
       );
     }
 
+    // DIAGONAL SPLIT - Asymmetric diagonal orientation with one field dominant
+    if (combinedGoldCardStyle === 'diagonal-split') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          {/* Glowing border effect */}
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+
+          {/* Gradient overlay accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? '#fab617' : '#00d4ff'} 0%, transparent 100%)`
+            }}
+          />
+
+          {/* Diagonal divider line */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div
+              className={`absolute w-px h-full origin-top-left`}
+              style={{
+                left: '0%',
+                top: '0%',
+                transform: 'rotate(25deg) translateX(50%)',
+                background: `linear-gradient(to bottom, transparent, ${useYellowGlow ? 'rgba(250, 182, 23, 0.6)' : 'rgba(0, 212, 255, 0.6)'}, transparent)`,
+                filter: 'blur(1px)',
+                height: '180%'
+              }}
+            />
+          </div>
+
+          <div className="relative z-10">
+            {/* Top left: Income Rate (Dominant - larger) */}
+            <div className="mb-4">
+              <div
+                className="text-[10px] text-white/40 uppercase tracking-[0.2em] mb-2"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                INCOME RATE
+              </div>
+              <div
+                className={`${accentColor} text-5xl leading-none`}
+                style={{
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200,
+                  letterSpacing: '0.05em',
+                  textShadow: `0 0 20px ${useYellowGlow ? 'rgba(250, 182, 23, 1)' : 'rgba(0, 212, 255, 1)'}, 0 0 40px ${useYellowGlow ? 'rgba(250, 182, 23, 0.5)' : 'rgba(0, 212, 255, 0.5)'}`
+                }}
+              >
+                {formatGoldRate(goldGenData.total)}
+              </div>
+            </div>
+
+            {/* Bottom right: Cumulative (Secondary - smaller, offset) */}
+            <div className="text-right mt-6">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em] mb-1"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                CUMULATIVE
+              </div>
+              <div
+                className={`${accentColor} text-3xl leading-none`}
+                style={{
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200,
+                  textShadow: `0 0 20px ${useYellowGlow ? 'rgba(250, 182, 23, 1)' : 'rgba(0, 212, 255, 1)'}, 0 0 40px ${useYellowGlow ? 'rgba(250, 182, 23, 0.5)' : 'rgba(0, 212, 255, 0.5)'}`
+                }}
+              >
+                {formatGold(currentOwnerGold)}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // COMPACT DENSITY - Tight, information-dense layout with minimal spacing
+    if (combinedGoldCardStyle === 'compact-density') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          {/* Glowing border effect */}
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+
+          {/* Gradient overlay accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? '#fab617' : '#00d4ff'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-2">
+            {/* Income Rate - Compact */}
+            <div className="flex items-baseline justify-between">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                INCOME RATE
+              </div>
+              <div
+                className={`${accentColor} text-2xl leading-none`}
+                style={{
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200,
+                  textShadow: `0 0 20px ${useYellowGlow ? 'rgba(250, 182, 23, 1)' : 'rgba(0, 212, 255, 1)'}, 0 0 40px ${useYellowGlow ? 'rgba(250, 182, 23, 0.5)' : 'rgba(0, 212, 255, 0.5)'}`
+                }}
+              >
+                {formatGoldRate(goldGenData.total)}
+              </div>
+            </div>
+
+            {/* Subtle divider */}
+            <div className="relative h-px">
+              <div
+                className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400/30' : 'via-cyan-400/30'} to-transparent`}
+              />
+            </div>
+
+            {/* Cumulative - Compact */}
+            <div className="flex items-baseline justify-between">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                CUMULATIVE
+              </div>
+              <div
+                className={`${accentColor} text-2xl leading-none`}
+                style={{
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200,
+                  textShadow: `0 0 20px ${useYellowGlow ? 'rgba(250, 182, 23, 1)' : 'rgba(0, 212, 255, 1)'}, 0 0 40px ${useYellowGlow ? 'rgba(250, 182, 23, 0.5)' : 'rgba(0, 212, 255, 0.5)'}`
+                }}
+              >
+                {formatGold(currentOwnerGold)}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // OVERLAPPING LAYERS - Cards that overlap with depth/layering effect
+    if (combinedGoldCardStyle === 'overlapping-layers') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          {/* Glowing border effect */}
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+
+          {/* Gradient overlay accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? '#fab617' : '#00d4ff'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10">
+            {/* Back layer: Cumulative (positioned lower) */}
+            <div
+              className="relative bg-black/50 border border-gray-600/30 p-4 mb-4"
+              style={{
+                transform: 'translateY(12px)',
+                zIndex: 1
+              }}
+            >
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em] mb-1"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                CUMULATIVE
+              </div>
+              <div
+                className="text-white text-xl"
+                style={{
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 300
+                }}
+              >
+                {formatGold(currentOwnerGold)}
+              </div>
+            </div>
+
+            {/* Front layer: Income Rate (overlaps back layer, elevated) */}
+            <div
+              className={`relative bg-black/70 border-2 ${borderColor} p-4`}
+              style={{
+                transform: 'translateY(-28px)',
+                zIndex: 2,
+                boxShadow: `0 4px 20px rgba(0, 0, 0, 0.5), 0 0 30px ${useYellowGlow ? 'rgba(250, 182, 23, 0.2)' : 'rgba(0, 212, 255, 0.2)'}`
+              }}
+            >
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em] mb-1"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                INCOME RATE
+              </div>
+              <div
+                className={`${accentColor} text-3xl leading-none`}
+                style={{
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200,
+                  textShadow: `0 0 20px ${useYellowGlow ? 'rgba(250, 182, 23, 1)' : 'rgba(0, 212, 255, 1)'}, 0 0 40px ${useYellowGlow ? 'rgba(250, 182, 23, 0.5)' : 'rgba(0, 212, 255, 0.5)'}`
+                }}
+              >
+                {formatGoldRate(goldGenData.total)}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
 
     return null;
   };
@@ -3207,7 +3440,7 @@ export default function MekProfileLightbox({
           return (
             <div key={barLevel} className="flex-1">
               <div
-                className="h-10 sm:h-8 transition-all duration-500 rounded-sm relative overflow-hidden"
+                className="h-12 sm:h-10 transition-all duration-500 rounded-sm relative overflow-hidden"
                 style={{
                   backgroundColor: isActive ? levelColor : '#1a1a1a',
                   backgroundImage: isActive
@@ -3387,50 +3620,36 @@ export default function MekProfileLightbox({
 
     // HERO LEVEL V2: Bold Tech Display with Color Bar Accent
     // Concept: Level number in Orbitron with color bar underneath, heavy glow
+    // NO TENURE - Bars extend to left edge
     if (tenureLevelStyle === 'hero-level-v2') {
       return (
-        <div className="flex items-center justify-between gap-3">
-          {/* Tenure - Minimal left side */}
-          <div className="flex flex-col items-start gap-0.5 shrink-0 opacity-70">
-            <div className="text-gray-400 text-[7px] uppercase tracking-[0.15em] font-mono">TENURE</div>
-            <div className="text-white text-[11px] font-medium">{tenureRate}</div>
-          </div>
-
-          {/* Bars - Center */}
+        <div className="flex items-center gap-3">
+          {/* Bars - Start from left edge */}
           {renderBars()}
 
-          {/* Level - Bold tech display */}
-          <div className="flex flex-col items-end gap-1.5 shrink-0">
-            <div className="text-gray-400 text-[7px] uppercase tracking-[0.2em] font-mono">LEVEL</div>
-            <div className="flex flex-col items-end">
-              {/* Large level number */}
-              <div
-                className="font-bold leading-none"
-                style={{
-                  fontSize: '2.75rem',
-                  fontFamily: 'Orbitron',
-                  fontWeight: 700,
-                  color: levelColor,
-                  textShadow: `
-                    0 0 15px ${levelColor}dd,
-                    0 0 30px ${levelColor}88,
-                    0 0 45px ${levelColor}44,
-                    2px 2px 6px rgba(0,0,0,0.9)
-                  `,
-                  letterSpacing: '-0.05em'
-                }}
-              >
-                {levelValue}
-              </div>
-              {/* Color bar accent */}
-              <div
-                className="w-full h-1 mt-1 rounded-full"
-                style={{
-                  backgroundColor: levelColor,
-                  boxShadow: `0 0 8px ${levelColor}cc, 0 0 16px ${levelColor}66`
-                }}
-              />
+          {/* Level - Bold tech display with number on top, label below */}
+          <div className="flex flex-col items-end justify-center shrink-0 h-12 sm:h-10">
+            {/* Large level number on top */}
+            <div
+              className="font-bold leading-none"
+              style={{
+                fontSize: '2rem',
+                fontFamily: 'Orbitron',
+                fontWeight: 700,
+                color: levelColor,
+                textShadow: `
+                  0 0 15px ${levelColor}dd,
+                  0 0 30px ${levelColor}88,
+                  0 0 45px ${levelColor}44,
+                  2px 2px 6px rgba(0,0,0,0.9)
+                `,
+                letterSpacing: '-0.05em'
+              }}
+            >
+              {levelValue}
             </div>
+            {/* LEVEL label below */}
+            <div className="text-gray-400 text-[8px] uppercase tracking-[0.2em] font-mono mt-0.5">LEVEL</div>
           </div>
         </div>
       );
