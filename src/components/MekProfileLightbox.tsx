@@ -12,7 +12,7 @@ export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-termi
 
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
 export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout' | 'stacked-compact' | 'stacked-wide' | 'stacked-minimal';
-export type GoldGenerationStyle = 'matrix-badge' | 'command-line' | 'energy-display' | 'split-panels' | 'holographic-readout' | 'tech-metrics' | 'data-stream';
+export type GoldGenerationStyle = 'matrix-badge' | 'command-line' | 'energy-display' | 'split-panels' | 'holographic-readout' | 'tech-metrics' | 'data-stream' | 'compact-table' | 'inline-metrics' | 'dense-grid' | 'stat-bar';
 
 export { LevelProgressStyle };
 
@@ -1447,15 +1447,30 @@ export default function MekProfileLightbox({
               </div>
             </div>
 
-            {/* Main Content - Layout 1 (Three-Column) */}
-            <div className="relative">
-              {/* Base content layer (always visible, never blurred) */}
+            {/* Frosted glass blur zone - sticky positioned just below header */}
+            {useForwardBlur && (
               <div
-                className="max-w-7xl mx-auto px-4 pb-6"
+                className="sticky pointer-events-none z-30 -mb-20"
                 style={{
-                  paddingTop: `${headerGap}px`
+                  top: '120px', // Position slightly inside header bottom
+                  height: '100px', // Blur zone height
+                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.05) 50%, transparent 100%)',
+                  filter: `blur(${headerBlur}px)`,
+                  WebkitFilter: `blur(${headerBlur}px)`,
+                  transform: 'translateZ(0)',
+                  maskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
+                  WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)'
                 }}
-              >
+              />
+            )}
+
+            {/* Main Content - Layout 1 (Three-Column) */}
+            <div
+              className="max-w-7xl mx-auto px-4 pb-6"
+              style={{
+                paddingTop: `${headerGap}px`
+              }}
+            >
               <div style={{ display: 'flex', flexDirection: 'column', gap: `${contentSpacing}px` }}>
                 {/* MOBILE: Mek Image Hero (only visible on mobile) */}
                 <div className="lg:hidden mek-card-industrial mek-border-sharp-gold overflow-hidden">
