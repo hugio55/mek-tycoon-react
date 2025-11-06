@@ -30,8 +30,8 @@ export default function MekLayoutsPage() {
   const [showLeftDebugPanel, setShowLeftDebugPanel] = useState(true);
   const [headerDarkness, setHeaderDarkness] = useState(29);
   const [headerBlur, setHeaderBlur] = useState(13);
-  const [variationGlowIntensity, setVariationGlowIntensity] = useState(0.6);
-  const [variationGlowSize, setVariationGlowSize] = useState(25);
+  const [variationGlowIntensity, setVariationGlowIntensity] = useState(0.1);
+  const [variationGlowSize, setVariationGlowSize] = useState(29);
   const [variationTextStyle, setVariationTextStyle] = useState<'hero-focus' | 'tech-readout' | 'minimal-labels' | 'data-grid' | 'compact-badge'>('hero-focus');
   const [statsLayoutStyle, setStatsLayoutStyle] = useState<StatsLayoutStyle>('inline-dot');
   const [tenureLevelStyle, setTenureLevelStyle] = useState<TenureLevelStyle>('classic-side-labels');
@@ -276,6 +276,9 @@ export default function MekLayoutsPage() {
               <option value="inline-badges">Inline Badges</option>
               <option value="vertical-emphasis">Vertical Emphasis</option>
               <option value="minimal-centered">Minimal Centered</option>
+              <option value="hero-level-v1">Hero Level V1 (Massive Glow)</option>
+              <option value="hero-level-v2">Hero Level V2 (Bold Tech)</option>
+              <option value="hero-level-v3">Hero Level V3 (Asymmetric)</option>
             </select>
           </div>
         </div>
