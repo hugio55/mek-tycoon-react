@@ -46,6 +46,9 @@ interface MekProfileLightboxProps {
   useYellowGlow?: boolean;
   headerDarkness?: number;
   headerBlur?: number;
+  useForwardBlur?: boolean;
+  variationGlowIntensity?: number;
+  variationGlowSize?: number;
 }
 
 export default function MekProfileLightbox({
@@ -80,7 +83,10 @@ export default function MekProfileLightbox({
   onContentSpacingChange,
   useYellowGlow = false,
   headerDarkness = 50,
-  headerBlur = 8
+  headerBlur = 8,
+  useForwardBlur = false,
+  variationGlowIntensity = 0.6,
+  variationGlowSize = 25
 }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
@@ -1471,24 +1477,61 @@ export default function MekProfileLightbox({
         {/* Scrollable Content */}
         <div className="w-full flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
           <div className="relative text-white">
+            {/* Forward Blur Mask Overlay - Only shown when useForwardBlur is true */}
+            {useForwardBlur && (
+              <div
+                className="fixed inset-0 pointer-events-none z-30"
+                style={{
+                  background: `linear-gradient(to bottom,
+                    rgba(0, 0, 0, 0) 0%,
+                    rgba(0, 0, 0, 0) calc(140px - ${headerBlur * 3}px),
+                    rgba(0, 0, 0, ${headerDarkness / 100}) 140px)`,
+                  backdropFilter: `blur(0px)`,
+                  WebkitBackdropFilter: `blur(0px)`,
+                  maskImage: `linear-gradient(to bottom,
+                    black 0px,
+                    black calc(140px - ${headerBlur * 3}px),
+                    transparent 140px,
+                    transparent 100%)`,
+                  WebkitMaskImage: `linear-gradient(to bottom,
+                    black 0px,
+                    black calc(140px - ${headerBlur * 3}px),
+                    transparent 140px,
+                    transparent 100%)`
+                }}
+              >
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backdropFilter: `blur(${headerBlur}px)`,
+                    WebkitBackdropFilter: `blur(${headerBlur}px)`
+                  }}
+                />
+              </div>
+            )}
+
             {/* Industrial Header - Made Sticky with Dynamic Blur & Darkness */}
             <div
               className="sticky top-0 z-40 w-full"
               style={{
                 backgroundColor: `rgba(0, 0, 0, ${headerDarkness / 100})`,
-                backdropFilter: `blur(${headerBlur}px) saturate(80%)`,
-                WebkitBackdropFilter: `blur(${headerBlur}px) saturate(80%)`
+                ...(!useForwardBlur && {
+                  backdropFilter: `blur(${headerBlur}px) saturate(80%)`,
+                  WebkitBackdropFilter: `blur(${headerBlur}px) saturate(80%)`
+                })
               }}
             >
-              {/* Additional blur overlay layer for stronger text blur effect */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  backdropFilter: `blur(${Math.floor(headerBlur / 2)}px)`,
-                  WebkitBackdropFilter: `blur(${Math.floor(headerBlur / 2)}px)`,
-                  zIndex: -1
-                }}
-              />
+              {/* Additional blur overlay layer - only for backdrop filter mode */}
+              {!useForwardBlur && (
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    backdropFilter: `blur(${Math.floor(headerBlur / 2)}px)`,
+                    WebkitBackdropFilter: `blur(${Math.floor(headerBlur / 2)}px)`,
+                    zIndex: -1
+                  }}
+                />
+              )}
               <div className="relative overflow-hidden">
                 <div className="absolute inset-0 opacity-5">
                   <div className="absolute inset-0" style={{
@@ -1710,7 +1753,7 @@ function VariationCard({ title, imagePath }: { title: string; imagePath?: string
             alt={title}
             className="w-full h-48 object-contain scale-[0.7]"
             style={{
-              filter: 'drop-shadow(0 0 25px rgba(250, 182, 23, 0.6)) drop-shadow(0 0 40px rgba(250, 182, 23, 0.3))'
+              filter: `drop-shadow(0 0 ${variationGlowSize}px rgba(250, 182, 23, ${variationGlowIntensity})) drop-shadow(0 0 ${variationGlowSize * 1.6}px rgba(250, 182, 23, ${variationGlowIntensity * 0.5}))`
             }}
           />
         ) : (

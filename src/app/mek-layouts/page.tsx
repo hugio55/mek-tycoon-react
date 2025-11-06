@@ -27,6 +27,7 @@ export default function MekLayoutsPage() {
   const [showLeftDebugPanel, setShowLeftDebugPanel] = useState(true);
   const [headerDarkness, setHeaderDarkness] = useState(80);
   const [headerBlur, setHeaderBlur] = useState(12);
+  const [useForwardBlur, setUseForwardBlur] = useState(false);
   const [variationGlowIntensity, setVariationGlowIntensity] = useState(0.6);
   const [variationGlowSize, setVariationGlowSize] = useState(25);
 
@@ -132,6 +133,60 @@ export default function MekLayoutsPage() {
               value={headerBlur}
               onChange={(e) => setHeaderBlur(Number(e.target.value))}
               className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-purple-500"
+            />
+          </div>
+
+          {/* Toggle: Forward Blur Mask */}
+          <div className="mb-3">
+            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+              Blur Method
+            </label>
+            <button
+              onClick={() => setUseForwardBlur(!useForwardBlur)}
+              className={`w-full px-3 py-2 rounded text-xs font-bold uppercase tracking-wider transition-all ${
+                useForwardBlur
+                  ? 'bg-purple-500/20 border-2 border-purple-500 text-purple-400'
+                  : 'bg-gray-500/20 border-2 border-gray-500 text-gray-400'
+              }`}
+            >
+              {useForwardBlur ? '🎯 Forward Blur Mask' : '🔙 Backdrop Filter'}
+            </button>
+          </div>
+
+          {/* Separator */}
+          <div className="my-4 border-t border-purple-500/30" />
+          <h4 className="text-purple-400 text-[9px] font-bold uppercase tracking-wider mb-3">
+            Variation PNG Glow
+          </h4>
+
+          {/* Slider 3: Variation Glow Intensity */}
+          <div className="mb-3">
+            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+              Glow Intensity: {(variationGlowIntensity * 100).toFixed(0)}%
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={variationGlowIntensity}
+              onChange={(e) => setVariationGlowIntensity(Number(e.target.value))}
+              className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+            />
+          </div>
+
+          {/* Slider 4: Variation Glow Size */}
+          <div className="mb-3">
+            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+              Glow Size: {variationGlowSize}px
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="60"
+              value={variationGlowSize}
+              onChange={(e) => setVariationGlowSize(Number(e.target.value))}
+              className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-yellow-500"
             />
           </div>
         </div>
@@ -498,6 +553,9 @@ export default function MekLayoutsPage() {
         onContentSpacingChange={setContentSpacing}
         headerDarkness={headerDarkness}
         headerBlur={headerBlur}
+        useForwardBlur={useForwardBlur}
+        variationGlowIntensity={variationGlowIntensity}
+        variationGlowSize={variationGlowSize}
       />
 
       {/* Gold Generation Details Lightbox */}
