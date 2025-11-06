@@ -573,6 +573,7 @@ export default function MekLayoutsPage() {
         useForwardBlur={useForwardBlur}
         variationGlowIntensity={variationGlowIntensity}
         variationGlowSize={variationGlowSize}
+        variationNoiseIntensity={variationNoiseIntensity}
       />
 
       {/* Gold Generation Details Lightbox */}
