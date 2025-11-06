@@ -18,7 +18,7 @@ export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-sty
 export type GoldGenerationStyle = 'matrix-badge' | 'command-line' | 'energy-display' | 'split-panels' | 'holographic-readout' | 'tech-metrics' | 'data-stream' | 'compact-table' | 'inline-metrics' | 'dense-grid' | 'stat-bar' | 'compact-table-v2' | 'compact-table-v3' | 'compact-table-v4';
 export type CombinedGoldCardStyle = 'vertical-stacked' | 'side-by-side' | 'dashboard-grid' | 'hero-emphasis' | 'elegant-split' | 'cascade-accumulation' | 'energy-conduit' | 'clean-horizontal' | 'stacked-minimal' | 'badge-pair' | 'diagonal-split' | 'compact-density' | 'overlapping-layers';
 export type StatsLayoutStyle = 'inline-dot' | 'vertical-divider' | 'badge-pills' | 'label-above' | 'glow-separator';
-export type TenureLevelStyle = 'classic-side-labels' | 'stacked-compact' | 'inline-badges' | 'vertical-emphasis' | 'minimal-centered' | 'hero-level-v1' | 'hero-level-v2' | 'hero-level-v3';
+export type TenureLevelStyle = 'classic-side-labels' | 'stacked-compact' | 'inline-badges' | 'vertical-emphasis' | 'minimal-centered' | 'hero-level-v1' | 'hero-level-v2' | 'hero-level-v3' | 'card-slide-up' | 'card-floating-badge' | 'card-inset-panel' | 'card-tech-plate';
 
 export { LevelProgressStyle };
 
@@ -3801,6 +3801,344 @@ export default function MekProfileLightbox({
               }}
             >
               LEVEL
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // CARD SLIDE-UP: Card overlaps bars from below with strong drop shadow
+    if (tenureLevelStyle === 'card-slide-up') {
+      return (
+        <div className="relative">
+          {/* Tenure - Tiny left side */}
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col gap-0.5 z-10 opacity-70">
+            <div className="text-gray-400 text-[7px] uppercase tracking-wider font-mono">TEN</div>
+            <div className="text-white/80 text-[10px] font-medium">{tenureRate}</div>
+          </div>
+
+          {/* Bars - Full width */}
+          <div className="flex gap-1 sm:gap-1.5 pl-12">
+            {Array.from({ length: 10 }, (_, i) => {
+              const barLevel = i + 1;
+              const isActive = barLevel <= displayLevel;
+
+              return (
+                <div key={barLevel} className="flex-1">
+                  <div
+                    className="h-8 transition-all duration-500 rounded-sm relative overflow-hidden"
+                    style={{
+                      backgroundColor: isActive ? levelColor : '#1a1a1a',
+                      border: isActive ? `1px solid ${levelColor}` : '1px solid #666',
+                      boxShadow: isActive ? `0 0 8px ${levelColor}80` : 'none',
+                      opacity: isActive ? 1 : 0.4,
+                    }}
+                  >
+                    {isActive && (
+                      <div
+                        className="absolute bottom-0 left-0 right-0 h-3/4"
+                        style={{
+                          background: `linear-gradient(to top, ${levelColor}, transparent)`,
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Card - Centered, overlapping from below with slide-up effect */}
+          <div className="absolute left-1/2 -translate-x-1/2 -bottom-3 z-20">
+            <div
+              className="px-4 py-2 rounded flex flex-col items-center justify-center"
+              style={{
+                background: `linear-gradient(135deg, rgba(20,20,20,0.95) 0%, rgba(40,40,40,0.95) 100%)`,
+                border: `2px solid ${levelColor}`,
+                boxShadow: `
+                  0 4px 12px rgba(0,0,0,0.9),
+                  0 0 20px ${levelColor}40,
+                  inset 0 1px 0 rgba(255,255,255,0.1)
+                `,
+              }}
+            >
+              <div
+                className="font-bold leading-none"
+                style={{
+                  fontSize: '28px',
+                  fontFamily: 'Orbitron',
+                  fontWeight: 700,
+                  color: levelColor,
+                  textShadow: `0 0 15px ${levelColor}dd, 0 2px 4px rgba(0,0,0,0.8)`,
+                }}
+              >
+                {levelValue}
+              </div>
+              <div className="text-gray-400 text-[9px] uppercase tracking-widest font-mono mt-0.5">
+                LVL
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // CARD FLOATING-BADGE: Heavy multi-layer shadow with glow, feels like hovering
+    if (tenureLevelStyle === 'card-floating-badge') {
+      return (
+        <div className="relative">
+          {/* Tenure - Tiny left side */}
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col gap-0.5 z-10 opacity-70">
+            <div className="text-gray-400 text-[7px] uppercase tracking-wider font-mono">TEN</div>
+            <div className="text-white/80 text-[10px] font-medium">{tenureRate}</div>
+          </div>
+
+          {/* Bars - Full width */}
+          <div className="flex gap-1 sm:gap-1.5 pl-12">
+            {Array.from({ length: 10 }, (_, i) => {
+              const barLevel = i + 1;
+              const isActive = barLevel <= displayLevel;
+
+              return (
+                <div key={barLevel} className="flex-1">
+                  <div
+                    className="h-8 transition-all duration-500 rounded-sm relative overflow-hidden"
+                    style={{
+                      backgroundColor: isActive ? levelColor : '#1a1a1a',
+                      border: isActive ? `1px solid ${levelColor}` : '1px solid #666',
+                      boxShadow: isActive ? `0 0 8px ${levelColor}80` : 'none',
+                      opacity: isActive ? 1 : 0.4,
+                    }}
+                  >
+                    {isActive && (
+                      <div
+                        className="absolute bottom-0 left-0 right-0 h-3/4"
+                        style={{
+                          background: `linear-gradient(to top, ${levelColor}, transparent)`,
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Badge - Centered, floating with heavy glow */}
+          <div className="absolute left-1/2 -translate-x-1/2 -bottom-4 z-20">
+            <div
+              className="w-16 h-16 rounded-full flex flex-col items-center justify-center"
+              style={{
+                background: `radial-gradient(circle at center, rgba(30,30,30,0.98) 0%, rgba(20,20,20,0.98) 100%)`,
+                border: `3px solid ${levelColor}`,
+                boxShadow: `
+                  0 0 30px ${levelColor}dd,
+                  0 0 50px ${levelColor}88,
+                  0 0 70px ${levelColor}44,
+                  0 6px 20px rgba(0,0,0,0.9),
+                  0 2px 8px rgba(0,0,0,0.8),
+                  inset 0 2px 4px rgba(255,255,255,0.15)
+                `,
+              }}
+            >
+              <div
+                className="font-bold leading-none"
+                style={{
+                  fontSize: '26px',
+                  fontFamily: 'Orbitron',
+                  fontWeight: 700,
+                  color: levelColor,
+                  textShadow: `0 0 20px ${levelColor}ff, 0 0 40px ${levelColor}88`,
+                }}
+              >
+                {levelValue}
+              </div>
+              <div className="text-gray-400 text-[8px] uppercase tracking-widest font-mono mt-0.5">
+                LVL
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // CARD INSET-PANEL: Recessed look with inner shadows and embossed effect
+    if (tenureLevelStyle === 'card-inset-panel') {
+      return (
+        <div className="relative">
+          {/* Tenure - Tiny left side */}
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col gap-0.5 z-10 opacity-70">
+            <div className="text-gray-400 text-[7px] uppercase tracking-wider font-mono">TEN</div>
+            <div className="text-white/80 text-[10px] font-medium">{tenureRate}</div>
+          </div>
+
+          {/* Bars - Full width */}
+          <div className="flex gap-1 sm:gap-1.5 pl-12">
+            {Array.from({ length: 10 }, (_, i) => {
+              const barLevel = i + 1;
+              const isActive = barLevel <= displayLevel;
+
+              return (
+                <div key={barLevel} className="flex-1">
+                  <div
+                    className="h-8 transition-all duration-500 rounded-sm relative overflow-hidden"
+                    style={{
+                      backgroundColor: isActive ? levelColor : '#1a1a1a',
+                      border: isActive ? `1px solid ${levelColor}` : '1px solid #666',
+                      boxShadow: isActive ? `0 0 8px ${levelColor}80` : 'none',
+                      opacity: isActive ? 1 : 0.4,
+                    }}
+                  >
+                    {isActive && (
+                      <div
+                        className="absolute bottom-0 left-0 right-0 h-3/4"
+                        style={{
+                          background: `linear-gradient(to top, ${levelColor}, transparent)`,
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Inset Panel - Centered, recessed with inner shadows */}
+          <div className="absolute left-1/2 -translate-x-1/2 -bottom-3 z-20">
+            <div
+              className="px-5 py-2.5 rounded flex flex-col items-center justify-center"
+              style={{
+                background: `linear-gradient(135deg, rgba(15,15,15,0.98) 0%, rgba(25,25,25,0.98) 100%)`,
+                border: `1px solid ${levelColor}88`,
+                boxShadow: `
+                  inset 0 4px 8px rgba(0,0,0,0.8),
+                  inset 0 -2px 4px rgba(255,255,255,0.05),
+                  0 0 15px ${levelColor}30,
+                  0 2px 8px rgba(0,0,0,0.6)
+                `,
+              }}
+            >
+              <div
+                className="font-bold leading-none"
+                style={{
+                  fontSize: '30px',
+                  fontFamily: 'Orbitron',
+                  fontWeight: 700,
+                  color: levelColor,
+                  textShadow: `0 0 10px ${levelColor}aa, 0 1px 2px rgba(0,0,0,0.9)`,
+                }}
+              >
+                {levelValue}
+              </div>
+              <div
+                className="uppercase tracking-widest font-mono mt-1"
+                style={{
+                  fontSize: '9px',
+                  color: '#6b7280',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                }}
+              >
+                LVL
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // CARD TECH-PLATE: Angular industrial plate with metallic gradient and sharp edges
+    if (tenureLevelStyle === 'card-tech-plate') {
+      return (
+        <div className="relative">
+          {/* Tenure - Tiny left side */}
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col gap-0.5 z-10 opacity-70">
+            <div className="text-gray-400 text-[7px] uppercase tracking-wider font-mono">TEN</div>
+            <div className="text-white/80 text-[10px] font-medium">{tenureRate}</div>
+          </div>
+
+          {/* Bars - Full width */}
+          <div className="flex gap-1 sm:gap-1.5 pl-12">
+            {Array.from({ length: 10 }, (_, i) => {
+              const barLevel = i + 1;
+              const isActive = barLevel <= displayLevel;
+
+              return (
+                <div key={barLevel} className="flex-1">
+                  <div
+                    className="h-8 transition-all duration-500 relative overflow-hidden"
+                    style={{
+                      backgroundColor: isActive ? levelColor : '#1a1a1a',
+                      border: isActive ? `1px solid ${levelColor}` : '1px solid #666',
+                      boxShadow: isActive ? `0 0 8px ${levelColor}80` : 'none',
+                      opacity: isActive ? 1 : 0.4,
+                      clipPath: 'polygon(8% 0%, 100% 0%, 92% 100%, 0% 100%)',
+                    }}
+                  >
+                    {isActive && (
+                      <div
+                        className="absolute bottom-0 left-0 right-0 h-3/4"
+                        style={{
+                          background: `linear-gradient(to top, ${levelColor}, transparent)`,
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Tech Plate - Centered, angular with metallic gradient */}
+          <div className="absolute left-1/2 -translate-x-1/2 -bottom-3 z-20">
+            <div
+              className="px-6 py-2 flex flex-col items-center justify-center"
+              style={{
+                background: `linear-gradient(135deg,
+                  rgba(50,50,50,0.95) 0%,
+                  rgba(30,30,30,0.95) 25%,
+                  rgba(20,20,20,0.95) 50%,
+                  rgba(30,30,30,0.95) 75%,
+                  rgba(50,50,50,0.95) 100%
+                )`,
+                border: `2px solid ${levelColor}`,
+                borderTop: `3px solid ${levelColor}dd`,
+                borderBottom: `1px solid ${levelColor}44`,
+                boxShadow: `
+                  0 0 20px ${levelColor}60,
+                  0 4px 12px rgba(0,0,0,0.9),
+                  inset 0 1px 0 rgba(255,255,255,0.2),
+                  inset 0 -1px 0 rgba(0,0,0,0.8)
+                `,
+                clipPath: 'polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%)',
+              }}
+            >
+              <div
+                className="font-bold leading-none"
+                style={{
+                  fontSize: '32px',
+                  fontFamily: 'Orbitron',
+                  fontWeight: 700,
+                  color: levelColor,
+                  textShadow: `
+                    0 0 15px ${levelColor}ff,
+                    0 0 30px ${levelColor}88,
+                    0 2px 6px rgba(0,0,0,0.9)
+                  `,
+                  WebkitTextStroke: `0.5px ${levelColor}44`,
+                }}
+              >
+                {levelValue}
+              </div>
+              <div
+                className="uppercase tracking-[0.2em] font-mono mt-0.5"
+                style={{
+                  fontSize: '8px',
+                  color: '#9ca3af',
+                  textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                }}
+              >
+                LVL
+              </div>
             </div>
           </div>
         </div>
