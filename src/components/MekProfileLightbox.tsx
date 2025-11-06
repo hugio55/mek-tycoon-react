@@ -360,20 +360,28 @@ export default function MekProfileLightbox({
 
     // Option 3: Data Terminal - Full-width horizontal bars with scanline overlay
     if (designationCardStyle === 'data-terminal') {
+      const borderBottomColor = useYellowGlow ? 'border-yellow-500/20' : 'border-cyan-500/20';
+      const accentBgColor = useYellowGlow ? 'bg-yellow-400' : 'bg-cyan-400';
+      const hoverBgFrom = useYellowGlow ? 'from-yellow-500/10' : 'from-cyan-500/10';
+      const hoverBgHover = useYellowGlow ? 'hover:from-yellow-500/15' : 'hover:from-cyan-500/15';
+      const hoverBg = useYellowGlow ? 'hover:bg-yellow-500/5' : 'hover:bg-cyan-500/5';
+      const accentBarShadow = useYellowGlow ? '0 0 10px rgba(250, 182, 23, 0.5)' : '0 0 10px rgba(0, 212, 255, 0.5)';
+      const scanlineRgba = useYellowGlow ? 'rgba(250, 182, 23, 0.03)' : 'rgba(0, 212, 255, 0.03)';
+
       return (
-        <div className="relative p-0 bg-black/50 backdrop-blur-sm border border-cyan-500/20 overflow-hidden">
+        <div className={`relative p-0 bg-black/50 backdrop-blur-sm border ${borderColor} overflow-hidden`}>
           {/* Scanline overlay effect */}
           <div className="absolute inset-0 pointer-events-none" style={{
-            backgroundImage: 'repeating-linear-gradient(0deg, rgba(0, 212, 255, 0.03) 0px, transparent 1px, transparent 2px, rgba(0, 212, 255, 0.03) 3px)',
+            backgroundImage: `repeating-linear-gradient(0deg, ${scanlineRgba} 0px, transparent 1px, transparent 2px, ${scanlineRgba} 3px)`,
             animation: 'scanline 8s linear infinite'
           }} />
 
           <div className="relative z-10">
             {/* Mekanism Number Bar */}
-            <div className="flex items-center border-b border-cyan-500/20 px-4 py-3 bg-black/20 hover:bg-cyan-500/5 transition-colors">
-              <div className="w-1 h-8 bg-cyan-400 mr-3" style={{ boxShadow: '0 0 10px rgba(0, 212, 255, 0.5)' }} />
+            <div className={`flex items-center border-b ${borderBottomColor} px-4 py-3 bg-black/20 ${hoverBg} transition-colors`}>
+              <div className={`w-1 h-8 ${accentBgColor} mr-3`} style={{ boxShadow: accentBarShadow }} />
               <div className="flex-1">
-                <div className="text-[9px] text-cyan-400/60 uppercase tracking-widest font-mono mb-0.5">
+                <div className={`text-[9px] ${accentColorDim} uppercase tracking-widest font-mono mb-0.5`}>
                   MEKANISM
                 </div>
                 <div className="text-white text-base font-mono font-bold">
@@ -383,15 +391,15 @@ export default function MekProfileLightbox({
             </div>
 
             {/* Rank Bar - Emphasized */}
-            <div className="flex items-center border-b border-cyan-500/20 px-4 py-3 bg-gradient-to-r from-cyan-500/10 to-transparent hover:from-cyan-500/15 transition-colors">
-              <div className="w-1 h-8 bg-cyan-400 mr-3" style={{ boxShadow: '0 0 10px rgba(0, 212, 255, 0.5)' }} />
+            <div className={`flex items-center border-b ${borderBottomColor} px-4 py-3 bg-gradient-to-r ${hoverBgFrom} to-transparent ${hoverBgHover} transition-colors`}>
+              <div className={`w-1 h-8 ${accentBgColor} mr-3`} style={{ boxShadow: accentBarShadow }} />
               <div className="flex-1">
-                <div className="text-[9px] text-cyan-400/60 uppercase tracking-widest font-mono mb-0.5">
+                <div className={`text-[9px] ${accentColorDim} uppercase tracking-widest font-mono mb-0.5`}>
                   RANK
                 </div>
                 <div
-                  className="text-cyan-400 text-2xl font-mono font-black"
-                  style={{ textShadow: '0 0 15px rgba(0, 212, 255, 0.8)' }}
+                  className={`${accentColor} text-2xl font-mono font-black`}
+                  style={{ textShadow: textShadowGlow }}
                 >
                   {mekData.rank}
                 </div>
@@ -399,10 +407,10 @@ export default function MekProfileLightbox({
             </div>
 
             {/* Corporation Bar */}
-            <div className="flex items-center border-b border-cyan-500/20 px-4 py-3 bg-black/20 hover:bg-cyan-500/5 transition-colors">
-              <div className="w-1 h-8 bg-cyan-400 mr-3" style={{ boxShadow: '0 0 10px rgba(0, 212, 255, 0.5)' }} />
+            <div className={`flex items-center border-b ${borderBottomColor} px-4 py-3 bg-black/20 ${hoverBg} transition-colors`}>
+              <div className={`w-1 h-8 ${accentBgColor} mr-3`} style={{ boxShadow: accentBarShadow }} />
               <div className="flex-1">
-                <div className="text-[9px] text-cyan-400/60 uppercase tracking-widest font-mono mb-0.5">
+                <div className={`text-[9px] ${accentColorDim} uppercase tracking-widest font-mono mb-0.5`}>
                   CORPORATION
                 </div>
                 <div className="text-white text-sm font-mono font-semibold">
@@ -412,14 +420,188 @@ export default function MekProfileLightbox({
             </div>
 
             {/* Employee ID Bar */}
-            <div className="flex items-center px-4 py-3 bg-black/20 hover:bg-cyan-500/5 transition-colors">
-              <div className="w-1 h-8 bg-cyan-400 mr-3" style={{ boxShadow: '0 0 10px rgba(0, 212, 255, 0.5)' }} />
+            <div className={`flex items-center px-4 py-3 bg-black/20 ${hoverBg} transition-colors`}>
+              <div className={`w-1 h-8 ${accentBgColor} mr-3`} style={{ boxShadow: accentBarShadow }} />
               <div className="flex-1">
-                <div className="text-[9px] text-cyan-400/60 uppercase tracking-widest font-mono mb-0.5">
+                <div className={`text-[9px] ${accentColorDim} uppercase tracking-widest font-mono mb-0.5`}>
                   EMPLOYEE ID
                 </div>
                 <div className="text-white text-base font-mono font-bold tracking-wide">
                   {mekData.employeeId}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  // Render Gold Produced Card based on selected style
+  const renderGoldProducedCard = () => {
+    const goldData = {
+      currentOwner: '12,869.015',
+      allTime: '458,414.324'
+    };
+
+    // Dynamic colors based on useYellowGlow
+    const accentColor = useYellowGlow ? 'text-yellow-400' : 'text-cyan-400';
+    const accentColorDim = useYellowGlow ? 'text-yellow-400/60' : 'text-cyan-400/60';
+    const borderColor = useYellowGlow ? 'border-yellow-400/50' : 'border-cyan-400/50';
+    const glowRgba = useYellowGlow ? 'rgba(250, 182, 23, 0.3)' : 'rgba(0, 212, 255, 0.3)';
+    const glowRgbaInset = useYellowGlow ? 'rgba(250, 182, 23, 0.1)' : 'rgba(0, 212, 255, 0.1)';
+    const textShadowGlow = useYellowGlow ? '0 0 15px rgba(250, 182, 23, 0.8)' : '0 0 15px rgba(0, 212, 255, 0.8)';
+
+    // Option 1: Corner Brackets
+    if (designationCardStyle === 'corner-brackets') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm">
+          {/* Corner Bracket SVG Elements */}
+          <svg className={`absolute top-0 left-0 w-8 h-8 ${accentColor}`} viewBox="0 0 32 32">
+            <path d="M 0 8 L 0 0 L 8 0" stroke="currentColor" strokeWidth="2" fill="none" />
+            <path d="M 0 0 L 8 8" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="none" />
+          </svg>
+          <svg className={`absolute top-0 right-0 w-8 h-8 ${accentColor}`} viewBox="0 0 32 32">
+            <path d="M 32 8 L 32 0 L 24 0" stroke="currentColor" strokeWidth="2" fill="none" />
+            <path d="M 32 0 L 24 8" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="none" />
+          </svg>
+          <svg className={`absolute bottom-0 left-0 w-8 h-8 ${accentColor}`} viewBox="0 0 32 32">
+            <path d="M 0 24 L 0 32 L 8 32" stroke="currentColor" strokeWidth="2" fill="none" />
+            <path d="M 0 32 L 8 24" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="none" />
+          </svg>
+          <svg className={`absolute bottom-0 right-0 w-8 h-8 ${accentColor}`} viewBox="0 0 32 32">
+            <path d="M 32 24 L 32 32 L 24 32" stroke="currentColor" strokeWidth="2" fill="none" />
+            <path d="M 32 32 L 24 24" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="none" />
+          </svg>
+
+          {/* Border glow effect */}
+          <div
+            className={`absolute inset-0 border ${borderColor} pointer-events-none`}
+            style={{ boxShadow: `0 0 20px ${glowRgba}, inset 0 0 20px ${glowRgbaInset}` }}
+          />
+
+          {/* Content */}
+          <div className="relative z-10 space-y-4">
+            {/* Current Owner - Prominent with glow */}
+            <div>
+              <div className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono mb-1`}>
+                CURRENT OWNER
+              </div>
+              <div
+                className={`${accentColor} text-2xl font-mono font-black`}
+                style={{ textShadow: textShadowGlow }}
+              >
+                {goldData.currentOwner}
+              </div>
+            </div>
+
+            {/* All Time */}
+            <div>
+              <div className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono mb-1`}>
+                ALL TIME
+              </div>
+              <div className="text-white text-xl font-mono font-bold">
+                {goldData.allTime}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Option 2: Split HUD
+    if (designationCardStyle === 'split-hud') {
+      const borderLeftColor = useYellowGlow ? 'border-yellow-500' : 'border-cyan-500';
+      const bgGradientFrom = useYellowGlow ? 'from-yellow-500/20' : 'from-cyan-500/20';
+      const bgGradientTo = useYellowGlow ? 'to-yellow-700/10' : 'to-cyan-700/10';
+      const dividerColor = useYellowGlow ? 'via-yellow-500/50' : 'via-cyan-500/50';
+      const dividerShadow = useYellowGlow ? '0 0 10px rgba(250, 182, 23, 0.5)' : '0 0 10px rgba(0, 212, 255, 0.5)';
+
+      return (
+        <div className={`relative p-4 bg-gradient-to-r from-black/60 via-black/40 to-black/60 backdrop-blur-sm border ${borderColor}`}>
+          {/* Background grid pattern */}
+          <div className="absolute inset-0 opacity-5" style={{
+            backgroundImage: useYellowGlow
+              ? 'linear-gradient(rgba(250, 182, 23, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(250, 182, 23, 0.3) 1px, transparent 1px)'
+              : 'linear-gradient(rgba(0, 212, 255, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 255, 0.3) 1px, transparent 1px)',
+            backgroundSize: '20px 20px'
+          }} />
+
+          <div className="relative z-10 flex gap-4 items-center">
+            {/* Left: Current Owner */}
+            <div className={`flex-1 px-4 py-3 bg-gradient-to-br ${bgGradientFrom} ${bgGradientTo} border-l-4 ${borderLeftColor}`}>
+              <div className={`text-[9px] ${accentColor} uppercase tracking-widest font-mono mb-2`}>
+                CURRENT OWNER
+              </div>
+              <div className={`${accentColor} text-2xl font-mono font-black`} style={{ textShadow: textShadowGlow }}>
+                {goldData.currentOwner}
+              </div>
+            </div>
+
+            {/* Vertical Divider with glow */}
+            <div className={`w-px h-16 bg-gradient-to-b from-transparent ${dividerColor} to-transparent`}
+                 style={{ boxShadow: dividerShadow }}
+            />
+
+            {/* Right: All Time */}
+            <div className="flex-1 px-4 py-3">
+              <div className={`text-[9px] ${accentColorDim} uppercase tracking-widest font-mono mb-2`}>
+                ALL TIME
+              </div>
+              <div className="text-white text-xl font-mono font-bold">
+                {goldData.allTime}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Option 3: Data Terminal
+    if (designationCardStyle === 'data-terminal') {
+      const borderBottomColor = useYellowGlow ? 'border-yellow-500/20' : 'border-cyan-500/20';
+      const accentBgColor = useYellowGlow ? 'bg-yellow-400' : 'bg-cyan-400';
+      const hoverBgFrom = useYellowGlow ? 'from-yellow-500/10' : 'from-cyan-500/10';
+      const hoverBgHover = useYellowGlow ? 'hover:from-yellow-500/15' : 'hover:from-cyan-500/15';
+      const accentBarShadow = useYellowGlow ? '0 0 10px rgba(250, 182, 23, 0.5)' : '0 0 10px rgba(0, 212, 255, 0.5)';
+      const scanlineRgba = useYellowGlow ? 'rgba(250, 182, 23, 0.03)' : 'rgba(0, 212, 255, 0.03)';
+
+      return (
+        <div className={`relative p-0 bg-black/50 backdrop-blur-sm border ${borderColor} overflow-hidden`}>
+          {/* Scanline overlay effect */}
+          <div className="absolute inset-0 pointer-events-none" style={{
+            backgroundImage: `repeating-linear-gradient(0deg, ${scanlineRgba} 0px, transparent 1px, transparent 2px, ${scanlineRgba} 3px)`,
+            animation: 'scanline 8s linear infinite'
+          }} />
+
+          <div className="relative z-10">
+            {/* Current Owner Bar - Emphasized */}
+            <div className={`flex items-center border-b ${borderBottomColor} px-4 py-3 bg-gradient-to-r ${hoverBgFrom} to-transparent ${hoverBgHover} transition-colors`}>
+              <div className={`w-1 h-8 ${accentBgColor} mr-3`} style={{ boxShadow: accentBarShadow }} />
+              <div className="flex-1">
+                <div className={`text-[9px] ${accentColorDim} uppercase tracking-widest font-mono mb-0.5`}>
+                  CURRENT OWNER
+                </div>
+                <div
+                  className={`${accentColor} text-2xl font-mono font-black`}
+                  style={{ textShadow: textShadowGlow }}
+                >
+                  {goldData.currentOwner}
+                </div>
+              </div>
+            </div>
+
+            {/* All Time Bar */}
+            <div className={`flex items-center px-4 py-3 bg-black/20 ${useYellowGlow ? 'hover:bg-yellow-500/5' : 'hover:bg-cyan-500/5'} transition-colors`}>
+              <div className={`w-1 h-8 ${accentBgColor} mr-3`} style={{ boxShadow: accentBarShadow }} />
+              <div className="flex-1">
+                <div className={`text-[9px] ${accentColorDim} uppercase tracking-widest font-mono mb-0.5`}>
+                  ALL TIME
+                </div>
+                <div className="text-white text-xl font-mono font-bold">
+                  {goldData.allTime}
                 </div>
               </div>
             </div>
@@ -639,19 +821,7 @@ export default function MekProfileLightbox({
                     </div>
 
                     {/* Gold Produced */}
-                    <div className={getCardClasses()}>
-                      <div className="mek-label-uppercase mb-2">GOLD PRODUCED</div>
-                      <div className={getCardSpacing()}>
-                        <div className={getCardInteriorClasses()}>
-                          <div className={getLabelClasses()}>CURRENT OWNER</div>
-                          <div className={`mek-value-primary ${getValueClasses()}`}>12,869.015</div>
-                        </div>
-                        <div className={getCardInteriorClasses()}>
-                          <div className={getLabelClasses()}>ALL TIME</div>
-                          <div className={`text-white ${getValueClasses()}`}>458,414.324</div>
-                        </div>
-                      </div>
-                    </div>
+                    {renderGoldProducedCard()}
                   </div>
                 </div>
 
