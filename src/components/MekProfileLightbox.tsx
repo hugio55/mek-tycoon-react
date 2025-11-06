@@ -4079,6 +4079,441 @@ export default function MekProfileLightbox({
       );
     }
 
+    // COMPACT DENSITY V3 - LAYOUT 1: Centered Stack (all centered alignment)
+    if (combinedGoldCardStyle === 'compact-density-v3-layout1') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? '#fab617' : '#00d4ff'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-3">
+            {/* INCOME header - centered */}
+            <div
+              className="text-center text-[10px] text-white/40 uppercase tracking-[0.3em]"
+              style={{ fontFamily: 'Inter', fontWeight: 400 }}
+            >
+              INCOME
+            </div>
+
+            {/* Income Rate - label above, centered */}
+            <div className="text-center space-y-1">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                INCOME RATE
+              </div>
+              <div className="flex items-baseline justify-center gap-1">
+                <span
+                  className={`${accentColor} text-4xl leading-none`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 700,
+                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`
+                  }}
+                >
+                  21
+                </span>
+                <span
+                  className="text-sm text-white/50"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                >
+                  g/hr
+                </span>
+              </div>
+            </div>
+
+            <div className="relative h-px">
+              <div className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400/30' : 'via-cyan-400/30'} to-transparent`} />
+            </div>
+
+            {/* Cumulative - label above, centered */}
+            <div className="text-center space-y-1">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                CUMULATIVE
+              </div>
+              <div className="flex items-baseline justify-center gap-0.5">
+                <span
+                  className={`${accentColor} text-2xl leading-none`}
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 100 }}
+                >
+                  453,412
+                </span>
+                <span
+                  className="text-xs text-white/50"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 100 }}
+                >
+                  g
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // COMPACT DENSITY V3 - LAYOUT 2: Left Labels, Right Numbers (with header)
+    if (combinedGoldCardStyle === 'compact-density-v3-layout2') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? '#fab617' : '#00d4ff'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-3">
+            {/* INCOME header - left aligned */}
+            <div
+              className="text-[10px] text-white/40 uppercase tracking-[0.3em]"
+              style={{ fontFamily: 'Inter', fontWeight: 400 }}
+            >
+              INCOME
+            </div>
+
+            {/* Income Rate - label left, number right */}
+            <div className="flex items-baseline justify-between">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                INCOME RATE
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span
+                  className={`${accentColor} text-4xl leading-none`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 700,
+                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`
+                  }}
+                >
+                  21
+                </span>
+                <span
+                  className="text-sm text-white/50"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                >
+                  g/hr
+                </span>
+              </div>
+            </div>
+
+            <div className="relative h-px">
+              <div className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400/30' : 'via-cyan-400/30'} to-transparent`} />
+            </div>
+
+            {/* Cumulative - label left, number right */}
+            <div className="flex items-baseline justify-between">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                CUMULATIVE
+              </div>
+              <div className="flex items-baseline gap-0.5">
+                <span
+                  className={`${accentColor} text-2xl leading-none`}
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 100 }}
+                >
+                  453,412
+                </span>
+                <span
+                  className="text-xs text-white/50"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 100 }}
+                >
+                  g
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // COMPACT DENSITY V3 - LAYOUT 3: Numbers First (reversed pattern)
+    if (combinedGoldCardStyle === 'compact-density-v3-layout3') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? '#fab617' : '#00d4ff'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-3">
+            {/* INCOME header */}
+            <div
+              className="text-[10px] text-white/40 uppercase tracking-[0.3em]"
+              style={{ fontFamily: 'Inter', fontWeight: 400 }}
+            >
+              INCOME
+            </div>
+
+            {/* Income Rate - number first (big), label below (small) */}
+            <div className="space-y-0.5">
+              <div className="flex items-baseline justify-center gap-1">
+                <span
+                  className={`${accentColor} text-4xl leading-none`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 700,
+                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`
+                  }}
+                >
+                  21
+                </span>
+                <span
+                  className="text-sm text-white/50"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                >
+                  g/hr
+                </span>
+              </div>
+              <div
+                className="text-center text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                INCOME RATE
+              </div>
+            </div>
+
+            <div className="relative h-px">
+              <div className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400/30' : 'via-cyan-400/30'} to-transparent`} />
+            </div>
+
+            {/* Cumulative - number first (big), label below (small) */}
+            <div className="space-y-0.5">
+              <div className="flex items-baseline justify-center gap-0.5">
+                <span
+                  className={`${accentColor} text-2xl leading-none`}
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 100 }}
+                >
+                  453,412
+                </span>
+                <span
+                  className="text-xs text-white/50"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 100 }}
+                >
+                  g
+                </span>
+              </div>
+              <div
+                className="text-center text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                CUMULATIVE
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // COMPACT DENSITY V3 - LAYOUT 4: Split Layout (alternating alignment)
+    if (combinedGoldCardStyle === 'compact-density-v3-layout4') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? '#fab617' : '#00d4ff'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-3">
+            {/* INCOME header - spans full width */}
+            <div
+              className="text-center text-[10px] text-white/40 uppercase tracking-[0.3em]"
+              style={{ fontFamily: 'Inter', fontWeight: 400 }}
+            >
+              INCOME
+            </div>
+
+            {/* Income Rate - number left, label right */}
+            <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline gap-1">
+                <span
+                  className={`${accentColor} text-4xl leading-none`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 700,
+                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`
+                  }}
+                >
+                  21
+                </span>
+                <span
+                  className="text-sm text-white/50"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                >
+                  g/hr
+                </span>
+              </div>
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                INCOME RATE
+              </div>
+            </div>
+
+            <div className="relative h-px">
+              <div className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400/30' : 'via-cyan-400/30'} to-transparent`} />
+            </div>
+
+            {/* Cumulative - label left, number right (opposite of income) */}
+            <div className="flex items-baseline justify-between">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                CUMULATIVE
+              </div>
+              <div className="flex items-baseline gap-0.5">
+                <span
+                  className={`${accentColor} text-2xl leading-none`}
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 100 }}
+                >
+                  453,412
+                </span>
+                <span
+                  className="text-xs text-white/50"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 100 }}
+                >
+                  g
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // COMPACT DENSITY V3 - LAYOUT 5: Vertical Emphasis (full vertical stack)
+    if (combinedGoldCardStyle === 'compact-density-v3-layout5') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? '#fab617' : '#00d4ff'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-2">
+            {/* INCOME header */}
+            <div
+              className="text-[10px] text-white/40 uppercase tracking-[0.3em]"
+              style={{ fontFamily: 'Inter', fontWeight: 400 }}
+            >
+              INCOME
+            </div>
+
+            {/* Income Rate - full vertical stack */}
+            <div className="space-y-1">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                INCOME RATE
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span
+                  className={`${accentColor} text-4xl leading-none`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 700,
+                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`
+                  }}
+                >
+                  21
+                </span>
+                <span
+                  className="text-sm text-white/50"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                >
+                  g/hr
+                </span>
+              </div>
+            </div>
+
+            <div className="relative h-px">
+              <div className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400/30' : 'via-cyan-400/30'} to-transparent`} />
+            </div>
+
+            {/* Cumulative - full vertical stack */}
+            <div className="space-y-1">
+              <div
+                className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                CUMULATIVE
+              </div>
+              <div className="flex items-baseline gap-0.5">
+                <span
+                  className={`${accentColor} text-2xl leading-none`}
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 100 }}
+                >
+                  453,412
+                </span>
+                <span
+                  className="text-xs text-white/50"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 100 }}
+                >
+                  g
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     // OVERLAPPING LAYERS - Cards that overlap with depth/layering effect
     if (combinedGoldCardStyle === 'overlapping-layers') {
       return (
