@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import MekProfileLightbox, { CardInteriorStyle, DesignationCardStyle, GoldGenerationStyle, CombinedGoldCardStyle, LevelProgressStyle, StatsLayoutStyle, TenureLevelStyle } from '@/components/MekProfileLightbox';
+import MekProfileLightbox, { CardInteriorStyle, DesignationCardStyle, GoldGenerationStyle, CombinedGoldCardStyle, LevelProgressStyle, StatsLayoutStyle, TenureLevelStyle, StatusCardStyle } from '@/components/MekProfileLightbox';
 import GoldGenerationDetailsLightbox from '@/components/GoldGenerationDetailsLightbox';
 
 export default function MekLayoutsPage() {
@@ -35,6 +35,7 @@ export default function MekLayoutsPage() {
   const [variationTextStyle, setVariationTextStyle] = useState<'hero-focus' | 'tech-readout' | 'minimal-labels' | 'data-grid' | 'compact-badge'>('minimal-labels');
   const [statsLayoutStyle, setStatsLayoutStyle] = useState<StatsLayoutStyle>('vertical-divider');
   const [tenureLevelStyle, setTenureLevelStyle] = useState<TenureLevelStyle>('classic-side-labels');
+  const [statusCardStyle, setStatusCardStyle] = useState<StatusCardStyle>('compact-minimal');
 
   return (
     <div className="min-h-screen text-white flex flex-col items-center p-4">
@@ -285,6 +286,30 @@ export default function MekLayoutsPage() {
               <option value="card-tech-plate">Card: Tech Plate</option>
             </select>
           </div>
+
+          {/* Section Divider */}
+          <div className="my-3 border-t border-purple-500/30" />
+
+          {/* Dropdown: STATUS Card Style */}
+          <h4 className="text-purple-400 text-[9px] font-bold uppercase tracking-wider mb-3">
+            Status Card Display
+          </h4>
+          <div className="mb-3">
+            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+              Card Layout Style
+            </label>
+            <select
+              value={statusCardStyle}
+              onChange={(e) => setStatusCardStyle(e.target.value as StatusCardStyle)}
+              className="w-full bg-black/60 border border-purple-500/50 rounded px-2 py-1.5 text-purple-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-purple-500 focus:outline-none focus:border-purple-400 transition-all"
+            >
+              <option value="compact-minimal">Compact Minimal</option>
+              <option value="wide-badge">Wide Badge</option>
+              <option value="vertical-stack">Vertical Stack</option>
+              <option value="tech-panel">Tech Panel</option>
+              <option value="holographic-glow">Holographic Glow</option>
+            </select>
+          </div>
         </div>
         </div>
       )}
@@ -476,6 +501,11 @@ export default function MekLayoutsPage() {
                 <option value="compact-density-v3">Compact Density V3 (Weight Contrast)</option>
                 <option value="compact-density-v4">Compact Density V4 (Spacing Contrast)</option>
                 <option value="compact-density-v5">Compact Density V5 (Mixed Contrast)</option>
+                <option value="compact-density-v3-layout1">CD V3 Layout 1 (Centered Stack)</option>
+                <option value="compact-density-v3-layout2">CD V3 Layout 2 (Left Labels, Right Numbers)</option>
+                <option value="compact-density-v3-layout3">CD V3 Layout 3 (Numbers First)</option>
+                <option value="compact-density-v3-layout4">CD V3 Layout 4 (Split Layout)</option>
+                <option value="compact-density-v3-layout5">CD V3 Layout 5 (Vertical Emphasis)</option>
               </select>
             </div>
 
@@ -717,6 +747,8 @@ export default function MekLayoutsPage() {
         onStatsLayoutStyleChange={setStatsLayoutStyle}
         tenureLevelStyle={tenureLevelStyle}
         onTenureLevelStyleChange={setTenureLevelStyle}
+        statusCardStyle={statusCardStyle}
+        onStatusCardStyleChange={setStatusCardStyle}
       />
 
       {/* Gold Generation Details Lightbox */}
