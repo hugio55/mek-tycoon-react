@@ -2849,42 +2849,29 @@ export default function MekProfileLightbox({
     // Layout: Horizontal side-by-side, total rate left, current corp right
     if (combinedGoldCardStyle === 'clean-horizontal') {
       return (
-        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+        <div className="relative p-3 bg-black/40 backdrop-blur-sm overflow-hidden">
           {/* Glowing border effect */}
           <div
-            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            className={`absolute inset-0 border ${borderColor} pointer-events-none`}
             style={{
-              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
-              filter: 'blur(0.5px)'
-            }}
-          />
-
-          {/* Gradient overlay accent */}
-          <div
-            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
-            style={{
-              background: `linear-gradient(180deg, ${useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)'} 0%, transparent 100%)`
+              boxShadow: `0 0 20px ${glowRgba}, inset 0 0 20px ${glowRgbaInset}`
             }}
           />
 
           <div className="relative z-10">
             {/* Two columns side by side */}
-            <div className="grid grid-cols-2 gap-8">
-              {/* LEFT: Total Rate */}
-              <div className="text-center space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              {/* LEFT: Income Rate */}
+              <div className="text-center">
                 <div
-                  className="text-[9px] text-white/40 uppercase tracking-[0.3em]"
-                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono mb-1`}
                 >
-                  TOTAL RATE
+                  INCOME RATE
                 </div>
                 <div
-                  className={`${accentColor} text-5xl leading-none`}
+                  className={`${accentColor} text-3xl font-mono font-black leading-none`}
                   style={{
-                    fontFamily: 'Saira Condensed',
-                    fontWeight: 200,
-                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
-                    letterSpacing: '0.05em'
+                    textShadow: `0 0 15px ${textShadowPrimary}`
                   }}
                 >
                   {formatGoldRate(goldGenData.total)}
@@ -2892,28 +2879,23 @@ export default function MekProfileLightbox({
               </div>
 
               {/* Vertical divider */}
-              <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2">
+              <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 opacity-30">
                 <div
-                  className={`absolute inset-0 bg-gradient-to-b from-transparent ${useYellowGlow ? 'via-yellow-400' : 'via-cyan-400'} to-transparent`}
-                  style={{ filter: 'blur(1px)' }}
+                  className={`absolute inset-0 ${useYellowGlow ? 'bg-yellow-400' : 'bg-cyan-400'}`}
                 />
               </div>
 
-              {/* RIGHT: Current Corp Cumulative */}
-              <div className="text-center space-y-4">
+              {/* RIGHT: Cumulative */}
+              <div className="text-center">
                 <div
-                  className="text-[9px] text-white/40 uppercase tracking-[0.3em]"
-                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono mb-1`}
                 >
-                  CURRENT CORP
+                  CUMULATIVE
                 </div>
                 <div
-                  className={`${accentColor} text-5xl leading-none`}
+                  className={`${accentColor} text-3xl font-mono font-black leading-none`}
                   style={{
-                    fontFamily: 'Saira Condensed',
-                    fontWeight: 200,
-                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
-                    letterSpacing: '0.05em'
+                    textShadow: `0 0 15px ${textShadowPrimary}`
                   }}
                 >
                   {formatGold(currentOwnerGold)}
@@ -2929,69 +2911,51 @@ export default function MekProfileLightbox({
     // Layout: Vertical stack with generous spacing, rate on top, corp below
     if (combinedGoldCardStyle === 'stacked-minimal') {
       return (
-        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+        <div className="relative p-3 bg-black/40 backdrop-blur-sm overflow-hidden">
           {/* Glowing border effect */}
           <div
-            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            className={`absolute inset-0 border ${borderColor} pointer-events-none`}
             style={{
-              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
-              filter: 'blur(0.5px)'
+              boxShadow: `0 0 20px ${glowRgba}, inset 0 0 20px ${glowRgbaInset}`
             }}
           />
 
-          {/* Gradient overlay accent */}
-          <div
-            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
-            style={{
-              background: `linear-gradient(180deg, ${useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)'} 0%, transparent 100%)`
-            }}
-          />
-
-          <div className="relative z-10 space-y-6">
-            {/* TOP: Total Rate */}
-            <div className="text-center space-y-2">
+          <div className="relative z-10 space-y-3">
+            {/* TOP: Income Rate */}
+            <div className="text-center">
               <div
-                className="text-[10px] text-white/40 uppercase tracking-[0.3em]"
-                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono mb-1`}
               >
-                TOTAL RATE
+                INCOME RATE
               </div>
               <div
-                className={`${accentColor} text-6xl leading-none`}
+                className={`${accentColor} text-3xl font-mono font-black leading-none`}
                 style={{
-                  fontFamily: 'Saira Condensed',
-                  fontWeight: 200,
-                  textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
-                  letterSpacing: '0.1em'
+                  textShadow: `0 0 15px ${textShadowPrimary}`
                 }}
               >
                 {formatGoldRate(goldGenData.total)}
               </div>
             </div>
 
-            {/* Horizontal divider with glow */}
-            <div className="relative h-px">
+            {/* Horizontal divider */}
+            <div className="relative h-px opacity-30">
               <div
-                className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400' : 'via-cyan-400'} to-transparent`}
-                style={{ filter: 'blur(1px)' }}
+                className={`absolute inset-0 ${useYellowGlow ? 'bg-yellow-400' : 'bg-cyan-400'}`}
               />
             </div>
 
-            {/* BOTTOM: Current Corp Cumulative */}
-            <div className="text-center space-y-2">
+            {/* BOTTOM: Cumulative */}
+            <div className="text-center">
               <div
-                className="text-[10px] text-white/40 uppercase tracking-[0.3em]"
-                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono mb-1`}
               >
-                CURRENT CORP
+                CUMULATIVE
               </div>
               <div
-                className={`${accentColor} text-6xl leading-none`}
+                className={`${accentColor} text-3xl font-mono font-black leading-none`}
                 style={{
-                  fontFamily: 'Saira Condensed',
-                  fontWeight: 200,
-                  textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
-                  letterSpacing: '0.1em'
+                  textShadow: `0 0 15px ${textShadowPrimary}`
                 }}
               >
                 {formatGold(currentOwnerGold)}
