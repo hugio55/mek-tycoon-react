@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import MekProfileLightbox, { CardInteriorStyle } from '@/components/MekProfileLightbox';
+import MekProfileLightbox, { CardInteriorStyle, DesignationCardStyle } from '@/components/MekProfileLightbox';
 import GoldGenerationDetailsLightbox from '@/components/GoldGenerationDetailsLightbox';
 
 export default function MekLayoutsPage() {
@@ -12,6 +12,7 @@ export default function MekLayoutsPage() {
   const [cardInteriorStyle, setCardInteriorStyle] = useState<CardInteriorStyle>('compact');
   const [buffDetailsLayout, setBuffDetailsLayout] = useState<'classic' | 'compact-grid' | 'detailed-cards' | 'minimal'>('classic');
   const [variationCardStyle, setVariationCardStyle] = useState<'clean-frames' | 'image-focus' | 'subtle-accent' | 'no-cards-direct'>('clean-frames');
+  const [designationCardStyle, setDesignationCardStyle] = useState<DesignationCardStyle>('corner-brackets');
   const [backdropDarkness, setBackdropDarkness] = useState(22);
   const [cardDarkness, setCardDarkness] = useState(7);
   const [backdropBlur, setBackdropBlur] = useState(0);
@@ -154,6 +155,22 @@ export default function MekLayoutsPage() {
                 <option value="image-focus">Centered Overlay</option>
                 <option value="subtle-accent">Borderless Float</option>
                 <option value="no-cards-direct">Direct on Lightbox</option>
+              </select>
+            </div>
+
+            {/* Dropdown 5: Designation Card Style */}
+            <div className="mb-3">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                Designation Card Style
+              </label>
+              <select
+                value={designationCardStyle}
+                onChange={(e) => setDesignationCardStyle(e.target.value as DesignationCardStyle)}
+                className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
+              >
+                <option value="corner-brackets">Corner Brackets</option>
+                <option value="split-hud">Split HUD</option>
+                <option value="data-terminal">Data Terminal</option>
               </select>
             </div>
 
@@ -309,6 +326,11 @@ export default function MekLayoutsPage() {
                   {variationCardStyle === 'subtle-accent' && 'Borderless Float'}
                   {variationCardStyle === 'no-cards-direct' && 'Direct on Lightbox'}
                 </div>
+                <div>
+                  {designationCardStyle === 'corner-brackets' && 'Corner Brackets'}
+                  {designationCardStyle === 'split-hud' && 'Split HUD'}
+                  {designationCardStyle === 'data-terminal' && 'Data Terminal'}
+                </div>
               </div>
             </div>
           </div>
@@ -327,6 +349,8 @@ export default function MekLayoutsPage() {
         onBuffDetailsLayoutChange={setBuffDetailsLayout}
         variationCardStyle={variationCardStyle}
         onVariationCardStyleChange={setVariationCardStyle}
+        designationCardStyle={designationCardStyle}
+        onDesignationCardStyleChange={setDesignationCardStyle}
         backdropDarkness={backdropDarkness}
         onBackdropDarknessChange={setBackdropDarkness}
         cardDarkness={cardDarkness}
