@@ -27,6 +27,7 @@ interface MekProfileLightboxProps {
   onDesignationCardStyleChange?: (style: DesignationCardStyle) => void;
   cumulativeGoldStyle?: CumulativeGoldStyle;
   onCumulativeGoldStyleChange?: (style: CumulativeGoldStyle) => void;
+  cumulativeGoldFont?: string;
   backdropDarkness?: number;
   onBackdropDarknessChange?: (value: number) => void;
   cardDarkness?: number;
@@ -59,6 +60,7 @@ export default function MekProfileLightbox({
   onDesignationCardStyleChange,
   cumulativeGoldStyle = 'stacked-emphasis',
   onCumulativeGoldStyleChange,
+  cumulativeGoldFont = 'Orbitron',
   backdropDarkness = 40,
   onBackdropDarknessChange,
   cardDarkness = 20,
@@ -483,7 +485,10 @@ export default function MekProfileLightbox({
             <div className="text-center">
               <div
                 className={`${accentColor} text-3xl font-mono font-black`}
-                style={{ textShadow: textShadowGlow }}
+                style={{
+                  textShadow: textShadowGlow,
+                  fontFamily: cumulativeGoldFont
+                }}
               >
                 {formatGold(currentOwnerGold)}
               </div>
@@ -494,7 +499,7 @@ export default function MekProfileLightbox({
               <div className="text-[9px] text-gray-500 uppercase tracking-wider font-mono mb-1">
                 all-time
               </div>
-              <div className="text-white text-base font-mono font-semibold">
+              <div className="text-white text-base font-mono font-semibold" style={{ fontFamily: cumulativeGoldFont }}>
                 {formatGold(allTimeGold)}
               </div>
             </div>
