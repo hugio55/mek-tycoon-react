@@ -384,6 +384,10 @@ export default function MekLayoutsPage() {
                 <option value="holographic-readout">Holographic Readout</option>
                 <option value="tech-metrics">Tech Metrics</option>
                 <option value="data-stream">Data Stream</option>
+                <option value="compact-table">Compact Table</option>
+                <option value="inline-metrics">Inline Metrics</option>
+                <option value="dense-grid">Dense Grid</option>
+                <option value="stat-bar">Stat Bar</option>
               </select>
             </div>
 
