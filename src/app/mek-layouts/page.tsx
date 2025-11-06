@@ -23,6 +23,9 @@ export default function MekLayoutsPage() {
   const [headerBottomPadding, setHeaderBottomPadding] = useState(15);
   const [contentSpacing, setContentSpacing] = useState(16);
   const [slidersCollapsed, setSlidersCollapsed] = useState(false);
+  const [showLeftDebugPanel, setShowLeftDebugPanel] = useState(true);
+  const [headerDarkness, setHeaderDarkness] = useState(80);
+  const [headerBlur, setHeaderBlur] = useState(12);
 
   return (
     <div className="min-h-screen text-white flex flex-col items-center p-4">
@@ -75,7 +78,15 @@ export default function MekLayoutsPage() {
         </button>
       </div>
 
-      {/* Debug Toggle Button - Fixed Position */}
+      {/* Left Debug Toggle Button - Fixed Position */}
+      <button
+        onClick={() => setShowLeftDebugPanel(!showLeftDebugPanel)}
+        className="fixed top-4 left-4 z-[99999] px-4 py-2 bg-black/80 border-2 border-cyan-500/50 rounded hover:bg-cyan-500/20 hover:border-cyan-500 transition-all"
+      >
+        <span className="text-cyan-400 text-xs font-bold uppercase tracking-wider">Header Controls</span>
+      </button>
+
+      {/* Right Debug Toggle Button - Fixed Position */}
       <button
         onClick={() => setShowDebugPanel(!showDebugPanel)}
         className="fixed top-4 right-4 z-[999999] px-4 py-2 bg-black/80 border-2 border-cyan-500/50 rounded hover:bg-cyan-500/20 hover:border-cyan-500 transition-all pointer-events-auto"
@@ -83,7 +94,48 @@ export default function MekLayoutsPage() {
         <span className="text-cyan-400 text-xs font-bold uppercase tracking-wider">Style Variations</span>
       </button>
 
-      {/* Debug Panel - Fixed Position with Style Dropdowns */}
+      {/* LEFT DEBUG PANEL - Header Controls */}
+      {showLeftDebugPanel && (
+        <div className="fixed left-4 top-16 z-[999999] w-72 bg-black/95 border-2 border-purple-500/50 rounded-lg shadow-2xl pointer-events-auto">
+        <div className="p-4">
+          <h3 className="text-purple-400 text-xs font-bold uppercase tracking-wider mb-3 border-b border-purple-500/30 pb-2">
+            Header Controls
+          </h3>
+
+          {/* Slider 1: Header Darkness */}
+          <div className="mb-3">
+            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+              Header Darkness: {headerDarkness}%
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={headerDarkness}
+              onChange={(e) => setHeaderDarkness(Number(e.target.value))}
+              className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-purple-500"
+            />
+          </div>
+
+          {/* Slider 2: Header Blur */}
+          <div className="mb-3">
+            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+              Header Blur: {headerBlur}px
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="20"
+              value={headerBlur}
+              onChange={(e) => setHeaderBlur(Number(e.target.value))}
+              className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-purple-500"
+            />
+          </div>
+        </div>
+        </div>
+      )}
+
+      {/* Right Debug Panel - Fixed Position with Style Dropdowns */}
       {showDebugPanel && (
         <div className="fixed top-16 right-4 z-[999999] w-72 bg-black/95 border-2 border-cyan-500/50 rounded-lg shadow-2xl max-h-[85vh] overflow-y-auto pointer-events-auto">
           <div className="p-4">
@@ -419,6 +471,8 @@ export default function MekLayoutsPage() {
         onHeaderBottomPaddingChange={setHeaderBottomPadding}
         contentSpacing={contentSpacing}
         onContentSpacingChange={setContentSpacing}
+        headerDarkness={headerDarkness}
+        headerBlur={headerBlur}
       />
 
       {/* Gold Generation Details Lightbox */}

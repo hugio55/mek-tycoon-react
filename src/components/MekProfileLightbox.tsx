@@ -41,6 +41,8 @@ interface MekProfileLightboxProps {
   contentSpacing?: number;
   onContentSpacingChange?: (value: number) => void;
   useYellowGlow?: boolean;
+  headerDarkness?: number;
+  headerBlur?: number;
 }
 
 export default function MekProfileLightbox({
@@ -71,7 +73,9 @@ export default function MekProfileLightbox({
   onHeaderBottomPaddingChange,
   contentSpacing = 16,
   onContentSpacingChange,
-  useYellowGlow = false
+  useYellowGlow = false,
+  headerDarkness = 50,
+  headerBlur = 8
 }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
@@ -1450,8 +1454,14 @@ export default function MekProfileLightbox({
         {/* Scrollable Content */}
         <div className="w-full flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
           <div className="relative text-white">
-            {/* Industrial Header - Made Sticky */}
-            <div className="sticky top-0 z-40 w-full bg-gradient-to-b from-black via-gray-900/50 to-transparent">
+            {/* Industrial Header - Made Sticky with Dynamic Blur & Darkness */}
+            <div
+              className="sticky top-0 z-40 w-full"
+              style={{
+                backgroundColor: `rgba(0, 0, 0, ${headerDarkness / 100})`,
+                backdropFilter: `blur(${headerBlur}px)`
+              }}
+            >
               <div className="relative overflow-hidden">
                 <div className="absolute inset-0 opacity-5">
                   <div className="absolute inset-0" style={{
