@@ -17,7 +17,7 @@ export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-termi
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
 export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout' | 'stacked-compact' | 'stacked-wide' | 'stacked-minimal';
 export type GoldGenerationStyle = 'matrix-badge' | 'command-line' | 'energy-display' | 'split-panels' | 'holographic-readout' | 'tech-metrics' | 'data-stream' | 'compact-table' | 'inline-metrics' | 'dense-grid' | 'stat-bar' | 'compact-table-v2' | 'compact-table-v3' | 'compact-table-v4';
-export type CombinedGoldCardStyle = 'vertical-stacked' | 'side-by-side' | 'dashboard-grid' | 'hero-emphasis' | 'elegant-split' | 'cascade-accumulation' | 'energy-conduit' | 'clean-horizontal' | 'stacked-minimal' | 'badge-pair' | 'diagonal-split' | 'compact-density' | 'overlapping-layers';
+export type CombinedGoldCardStyle = 'vertical-stacked' | 'side-by-side' | 'dashboard-grid' | 'hero-emphasis' | 'elegant-split' | 'cascade-accumulation' | 'energy-conduit' | 'clean-horizontal' | 'stacked-minimal' | 'badge-pair' | 'diagonal-split' | 'compact-density' | 'overlapping-layers' | 'compact-density-v1' | 'compact-density-v2' | 'compact-density-v3' | 'compact-density-v4' | 'compact-density-v5';
 export type StatsLayoutStyle = 'inline-dot' | 'vertical-divider' | 'badge-pills' | 'label-above' | 'glow-separator';
 export type TenureLevelStyle = 'classic-side-labels' | 'stacked-compact' | 'inline-badges' | 'vertical-emphasis' | 'minimal-centered' | 'hero-level-v1' | 'hero-level-v2' | 'hero-level-v3' | 'card-slide-up' | 'card-floating-badge' | 'card-inset-panel' | 'card-tech-plate';
 
