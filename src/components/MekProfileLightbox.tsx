@@ -12,7 +12,7 @@ export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-termi
 
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
 export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout' | 'stacked-compact' | 'stacked-wide' | 'stacked-minimal';
-export type GoldGenerationStyle = 'matrix-badge' | 'command-line' | 'energy-display' | 'split-panels' | 'holographic-readout' | 'tech-metrics' | 'data-stream' | 'compact-table' | 'inline-metrics' | 'dense-grid' | 'stat-bar';
+export type GoldGenerationStyle = 'matrix-badge' | 'command-line' | 'energy-display' | 'split-panels' | 'holographic-readout' | 'tech-metrics' | 'data-stream' | 'compact-table' | 'inline-metrics' | 'dense-grid' | 'stat-bar' | 'compact-table-v2' | 'compact-table-v3' | 'compact-table-v4';
 
 export { LevelProgressStyle };
 
@@ -1674,14 +1674,56 @@ function VariationCard({
                 `.trim()
               }}
             />
-            {/* Noise overlay to reduce gradient banding */}
+            {/* Multi-layer atmospheric effect to reduce gradient banding */}
+
+            {/* Layer 1: Dithering pattern */}
             <div
               className="absolute inset-0 pointer-events-none"
               style={{
-                opacity: noiseIntensity,
+                opacity: noiseIntensity * 0.3,
                 mixBlendMode: 'overlay',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 -0.5'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' fill='%23000000'/%3E%3C/svg%3E")`,
-                backgroundSize: 'cover'
+                backgroundImage: `
+                  repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.03) 1px, rgba(0,0,0,0.03) 2px),
+                  repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(0,0,0,0.03) 1px, rgba(0,0,0,0.03) 2px)
+                `
+              }}
+            />
+
+            {/* Layer 2: Radial gradient atmospheric haze */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                opacity: noiseIntensity * 0.4,
+                mixBlendMode: 'multiply',
+                background: `
+                  radial-gradient(circle at 30% 40%, rgba(0,0,0,0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 60%, rgba(0,0,0,0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 50% 80%, rgba(0,0,0,0.15) 0%, transparent 40%)
+                `
+              }}
+            />
+
+            {/* Layer 3: Stronger grain texture */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                opacity: noiseIntensity * 1.5,
+                mixBlendMode: 'overlay',
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 -0.7'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' fill='%23000000'/%3E%3C/svg%3E")`,
+                backgroundSize: '200px 200px'
+              }}
+            />
+
+            {/* Layer 4: Energy field shimmer (subtle variation) */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                opacity: noiseIntensity * 0.2,
+                mixBlendMode: 'screen',
+                background: `
+                  radial-gradient(ellipse at 40% 30%, rgba(250, 182, 23, 0.05) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 70%, rgba(250, 182, 23, 0.03) 0%, transparent 50%)
+                `
               }}
             />
           </div>

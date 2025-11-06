@@ -30,6 +30,7 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
   const [debugClaimState, setDebugClaimState] = useState<'claimed' | 'unclaimed' | null>(null);
   const [bannerVariation, setBannerVariation] = useState<BannerVariation>("industrial");
   const [showVariationPicker, setShowVariationPicker] = useState(false);
+  const [alreadyClaimed, setAlreadyClaimed] = useState(false);
 
   const PRICE_ADA = 10;
 
@@ -85,6 +86,7 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
 
     if (!walletAddress) {
       setClaimStatus("idle");
+      setAlreadyClaimed(false);
       return;
     }
 
@@ -95,8 +97,12 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
 
     if (eligibility.eligible) {
       setClaimStatus("eligible");
+      setAlreadyClaimed(false);
     } else {
-      setClaimStatus("ineligible");
+      // Check if ineligible because already claimed
+      const claimed = (eligibility as any).alreadyClaimed === true;
+      setAlreadyClaimed(claimed);
+      setClaimStatus(claimed ? "eligible" : "ineligible"); // Show banner if already claimed
     }
   }, [walletAddress, eligibility]);
 
@@ -115,7 +121,7 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
   };
 
   const handleClaim = () => {
-    if (!walletAddress || !eligibility?.eligible) return;
+    if (!walletAddress || !eligibility?.eligible || alreadyClaimed) return;
 
     // Show processing lightbox (NMKRPayLightbox will handle opening payment window)
     setShowLightbox(true);
@@ -222,15 +228,24 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
         </p>
 
         <div className="w-full max-w-xs mx-auto">
-          <HolographicButton
-            text="Claim Your NFT"
-            onClick={handleClaim}
-            isActive={true}
-            variant="yellow"
-            alwaysOn={true}
-            hideIcon={true}
-            className="w-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-6 [&_span]:!text-base [&_span]:!tracking-[0.15em]"
-          />
+          {alreadyClaimed ? (
+            <button
+              disabled
+              className="w-full py-3 px-6 rounded bg-gray-600 text-gray-400 font-bold text-base tracking-[0.15em] cursor-not-allowed opacity-60"
+            >
+              ALREADY CLAIMED
+            </button>
+          ) : (
+            <HolographicButton
+              text="Claim Your NFT"
+              onClick={handleClaim}
+              isActive={true}
+              variant="yellow"
+              alwaysOn={true}
+              hideIcon={true}
+              className="w-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-6 [&_span]:!text-base [&_span]:!tracking-[0.15em]"
+            />
+          )}
         </div>
       </div>
     </div>
@@ -286,17 +301,18 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
         <div className="w-full max-w-sm mx-auto">
           <button
             onClick={handleClaim}
-            className="w-full py-3 px-8 rounded-md font-semibold text-base transition-all duration-300 hover:scale-105"
+            disabled={alreadyClaimed}
+            className={`w-full py-3 px-8 rounded-md font-semibold text-base transition-all duration-300 ${alreadyClaimed ? 'cursor-not-allowed opacity-60' : 'hover:scale-105'}`}
             style={{
               fontFamily: "'Cinzel', serif",
-              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-              color: '#1a1a1a',
-              boxShadow: '0 4px 15px rgba(251, 191, 36, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
-              border: '2px solid #fbbf24',
+              background: alreadyClaimed ? '#4b5563' : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+              color: alreadyClaimed ? '#9ca3af' : '#1a1a1a',
+              boxShadow: alreadyClaimed ? 'none' : '0 4px 15px rgba(251, 191, 36, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+              border: alreadyClaimed ? '2px solid #6b7280' : '2px solid #fbbf24',
               letterSpacing: '0.1em'
             }}
           >
-            CLAIM YOUR NFT
+            {alreadyClaimed ? 'ALREADY CLAIMED' : 'CLAIM YOUR NFT'}
           </button>
         </div>
       </div>
