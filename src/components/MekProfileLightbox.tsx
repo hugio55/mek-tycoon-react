@@ -1848,11 +1848,11 @@ export default function MekProfileLightbox({
                   <div className="flex gap-1 sm:gap-1.5 h-10 sm:h-8">
                     {Array.from({ length: 10 }, (_, i) => {
                       const barLevel = i + 1;
-                      const currentLevel = 12;
+                      const currentLevel = 8;
                       const displayLevel = currentLevel <= 10 ? currentLevel : 10;
                       const isActive = barLevel <= displayLevel;
                       const isCurrent = barLevel === displayLevel;
-                      const levelColor = useYellowGlow ? '#fab617' : '#22d3ee';
+                      const levelColor = DEFAULT_LEVEL_COLORS[barLevel - 1] || '#FFFFFF';
 
                       return (
                         <div key={barLevel} className="flex-1 flex flex-col items-center gap-1">
@@ -1912,7 +1912,7 @@ export default function MekProfileLightbox({
                   {/* Level Progress */}
                   <div className="mek-card-industrial mek-border-sharp-gold p-4">
                     <LevelProgress
-                      currentLevel={12}
+                      currentLevel={8}
                       currentXP={6720}
                       requiredXP={10000}
                       style={levelProgressStyle}
@@ -1998,11 +1998,11 @@ export default function MekProfileLightbox({
                       <div className="flex gap-1 sm:gap-1.5 h-10 sm:h-8">
                         {Array.from({ length: 10 }, (_, i) => {
                           const barLevel = i + 1;
-                          const currentLevel = 12;
+                          const currentLevel = 8;
                           const displayLevel = currentLevel <= 10 ? currentLevel : 10;
                           const isActive = barLevel <= displayLevel;
                           const isCurrent = barLevel === displayLevel;
-                          const levelColor = useYellowGlow ? '#fab617' : '#22d3ee';
+                          const levelColor = DEFAULT_LEVEL_COLORS[barLevel - 1] || '#FFFFFF';
 
                           return (
                             <div key={barLevel} className="flex-1 flex flex-col items-center gap-1">
@@ -2058,7 +2058,7 @@ export default function MekProfileLightbox({
                     {/* Level Progress */}
                     <div className={getCardClasses()}>
                       <LevelProgress
-                        currentLevel={12}
+                        currentLevel={8}
                         currentXP={6720}
                         requiredXP={10000}
                         style={levelProgressStyle}
