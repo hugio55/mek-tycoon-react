@@ -15,7 +15,7 @@ import { Id } from "./_generated/dataModel";
  * - Uses campaign-scoped inventory queries
  */
 
-const RESERVATION_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
+const RESERVATION_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
 const GRACE_PERIOD = 5 * 1000; // 5 seconds (minimal grace for network delays)
 
 // ============================================================================
