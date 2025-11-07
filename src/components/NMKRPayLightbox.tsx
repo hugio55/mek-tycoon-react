@@ -61,7 +61,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
         if (!result.success) {
           console.error('[🎟️RESERVE] Failed to create reservation:', result.error);
-          setErrorMessage(result.error || 'Failed to reserve NFT');
+          // Use the detailed message if available, otherwise use the error
+          setErrorMessage(result.message || result.error || 'Failed to reserve NFT');
           setState('error');
           return;
         }
