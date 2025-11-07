@@ -412,7 +412,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
             {/* Cancel Button - Made more prominent */}
             <button
-              onClick={handleCancel}
+              onClick={attemptCancel}
               className="w-full px-8 py-4 bg-yellow-500/20 border-3 border-yellow-500 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-all font-bold uppercase tracking-wider text-lg shadow-lg shadow-yellow-500/50 hover:shadow-yellow-500/70"
               style={{ fontFamily: 'Orbitron, sans-serif' }}
             >
