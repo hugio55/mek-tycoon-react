@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -11,7 +11,7 @@ interface NMKRPayLightboxProps {
   onClose: () => void;
 }
 
-type LightboxState = 'creating' | 'reserved' | 'payment' | 'processing' | 'success' | 'error';
+type LightboxState = 'creating' | 'reserved' | 'payment' | 'processing' | 'success' | 'error' | 'timeout';
 
 export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLightboxProps) {
   const [mounted, setMounted] = useState(false);
@@ -161,50 +161,94 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
   }, [state, claimStatus]);
 
   // Auto-release when timer hits exactly 0:00 (instant client-side release)
+  // Uses interval to continuously check time
   useEffect(() => {
-    if (!activeReservation || state === 'success' || state === 'error') return;
+    console.log('[⏰AUTO-RELEASE] Effect mounted/updated', {
+      hasReservation: !!activeReservation,
+      state,
+      reservationId,
+    });
 
-    const now = Date.now();
-    const remainingMs = Math.max(0, activeReservation.expiresAt - now);
-
-    // INSTANT RELEASE when timer hits 0:00
-    if (remainingMs === 0 && !activeReservation.isExpired) {
-      // Only auto-release if:
-      // 1. NOT in payment window (user hasn't opened payment yet)
-      // 2. NOT processing payment (user closed window and we're checking)
-      // 3. Payment window is NOT currently open
-      const shouldAutoRelease =
-        state === 'reserved' &&
-        !activeReservation.isPaymentWindowOpen &&
-        (!paymentWindow || paymentWindow.closed);
-
-      if (shouldAutoRelease && reservationId) {
-        console.log('[⏰TIMER] Timer reached 0:00 - instant client-side release');
-        releaseReservation({ reservationId, reason: 'expired' })
-          .then(() => {
-            setErrorMessage('Reservation timer expired. Please try again.');
-            setState('error');
-          })
-          .catch((err) => {
-            console.error('[⏰TIMER] Failed to release reservation:', err);
-            // Still show error state even if mutation fails (backup cron will handle it)
-            setErrorMessage('Reservation timer expired. Please try again.');
-            setState('error');
-          });
-      }
+    if (!activeReservation || state === 'success' || state === 'error') {
+      console.log('[⏰AUTO-RELEASE] Skipping - no reservation or already complete');
+      return;
     }
 
-    // BACKUP: Cleanup expired reservations beyond grace period (if client-side release failed)
-    const GRACE_PERIOD = 30 * 1000; // 30 seconds
-    if (activeReservation.isExpired && now > activeReservation.expiresAt + GRACE_PERIOD) {
-      // Only trigger if we somehow missed the instant release above
-      if (state === 'reserved' && reservationId) {
-        console.log('[🎟️RESERVE] Backup cleanup: Reservation expired beyond grace period');
-        releaseReservation({ reservationId, reason: 'expired' });
-        setErrorMessage('Reservation expired. Please try again.');
-        setState('error');
+    // Check every second if timer has expired
+    const intervalId = setInterval(() => {
+      const now = Date.now();
+      const remainingMs = Math.max(0, activeReservation.expiresAt - now);
+      const isExpired = now >= activeReservation.expiresAt;
+
+      console.log('[⏰AUTO-RELEASE] Checking expiration', {
+        remainingMs,
+        isExpired,
+        dbIsExpired: activeReservation.isExpired,
+        state,
+        isPaymentWindowOpen: activeReservation.isPaymentWindowOpen,
+        paymentWindowClosed: !paymentWindow || paymentWindow.closed,
+      });
+
+      // INSTANT RELEASE when timer hits 0:00
+      if (remainingMs === 0 && isExpired) {
+        // Only auto-release if:
+        // 1. NOT in payment window (user hasn't opened payment yet)
+        // 2. NOT processing payment (user closed window and we're checking)
+        // 3. Payment window is NOT currently open
+        const shouldAutoRelease =
+          state === 'reserved' &&
+          !activeReservation.isPaymentWindowOpen &&
+          (!paymentWindow || paymentWindow.closed);
+
+        console.log('[⏰AUTO-RELEASE] Timer at 0:00', {
+          shouldAutoRelease,
+          state,
+          isPaymentWindowOpen: activeReservation.isPaymentWindowOpen,
+          paymentWindowExists: !!paymentWindow,
+          paymentWindowClosed: !paymentWindow || paymentWindow.closed,
+        });
+
+        if (shouldAutoRelease && reservationId) {
+          console.log('[⏰AUTO-RELEASE] Triggering instant client-side release');
+          clearInterval(intervalId); // Stop checking
+          releaseReservation({ reservationId, reason: 'expired' })
+            .then(() => {
+              console.log('[⏰AUTO-RELEASE] Release successful');
+              setErrorMessage('Reservation timer expired. Please try again.');
+              setState('error');
+            })
+            .catch((err) => {
+              console.error('[⏰AUTO-RELEASE] Release failed:', err);
+              // Still show error state even if mutation fails (backup cron will handle it)
+              setErrorMessage('Reservation timer expired. Please try again.');
+              setState('error');
+            });
+        } else {
+          console.log('[⏰AUTO-RELEASE] Conditions not met for auto-release');
+        }
       }
-    }
+
+      // BACKUP: Cleanup expired reservations beyond grace period (if client-side release failed)
+      const GRACE_PERIOD = 30 * 1000; // 30 seconds
+      if (isExpired && now > activeReservation.expiresAt + GRACE_PERIOD) {
+        // Only trigger if we somehow missed the instant release above
+        if (state === 'reserved' && reservationId) {
+          console.log('[⏰AUTO-RELEASE] Backup cleanup: Reservation expired beyond grace period');
+          clearInterval(intervalId); // Stop checking
+          releaseReservation({ reservationId, reason: 'expired' });
+          setErrorMessage('Reservation expired. Please try again.');
+          setState('error');
+        }
+      }
+    }, 1000); // Check every second
+
+    console.log('[⏰AUTO-RELEASE] Interval started:', intervalId);
+
+    // Cleanup interval on unmount or when dependencies change
+    return () => {
+      console.log('[⏰AUTO-RELEASE] Cleaning up interval:', intervalId);
+      clearInterval(intervalId);
+    };
   }, [activeReservation, state, reservationId, releaseReservation, paymentWindow]);
 
   // Close payment window if user closes lightbox
