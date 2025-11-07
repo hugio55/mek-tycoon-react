@@ -5738,7 +5738,7 @@ export default function MekProfileLightbox({
                       const mockMekName = "SENTINEL ALPHA";
 
                       return (
-                        <div className={`${getCardClasses()} overflow-hidden w-full !p-0 relative`}>
+                        <div className="relative w-full">
                           {/* Base Overlay Image */}
                           <img
                             ref={overlayRef}
