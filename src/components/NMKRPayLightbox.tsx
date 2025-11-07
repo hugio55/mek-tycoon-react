@@ -207,6 +207,12 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
           // Clear interval immediately
           clearInterval(intervalId);
 
+          // CRITICAL SECURITY FIX: Force close payment window if it's open
+          if (paymentWindow && !paymentWindow.closed) {
+            console.log('[⏰AUTO-RELEASE] Closing payment window due to timeout');
+            paymentWindow.close();
+          }
+
           // Transition to timeout state immediately (optimistic UI)
           setState('timeout');
 
