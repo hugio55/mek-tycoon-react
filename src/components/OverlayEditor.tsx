@@ -68,6 +68,7 @@ export default function OverlayEditor() {
 
   // Zone drawing
   const [zoneType, setZoneType] = useState("mechanism-slot");
+  const [aspectRatio, setAspectRatio] = useState<"free" | "1:1">("free");
   const [dragState, setDragState] = useState<DragState>({
     isDrawing: false,
     isDraggingSprite: false,
@@ -487,8 +488,16 @@ export default function OverlayEditor() {
     const currentX = (e.clientX - rect.left) / scale;
     const currentY = (e.clientY - rect.top) / scale;
 
-    const width = Math.abs(currentX - dragState.startX);
-    const height = Math.abs(currentY - dragState.startY);
+    let width = Math.abs(currentX - dragState.startX);
+    let height = Math.abs(currentY - dragState.startY);
+
+    // Apply aspect ratio constraint
+    if (aspectRatio === "1:1") {
+      const size = Math.min(width, height);
+      width = size;
+      height = size;
+    }
+
     const x = Math.min(dragState.startX, currentX);
     const y = Math.min(dragState.startY, currentY);
 
@@ -1420,6 +1429,31 @@ export default function OverlayEditor() {
                   <option value="display">Display Zone</option>
                   <option value="custom">Custom</option>
                 </select>
+              </div>
+              <div>
+                <label className="mek-label-uppercase block mb-2">Aspect Ratio</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setAspectRatio("free")}
+                    className={`flex-1 px-3 py-2 rounded border transition-colors ${
+                      aspectRatio === "free"
+                        ? "bg-yellow-500/30 border-yellow-500 text-yellow-400"
+                        : "bg-black/50 border-yellow-500/30 text-gray-400 hover:bg-yellow-500/10"
+                    }`}
+                  >
+                    Free
+                  </button>
+                  <button
+                    onClick={() => setAspectRatio("1:1")}
+                    className={`flex-1 px-3 py-2 rounded border transition-colors ${
+                      aspectRatio === "1:1"
+                        ? "bg-yellow-500/30 border-yellow-500 text-yellow-400"
+                        : "bg-black/50 border-yellow-500/30 text-gray-400 hover:bg-yellow-500/10"
+                    }`}
+                  >
+                    1:1 Square
+                  </button>
+                </div>
               </div>
               <div className="text-sm text-gray-400">
                 Click and drag on the canvas to create a rectangular zone.
