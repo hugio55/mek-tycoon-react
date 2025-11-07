@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Campaign, CampaignStatus } from "@/types/campaign";
@@ -67,24 +67,51 @@ export default function CampaignManager({
 
   const campaigns = useQuery(api.campaigns.getAllCampaigns);
 
+  // Query all inventory to calculate accurate counts
+  const allInventory = useQuery(api.commemorativeCampaigns.getAllInventoryForDiagnostics);
+
+  // Calculate accurate counts per campaign from inventory
+  const campaignCounts = useMemo(() => {
+    if (!allInventory) return new Map();
+
+    const counts = new Map<string, { available: number; reserved: number; sold: number; total: number }>();
+
+    for (const item of allInventory) {
+      const campaignId = item.campaignId;
+      if (!counts.has(campaignId)) {
+        counts.set(campaignId, { available: 0, reserved: 0, sold: 0, total: 0 });
+      }
+
+      const count = counts.get(campaignId)!;
+      count.total++;
+      if (item.status === 'available') count.available++;
+      if (item.status === 'reserved') count.reserved++;
+      if (item.status === 'sold') count.sold++;
+    }
+
+    return counts;
+  }, [allInventory]);
+
   // DEBUG: Log when campaign data changes
   useEffect(() => {
     if (campaigns && selectedCampaignId) {
       const selectedCampaign = campaigns.find(c => c._id === selectedCampaignId);
+      const counts = campaignCounts.get(selectedCampaignId);
       if (selectedCampaign) {
         const timestamp = new Date().toISOString().split('T')[1].slice(0, -1);
         console.log(`[🔄CAMPAIGN-UI ${timestamp}] Campaign data received:`, {
           name: selectedCampaign.name,
-          stats: {
+          cachedStats: {
             total: selectedCampaign.totalNFTs,
             available: selectedCampaign.availableNFTs,
             reserved: selectedCampaign.reservedNFTs,
             sold: selectedCampaign.soldNFTs,
-          }
+          },
+          actualCounts: counts || 'No inventory found'
         });
       }
     }
-  }, [campaigns, selectedCampaignId]);
+  }, [campaigns, selectedCampaignId, campaignCounts]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -716,36 +743,50 @@ export default function CampaignManager({
 
               <div className="mb-3">
                 <div className="grid grid-cols-5 gap-2">
-                  <div className="bg-black/50 p-2 rounded">
-                    <p className="text-xs text-gray-400">Max</p>
-                    <p className="text-lg font-bold text-white">
-                      {campaign.maxNFTs}
-                    </p>
-                  </div>
-                  <div className="bg-black/50 p-2 rounded">
-                    <p className="text-xs text-gray-400">Total</p>
-                    <p className="text-lg font-bold text-white">
-                      {campaign.totalNFTs}
-                    </p>
-                  </div>
-                  <div className="bg-black/50 p-2 rounded border border-green-500/30">
-                    <p className="text-xs text-gray-400">Available</p>
-                    <p className="text-lg font-bold text-green-400">
-                      {campaign.availableNFTs}
-                    </p>
-                  </div>
-                  <div className="bg-black/50 p-2 rounded border border-yellow-500/30">
-                    <p className="text-xs text-gray-400">Reserved</p>
-                    <p className="text-lg font-bold text-yellow-400">
-                      {campaign.reservedNFTs}
-                    </p>
-                  </div>
-                  <div className="bg-black/50 p-2 rounded border border-red-500/30">
-                    <p className="text-xs text-gray-400">Sold</p>
-                    <p className="text-lg font-bold text-red-400">
-                      {campaign.soldNFTs}
-                    </p>
-                  </div>
+                  {(() => {
+                    // Get accurate counts from inventory
+                    const counts = campaignCounts.get(campaign._id) || {
+                      available: 0,
+                      reserved: 0,
+                      sold: 0,
+                      total: 0
+                    };
+
+                    return (
+                      <>
+                        <div className="bg-black/50 p-2 rounded">
+                          <p className="text-xs text-gray-400">Max</p>
+                          <p className="text-lg font-bold text-white">
+                            {campaign.maxNFTs}
+                          </p>
+                        </div>
+                        <div className="bg-black/50 p-2 rounded">
+                          <p className="text-xs text-gray-400">Total</p>
+                          <p className="text-lg font-bold text-white">
+                            {counts.total}
+                          </p>
+                        </div>
+                        <div className="bg-black/50 p-2 rounded border border-green-500/30">
+                          <p className="text-xs text-gray-400">Available</p>
+                          <p className="text-lg font-bold text-green-400">
+                            {counts.available}
+                          </p>
+                        </div>
+                        <div className="bg-black/50 p-2 rounded border border-yellow-500/30">
+                          <p className="text-xs text-gray-400">Reserved</p>
+                          <p className="text-lg font-bold text-yellow-400">
+                            {counts.reserved}
+                          </p>
+                        </div>
+                        <div className="bg-black/50 p-2 rounded border border-red-500/30">
+                          <p className="text-xs text-gray-400">Sold</p>
+                          <p className="text-lg font-bold text-red-400">
+                            {counts.sold}
+                          </p>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* Sync Counters Button */}
