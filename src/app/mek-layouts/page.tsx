@@ -259,30 +259,6 @@ export default function MekLayoutsPage() {
               <option value="card-tech-plate">Card: Tech Plate</option>
             </select>
           </div>
-
-          {/* Section Divider */}
-          <div className="my-3 border-t border-purple-500/30" />
-
-          {/* Dropdown: STATUS Card Style */}
-          <h4 className="text-purple-400 text-[9px] font-bold uppercase tracking-wider mb-3">
-            Status Card Display
-          </h4>
-          <div className="mb-3">
-            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-              Card Layout Style
-            </label>
-            <select
-              value={statusCardStyle}
-              onChange={(e) => setStatusCardStyle(e.target.value as StatusCardStyle)}
-              className="w-full bg-black/60 border border-purple-500/50 rounded px-2 py-1.5 text-purple-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-purple-500 focus:outline-none focus:border-purple-400 transition-all"
-            >
-              <option value="compact-minimal">Compact Minimal</option>
-              <option value="wide-badge">Wide Badge</option>
-              <option value="vertical-stack">Vertical Stack</option>
-              <option value="tech-panel">Tech Panel</option>
-              <option value="holographic-glow">Holographic Glow</option>
-            </select>
-          </div>
         </div>
         </div>
       )}
@@ -347,28 +323,7 @@ export default function MekLayoutsPage() {
               </select>
             </div>
 
-            {/* Dropdown 4: Designation Card Style */}
-            <div className="mb-3">
-              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-                Designation Card Style
-              </label>
-              <select
-                value={designationCardStyle}
-                onChange={(e) => setDesignationCardStyle(e.target.value as DesignationCardStyle)}
-                className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
-              >
-                <option value="corner-brackets">Corner Brackets</option>
-                <option value="split-hud">Split HUD</option>
-                <option value="data-terminal">Data Terminal</option>
-                <option value="holographic-overlay">Holographic Overlay</option>
-                <option value="cyber-minimal">Cyber Minimal</option>
-                <option value="tech-frame">Tech Frame</option>
-                <option value="neon-edge">Neon Edge</option>
-                <option value="matrix-grid">Matrix Grid</option>
-              </select>
-            </div>
-
-            {/* Dropdown 5: Cumulative Gold Style */}
+            {/* Dropdown 4: Cumulative Gold Style */}
             <div className="mb-3">
               <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
                 Cumulative Gold Style
