@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -126,8 +126,15 @@ export default function MekProfileLightbox({
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
 
+  // Overlay rendering state and refs
+  const overlayRef = useRef<HTMLImageElement>(null);
+  const [overlaySize, setOverlaySize] = useState({ width: 0, height: 0 });
+
   // Query level colors from database
   const levelColors = useQuery(api.levelColors.getLevelColors) || DEFAULT_LEVEL_COLORS;
+
+  // Load mek pfp overlay data from database
+  const mekPfpOverlay = useQuery(api.overlays.getOverlay, { imageKey: "slot test 1" });
 
   // Define style classes based on variation (base classes only, opacity/blur applied inline)
   const getContainerClasses = () => {
@@ -5531,18 +5538,94 @@ export default function MekProfileLightbox({
               }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: `${contentSpacing}px` }}>
-                {/* MOBILE: Mek Image Hero (only visible on mobile) */}
-                <div className="lg:hidden mek-card-industrial mek-border-sharp-gold overflow-hidden">
-                  <img
-                    src="/mek-images/1000px/aa2-bl2-hn1.webp"
-                    alt="Mek Profile"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                {/* MOBILE: 10-Bar Level Indicator */}
+                {/* MOBILE: Mek PFP Overlay (only visible on mobile) */}
                 <div className="lg:hidden">
-                  {renderTenureLevelDisplay()}
+                  {mekPfpOverlay && mekPfpOverlay.imagePath && (() => {
+                    // Calculate scale factor based on displayed image size vs original size
+                    const displayScale = overlaySize.width > 0
+                      ? overlaySize.width / mekPfpOverlay.imageWidth
+                      : 1;
+
+                    // Find the "Slotted Mek PFP" display zone
+                    const displayZone = mekPfpOverlay.zones?.find(
+                      z => z.mode === 'zone' && z.type === 'display' && z.metadata?.displayType === 'slotted-mek-pfp'
+                    );
+
+                    // Find the "Mek Name" display zone
+                    const nameZone = mekPfpOverlay.zones?.find(
+                      z => z.mode === 'zone' && z.type === 'display' && z.metadata?.displayType === 'mek-name'
+                    );
+
+                    // Mock Mek data for testing
+                    const mockMekSourceKey = "aa2-bl2-hn1";
+                    const mockMekName = "SENTINEL ALPHA";
+
+                    return (
+                      <div className="mek-card-industrial mek-border-sharp-gold overflow-hidden relative">
+                        {/* Base Overlay Image */}
+                        <img
+                          ref={overlayRef}
+                          src={mekPfpOverlay.imagePath}
+                          alt="Mek Profile Overlay"
+                          className="w-full h-auto"
+                          onLoad={() => {
+                            if (overlayRef.current) {
+                              const rect = overlayRef.current.getBoundingClientRect();
+                              setOverlaySize({ width: rect.width, height: rect.height });
+                            }
+                          }}
+                        />
+
+                        {/* Display Zone - Show Mek Image */}
+                        {displayZone && overlaySize.width > 0 && (
+                          <div
+                            className="absolute"
+                            style={{
+                              left: `${displayZone.x * displayScale}px`,
+                              top: `${displayZone.y * displayScale}px`,
+                              width: `${(displayZone.width || 150) * displayScale}px`,
+                              height: `${(displayZone.height || 150) * displayScale}px`,
+                            }}
+                          >
+                            <img
+                              src={`/mek-images/150px/${mockMekSourceKey.toLowerCase()}.webp`}
+                              alt="Mek"
+                              className="w-full h-full object-contain"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )}
+
+                        {/* Name Zone - Show Mek's Name */}
+                        {nameZone && overlaySize.width > 0 && (
+                          <div
+                            className="absolute flex items-center"
+                            style={{
+                              left: `${nameZone.x * displayScale}px`,
+                              top: `${nameZone.y * displayScale}px`,
+                              width: `${(nameZone.width || 200) * displayScale}px`,
+                              height: `${(nameZone.height || 40) * displayScale}px`,
+                              justifyContent: nameZone.metadata?.displayAlign || 'center',
+                            }}
+                          >
+                            <div
+                              className="text-yellow-400 font-bold"
+                              style={{
+                                fontSize: `${(nameZone.metadata?.displayFontSize || 16) * displayScale}px`,
+                                lineHeight: 1.2,
+                                fontFamily: nameZone.metadata?.fontFamily || 'Orbitron, sans-serif',
+                                textAlign: (nameZone.metadata?.displayAlign || 'center') as any,
+                              }}
+                            >
+                              {mockMekName}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* MOBILE: Animated Details Button - Wider & Shorter (Pancake Shape) */}
@@ -5632,20 +5715,94 @@ export default function MekProfileLightbox({
                     )}
                   </div>
 
-                  {/* CENTER - MEK IMAGE */}
+                  {/* CENTER - MEK PFP OVERLAY */}
                   <div className="lg:col-span-6 flex flex-col items-start justify-center gap-4">
-                    <div className={`${getCardClasses()} overflow-hidden w-full !p-0`}>
-                      <img
-                        src="/mek-images/1000px/aa2-bl2-hn1.webp"
-                        alt="Mek Profile"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                    {mekPfpOverlay && mekPfpOverlay.imagePath && (() => {
+                      // Calculate scale factor based on displayed image size vs original size
+                      const displayScale = overlaySize.width > 0
+                        ? overlaySize.width / mekPfpOverlay.imageWidth
+                        : 1;
 
-                    {/* DESKTOP: 10-Bar Level Indicator */}
-                    <div className="w-full">
-                      {renderTenureLevelDisplay()}
-                    </div>
+                      // Find the "Slotted Mek PFP" display zone
+                      const displayZone = mekPfpOverlay.zones?.find(
+                        z => z.mode === 'zone' && z.type === 'display' && z.metadata?.displayType === 'slotted-mek-pfp'
+                      );
+
+                      // Find the "Mek Name" display zone
+                      const nameZone = mekPfpOverlay.zones?.find(
+                        z => z.mode === 'zone' && z.type === 'display' && z.metadata?.displayType === 'mek-name'
+                      );
+
+                      // Mock Mek data for testing
+                      const mockMekSourceKey = "aa2-bl2-hn1";
+                      const mockMekName = "SENTINEL ALPHA";
+
+                      return (
+                        <div className={`${getCardClasses()} overflow-hidden w-full !p-0 relative`}>
+                          {/* Base Overlay Image */}
+                          <img
+                            ref={overlayRef}
+                            src={mekPfpOverlay.imagePath}
+                            alt="Mek Profile Overlay"
+                            className="w-full h-auto"
+                            onLoad={() => {
+                              if (overlayRef.current) {
+                                const rect = overlayRef.current.getBoundingClientRect();
+                                setOverlaySize({ width: rect.width, height: rect.height });
+                              }
+                            }}
+                          />
+
+                          {/* Display Zone - Show Mek Image */}
+                          {displayZone && overlaySize.width > 0 && (
+                            <div
+                              className="absolute"
+                              style={{
+                                left: `${displayZone.x * displayScale}px`,
+                                top: `${displayZone.y * displayScale}px`,
+                                width: `${(displayZone.width || 150) * displayScale}px`,
+                                height: `${(displayZone.height || 150) * displayScale}px`,
+                              }}
+                            >
+                              <img
+                                src={`/mek-images/150px/${mockMekSourceKey.toLowerCase()}.webp`}
+                                alt="Mek"
+                                className="w-full h-full object-contain"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          )}
+
+                          {/* Name Zone - Show Mek's Name */}
+                          {nameZone && overlaySize.width > 0 && (
+                            <div
+                              className="absolute flex items-center"
+                              style={{
+                                left: `${nameZone.x * displayScale}px`,
+                                top: `${nameZone.y * displayScale}px`,
+                                width: `${(nameZone.width || 200) * displayScale}px`,
+                                height: `${(nameZone.height || 40) * displayScale}px`,
+                                justifyContent: nameZone.metadata?.displayAlign || 'center',
+                              }}
+                            >
+                              <div
+                                className="text-yellow-400 font-bold"
+                                style={{
+                                  fontSize: `${(nameZone.metadata?.displayFontSize || 16) * displayScale}px`,
+                                  lineHeight: 1.2,
+                                  fontFamily: nameZone.metadata?.fontFamily || 'Orbitron, sans-serif',
+                                  textAlign: (nameZone.metadata?.displayAlign || 'center') as any,
+                                }}
+                              >
+                                {mockMekName}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* DESKTOP: Animated Details Button - Wider & Shorter (Pancake Shape) */}
                     <div className="w-full flex justify-center">
