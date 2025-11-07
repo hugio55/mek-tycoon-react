@@ -500,7 +500,13 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     <>
       <div
         className="fixed inset-0 z-[9999] flex items-center justify-center overflow-auto p-4"
-        onClick={attemptCancel}
+        onClick={() => {
+          // Disable backdrop close during payment state to prevent accidental cancellation
+          if (state === 'payment') {
+            return;
+          }
+          attemptCancel();
+        }}
       >
         {/* Backdrop */}
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" />
