@@ -298,25 +298,10 @@ export default function MekRateLoggingPage() {
         if (cancelled) return;
 
         if (session && session.stakeAddress) {
-          console.log('[Root Page] Valid session found, redirecting to /home');
-
-          // Browser-aware delay to ensure state updates propagate
-          // Safari iOS and mobile browsers need more time for state sync
-          const isMobileSafari = /iPhone|iPad|iPod/.test(navigator.userAgent);
-          const isMobileAndroid = /Android/.test(navigator.userAgent);
-          const isDesktopSafari = /Safari/.test(navigator.userAgent) &&
-                                  !/Chrome/.test(navigator.userAgent) &&
-                                  !/Mobile/.test(navigator.userAgent);
-
-          const redirectDelay = isMobileSafari ? 250 :      // iOS Safari needs more time
-                               isMobileAndroid ? 200 :      // Android mid-range safety
-                               isDesktopSafari ? 150 :      // Desktop Safari slower than Chrome
-                               100;                         // Chrome/Firefox optimal
-
-          await new Promise(resolve => setTimeout(resolve, redirectDelay));
-
-          // Use Next.js router for smooth client-side navigation
-          router.push('/home');
+          console.log('[Root Page] Valid session found - AUTO-REDIRECT DISABLED');
+          // REDIRECT DISABLED: User can now stay on root page to interact with corporation creation
+          // router.push('/home');
+          setIsAutoReconnecting(false);
         } else {
           console.log('[Root Page] No valid session found');
           setIsAutoReconnecting(false);
