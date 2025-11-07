@@ -38,6 +38,24 @@ export const createReservation = mutation({
 
     if (!availableNFT) {
       console.log('[RESERVATION] No available NFTs');
+
+      // Check if any NFTs are currently reserved (not sold)
+      const reservedNFTs = await ctx.db
+        .query("commemorativeNFTInventory")
+        .withIndex("by_status_and_number", (q) => q.eq("status", "reserved"))
+        .collect();
+
+      if (reservedNFTs.length > 0) {
+        // There are reserved NFTs that might become available
+        console.log('[RESERVATION] All NFTs currently reserved, but may become available');
+        return {
+          success: false,
+          error: "TEMPORARILY_UNAVAILABLE",
+          message: "All NFTs are currently in the reservation phase. If they are not purchased by the users within the 10 minute reserve period, they will be available. Please check back in 5-10 minutes.",
+        };
+      }
+
+      // All NFTs are sold
       return {
         success: false,
         error: "All NFTs have been claimed",
