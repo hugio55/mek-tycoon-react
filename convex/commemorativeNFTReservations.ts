@@ -6,14 +6,14 @@ import { Id } from "./_generated/dataModel";
  * Commemorative NFT Reservation System
  *
  * This system manages the reservation flow for Lab Rat NFTs:
- * 1. User clicks "Claim NFT" → reserve next available NFT for 10 minutes
+ * 1. User clicks "Claim NFT" → reserve next available NFT for 5 minutes
  * 2. Timer pauses when NMKR payment window is open
  * 3. Timer resumes if window closes without payment
  * 4. 30-second grace period after expiry for slow payments
  * 5. Auto-release expired reservations
  */
 
-const RESERVATION_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
+const RESERVATION_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
 const GRACE_PERIOD = 5 * 60 * 1000; // 5 minutes (extended for payment processing)
 
 // Create a new reservation for the next available NFT
