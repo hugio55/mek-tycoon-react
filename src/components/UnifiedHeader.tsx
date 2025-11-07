@@ -73,7 +73,18 @@ export default function UnifiedHeader() {
 
   // Get wallet address from encrypted session storage
   useEffect(() => {
-    const checkWalletAddress = async () => {
+    let pollCount = 0;
+    let actualStateChanges = 0;
+    let storageEventCount = 0;
+    let lastAddress: string | null = null;
+    let lastExpires: number | null = null;
+
+    const checkWalletAddress = async (source: 'initial' | 'polling' | 'storage') => {
+      if (source === 'polling') pollCount++;
+      if (source === 'storage') storageEventCount++;
+
+      console.log(`[🔄SYNC] checkWalletAddress called from: ${source}`);
+
       try {
         const session = await restoreWalletSession();
 
@@ -81,29 +92,87 @@ export default function UnifiedHeader() {
           const address = session.stakeAddress || session.walletAddress;
           const expiresAt = session.expiresAt || null;
 
+          // Track what changed
+          const addressChanged = lastAddress !== address;
+          const expiresChanged = lastExpires !== expiresAt;
+
+          if (addressChanged || expiresChanged) {
+            actualStateChanges++;
+            console.log(`[🔄SYNC] STATE CHANGE DETECTED from ${source}:`, {
+              addressChanged,
+              expiresChanged,
+              oldAddress: lastAddress,
+              newAddress: address,
+              oldExpires: lastExpires,
+              newExpires: expiresAt,
+              pollCount,
+              actualStateChanges,
+              storageEventCount,
+              changeRate: pollCount > 0 ? `${(actualStateChanges / pollCount * 100).toFixed(2)}%` : 'N/A'
+            });
+
+            lastAddress = address;
+            lastExpires = expiresAt;
+          } else {
+            console.log(`[🔄SYNC] No change from ${source} (poll ${pollCount}, changes ${actualStateChanges})`);
+          }
+
           // CRITICAL FIX: Only update state if values actually changed
           // This prevents unnecessary re-renders and query re-executions
-          setWalletAddress(prevAddress => prevAddress !== address ? address : prevAddress);
-          setSessionExpiresAt(prevExpires => prevExpires !== expiresAt ? expiresAt : prevExpires);
+          setWalletAddress(prevAddress => {
+            if (prevAddress !== address) {
+              console.log('[🔄SYNC] setWalletAddress called:', { prev: prevAddress, new: address });
+              return address;
+            }
+            return prevAddress;
+          });
+          setSessionExpiresAt(prevExpires => {
+            if (prevExpires !== expiresAt) {
+              console.log('[🔄SYNC] setSessionExpiresAt called:', { prev: prevExpires, new: expiresAt });
+              return expiresAt;
+            }
+            return prevExpires;
+          });
         } else {
+          console.log(`[🔄SYNC] No session from ${source}`);
           // Only clear if not already cleared
           setWalletAddress(prev => prev !== null ? null : prev);
           setSessionExpiresAt(prev => prev !== null ? null : prev);
         }
       } catch (error) {
-        console.error('[UnifiedHeader] Error restoring session:', error);
+        console.error('[🔄SYNC] Error restoring session:', error);
         setWalletAddress(prev => prev !== null ? null : prev);
         setSessionExpiresAt(prev => prev !== null ? null : prev);
       }
     };
 
-    checkWalletAddress();
-    window.addEventListener('storage', checkWalletAddress);
-    const interval = setInterval(checkWalletAddress, 5000); // Check every 5 seconds
+    // Log polling statistics every 30 seconds
+    const statsInterval = setInterval(() => {
+      console.log('[🔄SYNC] POLLING STATISTICS:', {
+        totalPolls: pollCount,
+        actualChanges: actualStateChanges,
+        storageEvents: storageEventCount,
+        changeRate: pollCount > 0 ? `${(actualStateChanges / pollCount * 100).toFixed(2)}%` : 'N/A',
+        efficiency: actualStateChanges > 0
+          ? `${storageEventCount} storage events vs ${actualStateChanges} total changes = ${((storageEventCount / actualStateChanges) * 100).toFixed(0)}% event coverage`
+          : 'No changes detected yet'
+      });
+    }, 30000);
+
+    checkWalletAddress('initial');
+    window.addEventListener('storage', () => checkWalletAddress('storage'));
+    const interval = setInterval(() => checkWalletAddress('polling'), 5000); // Check every 5 seconds
 
     return () => {
-      window.removeEventListener('storage', checkWalletAddress);
+      window.removeEventListener('storage', () => checkWalletAddress('storage'));
       clearInterval(interval);
+      clearInterval(statsInterval);
+      console.log('[🔄SYNC] FINAL STATISTICS:', {
+        totalPolls: pollCount,
+        actualChanges: actualStateChanges,
+        storageEvents: storageEventCount,
+        changeRate: pollCount > 0 ? `${(actualStateChanges / pollCount * 100).toFixed(2)}%` : 'N/A'
+      });
     };
   }, []);
 
