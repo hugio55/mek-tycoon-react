@@ -98,12 +98,9 @@ export default function PowerSwitchToggle({
             className="origin-[75px_80px]"
             style={{
               strokeDasharray: 220,
-              strokeDashoffset: checked ? 40 : 220,
+              strokeDashoffset: 40,
               transform: 'rotate(-58deg)',
-              opacity: 0.2,
-              transitionProperty: 'stroke-dashoffset',
-              transitionDuration: checked ? '0s' : '1s',
-              transitionDelay: '0s'
+              opacity: 0.2
             }}
           />
         </svg>

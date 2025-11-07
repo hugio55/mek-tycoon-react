@@ -714,37 +714,55 @@ export default function CampaignManager({
                     </span>
                   </div>
 
-              <div className="grid grid-cols-5 gap-2 mb-3">
-                <div className="bg-black/50 p-2 rounded">
-                  <p className="text-xs text-gray-400">Max</p>
-                  <p className="text-lg font-bold text-white">
-                    {campaign.maxNFTs}
-                  </p>
+              <div className="mb-3">
+                <div className="grid grid-cols-5 gap-2">
+                  <div className="bg-black/50 p-2 rounded">
+                    <p className="text-xs text-gray-400">Max</p>
+                    <p className="text-lg font-bold text-white">
+                      {campaign.maxNFTs}
+                    </p>
+                  </div>
+                  <div className="bg-black/50 p-2 rounded">
+                    <p className="text-xs text-gray-400">Total</p>
+                    <p className="text-lg font-bold text-white">
+                      {campaign.totalNFTs}
+                    </p>
+                  </div>
+                  <div className="bg-black/50 p-2 rounded border border-green-500/30">
+                    <p className="text-xs text-gray-400">Available</p>
+                    <p className="text-lg font-bold text-green-400">
+                      {campaign.availableNFTs}
+                    </p>
+                  </div>
+                  <div className="bg-black/50 p-2 rounded border border-yellow-500/30">
+                    <p className="text-xs text-gray-400">Reserved</p>
+                    <p className="text-lg font-bold text-yellow-400">
+                      {campaign.reservedNFTs}
+                    </p>
+                  </div>
+                  <div className="bg-black/50 p-2 rounded border border-red-500/30">
+                    <p className="text-xs text-gray-400">Sold</p>
+                    <p className="text-lg font-bold text-red-400">
+                      {campaign.soldNFTs}
+                    </p>
+                  </div>
                 </div>
-                <div className="bg-black/50 p-2 rounded">
-                  <p className="text-xs text-gray-400">Total</p>
-                  <p className="text-lg font-bold text-white">
-                    {campaign.totalNFTs}
-                  </p>
-                </div>
-                <div className="bg-black/50 p-2 rounded border border-green-500/30">
-                  <p className="text-xs text-gray-400">Available</p>
-                  <p className="text-lg font-bold text-green-400">
-                    {campaign.availableNFTs}
-                  </p>
-                </div>
-                <div className="bg-black/50 p-2 rounded border border-yellow-500/30">
-                  <p className="text-xs text-gray-400">Reserved</p>
-                  <p className="text-lg font-bold text-yellow-400">
-                    {campaign.reservedNFTs}
-                  </p>
-                </div>
-                <div className="bg-black/50 p-2 rounded border border-red-500/30">
-                  <p className="text-xs text-gray-400">Sold</p>
-                  <p className="text-lg font-bold text-red-400">
-                    {campaign.soldNFTs}
-                  </p>
-                </div>
+
+                {/* Sync Counters Button */}
+                <button
+                  onClick={async () => {
+                    try {
+                      await syncCounters({ campaignId: campaign._id });
+                      onCampaignUpdated?.();
+                    } catch (error) {
+                      console.error('Failed to sync counters:', error);
+                    }
+                  }}
+                  className="mt-2 text-xs text-gray-400 hover:text-yellow-400 transition-colors underline"
+                  title="Recalculate counters from actual inventory"
+                >
+                  🔄 Sync Counters
+                </button>
               </div>
 
               {/* NFT Inventory Table */}

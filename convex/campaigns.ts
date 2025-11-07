@@ -155,10 +155,10 @@ export const updateCampaignStats = mutation({
       throw new Error("Campaign not found");
     }
 
-    // Count inventory items for this campaign
+    // Count inventory items for this campaign using indexed query
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .filter((q) => q.eq(q.field("projectId"), campaign.nmkrProjectId))
+      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
       .collect();
 
     const stats = {
