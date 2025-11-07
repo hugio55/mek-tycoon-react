@@ -9,7 +9,6 @@ import { restoreWalletSession } from '@/lib/walletSessionManager';
 import { getVariationInfoFromFullKey } from '@/lib/variationNameLookup';
 import MekNamingLightbox from '@/components/MekNamingLightbox';
 import MekManagementLightbox from '@/components/MekManagementLightbox';
-import MekManagementLightboxConcepts from '@/components/MekManagementLightboxConcepts';
 import AirdropClaimBanner from '@/components/AirdropClaimBanner';
 import * as Tooltip from '@radix-ui/react-tooltip';
 
@@ -988,9 +987,6 @@ export default function HomePage() {
             }}
           />
         )}
-
-        {/* DEBUG: Lightbox Concepts Comparison */}
-        <MekManagementLightboxConcepts />
         </div>
       </div>
     </Tooltip.Provider>
