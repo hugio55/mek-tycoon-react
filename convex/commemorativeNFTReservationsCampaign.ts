@@ -488,8 +488,9 @@ export const markPaymentWindowClosed = mutation({
 
 /**
  * Cleanup expired reservations for a specific campaign
+ * Returns the number of expired reservations actually cleaned up
  */
-async function cleanupExpiredCampaignReservations(ctx: any, campaignId: Id<"commemorativeCampaigns">, now: number) {
+async function cleanupExpiredCampaignReservations(ctx: any, campaignId: Id<"commemorativeCampaigns">, now: number): Promise<number> {
   const expiredReservations = await ctx.db
     .query("commemorativeNFTReservations")
     .withIndex("by_campaign", (q) => q.eq("campaignId", campaignId))
@@ -534,6 +535,8 @@ async function cleanupExpiredCampaignReservations(ctx: any, campaignId: Id<"comm
   if (expiredReservations.length > 0) {
     console.log('[CAMPAIGN RESERVATION] Cleaned up', expiredReservations.length, 'expired reservations for campaign:', campaignId);
   }
+
+  return expiredReservations.length;
 }
 
 /**
@@ -560,23 +563,28 @@ export const cleanupAllExpiredReservations = mutation({
     // Get all campaigns
     const campaigns = await ctx.db.query("commemorativeCampaigns").collect();
 
-    let totalCleaned = 0;
+    let totalExpiredReservations = 0;
     for (const campaign of campaigns) {
-      await cleanupExpiredCampaignReservations(ctx, campaign._id, now);
-      totalCleaned++;
+      const cleanedCount = await cleanupExpiredCampaignReservations(ctx, campaign._id, now);
+      totalExpiredReservations += cleanedCount;
     }
 
-    console.log('[CAMPAIGN RESERVATION] Cleaned up expired reservations for', totalCleaned, 'campaigns');
+    // Only log if we actually cleaned up expired reservations
+    if (totalExpiredReservations > 0) {
+      console.log('[CAMPAIGN RESERVATION] Cleaned up', totalExpiredReservations, 'expired reservations across', campaigns.length, 'campaigns');
+    }
 
-    return { success: true, campaignsProcessed: totalCleaned };
+    return { success: true, campaignsProcessed: campaigns.length, expiredReservationsCleaned: totalExpiredReservations };
   },
 });
 
 /**
  * INTERNAL: Cleanup ALL expired reservations (called by cron job)
  *
- * Runs every 5 minutes via cron to automatically expire reservations
+ * Runs every minute via cron to automatically expire reservations
  * that have passed their 10-minute timeout window
+ *
+ * Only logs when actual cleanup work is performed (silent when no expired reservations exist)
  */
 export const internalCleanupExpiredReservations = internalMutation({
   handler: async (ctx) => {
@@ -585,14 +593,17 @@ export const internalCleanupExpiredReservations = internalMutation({
     // Get all campaigns
     const campaigns = await ctx.db.query("commemorativeCampaigns").collect();
 
-    let totalCleaned = 0;
+    let totalExpiredReservations = 0;
     for (const campaign of campaigns) {
-      await cleanupExpiredCampaignReservations(ctx, campaign._id, now);
-      totalCleaned++;
+      const cleanedCount = await cleanupExpiredCampaignReservations(ctx, campaign._id, now);
+      totalExpiredReservations += cleanedCount;
     }
 
-    console.log('[CRON CLEANUP] Cleaned up expired reservations for', totalCleaned, 'campaigns');
+    // Only log when we actually found and cleaned up expired reservations
+    if (totalExpiredReservations > 0) {
+      console.log('[CRON CLEANUP] Cleaned up', totalExpiredReservations, 'expired reservations across', campaigns.length, 'campaigns');
+    }
 
-    return { success: true, campaignsProcessed: totalCleaned };
+    return { success: true, campaignsProcessed: campaigns.length, expiredReservationsCleaned: totalExpiredReservations };
   },
 });
