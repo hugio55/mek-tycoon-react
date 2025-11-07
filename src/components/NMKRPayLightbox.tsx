@@ -160,23 +160,52 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     }
   }, [state, claimStatus]);
 
-  // Check if reservation expired (including grace period)
+  // Auto-release when timer hits exactly 0:00 (instant client-side release)
   useEffect(() => {
-    if (!activeReservation || state === 'success') return;
+    if (!activeReservation || state === 'success' || state === 'error') return;
 
     const now = Date.now();
-    const GRACE_PERIOD = 30 * 1000; // 30 seconds
+    const remainingMs = Math.max(0, activeReservation.expiresAt - now);
 
-    // If expired beyond grace period, auto-release
-    if (activeReservation.isExpired && now > activeReservation.expiresAt + GRACE_PERIOD) {
-      console.log('[🎟️RESERVE] Reservation expired beyond grace period, releasing...');
-      if (reservationId) {
-        releaseReservation({ reservationId, reason: 'expired' });
+    // INSTANT RELEASE when timer hits 0:00
+    if (remainingMs === 0 && !activeReservation.isExpired) {
+      // Only auto-release if:
+      // 1. NOT in payment window (user hasn't opened payment yet)
+      // 2. NOT processing payment (user closed window and we're checking)
+      // 3. Payment window is NOT currently open
+      const shouldAutoRelease =
+        state === 'reserved' &&
+        !activeReservation.isPaymentWindowOpen &&
+        (!paymentWindow || paymentWindow.closed);
+
+      if (shouldAutoRelease && reservationId) {
+        console.log('[⏰TIMER] Timer reached 0:00 - instant client-side release');
+        releaseReservation({ reservationId, reason: 'expired' })
+          .then(() => {
+            setErrorMessage('Reservation timer expired. Please try again.');
+            setState('error');
+          })
+          .catch((err) => {
+            console.error('[⏰TIMER] Failed to release reservation:', err);
+            // Still show error state even if mutation fails (backup cron will handle it)
+            setErrorMessage('Reservation timer expired. Please try again.');
+            setState('error');
+          });
       }
-      setErrorMessage('Reservation expired. Please try again.');
-      setState('error');
     }
-  }, [activeReservation, state, reservationId, releaseReservation]);
+
+    // BACKUP: Cleanup expired reservations beyond grace period (if client-side release failed)
+    const GRACE_PERIOD = 30 * 1000; // 30 seconds
+    if (activeReservation.isExpired && now > activeReservation.expiresAt + GRACE_PERIOD) {
+      // Only trigger if we somehow missed the instant release above
+      if (state === 'reserved' && reservationId) {
+        console.log('[🎟️RESERVE] Backup cleanup: Reservation expired beyond grace period');
+        releaseReservation({ reservationId, reason: 'expired' });
+        setErrorMessage('Reservation expired. Please try again.');
+        setState('error');
+      }
+    }
+  }, [activeReservation, state, reservationId, releaseReservation, paymentWindow]);
 
   // Close payment window if user closes lightbox
   useEffect(() => {
