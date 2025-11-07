@@ -134,7 +134,7 @@ export default function MekProfileLightbox({
   const levelColors = useQuery(api.levelColors.getLevelColors) || DEFAULT_LEVEL_COLORS;
 
   // Load mek pfp overlay data from database
-  const mekPfpOverlay = useQuery(api.overlays.getOverlay, { imageKey: "slot test 1" });
+  const mekPfpOverlay = useQuery(api.overlays.getOverlay, { imageKey: "mek pfp" });
 
   // Define style classes based on variation (base classes only, opacity/blur applied inline)
   const getContainerClasses = () => {
