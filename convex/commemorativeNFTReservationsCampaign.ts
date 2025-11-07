@@ -16,7 +16,7 @@ import { Id } from "./_generated/dataModel";
  */
 
 const RESERVATION_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
-const GRACE_PERIOD = 30 * 1000; // 30 seconds
+const GRACE_PERIOD = 5 * 1000; // 5 seconds (minimal grace for network delays)
 
 // ============================================================================
 // CAMPAIGN-SCOPED RESERVATION MUTATIONS
