@@ -21,6 +21,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
   const [reservationId, setReservationId] = useState<Id<"commemorativeNFTReservations"> | null>(null);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
 
+  // Track if we've already initiated a timeout release to prevent multiple attempts
+  const hasInitiatedTimeoutRelease = useRef(false);
+
   // Mutations
   const createReservation = useMutation(api.commemorativeNFTReservations.createReservation);
   const releaseReservation = useMutation(api.commemorativeNFTReservations.releaseReservation);
@@ -160,96 +163,70 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     }
   }, [state, claimStatus]);
 
-  // Auto-release when timer hits exactly 0:00 (instant client-side release)
-  // Uses interval to continuously check time
+  // Auto-release when timer expires (instant client-side release)
   useEffect(() => {
-    console.log('[⏰AUTO-RELEASE] Effect mounted/updated', {
-      hasReservation: !!activeReservation,
-      state,
-      reservationId,
-    });
-
-    if (!activeReservation || state === 'success' || state === 'error') {
-      console.log('[⏰AUTO-RELEASE] Skipping - no reservation or already complete');
+    if (!activeReservation || state === 'success' || state === 'error' || state === 'timeout') {
       return;
     }
 
-    // Check every second if timer has expired
+    // If we've already initiated timeout, don't check again
+    if (hasInitiatedTimeoutRelease.current) {
+      return;
+    }
+
+    // Check every 100ms for more precise timing (instead of every second)
     const intervalId = setInterval(() => {
       const now = Date.now();
-      const remainingMs = Math.max(0, activeReservation.expiresAt - now);
       const isExpired = now >= activeReservation.expiresAt;
 
-      console.log('[⏰AUTO-RELEASE] Checking expiration', {
-        remainingMs,
+      console.log('[⏰TIMER] Check', {
         isExpired,
-        dbIsExpired: activeReservation.isExpired,
+        remainingMs: Math.max(0, activeReservation.expiresAt - now),
         state,
-        isPaymentWindowOpen: activeReservation.isPaymentWindowOpen,
-        paymentWindowClosed: !paymentWindow || paymentWindow.closed,
+        hasInitiated: hasInitiatedTimeoutRelease.current,
       });
 
-      // INSTANT RELEASE when timer hits 0:00
-      if (remainingMs === 0 && isExpired) {
-        // Only auto-release if:
-        // 1. NOT in payment window (user hasn't opened payment yet)
-        // 2. NOT processing payment (user closed window and we're checking)
-        // 3. Payment window is NOT currently open
-        const shouldAutoRelease =
-          state === 'reserved' &&
-          !activeReservation.isPaymentWindowOpen &&
-          (!paymentWindow || paymentWindow.closed);
+      // INSTANT RELEASE when timer expires
+      if (isExpired && !hasInitiatedTimeoutRelease.current) {
+        // Only auto-release if in 'reserved' or 'payment' state
+        // Don't release if already processing a payment verification
+        const shouldAutoRelease = (state === 'reserved' || state === 'payment');
 
-        console.log('[⏰AUTO-RELEASE] Timer at 0:00', {
+        console.log('[⏰TIMER] Timer expired!', {
           shouldAutoRelease,
           state,
           isPaymentWindowOpen: activeReservation.isPaymentWindowOpen,
-          paymentWindowExists: !!paymentWindow,
-          paymentWindowClosed: !paymentWindow || paymentWindow.closed,
         });
 
         if (shouldAutoRelease && reservationId) {
-          console.log('[⏰AUTO-RELEASE] Triggering instant client-side release');
-          clearInterval(intervalId); // Stop checking
+          console.log('[⏰TIMER] Initiating instant timeout release');
+
+          // Set flag immediately to prevent duplicate attempts
+          hasInitiatedTimeoutRelease.current = true;
+
+          // Clear interval immediately
+          clearInterval(intervalId);
+
+          // Transition to timeout state immediately (optimistic UI)
+          setState('timeout');
+
+          // Release reservation in background
           releaseReservation({ reservationId, reason: 'expired' })
             .then(() => {
-              console.log('[⏰AUTO-RELEASE] Release successful');
-              setErrorMessage('Reservation timer expired. Please try again.');
-              setState('error');
+              console.log('[⏰TIMER] Release successful');
             })
             .catch((err) => {
-              console.error('[⏰AUTO-RELEASE] Release failed:', err);
-              // Still show error state even if mutation fails (backup cron will handle it)
-              setErrorMessage('Reservation timer expired. Please try again.');
-              setState('error');
+              console.error('[⏰TIMER] Release failed:', err);
+              // Timeout state already shown, backup cron will handle cleanup
             });
-        } else {
-          console.log('[⏰AUTO-RELEASE] Conditions not met for auto-release');
         }
       }
+    }, 100); // Check every 100ms for precise timing
 
-      // BACKUP: Cleanup expired reservations beyond grace period (if client-side release failed)
-      const GRACE_PERIOD = 30 * 1000; // 30 seconds
-      if (isExpired && now > activeReservation.expiresAt + GRACE_PERIOD) {
-        // Only trigger if we somehow missed the instant release above
-        if (state === 'reserved' && reservationId) {
-          console.log('[⏰AUTO-RELEASE] Backup cleanup: Reservation expired beyond grace period');
-          clearInterval(intervalId); // Stop checking
-          releaseReservation({ reservationId, reason: 'expired' });
-          setErrorMessage('Reservation expired. Please try again.');
-          setState('error');
-        }
-      }
-    }, 1000); // Check every second
-
-    console.log('[⏰AUTO-RELEASE] Interval started:', intervalId);
-
-    // Cleanup interval on unmount or when dependencies change
     return () => {
-      console.log('[⏰AUTO-RELEASE] Cleaning up interval:', intervalId);
       clearInterval(intervalId);
     };
-  }, [activeReservation, state, reservationId, releaseReservation, paymentWindow]);
+  }, [activeReservation, state, reservationId, releaseReservation]);
 
   // Close payment window if user closes lightbox
   useEffect(() => {
@@ -262,8 +239,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
   // Attempt to cancel - show confirmation first
   const attemptCancel = () => {
-    // Don't show confirmation if already in success or error state
-    if (state === 'success' || state === 'error') {
+    // Don't show confirmation if already in success, error, or timeout state
+    if (state === 'success' || state === 'error' || state === 'timeout') {
       onClose();
       return;
     }
@@ -365,7 +342,11 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                     {activeReservation.nft?.name || "NFT"}
                   </h3>
                   <p style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', fontSize: '0.95rem', lineHeight: '1.6', fontWeight: 400 }}>
-                    You are currently reserving edition number {activeReservation.nftNumber}. This will last for 10 minutes, and then that edition will be released.
+                    You are currently reserving <span style={{
+                      color: '#22d3ee',
+                      fontWeight: 600,
+                      textShadow: '0 0 10px rgba(34, 211, 238, 0.6), 0 0 20px rgba(34, 211, 238, 0.4)'
+                    }}>edition number {activeReservation.nftNumber}</span>. This will last for 5 minutes, and then that edition will be released.
                   </p>
 
                   <div className={`mt-5 p-4 rounded-xl backdrop-blur-sm ${
@@ -509,6 +490,32 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
             <button
               onClick={onClose}
               className="px-6 py-3 bg-green-500/20 border-2 border-green-500 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors font-bold uppercase tracking-wider"
+              style={{ fontFamily: 'Orbitron, sans-serif' }}
+            >
+              Close
+            </button>
+          </div>
+        );
+
+      case 'timeout':
+        return (
+          <div className="text-center">
+            <div className="mb-6">
+              <div className="h-16 w-16 bg-yellow-500/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <svg className="w-10 h-10 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-yellow-400 mb-2 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                Reservation Timed Out
+              </h2>
+              <p className="text-gray-300 mb-4 max-w-md mx-auto">
+                We are sorry, the reservation has timed out. Please try again when you are ready.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="px-6 py-3 bg-yellow-500/20 border-2 border-yellow-500 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-colors font-bold uppercase tracking-wider"
               style={{ fontFamily: 'Orbitron, sans-serif' }}
             >
               Close
