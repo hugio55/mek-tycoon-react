@@ -2,9 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import PhaseCarousel from '@/components/PhaseCarousel';
 import PowerSwitchToggle from '@/components/controls/PowerSwitchToggle';
-import MekGalleryCarousel from '@/components/MekGalleryCarousel';
 import EmotionsSlider from '@/components/EmotionsSlider';
 import TeamCarousel from '@/components/TeamCarousel';
 import HorizontalTimeline from '@/components/HorizontalTimeline';
@@ -617,16 +615,6 @@ export default function LandingPage() {
                 verticalOffset={0}
               />
             </div>
-          </div>
-
-          {/* Phase Carousel */}
-          <div className="w-full mt-16 sm:mt-24 md:mt-32">
-            <PhaseCarousel designVariation={designVariation} />
-          </div>
-
-          {/* Mek Gallery Carousel */}
-          <div className="w-full mt-16 sm:mt-24 md:mt-32">
-            <MekGalleryCarousel />
           </div>
 
           {/* Emotions Slider */}
