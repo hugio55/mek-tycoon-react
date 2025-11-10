@@ -100,6 +100,7 @@ export default function LandingDebugPage() {
   });
   const [viewMode, setViewMode] = useState<'controls-only' | 'split-view'>('controls-only');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [lastSaveTime, setLastSaveTime] = useState<string>('');
   const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel'>('description');
 
   // Phase card management
@@ -152,7 +153,9 @@ export default function LandingDebugPage() {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-      console.log('[AUTO-SAVE] Settings auto-saved at', new Date().toLocaleTimeString());
+      const saveTime = new Date().toLocaleTimeString();
+      console.log('[AUTO-SAVE] Settings auto-saved at', saveTime);
+      setLastSaveTime(saveTime);
 
       // Dispatch storage event for other tabs/windows
       window.dispatchEvent(new Event('storage'));
