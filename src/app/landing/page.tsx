@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import PowerSwitchToggle from '@/components/controls/PowerSwitchToggle';
-import EmotionsSlider from '@/components/EmotionsSlider';
 import TeamCarousel from '@/components/TeamCarousel';
 import HorizontalTimeline from '@/components/HorizontalTimeline';
 import { SPEAKER_ICON_STYLES, type SpeakerIconStyle } from '@/components/SpeakerIcons';
@@ -53,6 +52,8 @@ const DEFAULT_CONFIG = {
   descriptionColor: 'text-yellow-400/90',
   designVariation: 'modern' as 'modern' | 'industrial' | 'neon',
   phaseHeaderFont: 'Orbitron',
+  phaseHeaderFontSize: 48,
+  phaseHeaderColor: 'text-white/70',
   soundLabelFont: 'Orbitron',
   soundLabelSize: 16,
   soundLabelColor: 'text-yellow-400/90',
@@ -111,6 +112,8 @@ export default function LandingPage() {
 
   // Phase header font
   const [phaseHeaderFont, setPhaseHeaderFont] = useState(DEFAULT_CONFIG.phaseHeaderFont);
+  const [phaseHeaderFontSize, setPhaseHeaderFontSize] = useState(DEFAULT_CONFIG.phaseHeaderFontSize);
+  const [phaseHeaderColor, setPhaseHeaderColor] = useState(DEFAULT_CONFIG.phaseHeaderColor);
 
   // Audio controls
   const [audioPlaying, setAudioPlaying] = useState(false);
@@ -615,11 +618,6 @@ export default function LandingPage() {
                 verticalOffset={0}
               />
             </div>
-          </div>
-
-          {/* Emotions Slider */}
-          <div className="w-full mt-16 sm:mt-24 md:mt-32">
-            <EmotionsSlider />
           </div>
 
           {/* Team Carousel */}
