@@ -49,6 +49,21 @@ export default function LandingDebugPage() {
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'soundLabel'>('description');
 
+  // Phase card management
+  const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
+  const createPhaseCard = useMutation(api.phaseCards.createPhaseCard);
+  const updatePhaseCard = useMutation(api.phaseCards.updatePhaseCard);
+  const deletePhaseCard = useMutation(api.phaseCards.deletePhaseCard);
+  const reorderPhaseCards = useMutation(api.phaseCards.reorderPhaseCards);
+  const initializeDefaultPhaseCards = useMutation(api.phaseCards.initializeDefaultPhaseCards);
+
+  const [editingPhaseId, setEditingPhaseId] = useState<Id<"phaseCards"> | null>(null);
+  const [newPhaseForm, setNewPhaseForm] = useState({
+    title: '',
+    description: '',
+    locked: false,
+  });
+
   // Available fonts for testing
   const fonts = [
     'Orbitron',
@@ -123,6 +138,66 @@ export default function LandingDebugPage() {
         setSaveState('idle');
       }, 2000);
     }, 300);
+  };
+
+  // Phase card management functions
+  const handleCreatePhase = async () => {
+    if (!newPhaseForm.title.trim()) return;
+
+    const nextOrder = phaseCards ? phaseCards.length + 1 : 1;
+
+    await createPhaseCard({
+      title: newPhaseForm.title,
+      description: newPhaseForm.description || undefined,
+      locked: newPhaseForm.locked,
+      order: nextOrder,
+    });
+
+    setNewPhaseForm({ title: '', description: '', locked: false });
+  };
+
+  const handleUpdatePhase = async (id: Id<"phaseCards">, updates: { title?: string; description?: string; locked?: boolean }) => {
+    await updatePhaseCard({ id, ...updates });
+    setEditingPhaseId(null);
+  };
+
+  const handleDeletePhase = async (id: Id<"phaseCards">) => {
+    if (!confirm('Are you sure you want to delete this phase card?')) return;
+    await deletePhaseCard({ id });
+  };
+
+  const handleMovePhaseUp = async (id: Id<"phaseCards">, currentOrder: number) => {
+    if (!phaseCards || currentOrder <= 1) return;
+
+    const phaseToSwap = phaseCards.find(p => p.order === currentOrder - 1);
+    if (!phaseToSwap) return;
+
+    await reorderPhaseCards({
+      cardOrders: [
+        { id, order: currentOrder - 1 },
+        { id: phaseToSwap._id, order: currentOrder },
+      ],
+    });
+  };
+
+  const handleMovePhaseDown = async (id: Id<"phaseCards">, currentOrder: number) => {
+    if (!phaseCards || currentOrder >= phaseCards.length) return;
+
+    const phaseToSwap = phaseCards.find(p => p.order === currentOrder + 1);
+    if (!phaseToSwap) return;
+
+    await reorderPhaseCards({
+      cardOrders: [
+        { id, order: currentOrder + 1 },
+        { id: phaseToSwap._id, order: currentOrder },
+      ],
+    });
+  };
+
+  const handleInitializeDefaults = async () => {
+    if (!confirm('Initialize default phase cards? This only works if no cards exist yet.')) return;
+    const result = await initializeDefaultPhaseCards();
+    alert(result.message);
   };
 
   return (
@@ -783,6 +858,186 @@ export default function LandingDebugPage() {
             </div>
           </div>
 
+        </div>
+
+        {/* Phase Cards Management Section */}
+        <div className="mt-6 bg-gray-800 border border-yellow-500 rounded p-4">
+          <h2 className="text-lg font-semibold text-yellow-400 mb-3 pb-2 border-b border-yellow-500/30">
+            Phase Cards Management
+          </h2>
+
+          <div className="mb-4">
+            <button
+              onClick={handleInitializeDefaults}
+              className="px-3 py-2 bg-blue-700 border border-blue-600 rounded text-white text-sm hover:bg-blue-600"
+            >
+              Initialize Default Phase Cards
+            </button>
+          </div>
+
+          {/* Add New Phase Card Form */}
+          <div className="bg-gray-900 border border-gray-700 rounded p-3 mb-4">
+            <h3 className="text-sm font-semibold text-gray-100 mb-2">Add New Phase Card</h3>
+            <div className="space-y-2">
+              <div>
+                <label className="block text-xs text-gray-300 mb-1">Title</label>
+                <input
+                  type="text"
+                  value={newPhaseForm.title}
+                  onChange={(e) => setNewPhaseForm(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="e.g., Phase VI"
+                  className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-300 mb-1">Description (optional)</label>
+                <textarea
+                  value={newPhaseForm.description}
+                  onChange={(e) => setNewPhaseForm(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Phase description..."
+                  rows={2}
+                  className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="newPhaseLocked"
+                  checked={newPhaseForm.locked}
+                  onChange={(e) => setNewPhaseForm(prev => ({ ...prev, locked: e.target.checked }))}
+                  className="rounded"
+                />
+                <label htmlFor="newPhaseLocked" className="text-xs text-gray-300">
+                  Locked (coming soon)
+                </label>
+              </div>
+              <button
+                onClick={handleCreatePhase}
+                disabled={!newPhaseForm.title.trim()}
+                className="w-full px-3 py-2 bg-green-700 border border-green-600 rounded text-white text-sm hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add Phase Card
+              </button>
+            </div>
+          </div>
+
+          {/* Existing Phase Cards List */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-gray-100 mb-2">Existing Phase Cards</h3>
+            {!phaseCards ? (
+              <div className="text-gray-400 text-sm">Loading phase cards...</div>
+            ) : phaseCards.length === 0 ? (
+              <div className="text-gray-400 text-sm">No phase cards yet. Add one above or initialize defaults.</div>
+            ) : (
+              phaseCards.map((phase) => (
+                <div key={phase._id} className="bg-gray-900 border border-gray-700 rounded p-3">
+                  {editingPhaseId === phase._id ? (
+                    // Edit mode
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-xs text-gray-300 mb-1">Title</label>
+                        <input
+                          type="text"
+                          defaultValue={phase.title}
+                          id={`edit-title-${phase._id}`}
+                          className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-300 mb-1">Description</label>
+                        <textarea
+                          defaultValue={phase.description || ''}
+                          id={`edit-description-${phase._id}`}
+                          rows={2}
+                          className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id={`edit-locked-${phase._id}`}
+                          defaultChecked={phase.locked}
+                          className="rounded"
+                        />
+                        <label htmlFor={`edit-locked-${phase._id}`} className="text-xs text-gray-300">
+                          Locked
+                        </label>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            const title = (document.getElementById(`edit-title-${phase._id}`) as HTMLInputElement).value;
+                            const description = (document.getElementById(`edit-description-${phase._id}`) as HTMLTextAreaElement).value;
+                            const locked = (document.getElementById(`edit-locked-${phase._id}`) as HTMLInputElement).checked;
+                            handleUpdatePhase(phase._id, { title, description, locked });
+                          }}
+                          className="flex-1 px-2 py-1 bg-green-700 border border-green-600 rounded text-white text-xs hover:bg-green-600"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingPhaseId(null)}
+                          className="flex-1 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-gray-300 text-xs hover:bg-gray-600"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    // View mode
+                    <div>
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-semibold text-gray-100">{phase.title}</h4>
+                            {phase.locked && (
+                              <span className="px-1.5 py-0.5 bg-red-900/50 border border-red-700 rounded text-red-300 text-[10px]">
+                                LOCKED
+                              </span>
+                            )}
+                            <span className="px-1.5 py-0.5 bg-blue-900/50 border border-blue-700 rounded text-blue-300 text-[10px]">
+                              Order: {phase.order}
+                            </span>
+                          </div>
+                          {phase.description && (
+                            <p className="text-xs text-gray-400 mt-1">{phase.description}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-1 flex-wrap">
+                        <button
+                          onClick={() => setEditingPhaseId(phase._id)}
+                          className="px-2 py-1 bg-blue-700 border border-blue-600 rounded text-white text-xs hover:bg-blue-600"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleMovePhaseUp(phase._id, phase.order)}
+                          disabled={phase.order === 1}
+                          className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-gray-300 text-xs hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          ↑ Up
+                        </button>
+                        <button
+                          onClick={() => handleMovePhaseDown(phase._id, phase.order)}
+                          disabled={!phaseCards || phase.order === phaseCards.length}
+                          className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-gray-300 text-xs hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          ↓ Down
+                        </button>
+                        <button
+                          onClick={() => handleDeletePhase(phase._id)}
+                          className="px-2 py-1 bg-red-700 border border-red-600 rounded text-white text-xs hover:bg-red-600"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 

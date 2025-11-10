@@ -2,43 +2,16 @@
 
 import { Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useRef, useCallback } from 'react';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 
 interface Phase {
-  id: number;
+  _id: string;
   title: string;
   description?: string;
   locked: boolean;
+  order: number;
 }
-
-const phases: Phase[] = [
-  {
-    id: 1,
-    title: 'Phase I',
-    description: 'Gold Generation and Corporation Creation',
-    locked: false,
-  },
-  {
-    id: 2,
-    title: 'Phase II',
-    description: 'Under Construction',
-    locked: false,
-  },
-  {
-    id: 3,
-    title: 'Phase III',
-    locked: true,
-  },
-  {
-    id: 4,
-    title: 'Phase IV',
-    locked: true,
-  },
-  {
-    id: 5,
-    title: 'Phase V',
-    locked: true,
-  },
-];
 
 type DesignVariation = 'modern' | 'industrial' | 'neon';
 
@@ -47,6 +20,10 @@ interface PhaseCarouselProps {
 }
 
 export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarouselProps) {
+  // Load phase cards from Convex database
+  const phasesData = useQuery(api.phaseCards.getAllPhaseCards);
+  const phases = phasesData || [];
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
@@ -274,6 +251,27 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
     );
   };
 
+  // Show loading state while data is fetching
+  if (!phasesData) {
+    return (
+      <div className="w-full py-8 md:py-12 relative select-none flex items-center justify-center h-64 md:h-72">
+        <div className="text-gray-400">Loading phases...</div>
+      </div>
+    );
+  }
+
+  // Show empty state if no phases exist
+  if (phases.length === 0) {
+    return (
+      <div className="w-full py-8 md:py-12 relative select-none flex items-center justify-center h-64 md:h-72">
+        <div className="text-gray-400 text-center">
+          <p>No phases configured yet.</p>
+          <p className="text-sm mt-2">Visit /landing-debug to add phase cards.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full py-8 md:py-12 relative select-none" style={{ touchAction: 'pan-y' }}>
       {/* Backdrop blur effect behind cards */}
@@ -331,7 +329,7 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
       <div className="flex justify-center gap-2 mt-8">
         {phases.map((phase, index) => (
           <button
-            key={phase.id}
+            key={phase._id}
             onClick={() => setCurrentIndex(index)}
             className="min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-90 transition-transform"
             style={{ touchAction: 'manipulation' }}
