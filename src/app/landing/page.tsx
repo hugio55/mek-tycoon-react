@@ -55,6 +55,7 @@ const DEFAULT_CONFIG = {
   powerButtonScale: 1,
   powerButtonVerticalOffset: 0,
   powerButtonHorizontalOffset: 0,
+  powerButtonGlowEnabled: true,
 };
 
 export default function LandingPage() {
@@ -111,6 +112,7 @@ export default function LandingPage() {
   const [powerButtonScale, setPowerButtonScale] = useState(DEFAULT_CONFIG.powerButtonScale);
   const [powerButtonVerticalOffset, setPowerButtonVerticalOffset] = useState(DEFAULT_CONFIG.powerButtonVerticalOffset);
   const [powerButtonHorizontalOffset, setPowerButtonHorizontalOffset] = useState(DEFAULT_CONFIG.powerButtonHorizontalOffset);
+  const [powerButtonGlowEnabled, setPowerButtonGlowEnabled] = useState(DEFAULT_CONFIG.powerButtonGlowEnabled);
 
 
   // Load config from localStorage and listen for changes from debug page
@@ -150,6 +152,7 @@ export default function LandingPage() {
           setPowerButtonScale(config.powerButtonScale ?? DEFAULT_CONFIG.powerButtonScale);
           setPowerButtonVerticalOffset(config.powerButtonVerticalOffset ?? DEFAULT_CONFIG.powerButtonVerticalOffset);
           setPowerButtonHorizontalOffset(config.powerButtonHorizontalOffset ?? DEFAULT_CONFIG.powerButtonHorizontalOffset);
+          setPowerButtonGlowEnabled(config.powerButtonGlowEnabled ?? DEFAULT_CONFIG.powerButtonGlowEnabled);
         } catch (e) {
           console.error('Failed to load debug config:', e);
         }
@@ -526,7 +529,7 @@ export default function LandingPage() {
             >
               soundwaves
             </div>
-            <div className="power-button-pulse">
+            <div className={powerButtonGlowEnabled ? "power-button-flash-glow" : ""}>
               <PowerSwitchToggle
                 checked={audioPlaying}
                 onChange={handleAudioToggle}
