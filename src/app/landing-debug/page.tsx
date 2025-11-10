@@ -37,6 +37,7 @@ const DEFAULT_CONFIG = {
   powerButtonScale: 1,
   powerButtonVerticalOffset: 0,
   powerButtonHorizontalOffset: 0,
+  powerButtonGlowEnabled: true,
 };
 
 export default function LandingDebugPage() {
@@ -759,6 +760,23 @@ export default function LandingDebugPage() {
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.powerButtonHorizontalOffset}px
               </div>
+            </div>
+
+            {/* Flashing Glow Effect Toggle */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Flashing Glow Effect
+              </label>
+              <button
+                onClick={() => updateConfig('powerButtonGlowEnabled', !config.powerButtonGlowEnabled)}
+                className={`w-full px-2 py-1 text-xs rounded ${
+                  config.powerButtonGlowEnabled
+                    ? 'bg-blue-900/50 border border-blue-700 text-blue-200'
+                    : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                {config.powerButtonGlowEnabled ? 'Enabled' : 'Disabled'}
+              </button>
             </div>
           </div>
 
