@@ -52,6 +52,7 @@ const DEFAULT_CONFIG = {
   // PhaseCarousel Controls
   phaseImageDarkening: 30,
   phaseBlurAmount: 20,
+  phaseBlurAmountSelected: 5,
   phaseColumnHeight: 288,
   phaseFadePosition: 50,
   phaseImage1: '',
@@ -1001,7 +1002,7 @@ export default function LandingDebugPage() {
               </div>
             </div>
 
-            {/* Blur Amount */}
+            {/* Blur Amount - Non-Selected Cards */}
             <div className="mb-2">
               <label className="block text-xs text-cyan-300 mb-1">
                 Blur Amount (non-selected cards)
@@ -1017,6 +1018,25 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-cyan-400 text-center mt-0.5">
                 {config.phaseBlurAmount}px blur
+              </div>
+            </div>
+
+            {/* Blur Amount - Selected Card */}
+            <div className="mb-2">
+              <label className="block text-xs text-cyan-300 mb-1">
+                Blur Amount (selected/center card)
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                step="1"
+                value={config.phaseBlurAmountSelected}
+                onChange={(e) => updateConfig('phaseBlurAmountSelected', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-cyan-400 text-center mt-0.5">
+                {config.phaseBlurAmountSelected}px blur
               </div>
             </div>
 
