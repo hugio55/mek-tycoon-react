@@ -165,6 +165,27 @@
       transform: scale(1);
     }
   }
+
+  /* Quick flashing glow for power button */
+  @keyframes power-button-flash-glow {
+    0%, 100% {
+      filter: drop-shadow(0 0 8px rgba(250, 182, 23, 0.6)) drop-shadow(0 0 16px rgba(250, 182, 23, 0.4));
+    }
+    50% {
+      filter: drop-shadow(0 0 16px rgba(250, 182, 23, 1)) drop-shadow(0 0 32px rgba(250, 182, 23, 0.8));
+    }
+  }
+  .power-button-pulse {
+    animation: power-button-flash-glow 0.8s ease-in-out infinite;
+    will-change: filter;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .power-button-pulse {
+      animation: none;
+      filter: drop-shadow(0 0 8px rgba(250, 182, 23, 0.6));
+    }
+  }
 }
 
 /* Global overflow prevention - mobile-friendly */

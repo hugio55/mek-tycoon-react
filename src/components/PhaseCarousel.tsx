@@ -70,9 +70,9 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
 
     // Base positioning and scaling classes
     const positionClasses = {
-      left: 'translate-x-[-20%] scale-75 opacity-40 z-0',
+      left: 'translate-x-[-85%] scale-[0.8] opacity-50 z-0',
       center: 'translate-x-0 scale-100 opacity-100 z-10',
-      right: 'translate-x-[20%] scale-75 opacity-40 z-0',
+      right: 'translate-x-[85%] scale-[0.8] opacity-50 z-0',
     };
 
     // Variation-specific styles
@@ -195,7 +195,7 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
         {/* Carousel Track */}
         <div className="relative w-full h-64 md:h-72 overflow-visible">
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative w-full max-w-md md:max-w-lg">
+            <div className="relative w-full max-w-2xl md:max-w-4xl">
               {visibleIndices.map((phaseIndex, i) => {
                 const position = i === 0 ? 'left' : i === 1 ? 'center' : 'right';
                 return (
