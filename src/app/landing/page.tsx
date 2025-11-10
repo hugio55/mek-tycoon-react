@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import PowerSwitchToggle from '@/components/controls/PowerSwitchToggle';
-import TeamCarousel from '@/components/TeamCarousel';
 import HorizontalTimeline from '@/components/HorizontalTimeline';
 import { SPEAKER_ICON_STYLES, type SpeakerIconStyle } from '@/components/SpeakerIcons';
 
