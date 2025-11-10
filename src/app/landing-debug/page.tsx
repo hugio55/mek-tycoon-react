@@ -13,6 +13,11 @@ const DEFAULT_CONFIG = {
   starScale2: 1,
   starSpeed2: 10,
   starFrequency2: 100,
+  lineLength2: 2,
+  starScale3: 1,
+  starSpeed3: 10,
+  starFrequency3: 100,
+  lineLength3: 2,
   logoSize: 600,
   logoYPosition: 50,
   selectedFont: 'Orbitron',
@@ -280,15 +285,117 @@ export default function LandingDebugPage() {
               </label>
               <input
                 type="range"
-                min="5"
+                min="1"
                 max="500"
-                step="5"
+                step="1"
                 value={config.starFrequency2}
                 onChange={(e) => updateConfig('starFrequency2', parseInt(e.target.value))}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.starFrequency2} stars
+              </div>
+            </div>
+
+            {/* Line Length 2 */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Line Length
+              </label>
+              <input
+                type="range"
+                min="0.5"
+                max="5"
+                step="0.1"
+                value={config.lineLength2}
+                onChange={(e) => updateConfig('lineLength2', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.lineLength2.toFixed(1)}x
+              </div>
+            </div>
+          </div>
+
+          {/* Star Controls Section - Layer 3 */}
+          <div className="bg-gray-800 border border-purple-500 rounded p-3">
+            <h2 className="text-sm font-semibold text-purple-400 mb-2 pb-1 border-b border-purple-700">
+              Layer 3 Star Field
+            </h2>
+
+            {/* Star Scale 3 */}
+            <div className="mb-2">
+              <label className="block text-xs text-purple-300 mb-1">
+                Star Scale
+              </label>
+              <input
+                type="range"
+                min="0.3"
+                max="3"
+                step="0.1"
+                value={config.starScale3}
+                onChange={(e) => updateConfig('starScale3', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-purple-400 text-center mt-0.5">
+                {config.starScale3.toFixed(1)}x
+              </div>
+            </div>
+
+            {/* Star Speed 3 */}
+            <div className="mb-2">
+              <label className="block text-xs text-purple-300 mb-1">
+                Star Speed
+              </label>
+              <input
+                type="range"
+                min="0.5"
+                max="125"
+                step="0.5"
+                value={config.starSpeed3}
+                onChange={(e) => updateConfig('starSpeed3', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-purple-400 text-center mt-0.5">
+                {config.starSpeed3.toFixed(1)}x
+              </div>
+            </div>
+
+            {/* Star Density 3 */}
+            <div className="mb-2">
+              <label className="block text-xs text-purple-300 mb-1">
+                Star Density
+              </label>
+              <input
+                type="range"
+                min="1"
+                max="500"
+                step="1"
+                value={config.starFrequency3}
+                onChange={(e) => updateConfig('starFrequency3', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-purple-400 text-center mt-0.5">
+                {config.starFrequency3} stars
+              </div>
+            </div>
+
+            {/* Line Length 3 */}
+            <div className="mb-2">
+              <label className="block text-xs text-purple-300 mb-1">
+                Line Length
+              </label>
+              <input
+                type="range"
+                min="0.5"
+                max="5"
+                step="0.1"
+                value={config.lineLength3}
+                onChange={(e) => updateConfig('lineLength3', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-purple-400 text-center mt-0.5">
+                {config.lineLength3.toFixed(1)}x
               </div>
             </div>
           </div>
@@ -611,16 +718,6 @@ export default function LandingDebugPage() {
             </div>
           </div>
 
-        </div>
-
-        {/* Current Config JSON (for debugging) */}
-        <div className="mt-3 bg-gray-800 border border-gray-700 rounded p-3">
-          <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
-            Current Configuration
-          </h2>
-          <pre className="text-[10px] text-gray-400 font-mono overflow-x-auto">
-            {JSON.stringify(config, null, 2)}
-          </pre>
         </div>
       </div>
 
