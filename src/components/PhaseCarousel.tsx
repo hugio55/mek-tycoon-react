@@ -150,7 +150,7 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
           return {
             container: `relative h-64 md:h-72 rounded-3xl overflow-hidden
                        bg-black/40
-                       backdrop-blur-[40px]
+                       ${isCenter ? 'backdrop-blur-[40px]' : ''}
                        border border-white/[0.15]
                        ${isCenter ? 'hover:border-white/[0.25] hover:bg-black/50' : ''}
                        transition-all duration-500 ease-out
