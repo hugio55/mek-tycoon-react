@@ -116,19 +116,19 @@ export default function HorizontalTimeline({
                 className="absolute inset-0 bg-cover bg-center transition-all duration-500"
                 style={{
                   backgroundImage: `url(${item.imageUrl})`,
-                  opacity: isHovered ? 0.85 : 0.5,
+                  opacity: isActive ? 0.85 : 0.5,
                   maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 75%)',
                   WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 75%)',
-                  filter: `grayscale(${isHovered ? '0%' : '100%'}) ${isAnyHovered && !isHovered ? 'blur(6px)' : 'blur(0px)'}`,
+                  filter: `grayscale(${isActive ? '0%' : '100%'}) ${isAnyActive && !isActive ? 'blur(6px)' : 'blur(0px)'}`,
                 }}
               />
 
-              {/* Dark Gradient Overlay - appears on hover, concentrated at bottom */}
+              {/* Dark Gradient Overlay - appears on hover/click, concentrated at bottom */}
               <div
                 className={`
                   absolute inset-0
                   transition-opacity duration-500
-                  ${isHovered ? 'opacity-100' : 'opacity-0'}
+                  ${isActive ? 'opacity-100' : 'opacity-0'}
                 `}
                 style={{
                   background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.2) 50%, transparent 70%)'
@@ -155,14 +155,14 @@ export default function HorizontalTimeline({
                 </h2>
               </div>
 
-              {/* Content - fades in from bottom on hover */}
+              {/* Content - fades in from bottom on hover/click */}
               <div
                 className={`
                   absolute bottom-0 left-0 right-0
                   p-8 md:p-12
                   transition-all duration-500
                   z-20
-                  ${isHovered
+                  ${isActive
                     ? 'translate-y-0 opacity-100'
                     : 'translate-y-8 opacity-0'
                   }
