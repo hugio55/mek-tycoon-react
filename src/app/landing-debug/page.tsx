@@ -338,10 +338,23 @@ export default function LandingDebugPage() {
             </button>
             <button
               onClick={() => {
-                // Trigger audio consent lightbox in landing page
-                window.dispatchEvent(new CustomEvent('mek-debug-trigger', {
-                  detail: { action: 'show-audio-consent' }
+                // Trigger audio consent lightbox in landing page via localStorage
+                localStorage.setItem('mek-debug-trigger', JSON.stringify({
+                  action: 'show-audio-consent',
+                  timestamp: Date.now()
                 }));
+
+                // Also dispatch storage event for same-tab updates
+                window.dispatchEvent(new Event('storage'));
+
+                // If in split-view mode, also send postMessage to iframe
+                const iframe = document.querySelector('iframe[title="Landing Page Preview"]') as HTMLIFrameElement;
+                if (iframe && iframe.contentWindow) {
+                  iframe.contentWindow.postMessage({
+                    type: 'mek-debug-trigger',
+                    action: 'show-audio-consent'
+                  }, '*');
+                }
               }}
               className="px-2 py-1 bg-yellow-700 border border-yellow-600 rounded text-yellow-200 text-xs hover:bg-yellow-600"
             >
