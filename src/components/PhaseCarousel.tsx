@@ -146,14 +146,24 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
 
   const visibleIndices = getVisiblePhases();
 
-  const renderCard = (phase: Phase, position: 'left' | 'center' | 'right') => {
+  const renderCard = (phase: Phase, position: 'left' | 'center' | 'right', offset: number = 0) => {
     const isCenter = position === 'center';
 
-    // Base positioning and scaling - all cards centered by default, then transformed
-    const positionClasses = {
-      left: '-translate-x-[45%] scale-[0.85] opacity-40 z-0',
-      center: 'translate-x-0 scale-100 opacity-100 z-10',
-      right: 'translate-x-[45%] scale-[0.85] opacity-40 z-0',
+    const baseTranslateX = position === 'left' ? -45 : position === 'right' ? 45 : 0;
+    const dragInfluence = isDragging ? (offset / 10) : 0;
+    const finalTranslateX = baseTranslateX + dragInfluence;
+
+    const baseScale = isCenter ? 1 : 0.85;
+    const dragScale = isDragging && isCenter ? Math.max(0.95, 1 - Math.abs(offset) / 1000) : baseScale;
+
+    const baseOpacity = isCenter ? 1 : 0.4;
+    const dragOpacity = isDragging && isCenter ? Math.max(0.7, 1 - Math.abs(offset) / 500) : baseOpacity;
+
+    const positionStyles = {
+      transform: `translateX(${finalTranslateX}%) scale(${dragScale})`,
+      opacity: dragOpacity,
+      zIndex: isCenter ? 10 : 0,
+      transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s',
     };
 
     // Variation-specific styles
@@ -206,11 +216,11 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
 
     return (
       <div
-        className={`absolute inset-x-0 mx-auto w-[60%] max-w-md md:max-w-lg ${positionClasses[position]}`}
+        className="absolute inset-x-0 mx-auto w-[60%] max-w-md md:max-w-lg"
         style={{
+          ...positionStyles,
           transformStyle: 'preserve-3d',
           willChange: 'transform, opacity',
-          transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s',
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden',
           perspective: 1000,
@@ -265,13 +275,18 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
   };
 
   return (
-    <div className="w-full py-8 md:py-12 relative" style={{ touchAction: 'pan-y' }}>
+    <div className="w-full py-8 md:py-12 relative select-none" style={{ touchAction: 'pan-y' }}>
+      {/* Backdrop blur effect behind cards */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 backdrop-blur-sm bg-black/5" />
+      </div>
+
       {/* Carousel Container */}
       <div className="relative max-w-5xl mx-auto px-4">
         {/* Left Arrow */}
         <button
           onClick={handlePrevious}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 min-w-[44px] min-h-[44px] w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-black/80 hover:border-white/40 transition-all duration-200 hover:scale-110 touch-manipulation will-change-transform"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 min-w-[44px] min-h-[44px] w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-black/80 hover:border-white/40 transition-all duration-200 hover:scale-110 touch-manipulation will-change-transform active:scale-95"
           style={{ touchAction: 'manipulation' }}
           aria-label="Previous phase"
         >
@@ -280,17 +295,22 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
 
         {/* Carousel Track */}
         <div
-          className="relative w-full h-64 md:h-72 overflow-hidden"
+          ref={trackRef}
+          className="relative w-full h-64 md:h-72 cursor-grab active:cursor-grabbing"
           style={{
             transform: 'translateZ(0)',
             willChange: 'transform',
+            touchAction: 'pan-y',
           }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           {visibleIndices.map((phaseIndex, i) => {
             const position = i === 0 ? 'left' : i === 1 ? 'center' : 'right';
             return (
-              <div key={`${phaseIndex}-${position}`}>
-                {renderCard(phases[phaseIndex], position)}
+              <div key={phaseIndex}>
+                {renderCard(phases[phaseIndex], position, dragOffset)}
               </div>
             );
           })}
@@ -299,7 +319,7 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
         {/* Right Arrow */}
         <button
           onClick={handleNext}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 min-w-[44px] min-h-[44px] w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-black/80 hover:border-white/40 transition-all duration-200 hover:scale-110 touch-manipulation will-change-transform"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 min-w-[44px] min-h-[44px] w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-black/80 hover:border-white/40 transition-all duration-200 hover:scale-110 touch-manipulation will-change-transform active:scale-95"
           style={{ touchAction: 'manipulation' }}
           aria-label="Next phase"
         >
@@ -313,11 +333,7 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
           <button
             key={phase.id}
             onClick={() => setCurrentIndex(index)}
-            className={`min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation ${
-              index === currentIndex
-                ? ''
-                : ''
-            }`}
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-90 transition-transform"
             style={{ touchAction: 'manipulation' }}
             aria-label={`Go to ${phase.title}`}
           >
@@ -325,7 +341,7 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
               className={`w-2 h-2 rounded-full transition-all duration-300 will-change-[width,background-color] ${
                 index === currentIndex
                   ? 'bg-white w-8'
-                  : 'bg-white/30'
+                  : 'bg-white/30 hover:bg-white/50'
               }`}
               style={{
                 transform: 'translateZ(0)',
