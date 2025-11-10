@@ -167,13 +167,18 @@ export default function HorizontalTimeline({
           const isActive = isHovered || isSelected; // Active if hovered OR selected
           const isAnyActive = hoveredIndex !== null || selectedIndex !== null;
 
-          let widthClass = 'w-1/4';
+          let widthStyle: string;
+          let marginStyle: string = '0'; // Overlap to bridge sub-pixel gaps
+
           if (isAnyActive) {
             if (isActive) {
-              widthClass = 'w-[30%]';
+              widthStyle = 'calc(30% + 2px)'; // Add 2px to compensate for negative margins
             } else {
-              widthClass = 'w-[23.33%]';
+              widthStyle = 'calc(70% / 3)';
+              marginStyle = '-1px'; // Negative margin to overlap and eliminate gaps
             }
+          } else {
+            widthStyle = '25%';
           }
 
           // Calculate blur value
@@ -186,13 +191,14 @@ export default function HorizontalTimeline({
             <div
               key={index}
               className={`
-                ${widthClass}
                 relative
                 overflow-hidden
                 cursor-pointer
               `}
               style={{
-                transition: 'width 0.5s ease-in-out',
+                width: widthStyle,
+                marginLeft: index === 0 ? '0' : marginStyle, // First card has no left margin
+                transition: 'width 0.5s ease-in-out, margin 0.5s ease-in-out',
               }}
               onMouseEnter={() => handleHoverEnter(index)}
               onMouseLeave={handleHoverLeave}
