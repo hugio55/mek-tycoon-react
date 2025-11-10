@@ -629,11 +629,12 @@ export default function LandingDebugPage() {
               </label>
               <select
                 value={selectedTypographyElement}
-                onChange={(e) => setSelectedTypographyElement(e.target.value as 'description' | 'phaseHeader' | 'soundLabel')}
+                onChange={(e) => setSelectedTypographyElement(e.target.value as 'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel')}
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-gray-500"
               >
                 <option value="description">Description Text</option>
                 <option value="phaseHeader">Phase Header</option>
+                <option value="phaseDescription">Phase Description</option>
                 <option value="soundLabel">Sound Label</option>
               </select>
             </div>
@@ -647,11 +648,13 @@ export default function LandingDebugPage() {
                 value={
                   selectedTypographyElement === 'description' ? config.selectedFont :
                   selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderFont :
+                  selectedTypographyElement === 'phaseDescription' ? config.phaseDescriptionFont :
                   config.soundLabelFont
                 }
                 onChange={(e) => updateConfig(
                   selectedTypographyElement === 'description' ? 'selectedFont' :
                   selectedTypographyElement === 'phaseHeader' ? 'phaseHeaderFont' :
+                  selectedTypographyElement === 'phaseDescription' ? 'phaseDescriptionFont' :
                   'soundLabelFont',
                   e.target.value
                 )}
@@ -659,6 +662,7 @@ export default function LandingDebugPage() {
                 style={{
                   fontFamily: selectedTypographyElement === 'description' ? config.selectedFont :
                              selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderFont :
+                             selectedTypographyElement === 'phaseDescription' ? config.phaseDescriptionFont :
                              config.soundLabelFont
                 }}
               >
@@ -702,11 +706,13 @@ export default function LandingDebugPage() {
                 value={
                   selectedTypographyElement === 'description' ? config.descriptionFontSize :
                   selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderFontSize :
+                  selectedTypographyElement === 'phaseDescription' ? config.phaseDescriptionFontSize :
                   config.soundLabelSize
                 }
                 onChange={(e) => updateConfig(
                   selectedTypographyElement === 'description' ? 'descriptionFontSize' :
                   selectedTypographyElement === 'phaseHeader' ? 'phaseHeaderFontSize' :
+                  selectedTypographyElement === 'phaseDescription' ? 'phaseDescriptionFontSize' :
                   'soundLabelSize',
                   parseInt(e.target.value)
                 )}
@@ -715,6 +721,7 @@ export default function LandingDebugPage() {
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {selectedTypographyElement === 'description' ? config.descriptionFontSize :
                  selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderFontSize :
+                 selectedTypographyElement === 'phaseDescription' ? config.phaseDescriptionFontSize :
                  config.soundLabelSize}px
               </div>
             </div>

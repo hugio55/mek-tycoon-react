@@ -14,6 +14,8 @@ interface HorizontalTimelineProps {
   phaseHeaderFont?: string;
   phaseHeaderFontSize?: number;
   phaseHeaderColor?: string;
+  phaseDescriptionFont?: string;
+  phaseDescriptionFontSize?: number;
 }
 
 const timelineData: TimelineItem[] = [
@@ -50,7 +52,9 @@ const timelineData: TimelineItem[] = [
 export default function HorizontalTimeline({
   phaseHeaderFont = 'Orbitron',
   phaseHeaderFontSize = 48,
-  phaseHeaderColor = 'text-white/70'
+  phaseHeaderColor = 'text-white/70',
+  phaseDescriptionFont = 'Arial',
+  phaseDescriptionFontSize = 16
 }: HorizontalTimelineProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
@@ -157,7 +161,13 @@ export default function HorizontalTimeline({
                     {item.subtitle}
                   </p>
                 )}
-                <p className="text-white/90 text-base md:text-lg leading-relaxed">
+                <p
+                  className="text-white/90 leading-relaxed"
+                  style={{
+                    fontFamily: phaseDescriptionFont,
+                    fontSize: `${phaseDescriptionFontSize}px`
+                  }}
+                >
                   {item.description}
                 </p>
               </div>

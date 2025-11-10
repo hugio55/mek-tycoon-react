@@ -54,6 +54,8 @@ const DEFAULT_CONFIG = {
   phaseHeaderFont: 'Orbitron',
   phaseHeaderFontSize: 48,
   phaseHeaderColor: 'text-white/70',
+  phaseDescriptionFont: 'Arial',
+  phaseDescriptionFontSize: 16,
   soundLabelFont: 'Orbitron',
   soundLabelSize: 16,
   soundLabelColor: 'text-yellow-400/90',
@@ -115,6 +117,10 @@ export default function LandingPage() {
   const [phaseHeaderFontSize, setPhaseHeaderFontSize] = useState(DEFAULT_CONFIG.phaseHeaderFontSize);
   const [phaseHeaderColor, setPhaseHeaderColor] = useState(DEFAULT_CONFIG.phaseHeaderColor);
 
+  // Phase description font
+  const [phaseDescriptionFont, setPhaseDescriptionFont] = useState(DEFAULT_CONFIG.phaseDescriptionFont);
+  const [phaseDescriptionFontSize, setPhaseDescriptionFontSize] = useState(DEFAULT_CONFIG.phaseDescriptionFontSize);
+
   // Audio controls
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [soundLabelFont, setSoundLabelFont] = useState(DEFAULT_CONFIG.soundLabelFont);
@@ -167,6 +173,8 @@ export default function LandingPage() {
           setPhaseHeaderFont(config.phaseHeaderFont ?? DEFAULT_CONFIG.phaseHeaderFont);
           setPhaseHeaderFontSize(config.phaseHeaderFontSize ?? DEFAULT_CONFIG.phaseHeaderFontSize);
           setPhaseHeaderColor(config.phaseHeaderColor ?? DEFAULT_CONFIG.phaseHeaderColor);
+          setPhaseDescriptionFont(config.phaseDescriptionFont ?? DEFAULT_CONFIG.phaseDescriptionFont);
+          setPhaseDescriptionFontSize(config.phaseDescriptionFontSize ?? DEFAULT_CONFIG.phaseDescriptionFontSize);
           setSoundLabelFont(config.soundLabelFont ?? DEFAULT_CONFIG.soundLabelFont);
           setSoundLabelSize(config.soundLabelSize ?? DEFAULT_CONFIG.soundLabelSize);
           setSoundLabelColor(config.soundLabelColor ?? DEFAULT_CONFIG.soundLabelColor);
@@ -554,12 +562,42 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Phase Timeline - Below Description */}
+          {/* Sound Toggle - Above Phase Timeline */}
+          <div
+            className="flex flex-row items-center gap-3 mt-8 sm:mt-12 md:mt-16"
+            style={{
+              transform: `translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px)`
+            }}
+          >
+            <div
+              className={`${soundLabelColor} uppercase tracking-wider`}
+              style={{
+                fontFamily: soundLabelFont,
+                fontSize: `${soundLabelSize}px`,
+                transform: `translate(${soundLabelHorizontalOffset}px, ${soundLabelVerticalOffset}px)`
+              }}
+            >
+              soundwaves
+            </div>
+            <div className={powerButtonGlowEnabled ? "power-button-flash-glow" : ""}>
+              <PowerSwitchToggle
+                checked={audioPlaying}
+                onChange={handleAudioToggle}
+                className="w-16 h-16"
+                scale={powerButtonScale}
+                verticalOffset={0}
+              />
+            </div>
+          </div>
+
+          {/* Phase Timeline - Below Sound Toggle */}
           <div className="w-full mt-8 sm:mt-12 md:mt-16 max-w-7xl">
             <HorizontalTimeline
               phaseHeaderFont={phaseHeaderFont}
               phaseHeaderFontSize={phaseHeaderFontSize}
               phaseHeaderColor={phaseHeaderColor}
+              phaseDescriptionFont={phaseDescriptionFont}
+              phaseDescriptionFontSize={phaseDescriptionFontSize}
             />
           </div>
 
@@ -597,39 +635,6 @@ export default function LandingPage() {
               return <SelectedIcon size={58} isPlaying={audioPlaying} />;
             })()}
           </button>
-
-          {/* Sound Toggle - Top Right Corner (Fixed Position) */}
-          <div
-            className="fixed top-4 right-4 z-[30] flex flex-row items-center gap-3"
-            style={{
-              transform: `translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px)`
-            }}
-          >
-            <div
-              className={`${soundLabelColor} uppercase tracking-wider`}
-              style={{
-                fontFamily: soundLabelFont,
-                fontSize: `${soundLabelSize}px`,
-                transform: `translate(${soundLabelHorizontalOffset}px, ${soundLabelVerticalOffset}px)`
-              }}
-            >
-              soundwaves
-            </div>
-            <div className={powerButtonGlowEnabled ? "power-button-flash-glow" : ""}>
-              <PowerSwitchToggle
-                checked={audioPlaying}
-                onChange={handleAudioToggle}
-                className="w-16 h-16"
-                scale={powerButtonScale}
-                verticalOffset={0}
-              />
-            </div>
-          </div>
-
-          {/* Team Carousel */}
-          <div className="w-full mt-16 sm:mt-24 md:mt-32">
-            <TeamCarousel />
-          </div>
         </div>
       </div>
 
