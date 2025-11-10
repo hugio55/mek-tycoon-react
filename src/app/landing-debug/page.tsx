@@ -65,6 +65,7 @@ const DEFAULT_CONFIG = {
   phaseHoverDarkeningIntensity: 90,
   phaseIdleBackdropBlur: 0,
   phaseColumnYOffset: 0,
+  phaseCardOpacity: 40, // Card background opacity (0-100)
   // Description glass card controls
   descriptionCardBlur: 40,
   descriptionCardDarkness: 40,
@@ -370,8 +371,11 @@ export default function LandingDebugPage() {
                 key={layoutOption}
                 onClick={() => {
                   localStorage.setItem('mek-audio-consent-layout', layoutOption);
-                  // Trigger a re-render by dispatching storage event
-                  window.dispatchEvent(new Event('storage'));
+
+                  // Dispatch custom event for same-tab updates
+                  window.dispatchEvent(new CustomEvent('mek-layout-change', {
+                    detail: { layout: layoutOption }
+                  }));
                 }}
                 className={`px-2 py-1 border rounded text-xs transition-colors ${
                   localStorage.getItem('mek-audio-consent-layout') === layoutOption
@@ -1266,6 +1270,25 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-cyan-400 text-center mt-0.5">
                 {config.phaseColumnHeight}px
+              </div>
+            </div>
+
+            {/* Card Background Opacity */}
+            <div className="mb-2">
+              <label className="block text-xs text-cyan-300 mb-1">
+                Card Background Opacity
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.phaseCardOpacity}
+                onChange={(e) => updateConfig('phaseCardOpacity', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-cyan-400 text-center mt-0.5">
+                {config.phaseCardOpacity}% opacity
               </div>
             </div>
 

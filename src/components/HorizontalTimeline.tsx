@@ -214,6 +214,11 @@ export default function HorizontalTimeline({
               onMouseLeave={handleHoverLeave}
               onClick={() => handlePhaseClick(index)}
             >
+              {/* Base background layer for smooth appearance */}
+              <div
+                className="absolute inset-0 bg-black/80"
+              />
+
               {/* Blend Mode Wrapper - contains visual layers that need to blend */}
               <div
                 className="absolute inset-0"
@@ -226,7 +231,7 @@ export default function HorizontalTimeline({
                     className="absolute inset-0 bg-cover bg-center transition-all duration-500"
                     style={{
                       backgroundImage: `url(${item.imageUrl})`,
-                      opacity: 0.85,
+                      opacity: 0.75,
                       maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                       WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                       filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected : imageBlur}px)`,
@@ -258,20 +263,19 @@ export default function HorizontalTimeline({
                   )}
                 </div>
 
-                {/* Frosted Glass Backdrop Blur Overlay - separate layer with pointer-events-none */}
-                <div
-                  className={`
-                    absolute inset-0
-                    transition-all duration-500
-                    ${isActive ? 'opacity-100' : 'opacity-0'}
-                    pointer-events-none
-                  `}
-                  style={{
-                    backdropFilter: blurValue,
-                    WebkitBackdropFilter: blurValue,
-                  }}
-                />
-              </div>
+              {/* Frosted Glass Backdrop Blur Overlay - separate layer with pointer-events-none */}
+              <div
+                className={`
+                  absolute inset-0
+                  transition-all duration-500
+                  ${isActive ? 'opacity-100' : 'opacity-0'}
+                  pointer-events-none
+                `}
+                style={{
+                  backdropFilter: blurValue,
+                  WebkitBackdropFilter: blurValue,
+                }}
+              />
 
               {/* Phase Label - always visible, centered */}
               <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
