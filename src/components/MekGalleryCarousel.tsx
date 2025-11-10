@@ -108,6 +108,8 @@ const MekGalleryCarousel = () => {
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     dragStartRef.current = { x: e.clientX, y: e.clientY };
+    velocityRef.current = 0;
+    lastDragTimeRef.current = Date.now();
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -116,32 +118,62 @@ const MekGalleryCarousel = () => {
       x: e.touches[0].clientX,
       y: e.touches[0].clientY
     };
+    velocityRef.current = 0;
+    lastDragTimeRef.current = Date.now();
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
 
+    const now = Date.now();
+    const timeDelta = now - lastDragTimeRef.current;
     const deltaX = e.clientX - dragStartRef.current.x;
+
+    // Calculate velocity for momentum
+    if (timeDelta > 0) {
+      velocityRef.current = deltaX / timeDelta * 16; // Normalize to 60fps
+    }
+
     targetRotationRef.current += deltaX * 0.5;
     dragStartRef.current = { x: e.clientX, y: e.clientY };
+    lastDragTimeRef.current = now;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging) return;
 
+    const now = Date.now();
+    const timeDelta = now - lastDragTimeRef.current;
     const deltaX = e.touches[0].clientX - dragStartRef.current.x;
-    targetRotationRef.current += deltaX * 0.5;
+
+    // Calculate velocity for momentum
+    if (timeDelta > 0) {
+      velocityRef.current = deltaX / timeDelta * 16; // Normalize to 60fps
+    }
+
+    // More sensitive touch rotation on mobile
+    const sensitivity = isMobile ? 0.7 : 0.5;
+    targetRotationRef.current += deltaX * sensitivity;
+
     dragStartRef.current = {
       x: e.touches[0].clientX,
       y: e.touches[0].clientY
     };
+    lastDragTimeRef.current = now;
   };
 
   const handleMouseUp = () => {
     setIsDragging(false);
   };
 
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
   const handleImageHover = (index: number, isHovering: boolean) => {
+    // Disable hover effects on mobile (use touch instead)
+    if (isMobile) return;
+
     const img = imagesRef.current[index];
     if (!img) return;
 
@@ -150,21 +182,52 @@ const MekGalleryCarousel = () => {
       z: isHovering ? '+=100' : '-=100',
       duration: 0.3,
       ease: 'power2.out',
+      force3D: true,
     });
+  };
+
+  const handleImageTap = (index: number) => {
+    // Touch feedback for mobile
+    if (!isMobile) return;
+
+    const img = imagesRef.current[index];
+    if (!img) return;
+
+    // Quick scale animation for touch feedback
+    gsap.timeline()
+      .to(img, {
+        scale: 1.15,
+        z: '+=80',
+        duration: 0.2,
+        ease: 'power2.out',
+        force3D: true,
+      })
+      .to(img, {
+        scale: 1,
+        z: '-=80',
+        duration: 0.2,
+        ease: 'power2.in',
+        force3D: true,
+      });
   };
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-screen overflow-hidden bg-black cursor-grab active:cursor-grabbing"
+      className="relative w-full h-screen overflow-hidden bg-black cursor-grab active:cursor-grabbing touch-none"
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
-      onTouchEnd={handleMouseUp}
-      style={{ perspective: '2000px' }}
+      onTouchEnd={handleTouchEnd}
+      style={{
+        perspective: isMobile ? '1500px' : '2000px',
+        // Enable hardware acceleration
+        transform: 'translateZ(0)',
+        willChange: 'transform',
+      }}
     >
       {/* Parallax Background */}
       <div
@@ -174,7 +237,9 @@ const MekGalleryCarousel = () => {
           backgroundImage: 'url(/mek-images/1000px/ae1-cx1-az2.webp)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          filter: 'blur(10px)',
+          filter: isMobile ? 'blur(8px)' : 'blur(10px)', // Slightly less blur on mobile for performance
+          transform: 'translateZ(0)',
+          willChange: 'transform',
         }}
       />
 
@@ -185,6 +250,8 @@ const MekGalleryCarousel = () => {
           transformStyle: 'preserve-3d',
           width: '100%',
           height: '100%',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
         }}
       >
         <div
@@ -192,8 +259,10 @@ const MekGalleryCarousel = () => {
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
           style={{
             transformStyle: 'preserve-3d',
-            width: '300px',
-            height: '300px',
+            width: isMobile ? '200px' : '300px',
+            height: isMobile ? '200px' : '300px',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
           }}
         >
           {mekImages.map((imageName, index) => (
@@ -202,23 +271,44 @@ const MekGalleryCarousel = () => {
               ref={(el) => {
                 if (el) imagesRef.current[index] = el;
               }}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
               style={{
                 transformStyle: 'preserve-3d',
-                width: '250px',
-                height: '250px',
+                width: isMobile ? '180px' : '250px',
+                height: isMobile ? '180px' : '250px',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                willChange: 'transform',
               }}
               onMouseEnter={() => handleImageHover(index, true)}
               onMouseLeave={() => handleImageHover(index, false)}
+              onClick={() => handleImageTap(index)}
             >
-              <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-yellow-500/50 shadow-2xl">
+              <div
+                className="relative w-full h-full rounded-lg overflow-hidden border-2 border-yellow-500/50 shadow-2xl"
+                style={{
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                }}
+              >
                 <img
                   src={`/mek-images/500px/${imageName}`}
                   alt={`Mek ${index + 1}`}
                   className="w-full h-full object-cover"
                   draggable={false}
+                  style={{
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    transform: 'translateZ(0)',
+                  }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+                <div
+                  className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"
+                  style={{
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                  }}
+                />
               </div>
             </div>
           ))}
@@ -226,9 +316,9 @@ const MekGalleryCarousel = () => {
       </div>
 
       {/* Instructions */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center">
-        <p className="text-yellow-500/70 font-['Orbitron'] uppercase tracking-wider text-sm">
-          Drag to rotate • Hover to zoom
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center px-4">
+        <p className="text-yellow-500/70 font-['Orbitron'] uppercase tracking-wider text-xs sm:text-sm">
+          {isMobile ? 'Drag to rotate • Tap to interact' : 'Drag to rotate • Hover to zoom'}
         </p>
       </div>
     </div>

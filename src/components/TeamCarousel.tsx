@@ -181,17 +181,21 @@ const TeamCarousel = () => {
                   onClick={() => goToSlide(index)}
                   style={{ cursor: index !== currentIndex ? 'pointer' : 'default' }}
                 >
+                  {/* Background image */}
                   <img
                     src={member.imageUrl}
                     alt={member.name}
                     className="w-full h-full object-cover rounded-lg"
                   />
 
+                  {/* Frosted glass overlay */}
+                  <div className="team-card-glass absolute inset-0 bg-black/20 rounded-lg" />
+
                   {/* Industrial corner accents */}
-                  <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-yellow-500/70" />
-                  <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-yellow-500/70" />
-                  <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-yellow-500/70" />
-                  <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-yellow-500/70" />
+                  <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-yellow-500/70 z-10" />
+                  <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-yellow-500/70 z-10" />
+                  <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-yellow-500/70 z-10" />
+                  <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-yellow-500/70 z-10" />
                 </div>
               ))}
             </div>
@@ -306,6 +310,12 @@ const TeamCarousel = () => {
           overflow: hidden;
         }
 
+        .team-card-glass {
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          transition: backdrop-filter 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         @media (max-width: 640px) {
           .team-card {
             width: 400px;
@@ -322,11 +332,23 @@ const TeamCarousel = () => {
           box-shadow: 0 15px 50px rgba(250, 182, 23, 0.3);
         }
 
+        .team-card-center .team-card-glass {
+          backdrop-filter: blur(2px);
+          -webkit-backdrop-filter: blur(2px);
+          background: rgba(0, 0, 0, 0.1);
+        }
+
         .team-card-down-1 {
           transform: translateY(150px) scale(0.9);
           filter: grayscale(0.3);
           opacity: 0.85;
           z-index: 4;
+        }
+
+        .team-card-down-1 .team-card-glass {
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          background: rgba(0, 0, 0, 0.25);
         }
 
         .team-card-down-2 {
@@ -336,11 +358,23 @@ const TeamCarousel = () => {
           z-index: 3;
         }
 
+        .team-card-down-2 .team-card-glass {
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          background: rgba(0, 0, 0, 0.35);
+        }
+
         .team-card-up-1 {
           transform: translateY(-150px) scale(0.9);
           filter: grayscale(0.3);
           opacity: 0.85;
           z-index: 4;
+        }
+
+        .team-card-up-1 .team-card-glass {
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          background: rgba(0, 0, 0, 0.25);
         }
 
         .team-card-up-2 {
@@ -350,10 +384,22 @@ const TeamCarousel = () => {
           z-index: 3;
         }
 
+        .team-card-up-2 .team-card-glass {
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          background: rgba(0, 0, 0, 0.35);
+        }
+
         .team-card-hidden {
           transform: translateY(500px) scale(0.5);
           opacity: 0;
           z-index: 1;
+        }
+
+        .team-card-hidden .team-card-glass {
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          background: rgba(0, 0, 0, 0.4);
         }
 
         @media (max-width: 1024px) {
