@@ -6,6 +6,8 @@ interface PowerSwitchToggleProps {
   checked?: boolean;
   onChange?: (checked: boolean) => void;
   className?: string;
+  scale?: number;
+  verticalOffset?: number;
 }
 
 /**
@@ -19,7 +21,9 @@ interface PowerSwitchToggleProps {
 export default function PowerSwitchToggle({
   checked = false,
   onChange,
-  className = ''
+  className = '',
+  scale = 1,
+  verticalOffset = 0
 }: PowerSwitchToggleProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange?.(e.target.checked);
@@ -28,10 +32,13 @@ export default function PowerSwitchToggle({
   return (
     <div
       className={`
-        relative flex items-center justify-center
-        w-[150px] h-[150px]
-        ${className}
+        relative inline-flex items-center justify-center
+        ${className || 'w-[150px] h-[150px]'}
       `}
+      style={{
+        transform: `scale(${scale}) translateY(${verticalOffset}px)`,
+        transformOrigin: 'center center'
+      }}
     >
       {/* Hidden checkbox input for state */}
       <input
@@ -41,7 +48,7 @@ export default function PowerSwitchToggle({
         className="absolute w-full h-full z-20 cursor-pointer opacity-0"
       />
 
-      {/* Button container */}
+      {/* Button container - ensure SVGs are centered within container */}
       <div className="relative w-full h-full flex items-center justify-center">
         {/* Glow effect backdrop - only visible when checked */}
         <div

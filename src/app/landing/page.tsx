@@ -46,6 +46,8 @@ const DEFAULT_CONFIG = {
   soundLabelSize: 16,
   soundLabelColor: 'text-yellow-400/90',
   soundLabelVerticalOffset: 0,
+  powerButtonScale: 1,
+  powerButtonVerticalOffset: 0,
 };
 
 export default function LandingPage() {
@@ -90,6 +92,10 @@ export default function LandingPage() {
   const [soundLabelColor, setSoundLabelColor] = useState(DEFAULT_CONFIG.soundLabelColor);
   const [soundLabelVerticalOffset, setSoundLabelVerticalOffset] = useState(DEFAULT_CONFIG.soundLabelVerticalOffset);
 
+  // Power button controls
+  const [powerButtonScale, setPowerButtonScale] = useState(DEFAULT_CONFIG.powerButtonScale);
+  const [powerButtonVerticalOffset, setPowerButtonVerticalOffset] = useState(DEFAULT_CONFIG.powerButtonVerticalOffset);
+
 
   // Load config from localStorage and listen for changes from debug page
   useEffect(() => {
@@ -119,6 +125,8 @@ export default function LandingPage() {
           setSoundLabelSize(config.soundLabelSize ?? DEFAULT_CONFIG.soundLabelSize);
           setSoundLabelColor(config.soundLabelColor ?? DEFAULT_CONFIG.soundLabelColor);
           setSoundLabelVerticalOffset(config.soundLabelVerticalOffset ?? DEFAULT_CONFIG.soundLabelVerticalOffset);
+          setPowerButtonScale(config.powerButtonScale ?? DEFAULT_CONFIG.powerButtonScale);
+          setPowerButtonVerticalOffset(config.powerButtonVerticalOffset ?? DEFAULT_CONFIG.powerButtonVerticalOffset);
         } catch (e) {
           console.error('Failed to load debug config:', e);
         }
@@ -438,6 +446,8 @@ export default function LandingPage() {
               checked={audioPlaying}
               onChange={handleAudioToggle}
               className="w-24 h-24"
+              scale={powerButtonScale}
+              verticalOffset={powerButtonVerticalOffset}
             />
             <div
               className={`${soundLabelColor} uppercase tracking-wider`}
