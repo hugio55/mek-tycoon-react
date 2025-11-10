@@ -23,10 +23,12 @@ const DEFAULT_CONFIG = {
   lineLength3: 2,
   spawnDelay3: 50,
   logoSize: 600,
-  logoYPosition: 50,
+  logoYPosition: 400,
   selectedFont: 'Orbitron',
   descriptionFontSize: 18,
   descriptionText: 'A futuristic idle tycoon game featuring collectible Mek NFTs. Build your empire through resource management, strategic crafting, and automated gold generation.',
+  descriptionXOffset: 0,
+  descriptionYOffset: 0,
   bgYPosition: 0,
   motionBlurEnabled: true,
   blurIntensity: 50,
@@ -603,15 +605,15 @@ export default function LandingDebugPage() {
               </label>
               <input
                 type="range"
-                min="20"
-                max="80"
-                step="1"
+                min="0"
+                max="2000"
+                step="10"
                 value={config.logoYPosition}
                 onChange={(e) => updateConfig('logoYPosition', parseInt(e.target.value))}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
-                {config.logoYPosition}% from top
+                {config.logoYPosition}px from top
               </div>
             </div>
 
@@ -815,6 +817,47 @@ export default function LandingDebugPage() {
                 ))}
               </select>
             </div>
+
+            {/* Horizontal Offset (Description Only) */}
+            {selectedTypographyElement === 'description' && (
+              <>
+                <div className="mb-2">
+                  <label className="block text-xs text-gray-300 mb-1">
+                    Horizontal Offset (X)
+                  </label>
+                  <input
+                    type="range"
+                    min="-500"
+                    max="500"
+                    step="5"
+                    value={config.descriptionXOffset}
+                    onChange={(e) => updateConfig('descriptionXOffset', parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-gray-400 text-center mt-0.5">
+                    {config.descriptionXOffset}px
+                  </div>
+                </div>
+
+                <div className="mb-2">
+                  <label className="block text-xs text-gray-300 mb-1">
+                    Vertical Offset (Y)
+                  </label>
+                  <input
+                    type="range"
+                    min="-500"
+                    max="500"
+                    step="5"
+                    value={config.descriptionYOffset}
+                    onChange={(e) => updateConfig('descriptionYOffset', parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-gray-400 text-center mt-0.5">
+                    {config.descriptionYOffset}px
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Vertical Offset (Sound Label Only) */}
             {selectedTypographyElement === 'soundLabel' && (

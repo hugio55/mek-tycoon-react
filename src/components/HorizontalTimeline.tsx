@@ -174,38 +174,45 @@ export default function HorizontalTimeline({
               onMouseLeave={() => setHoveredIndex(null)}
               onClick={() => handlePhaseClick(index)}
             >
-              {/* Timeline Background Image with each phase having its own Mek image */}
+              {/* Blend Mode Wrapper - contains image + overlays so entire composition blends */}
               <div
-                className="absolute inset-0 bg-cover bg-center transition-all duration-500"
+                className="absolute inset-0"
                 style={{
-                  backgroundImage: `url(${item.imageUrl})`,
-                  opacity: isActive ? 0.85 : 0.5,
-                  maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
-                  WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
-                  filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected : imageBlur}px)`,
                   mixBlendMode: imageBlendMode,
                 }}
-              />
+              >
+                {/* Timeline Background Image with each phase having its own Mek image */}
+                <div
+                  className="absolute inset-0 bg-cover bg-center transition-all duration-500"
+                  style={{
+                    backgroundImage: `url(${item.imageUrl})`,
+                    opacity: isActive ? 0.85 : 0.5,
+                    maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
+                    WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
+                    filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected : imageBlur}px)`,
+                  }}
+                />
 
-              {/* Darkening Overlay - controlled by imageDarkness parameter */}
-              <div
-                className="absolute inset-0 bg-black transition-opacity duration-500"
-                style={{
-                  opacity: imageDarkness / 100
-                }}
-              />
+                {/* Darkening Overlay - controlled by imageDarkness parameter */}
+                <div
+                  className="absolute inset-0 bg-black transition-opacity duration-500"
+                  style={{
+                    opacity: imageDarkness / 100
+                  }}
+                />
 
-              {/* Dark Gradient Overlay - appears on hover/click, concentrated at bottom */}
-              <div
-                className={`
-                  absolute inset-0
-                  transition-opacity duration-500
-                  ${isActive ? 'opacity-100' : 'opacity-0'}
-                `}
-                style={{
-                  background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.2) 50%, transparent 70%)'
-                }}
-              />
+                {/* Dark Gradient Overlay - appears on hover/click, concentrated at bottom */}
+                <div
+                  className={`
+                    absolute inset-0
+                    transition-opacity duration-500
+                    ${isActive ? 'opacity-100' : 'opacity-0'}
+                  `}
+                  style={{
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.2) 50%, transparent 70%)'
+                  }}
+                />
+              </div>
 
               {/* Phase Label - always visible, centered */}
               <div className="absolute inset-0 flex items-center justify-center z-10">

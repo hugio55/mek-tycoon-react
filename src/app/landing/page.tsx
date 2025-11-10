@@ -37,10 +37,12 @@ const DEFAULT_CONFIG = {
   lineLength3: 2,
   spawnDelay3: 50,
   logoSize: 600,
-  logoYPosition: 50,
+  logoYPosition: 400,
   selectedFont: 'Orbitron',
   descriptionFontSize: 18,
   descriptionText: 'A futuristic idle tycoon game featuring collectible Mek NFTs. Build your empire through resource management, strategic crafting, and automated gold generation.',
+  descriptionXOffset: 0,
+  descriptionYOffset: 0,
   bgYPosition: 0,
   motionBlurEnabled: true,
   blurIntensity: 50,
@@ -113,6 +115,10 @@ export default function LandingPage() {
   // Description text color
   const [descriptionColor, setDescriptionColor] = useState(DEFAULT_CONFIG.descriptionColor);
 
+  // Description offsets
+  const [descriptionXOffset, setDescriptionXOffset] = useState(DEFAULT_CONFIG.descriptionXOffset);
+  const [descriptionYOffset, setDescriptionYOffset] = useState(DEFAULT_CONFIG.descriptionYOffset);
+
   // Phase Carousel design variation
   const [designVariation, setDesignVariation] = useState<'modern' | 'industrial' | 'neon'>(DEFAULT_CONFIG.designVariation);
 
@@ -181,6 +187,8 @@ export default function LandingPage() {
           setMotionBlurEnabled2(config.motionBlurEnabled2 ?? DEFAULT_CONFIG.motionBlurEnabled2);
           setBlurIntensity2(config.blurIntensity2 ?? DEFAULT_CONFIG.blurIntensity2);
           setDescriptionColor(config.descriptionColor ?? DEFAULT_CONFIG.descriptionColor);
+          setDescriptionXOffset(config.descriptionXOffset ?? DEFAULT_CONFIG.descriptionXOffset);
+          setDescriptionYOffset(config.descriptionYOffset ?? DEFAULT_CONFIG.descriptionYOffset);
           setDesignVariation(config.designVariation ?? DEFAULT_CONFIG.designVariation);
           setPhaseHeaderFont(config.phaseHeaderFont ?? DEFAULT_CONFIG.phaseHeaderFont);
           setPhaseHeaderFontSize(config.phaseHeaderFontSize ?? DEFAULT_CONFIG.phaseHeaderFontSize);
@@ -559,7 +567,7 @@ export default function LandingPage() {
       />
 
       {/* Scrollable content layer */}
-      <div className="relative flex justify-center z-[20] px-4 py-8" style={{ alignItems: 'flex-start', paddingTop: `${logoYPosition}vh`, minHeight: '300vh' }}>
+      <div className="relative flex justify-center z-[20] px-4 py-8" style={{ alignItems: 'flex-start', paddingTop: `${logoYPosition}px`, minHeight: '300vh' }}>
         <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full max-w-7xl pb-[100vh]">
           <div className="relative max-w-[80vw] max-h-[80vw]" style={{ width: `${logoSize}px`, height: `${logoSize}px` }}>
             <video
@@ -573,7 +581,8 @@ export default function LandingPage() {
           </div>
 
           {/* Description - Mobile Optimized */}
-          <div className="w-full max-w-xs sm:max-w-md md:max-w-xl lg:max-w-2xl px-4 sm:px-6 text-center">
+          <div className="w-full max-w-xs sm:max-w-md md:max-w-xl lg:max-w-2xl px-4 sm:px-6 text-center"
+               style={{ transform: `translate(${descriptionXOffset}px, ${descriptionYOffset}px)` }}>
             <p className={`${descriptionColor}
                           tracking-wide leading-relaxed
                           break-words`}
