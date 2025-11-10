@@ -14,25 +14,25 @@ const timelineData: TimelineItem[] = [
     phase: 'Phase I',
     title: 'Foundation',
     description: 'Project inception and initial concept development. The vision for Mek Tycoon begins to take shape.',
-    imageUrl: '/timeline/2023.webp',
+    imageUrl: '/mek-images/1000px/dj1-bf3-mt1.webp',
   },
   {
     phase: 'Phase II',
     title: 'Development',
     description: 'Building the core ecosystem. Smart contracts, game mechanics, and NFT infrastructure come to life.',
-    imageUrl: '/timeline/2024.webp',
+    imageUrl: '/mek-images/1000px/dp1-er3-lg2.webp',
   },
   {
     phase: 'Phase III',
     title: 'Launch',
     description: 'Going live with the mainnet. The Mek Tycoon universe opens its doors to the community.',
-    imageUrl: '/timeline/2025.webp',
+    imageUrl: '/mek-images/1000px/dp2-jg1-nm1.webp',
   },
   {
     phase: 'Phase IV',
     title: 'Expansion',
     description: 'Growing the community. New features, partnerships, and gameplay experiences emerge.',
-    imageUrl: '/timeline/2026.webp',
+    imageUrl: '/mek-images/1000px/fn4-cu1-de1.webp',
   },
 ];
 
