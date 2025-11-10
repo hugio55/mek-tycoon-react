@@ -66,6 +66,7 @@ const DEFAULT_CONFIG = {
   speakerIconStyle: 'minimal' as SpeakerIconStyle,
   phaseImageDarkening: 30,
   phaseBlurAmount: 20,
+  phaseBlurAmountSelected: 5,
   phaseColumnHeight: 288,
   phaseFadePosition: 50,
   // Note: phaseImage1-4 not in DEFAULT_CONFIG - PhaseCarousel manages these
@@ -144,6 +145,7 @@ export default function LandingPage() {
   // Phase Carousel controls (used by HorizontalTimeline)
   const [phaseImageDarkening, setPhaseImageDarkening] = useState(DEFAULT_CONFIG.phaseImageDarkening);
   const [phaseBlurAmount, setPhaseBlurAmount] = useState(DEFAULT_CONFIG.phaseBlurAmount);
+  const [phaseBlurAmountSelected, setPhaseBlurAmountSelected] = useState(DEFAULT_CONFIG.phaseBlurAmountSelected);
   const [phaseColumnHeight, setPhaseColumnHeight] = useState(DEFAULT_CONFIG.phaseColumnHeight);
   const [phaseFadePosition, setPhaseFadePosition] = useState(DEFAULT_CONFIG.phaseFadePosition);
   // Note: phaseImage1-4 not needed here - PhaseCarousel reads directly from localStorage
@@ -196,6 +198,7 @@ export default function LandingPage() {
           setSpeakerIconStyle(config.speakerIconStyle ?? DEFAULT_CONFIG.speakerIconStyle);
           setPhaseImageDarkening(config.phaseImageDarkening ?? DEFAULT_CONFIG.phaseImageDarkening);
           setPhaseBlurAmount(config.phaseBlurAmount ?? DEFAULT_CONFIG.phaseBlurAmount);
+          setPhaseBlurAmountSelected(config.phaseBlurAmountSelected ?? DEFAULT_CONFIG.phaseBlurAmountSelected);
           setPhaseColumnHeight(config.phaseColumnHeight ?? DEFAULT_CONFIG.phaseColumnHeight);
           setPhaseFadePosition(config.phaseFadePosition ?? DEFAULT_CONFIG.phaseFadePosition);
           // Note: phaseImage1-4 not loaded here - PhaseCarousel reads directly from localStorage
@@ -625,6 +628,7 @@ export default function LandingPage() {
               phaseDescriptionFontSize={phaseDescriptionFontSize}
               imageDarkness={phaseImageDarkening}
               imageBlur={phaseBlurAmount}
+              imageBlurSelected={phaseBlurAmountSelected}
               columnHeight={phaseColumnHeight}
               fadePosition={phaseFadePosition}
             />
