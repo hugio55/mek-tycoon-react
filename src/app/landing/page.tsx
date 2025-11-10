@@ -599,20 +599,21 @@ export default function LandingPage() {
             `}
             aria-label={audioPlaying ? 'Mute audio' : 'Play audio'}
             style={{
-              transform: `scale(${powerButtonScale}) translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px)`,
+              transform: `translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px) scale(${powerButtonScale})`,
+              transformOrigin: 'center center',
               filter: powerButtonGlowEnabled && audioPlaying
                 ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8))'
                 : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0))',
               transition: 'filter 0.8s ease-in-out, transform 0.3s ease-out, color 0.8s ease-in-out',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = `scale(${powerButtonScale * 1.1}) translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px)`;
+              e.currentTarget.style.transform = `translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px) scale(${powerButtonScale * 1.1})`;
               e.currentTarget.style.filter = powerButtonGlowEnabled && audioPlaying
                 ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8)) brightness(1.4)'
                 : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0)) brightness(1.4)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.transform = `scale(${powerButtonScale}) translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px)`;
+              e.currentTarget.style.transform = `translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px) scale(${powerButtonScale})`;
               e.currentTarget.style.filter = powerButtonGlowEnabled && audioPlaying
                 ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8))'
                 : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0))';
