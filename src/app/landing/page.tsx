@@ -7,6 +7,7 @@ import PowerSwitchToggle from '@/components/controls/PowerSwitchToggle';
 import MekGalleryCarousel from '@/components/MekGalleryCarousel';
 import EmotionsSlider from '@/components/EmotionsSlider';
 import TeamCarousel from '@/components/TeamCarousel';
+import HorizontalTimeline from '@/components/HorizontalTimeline';
 import { SPEAKER_ICON_STYLES, type SpeakerIconStyle } from '@/components/SpeakerIcons';
 
 interface Star {
@@ -592,6 +593,11 @@ export default function LandingPage() {
             <TeamCarousel />
           </div>
         </div>
+      </div>
+
+      {/* Horizontal Timeline - Full Width at Bottom */}
+      <div className="relative z-[20] w-full">
+        <HorizontalTimeline />
       </div>
     </div>
   );
