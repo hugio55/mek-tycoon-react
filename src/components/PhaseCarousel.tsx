@@ -124,10 +124,12 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
 
     return (
       <div
-        className={`absolute w-full transition-all duration-700 ease-out ${positionClasses[position]}`}
+        className={`absolute w-full max-w-md md:max-w-lg transition-all duration-700 ease-out ${positionClasses[position]}`}
         style={{
           transform: 'translateZ(0)',
           backfaceVisibility: 'hidden',
+          left: '50%',
+          marginLeft: '-50%',
         }}
       >
         <div className={styles.container}>
