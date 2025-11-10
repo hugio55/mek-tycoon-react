@@ -1311,9 +1311,9 @@ export default function LandingDebugPage() {
               </label>
               <input
                 type="range"
-                min="-500"
-                max="500"
-                step="10"
+                min="-5000"
+                max="5000"
+                step="50"
                 value={config.phaseColumnYOffset}
                 onChange={(e) => updateConfig('phaseColumnYOffset', parseInt(e.target.value))}
                 className="w-full"
