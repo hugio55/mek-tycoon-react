@@ -15,14 +15,25 @@ export default function NavigationBar() {
   // ============================================================
   // 🚨 NAVIGATION BAR VISIBILITY CONTROL 🚨
   // ============================================================
-  // Currently HIDDEN on root page (/) for public launch
+  // Currently HIDDEN on:
+  // - Root page (/) for public launch
+  // - Landing page (/landing) which has its own custom UI
   //
   // TO RE-ENABLE NAVIGATION ON ROOT PAGE:
-  // Simply comment out or delete lines 16-18 below (the if statement)
-  //
-  // Current state: Navigation hidden on "/"
+  // Simply comment out or delete the if statement below
   // ============================================================
-  if (pathname === '/') {
+
+  // Debug logging to see what pathname we're getting
+  console.log('[🎯NAV-VISIBILITY] Current pathname:', pathname);
+
+  // More robust pathname checking (handles trailing slashes)
+  const normalizedPath = pathname?.toLowerCase().replace(/\/$/, '') || '';
+  const shouldHide = normalizedPath === '' || normalizedPath === '/landing';
+
+  console.log('[🎯NAV-VISIBILITY] Normalized path:', normalizedPath, '| Should hide:', shouldHide);
+
+  if (shouldHide) {
+    console.log('[🎯NAV-VISIBILITY] Hiding navigation on landing page');
     return null;
   }
   // ============================================================

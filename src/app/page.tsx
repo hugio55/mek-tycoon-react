@@ -35,6 +35,8 @@ import MechanismGridLightbox from "@/components/MechanismGridLightbox";
 import MeksTriangleLightbox from "@/components/MeksTriangleLightbox";
 import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
 import NoMekanismsLightbox from "@/components/NoMekanismsLightbox";
+import StarfieldWithControls, { StarfieldDebugControls } from "@/components/StarfieldWithControls";
+import SoundToggle from "@/components/SoundToggle";
 
 // Animated Number Component with smooth counting animation
 function AnimatedNumber({ value, decimals = 1, threshold = 0.01 }: { value: number; decimals?: number; threshold?: number }) {
@@ -267,6 +269,13 @@ export default function MekRateLoggingPage() {
   const [forceNoWallet, setForceNoWallet] = useState(false);
   // Wallet card design variation selector (1, 2, 3, 4, or 5) - LOCKED TO 5: Docking Port C
   const walletCardVariation = 5;
+
+  // Debug controls for logo and font
+  const [debugControls, setDebugControls] = useState<StarfieldDebugControls>({
+    logoScale: 1.0,
+    logoVerticalOffset: 0,
+    fontFamily: 'Orbitron'
+  });
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -3014,7 +3023,10 @@ export default function MekRateLoggingPage() {
   }, [toast]);
 
   return (
-    <div className="fixed inset-0 overflow-hidden touch-manipulation">
+    <div className="fixed inset-0 touch-manipulation" style={{ pointerEvents: 'none' }}>
+      {/* Animated Starfield Canvas with Controls */}
+      <StarfieldWithControls onDebugControlsChange={setDebugControls} />
+
       {/* Industrial grid overlay */}
       <div
         className="fixed inset-0 pointer-events-none opacity-10"
@@ -3030,6 +3042,7 @@ export default function MekRateLoggingPage() {
       {isConnecting && (
         <div
           className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          style={{ pointerEvents: 'auto' }}
           onClick={cancelConnection}
         >
           <div
@@ -3082,7 +3095,7 @@ export default function MekRateLoggingPage() {
       )}
 
       {/* Main Content - Mobile-optimized padding and overflow */}
-      <div className="relative z-10 h-screen overflow-auto p-4 pb-24 md:p-6 lg:p-8 mobile-scroll">
+      <div className="relative z-10 min-h-screen p-4 pb-24 md:p-6 lg:p-8 mobile-scroll" style={{ pointerEvents: 'auto' }}>
         {isAutoReconnecting ? (
           // Session Restore Loading Screen
           <div className="flex flex-col items-center justify-center h-full">
@@ -3137,9 +3150,10 @@ export default function MekRateLoggingPage() {
 
                 {/* Title with glow */}
                 <h1
-                  className="text-3xl sm:text-4xl md:text-5xl font-black text-yellow-500 mb-2 uppercase tracking-[0.1em] sm:tracking-[0.15em] md:tracking-[0.2em] text-center font-['Orbitron']"
+                  className="text-3xl sm:text-4xl md:text-5xl font-black text-yellow-500 mb-2 uppercase tracking-[0.1em] sm:tracking-[0.15em] md:tracking-[0.2em] text-center"
                   style={{
-                    textShadow: '0 0 20px rgba(250, 182, 23, 0.5), 0 0 40px rgba(250, 182, 23, 0.3)'
+                    textShadow: '0 0 20px rgba(250, 182, 23, 0.5), 0 0 40px rgba(250, 182, 23, 0.3)',
+                    fontFamily: debugControls.fontFamily
                   }}
                 >
                   MEK EMPLOYMENT
@@ -3707,7 +3721,7 @@ export default function MekRateLoggingPage() {
             </div>
 
             {/* Logo in top right corner */}
-            <div className="absolute right-0 z-20" style={{ top: '-20px' }}>
+            <div className="absolute right-0 z-20" style={{ top: `${-20 + debugControls.logoVerticalOffset}px`, transform: `scale(${debugControls.logoScale})`, transformOrigin: 'top right' }}>
               <a
                 href="https://overexposed.io"
                 target="_blank"
@@ -4511,6 +4525,9 @@ export default function MekRateLoggingPage() {
         </div>
       )}
 
+      {/* Sound Toggle - Fixed bottom-right position */}
+      <SoundToggle />
+
       {/* Toast Notification - Minimal Flat Style */}
       {toast && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-sm">
@@ -4554,33 +4571,42 @@ export default function MekRateLoggingPage() {
 
       {/* Add animations and mobile optimizations */}
       <style jsx>{`
-        /* Prevent overscroll and bounce on iOS */
+        /* Mobile-friendly scroll behavior - allow body scroll, fix content container */
         :global(html) {
-          overflow: hidden;
-          position: fixed;
           width: 100%;
-          height: 100%;
+          min-height: 100%;
         }
 
         :global(body) {
-          overflow: hidden;
-          position: fixed;
           width: 100%;
-          height: 100%;
+          min-height: 100%;
+          /* Enable momentum scrolling on iOS */
           -webkit-overflow-scrolling: touch;
+          /* Prevent horizontal scroll but allow vertical */
+          overflow-x: hidden;
+          overflow-y: auto;
         }
 
-        /* Smooth scrolling for mobile */
+        /* Smooth scrolling for mobile with touch optimization */
         :global(.mobile-scroll) {
           -webkit-overflow-scrolling: touch;
           scroll-behavior: smooth;
+          /* Ensure vertical scroll is enabled */
+          overflow-y: auto;
+          overflow-x: hidden;
+          /* Create stacking context for proper scroll containment */
+          position: relative;
+          /* Allow content to expand naturally */
+          min-height: 100vh;
         }
 
-        /* Prevent text selection on buttons */
+        /* Prevent text selection on buttons but allow scroll interaction */
         :global(.touch-manipulation) {
           -webkit-user-select: none;
           user-select: none;
           -webkit-tap-highlight-color: transparent;
+          /* Allow touch panning in all directions for scroll */
+          touch-action: pan-y pan-x;
         }
 
         /* Optimize animations for mobile */

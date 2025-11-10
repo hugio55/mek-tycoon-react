@@ -1,9 +1,16 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import { SeededRandom } from "@/lib/seeded-random";
 
 export default function GlobalBackground() {
+  const pathname = usePathname();
+
+  // Don't render background on landing page (has its own custom background)
+  if (pathname === '/landing') {
+    return null;
+  }
   const backgroundStars = useMemo(() => {
     const rng = new SeededRandom(67890); // Seed for stationary stars
     return [...Array(200)].map((_, i) => ({
