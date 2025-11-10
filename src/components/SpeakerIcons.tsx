@@ -14,6 +14,25 @@ export const MinimalWaveIcon = ({ size = 48, isPlaying, className = '' }: Speake
     className={className}
     style={{ transition: 'all 0.8s ease-in-out' }}
   >
+    <style>
+      {`
+        @keyframes wavePulse1 {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+        @keyframes wavePulse2 {
+          0%, 100% { opacity: 0.7; }
+          50% { opacity: 0.2; }
+        }
+        @keyframes wavePulse3 {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 0.15; }
+        }
+        .wave-1 { animation: wavePulse1 2.5s ease-in-out infinite; }
+        .wave-2 { animation: wavePulse2 2.5s ease-in-out infinite 0.3s; }
+        .wave-3 { animation: wavePulse3 2.5s ease-in-out infinite 0.6s; }
+      `}
+    </style>
     <circle
       cx="24" cy="24" r="20"
       stroke="currentColor"
@@ -24,19 +43,28 @@ export const MinimalWaveIcon = ({ size = 48, isPlaying, className = '' }: Speake
     {isPlaying ? (
       <>
         <path
+          className="wave-1"
           d="M30 18 Q36 24 30 30"
           stroke="currentColor"
           strokeWidth="2"
           strokeLinecap="round"
-          style={{ transition: 'stroke 0.8s ease-in-out, opacity 0.8s ease-in-out' }}
+          style={{ transition: 'stroke 0.8s ease-in-out' }}
         />
         <path
+          className="wave-2"
           d="M33 14 Q42 24 33 34"
           stroke="currentColor"
           strokeWidth="2"
           strokeLinecap="round"
-          opacity="0.6"
-          style={{ transition: 'stroke 0.8s ease-in-out, opacity 0.8s ease-in-out' }}
+          style={{ transition: 'stroke 0.8s ease-in-out' }}
+        />
+        <path
+          className="wave-3"
+          d="M36 10 Q47 24 36 38"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          style={{ transition: 'stroke 0.8s ease-in-out' }}
         />
       </>
     ) : (

@@ -58,7 +58,11 @@ export default function HorizontalTimeline({
   phaseHeaderFontSize = 48,
   phaseHeaderColor = 'text-white/70',
   phaseDescriptionFont = 'Arial',
-  phaseDescriptionFontSize = 16
+  phaseDescriptionFontSize = 16,
+  imageDarkness = 30,
+  imageBlur = 20,
+  columnHeight = 288,
+  fadePosition = 50
 }: HorizontalTimelineProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -84,7 +88,11 @@ export default function HorizontalTimeline({
   };
 
   return (
-    <div ref={containerRef} className="w-full h-[38vh] min-h-[280px] relative overflow-hidden">
+    <div
+      ref={containerRef}
+      className="w-full relative overflow-hidden"
+      style={{ height: `${columnHeight}px` }}
+    >
       <div className="absolute inset-0 flex">
         {timelineData.map((item, index) => {
           const isHovered = hoveredIndex === index;
@@ -121,9 +129,17 @@ export default function HorizontalTimeline({
                 style={{
                   backgroundImage: `url(${item.imageUrl})`,
                   opacity: isActive ? 0.85 : 0.5,
-                  maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 75%)',
-                  WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 75%)',
-                  filter: `grayscale(${isActive ? '0%' : '100%'}) ${isAnyActive && !isActive ? 'blur(6px)' : 'blur(0px)'}`,
+                  maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
+                  WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
+                  filter: `grayscale(${isActive ? '0%' : '100%'}) ${isAnyActive && !isActive ? `blur(${imageBlur}px)` : 'blur(0px)'}`,
+                }}
+              />
+
+              {/* Darkening Overlay - controlled by imageDarkness parameter */}
+              <div
+                className="absolute inset-0 bg-black transition-opacity duration-500"
+                style={{
+                  opacity: imageDarkness / 100
                 }}
               />
 
