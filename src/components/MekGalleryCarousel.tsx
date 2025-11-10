@@ -10,9 +10,12 @@ const MekGalleryCarousel = () => {
   const imagesRef = useRef<HTMLDivElement[]>([]);
 
   const [isDragging, setIsDragging] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
   const currentRotationRef = useRef(0);
   const targetRotationRef = useRef(0);
+  const velocityRef = useRef(0);
+  const lastDragTimeRef = useRef(0);
 
   // Sample Mek images for the carousel
   const mekImages = [
@@ -28,12 +31,24 @@ const MekGalleryCarousel = () => {
     'aj1-aj1-bf1.webp',
   ];
 
+  // Detect mobile viewport on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   useEffect(() => {
     if (!ringRef.current || imagesRef.current.length === 0) return;
 
-    // Position images in 3D ring
+    // Position images in 3D ring - adjust radius for mobile
     const angleIncrement = 360 / mekImages.length;
-    const radius = 400;
+    const radius = isMobile ? 250 : 400; // Smaller radius on mobile
 
     imagesRef.current.forEach((img, index) => {
       if (!img) return;
@@ -49,23 +64,38 @@ const MekGalleryCarousel = () => {
         z: z,
         rotationY: -angle,
         transformOrigin: 'center center',
+        // Hardware acceleration and backface culling
+        force3D: true,
+        backfaceVisibility: 'hidden',
+        perspective: 1000,
       });
     });
 
-    // Animation loop for smooth rotation
+    // Animation loop with momentum decay for smooth rotation
     const animate = () => {
+      // Apply momentum decay
+      if (!isDragging && Math.abs(velocityRef.current) > 0.01) {
+        targetRotationRef.current += velocityRef.current;
+        velocityRef.current *= 0.95; // Momentum decay
+      }
+
+      // Smooth interpolation with hardware-accelerated transforms
       currentRotationRef.current += (targetRotationRef.current - currentRotationRef.current) * 0.1;
 
       if (ringRef.current) {
         gsap.set(ringRef.current, {
           rotationY: currentRotationRef.current,
+          force3D: true,
+          transformStyle: 'preserve-3d',
         });
       }
 
-      // Parallax background effect
+      // Parallax background effect - reduced on mobile for performance
       if (backgroundRef.current) {
+        const parallaxAmount = isMobile ? 0.25 : 0.5;
         gsap.set(backgroundRef.current, {
-          x: currentRotationRef.current * 0.5,
+          x: currentRotationRef.current * parallaxAmount,
+          force3D: true,
         });
       }
 
@@ -73,7 +103,7 @@ const MekGalleryCarousel = () => {
     };
 
     animate();
-  }, [mekImages.length]);
+  }, [mekImages.length, isMobile, isDragging]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);

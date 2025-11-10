@@ -9,8 +9,8 @@ const MekGalleryRing = () => {
   const ringRef = useRef<HTMLDivElement>(null);
   const backgroundRef = useRef<HTMLDivElement>(null);
 
-  const rotationRef = useRef(0);
-  const targetRotationRef = useRef(0);
+  const rotationRef = useRef(180);
+  const targetRotationRef = useRef(180);
   const isDraggingRef = useRef(false);
   const lastMouseXRef = useRef(0);
 
@@ -28,11 +28,14 @@ const MekGalleryRing = () => {
         });
       }
 
-      // Parallax background effect
+      // Parallax background effect - shifts based on ring rotation
       if (backgroundRef.current) {
-        const bgX = (rotationRef.current % 360) * 2;
+        // Wrap rotation to 0-360 range
+        const wrappedRotation = ((rotationRef.current % 360) + 360) % 360;
+        // Calculate background position for parallax effect
+        const bgX = 100 - (wrappedRotation / 360) * 500;
         gsap.set(backgroundRef.current, {
-          backgroundPositionX: `${bgX}px`,
+          backgroundPosition: `${bgX}px 0px`,
         });
       }
 
@@ -142,7 +145,7 @@ const MekGalleryRing = () => {
         >
           {/* 10 Images positioned in 3D ring */}
           {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((index) => {
-            const angle = index * 36; // 360 / 10 = 36 degrees
+            const angle = index * -36; // Negative rotation for proper ring orientation
 
             return (
               <div
@@ -156,14 +159,23 @@ const MekGalleryRing = () => {
                   transformStyle: 'preserve-3d',
                   transform: `rotateY(${angle}deg)`,
                   transformOrigin: '50% 50% -500px',
+                  backfaceVisibility: 'hidden',
                 }}
               >
-                <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-yellow-500/50 shadow-2xl">
+                <div
+                  className="relative w-full h-full rounded-lg overflow-hidden border-2 border-yellow-500/50 shadow-2xl"
+                  style={{
+                    backfaceVisibility: 'hidden',
+                  }}
+                >
                   <img
                     src="/mek-images/1000px/ae1-cx1-az2.webp"
                     alt={`Mek ${index + 1}`}
                     className="w-full h-full object-cover"
                     draggable={false}
+                    style={{
+                      backfaceVisibility: 'hidden',
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
                 </div>
