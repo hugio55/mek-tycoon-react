@@ -21,6 +21,7 @@ const DEFAULT_CONFIG = {
   starSpeed3: 10,
   starFrequency3: 100,
   lineLength3: 2,
+  spawnDelay3: 50,
   logoSize: 600,
   logoYPosition: 50,
   selectedFont: 'Orbitron',
@@ -478,6 +479,25 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-purple-400 text-center mt-0.5">
                 {config.lineLength3.toFixed(1)}x
+              </div>
+            </div>
+
+            {/* Spawn Delay 3 */}
+            <div className="mb-2">
+              <label className="block text-xs text-purple-300 mb-1">
+                Spawn Delay (time between stars)
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="500"
+                step="10"
+                value={config.spawnDelay3}
+                onChange={(e) => updateConfig('spawnDelay3', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-purple-400 text-center mt-0.5">
+                {config.spawnDelay3}ms
               </div>
             </div>
           </div>

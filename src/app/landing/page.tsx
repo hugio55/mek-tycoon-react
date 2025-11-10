@@ -41,6 +41,7 @@ const DEFAULT_CONFIG = {
   starSpeed3: 10,
   starFrequency3: 100,
   lineLength3: 2,
+  spawnDelay3: 50,
   logoSize: 600,
   logoYPosition: 50,
   selectedFont: 'Orbitron',
@@ -84,6 +85,7 @@ export default function LandingPage() {
   const [starSpeed3, setStarSpeed3] = useState(DEFAULT_CONFIG.starSpeed3);
   const [starFrequency3, setStarFrequency3] = useState(DEFAULT_CONFIG.starFrequency3);
   const [lineLength3, setLineLength3] = useState(DEFAULT_CONFIG.lineLength3);
+  const [spawnDelay3, setSpawnDelay3] = useState(DEFAULT_CONFIG.spawnDelay3);
 
   // Layout controls
   const [logoSize, setLogoSize] = useState(DEFAULT_CONFIG.logoSize);
@@ -142,6 +144,7 @@ export default function LandingPage() {
           setStarSpeed3(config.starSpeed3 ?? DEFAULT_CONFIG.starSpeed3);
           setStarFrequency3(config.starFrequency3 ?? DEFAULT_CONFIG.starFrequency3);
           setLineLength3(config.lineLength3 ?? DEFAULT_CONFIG.lineLength3);
+          setSpawnDelay3(config.spawnDelay3 ?? DEFAULT_CONFIG.spawnDelay3);
           setLogoSize(config.logoSize ?? DEFAULT_CONFIG.logoSize);
           setLogoYPosition(config.logoYPosition ?? DEFAULT_CONFIG.logoYPosition);
           setSelectedFont(config.selectedFont ?? DEFAULT_CONFIG.selectedFont);
@@ -333,6 +336,9 @@ export default function LandingPage() {
       });
     }
 
+    // Track last spawn time for Layer 3 stars (for spawn delay)
+    const starLastSpawnTime3 = new Map<number, number>();
+
 
     let animationId: number;
     const animate = () => {
@@ -417,14 +423,29 @@ export default function LandingPage() {
       });
 
       // Draw Layer 3 stars as lines (ultra-fast-moving streaks)
-      stars3.forEach((star) => {
+      const currentTime = Date.now();
+      stars3.forEach((star, index) => {
         star.z -= starSpeed3;
 
         if (star.z <= 0) {
-          const { x, y } = initializeStar();
-          star.x = x;
-          star.y = y;
-          star.z = maxZ;
+          // Check spawn delay - only respawn if enough time has passed
+          const lastSpawnTime = starLastSpawnTime3.get(index) || 0;
+          const timeSinceLastSpawn = currentTime - lastSpawnTime;
+
+          // Add randomization (±30%) to spread out spawns and prevent clustering
+          const randomFactor = 0.7 + Math.random() * 0.6; // Range: 0.7 to 1.3
+          const requiredDelay = spawnDelay3 * randomFactor;
+
+          if (timeSinceLastSpawn >= requiredDelay) {
+            const { x, y } = initializeStar();
+            star.x = x;
+            star.y = y;
+            star.z = maxZ;
+            starLastSpawnTime3.set(index, currentTime);
+          } else {
+            // Keep star out of view until delay passes
+            star.z = -100;
+          }
         }
 
         const scale = 1000 / star.z;
@@ -462,7 +483,7 @@ export default function LandingPage() {
       window.removeEventListener('resize', updateCanvasSize);
       cancelAnimationFrame(animationId);
     };
-  }, [starScale, starSpeed, starFrequency, starScale2, starSpeed2, starFrequency2, lineLength2, starScale3, starSpeed3, starFrequency3, lineLength3, motionBlurEnabled, blurIntensity, motionBlurEnabled2, blurIntensity2]);
+  }, [starScale, starSpeed, starFrequency, starScale2, starSpeed2, starFrequency2, lineLength2, starScale3, starSpeed3, starFrequency3, lineLength3, spawnDelay3, motionBlurEnabled, blurIntensity, motionBlurEnabled2, blurIntensity2]);
 
   return (
     <div
