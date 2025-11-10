@@ -37,7 +37,7 @@ const DEFAULT_CONFIG = {
   lineLength3: 2,
   spawnDelay3: 50,
   logoSize: 600,
-  logoYPosition: 400,
+  logoYPosition: 0, // Percentage offset from center (-50 to +50)
   selectedFont: 'Orbitron',
   descriptionFontSize: 18,
   descriptionText: 'A futuristic idle tycoon game featuring collectible Mek NFTs. Build your empire through resource management, strategic crafting, and automated gold generation.',
@@ -653,8 +653,8 @@ export default function LandingPage() {
         className="relative flex justify-center z-[20] px-4"
         style={{
           paddingTop: viewportHeight > 0
-            ? `calc(50vh - ${logoSize / 2}px)`
-            : `${logoYPosition}px`,
+            ? `calc(50vh - ${logoSize / 2}px - ${logoYPosition}vh)`
+            : '50vh',
           minHeight: '300vh'
         }}
       >
