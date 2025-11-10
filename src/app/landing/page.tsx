@@ -174,6 +174,9 @@ export default function LandingPage() {
   const [descriptionCardDarkness, setDescriptionCardDarkness] = useState(DEFAULT_CONFIG.descriptionCardDarkness);
   const [descriptionCardBorder, setDescriptionCardBorder] = useState(DEFAULT_CONFIG.descriptionCardBorder);
 
+  // Scroll-triggered animation state
+  const [hasScrolled, setHasScrolled] = useState(false);
+
   // Note: phaseImage1-4 not needed here - PhaseCarousel reads directly from localStorage
 
   // Load config from localStorage and listen for changes from debug page
@@ -284,6 +287,20 @@ export default function LandingPage() {
     // Update on resize
     window.addEventListener('resize', updateViewportHeight);
     return () => window.removeEventListener('resize', updateViewportHeight);
+  }, []);
+
+  // Scroll detection for description text animation
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setHasScrolled(true);
+      } else {
+        setHasScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Initialize audio on component mount
@@ -646,24 +663,20 @@ export default function LandingPage() {
             />
           </div>
 
-          {/* Description - Mobile Optimized with Glass Card */}
+          {/* Description - Scroll-triggered fade-in animation */}
           <div className="w-full max-w-xs sm:max-w-md md:max-w-xl lg:max-w-2xl px-4 sm:px-6 text-center"
                style={{ transform: `translate(${descriptionXOffset}px, ${descriptionYOffset}px)` }}>
-            <div
-              className={`relative rounded-2xl p-6 md:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.3)] ${descriptionCardBorder ? 'border border-white/[0.15]' : ''}`}
+            <p
+              className={`${descriptionColor} tracking-wide leading-relaxed break-words transition-all duration-700 ease-out`}
               style={{
-                background: `rgba(0, 0, 0, ${descriptionCardDarkness / 100})`,
-                backdropFilter: `blur(${descriptionCardBlur}px)`,
-                WebkitBackdropFilter: `blur(${descriptionCardBlur}px)`,
+                fontFamily: selectedFont,
+                fontSize: `${descriptionFontSize}px`,
+                opacity: hasScrolled ? 1 : 0,
+                transform: hasScrolled ? 'translateY(0)' : 'translateY(20px)',
               }}
             >
-              <p className={`${descriptionColor}
-                            tracking-wide leading-relaxed
-                            break-words`}
-                 style={{ fontFamily: selectedFont, fontSize: `${descriptionFontSize}px` }}>
-                {descriptionText}
-              </p>
-            </div>
+              {descriptionText}
+            </p>
           </div>
 
           {/* Speaker Button - Above Phase Timeline */}
