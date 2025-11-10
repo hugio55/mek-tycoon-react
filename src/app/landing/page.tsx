@@ -74,6 +74,10 @@ const DEFAULT_CONFIG = {
   phaseHoverDarkeningIntensity: 90,
   phaseIdleBackdropBlur: 0,
   phaseColumnYOffset: 0,
+  // Description glass card controls
+  descriptionCardBlur: 40,
+  descriptionCardDarkness: 40,
+  descriptionCardBorder: true,
   // Note: phaseImage1-4 not in DEFAULT_CONFIG - PhaseCarousel manages these
 };
 
@@ -164,6 +168,12 @@ export default function LandingPage() {
   const [phaseHoverDarkeningIntensity, setPhaseHoverDarkeningIntensity] = useState(DEFAULT_CONFIG.phaseHoverDarkeningIntensity);
   const [phaseIdleBackdropBlur, setPhaseIdleBackdropBlur] = useState(DEFAULT_CONFIG.phaseIdleBackdropBlur);
   const [phaseColumnYOffset, setPhaseColumnYOffset] = useState(DEFAULT_CONFIG.phaseColumnYOffset);
+
+  // Description glass card controls
+  const [descriptionCardBlur, setDescriptionCardBlur] = useState(DEFAULT_CONFIG.descriptionCardBlur);
+  const [descriptionCardDarkness, setDescriptionCardDarkness] = useState(DEFAULT_CONFIG.descriptionCardDarkness);
+  const [descriptionCardBorder, setDescriptionCardBorder] = useState(DEFAULT_CONFIG.descriptionCardBorder);
+
   // Note: phaseImage1-4 not needed here - PhaseCarousel reads directly from localStorage
 
   // Load config from localStorage and listen for changes from debug page
@@ -223,6 +233,9 @@ export default function LandingPage() {
           setPhaseHoverDarkeningIntensity(config.phaseHoverDarkeningIntensity ?? DEFAULT_CONFIG.phaseHoverDarkeningIntensity);
           setPhaseIdleBackdropBlur(config.phaseIdleBackdropBlur ?? DEFAULT_CONFIG.phaseIdleBackdropBlur);
           setPhaseColumnYOffset(config.phaseColumnYOffset ?? DEFAULT_CONFIG.phaseColumnYOffset);
+          setDescriptionCardBlur(config.descriptionCardBlur ?? DEFAULT_CONFIG.descriptionCardBlur);
+          setDescriptionCardDarkness(config.descriptionCardDarkness ?? DEFAULT_CONFIG.descriptionCardDarkness);
+          setDescriptionCardBorder(config.descriptionCardBorder ?? DEFAULT_CONFIG.descriptionCardBorder);
           // Note: phaseImage1-4 not loaded here - PhaseCarousel reads directly from localStorage
         } catch (e) {
           console.error('Failed to load debug config:', e);
@@ -636,7 +649,14 @@ export default function LandingPage() {
           {/* Description - Mobile Optimized with Glass Card */}
           <div className="w-full max-w-xs sm:max-w-md md:max-w-xl lg:max-w-2xl px-4 sm:px-6 text-center"
                style={{ transform: `translate(${descriptionXOffset}px, ${descriptionYOffset}px)` }}>
-            <div className="relative bg-black/40 backdrop-blur-[40px] border border-white/[0.15] rounded-2xl p-6 md:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+            <div
+              className={`relative rounded-2xl p-6 md:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.3)] ${descriptionCardBorder ? 'border border-white/[0.15]' : ''}`}
+              style={{
+                background: `rgba(0, 0, 0, ${descriptionCardDarkness / 100})`,
+                backdropFilter: `blur(${descriptionCardBlur}px)`,
+                WebkitBackdropFilter: `blur(${descriptionCardBlur}px)`,
+              }}
+            >
               <p className={`${descriptionColor}
                             tracking-wide leading-relaxed
                             break-words`}
