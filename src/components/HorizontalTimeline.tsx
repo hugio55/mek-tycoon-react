@@ -170,9 +170,7 @@ export default function HorizontalTimeline({
                 cursor-pointer
               `}
               style={{
-                transition: isActive
-                  ? 'all 0.5s ease-in-out 0s'
-                  : 'all 0.5s ease-in-out 0.25s',
+                transition: 'width 0.5s ease-in-out, backdrop-filter 0.5s ease-in-out',
                 backdropFilter: !isActive && idleBackdropBlur > 0
                   ? `blur(${idleBackdropBlur}px)`
                   : 'none',
