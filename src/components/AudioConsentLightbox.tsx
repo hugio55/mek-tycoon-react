@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import PowerSwitch from '@/components/controls/PowerSwitch';
 
 interface AudioConsentLightboxProps {
   onProceed: (audioEnabled: boolean) => void;
@@ -241,7 +242,11 @@ export default function AudioConsentLightbox({ onProceed, isVisible }: AudioCons
             This website uses atmospheric sound. We highly encourage the immersion into the bath of sonic waves.
           </p>
           <div className="inline-block mb-6">
-            <PowerButton />
+            <PowerSwitch
+              enabled={audioEnabled}
+              onChange={setAudioEnabled}
+              label="Audio"
+            />
           </div>
           <div>
             <button
