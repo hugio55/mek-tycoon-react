@@ -41,16 +41,6 @@ export default function HorizontalTimeline() {
 
   return (
     <div className="w-full h-[60vh] min-h-[400px] relative overflow-hidden">
-      {/* Mek Background Image with Fade Effect */}
-      <div
-        className="absolute inset-0 bg-cover bg-bottom"
-        style={{
-          backgroundImage: 'url(/mek-images/1000px/ae1-er3-lg2.webp)',
-          maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%)',
-          WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%)',
-        }}
-      />
-
       <div className="absolute inset-0 flex">
         {timelineData.map((item, index) => {
           const isHovered = hoveredIndex === index;
@@ -78,12 +68,23 @@ export default function HorizontalTimeline() {
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
             >
-              {/* Background Image */}
+              {/* Mek Background Image with Fade Effect - Individual per column */}
+              <div
+                className="absolute inset-0 bg-cover bg-bottom transition-all duration-500"
+                style={{
+                  backgroundImage: 'url(/mek-images/1000px/ae1-er3-lg2.webp)',
+                  maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%)',
+                  WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%)',
+                  filter: isAnyHovered && !isHovered ? 'blur(6px)' : 'blur(0px)',
+                }}
+              />
+
+              {/* Timeline Background Image */}
               <div
                 className="absolute inset-0 bg-cover bg-center transition-all duration-500"
                 style={{
                   backgroundImage: `url(${item.imageUrl})`,
-                  filter: isHovered ? 'grayscale(0%)' : 'grayscale(100%)',
+                  filter: `grayscale(${isHovered ? '0%' : '100%'}) ${isAnyHovered && !isHovered ? 'blur(6px)' : 'blur(0px)'}`,
                 }}
               />
 
