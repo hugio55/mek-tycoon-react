@@ -3595,5 +3595,6 @@ export default defineSchema({
   // Global site-wide configuration
   siteSettings: defineTable({
     landingPageEnabled: v.boolean(), // Controls whether root (/) shows landing page or game
+    ignoreLocalhostRule: v.optional(v.boolean()), // When true, localhost acts like production (shows landing page when enabled)
   }),
 });

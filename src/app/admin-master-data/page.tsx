@@ -117,6 +117,7 @@ export default function AdminMasterDataPage() {
   // Site settings for landing page toggle
   const siteSettings = useQuery(api.siteSettings.getSiteSettings);
   const toggleLandingPage = useMutation(api.siteSettings.toggleLandingPage);
+  const toggleIgnoreLocalhostRule = useMutation(api.siteSettings.toggleIgnoreLocalhostRule);
 
   const [activeSystem, setActiveSystem] = useState<string | null>(null);
   // Initialize with static value to avoid hydration mismatch
@@ -786,22 +787,42 @@ export default function AdminMasterDataPage() {
         </h1>
         <p className="text-gray-400 mb-4">Centralized procedural generation and game balance control</p>
 
-        {/* Landing Page Toggle - Compact */}
-        <div className="mb-4 inline-flex items-center gap-3 bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2">
-          <span className="text-sm font-semibold text-gray-300">Landing Page (Production Only)</span>
-          <Switch.Root
-            checked={siteSettings?.landingPageEnabled ?? false}
-            onCheckedChange={async (enabled) => {
-              await toggleLandingPage({ enabled });
-            }}
-            className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-yellow-500 transition-colors"
-          >
-            <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
-          </Switch.Root>
-          <span className={`text-xs font-bold ${siteSettings?.landingPageEnabled ? 'text-yellow-400' : 'text-gray-400'}`}>
-            {siteSettings?.landingPageEnabled ? 'ON' : 'OFF'}
-          </span>
-          <span className="text-xs text-gray-500 ml-2">(localhost always shows game)</span>
+        {/* Landing Page Toggles - Compact */}
+        <div className="mb-4 flex gap-4">
+          {/* Main Landing Page Toggle */}
+          <div className="inline-flex items-center gap-3 bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2">
+            <span className="text-sm font-semibold text-gray-300">Landing Page</span>
+            <Switch.Root
+              checked={siteSettings?.landingPageEnabled ?? false}
+              onCheckedChange={async (enabled) => {
+                await toggleLandingPage({ enabled });
+              }}
+              className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-yellow-500 transition-colors"
+            >
+              <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
+            </Switch.Root>
+            <span className={`text-xs font-bold ${siteSettings?.landingPageEnabled ? 'text-yellow-400' : 'text-gray-400'}`}>
+              {siteSettings?.landingPageEnabled ? 'ON' : 'OFF'}
+            </span>
+          </div>
+
+          {/* Ignore Localhost Rule Toggle */}
+          <div className="inline-flex items-center gap-3 bg-gray-900/50 border border-blue-700/50 rounded-lg px-4 py-2">
+            <span className="text-sm font-semibold text-blue-300">Ignore Localhost Rule</span>
+            <Switch.Root
+              checked={siteSettings?.ignoreLocalhostRule ?? false}
+              onCheckedChange={async (enabled) => {
+                await toggleIgnoreLocalhostRule({ enabled });
+              }}
+              className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors"
+            >
+              <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
+            </Switch.Root>
+            <span className={`text-xs font-bold ${siteSettings?.ignoreLocalhostRule ? 'text-blue-400' : 'text-gray-400'}`}>
+              {siteSettings?.ignoreLocalhostRule ? 'ON' : 'OFF'}
+            </span>
+            <span className="text-xs text-gray-500">(force landing page on localhost)</span>
+          </div>
         </div>
 
         {/* Message Display */}

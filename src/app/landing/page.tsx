@@ -520,7 +520,7 @@ export default function LandingPage() {
                 marginTop: `${soundLabelVerticalOffset}px`
               }}
             >
-              sound
+              aural
             </div>
           </div>
 
