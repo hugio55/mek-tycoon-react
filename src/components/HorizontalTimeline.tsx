@@ -117,10 +117,14 @@ export default function HorizontalTimeline({
               className={`
                 ${widthClass}
                 relative
-                transition-all duration-500 ease-in-out
                 overflow-hidden
                 cursor-pointer
               `}
+              style={{
+                transition: isActive
+                  ? 'all 0.5s ease-in-out 0s'
+                  : 'all 0.5s ease-in-out 0.25s',
+              }}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
               onClick={() => handlePhaseClick(index)}
@@ -200,11 +204,10 @@ export default function HorizontalTimeline({
                     mb-2
                     font-['Orbitron']
                     tracking-wide
-                    transition-opacity duration-300
                     ${isActive ? 'opacity-100' : 'opacity-0'}
                   `}
                   style={{
-                    transitionDelay: isActive ? '550ms' : '0ms',
+                    transition: isActive ? 'opacity 0.3s ease-in-out 0.4s' : 'opacity 0.2s ease-in-out 0s',
                   }}
                 >
                   {item.title}
@@ -213,11 +216,10 @@ export default function HorizontalTimeline({
                   <p
                     className={`
                       text-gray-300/80 text-sm md:text-base mb-3 italic
-                      transition-opacity duration-300
                       ${isActive ? 'opacity-100' : 'opacity-0'}
                     `}
                     style={{
-                      transitionDelay: isActive ? '550ms' : '0ms',
+                      transition: isActive ? 'opacity 0.3s ease-in-out 0.4s' : 'opacity 0.2s ease-in-out 0s',
                     }}
                   >
                     {item.subtitle}
@@ -226,13 +228,12 @@ export default function HorizontalTimeline({
                 <p
                   className={`
                     text-white/90 leading-relaxed
-                    transition-opacity duration-300
                     ${isActive ? 'opacity-100' : 'opacity-0'}
                   `}
                   style={{
                     fontFamily: phaseDescriptionFont,
                     fontSize: `${phaseDescriptionFontSize}px`,
-                    transitionDelay: isActive ? '550ms' : '0ms',
+                    transition: isActive ? 'opacity 0.3s ease-in-out 0.4s' : 'opacity 0.2s ease-in-out 0s',
                   }}
                 >
                   {item.description}
