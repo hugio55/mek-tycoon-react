@@ -2136,6 +2136,18 @@ body {
   }
 }
 
+/* Phase Carousel slide-up entrance animation */
+@keyframes slideUpEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Story Climb flash animations */
 @keyframes flash-red {
   0%, 100% { border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
