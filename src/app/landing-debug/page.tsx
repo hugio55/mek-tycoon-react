@@ -65,6 +65,10 @@ const DEFAULT_CONFIG = {
   phaseHoverDarkeningIntensity: 90,
   phaseIdleBackdropBlur: 0,
   phaseColumnYOffset: 0,
+  // Description glass card controls
+  descriptionCardBlur: 40,
+  descriptionCardDarkness: 40,
+  descriptionCardBorder: true,
 };
 
 type ConfigType = typeof DEFAULT_CONFIG;
