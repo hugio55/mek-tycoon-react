@@ -145,12 +145,12 @@
 /* Global overflow prevention - mobile-friendly */
 html, body {
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: scroll !important; /* Force scrollbar to always appear */
   max-width: 100%;
   margin: 0;
   padding: 0;
   width: 100%;
-  height: auto;
+  height: 100%;
   /* Ensure scrolling works on mobile */
   min-height: 100%;
   /* Smooth momentum scrolling on iOS */

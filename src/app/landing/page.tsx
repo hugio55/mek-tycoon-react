@@ -429,14 +429,15 @@ export default function LandingPage() {
 
   return (
     <div
-      className="w-screen bg-black relative z-0"
+      className="w-screen bg-black"
       style={{
         margin: 0,
         padding: 0,
-        minHeight: '100vh',
+        minHeight: '300vh',
         height: 'auto',
         overflowX: 'hidden',
-        overflowY: 'auto',
+        overflowY: 'scroll',
+        position: 'relative',
         touchAction: 'pan-y',
         WebkitOverflowScrolling: 'touch',
       }}
@@ -499,8 +500,8 @@ export default function LandingPage() {
       )}
 
       {/* Scrollable content layer */}
-      <div className="relative flex justify-center z-[20] px-4 py-8" style={{ alignItems: 'flex-start', paddingTop: `${logoYPosition}vh`, minHeight: '250vh' }}>
-        <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full max-w-7xl pb-96">
+      <div className="relative flex justify-center z-[20] px-4 py-8" style={{ alignItems: 'flex-start', paddingTop: `${logoYPosition}vh`, minHeight: '300vh' }}>
+        <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full max-w-7xl pb-[100vh]">
           <div className="relative max-w-[80vw] max-h-[80vw]" style={{ width: `${logoSize}px`, height: `${logoSize}px` }}>
             <Image
               src="/logo/multi-color-big-3.webp"
