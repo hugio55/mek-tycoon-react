@@ -1643,7 +1643,8 @@ export default defineSchema({
   })
     .index("by_wallet", ["walletAddress"])
     .index("by_wallet_and_time", ["walletAddress", "snapshotTime"])
-    .index("by_status", ["verificationStatus"]),
+    .index("by_status", ["verificationStatus"])
+    .index("by_snapshotTime", ["snapshotTime"]), // CRITICAL FIX: Index for efficient cleanup
 
   // Node Fee Configuration for Story Climb
   nodeFeeConfig: defineTable({
@@ -2933,6 +2934,7 @@ export default defineSchema({
 
     createdAt: v.number(),
     updatedAt: v.number(),
+    version: v.optional(v.number()), // CRITICAL FIX: Optimistic concurrency control
   })
     .index("by_imageKey", ["imageKey"]),
 
