@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import PowerSwitchToggle from '@/components/controls/PowerSwitchToggle';
 import HorizontalTimeline from '@/components/HorizontalTimeline';
 import { SPEAKER_ICON_STYLES, type SpeakerIconStyle } from '@/components/SpeakerIcons';
 
@@ -561,46 +560,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Sound Toggle - Above Phase Timeline */}
-          <div
-            className="flex flex-row items-center gap-3 mt-8 sm:mt-12 md:mt-16"
-            style={{
-              transform: `translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px)`
-            }}
-          >
-            <div
-              className={`${soundLabelColor} uppercase tracking-wider`}
-              style={{
-                fontFamily: soundLabelFont,
-                fontSize: `${soundLabelSize}px`,
-                transform: `translate(${soundLabelHorizontalOffset}px, ${soundLabelVerticalOffset}px)`
-              }}
-            >
-              soundwaves
-            </div>
-            <div className={powerButtonGlowEnabled ? "power-button-flash-glow" : ""}>
-              <PowerSwitchToggle
-                checked={audioPlaying}
-                onChange={handleAudioToggle}
-                className="w-16 h-16"
-                scale={powerButtonScale}
-                verticalOffset={0}
-              />
-            </div>
-          </div>
-
-          {/* Phase Timeline - Below Sound Toggle */}
-          <div className="w-full mt-8 sm:mt-12 md:mt-16 max-w-7xl">
-            <HorizontalTimeline
-              phaseHeaderFont={phaseHeaderFont}
-              phaseHeaderFontSize={phaseHeaderFontSize}
-              phaseHeaderColor={phaseHeaderColor}
-              phaseDescriptionFont={phaseDescriptionFont}
-              phaseDescriptionFontSize={phaseDescriptionFontSize}
-            />
-          </div>
-
-          {/* Speaker Button - Below Phase Timeline */}
+          {/* Speaker Button - Above Phase Timeline */}
           <button
             onClick={() => handleAudioToggle(!audioPlaying)}
             className={`
@@ -608,11 +568,11 @@ export default function LandingPage() {
               transition-all duration-500 ease-out
               hover:scale-110 active:scale-95
               cursor-pointer
+              mt-8 sm:mt-12 md:mt-16
               ${audioPlaying ? 'text-yellow-400' : 'text-gray-400'}
             `}
             aria-label={audioPlaying ? 'Mute audio' : 'Play audio'}
             style={{
-              marginTop: '-1rem',
               filter: audioPlaying
                 ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8))'
                 : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0))',
@@ -634,6 +594,17 @@ export default function LandingPage() {
               return <SelectedIcon size={58} isPlaying={audioPlaying} />;
             })()}
           </button>
+
+          {/* Phase Timeline - Below Speaker Button */}
+          <div className="w-full mt-8 sm:mt-12 md:mt-16 max-w-7xl">
+            <HorizontalTimeline
+              phaseHeaderFont={phaseHeaderFont}
+              phaseHeaderFontSize={phaseHeaderFontSize}
+              phaseHeaderColor={phaseHeaderColor}
+              phaseDescriptionFont={phaseDescriptionFont}
+              phaseDescriptionFontSize={phaseDescriptionFontSize}
+            />
+          </div>
         </div>
       </div>
 

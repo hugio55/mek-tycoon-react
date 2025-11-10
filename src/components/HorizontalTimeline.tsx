@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface TimelineItem {
   phase: string;
@@ -57,17 +57,40 @@ export default function HorizontalTimeline({
   phaseDescriptionFontSize = 16
 }: HorizontalTimelineProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle clicking outside to deselect
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setSelectedIndex(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handlePhaseClick = (index: number) => {
+    // Toggle: if clicking the same phase, deselect it
+    setSelectedIndex(selectedIndex === index ? null : index);
+  };
 
   return (
-    <div className="w-full h-[38vh] min-h-[280px] relative overflow-hidden">
+    <div ref={containerRef} className="w-full h-[38vh] min-h-[280px] relative overflow-hidden">
       <div className="absolute inset-0 flex">
         {timelineData.map((item, index) => {
           const isHovered = hoveredIndex === index;
-          const isAnyHovered = hoveredIndex !== null;
+          const isSelected = selectedIndex === index;
+          const isActive = isHovered || isSelected; // Active if hovered OR selected
+          const isAnyActive = hoveredIndex !== null || selectedIndex !== null;
 
           let widthClass = 'w-1/4';
-          if (isAnyHovered) {
-            if (isHovered) {
+          if (isAnyActive) {
+            if (isActive) {
               widthClass = 'w-[30%]';
             } else {
               widthClass = 'w-[23.33%]';
@@ -86,6 +109,7 @@ export default function HorizontalTimeline({
               `}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
+              onClick={() => handlePhaseClick(index)}
             >
               {/* Timeline Background Image with each phase having its own Mek image */}
               <div
