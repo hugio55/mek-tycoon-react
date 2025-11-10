@@ -41,6 +41,7 @@ const DEFAULT_CONFIG = {
   powerButtonVerticalOffset: 0,
   powerButtonHorizontalOffset: 0,
   powerButtonGlowEnabled: true,
+  speakerIconStyle: 'minimal' as 'minimal' | 'geometric' | 'bars' | 'hologram' | 'pulse',
 };
 
 export default function LandingDebugPage() {
@@ -855,6 +856,24 @@ export default function LandingDebugPage() {
               >
                 {config.powerButtonGlowEnabled ? 'Enabled' : 'Disabled'}
               </button>
+            </div>
+
+            {/* Speaker Icon Style */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Speaker Icon Style
+              </label>
+              <select
+                value={config.speakerIconStyle}
+                onChange={(e) => updateConfig('speakerIconStyle', e.target.value as any)}
+                className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-gray-300"
+              >
+                <option value="minimal">Minimal Wave</option>
+                <option value="geometric">Geometric</option>
+                <option value="bars">Sound Bars</option>
+                <option value="hologram">Futuristic</option>
+                <option value="pulse">Pulse Ring</option>
+              </select>
             </div>
           </div>
 
