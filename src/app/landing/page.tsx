@@ -686,7 +686,10 @@ export default function LandingPage() {
           </button>
 
           {/* Phase Timeline - Below Speaker Button */}
-          <div className="w-full mt-8 sm:mt-12 md:mt-16 max-w-7xl">
+          <div
+            className="w-full mt-8 sm:mt-12 md:mt-16 max-w-7xl"
+            style={{ transform: `translateY(${phaseColumnYOffset}px)` }}
+          >
             <HorizontalTimeline
               phaseHeaderFont={phaseHeaderFont}
               phaseHeaderFontSize={phaseHeaderFontSize}
