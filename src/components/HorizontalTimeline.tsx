@@ -247,7 +247,7 @@ export default function HorizontalTimeline({
               {/* Content - slides up on entrance, slides down on exit */}
               <div
                 className={`
-                  absolute bottom-0 left-0 right-0
+                  absolute bottom-0 left-0
                   p-8 md:p-12
                   z-20
                   ${isActive
@@ -259,8 +259,8 @@ export default function HorizontalTimeline({
                   transition: isActive
                     ? 'transform 0.4s ease-out 0.2s, opacity 0.3s ease-out 0.2s'
                     : 'transform 0.3s ease-in, opacity 0.2s ease-in',
-                  minWidth: '30%',
-                  width: '100%',
+                  width: '30vw',
+                  pointerEvents: 'none',
                 }}
               >
                 <h3

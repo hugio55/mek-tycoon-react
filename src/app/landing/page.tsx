@@ -569,9 +569,9 @@ export default function LandingPage() {
         WebkitOverflowScrolling: 'touch',
       }}
     >
-      {/* Scrolling background layer */}
+      {/* Fixed background layer */}
       <div
-        className="absolute inset-0 w-full h-full bg-black z-0"
+        className="fixed inset-0 w-full h-full bg-black z-0"
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: 'cover',
@@ -582,10 +582,10 @@ export default function LandingPage() {
         }}
       />
 
-      {/* Scrolling canvas layer */}
+      {/* Fixed canvas layer */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 w-full h-full z-[1] pointer-events-none"
+        className="fixed inset-0 w-full h-full z-[1] pointer-events-none"
         style={{ display: 'block', touchAction: 'none' }}
       />
 
