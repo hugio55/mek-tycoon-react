@@ -658,7 +658,7 @@ export default function LandingPage() {
           minHeight: '300vh'
         }}
       >
-        <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full max-w-7xl pb-[100vh]">
+        <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full pb-[100vh]">
           <div className="relative max-w-[80vw] max-h-[80vw]" style={{ width: `${logoSize}px`, height: `${logoSize}px` }}>
             <video
               src="/random-images/Everydays_00000.webm"
@@ -724,29 +724,33 @@ export default function LandingPage() {
               return <SelectedIcon size={58} isPlaying={audioPlaying} />;
             })()}
           </button>
-
-          {/* Phase Timeline - Below Speaker Button */}
-          <div
-            className="w-full mt-8 sm:mt-12 md:mt-16 max-w-7xl"
-            style={{ transform: `translateY(${phaseColumnYOffset}px)` }}
-          >
-            <HorizontalTimeline
-              phaseHeaderFont={phaseHeaderFont}
-              phaseHeaderFontSize={phaseHeaderFontSize}
-              phaseHeaderColor={phaseHeaderColor}
-              phaseDescriptionFont={phaseDescriptionFont}
-              phaseDescriptionFontSize={phaseDescriptionFontSize}
-              imageDarkness={phaseImageDarkening}
-              imageBlur={phaseBlurAmount}
-              imageBlurSelected={phaseBlurAmountSelected}
-              columnHeight={phaseColumnHeight}
-              fadePosition={phaseFadePosition}
-              imageBlendMode={phaseImageBlendMode}
-              hoverDarkenIntensity={phaseHoverDarkeningIntensity}
-              idleBackdropBlur={phaseIdleBackdropBlur}
-            />
-          </div>
         </div>
+      </div>
+
+      {/* Phase Timeline - Full Width, Outside Centered Container */}
+      <div
+        className="relative w-screen z-[20] mt-8 sm:mt-12 md:mt-16"
+        style={{
+          transform: `translateY(${phaseColumnYOffset}px)`,
+          marginLeft: 0,
+          marginRight: 0,
+        }}
+      >
+        <HorizontalTimeline
+          phaseHeaderFont={phaseHeaderFont}
+          phaseHeaderFontSize={phaseHeaderFontSize}
+          phaseHeaderColor={phaseHeaderColor}
+          phaseDescriptionFont={phaseDescriptionFont}
+          phaseDescriptionFontSize={phaseDescriptionFontSize}
+          imageDarkness={phaseImageDarkening}
+          imageBlur={phaseBlurAmount}
+          imageBlurSelected={phaseBlurAmountSelected}
+          columnHeight={phaseColumnHeight}
+          fadePosition={phaseFadePosition}
+          imageBlendMode={phaseImageBlendMode}
+          hoverDarkenIntensity={phaseHoverDarkeningIntensity}
+          idleBackdropBlur={phaseIdleBackdropBlur}
+        />
       </div>
 
     </div>
