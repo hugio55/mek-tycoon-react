@@ -17,9 +17,26 @@ type DesignVariation = 'modern' | 'industrial' | 'neon';
 
 interface PhaseCarouselProps {
   designVariation?: DesignVariation;
+  imageDarkness?: number; // 0-100
+  imageBlur?: number; // 0-20px
+  columnHeight?: number; // 200-800px
+  fadePosition?: number; // 0-100%
+  customImages?: {
+    phase1?: string;
+    phase2?: string;
+    phase3?: string;
+    phase4?: string;
+  };
 }
 
-export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarouselProps) {
+export default function PhaseCarousel({
+  designVariation = 'modern',
+  imageDarkness = 50,
+  imageBlur = 5,
+  columnHeight = 288,
+  fadePosition = 60,
+  customImages = {}
+}: PhaseCarouselProps) {
   // Load phase cards from Convex database
   const phasesData = useQuery(api.phaseCards.getAllPhaseCards);
   const phases = phasesData || [];
@@ -143,48 +160,57 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
       transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s',
     };
 
+    // Get custom image for this phase
+    const getPhaseImage = () => {
+      const phaseIndex = phases.findIndex(p => p._id === phase._id);
+      const imageKey = `phase${phaseIndex + 1}` as keyof typeof customImages;
+      return customImages[imageKey];
+    };
+
+    const phaseImage = getPhaseImage();
+
     // Variation-specific styles
     const getCardStyles = () => {
       switch (designVariation) {
         case 'modern':
           return {
-            container: `relative h-64 md:h-72 rounded-3xl overflow-hidden
+            container: `relative rounded-3xl overflow-hidden
                        bg-black/40
                        ${isCenter ? 'backdrop-blur-[40px]' : ''}
                        border border-white/[0.15]
                        ${isCenter ? 'hover:border-white/[0.25] hover:bg-black/50' : ''}
-                       transition-all duration-500 ease-out
+                       transition-all duration-300 ease-out
                        shadow-[0_8px_32px_rgba(0,0,0,0.3),0_0_1px_rgba(255,255,255,0.1)_inset]
                        ${isCenter ? 'hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_0_1px_rgba(255,255,255,0.15)_inset]' : ''}
                        group cursor-pointer
                        will-change-[transform,box-shadow]`,
             lockIcon: 'w-16 h-16 md:w-20 md:h-20 text-gray-400/30 mb-4 group-hover:text-gray-300/45 group-hover:scale-105 transition-all duration-700',
             title: `text-2xl md:text-3xl ${phase.locked ? 'text-gray-400/50 group-hover:text-gray-300/60' : 'bg-gradient-to-br from-white via-white/95 to-white/75 bg-clip-text text-transparent group-hover:from-white group-hover:via-white group-hover:to-white/85 drop-shadow-[0_2px_20px_rgba(255,255,255,0.15)]'} font-semibold tracking-tight transition-all duration-700`,
-            description: 'text-sm md:text-base text-gray-300/60 font-light tracking-wide leading-relaxed group-hover:text-gray-200/70 transition-colors duration-700',
+            description: 'text-sm md:text-base text-gray-300/60 font-light tracking-wide leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-[350ms]',
           };
 
         case 'industrial':
           return {
             container: `mek-card-industrial mek-border-sharp-gold
-                       relative h-64 md:h-72 overflow-hidden
+                       relative overflow-hidden
                        ${isCenter ? 'mek-glow-yellow' : ''}
-                       transition-all duration-500
+                       transition-all duration-300
                        group cursor-pointer`,
             lockIcon: 'w-16 h-16 md:w-20 md:h-20 text-yellow-500/20 mb-4 transition-all duration-500',
             title: `text-2xl md:text-3xl font-bold tracking-wider uppercase ${phase.locked ? 'text-gray-500' : 'text-yellow-400 mek-text-shadow'} transition-all duration-500`,
-            description: 'text-sm md:text-base text-gray-400 tracking-wide uppercase transition-all duration-500',
+            description: 'text-sm md:text-base text-gray-400 tracking-wide uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-[350ms]',
           };
 
         case 'neon':
           return {
             container: `neon-edge-card
-                       relative h-64 md:h-72 border-2
+                       relative border-2
                        ${isCenter ? 'border-cyan-400/50 shadow-[0_0_30px_rgba(0,212,255,0.3)]' : 'border-cyan-400/20'}
-                       transition-all duration-500
+                       transition-all duration-300
                        group cursor-pointer`,
             lockIcon: 'w-16 h-16 md:w-20 md:h-20 text-cyan-400/30 mb-4 transition-all duration-500',
             title: `text-2xl md:text-3xl font-bold tracking-wider ${phase.locked ? 'text-gray-500' : 'text-cyan-400'} transition-all duration-500`,
-            description: 'text-sm md:text-base text-cyan-300/60 tracking-wide transition-all duration-500',
+            description: 'text-sm md:text-base text-cyan-300/60 tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-[350ms]',
           };
       }
     };
@@ -203,7 +229,26 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
           perspective: 1000,
         }}
       >
-        <div className={styles.container}>
+        <div className={styles.container} style={{ height: `${columnHeight}px` }}>
+          {/* Background Image with Effects */}
+          {phaseImage && (
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
+                backgroundImage: `url(${phaseImage})`,
+                filter: `brightness(${1 - imageDarkness / 100}) blur(${!isCenter ? imageBlur : 0}px)`,
+                transition: 'filter 0.3s ease-out',
+              }}
+            />
+          )}
+
+          {/* Gradient Fade Overlay */}
+          <div
+            className="absolute inset-0 bg-gradient-to-b from-transparent to-black pointer-events-none"
+            style={{
+              background: `linear-gradient(to bottom, transparent 0%, transparent ${fadePosition}%, black 100%)`,
+            }}
+          />
           {phase.locked ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-5">
               <Lock className={styles.lockIcon} />
@@ -254,7 +299,7 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
   // Show loading state while data is fetching
   if (!phasesData) {
     return (
-      <div className="w-full py-8 md:py-12 relative select-none flex items-center justify-center h-64 md:h-72">
+      <div className="w-full py-8 md:py-12 relative select-none flex items-center justify-center" style={{ height: `${columnHeight}px` }}>
         <div className="text-gray-400">Loading phases...</div>
       </div>
     );
@@ -263,7 +308,7 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
   // Show empty state if no phases exist
   if (phases.length === 0) {
     return (
-      <div className="w-full py-8 md:py-12 relative select-none flex items-center justify-center h-64 md:h-72">
+      <div className="w-full py-8 md:py-12 relative select-none flex items-center justify-center" style={{ height: `${columnHeight}px` }}>
         <div className="text-gray-400 text-center">
           <p>No phases configured yet.</p>
           <p className="text-sm mt-2">Visit /landing-debug to add phase cards.</p>
@@ -275,10 +320,10 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
   return (
     <div className="w-full py-8 md:py-12 relative select-none" style={{ touchAction: 'pan-y' }}>
       {/* Carousel Container */}
-      <div className="relative max-w-5xl mx-auto px-4">
+      <div className="relative max-w-5xl mx-auto px-4" style={{ height: `${columnHeight}px` }}>
         {/* Background layer for blur effect - colorful gradient behind cards */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-[80%] max-w-2xl h-64 md:h-72 rounded-3xl bg-gradient-to-br from-blue-500/30 via-purple-500/30 to-pink-500/30 blur-xl opacity-40" />
+          <div className="w-[80%] max-w-2xl rounded-3xl bg-gradient-to-br from-blue-500/30 via-purple-500/30 to-pink-500/30 blur-xl opacity-40" style={{ height: `${columnHeight}px` }} />
         </div>
 
         {/* Left Arrow */}
@@ -294,8 +339,9 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
         {/* Carousel Track */}
         <div
           ref={trackRef}
-          className="relative w-full h-64 md:h-72 cursor-grab active:cursor-grabbing"
+          className="relative w-full cursor-grab active:cursor-grabbing"
           style={{
+            height: `${columnHeight}px`,
             transform: 'translateZ(0)',
             willChange: 'transform',
             touchAction: 'pan-y',

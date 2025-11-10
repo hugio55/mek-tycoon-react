@@ -49,6 +49,15 @@ const DEFAULT_CONFIG = {
   powerButtonHorizontalOffset: 0,
   powerButtonGlowEnabled: true,
   speakerIconStyle: 'minimal' as 'minimal' | 'geometric' | 'bars' | 'hologram' | 'pulse',
+  // PhaseCarousel Controls
+  phaseImageDarkening: 30,
+  phaseBlurAmount: 20,
+  phaseColumnHeight: 288,
+  phaseFadePosition: 50,
+  phaseImage1: '',
+  phaseImage2: '',
+  phaseImage3: '',
+  phaseImage4: '',
 };
 
 export default function LandingDebugPage() {
@@ -951,6 +960,155 @@ export default function LandingDebugPage() {
                 <option value="hologram">Futuristic</option>
                 <option value="pulse">Pulse Ring</option>
               </select>
+            </div>
+          </div>
+
+          {/* PhaseCarousel Visual Controls Section */}
+          <div className="bg-gray-800 border border-cyan-500 rounded p-3">
+            <h2 className="text-sm font-semibold text-cyan-400 mb-2 pb-1 border-b border-cyan-700">
+              Phase Carousel Visual Controls
+            </h2>
+
+            {/* Image Darkening */}
+            <div className="mb-2">
+              <label className="block text-xs text-cyan-300 mb-1">
+                Image Darkening (overlay)
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.phaseImageDarkening}
+                onChange={(e) => updateConfig('phaseImageDarkening', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-cyan-400 text-center mt-0.5">
+                {config.phaseImageDarkening}% darkness
+              </div>
+            </div>
+
+            {/* Blur Amount */}
+            <div className="mb-2">
+              <label className="block text-xs text-cyan-300 mb-1">
+                Blur Amount (non-selected cards)
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                step="1"
+                value={config.phaseBlurAmount}
+                onChange={(e) => updateConfig('phaseBlurAmount', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-cyan-400 text-center mt-0.5">
+                {config.phaseBlurAmount}px blur
+              </div>
+            </div>
+
+            {/* Column Height */}
+            <div className="mb-2">
+              <label className="block text-xs text-cyan-300 mb-1">
+                Card Height
+              </label>
+              <input
+                type="range"
+                min="200"
+                max="500"
+                step="8"
+                value={config.phaseColumnHeight}
+                onChange={(e) => updateConfig('phaseColumnHeight', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-cyan-400 text-center mt-0.5">
+                {config.phaseColumnHeight}px
+              </div>
+            </div>
+
+            {/* Opacity Fade Position */}
+            <div className="mb-2">
+              <label className="block text-xs text-cyan-300 mb-1">
+                Fade Start Position (vertical)
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.phaseFadePosition}
+                onChange={(e) => updateConfig('phaseFadePosition', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-cyan-400 text-center mt-0.5">
+                {config.phaseFadePosition}% from top
+              </div>
+            </div>
+          </div>
+
+          {/* Phase Image URLs Section */}
+          <div className="bg-gray-800 border border-cyan-500 rounded p-3">
+            <h2 className="text-sm font-semibold text-cyan-400 mb-2 pb-1 border-b border-cyan-700">
+              Phase Background Images
+            </h2>
+            <p className="text-xs text-cyan-300/70 mb-2">
+              Paste image URLs for each phase card
+            </p>
+
+            {/* Phase I */}
+            <div className="mb-2">
+              <label className="block text-xs text-cyan-300 mb-1">
+                Phase I Image URL
+              </label>
+              <input
+                type="text"
+                value={config.phaseImage1}
+                onChange={(e) => updateConfig('phaseImage1', e.target.value)}
+                placeholder="https://..."
+                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500"
+              />
+            </div>
+
+            {/* Phase II */}
+            <div className="mb-2">
+              <label className="block text-xs text-cyan-300 mb-1">
+                Phase II Image URL
+              </label>
+              <input
+                type="text"
+                value={config.phaseImage2}
+                onChange={(e) => updateConfig('phaseImage2', e.target.value)}
+                placeholder="https://..."
+                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500"
+              />
+            </div>
+
+            {/* Phase III */}
+            <div className="mb-2">
+              <label className="block text-xs text-cyan-300 mb-1">
+                Phase III Image URL
+              </label>
+              <input
+                type="text"
+                value={config.phaseImage3}
+                onChange={(e) => updateConfig('phaseImage3', e.target.value)}
+                placeholder="https://..."
+                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500"
+              />
+            </div>
+
+            {/* Phase IV */}
+            <div className="mb-2">
+              <label className="block text-xs text-cyan-300 mb-1">
+                Phase IV Image URL
+              </label>
+              <input
+                type="text"
+                value={config.phaseImage4}
+                onChange={(e) => updateConfig('phaseImage4', e.target.value)}
+                placeholder="https://..."
+                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500"
+              />
             </div>
           </div>
 
