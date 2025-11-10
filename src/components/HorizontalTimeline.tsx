@@ -79,6 +79,11 @@ export default function HorizontalTimeline({
   const [timelineData, setTimelineData] = useState<TimelineItem[]>(defaultTimelineData);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Debug logging when prop changes
+  useEffect(() => {
+    console.log('[🔍BLUR] HorizontalTimeline received prop:', idleBackdropBlur);
+  }, [idleBackdropBlur]);
+
   // Load phase images from localStorage
   useEffect(() => {
     const loadConfig = () => {
@@ -138,6 +143,17 @@ export default function HorizontalTimeline({
     setSelectedIndex(selectedIndex === index ? null : index);
   };
 
+  // Debug log hover state changes
+  const handleHoverEnter = (index: number) => {
+    console.log('[🔍BLUR] Mouse entered column', index, '- idleBackdropBlur prop value:', idleBackdropBlur);
+    setHoveredIndex(index);
+  };
+
+  const handleHoverLeave = () => {
+    console.log('[🔍BLUR] Mouse left column');
+    setHoveredIndex(null);
+  };
+
   return (
     <div
       ref={containerRef}
@@ -160,6 +176,12 @@ export default function HorizontalTimeline({
             }
           }
 
+          // Calculate blur value
+          const blurValue = isActive && idleBackdropBlur > 0 ? `blur(${idleBackdropBlur}px)` : 'none';
+
+          // Debug log for each column render
+          console.log(`[🔍BLUR] Column ${index} render: isActive=${isActive}, blurValue="${blurValue}", idleBackdropBlur=${idleBackdropBlur}`);
+
           return (
             <div
               key={index}
@@ -170,16 +192,10 @@ export default function HorizontalTimeline({
                 cursor-pointer
               `}
               style={{
-                transition: 'width 0.5s ease-in-out, backdrop-filter 0.5s ease-in-out',
-                backdropFilter: isActive && idleBackdropBlur > 0
-                  ? `blur(${idleBackdropBlur}px)`
-                  : 'none',
-                WebkitBackdropFilter: isActive && idleBackdropBlur > 0
-                  ? `blur(${idleBackdropBlur}px)`
-                  : 'none',
+                transition: 'width 0.5s ease-in-out',
               }}
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(null)}
+              onMouseEnter={() => handleHoverEnter(index)}
+              onMouseLeave={handleHoverLeave}
               onClick={() => handlePhaseClick(index)}
             >
               {/* Blend Mode Wrapper - contains image + darkening overlay so they blend together */}
@@ -220,6 +236,19 @@ export default function HorizontalTimeline({
                 `}
                 style={{
                   background: `linear-gradient(to top, rgba(0,0,0,${0.9 * (hoverDarkenIntensity / 100)}) 0%, rgba(0,0,0,${0.6 * (hoverDarkenIntensity / 100)}) 30%, rgba(0,0,0,${0.2 * (hoverDarkenIntensity / 100)}) 50%, transparent 70%)`
+                }}
+              />
+
+              {/* Frosted Glass Backdrop Blur Overlay - blurs the layers beneath it */}
+              <div
+                className={`
+                  absolute inset-0
+                  transition-all duration-500
+                  ${isActive ? 'opacity-100' : 'opacity-0'}
+                `}
+                style={{
+                  backdropFilter: blurValue,
+                  WebkitBackdropFilter: blurValue,
                 }}
               />
 
