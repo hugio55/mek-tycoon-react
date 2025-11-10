@@ -266,7 +266,7 @@ export default function PhaseCarousel({
               className="absolute inset-0 bg-cover bg-center transition-all duration-300"
               style={{
                 backgroundImage: `url(${phaseImage})`,
-                filter: `brightness(${1 - config.phaseImageDarkening / 100}) blur(${!isCenter ? config.phaseBlurAmount : 0}px)`,
+                filter: `brightness(${1 - config.phaseImageDarkening / 100}) blur(${isCenter ? config.phaseBlurAmount : 0}px)`,
               }}
             />
           )}
