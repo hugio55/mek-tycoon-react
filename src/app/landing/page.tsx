@@ -51,8 +51,10 @@ const DEFAULT_CONFIG = {
   soundLabelSize: 16,
   soundLabelColor: 'text-yellow-400/90',
   soundLabelVerticalOffset: 0,
+  soundLabelHorizontalOffset: 0,
   powerButtonScale: 1,
   powerButtonVerticalOffset: 0,
+  powerButtonHorizontalOffset: 0,
 };
 
 export default function LandingPage() {
@@ -103,10 +105,12 @@ export default function LandingPage() {
   const [soundLabelSize, setSoundLabelSize] = useState(DEFAULT_CONFIG.soundLabelSize);
   const [soundLabelColor, setSoundLabelColor] = useState(DEFAULT_CONFIG.soundLabelColor);
   const [soundLabelVerticalOffset, setSoundLabelVerticalOffset] = useState(DEFAULT_CONFIG.soundLabelVerticalOffset);
+  const [soundLabelHorizontalOffset, setSoundLabelHorizontalOffset] = useState(DEFAULT_CONFIG.soundLabelHorizontalOffset);
 
   // Power button controls
   const [powerButtonScale, setPowerButtonScale] = useState(DEFAULT_CONFIG.powerButtonScale);
   const [powerButtonVerticalOffset, setPowerButtonVerticalOffset] = useState(DEFAULT_CONFIG.powerButtonVerticalOffset);
+  const [powerButtonHorizontalOffset, setPowerButtonHorizontalOffset] = useState(DEFAULT_CONFIG.powerButtonHorizontalOffset);
 
 
   // Load config from localStorage and listen for changes from debug page
@@ -142,8 +146,10 @@ export default function LandingPage() {
           setSoundLabelSize(config.soundLabelSize ?? DEFAULT_CONFIG.soundLabelSize);
           setSoundLabelColor(config.soundLabelColor ?? DEFAULT_CONFIG.soundLabelColor);
           setSoundLabelVerticalOffset(config.soundLabelVerticalOffset ?? DEFAULT_CONFIG.soundLabelVerticalOffset);
+          setSoundLabelHorizontalOffset(config.soundLabelHorizontalOffset ?? DEFAULT_CONFIG.soundLabelHorizontalOffset);
           setPowerButtonScale(config.powerButtonScale ?? DEFAULT_CONFIG.powerButtonScale);
           setPowerButtonVerticalOffset(config.powerButtonVerticalOffset ?? DEFAULT_CONFIG.powerButtonVerticalOffset);
+          setPowerButtonHorizontalOffset(config.powerButtonHorizontalOffset ?? DEFAULT_CONFIG.powerButtonHorizontalOffset);
         } catch (e) {
           console.error('Failed to load debug config:', e);
         }
@@ -504,15 +510,21 @@ export default function LandingPage() {
           </div>
 
           {/* Sound Toggle - Top Right Corner (Fixed Position) */}
-          <div className="fixed top-4 right-4 z-[30] flex flex-row items-center gap-3">
+          <div
+            className="fixed top-4 right-4 z-[30] flex flex-row items-center gap-3"
+            style={{
+              transform: `translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px)`
+            }}
+          >
             <div
               className={`${soundLabelColor} uppercase tracking-wider`}
               style={{
                 fontFamily: soundLabelFont,
                 fontSize: `${soundLabelSize}px`,
+                transform: `translate(${soundLabelHorizontalOffset}px, ${soundLabelVerticalOffset}px)`
               }}
             >
-              aural
+              soundwaves
             </div>
             <div className="power-button-pulse">
               <PowerSwitchToggle
@@ -520,7 +532,7 @@ export default function LandingPage() {
                 onChange={handleAudioToggle}
                 className="w-16 h-16"
                 scale={powerButtonScale}
-                verticalOffset={powerButtonVerticalOffset}
+                verticalOffset={0}
               />
             </div>
           </div>

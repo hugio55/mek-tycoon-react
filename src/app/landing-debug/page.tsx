@@ -31,10 +31,12 @@ const DEFAULT_CONFIG = {
   soundLabelSize: 16,
   soundLabelColor: 'text-yellow-400/90',
   soundLabelVerticalOffset: 0,
+  soundLabelHorizontalOffset: 0,
   motionBlurEnabled2: false,
   blurIntensity2: 50,
   powerButtonScale: 1,
   powerButtonVerticalOffset: 0,
+  powerButtonHorizontalOffset: 0,
 };
 
 export default function LandingDebugPage() {
@@ -596,23 +598,43 @@ export default function LandingDebugPage() {
 
             {/* Vertical Offset (Sound Label Only) */}
             {selectedTypographyElement === 'soundLabel' && (
-              <div className="mb-2">
-                <label className="block text-xs text-gray-300 mb-1">
-                  Vertical Offset
-                </label>
-                <input
-                  type="range"
-                  min="-50"
-                  max="50"
-                  step="1"
-                  value={config.soundLabelVerticalOffset}
-                  onChange={(e) => updateConfig('soundLabelVerticalOffset', parseInt(e.target.value))}
-                  className="w-full"
-                />
-                <div className="text-xs text-gray-400 text-center mt-0.5">
-                  {config.soundLabelVerticalOffset}px
+              <>
+                <div className="mb-2">
+                  <label className="block text-xs text-gray-300 mb-1">
+                    Vertical Offset
+                  </label>
+                  <input
+                    type="range"
+                    min="-50"
+                    max="50"
+                    step="1"
+                    value={config.soundLabelVerticalOffset}
+                    onChange={(e) => updateConfig('soundLabelVerticalOffset', parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-gray-400 text-center mt-0.5">
+                    {config.soundLabelVerticalOffset}px
+                  </div>
                 </div>
-              </div>
+
+                <div className="mb-2">
+                  <label className="block text-xs text-gray-300 mb-1">
+                    Horizontal Offset
+                  </label>
+                  <input
+                    type="range"
+                    min="-100"
+                    max="100"
+                    step="1"
+                    value={config.soundLabelHorizontalOffset}
+                    onChange={(e) => updateConfig('soundLabelHorizontalOffset', parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-gray-400 text-center mt-0.5">
+                    {config.soundLabelHorizontalOffset}px
+                  </div>
+                </div>
+              </>
             )}
 
             {/* Preview Text */}
@@ -637,7 +659,7 @@ export default function LandingDebugPage() {
                       fontSize: `${config.soundLabelSize}px`
                     }}
                   >
-                    sound
+                    soundwaves
                   </p>
                 </div>
               )}
@@ -704,7 +726,7 @@ export default function LandingDebugPage() {
             {/* Power Button Vertical Offset */}
             <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">
-                Vertical Offset
+                Button Vertical Offset
               </label>
               <input
                 type="range"
@@ -717,6 +739,25 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.powerButtonVerticalOffset}px
+              </div>
+            </div>
+
+            {/* Power Button Horizontal Offset */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Button Horizontal Offset
+              </label>
+              <input
+                type="range"
+                min="-100"
+                max="100"
+                step="1"
+                value={config.powerButtonHorizontalOffset}
+                onChange={(e) => updateConfig('powerButtonHorizontalOffset', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.powerButtonHorizontalOffset}px
               </div>
             </div>
           </div>
