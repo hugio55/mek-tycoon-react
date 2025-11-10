@@ -138,7 +138,9 @@ export default function LandingDebugPage() {
   // Save config to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-    // Dispatch storage event to notify other tabs
+    // Dispatch custom event to notify components in same tab
+    window.dispatchEvent(new Event('mek-landing-config-updated'));
+    // Also dispatch storage event for other tabs (standard behavior)
     window.dispatchEvent(new Event('storage'));
   }, [config]);
 
@@ -192,7 +194,9 @@ export default function LandingDebugPage() {
     // Ensure config is saved to localStorage (already happens automatically, but this is explicit)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
 
-    // Dispatch storage event to notify other tabs
+    // Dispatch custom event to notify components in same tab
+    window.dispatchEvent(new Event('mek-landing-config-updated'));
+    // Also dispatch storage event for other tabs (standard behavior)
     window.dispatchEvent(new Event('storage'));
 
     // Brief saving state

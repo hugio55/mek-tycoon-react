@@ -66,11 +66,21 @@ export default function PhaseCarousel({
 
     loadConfig();
 
-    // Listen for storage changes from debug page
+    // Listen for storage changes from other tabs
     const handleStorageChange = () => loadConfig();
     window.addEventListener('storage', handleStorageChange);
 
-    return () => window.removeEventListener('storage', handleStorageChange);
+    // Listen for custom event for same-tab updates
+    const handleConfigUpdate = () => {
+      console.log('[🎯CAROUSEL] Received config update event, reloading...');
+      loadConfig();
+    };
+    window.addEventListener('mek-config-update', handleConfigUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('mek-config-update', handleConfigUpdate);
+    };
   }, []);
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -196,7 +206,9 @@ export default function PhaseCarousel({
     const getPhaseImage = () => {
       const phaseOrder = phase.order;
       const imageKey = `phaseImage${phaseOrder}` as keyof typeof config;
-      return config[imageKey];
+      const imagePath = config[imageKey];
+      console.log(`[🎯CAROUSEL] Phase "${phase.title}" (order ${phaseOrder}) → imageKey: ${imageKey} → path: ${imagePath || 'NONE'}`);
+      return imagePath;
     };
 
     const phaseImage = getPhaseImage();
@@ -218,7 +230,7 @@ export default function PhaseCarousel({
                        will-change-[transform,box-shadow]`,
             lockIcon: 'w-16 h-16 md:w-20 md:h-20 text-gray-400/30 mb-4 group-hover:text-gray-300/45 group-hover:scale-105 transition-all duration-700',
             title: `text-2xl md:text-3xl ${phase.locked ? 'text-gray-400/50 group-hover:text-gray-300/60' : 'bg-gradient-to-br from-white via-white/95 to-white/75 bg-clip-text text-transparent group-hover:from-white group-hover:via-white group-hover:to-white/85 drop-shadow-[0_2px_20px_rgba(255,255,255,0.15)]'} font-semibold tracking-tight transition-all duration-700`,
-            description: 'text-sm md:text-base text-gray-300/60 font-light tracking-wide leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-[350ms]',
+            description: 'text-sm md:text-base text-gray-300/60 font-light tracking-wide leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:delay-[450ms] delay-0',
           };
 
         case 'industrial':
