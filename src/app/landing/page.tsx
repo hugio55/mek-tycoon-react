@@ -202,6 +202,7 @@ export default function LandingPage() {
           setPhaseBlurAmountSelected(config.phaseBlurAmountSelected ?? DEFAULT_CONFIG.phaseBlurAmountSelected);
           setPhaseColumnHeight(config.phaseColumnHeight ?? DEFAULT_CONFIG.phaseColumnHeight);
           setPhaseFadePosition(config.phaseFadePosition ?? DEFAULT_CONFIG.phaseFadePosition);
+          setPhaseImageBlendMode(config.phaseImageBlendMode ?? DEFAULT_CONFIG.phaseImageBlendMode);
           // Note: phaseImage1-4 not loaded here - PhaseCarousel reads directly from localStorage
         } catch (e) {
           console.error('Failed to load debug config:', e);
@@ -633,6 +634,7 @@ export default function LandingPage() {
               imageBlurSelected={phaseBlurAmountSelected}
               columnHeight={phaseColumnHeight}
               fadePosition={phaseFadePosition}
+              imageBlendMode={phaseImageBlendMode}
             />
           </div>
         </div>

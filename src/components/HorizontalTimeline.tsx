@@ -21,6 +21,7 @@ interface HorizontalTimelineProps {
   imageBlurSelected?: number; // Blur amount for the selected/active card
   columnHeight?: number;
   fadePosition?: number;
+  imageBlendMode?: 'normal' | 'screen' | 'lighten' | 'lighter';
 }
 
 const STORAGE_KEY = 'mek-landing-debug-config';
@@ -66,7 +67,8 @@ export default function HorizontalTimeline({
   imageBlur = 20,
   imageBlurSelected = 5,
   columnHeight = 288,
-  fadePosition = 50
+  fadePosition = 50,
+  imageBlendMode = 'normal'
 }: HorizontalTimelineProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -181,6 +183,7 @@ export default function HorizontalTimeline({
                   maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                   WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                   filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected : imageBlur}px)`,
+                  mixBlendMode: imageBlendMode,
                 }}
               />
 
