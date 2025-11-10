@@ -171,10 +171,10 @@ export default function HorizontalTimeline({
               `}
               style={{
                 transition: 'width 0.5s ease-in-out, backdrop-filter 0.5s ease-in-out',
-                backdropFilter: !isActive && idleBackdropBlur > 0
+                backdropFilter: isActive && idleBackdropBlur > 0
                   ? `blur(${idleBackdropBlur}px)`
                   : 'none',
-                WebkitBackdropFilter: !isActive && idleBackdropBlur > 0
+                WebkitBackdropFilter: isActive && idleBackdropBlur > 0
                   ? `blur(${idleBackdropBlur}px)`
                   : 'none',
               }}
@@ -182,7 +182,7 @@ export default function HorizontalTimeline({
               onMouseLeave={() => setHoveredIndex(null)}
               onClick={() => handlePhaseClick(index)}
             >
-              {/* Blend Mode Wrapper - contains image + overlays so entire composition blends */}
+              {/* Blend Mode Wrapper - contains image + darkening overlay so they blend together */}
               <div
                 className="absolute inset-0"
                 style={{
@@ -208,19 +208,20 @@ export default function HorizontalTimeline({
                     opacity: imageDarkness / 100
                   }}
                 />
-
-                {/* Dark Gradient Overlay - appears on hover/click, concentrated at bottom */}
-                <div
-                  className={`
-                    absolute inset-0
-                    transition-opacity duration-500
-                    ${isActive ? 'opacity-100' : 'opacity-0'}
-                  `}
-                  style={{
-                    background: `linear-gradient(to top, rgba(0,0,0,${0.9 * (hoverDarkenIntensity / 100)}) 0%, rgba(0,0,0,${0.6 * (hoverDarkenIntensity / 100)}) 30%, rgba(0,0,0,${0.2 * (hoverDarkenIntensity / 100)}) 50%, transparent 70%)`
-                  }}
-                />
               </div>
+
+              {/* Dark Gradient Overlay - appears on hover/click, concentrated at bottom */}
+              {/* Outside blend mode wrapper so it's not affected by lightening blend modes */}
+              <div
+                className={`
+                  absolute inset-0
+                  transition-opacity duration-500
+                  ${isActive ? 'opacity-100' : 'opacity-0'}
+                `}
+                style={{
+                  background: `linear-gradient(to top, rgba(0,0,0,${0.9 * (hoverDarkenIntensity / 100)}) 0%, rgba(0,0,0,${0.6 * (hoverDarkenIntensity / 100)}) 30%, rgba(0,0,0,${0.2 * (hoverDarkenIntensity / 100)}) 50%, transparent 70%)`
+                }}
+              />
 
               {/* Phase Label - always visible, centered */}
               <div className="absolute inset-0 flex items-center justify-center z-10">
