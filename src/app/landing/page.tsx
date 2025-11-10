@@ -226,8 +226,25 @@ export default function LandingPage() {
       loadConfig();
     };
 
+    // Listen for postMessage from parent (iframe scenario)
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'mek-landing-config-updated') {
+        loadConfig();
+      }
+    };
+
+    // Listen for both storage events:
+    // 1. 'storage' - fires in OTHER tabs when localStorage changes
+    // 2. 'mek-landing-config-updated' - custom event fired by debug page in SAME tab
+    // 3. 'message' - postMessage from parent window (when in iframe)
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('mek-landing-config-updated', handleStorageChange);
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('mek-landing-config-updated', handleStorageChange);
+      window.removeEventListener('message', handleMessage);
+    };
   }, []);
 
   // Initialize audio on component mount

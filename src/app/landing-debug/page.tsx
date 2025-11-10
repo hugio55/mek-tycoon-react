@@ -145,7 +145,13 @@ export default function LandingDebugPage() {
     window.dispatchEvent(new Event('mek-landing-config-updated'));
     // Also dispatch storage event for other tabs (standard behavior)
     window.dispatchEvent(new Event('storage'));
-  }, [config]);
+
+    // If in split-view mode, notify the iframe
+    const iframe = document.querySelector('iframe[title="Landing Page Preview"]') as HTMLIFrameElement;
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage({ type: 'mek-landing-config-updated' }, '*');
+    }
+  }, [config, viewMode]);
 
   // Helper function to convert Windows absolute paths to web-relative paths
   const convertToWebPath = (path: string): string => {
