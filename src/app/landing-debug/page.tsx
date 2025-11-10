@@ -312,9 +312,17 @@ export default function LandingDebugPage() {
       <div className={viewMode === 'split-view' ? 'w-1/2 bg-gray-800 p-3 overflow-y-auto border-r border-gray-700' : 'max-w-5xl mx-auto'}>
         {/* Header */}
         <div className="mb-3">
-          <h1 className="text-lg font-semibold text-gray-100 mb-1">
-            Landing Page Debug Controls
-          </h1>
+          <div className="flex items-center justify-between mb-1">
+            <h1 className="text-lg font-semibold text-gray-100">
+              Landing Page Debug Controls
+            </h1>
+            {lastSaveTime && (
+              <div className="flex items-center gap-2 text-xs text-green-400">
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                Auto-saved at {lastSaveTime}
+              </div>
+            )}
+          </div>
           <p className="text-xs text-gray-400">
             Open <code className="bg-gray-700 px-1 py-0.5 rounded text-gray-200 text-xs">/landing</code> in another tab to see changes in real-time
           </p>
