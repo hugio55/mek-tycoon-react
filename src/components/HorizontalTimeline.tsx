@@ -157,7 +157,7 @@ export default function HorizontalTimeline({
   return (
     <div
       ref={containerRef}
-      className="w-full relative overflow-hidden bg-black"
+      className="w-full relative overflow-hidden"
       style={{ height: `${columnHeight}px` }}
     >
       <div
@@ -214,20 +214,12 @@ export default function HorizontalTimeline({
               onMouseLeave={handleHoverLeave}
               onClick={() => handlePhaseClick(index)}
             >
-              {/* Base background layer - much lighter for screen mode */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundColor: imageBlendMode === 'screen' ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.6)',
-                }}
-              />
-
-              {/* Timeline Background Image with blend mode applied directly */}
+              {/* Timeline Background Image - bottommost layer, blends with page background */}
               <div
                 className="absolute inset-0 bg-cover bg-center transition-all duration-500"
                 style={{
                   backgroundImage: `url(${item.imageUrl})`,
-                  opacity: imageBlendMode === 'screen' ? 0.75 : 0.4,
+                  opacity: imageBlendMode === 'screen' ? 0.6 : 0.4,
                   maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                   WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                   filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected : imageBlur}px)`,
