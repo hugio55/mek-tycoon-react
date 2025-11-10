@@ -126,19 +126,17 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
       console.warn('NMKR webhook received without HMAC signature');
     }
 
-    // Extract data from NMKR payload
-    const {
-      EventType,
-      ProjectUid,
-      TxHash,
-      NotificationSaleNfts,
-      Price,
-      ReceiverStakeAddress,
-      ReceiverAddress,
-    } = payload;
+    // Extract data from NMKR payload (avoid destructuring to prevent webpack loader conflicts)
+    const EventType = payload.EventType;
+    const ProjectUid = payload.ProjectUid;
+    const txHash = payload.TxHash;
+    const NotificationSaleNfts = payload.NotificationSaleNfts;
+    const Price = payload.Price;
+    const ReceiverStakeAddress = payload.ReceiverStakeAddress;
+    const ReceiverAddress = payload.ReceiverAddress;
 
     // Validate required fields
-    if (!TxHash || !ProjectUid) {
+    if (!txHash || !ProjectUid) {
       console.log('Test webhook or missing required fields');
       return;
     }

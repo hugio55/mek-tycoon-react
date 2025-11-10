@@ -175,6 +175,7 @@ export default function LandingPage() {
   // Debug logging for phaseIdleBackdropBlur changes
   useEffect(() => {
     console.log('[🔍BLUR] landing/page.tsx state updated:', phaseIdleBackdropBlur);
+    console.log('[🔍BLUR] Stack trace:', new Error().stack);
   }, [phaseIdleBackdropBlur]);
 
   // Description glass card controls
@@ -253,6 +254,7 @@ export default function LandingPage() {
       if (stored) {
         try {
           const config = JSON.parse(stored);
+          console.log('[🔍STORAGE] Full config loaded from localStorage:', config);
           setStarScale(config.starScale ?? DEFAULT_CONFIG.starScale);
           setStarSpeed(config.starSpeed ?? DEFAULT_CONFIG.starSpeed);
           setStarFrequency(config.starFrequency ?? DEFAULT_CONFIG.starFrequency);
@@ -302,7 +304,9 @@ export default function LandingPage() {
           setPhaseImageBlendMode(config.phaseImageBlendMode ?? DEFAULT_CONFIG.phaseImageBlendMode);
           setPhaseHoverDarkeningIntensity(config.phaseHoverDarkeningIntensity ?? DEFAULT_CONFIG.phaseHoverDarkeningIntensity);
           const backdropBlurValue = config.phaseIdleBackdropBlur ?? DEFAULT_CONFIG.phaseIdleBackdropBlur;
-          console.log('[🔍BLUR] loading from localStorage:', backdropBlurValue);
+          console.log('[🔍BLUR] Raw value from config:', config.phaseIdleBackdropBlur);
+          console.log('[🔍BLUR] After nullish coalescing:', backdropBlurValue);
+          console.log('[🔍BLUR] Setting state to:', backdropBlurValue);
           setPhaseIdleBackdropBlur(backdropBlurValue);
           setPhaseColumnYOffset(config.phaseColumnYOffset ?? DEFAULT_CONFIG.phaseColumnYOffset);
           setDescriptionCardBlur(config.descriptionCardBlur ?? DEFAULT_CONFIG.descriptionCardBlur);
