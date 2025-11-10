@@ -282,6 +282,8 @@ export default function PhaseCarousel({
               style={{
                 backgroundImage: `url(${phaseImage})`,
                 filter: `brightness(${1 - config.phaseImageDarkening / 100}) blur(${isCenter ? config.phaseBlurAmountSelected : config.phaseBlurAmount}px)`,
+                transform: 'scale(1.1)',
+                transformOrigin: 'center',
               }}
             />
           )}

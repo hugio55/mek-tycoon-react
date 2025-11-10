@@ -214,6 +214,8 @@ export default function HorizontalTimeline({
                     maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                     WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                     filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected : imageBlur}px)`,
+                    transform: `scale(${1 + ((isActive ? imageBlurSelected : imageBlur) * 0.015)})`,
+                    transformOrigin: 'center',
                   }}
                 />
 
