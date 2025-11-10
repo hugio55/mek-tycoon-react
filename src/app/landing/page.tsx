@@ -78,6 +78,39 @@ export default function LandingPage() {
   const [soundLabelFont, setSoundLabelFont] = useState('Orbitron');
   const [soundLabelSize, setSoundLabelSize] = useState(16);
 
+  // Debug panel controls
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
+
+  // Function to update config and persist to localStorage
+  const updateConfig = (key: keyof typeof DEFAULT_CONFIG, value: any) => {
+    const newConfig = {
+      starScale,
+      starSpeed,
+      starFrequency,
+      starScale2,
+      starSpeed2,
+      starFrequency2,
+      logoSize,
+      logoYPosition,
+      selectedFont,
+      descriptionFontSize,
+      bgYPosition,
+      motionBlurEnabled,
+      blurIntensity,
+      descriptionColor,
+      designVariation,
+      [key]: value,
+    };
+
+    // Update state based on key
+    if (key === 'designVariation') setDesignVariation(value);
+    if (key === 'bgYPosition') setBgYPosition(value);
+
+    // Persist to localStorage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newConfig));
+    window.dispatchEvent(new Event('storage'));
+  };
+
   // Load config from localStorage and listen for changes from debug page
   useEffect(() => {
     const loadConfig = () => {
@@ -400,6 +433,8 @@ export default function LandingPage() {
       style={{
         margin: 0,
         padding: 0,
+        touchAction: 'pan-y',
+        WebkitOverflowScrolling: 'touch',
       }}
     >
       {/* Fixed background layer */}
@@ -410,6 +445,8 @@ export default function LandingPage() {
           backgroundSize: 'cover',
           backgroundPosition: `center ${bgYPosition}%`,
           backgroundRepeat: 'no-repeat',
+          touchAction: 'none',
+          pointerEvents: 'none',
         }}
       />
 
@@ -417,13 +454,71 @@ export default function LandingPage() {
       <canvas
         ref={canvasRef}
         className="fixed inset-0 w-full h-full z-[1] pointer-events-none"
-        style={{ display: 'block' }}
+        style={{ display: 'block', touchAction: 'none' }}
       />
 
+      {/* Debug Panel Toggle Button */}
+      <button
+        onClick={() => setShowDebugPanel(!showDebugPanel)}
+        className="fixed top-4 right-4 z-[9999] px-4 py-2 bg-black/80 border-2 border-cyan-500/50 rounded hover:bg-cyan-500/20 hover:border-cyan-500 transition-all pointer-events-auto"
+      >
+        <span className="text-cyan-400 text-xs font-bold uppercase tracking-wider">
+          {showDebugPanel ? 'Hide Debug' : 'Show Debug'}
+        </span>
+      </button>
+
+      {/* Right Debug Panel - Design Variation & Background Controls */}
+      {showDebugPanel && (
+        <div className="fixed right-4 top-20 z-[9999] w-72 bg-black/95 border-2 border-yellow-500/50 rounded-lg shadow-2xl pointer-events-auto max-h-[calc(100vh-100px)] overflow-y-auto">
+          <div className="p-4">
+            <h3 className="text-yellow-400 text-xs font-bold uppercase tracking-wider mb-3 border-b border-yellow-500/30 pb-2">
+              Design Controls
+            </h3>
+
+            {/* Design Variation */}
+            <div className="mb-4">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-2">
+                Phase Carousel Design
+              </label>
+              <div className="space-y-2">
+                {(['modern', 'industrial', 'neon'] as const).map((variation) => (
+                  <button
+                    key={variation}
+                    onClick={() => updateConfig('designVariation', variation)}
+                    className={`w-full px-3 py-2 text-xs rounded transition-all font-orbitron uppercase tracking-wide ${
+                      designVariation === variation
+                        ? 'bg-yellow-500/30 border-2 border-yellow-400 text-yellow-300'
+                        : 'bg-black/50 border border-yellow-500/30 text-yellow-500/70 hover:bg-yellow-500/10 hover:border-yellow-400/50'
+                    }`}
+                  >
+                    {variation}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Background Y Position */}
+            <div className="mb-4">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                BG Y-Pos: {bgYPosition}%
+              </label>
+              <input
+                type="range"
+                min="-100"
+                max="100"
+                step="1"
+                value={bgYPosition}
+                onChange={(e) => updateConfig('bgYPosition', parseInt(e.target.value))}
+                className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Scrollable content layer */}
-      <div className="relative flex justify-center z-[20] px-4 py-8" style={{ alignItems: 'flex-start', paddingTop: `${logoYPosition}vh` }}>
-        <div className="flex flex-col items-center gap-4 sm:gap-6 md:gap-8 w-full max-w-7xl pb-16">
+      <div className="relative flex justify-center z-[20] px-4 py-8 min-h-[200vh]" style={{ alignItems: 'flex-start', paddingTop: `${logoYPosition}vh` }}>
+        <div className="flex flex-col items-center gap-4 sm:gap-6 md:gap-8 w-full max-w-7xl pb-64">
           <div className="relative max-w-[80vw] max-h-[80vw]" style={{ width: `${logoSize}px`, height: `${logoSize}px` }}>
             <Image
               src="/logo/multi-color-big-3.webp"
@@ -445,7 +540,7 @@ export default function LandingPage() {
           </div>
 
           {/* Sound Toggle - Centered Below Description */}
-          <div className="flex flex-col items-center gap-2 mt-4">
+          <div className="flex flex-col items-center gap-0.5 mt-4">
             <PowerSwitchToggle
               checked={audioPlaying}
               onChange={handleAudioToggle}
