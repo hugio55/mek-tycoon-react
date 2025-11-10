@@ -633,6 +633,10 @@ export default function LandingPage() {
               phaseHeaderColor={phaseHeaderColor}
               phaseDescriptionFont={phaseDescriptionFont}
               phaseDescriptionFontSize={phaseDescriptionFontSize}
+              imageDarkness={phaseImageDarkening}
+              imageBlur={phaseBlurAmount}
+              columnHeight={phaseColumnHeight}
+              fadePosition={phaseFadePosition}
             />
           </div>
 
