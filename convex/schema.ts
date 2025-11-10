@@ -3597,4 +3597,16 @@ export default defineSchema({
     landingPageEnabled: v.boolean(), // Controls whether root (/) shows landing page or game
     ignoreLocalhostRule: v.optional(v.boolean()), // When true, localhost acts like production (shows landing page when enabled)
   }),
+
+  // ===== LANDING PAGE PHASE CARDS =====
+  // Phase cards displayed on landing page carousel
+  phaseCards: defineTable({
+    title: v.string(), // Phase title (e.g., "Phase I", "Phase II")
+    description: v.optional(v.string()), // Phase description text
+    locked: v.boolean(), // Whether the phase is locked/coming soon
+    order: v.number(), // Display order (lower number = earlier in carousel)
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_order", ["order"]),
 });

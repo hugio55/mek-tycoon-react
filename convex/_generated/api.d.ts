@@ -173,6 +173,7 @@ import type * as normalMekRewards from "../normalMekRewards.js";
 import type * as offlineAccumulation from "../offlineAccumulation.js";
 import type * as optimizedQueries from "../optimizedQueries.js";
 import type * as overlays from "../overlays.js";
+import type * as phaseCards from "../phaseCards.js";
 import type * as publicCorporation from "../publicCorporation.js";
 import type * as runStoryClimbMigration from "../runStoryClimbMigration.js";
 import type * as saves from "../saves.js";
@@ -402,6 +403,7 @@ declare const fullApi: ApiFromModules<{
   offlineAccumulation: typeof offlineAccumulation;
   optimizedQueries: typeof optimizedQueries;
   overlays: typeof overlays;
+  phaseCards: typeof phaseCards;
   publicCorporation: typeof publicCorporation;
   runStoryClimbMigration: typeof runStoryClimbMigration;
   saves: typeof saves;
