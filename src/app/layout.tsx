@@ -171,13 +171,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" style={{ margin: 0, padding: 0, width: '100vw', overflowX: 'hidden' }} suppressHydrationWarning>
+    <html lang="en" style={{ margin: 0, padding: 0, width: '100vw', height: 'auto', overflowX: 'hidden', overflowY: 'auto' }} suppressHydrationWarning>
       <head>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} ${inter.variable} ${cinzel.variable} ${lora.variable} ${rajdhani.variable} ${spaceGrotesk.variable} ${exo2.variable} ${sairaCondensed.variable} ${teko.variable} ${abel.variable} ${josefinSans.variable} ${economica.variable} ${adventPro.variable} ${archivoNarrow.variable} ${electrolize.variable} ${audiowide.variable} ${michroma.variable} ${play.variable} ${quantico.variable} ${saira.variable} antialiased min-h-screen overflow-x-hidden`}
-        style={{ backgroundColor: '#0a0a0a', width: '100vw', maxWidth: '100vw', margin: 0, padding: 0 }}
+        className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} ${inter.variable} ${cinzel.variable} ${lora.variable} ${rajdhani.variable} ${spaceGrotesk.variable} ${exo2.variable} ${sairaCondensed.variable} ${teko.variable} ${abel.variable} ${josefinSans.variable} ${economica.variable} ${adventPro.variable} ${archivoNarrow.variable} ${electrolize.variable} ${audiowide.variable} ${michroma.variable} ${play.variable} ${quantico.variable} ${saira.variable} antialiased min-h-screen overflow-x-hidden overflow-y-auto`}
+        style={{ backgroundColor: '#0a0a0a', width: '100vw', maxWidth: '100vw', height: 'auto', margin: 0, padding: 0 }}
       >
         {/* Global background with animated stars and particles */}
         <div style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', overflow: 'hidden', zIndex: -1 }}>
