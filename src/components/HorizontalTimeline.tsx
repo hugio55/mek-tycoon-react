@@ -23,7 +23,9 @@ interface HorizontalTimelineProps {
   fadePosition?: number;
 }
 
-const timelineData: TimelineItem[] = [
+const STORAGE_KEY = 'mek-landing-debug-config';
+
+const defaultTimelineData: TimelineItem[] = [
   {
     phase: 'Phase I',
     title: 'Foundation',
@@ -68,7 +70,48 @@ export default function HorizontalTimeline({
 }: HorizontalTimelineProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [timelineData, setTimelineData] = useState<TimelineItem[]>(defaultTimelineData);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Load phase images from localStorage
+  useEffect(() => {
+    const loadConfig = () => {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          const updatedData = defaultTimelineData.map((item, index) => {
+            const imageKey = `phaseImage${index + 1}` as keyof typeof parsed;
+            const customImage = parsed[imageKey];
+            return {
+              ...item,
+              imageUrl: customImage || item.imageUrl
+            };
+          });
+          setTimelineData(updatedData);
+          console.log('[🎯TIMELINE] Loaded phase images from config');
+        } catch (e) {
+          console.error('Failed to parse debug config:', e);
+        }
+      }
+    };
+
+    loadConfig();
+
+    // Listen for config updates from landing-debug
+    const handleConfigUpdate = () => {
+      console.log('[🎯TIMELINE] Received config update event, reloading...');
+      loadConfig();
+    };
+
+    window.addEventListener('storage', handleConfigUpdate);
+    window.addEventListener('mek-landing-config-updated', handleConfigUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleConfigUpdate);
+      window.removeEventListener('mek-landing-config-updated', handleConfigUpdate);
+    };
+  }, []);
 
   // Handle clicking outside to deselect
   useEffect(() => {

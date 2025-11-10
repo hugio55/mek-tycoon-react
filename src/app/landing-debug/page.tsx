@@ -59,6 +59,7 @@ const DEFAULT_CONFIG = {
   phaseImage2: '',
   phaseImage3: '',
   phaseImage4: '',
+  phaseImageBlendMode: 'normal' as 'normal' | 'screen' | 'lighten' | 'lighter',
 };
 
 type ConfigType = typeof DEFAULT_CONFIG;
@@ -1114,6 +1115,31 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-cyan-400 text-center mt-0.5">
                 {config.phaseFadePosition}% from top
+              </div>
+            </div>
+
+            {/* Image Blend Mode */}
+            <div className="mb-2">
+              <label className="block text-xs text-cyan-300 mb-1">
+                Image Blend Mode
+              </label>
+              <div className="grid grid-cols-2 gap-1">
+                {(['normal', 'screen', 'lighten', 'lighter'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => updateConfig('phaseImageBlendMode', mode)}
+                    className={`px-2 py-1 text-xs rounded ${
+                      config.phaseImageBlendMode === mode
+                        ? 'bg-cyan-900/50 border border-cyan-700 text-cyan-200'
+                        : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    {mode === 'lighter' ? 'Add' : mode.charAt(0).toUpperCase() + mode.slice(1)}
+                  </button>
+                ))}
+              </div>
+              <div className="text-xs text-cyan-400 text-center mt-1">
+                Current: {config.phaseImageBlendMode === 'lighter' ? 'Add' : config.phaseImageBlendMode}
               </div>
             </div>
           </div>

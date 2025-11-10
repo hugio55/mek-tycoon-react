@@ -242,7 +242,7 @@ export default function PhaseCarousel({
                        group cursor-pointer`,
             lockIcon: 'w-16 h-16 md:w-20 md:h-20 text-yellow-500/20 mb-4 transition-all duration-500',
             title: `text-2xl md:text-3xl font-bold tracking-wider uppercase ${phase.locked ? 'text-gray-500' : 'text-yellow-400 mek-text-shadow'} transition-all duration-500`,
-            description: 'text-sm md:text-base text-gray-400 tracking-wide uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-[350ms]',
+            description: 'text-sm md:text-base text-gray-400 tracking-wide uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:delay-[450ms] delay-0',
           };
 
         case 'neon':
@@ -254,7 +254,7 @@ export default function PhaseCarousel({
                        group cursor-pointer`,
             lockIcon: 'w-16 h-16 md:w-20 md:h-20 text-cyan-400/30 mb-4 transition-all duration-500',
             title: `text-2xl md:text-3xl font-bold tracking-wider ${phase.locked ? 'text-gray-500' : 'text-cyan-400'} transition-all duration-500`,
-            description: 'text-sm md:text-base text-cyan-300/60 tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-[350ms]',
+            description: 'text-sm md:text-base text-cyan-300/60 tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:delay-[450ms] delay-0',
           };
       }
     };

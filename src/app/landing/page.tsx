@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import HorizontalTimeline from '@/components/HorizontalTimeline';
 import { SPEAKER_ICON_STYLES, type SpeakerIconStyle } from '@/components/SpeakerIcons';
 
@@ -69,6 +68,7 @@ const DEFAULT_CONFIG = {
   phaseBlurAmountSelected: 5,
   phaseColumnHeight: 288,
   phaseFadePosition: 50,
+  phaseImageBlendMode: 'normal' as 'normal' | 'screen' | 'lighten' | 'lighter',
   // Note: phaseImage1-4 not in DEFAULT_CONFIG - PhaseCarousel manages these
 };
 
@@ -148,6 +148,7 @@ export default function LandingPage() {
   const [phaseBlurAmountSelected, setPhaseBlurAmountSelected] = useState(DEFAULT_CONFIG.phaseBlurAmountSelected);
   const [phaseColumnHeight, setPhaseColumnHeight] = useState(DEFAULT_CONFIG.phaseColumnHeight);
   const [phaseFadePosition, setPhaseFadePosition] = useState(DEFAULT_CONFIG.phaseFadePosition);
+  const [phaseImageBlendMode, setPhaseImageBlendMode] = useState(DEFAULT_CONFIG.phaseImageBlendMode);
   // Note: phaseImage1-4 not needed here - PhaseCarousel reads directly from localStorage
 
   // Load config from localStorage and listen for changes from debug page
@@ -560,12 +561,13 @@ export default function LandingPage() {
       <div className="relative flex justify-center z-[20] px-4 py-8" style={{ alignItems: 'flex-start', paddingTop: `${logoYPosition}vh`, minHeight: '300vh' }}>
         <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full max-w-7xl pb-[100vh]">
           <div className="relative max-w-[80vw] max-h-[80vw]" style={{ width: `${logoSize}px`, height: `${logoSize}px` }}>
-            <Image
-              src="/logo/multi-color-big-3.webp"
-              alt="Mek Tycoon"
-              fill
-              className="object-contain"
-              priority
+            <video
+              src="/random-images/Everydays_00000.webm"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-contain"
             />
           </div>
 
