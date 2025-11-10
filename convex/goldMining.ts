@@ -362,6 +362,7 @@ export const getGoldMiningData = query({
 export const updateGoldCheckpoint = mutation({
   args: {
     walletAddress: v.string(),
+    skipIfRecentUpdate: v.optional(v.boolean()), // CRITICAL FIX: Debounce checkpoints
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -373,6 +374,24 @@ export const updateGoldCheckpoint = mutation({
 
     if (!existing) {
       throw new Error("Gold mining data not found for wallet");
+    }
+
+    // CRITICAL FIX: Skip update if last update was less than 30 seconds ago
+    // This reduces transaction throughput pressure from frequent checkpoints
+    if (args.skipIfRecentUpdate) {
+      const timeSinceLastUpdate = now - (existing.updatedAt || 0);
+      const DEBOUNCE_THRESHOLD = 30 * 1000; // 30 seconds
+
+      if (timeSinceLastUpdate < DEBOUNCE_THRESHOLD) {
+        const secondsRemaining = Math.ceil((DEBOUNCE_THRESHOLD - timeSinceLastUpdate) / 1000);
+        console.log(`[GOLD-CHECKPOINT-FIX] Skipping checkpoint - last update was ${Math.floor(timeSinceLastUpdate / 1000)}s ago (debounce: ${secondsRemaining}s remaining)`);
+        return {
+          success: true,
+          skipped: true,
+          accumulatedGold: existing.accumulatedGold || 0,
+          reason: `Checkpoint debounced - last update was ${Math.floor(timeSinceLastUpdate / 1000)}s ago`,
+        };
+      }
     }
 
     // VERIFICATION CHECK: Only accumulate gold if verified
