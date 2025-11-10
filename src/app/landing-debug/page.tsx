@@ -22,12 +22,17 @@ const DEFAULT_CONFIG = {
   blurIntensity: 50,
   descriptionColor: 'text-yellow-400/90',
   designVariation: 'modern' as 'modern' | 'industrial' | 'neon',
+  soundLabelFont: 'Orbitron',
+  soundLabelSize: 16,
+  soundLabelColor: 'text-yellow-400/90',
+  soundLabelVerticalOffset: 0,
 };
 
 export default function LandingDebugPage() {
   const [config, setConfig] = useState(DEFAULT_CONFIG);
   const [viewMode, setViewMode] = useState<'controls-only' | 'split-view'>('controls-only');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'soundLabel'>('description');
 
   // Available fonts for testing
   const fonts = [
@@ -392,16 +397,34 @@ export default function LandingDebugPage() {
               Typography
             </h2>
 
+            {/* Element Selector Dropdown */}
+            <div className="mb-4">
+              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+                Edit Element
+              </label>
+              <select
+                value={selectedTypographyElement}
+                onChange={(e) => setSelectedTypographyElement(e.target.value as 'description' | 'soundLabel')}
+                className="w-full bg-black/90 border-2 border-yellow-500/70 rounded px-3 py-2 text-yellow-400 text-xs font-orbitron uppercase cursor-pointer hover:border-yellow-400 transition-all focus:outline-none focus:border-yellow-400"
+              >
+                <option value="description">Description Text</option>
+                <option value="soundLabel">Sound Label</option>
+              </select>
+            </div>
+
             {/* Font Family */}
             <div className="mb-3">
               <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
                 Font Family
               </label>
               <select
-                value={config.selectedFont}
-                onChange={(e) => updateConfig('selectedFont', e.target.value)}
+                value={selectedTypographyElement === 'description' ? config.selectedFont : config.soundLabelFont}
+                onChange={(e) => updateConfig(
+                  selectedTypographyElement === 'description' ? 'selectedFont' : 'soundLabelFont',
+                  e.target.value
+                )}
                 className="w-full bg-black/90 border border-yellow-500/50 rounded px-2 py-1.5 text-yellow-400 text-xs font-orbitron uppercase cursor-pointer hover:border-yellow-400/70 transition-all focus:outline-none focus:border-yellow-400"
-                style={{ fontFamily: config.selectedFont }}
+                style={{ fontFamily: selectedTypographyElement === 'description' ? config.selectedFont : config.soundLabelFont }}
               >
                 {fonts.map((font) => (
                   <option key={font} value={font} style={{ fontFamily: font }}>
@@ -411,33 +434,39 @@ export default function LandingDebugPage() {
               </select>
             </div>
 
-            {/* Description Font Size */}
+            {/* Font Size */}
             <div className="mb-3">
               <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
-                Description Font Size
+                Font Size
               </label>
               <input
                 type="range"
                 min="10"
                 max="32"
                 step="1"
-                value={config.descriptionFontSize}
-                onChange={(e) => updateConfig('descriptionFontSize', parseInt(e.target.value))}
+                value={selectedTypographyElement === 'description' ? config.descriptionFontSize : config.soundLabelSize}
+                onChange={(e) => updateConfig(
+                  selectedTypographyElement === 'description' ? 'descriptionFontSize' : 'soundLabelSize',
+                  parseInt(e.target.value)
+                )}
                 className="w-full debug-slider"
               />
               <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
-                {config.descriptionFontSize}px
+                {selectedTypographyElement === 'description' ? config.descriptionFontSize : config.soundLabelSize}px
               </div>
             </div>
 
-            {/* Description Color */}
+            {/* Color */}
             <div className="mb-3">
               <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
-                Description Color
+                Color
               </label>
               <select
-                value={config.descriptionColor}
-                onChange={(e) => updateConfig('descriptionColor', e.target.value)}
+                value={selectedTypographyElement === 'description' ? config.descriptionColor : config.soundLabelColor}
+                onChange={(e) => updateConfig(
+                  selectedTypographyElement === 'description' ? 'descriptionColor' : 'soundLabelColor',
+                  e.target.value
+                )}
                 className="w-full bg-black/90 border border-yellow-500/50 rounded px-2 py-1.5 text-yellow-400 text-xs font-orbitron uppercase cursor-pointer hover:border-yellow-400/70 transition-all focus:outline-none focus:border-yellow-400"
               >
                 {colorOptions.map((color) => (
@@ -448,18 +477,53 @@ export default function LandingDebugPage() {
               </select>
             </div>
 
+            {/* Vertical Offset (Sound Label Only) */}
+            {selectedTypographyElement === 'soundLabel' && (
+              <div className="mb-3">
+                <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+                  Vertical Offset
+                </label>
+                <input
+                  type="range"
+                  min="-50"
+                  max="50"
+                  step="1"
+                  value={config.soundLabelVerticalOffset}
+                  onChange={(e) => updateConfig('soundLabelVerticalOffset', parseInt(e.target.value))}
+                  className="w-full debug-slider"
+                />
+                <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
+                  {config.soundLabelVerticalOffset}px
+                </div>
+              </div>
+            )}
+
             {/* Preview Text */}
             <div className="mt-4 p-3 bg-black/50 rounded border border-yellow-500/20">
               <p className="text-[10px] text-yellow-500/50 mb-1.5 font-orbitron uppercase">Preview:</p>
-              <p
-                className={config.descriptionColor}
-                style={{
-                  fontFamily: config.selectedFont,
-                  fontSize: `${config.descriptionFontSize}px`
-                }}
-              >
-                A futuristic idle tycoon game featuring collectible Mek NFTs.
-              </p>
+              {selectedTypographyElement === 'description' ? (
+                <p
+                  className={config.descriptionColor}
+                  style={{
+                    fontFamily: config.selectedFont,
+                    fontSize: `${config.descriptionFontSize}px`
+                  }}
+                >
+                  A futuristic idle tycoon game featuring collectible Mek NFTs.
+                </p>
+              ) : (
+                <div className="flex justify-center">
+                  <p
+                    className={`${config.soundLabelColor} uppercase tracking-wider`}
+                    style={{
+                      fontFamily: config.soundLabelFont,
+                      fontSize: `${config.soundLabelSize}px`
+                    }}
+                  >
+                    sound
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

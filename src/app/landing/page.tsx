@@ -40,6 +40,10 @@ const DEFAULT_CONFIG = {
   blurIntensity: 50,
   descriptionColor: 'text-yellow-400/90',
   designVariation: 'modern' as 'modern' | 'industrial' | 'neon',
+  soundLabelFont: 'Orbitron',
+  soundLabelSize: 16,
+  soundLabelColor: 'text-yellow-400/90',
+  soundLabelVerticalOffset: 0,
 };
 
 export default function LandingPage() {
@@ -75,8 +79,10 @@ export default function LandingPage() {
 
   // Audio controls
   const [audioPlaying, setAudioPlaying] = useState(false);
-  const [soundLabelFont, setSoundLabelFont] = useState('Orbitron');
-  const [soundLabelSize, setSoundLabelSize] = useState(16);
+  const [soundLabelFont, setSoundLabelFont] = useState(DEFAULT_CONFIG.soundLabelFont);
+  const [soundLabelSize, setSoundLabelSize] = useState(DEFAULT_CONFIG.soundLabelSize);
+  const [soundLabelColor, setSoundLabelColor] = useState(DEFAULT_CONFIG.soundLabelColor);
+  const [soundLabelVerticalOffset, setSoundLabelVerticalOffset] = useState(DEFAULT_CONFIG.soundLabelVerticalOffset);
 
   // Debug panel controls
   const [showDebugPanel, setShowDebugPanel] = useState(false);
@@ -133,6 +139,10 @@ export default function LandingPage() {
           setBlurIntensity(config.blurIntensity ?? DEFAULT_CONFIG.blurIntensity);
           setDescriptionColor(config.descriptionColor ?? DEFAULT_CONFIG.descriptionColor);
           setDesignVariation(config.designVariation ?? DEFAULT_CONFIG.designVariation);
+          setSoundLabelFont(config.soundLabelFont ?? DEFAULT_CONFIG.soundLabelFont);
+          setSoundLabelSize(config.soundLabelSize ?? DEFAULT_CONFIG.soundLabelSize);
+          setSoundLabelColor(config.soundLabelColor ?? DEFAULT_CONFIG.soundLabelColor);
+          setSoundLabelVerticalOffset(config.soundLabelVerticalOffset ?? DEFAULT_CONFIG.soundLabelVerticalOffset);
         } catch (e) {
           console.error('Failed to load debug config:', e);
         }
@@ -530,8 +540,12 @@ export default function LandingPage() {
               className="w-24 h-24"
             />
             <div
-              className="text-yellow-400/90 uppercase tracking-wider"
-              style={{ fontFamily: soundLabelFont, fontSize: `${soundLabelSize}px` }}
+              className={`${soundLabelColor} uppercase tracking-wider`}
+              style={{
+                fontFamily: soundLabelFont,
+                fontSize: `${soundLabelSize}px`,
+                marginTop: `${soundLabelVerticalOffset}px`
+              }}
             >
               sound
             </div>
