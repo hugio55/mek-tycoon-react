@@ -160,7 +160,10 @@ export default function HorizontalTimeline({
       className="w-full relative overflow-hidden"
       style={{ height: `${columnHeight}px` }}
     >
-      <div className="absolute inset-0 flex">
+      <div
+        className="absolute inset-0 flex"
+        style={{ gap: 0 }}
+      >
         {timelineData.map((item, index) => {
           const isHovered = hoveredIndex === index;
           const isSelected = selectedIndex === index;
@@ -168,18 +171,18 @@ export default function HorizontalTimeline({
           const isAnyActive = hoveredIndex !== null || selectedIndex !== null;
 
           let widthStyle: string;
-          let marginStyle: string = '-1px'; // Default: Overlap to bridge sub-pixel gaps
+          let marginStyle: string = '-3px'; // Aggressive overlap to completely eliminate gaps
 
           if (isAnyActive) {
             if (isActive) {
-              widthStyle = 'calc(30% + 2px)'; // Add 2px to compensate for negative margins
+              widthStyle = 'calc(30% + 6px)'; // Add 6px to compensate for negative margins (3px × 2 sides)
             } else {
-              widthStyle = 'calc(70% / 3)';
-              marginStyle = '-1px'; // Negative margin to overlap and eliminate gaps
+              widthStyle = 'calc(70% / 3 + 2px)';
+              marginStyle = '-3px'; // Aggressive negative margin to overlap
             }
           } else {
-            widthStyle = 'calc(25% + 1px)'; // Add 1px to compensate for -1px margin
-            marginStyle = '-1px'; // Always overlap to prevent gaps
+            widthStyle = 'calc(25% + 2px)'; // Add 2px to compensate for -3px margin
+            marginStyle = '-3px'; // Always overlap aggressively
           }
 
           // Calculate blur value
@@ -200,6 +203,9 @@ export default function HorizontalTimeline({
                 width: widthStyle,
                 marginLeft: index === 0 ? '0' : marginStyle, // First card has no left margin
                 transition: 'width 0.5s ease-in-out, margin 0.5s ease-in-out',
+                border: 'none',
+                outline: 'none',
+                boxShadow: 'none', // No box-shadow to prevent visible seams
               }}
               onMouseEnter={() => handleHoverEnter(index)}
               onMouseLeave={handleHoverLeave}
