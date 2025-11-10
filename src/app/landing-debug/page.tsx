@@ -643,7 +643,7 @@ export default function LandingDebugPage() {
               </label>
               <input
                 type="range"
-                min="-100"
+                min="-200"
                 max="100"
                 step="1"
                 value={config.bgYPosition}
