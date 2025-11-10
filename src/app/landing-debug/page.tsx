@@ -1015,7 +1015,7 @@ export default function LandingDebugPage() {
               <input
                 type="range"
                 min="200"
-                max="500"
+                max="800"
                 step="8"
                 value={config.phaseColumnHeight}
                 onChange={(e) => updateConfig('phaseColumnHeight', parseInt(e.target.value))}

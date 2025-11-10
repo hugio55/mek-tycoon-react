@@ -65,10 +65,10 @@ const DEFAULT_CONFIG = {
   powerButtonHorizontalOffset: 0,
   powerButtonGlowEnabled: true,
   speakerIconStyle: 'minimal' as SpeakerIconStyle,
-  phaseImageDarkness: 50,
-  phaseImageBlur: 5,
+  phaseImageDarkening: 30,
+  phaseBlurAmount: 20,
   phaseColumnHeight: 288,
-  phaseFadePosition: 60,
+  phaseFadePosition: 50,
   phaseImage1: '',
   phaseImage2: '',
   phaseImage3: '',
@@ -146,8 +146,8 @@ export default function LandingPage() {
   const [speakerIconStyle, setSpeakerIconStyle] = useState<SpeakerIconStyle>(DEFAULT_CONFIG.speakerIconStyle);
 
   // Phase Carousel controls
-  const [phaseImageDarkness, setPhaseImageDarkness] = useState(DEFAULT_CONFIG.phaseImageDarkness);
-  const [phaseImageBlur, setPhaseImageBlur] = useState(DEFAULT_CONFIG.phaseImageBlur);
+  const [phaseImageDarkening, setPhaseImageDarkening] = useState(DEFAULT_CONFIG.phaseImageDarkening);
+  const [phaseBlurAmount, setPhaseBlurAmount] = useState(DEFAULT_CONFIG.phaseBlurAmount);
   const [phaseColumnHeight, setPhaseColumnHeight] = useState(DEFAULT_CONFIG.phaseColumnHeight);
   const [phaseFadePosition, setPhaseFadePosition] = useState(DEFAULT_CONFIG.phaseFadePosition);
   const [phaseImage1, setPhaseImage1] = useState(DEFAULT_CONFIG.phaseImage1);
@@ -201,8 +201,8 @@ export default function LandingPage() {
           setPowerButtonHorizontalOffset(config.powerButtonHorizontalOffset ?? DEFAULT_CONFIG.powerButtonHorizontalOffset);
           setPowerButtonGlowEnabled(config.powerButtonGlowEnabled ?? DEFAULT_CONFIG.powerButtonGlowEnabled);
           setSpeakerIconStyle(config.speakerIconStyle ?? DEFAULT_CONFIG.speakerIconStyle);
-          setPhaseImageDarkness(config.phaseImageDarkness ?? DEFAULT_CONFIG.phaseImageDarkness);
-          setPhaseImageBlur(config.phaseImageBlur ?? DEFAULT_CONFIG.phaseImageBlur);
+          setPhaseImageDarkening(config.phaseImageDarkening ?? DEFAULT_CONFIG.phaseImageDarkening);
+          setPhaseBlurAmount(config.phaseBlurAmount ?? DEFAULT_CONFIG.phaseBlurAmount);
           setPhaseColumnHeight(config.phaseColumnHeight ?? DEFAULT_CONFIG.phaseColumnHeight);
           setPhaseFadePosition(config.phaseFadePosition ?? DEFAULT_CONFIG.phaseFadePosition);
           setPhaseImage1(config.phaseImage1 ?? DEFAULT_CONFIG.phaseImage1);
@@ -632,6 +632,23 @@ export default function LandingPage() {
               phaseHeaderColor={phaseHeaderColor}
               phaseDescriptionFont={phaseDescriptionFont}
               phaseDescriptionFontSize={phaseDescriptionFontSize}
+            />
+          </div>
+
+          {/* Phase Carousel - Alternative Phase Display */}
+          <div className="w-full mt-8 sm:mt-12 md:mt-16 max-w-7xl">
+            <PhaseCarousel
+              designVariation={designVariation}
+              imageDarkness={phaseImageDarkening}
+              imageBlur={phaseBlurAmount}
+              columnHeight={phaseColumnHeight}
+              fadePosition={phaseFadePosition}
+              customImages={{
+                phase1: phaseImage1,
+                phase2: phaseImage2,
+                phase3: phaseImage3,
+                phase4: phaseImage4,
+              }}
             />
           </div>
         </div>

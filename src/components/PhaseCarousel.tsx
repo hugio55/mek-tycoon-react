@@ -1,7 +1,7 @@
 'use client';
 
 import { Lock, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 
@@ -17,29 +17,59 @@ type DesignVariation = 'modern' | 'industrial' | 'neon';
 
 interface PhaseCarouselProps {
   designVariation?: DesignVariation;
-  imageDarkness?: number; // 0-100
-  imageBlur?: number; // 0-20px
-  columnHeight?: number; // 200-800px
-  fadePosition?: number; // 0-100%
-  customImages?: {
-    phase1?: string;
-    phase2?: string;
-    phase3?: string;
-    phase4?: string;
-  };
 }
 
+const STORAGE_KEY = 'mek-landing-debug-config';
+
 export default function PhaseCarousel({
-  designVariation = 'modern',
-  imageDarkness = 50,
-  imageBlur = 5,
-  columnHeight = 288,
-  fadePosition = 60,
-  customImages = {}
+  designVariation = 'modern'
 }: PhaseCarouselProps) {
   // Load phase cards from Convex database
   const phasesData = useQuery(api.phaseCards.getAllPhaseCards);
   const phases = phasesData || [];
+
+  // Load debug config from localStorage with defaults
+  const [config, setConfig] = useState({
+    phaseImageDarkening: 30,
+    phaseBlurAmount: 20,
+    phaseColumnHeight: 288,
+    phaseFadePosition: 50,
+    phaseImage1: '',
+    phaseImage2: '',
+    phaseImage3: '',
+    phaseImage4: '',
+  });
+
+  useEffect(() => {
+    const loadConfig = () => {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          setConfig({
+            phaseImageDarkening: parsed.phaseImageDarkening ?? 30,
+            phaseBlurAmount: parsed.phaseBlurAmount ?? 20,
+            phaseColumnHeight: parsed.phaseColumnHeight ?? 288,
+            phaseFadePosition: parsed.phaseFadePosition ?? 50,
+            phaseImage1: parsed.phaseImage1 ?? '',
+            phaseImage2: parsed.phaseImage2 ?? '',
+            phaseImage3: parsed.phaseImage3 ?? '',
+            phaseImage4: parsed.phaseImage4 ?? '',
+          });
+        } catch (e) {
+          console.error('Failed to parse debug config:', e);
+        }
+      }
+    };
+
+    loadConfig();
+
+    // Listen for storage changes from debug page
+    const handleStorageChange = () => loadConfig();
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -160,11 +190,11 @@ export default function PhaseCarousel({
       transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s',
     };
 
-    // Get custom image for this phase
+    // Get custom image for this phase based on order
     const getPhaseImage = () => {
-      const phaseIndex = phases.findIndex(p => p._id === phase._id);
-      const imageKey = `phase${phaseIndex + 1}` as keyof typeof customImages;
-      return customImages[imageKey];
+      const phaseOrder = phase.order;
+      const imageKey = `phaseImage${phaseOrder}` as keyof typeof config;
+      return config[imageKey];
     };
 
     const phaseImage = getPhaseImage();
@@ -229,33 +259,32 @@ export default function PhaseCarousel({
           perspective: 1000,
         }}
       >
-        <div className={styles.container} style={{ height: `${columnHeight}px` }}>
+        <div className={styles.container} style={{ height: `${config.phaseColumnHeight}px` }}>
           {/* Background Image with Effects */}
           {phaseImage && (
             <div
-              className="absolute inset-0 bg-cover bg-center"
+              className="absolute inset-0 bg-cover bg-center transition-all duration-300"
               style={{
                 backgroundImage: `url(${phaseImage})`,
-                filter: `brightness(${1 - imageDarkness / 100}) blur(${!isCenter ? imageBlur : 0}px)`,
-                transition: 'filter 0.3s ease-out',
+                filter: `brightness(${1 - config.phaseImageDarkening / 100}) blur(${!isCenter ? config.phaseBlurAmount : 0}px)`,
               }}
             />
           )}
 
           {/* Gradient Fade Overlay */}
           <div
-            className="absolute inset-0 bg-gradient-to-b from-transparent to-black pointer-events-none"
+            className="absolute inset-0 pointer-events-none z-10"
             style={{
-              background: `linear-gradient(to bottom, transparent 0%, transparent ${fadePosition}%, black 100%)`,
+              background: `linear-gradient(to bottom, transparent 0%, transparent ${config.phaseFadePosition}%, rgba(0,0,0,0.8) 100%)`,
             }}
           />
           {phase.locked ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-5">
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-5 z-20">
               <Lock className={styles.lockIcon} />
               <h3 className={styles.title}>{phase.title}</h3>
             </div>
           ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 md:p-7 text-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 md:p-7 text-center z-20">
               <div className="w-full space-y-4">
                 <h3 className={styles.title}>{phase.title}</h3>
                 {phase.description && (
@@ -299,7 +328,7 @@ export default function PhaseCarousel({
   // Show loading state while data is fetching
   if (!phasesData) {
     return (
-      <div className="w-full py-8 md:py-12 relative select-none flex items-center justify-center" style={{ height: `${columnHeight}px` }}>
+      <div className="w-full py-8 md:py-12 relative select-none flex items-center justify-center" style={{ height: `${config.phaseColumnHeight}px` }}>
         <div className="text-gray-400">Loading phases...</div>
       </div>
     );
@@ -308,7 +337,7 @@ export default function PhaseCarousel({
   // Show empty state if no phases exist
   if (phases.length === 0) {
     return (
-      <div className="w-full py-8 md:py-12 relative select-none flex items-center justify-center" style={{ height: `${columnHeight}px` }}>
+      <div className="w-full py-8 md:py-12 relative select-none flex items-center justify-center" style={{ height: `${config.phaseColumnHeight}px` }}>
         <div className="text-gray-400 text-center">
           <p>No phases configured yet.</p>
           <p className="text-sm mt-2">Visit /landing-debug to add phase cards.</p>
@@ -320,10 +349,10 @@ export default function PhaseCarousel({
   return (
     <div className="w-full py-8 md:py-12 relative select-none" style={{ touchAction: 'pan-y' }}>
       {/* Carousel Container */}
-      <div className="relative max-w-5xl mx-auto px-4" style={{ height: `${columnHeight}px` }}>
+      <div className="relative max-w-5xl mx-auto px-4" style={{ height: `${config.phaseColumnHeight}px` }}>
         {/* Background layer for blur effect - colorful gradient behind cards */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-[80%] max-w-2xl rounded-3xl bg-gradient-to-br from-blue-500/30 via-purple-500/30 to-pink-500/30 blur-xl opacity-40" style={{ height: `${columnHeight}px` }} />
+          <div className="w-[80%] max-w-2xl rounded-3xl bg-gradient-to-br from-blue-500/30 via-purple-500/30 to-pink-500/30 blur-xl opacity-40" style={{ height: `${config.phaseColumnHeight}px` }} />
         </div>
 
         {/* Left Arrow */}
@@ -341,7 +370,7 @@ export default function PhaseCarousel({
           ref={trackRef}
           className="relative w-full cursor-grab active:cursor-grabbing"
           style={{
-            height: `${columnHeight}px`,
+            height: `${config.phaseColumnHeight}px`,
             transform: 'translateZ(0)',
             willChange: 'transform',
             touchAction: 'pan-y',
