@@ -46,6 +46,7 @@ const DEFAULT_CONFIG = {
   logoYPosition: 50,
   selectedFont: 'Orbitron',
   descriptionFontSize: 18,
+  descriptionText: 'A futuristic idle tycoon game featuring collectible Mek NFTs. Build your empire through resource management, strategic crafting, and automated gold generation.',
   bgYPosition: 0,
   motionBlurEnabled: true,
   blurIntensity: 50,
@@ -93,6 +94,7 @@ export default function LandingPage() {
   const [logoYPosition, setLogoYPosition] = useState(DEFAULT_CONFIG.logoYPosition);
   const [selectedFont, setSelectedFont] = useState(DEFAULT_CONFIG.selectedFont);
   const [descriptionFontSize, setDescriptionFontSize] = useState(DEFAULT_CONFIG.descriptionFontSize);
+  const [descriptionText, setDescriptionText] = useState(DEFAULT_CONFIG.descriptionText);
   const [bgYPosition, setBgYPosition] = useState(DEFAULT_CONFIG.bgYPosition);
 
   // Motion blur controls - Layer 1
@@ -153,6 +155,7 @@ export default function LandingPage() {
           setLogoYPosition(config.logoYPosition ?? DEFAULT_CONFIG.logoYPosition);
           setSelectedFont(config.selectedFont ?? DEFAULT_CONFIG.selectedFont);
           setDescriptionFontSize(config.descriptionFontSize ?? DEFAULT_CONFIG.descriptionFontSize);
+          setDescriptionText(config.descriptionText ?? DEFAULT_CONFIG.descriptionText);
           setBgYPosition(config.bgYPosition ?? DEFAULT_CONFIG.bgYPosition);
           setMotionBlurEnabled(config.motionBlurEnabled ?? DEFAULT_CONFIG.motionBlurEnabled);
           setBlurIntensity(config.blurIntensity ?? DEFAULT_CONFIG.blurIntensity);
@@ -544,7 +547,7 @@ export default function LandingPage() {
                           tracking-wide leading-relaxed
                           break-words`}
                style={{ fontFamily: selectedFont, fontSize: `${descriptionFontSize}px` }}>
-              A futuristic idle tycoon game featuring collectible Mek NFTs. Build your empire through resource management, strategic crafting, and automated gold generation.
+              {descriptionText}
             </p>
           </div>
 

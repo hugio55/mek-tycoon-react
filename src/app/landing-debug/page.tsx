@@ -26,6 +26,7 @@ const DEFAULT_CONFIG = {
   logoYPosition: 50,
   selectedFont: 'Orbitron',
   descriptionFontSize: 18,
+  descriptionText: 'A futuristic idle tycoon game featuring collectible Mek NFTs. Build your empire through resource management, strategic crafting, and automated gold generation.',
   bgYPosition: 0,
   motionBlurEnabled: true,
   blurIntensity: 50,
@@ -306,7 +307,7 @@ export default function LandingDebugPage() {
               <input
                 type="range"
                 min="50"
-                max="500"
+                max="1500"
                 step="10"
                 value={config.starFrequency}
                 onChange={(e) => updateConfig('starFrequency', parseInt(e.target.value))}
@@ -654,6 +655,25 @@ export default function LandingDebugPage() {
               </select>
             </div>
 
+            {/* Description Text (Description Only) */}
+            {selectedTypographyElement === 'description' && (
+              <div className="mb-2">
+                <label className="block text-xs text-gray-300 mb-1">
+                  Description Text
+                </label>
+                <textarea
+                  value={config.descriptionText}
+                  onChange={(e) => updateConfig('descriptionText', e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-2 text-gray-200 text-xs focus:outline-none focus:border-gray-500 resize-none"
+                  rows={4}
+                  placeholder="Enter landing page description..."
+                />
+                <div className="text-xs text-gray-400 mt-1">
+                  {config.descriptionText.length} characters
+                </div>
+              </div>
+            )}
+
             {/* Font Size */}
             <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">
@@ -749,7 +769,7 @@ export default function LandingDebugPage() {
                     fontSize: `${config.descriptionFontSize}px`
                   }}
                 >
-                  A futuristic idle tycoon game featuring collectible Mek NFTs.
+                  {config.descriptionText}
                 </p>
               ) : (
                 <div className="flex justify-center">
