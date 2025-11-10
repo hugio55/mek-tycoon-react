@@ -374,13 +374,21 @@ export default function LandingPage() {
 
     // Listen for storage changes from debug page
     const handleStorageChange = () => {
-      loadConfig();
+      try {
+        loadConfig();
+      } catch (e) {
+        console.error('[LANDING] Error in handleStorageChange:', e);
+      }
     };
 
     // Listen for postMessage from parent (iframe scenario)
     const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'mek-landing-config-updated') {
-        loadConfig();
+      try {
+        if (event.data?.type === 'mek-landing-config-updated') {
+          loadConfig();
+        }
+      } catch (e) {
+        console.error('[LANDING] Error in handleMessage:', e);
       }
     };
 
