@@ -5,6 +5,7 @@ import Image from 'next/image';
 import PhaseCarousel from '@/components/PhaseCarousel';
 import PowerSwitchToggle from '@/components/controls/PowerSwitchToggle';
 import MekGalleryCarousel from '@/components/MekGalleryCarousel';
+import EmotionsSlider from '@/components/EmotionsSlider';
 
 interface Star {
   x: number;
@@ -549,6 +550,11 @@ export default function LandingPage() {
           {/* Mek Gallery Carousel */}
           <div className="w-full mt-16 sm:mt-24 md:mt-32">
             <MekGalleryCarousel />
+          </div>
+
+          {/* Emotions Slider */}
+          <div className="w-full mt-16 sm:mt-24 md:mt-32">
+            <EmotionsSlider />
           </div>
         </div>
       </div>
