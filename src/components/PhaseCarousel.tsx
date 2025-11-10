@@ -149,13 +149,13 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
         case 'modern':
           return {
             container: `relative h-64 md:h-72 rounded-3xl overflow-hidden
-                       bg-gradient-to-br from-white/[0.07] via-white/[0.03] to-white/[0.07]
-                       backdrop-blur-2xl backdrop-saturate-150
-                       border border-white/[0.08]
-                       ${isCenter ? 'hover:border-white/[0.15] hover:bg-gradient-to-br hover:from-white/[0.1] hover:via-white/[0.05] hover:to-white/[0.1]' : ''}
+                       bg-white/[0.05]
+                       backdrop-blur-[40px] backdrop-saturate-150
+                       border border-white/[0.15]
+                       ${isCenter ? 'hover:border-white/[0.25] hover:bg-white/[0.08]' : ''}
                        transition-all duration-500 ease-out
-                       shadow-[0_8px_32px_rgba(0,0,0,0.15),0_0_1px_rgba(255,255,255,0.05)_inset]
-                       ${isCenter ? 'hover:shadow-[0_20px_60px_rgba(0,0,0,0.25),0_0_1px_rgba(255,255,255,0.1)_inset]' : ''}
+                       shadow-[0_8px_32px_rgba(0,0,0,0.3),0_0_1px_rgba(255,255,255,0.1)_inset]
+                       ${isCenter ? 'hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_0_1px_rgba(255,255,255,0.15)_inset]' : ''}
                        group cursor-pointer
                        will-change-[transform,box-shadow]`,
             lockIcon: 'w-16 h-16 md:w-20 md:h-20 text-gray-400/30 mb-4 group-hover:text-gray-300/45 group-hover:scale-105 transition-all duration-700',
@@ -274,11 +274,6 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
 
   return (
     <div className="w-full py-8 md:py-12 relative select-none" style={{ touchAction: 'pan-y' }}>
-      {/* Backdrop blur effect behind cards */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 backdrop-blur-sm bg-black/5" />
-      </div>
-
       {/* Carousel Container */}
       <div className="relative max-w-5xl mx-auto px-4">
         {/* Left Arrow */}
