@@ -64,6 +64,7 @@ const DEFAULT_CONFIG = {
   phaseImageBlendMode: 'normal' as 'normal' | 'screen' | 'lighten' | 'lighter',
   phaseHoverDarkeningIntensity: 90,
   phaseIdleBackdropBlur: 0,
+  phaseColumnYOffset: 0,
 };
 
 type ConfigType = typeof DEFAULT_CONFIG;
@@ -1229,6 +1230,25 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-cyan-400 text-center mt-0.5">
                 {config.phaseIdleBackdropBlur}px blur
+              </div>
+            </div>
+
+            {/* Column Vertical Offset */}
+            <div className="mb-2">
+              <label className="block text-xs text-cyan-300 mb-1">
+                Column Vertical Position
+              </label>
+              <input
+                type="range"
+                min="-500"
+                max="500"
+                step="10"
+                value={config.phaseColumnYOffset}
+                onChange={(e) => updateConfig('phaseColumnYOffset', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-cyan-400 text-center mt-0.5">
+                {config.phaseColumnYOffset > 0 ? '+' : ''}{config.phaseColumnYOffset}px
               </div>
             </div>
           </div>
