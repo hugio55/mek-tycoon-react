@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import HorizontalTimeline from '@/components/HorizontalTimeline';
 import { SPEAKER_ICON_STYLES, type SpeakerIconStyle } from '@/components/SpeakerIcons';
+import AudioConsentLightbox from '@/components/AudioConsentLightbox';
 
 interface Star {
   x: number;
@@ -21,6 +22,7 @@ interface BackgroundStar {
 
 // Storage key must match the debug page
 const STORAGE_KEY = 'mek-landing-debug-config';
+const AUDIO_CONSENT_KEY = 'mek-audio-consent';
 
 // Default configuration
 const DEFAULT_CONFIG = {
@@ -143,6 +145,7 @@ export default function LandingPage() {
 
   // Audio controls
   const [audioPlaying, setAudioPlaying] = useState(false);
+  const [showAudioConsent, setShowAudioConsent] = useState(false);
   const [soundLabelFont, setSoundLabelFont] = useState(DEFAULT_CONFIG.soundLabelFont);
   const [soundLabelSize, setSoundLabelSize] = useState(DEFAULT_CONFIG.soundLabelSize);
   const [soundLabelColor, setSoundLabelColor] = useState(DEFAULT_CONFIG.soundLabelColor);
@@ -183,6 +186,32 @@ export default function LandingPage() {
   const [hasScrolled, setHasScrolled] = useState(false);
 
   // Note: phaseImage1-4 not needed here - PhaseCarousel reads directly from localStorage
+
+  // Check for audio consent on mount
+  useEffect(() => {
+    const consent = localStorage.getItem(AUDIO_CONSENT_KEY);
+    if (!consent) {
+      // First-time visitor - show consent lightbox
+      setShowAudioConsent(true);
+    } else {
+      // User has already given consent
+      const consentData = JSON.parse(consent);
+      if (consentData.audioEnabled) {
+        // User previously enabled audio - auto-play on load
+        setAudioPlaying(true);
+      }
+    }
+
+    // Listen for debug trigger events
+    const handleDebugTrigger = (event: CustomEvent) => {
+      if (event.detail?.action === 'show-audio-consent') {
+        setShowAudioConsent(true);
+      }
+    };
+
+    window.addEventListener('mek-debug-trigger' as any, handleDebugTrigger);
+    return () => window.removeEventListener('mek-debug-trigger' as any, handleDebugTrigger);
+  }, []);
 
   // Load config from localStorage and listen for changes from debug page
   useEffect(() => {
@@ -322,6 +351,20 @@ export default function LandingPage() {
       }
     };
   }, []);
+
+  // Handle audio consent proceeding
+  const handleConsentProceed = (audioEnabled: boolean) => {
+    // Store consent in localStorage
+    localStorage.setItem(AUDIO_CONSENT_KEY, JSON.stringify({ audioEnabled, timestamp: Date.now() }));
+
+    // Hide the consent lightbox
+    setShowAudioConsent(false);
+
+    // If audio enabled, start playing
+    if (audioEnabled) {
+      setAudioPlaying(true);
+    }
+  };
 
   // Handle audio toggle with fade-in and fade-out effects
   const handleAudioToggle = (checked: boolean) => {
@@ -655,8 +698,8 @@ export default function LandingPage() {
           paddingTop: viewportHeight > 0
             ? `calc(50vh - ${logoSize / 2}px - ${logoYPosition}vh)`
             : '50vh',
-          minHeight: `calc(100vh - ${columnHeight}px)`,
-          paddingBottom: `${columnHeight}px`
+          minHeight: `calc(100vh - ${phaseColumnHeight}px)`,
+          paddingBottom: `${phaseColumnHeight}px`
         }}
       >
         <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full">
@@ -751,6 +794,12 @@ export default function LandingPage() {
           idleBackdropBlur={phaseIdleBackdropBlur}
         />
       </div>
+
+      {/* Audio Consent Lightbox */}
+      <AudioConsentLightbox
+        onProceed={handleConsentProceed}
+        isVisible={showAudioConsent}
+      />
 
     </div>
   );
