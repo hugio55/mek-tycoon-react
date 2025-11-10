@@ -9,6 +9,10 @@ interface TimelineItem {
   imageUrl: string;
 }
 
+interface HorizontalTimelineProps {
+  phaseHeaderFont?: string;
+}
+
 const timelineData: TimelineItem[] = [
   {
     phase: 'Phase I',
@@ -36,11 +40,11 @@ const timelineData: TimelineItem[] = [
   },
 ];
 
-export default function HorizontalTimeline() {
+export default function HorizontalTimeline({ phaseHeaderFont = 'Orbitron' }: HorizontalTimelineProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
-    <div className="w-full h-[45vh] min-h-[300px] relative overflow-hidden">
+    <div className="w-full h-[56vh] min-h-[375px] relative overflow-hidden">
       <div className="absolute inset-0 flex">
         {timelineData.map((item, index) => {
           const isHovered = hoveredIndex === index;
@@ -97,12 +101,12 @@ export default function HorizontalTimeline() {
                     text-4xl md:text-5xl
                     font-bold
                     text-white/70
-                    font-['Orbitron']
                     tracking-wider
                     transition-all duration-500
                     pointer-events-none
                   "
                   style={{
+                    fontFamily: phaseHeaderFont,
                     textShadow: '0 0 40px rgba(0, 0, 0, 0.8)',
                   }}
                 >

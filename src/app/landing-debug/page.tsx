@@ -31,6 +31,7 @@ const DEFAULT_CONFIG = {
   blurIntensity: 50,
   descriptionColor: 'text-yellow-400/90',
   designVariation: 'modern' as 'modern' | 'industrial' | 'neon',
+  phaseHeaderFont: 'Orbitron',
   soundLabelFont: 'Orbitron',
   soundLabelSize: 16,
   soundLabelColor: 'text-yellow-400/90',
@@ -49,7 +50,7 @@ export default function LandingDebugPage() {
   const [config, setConfig] = useState(DEFAULT_CONFIG);
   const [viewMode, setViewMode] = useState<'controls-only' | 'split-view'>('controls-only');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
-  const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'soundLabel'>('description');
+  const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'phaseHeader' | 'soundLabel'>('description');
 
   // Phase card management
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
