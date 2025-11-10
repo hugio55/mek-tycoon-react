@@ -3590,4 +3590,10 @@ export default defineSchema({
     .index("by_name", ["name"])
     .index("by_autoApply", ["autoApply"])
     .index("by_confidence", ["confidence"]),
+
+  // ===== SITE SETTINGS =====
+  // Global site-wide configuration
+  siteSettings: defineTable({
+    landingPageEnabled: v.boolean(), // Controls whether root (/) shows landing page or game
+  }),
 });

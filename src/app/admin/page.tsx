@@ -1,9 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import PowerSwitchToggle from "@/components/controls/PowerSwitchToggle";
 
 export default function AdminPage() {
   const router = useRouter();
+
+  // Query site settings
+  const siteSettings = useQuery(api.siteSettings.getSiteSettings);
+  const toggleLandingPage = useMutation(api.siteSettings.toggleLandingPage);
   
   const adminTools = [
     {
@@ -104,6 +111,39 @@ export default function AdminPage() {
           <span className="mr-2 group-hover:translate-x--1 inline-block transition-transform">←</span>
           Back to Game
         </button>
+
+        {/* Landing Page Toggle Section */}
+        <div className="mb-8 bg-gray-900/50 border-2 border-yellow-500/30 rounded-xl p-6">
+          <div className="flex items-center justify-between gap-8">
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold text-yellow-400 mb-2">
+                Landing Page Toggle
+              </h3>
+              <p className="text-gray-400 text-sm mb-1">
+                Control what visitors see at the root domain (/)
+              </p>
+              <div className="text-xs text-gray-500">
+                <span className="font-semibold text-gray-400">OFF:</span> Shows game interface (redirects to /home)<br />
+                <span className="font-semibold text-gray-400">ON:</span> Shows marketing landing page
+              </div>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <PowerSwitchToggle
+                checked={siteSettings?.landingPageEnabled ?? false}
+                onChange={async (enabled) => {
+                  await toggleLandingPage({ enabled });
+                }}
+                className="w-32 h-32"
+              />
+              <div className="text-center">
+                <div className="text-xs text-gray-500 uppercase tracking-wider">Status</div>
+                <div className={`text-sm font-bold ${siteSettings?.landingPageEnabled ? 'text-yellow-400' : 'text-gray-400'}`}>
+                  {siteSettings?.landingPageEnabled ? 'LANDING PAGE' : 'GAME INTERFACE'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         
         {/* Admin Tools Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
