@@ -1529,7 +1529,8 @@ export default defineSchema({
     updatedCount: v.number(), // Number successfully updated
     errorCount: v.number(), // Number of errors encountered
     status: v.string(), // "completed", "failed", "triggered_manually", etc.
-  }),
+  })
+    .index("by_timestamp", ["timestamp"]),
 
   // Snapshot Sessions - tracks ongoing batched snapshot processing
   snapshotSessions: defineTable({
