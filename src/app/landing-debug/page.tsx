@@ -197,6 +197,11 @@ export default function LandingDebugPage() {
     } else {
       setConfig(prev => ({ ...prev, [key]: value }));
     }
+
+    // Debug log for phaseIdleBackdropBlur changes
+    if (key === 'phaseIdleBackdropBlur') {
+      console.log('[🔍BLUR] Slider changed in landing-debug:', value);
+    }
   };
 
   const resetToDefaults = () => {
