@@ -214,54 +214,52 @@ export default function HorizontalTimeline({
               onMouseLeave={handleHoverLeave}
               onClick={() => handlePhaseClick(index)}
             >
-              {/* Base background layer for smooth appearance */}
-              <div
-                className="absolute inset-0 bg-black/80"
-              />
-
-              {/* Blend Mode Wrapper - contains visual layers that need to blend */}
+              {/* Base background layer - much lighter for screen mode */}
               <div
                 className="absolute inset-0"
                 style={{
+                  backgroundColor: imageBlendMode === 'screen' ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.6)',
+                }}
+              />
+
+              {/* Timeline Background Image with blend mode applied directly */}
+              <div
+                className="absolute inset-0 bg-cover bg-center transition-all duration-500"
+                style={{
+                  backgroundImage: `url(${item.imageUrl})`,
+                  opacity: imageBlendMode === 'screen' ? 0.75 : 0.4,
+                  maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
+                  WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
+                  filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected : imageBlur}px)`,
+                  transform: `scale(${1 + ((isActive ? imageBlurSelected : imageBlur) * 0.015)})`,
+                  transformOrigin: 'center',
                   mixBlendMode: imageBlendMode,
                 }}
-              >
-                  {/* Timeline Background Image with each phase having its own Mek image */}
-                  <div
-                    className="absolute inset-0 bg-cover bg-center transition-all duration-500"
-                    style={{
-                      backgroundImage: `url(${item.imageUrl})`,
-                      opacity: 0.75,
-                      maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
-                      WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
-                      filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected : imageBlur}px)`,
-                      transform: `scale(${1 + ((isActive ? imageBlurSelected : imageBlur) * 0.015)})`,
-                      transformOrigin: 'center',
-                    }}
-                  />
+              />
 
-                  {/* Darkening Overlay - controlled by imageDarkness parameter */}
-                  <div
-                    className="absolute inset-0 bg-black transition-opacity duration-500"
-                    style={{
-                      opacity: imageDarkness / 100
-                    }}
-                  />
+              {/* Darkening Overlay - only in normal mode */}
+              {imageBlendMode === 'normal' && (
+                <div
+                  className="absolute inset-0 bg-black transition-opacity duration-500"
+                  style={{
+                    opacity: (imageDarkness / 100) * 0.5
+                  }}
+                />
+              )}
 
-                  {/* Dark Gradient Overlay - only when using 'normal' blend mode (not lighten modes) */}
-                  {imageBlendMode === 'normal' && (
-                    <div
-                      className={`
-                        absolute inset-0
-                        transition-opacity duration-500
-                        ${isActive ? 'opacity-100' : 'opacity-0'}
-                      `}
-                      style={{
-                        background: `linear-gradient(to top, rgba(0,0,0,${0.9 * (hoverDarkenIntensity / 100)}) 0%, rgba(0,0,0,${0.6 * (hoverDarkenIntensity / 100)}) 30%, rgba(0,0,0,${0.2 * (hoverDarkenIntensity / 100)}) 50%, transparent 70%)`
-                      }}
-                    />
-                  )}
-                </div>
+              {/* Dark Gradient Overlay - only when using 'normal' blend mode (not lighten modes) */}
+              {imageBlendMode === 'normal' && (
+                <div
+                  className={`
+                    absolute inset-0
+                    transition-opacity duration-500
+                    ${isActive ? 'opacity-100' : 'opacity-0'}
+                  `}
+                  style={{
+                    background: `linear-gradient(to top, rgba(0,0,0,${0.9 * (hoverDarkenIntensity / 100)}) 0%, rgba(0,0,0,${0.6 * (hoverDarkenIntensity / 100)}) 30%, rgba(0,0,0,${0.2 * (hoverDarkenIntensity / 100)}) 50%, transparent 70%)`
+                  }}
+                />
+              )}
 
               {/* Frosted Glass Backdrop Blur Overlay - separate layer with pointer-events-none */}
               <div
