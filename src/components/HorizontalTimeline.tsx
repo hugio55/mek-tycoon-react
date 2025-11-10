@@ -157,7 +157,7 @@ export default function HorizontalTimeline({
   return (
     <div
       ref={containerRef}
-      className="w-full relative overflow-hidden"
+      className="w-full relative overflow-hidden bg-black"
       style={{ height: `${columnHeight}px` }}
     >
       <div
@@ -170,19 +170,24 @@ export default function HorizontalTimeline({
           const isActive = isHovered || isSelected; // Active if hovered OR selected
           const isAnyActive = hoveredIndex !== null || selectedIndex !== null;
 
-          let widthStyle: string;
-          let marginStyle: string = '-3px'; // Aggressive overlap to completely eliminate gaps
+          // Clean percentage-based widths that sum to exactly 100%
+          let widthPercent: number;
+          let translateX: number = 0; // Use transform for overlap, not margins
 
           if (isAnyActive) {
             if (isActive) {
-              widthStyle = 'calc(30% + 6px)'; // Add 6px to compensate for negative margins (3px × 2 sides)
+              widthPercent = 30; // Active card: 30%
             } else {
-              widthStyle = 'calc(70% / 3 + 2px)';
-              marginStyle = '-3px'; // Aggressive negative margin to overlap
+              widthPercent = 70 / 3; // Inactive cards: 23.333% each (70% / 3)
             }
           } else {
-            widthStyle = 'calc(25% + 2px)'; // Add 2px to compensate for -3px margin
-            marginStyle = '-3px'; // Always overlap aggressively
+            widthPercent = 25; // All equal: 25% each
+          }
+
+          // Apply sub-pixel perfect overlap using transform
+          // Each card (except first) overlaps by 2px to eliminate any gaps
+          if (index > 0) {
+            translateX = -2 * index; // Progressive overlap: -2px, -4px, -6px
           }
 
           // Calculate blur value
@@ -200,12 +205,10 @@ export default function HorizontalTimeline({
                 cursor-pointer
               `}
               style={{
-                width: widthStyle,
-                marginLeft: index === 0 ? '0' : marginStyle, // First card has no left margin
-                transition: 'width 0.5s ease-in-out, margin 0.5s ease-in-out',
-                border: 'none',
-                outline: 'none',
-                boxShadow: 'none', // No box-shadow to prevent visible seams
+                width: `${widthPercent}%`,
+                transform: `translateX(${translateX}px)`,
+                transition: 'width 0.5s ease-in-out, transform 0.5s ease-in-out',
+                zIndex: isActive ? 20 : 10 - index, // Active card on top, rest stack left-to-right
               }}
               onMouseEnter={() => handleHoverEnter(index)}
               onMouseLeave={handleHoverLeave}
@@ -216,6 +219,7 @@ export default function HorizontalTimeline({
                 className="absolute inset-0"
                 style={{
                   isolation: 'isolate',
+                  backgroundColor: '#000', // Solid black background to prevent any gap visibility
                 }}
               >
                 {/* Blend Mode Wrapper - contains visual layers that need to blend */}
