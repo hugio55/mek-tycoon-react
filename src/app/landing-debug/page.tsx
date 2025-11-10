@@ -223,44 +223,6 @@ export default function LandingDebugPage() {
                 {config.starFrequency} stars
               </div>
             </div>
-
-            {/* Motion Blur Toggle */}
-            <div className="mb-3">
-              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
-                Motion Blur
-              </label>
-              <button
-                onClick={() => updateConfig('motionBlurEnabled', !config.motionBlurEnabled)}
-                className={`w-full px-3 py-1.5 rounded text-xs font-orbitron uppercase tracking-wide transition-all ${
-                  config.motionBlurEnabled
-                    ? 'bg-yellow-500/30 border-2 border-yellow-500/70 text-yellow-400'
-                    : 'bg-black/50 border-2 border-yellow-500/30 text-yellow-500/50'
-                }`}
-              >
-                {config.motionBlurEnabled ? 'ENABLED' : 'DISABLED'}
-              </button>
-            </div>
-
-            {/* Blur Intensity */}
-            {config.motionBlurEnabled && (
-              <div className="mb-3">
-                <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
-                  Blur Intensity
-                </label>
-                <input
-                  type="range"
-                  min="5"
-                  max="100"
-                  step="5"
-                  value={config.blurIntensity}
-                  onChange={(e) => updateConfig('blurIntensity', parseInt(e.target.value))}
-                  className="w-full debug-slider"
-                />
-                <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
-                  {config.blurIntensity}%
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Star Controls Section - Layer 2 */}
@@ -387,6 +349,50 @@ export default function LandingDebugPage() {
               />
               <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
                 {config.bgYPosition}%
+              </div>
+            </div>
+          </div>
+
+          {/* Motion Blur Controls Section */}
+          <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-4">
+            <h2 className="text-base font-orbitron uppercase text-yellow-400 mb-3 border-b border-yellow-500/30 pb-1.5">
+              Motion Blur Effects
+            </h2>
+
+            {/* Motion Blur Enabled Toggle */}
+            <div className="mb-3">
+              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-2">
+                Enable Motion Blur
+              </label>
+              <button
+                onClick={() => updateConfig('motionBlurEnabled', !config.motionBlurEnabled)}
+                className={`w-full px-3 py-2 text-xs rounded transition-all font-orbitron uppercase tracking-wide ${
+                  config.motionBlurEnabled
+                    ? 'bg-yellow-500/30 border-2 border-yellow-400 text-yellow-300'
+                    : 'bg-black/50 border border-yellow-500/30 text-yellow-500/70 hover:bg-yellow-500/10 hover:border-yellow-400/50'
+                }`}
+              >
+                {config.motionBlurEnabled ? 'Enabled' : 'Disabled'}
+              </button>
+            </div>
+
+            {/* Blur Intensity */}
+            <div className="mb-3">
+              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+                Blur Intensity
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.blurIntensity}
+                onChange={(e) => updateConfig('blurIntensity', parseInt(e.target.value))}
+                className="w-full debug-slider"
+                disabled={!config.motionBlurEnabled}
+              />
+              <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
+                {config.blurIntensity}%
               </div>
             </div>
           </div>

@@ -113,6 +113,11 @@ const DATA_SYSTEMS = [
 
 export default function AdminMasterDataPage() {
   const convex = useConvex();
+
+  // Site settings for landing page toggle
+  const siteSettings = useQuery(api.siteSettings.getSiteSettings);
+  const toggleLandingPage = useMutation(api.siteSettings.toggleLandingPage);
+
   const [activeSystem, setActiveSystem] = useState<string | null>(null);
   // Initialize with static value to avoid hydration mismatch
   // Load from localStorage after mount (client-side only)
@@ -780,6 +785,39 @@ export default function AdminMasterDataPage() {
           MASTER DATA SYSTEMS
         </h1>
         <p className="text-gray-400 mb-4">Centralized procedural generation and game balance control</p>
+
+        {/* Landing Page Toggle Section */}
+        <div className="mb-6 bg-gradient-to-r from-yellow-900/20 via-yellow-800/10 to-yellow-900/20 border-2 border-yellow-500/40 rounded-xl p-6 shadow-lg shadow-yellow-500/10">
+          <div className="flex items-center justify-between gap-8">
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold text-yellow-400 mb-2 font-orbitron tracking-wider uppercase">
+                🌐 Landing Page Control
+              </h3>
+              <p className="text-gray-300 text-sm mb-2 font-semibold">
+                Control what visitors see at the root domain (/)
+              </p>
+              <div className="text-xs text-gray-400 space-y-1">
+                <div><span className="font-bold text-gray-300">OFF:</span> Shows game interface (redirects to /home)</div>
+                <div><span className="font-bold text-gray-300">ON:</span> Shows public marketing landing page</div>
+              </div>
+            </div>
+            <div className="flex flex-col items-center gap-3">
+              <PowerSwitchToggle
+                checked={siteSettings?.landingPageEnabled ?? false}
+                onChange={async (enabled) => {
+                  await toggleLandingPage({ enabled });
+                }}
+                className="w-32 h-32"
+              />
+              <div className="text-center">
+                <div className="text-xs text-gray-500 uppercase tracking-widest font-bold">Current Status</div>
+                <div className={`text-sm font-bold tracking-wider ${siteSettings?.landingPageEnabled ? 'text-yellow-400' : 'text-gray-400'}`}>
+                  {siteSettings?.landingPageEnabled ? '🎭 LANDING PAGE' : '🎮 GAME INTERFACE'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Message Display */}
         {message && (
