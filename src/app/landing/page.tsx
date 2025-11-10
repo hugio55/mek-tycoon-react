@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import HorizontalTimeline from '@/components/HorizontalTimeline';
-import PhaseCarousel from '@/components/PhaseCarousel';
 import { SPEAKER_ICON_STYLES, type SpeakerIconStyle } from '@/components/SpeakerIcons';
 
 interface Star {
@@ -628,13 +627,6 @@ export default function LandingPage() {
               imageBlur={phaseBlurAmount}
               columnHeight={phaseColumnHeight}
               fadePosition={phaseFadePosition}
-            />
-          </div>
-
-          {/* Phase Carousel - Alternative Phase Display */}
-          <div className="w-full mt-8 sm:mt-12 md:mt-16 max-w-7xl">
-            <PhaseCarousel
-              designVariation={designVariation}
             />
           </div>
         </div>
