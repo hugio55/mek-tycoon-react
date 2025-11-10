@@ -44,7 +44,7 @@ export default function HorizontalTimeline({ phaseHeaderFont = 'Orbitron' }: Hor
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
-    <div className="w-full h-[56vh] min-h-[375px] relative overflow-hidden">
+    <div className="w-full h-[48vh] min-h-[320px] relative overflow-hidden">
       <div className="absolute inset-0 flex">
         {timelineData.map((item, index) => {
           const isHovered = hoveredIndex === index;
@@ -77,7 +77,7 @@ export default function HorizontalTimeline({ phaseHeaderFont = 'Orbitron' }: Hor
                 className="absolute inset-0 bg-cover bg-center transition-all duration-500"
                 style={{
                   backgroundImage: `url(${item.imageUrl})`,
-                  opacity: 0.5,
+                  opacity: isHovered ? 0.85 : 0.5,
                   maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 75%)',
                   WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 75%)',
                   filter: `grayscale(${isHovered ? '0%' : '100%'}) ${isAnyHovered && !isHovered ? 'blur(6px)' : 'blur(0px)'}`,
