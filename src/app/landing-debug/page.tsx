@@ -35,6 +35,8 @@ const DEFAULT_CONFIG = {
   phaseHeaderFont: 'Orbitron',
   phaseHeaderFontSize: 48,
   phaseHeaderColor: 'text-white/70',
+  phaseDescriptionFont: 'Arial',
+  phaseDescriptionFontSize: 16,
   soundLabelFont: 'Orbitron',
   soundLabelSize: 16,
   soundLabelColor: 'text-yellow-400/90',
@@ -53,7 +55,7 @@ export default function LandingDebugPage() {
   const [config, setConfig] = useState(DEFAULT_CONFIG);
   const [viewMode, setViewMode] = useState<'controls-only' | 'split-view'>('controls-only');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
-  const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'phaseHeader' | 'soundLabel'>('description');
+  const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel'>('description');
 
   // Phase card management
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
