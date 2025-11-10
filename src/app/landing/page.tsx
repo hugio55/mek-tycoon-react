@@ -73,6 +73,7 @@ const DEFAULT_CONFIG = {
   phaseImageBlendMode: 'normal' as 'normal' | 'screen' | 'lighten' | 'lighter',
   phaseHoverDarkeningIntensity: 90,
   phaseIdleBackdropBlur: 0,
+  phaseColumnYOffset: 0,
   // Note: phaseImage1-4 not in DEFAULT_CONFIG - PhaseCarousel manages these
 };
 
@@ -162,6 +163,7 @@ export default function LandingPage() {
   const [phaseImageBlendMode, setPhaseImageBlendMode] = useState(DEFAULT_CONFIG.phaseImageBlendMode);
   const [phaseHoverDarkeningIntensity, setPhaseHoverDarkeningIntensity] = useState(DEFAULT_CONFIG.phaseHoverDarkeningIntensity);
   const [phaseIdleBackdropBlur, setPhaseIdleBackdropBlur] = useState(DEFAULT_CONFIG.phaseIdleBackdropBlur);
+  const [phaseColumnYOffset, setPhaseColumnYOffset] = useState(DEFAULT_CONFIG.phaseColumnYOffset);
   // Note: phaseImage1-4 not needed here - PhaseCarousel reads directly from localStorage
 
   // Load config from localStorage and listen for changes from debug page
@@ -220,6 +222,7 @@ export default function LandingPage() {
           setPhaseImageBlendMode(config.phaseImageBlendMode ?? DEFAULT_CONFIG.phaseImageBlendMode);
           setPhaseHoverDarkeningIntensity(config.phaseHoverDarkeningIntensity ?? DEFAULT_CONFIG.phaseHoverDarkeningIntensity);
           setPhaseIdleBackdropBlur(config.phaseIdleBackdropBlur ?? DEFAULT_CONFIG.phaseIdleBackdropBlur);
+          setPhaseColumnYOffset(config.phaseColumnYOffset ?? DEFAULT_CONFIG.phaseColumnYOffset);
           // Note: phaseImage1-4 not loaded here - PhaseCarousel reads directly from localStorage
         } catch (e) {
           console.error('Failed to load debug config:', e);
