@@ -625,10 +625,11 @@ export default function LandingDebugPage() {
               </label>
               <select
                 value={selectedTypographyElement}
-                onChange={(e) => setSelectedTypographyElement(e.target.value as 'description' | 'soundLabel')}
+                onChange={(e) => setSelectedTypographyElement(e.target.value as 'description' | 'phaseHeader' | 'soundLabel')}
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-gray-500"
               >
                 <option value="description">Description Text</option>
+                <option value="phaseHeader">Phase Header</option>
                 <option value="soundLabel">Sound Label</option>
               </select>
             </div>
@@ -639,13 +640,23 @@ export default function LandingDebugPage() {
                 Font Family
               </label>
               <select
-                value={selectedTypographyElement === 'description' ? config.selectedFont : config.soundLabelFont}
+                value={
+                  selectedTypographyElement === 'description' ? config.selectedFont :
+                  selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderFont :
+                  config.soundLabelFont
+                }
                 onChange={(e) => updateConfig(
-                  selectedTypographyElement === 'description' ? 'selectedFont' : 'soundLabelFont',
+                  selectedTypographyElement === 'description' ? 'selectedFont' :
+                  selectedTypographyElement === 'phaseHeader' ? 'phaseHeaderFont' :
+                  'soundLabelFont',
                   e.target.value
                 )}
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-gray-500"
-                style={{ fontFamily: selectedTypographyElement === 'description' ? config.selectedFont : config.soundLabelFont }}
+                style={{
+                  fontFamily: selectedTypographyElement === 'description' ? config.selectedFont :
+                             selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderFont :
+                             config.soundLabelFont
+                }}
               >
                 {fonts.map((font) => (
                   <option key={font} value={font} style={{ fontFamily: font }}>
