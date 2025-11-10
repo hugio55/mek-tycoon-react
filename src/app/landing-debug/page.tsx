@@ -259,14 +259,14 @@ export default function LandingDebugPage() {
           </div>
 
           {/* Star Controls Section - Layer 2 */}
-          <div className="bg-black/40 backdrop-blur-sm border-2 border-blue-500/50 rounded-lg p-6">
-            <h2 className="text-xl font-orbitron uppercase text-blue-400 mb-4 border-b border-blue-500/30 pb-2">
+          <div className="bg-black/40 backdrop-blur-sm border-2 border-blue-500/50 rounded-lg p-4">
+            <h2 className="text-base font-orbitron uppercase text-blue-400 mb-3 border-b border-blue-500/30 pb-1.5">
               <span className="text-blue-500">Layer 2</span> Star Field Controls
             </h2>
 
             {/* Star Scale 2 */}
-            <div className="mb-4">
-              <label className="block text-blue-400/80 font-orbitron text-sm uppercase tracking-wide mb-2">
+            <div className="mb-3">
+              <label className="block text-blue-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
                 Star Scale
               </label>
               <input
@@ -278,14 +278,14 @@ export default function LandingDebugPage() {
                 onChange={(e) => updateConfig('starScale2', parseFloat(e.target.value))}
                 className="w-full debug-slider"
               />
-              <div className="text-blue-500 text-sm font-mono text-center mt-1">
+              <div className="text-blue-500 text-xs font-mono text-center mt-0.5">
                 {config.starScale2.toFixed(1)}x
               </div>
             </div>
 
             {/* Star Speed 2 */}
-            <div className="mb-4">
-              <label className="block text-blue-400/80 font-orbitron text-sm uppercase tracking-wide mb-2">
+            <div className="mb-3">
+              <label className="block text-blue-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
                 Star Speed
               </label>
               <input
@@ -297,14 +297,14 @@ export default function LandingDebugPage() {
                 onChange={(e) => updateConfig('starSpeed2', parseFloat(e.target.value))}
                 className="w-full debug-slider"
               />
-              <div className="text-blue-500 text-sm font-mono text-center mt-1">
+              <div className="text-blue-500 text-xs font-mono text-center mt-0.5">
                 {config.starSpeed2.toFixed(1)}x
               </div>
             </div>
 
             {/* Star Density 2 */}
-            <div className="mb-4">
-              <label className="block text-blue-400/80 font-orbitron text-sm uppercase tracking-wide mb-2">
+            <div className="mb-3">
+              <label className="block text-blue-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
                 Star Density
               </label>
               <input
@@ -316,21 +316,21 @@ export default function LandingDebugPage() {
                 onChange={(e) => updateConfig('starFrequency2', parseInt(e.target.value))}
                 className="w-full debug-slider"
               />
-              <div className="text-blue-500 text-sm font-mono text-center mt-1">
+              <div className="text-blue-500 text-xs font-mono text-center mt-0.5">
                 {config.starFrequency2} stars
               </div>
             </div>
           </div>
 
           {/* Layout Controls Section */}
-          <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-6">
-            <h2 className="text-xl font-orbitron uppercase text-yellow-400 mb-4 border-b border-yellow-500/30 pb-2">
+          <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-4">
+            <h2 className="text-base font-orbitron uppercase text-yellow-400 mb-3 border-b border-yellow-500/30 pb-1.5">
               Layout & Positioning
             </h2>
 
             {/* Logo Size */}
-            <div className="mb-4">
-              <label className="block text-yellow-400/80 font-orbitron text-sm uppercase tracking-wide mb-2">
+            <div className="mb-3">
+              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
                 Logo Size
               </label>
               <input
@@ -342,14 +342,14 @@ export default function LandingDebugPage() {
                 onChange={(e) => updateConfig('logoSize', parseInt(e.target.value))}
                 className="w-full debug-slider"
               />
-              <div className="text-yellow-500 text-sm font-mono text-center mt-1">
+              <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
                 {config.logoSize}px
               </div>
             </div>
 
             {/* Logo Y Position */}
-            <div className="mb-4">
-              <label className="block text-yellow-400/80 font-orbitron text-sm uppercase tracking-wide mb-2">
+            <div className="mb-3">
+              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
                 Logo Vertical Position
               </label>
               <input
@@ -361,14 +361,14 @@ export default function LandingDebugPage() {
                 onChange={(e) => updateConfig('logoYPosition', parseInt(e.target.value))}
                 className="w-full debug-slider"
               />
-              <div className="text-yellow-500 text-sm font-mono text-center mt-1">
+              <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
                 {config.logoYPosition}% from top
               </div>
             </div>
 
             {/* Background Y Position */}
-            <div className="mb-4">
-              <label className="block text-yellow-400/80 font-orbitron text-sm uppercase tracking-wide mb-2">
+            <div className="mb-3">
+              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
                 Background Vertical Position
               </label>
               <input
@@ -380,27 +380,27 @@ export default function LandingDebugPage() {
                 onChange={(e) => updateConfig('bgYPosition', parseInt(e.target.value))}
                 className="w-full debug-slider"
               />
-              <div className="text-yellow-500 text-sm font-mono text-center mt-1">
+              <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
                 {config.bgYPosition}%
               </div>
             </div>
           </div>
 
           {/* Typography Controls Section */}
-          <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-6">
-            <h2 className="text-xl font-orbitron uppercase text-yellow-400 mb-4 border-b border-yellow-500/30 pb-2">
+          <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-4">
+            <h2 className="text-base font-orbitron uppercase text-yellow-400 mb-3 border-b border-yellow-500/30 pb-1.5">
               Typography
             </h2>
 
             {/* Font Family */}
-            <div className="mb-4">
-              <label className="block text-yellow-400/80 font-orbitron text-sm uppercase tracking-wide mb-2">
+            <div className="mb-3">
+              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
                 Font Family
               </label>
               <select
                 value={config.selectedFont}
                 onChange={(e) => updateConfig('selectedFont', e.target.value)}
-                className="w-full bg-black/90 border border-yellow-500/50 rounded px-3 py-2 text-yellow-400 text-sm font-orbitron uppercase cursor-pointer hover:border-yellow-400/70 transition-all focus:outline-none focus:border-yellow-400"
+                className="w-full bg-black/90 border border-yellow-500/50 rounded px-2 py-1.5 text-yellow-400 text-xs font-orbitron uppercase cursor-pointer hover:border-yellow-400/70 transition-all focus:outline-none focus:border-yellow-400"
                 style={{ fontFamily: config.selectedFont }}
               >
                 {fonts.map((font) => (
@@ -412,8 +412,8 @@ export default function LandingDebugPage() {
             </div>
 
             {/* Description Font Size */}
-            <div className="mb-4">
-              <label className="block text-yellow-400/80 font-orbitron text-sm uppercase tracking-wide mb-2">
+            <div className="mb-3">
+              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
                 Description Font Size
               </label>
               <input
@@ -425,20 +425,20 @@ export default function LandingDebugPage() {
                 onChange={(e) => updateConfig('descriptionFontSize', parseInt(e.target.value))}
                 className="w-full debug-slider"
               />
-              <div className="text-yellow-500 text-sm font-mono text-center mt-1">
+              <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
                 {config.descriptionFontSize}px
               </div>
             </div>
 
             {/* Description Color */}
-            <div className="mb-4">
-              <label className="block text-yellow-400/80 font-orbitron text-sm uppercase tracking-wide mb-2">
+            <div className="mb-3">
+              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
                 Description Color
               </label>
               <select
                 value={config.descriptionColor}
                 onChange={(e) => updateConfig('descriptionColor', e.target.value)}
-                className="w-full bg-black/90 border border-yellow-500/50 rounded px-3 py-2 text-yellow-400 text-sm font-orbitron uppercase cursor-pointer hover:border-yellow-400/70 transition-all focus:outline-none focus:border-yellow-400"
+                className="w-full bg-black/90 border border-yellow-500/50 rounded px-2 py-1.5 text-yellow-400 text-xs font-orbitron uppercase cursor-pointer hover:border-yellow-400/70 transition-all focus:outline-none focus:border-yellow-400"
               >
                 {colorOptions.map((color) => (
                   <option key={color.class} value={color.class}>
@@ -449,8 +449,8 @@ export default function LandingDebugPage() {
             </div>
 
             {/* Preview Text */}
-            <div className="mt-6 p-4 bg-black/50 rounded border border-yellow-500/20">
-              <p className="text-xs text-yellow-500/50 mb-2 font-orbitron uppercase">Preview:</p>
+            <div className="mt-4 p-3 bg-black/50 rounded border border-yellow-500/20">
+              <p className="text-[10px] text-yellow-500/50 mb-1.5 font-orbitron uppercase">Preview:</p>
               <p
                 className={config.descriptionColor}
                 style={{
@@ -464,22 +464,22 @@ export default function LandingDebugPage() {
           </div>
 
           {/* Phase Carousel Design Section */}
-          <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-6">
-            <h2 className="text-xl font-orbitron uppercase text-yellow-400 mb-4 border-b border-yellow-500/30 pb-2">
+          <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-4">
+            <h2 className="text-base font-orbitron uppercase text-yellow-400 mb-3 border-b border-yellow-500/30 pb-1.5">
               Phase Carousel Design
             </h2>
 
             {/* Design Variation */}
-            <div className="mb-4">
-              <label className="block text-yellow-400/80 font-orbitron text-sm uppercase tracking-wide mb-3">
+            <div className="mb-3">
+              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-2">
                 Design Variation
               </label>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {(['modern', 'industrial', 'neon'] as const).map((variation) => (
                   <button
                     key={variation}
                     onClick={() => updateConfig('designVariation', variation)}
-                    className={`w-full px-4 py-3 text-sm rounded transition-all font-orbitron uppercase tracking-wide ${
+                    className={`w-full px-3 py-2 text-xs rounded transition-all font-orbitron uppercase tracking-wide ${
                       config.designVariation === variation
                         ? 'bg-yellow-500/30 border-2 border-yellow-400 text-yellow-300'
                         : 'bg-black/50 border border-yellow-500/30 text-yellow-500/70 hover:bg-yellow-500/10 hover:border-yellow-400/50'
@@ -495,11 +495,11 @@ export default function LandingDebugPage() {
         </div>
 
         {/* Current Config JSON (for debugging) */}
-        <div className="mt-8 bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-6">
-          <h2 className="text-xl font-orbitron uppercase text-yellow-400 mb-4 border-b border-yellow-500/30 pb-2">
+        <div className="mt-6 bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-4">
+          <h2 className="text-base font-orbitron uppercase text-yellow-400 mb-3 border-b border-yellow-500/30 pb-1.5">
             Current Configuration
           </h2>
-          <pre className="text-xs text-gray-400 font-mono overflow-x-auto">
+          <pre className="text-[10px] text-gray-400 font-mono overflow-x-auto">
             {JSON.stringify(config, null, 2)}
           </pre>
         </div>
@@ -508,11 +508,11 @@ export default function LandingDebugPage() {
       {/* Live Preview Section (Split View Only) */}
       {viewMode === 'split-view' && (
         <div className="w-1/2 bg-gray-900 relative flex flex-col">
-          <div className="bg-gray-900/95 backdrop-blur-sm border-b-2 border-yellow-500/50 p-4">
-            <h2 className="text-yellow-400 font-orbitron text-lg uppercase tracking-wider">
+          <div className="bg-gray-900/95 backdrop-blur-sm border-b-2 border-yellow-500/50 p-3">
+            <h2 className="text-yellow-400 font-orbitron text-base uppercase tracking-wider">
               Live Preview
             </h2>
-            <p className="text-yellow-500/60 text-xs mt-1">
+            <p className="text-yellow-500/60 text-[10px] mt-0.5">
               Changes update in real-time via localStorage sync
             </p>
           </div>
