@@ -1,0 +1,2 @@
+# Admin-only debug pages (localhost only, skip in production builds)
+src/app/landing-debug
