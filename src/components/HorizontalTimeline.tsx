@@ -18,6 +18,7 @@ interface HorizontalTimelineProps {
   phaseDescriptionFontSize?: number;
   imageDarkness?: number;
   imageBlur?: number;
+  imageBlurSelected?: number; // Blur amount for the selected/active card
   columnHeight?: number;
   fadePosition?: number;
 }
@@ -61,6 +62,7 @@ export default function HorizontalTimeline({
   phaseDescriptionFontSize = 16,
   imageDarkness = 30,
   imageBlur = 20,
+  imageBlurSelected = 5,
   columnHeight = 288,
   fadePosition = 50
 }: HorizontalTimelineProps) {
@@ -131,7 +133,7 @@ export default function HorizontalTimeline({
                   opacity: isActive ? 0.85 : 0.5,
                   maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                   WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
-                  filter: `grayscale(${isActive ? '0%' : '100%'}) ${isAnyActive && !isActive ? `blur(${imageBlur}px)` : 'blur(0px)'}`,
+                  filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected : imageBlur}px)`,
                 }}
               />
 
