@@ -53,6 +53,7 @@ const DEFAULT_CONFIG = {
   blurIntensity2: 50,
   descriptionColor: 'text-yellow-400/90',
   designVariation: 'modern' as 'modern' | 'industrial' | 'neon',
+  phaseHeaderFont: 'Orbitron',
   soundLabelFont: 'Orbitron',
   soundLabelSize: 16,
   soundLabelColor: 'text-yellow-400/90',
@@ -108,6 +109,9 @@ export default function LandingPage() {
   // Phase Carousel design variation
   const [designVariation, setDesignVariation] = useState<'modern' | 'industrial' | 'neon'>(DEFAULT_CONFIG.designVariation);
 
+  // Phase header font
+  const [phaseHeaderFont, setPhaseHeaderFont] = useState(DEFAULT_CONFIG.phaseHeaderFont);
+
   // Audio controls
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [soundLabelFont, setSoundLabelFont] = useState(DEFAULT_CONFIG.soundLabelFont);
@@ -156,6 +160,7 @@ export default function LandingPage() {
           setBlurIntensity2(config.blurIntensity2 ?? DEFAULT_CONFIG.blurIntensity2);
           setDescriptionColor(config.descriptionColor ?? DEFAULT_CONFIG.descriptionColor);
           setDesignVariation(config.designVariation ?? DEFAULT_CONFIG.designVariation);
+          setPhaseHeaderFont(config.phaseHeaderFont ?? DEFAULT_CONFIG.phaseHeaderFont);
           setSoundLabelFont(config.soundLabelFont ?? DEFAULT_CONFIG.soundLabelFont);
           setSoundLabelSize(config.soundLabelSize ?? DEFAULT_CONFIG.soundLabelSize);
           setSoundLabelColor(config.soundLabelColor ?? DEFAULT_CONFIG.soundLabelColor);
@@ -543,7 +548,12 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Speaker Button - Below Description */}
+          {/* Phase Timeline - Below Description */}
+          <div className="w-full mt-8 sm:mt-12 md:mt-16 max-w-7xl">
+            <HorizontalTimeline phaseHeaderFont={phaseHeaderFont} />
+          </div>
+
+          {/* Speaker Button - Below Phase Timeline */}
           <button
             onClick={() => handleAudioToggle(!audioPlaying)}
             className={`
@@ -628,10 +638,6 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Horizontal Timeline - Full Width at Bottom */}
-      <div className="relative z-[20] w-full -mt-64">
-        <HorizontalTimeline />
-      </div>
     </div>
   );
 }
