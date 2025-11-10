@@ -71,6 +71,8 @@ const DEFAULT_CONFIG = {
   phaseColumnHeight: 288,
   phaseFadePosition: 50,
   phaseImageBlendMode: 'normal' as 'normal' | 'screen' | 'lighten' | 'lighter',
+  phaseHoverDarkeningIntensity: 90,
+  phaseIdleBackdropBlur: 0,
   // Note: phaseImage1-4 not in DEFAULT_CONFIG - PhaseCarousel manages these
 };
 
@@ -155,6 +157,8 @@ export default function LandingPage() {
   const [phaseColumnHeight, setPhaseColumnHeight] = useState(DEFAULT_CONFIG.phaseColumnHeight);
   const [phaseFadePosition, setPhaseFadePosition] = useState(DEFAULT_CONFIG.phaseFadePosition);
   const [phaseImageBlendMode, setPhaseImageBlendMode] = useState(DEFAULT_CONFIG.phaseImageBlendMode);
+  const [phaseHoverDarkeningIntensity, setPhaseHoverDarkeningIntensity] = useState(DEFAULT_CONFIG.phaseHoverDarkeningIntensity);
+  const [phaseIdleBackdropBlur, setPhaseIdleBackdropBlur] = useState(DEFAULT_CONFIG.phaseIdleBackdropBlur);
   // Note: phaseImage1-4 not needed here - PhaseCarousel reads directly from localStorage
 
   // Load config from localStorage and listen for changes from debug page
