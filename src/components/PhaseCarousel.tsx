@@ -302,7 +302,7 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
           {visibleIndices.map((phaseIndex, i) => {
             const position = i === 0 ? 'left' : i === 1 ? 'center' : 'right';
             return (
-              <div key={phaseIndex}>
+              <div key={`${i}-${phaseIndex}`}>
                 {renderCard(phases[phaseIndex], position, dragOffset)}
               </div>
             );
