@@ -106,35 +106,35 @@ export default function LandingDebugPage() {
   };
 
   return (
-    <div className={`min-h-screen ${viewMode === 'split-view' ? 'flex' : 'bg-gradient-to-br from-black via-gray-900 to-black p-8'}`}>
-      <div className={viewMode === 'split-view' ? 'w-1/2 bg-gradient-to-br from-black via-gray-900 to-black p-6 overflow-y-auto border-r-2 border-yellow-500/50' : 'max-w-4xl mx-auto'}>
+    <div className={`min-h-screen ${viewMode === 'split-view' ? 'flex' : 'bg-gradient-to-br from-black via-gray-900 to-black p-6'}`}>
+      <div className={viewMode === 'split-view' ? 'w-1/2 bg-gradient-to-br from-black via-gray-900 to-black p-4 overflow-y-auto border-r-2 border-yellow-500/50' : 'max-w-4xl mx-auto'}>
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-orbitron uppercase tracking-wider text-yellow-400 mb-2">
+        <div className="mb-6">
+          <h1 className="text-3xl font-orbitron uppercase tracking-wider text-yellow-400 mb-1.5">
             Landing Page Debug Controls
           </h1>
-          <p className="text-gray-400 text-sm">
-            Open <code className="bg-black/50 px-2 py-1 rounded text-yellow-500">/landing</code> in another tab to see changes in real-time
+          <p className="text-gray-400 text-xs">
+            Open <code className="bg-black/50 px-1.5 py-0.5 rounded text-yellow-500">/landing</code> in another tab to see changes in real-time
           </p>
-          <div className="mt-4 flex gap-4 flex-wrap">
+          <div className="mt-3 flex gap-3 flex-wrap">
             <a
               href="/landing"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 font-orbitron text-sm uppercase tracking-wide hover:bg-yellow-500/30 transition-all"
+              className="px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 font-orbitron text-xs uppercase tracking-wide hover:bg-yellow-500/30 transition-all"
             >
               Open Landing Page
             </a>
             <button
               onClick={() => setViewMode(viewMode === 'controls-only' ? 'split-view' : 'controls-only')}
-              className="px-4 py-2 bg-blue-500/20 border border-blue-500/50 rounded text-blue-400 font-orbitron text-sm uppercase tracking-wide hover:bg-blue-500/30 transition-all"
+              className="px-3 py-1.5 bg-blue-500/20 border border-blue-500/50 rounded text-blue-400 font-orbitron text-xs uppercase tracking-wide hover:bg-blue-500/30 transition-all"
             >
               {viewMode === 'controls-only' ? 'Show Preview' : 'Hide Preview'}
             </button>
             <button
               onClick={handleSave}
               disabled={saveState === 'saving'}
-              className={`px-4 py-2 rounded font-orbitron text-sm uppercase tracking-wide transition-all ${
+              className={`px-3 py-1.5 rounded font-orbitron text-xs uppercase tracking-wide transition-all ${
                 saveState === 'saved'
                   ? 'bg-green-500/40 border-2 border-green-400 text-green-300'
                   : saveState === 'saving'
@@ -146,7 +146,7 @@ export default function LandingDebugPage() {
             </button>
             <button
               onClick={resetToDefaults}
-              className="px-4 py-2 bg-red-500/20 border border-red-500/50 rounded text-red-400 font-orbitron text-sm uppercase tracking-wide hover:bg-red-500/30 transition-all"
+              className="px-3 py-1.5 bg-red-500/20 border border-red-500/50 rounded text-red-400 font-orbitron text-xs uppercase tracking-wide hover:bg-red-500/30 transition-all"
             >
               Reset to Defaults
             </button>
@@ -154,17 +154,17 @@ export default function LandingDebugPage() {
         </div>
 
         {/* Debug Controls Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* Star Controls Section - Layer 1 */}
-          <div className="bg-black/40 backdrop-blur-sm border-2 border-yellow-500/50 rounded-lg p-6">
-            <h2 className="text-xl font-orbitron uppercase text-yellow-400 mb-4 border-b border-yellow-500/30 pb-2">
+          <div className="bg-black/40 backdrop-blur-sm border-2 border-yellow-500/50 rounded-lg p-4">
+            <h2 className="text-base font-orbitron uppercase text-yellow-400 mb-3 border-b border-yellow-500/30 pb-1.5">
               <span className="text-yellow-500">Layer 1</span> Star Field Controls
             </h2>
 
             {/* Star Scale */}
-            <div className="mb-4">
-              <label className="block text-yellow-400/80 font-orbitron text-sm uppercase tracking-wide mb-2">
+            <div className="mb-3">
+              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
                 Star Scale
               </label>
               <input
@@ -176,14 +176,14 @@ export default function LandingDebugPage() {
                 onChange={(e) => updateConfig('starScale', parseFloat(e.target.value))}
                 className="w-full debug-slider"
               />
-              <div className="text-yellow-500 text-sm font-mono text-center mt-1">
+              <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
                 {config.starScale.toFixed(1)}x
               </div>
             </div>
 
             {/* Star Speed */}
-            <div className="mb-4">
-              <label className="block text-yellow-400/80 font-orbitron text-sm uppercase tracking-wide mb-2">
+            <div className="mb-3">
+              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
                 Star Speed
               </label>
               <input
@@ -195,14 +195,14 @@ export default function LandingDebugPage() {
                 onChange={(e) => updateConfig('starSpeed', parseFloat(e.target.value))}
                 className="w-full debug-slider"
               />
-              <div className="text-yellow-500 text-sm font-mono text-center mt-1">
+              <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
                 {config.starSpeed.toFixed(1)}x
               </div>
             </div>
 
             {/* Star Density */}
-            <div className="mb-4">
-              <label className="block text-yellow-400/80 font-orbitron text-sm uppercase tracking-wide mb-2">
+            <div className="mb-3">
+              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
                 Star Density
               </label>
               <input
@@ -214,19 +214,19 @@ export default function LandingDebugPage() {
                 onChange={(e) => updateConfig('starFrequency', parseInt(e.target.value))}
                 className="w-full debug-slider"
               />
-              <div className="text-yellow-500 text-sm font-mono text-center mt-1">
+              <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
                 {config.starFrequency} stars
               </div>
             </div>
 
             {/* Motion Blur Toggle */}
-            <div className="mb-4">
-              <label className="block text-yellow-400/80 font-orbitron text-sm uppercase tracking-wide mb-2">
+            <div className="mb-3">
+              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
                 Motion Blur
               </label>
               <button
                 onClick={() => updateConfig('motionBlurEnabled', !config.motionBlurEnabled)}
-                className={`w-full px-4 py-2 rounded text-sm font-orbitron uppercase tracking-wide transition-all ${
+                className={`w-full px-3 py-1.5 rounded text-xs font-orbitron uppercase tracking-wide transition-all ${
                   config.motionBlurEnabled
                     ? 'bg-yellow-500/30 border-2 border-yellow-500/70 text-yellow-400'
                     : 'bg-black/50 border-2 border-yellow-500/30 text-yellow-500/50'
@@ -238,8 +238,8 @@ export default function LandingDebugPage() {
 
             {/* Blur Intensity */}
             {config.motionBlurEnabled && (
-              <div className="mb-4">
-                <label className="block text-yellow-400/80 font-orbitron text-sm uppercase tracking-wide mb-2">
+              <div className="mb-3">
+                <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
                   Blur Intensity
                 </label>
                 <input
@@ -251,7 +251,7 @@ export default function LandingDebugPage() {
                   onChange={(e) => updateConfig('blurIntensity', parseInt(e.target.value))}
                   className="w-full debug-slider"
                 />
-                <div className="text-yellow-500 text-sm font-mono text-center mt-1">
+                <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
                   {config.blurIntensity}%
                 </div>
               </div>
