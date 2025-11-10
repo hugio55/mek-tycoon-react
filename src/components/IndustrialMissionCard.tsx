@@ -111,10 +111,10 @@ const AnimatedSuccessBar = ({
   
   return (
     <div className={`bg-black/60 rounded-full overflow-hidden ${heightClasses[height]}`}>
-      <div 
-        className={`h-full transition-all duration-500 ease-out relative overflow-hidden ${
-          successRate >= 80 ? 'bg-gradient-to-r from-green-500 to-green-400' : 
-          successRate >= 50 ? 'bg-gradient-to-r from-yellow-500 to-yellow-400' : 
+      <div
+        className={`h-full transition-[width,background] duration-500 ease-out relative overflow-hidden ${
+          successRate >= 80 ? 'bg-gradient-to-r from-green-500 to-green-400' :
+          successRate >= 50 ? 'bg-gradient-to-r from-yellow-500 to-yellow-400' :
           'bg-gradient-to-r from-orange-500 to-orange-400'
         }`}
         style={{ width: `${successRate}%` }}
@@ -518,9 +518,9 @@ export default function IndustrialMissionCard({
                               src={assignedMek.image || `/mek-images/150px/mek${String(Math.floor(Math.random() * 1000) + 1).padStart(4, '0')}.png`}
                               alt={assignedMek.name}
                               fill
-                              className={`object-cover transition-all duration-300 ${
-                                isHovered 
-                                  ? 'scale-110 brightness-110' 
+                              className={`object-cover transition-[transform,filter] duration-300 ${
+                                isHovered
+                                  ? 'scale-110 brightness-110'
                                   : 'scale-100 brightness-100'
                               }`}
                             />
