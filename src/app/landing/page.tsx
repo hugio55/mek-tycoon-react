@@ -165,6 +165,8 @@ export default function LandingPage() {
           setDescriptionColor(config.descriptionColor ?? DEFAULT_CONFIG.descriptionColor);
           setDesignVariation(config.designVariation ?? DEFAULT_CONFIG.designVariation);
           setPhaseHeaderFont(config.phaseHeaderFont ?? DEFAULT_CONFIG.phaseHeaderFont);
+          setPhaseHeaderFontSize(config.phaseHeaderFontSize ?? DEFAULT_CONFIG.phaseHeaderFontSize);
+          setPhaseHeaderColor(config.phaseHeaderColor ?? DEFAULT_CONFIG.phaseHeaderColor);
           setSoundLabelFont(config.soundLabelFont ?? DEFAULT_CONFIG.soundLabelFont);
           setSoundLabelSize(config.soundLabelSize ?? DEFAULT_CONFIG.soundLabelSize);
           setSoundLabelColor(config.soundLabelColor ?? DEFAULT_CONFIG.soundLabelColor);
@@ -554,7 +556,11 @@ export default function LandingPage() {
 
           {/* Phase Timeline - Below Description */}
           <div className="w-full mt-8 sm:mt-12 md:mt-16 max-w-7xl">
-            <HorizontalTimeline phaseHeaderFont={phaseHeaderFont} />
+            <HorizontalTimeline
+              phaseHeaderFont={phaseHeaderFont}
+              phaseHeaderFontSize={phaseHeaderFontSize}
+              phaseHeaderColor={phaseHeaderColor}
+            />
           </div>
 
           {/* Speaker Button - Below Phase Timeline */}

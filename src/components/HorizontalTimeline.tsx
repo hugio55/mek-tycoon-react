@@ -11,6 +11,8 @@ interface TimelineItem {
 
 interface HorizontalTimelineProps {
   phaseHeaderFont?: string;
+  phaseHeaderFontSize?: number;
+  phaseHeaderColor?: string;
 }
 
 const timelineData: TimelineItem[] = [
@@ -40,7 +42,11 @@ const timelineData: TimelineItem[] = [
   },
 ];
 
-export default function HorizontalTimeline({ phaseHeaderFont = 'Orbitron' }: HorizontalTimelineProps) {
+export default function HorizontalTimeline({
+  phaseHeaderFont = 'Orbitron',
+  phaseHeaderFontSize = 48,
+  phaseHeaderColor = 'text-white/70'
+}: HorizontalTimelineProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
@@ -84,29 +90,31 @@ export default function HorizontalTimeline({ phaseHeaderFont = 'Orbitron' }: Hor
                 }}
               />
 
-              {/* Dark Gradient Overlay - appears on hover */}
+              {/* Dark Gradient Overlay - appears on hover, concentrated at bottom */}
               <div
                 className={`
                   absolute inset-0
-                  bg-gradient-to-t from-black/80 via-black/40 to-transparent
                   transition-opacity duration-500
                   ${isHovered ? 'opacity-100' : 'opacity-0'}
                 `}
+                style={{
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.2) 50%, transparent 70%)'
+                }}
               />
 
               {/* Phase Label - always visible, centered */}
               <div className="absolute inset-0 flex items-center justify-center z-10">
                 <h2
-                  className="
-                    text-4xl md:text-5xl
+                  className={`
                     font-bold
-                    text-white/70
+                    ${phaseHeaderColor}
                     tracking-wider
                     transition-all duration-500
                     pointer-events-none
-                  "
+                  `}
                   style={{
                     fontFamily: phaseHeaderFont,
+                    fontSize: `${phaseHeaderFontSize}px`,
                     textShadow: '0 0 40px rgba(0, 0, 0, 0.8)',
                   }}
                 >

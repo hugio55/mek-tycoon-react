@@ -33,6 +33,8 @@ const DEFAULT_CONFIG = {
   descriptionColor: 'text-yellow-400/90',
   designVariation: 'modern' as 'modern' | 'industrial' | 'neon',
   phaseHeaderFont: 'Orbitron',
+  phaseHeaderFontSize: 48,
+  phaseHeaderColor: 'text-white/70',
   soundLabelFont: 'Orbitron',
   soundLabelSize: 16,
   soundLabelColor: 'text-yellow-400/90',
@@ -693,17 +695,25 @@ export default function LandingDebugPage() {
               <input
                 type="range"
                 min="10"
-                max="32"
+                max="72"
                 step="1"
-                value={selectedTypographyElement === 'description' ? config.descriptionFontSize : config.soundLabelSize}
+                value={
+                  selectedTypographyElement === 'description' ? config.descriptionFontSize :
+                  selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderFontSize :
+                  config.soundLabelSize
+                }
                 onChange={(e) => updateConfig(
-                  selectedTypographyElement === 'description' ? 'descriptionFontSize' : 'soundLabelSize',
+                  selectedTypographyElement === 'description' ? 'descriptionFontSize' :
+                  selectedTypographyElement === 'phaseHeader' ? 'phaseHeaderFontSize' :
+                  'soundLabelSize',
                   parseInt(e.target.value)
                 )}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
-                {selectedTypographyElement === 'description' ? config.descriptionFontSize : config.soundLabelSize}px
+                {selectedTypographyElement === 'description' ? config.descriptionFontSize :
+                 selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderFontSize :
+                 config.soundLabelSize}px
               </div>
             </div>
 
@@ -713,9 +723,15 @@ export default function LandingDebugPage() {
                 Color
               </label>
               <select
-                value={selectedTypographyElement === 'description' ? config.descriptionColor : config.soundLabelColor}
+                value={
+                  selectedTypographyElement === 'description' ? config.descriptionColor :
+                  selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderColor :
+                  config.soundLabelColor
+                }
                 onChange={(e) => updateConfig(
-                  selectedTypographyElement === 'description' ? 'descriptionColor' : 'soundLabelColor',
+                  selectedTypographyElement === 'description' ? 'descriptionColor' :
+                  selectedTypographyElement === 'phaseHeader' ? 'phaseHeaderColor' :
+                  'soundLabelColor',
                   e.target.value
                 )}
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-gray-500"
