@@ -144,12 +144,12 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
     // Handle different transaction events
     if (EventType === 'transactionconfirmed') {
       // Payment received, transaction confirmed on blockchain, minting started
-      console.log(`✓ Payment confirmed for tx: ${TxHash}`);
+      console.log(`✓ Payment confirmed for tx: ${txHash}`);
 
       try {
         // Update purchase status to show payment received + minting
         await convex.mutation(api.commemorative.updatePurchaseStatus, {
-          transactionHash: TxHash,
+          transactionHash: txHash,
           status: 'completed', // Mark as completed since we don't have granular status in schema
           nftTokenId: undefined,
           paymentAmount: Price ? Price.toString() : undefined,
@@ -163,7 +163,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
           }
         });
 
-        console.log(`✓ Payment confirmation recorded for tx: ${TxHash}`);
+        console.log(`✓ Payment confirmation recorded for tx: ${txHash}`);
       } catch (error) {
         console.error('Failed to record payment confirmation:', error);
       }
@@ -180,7 +180,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
     // Update purchase status in database
     try {
       await convex.mutation(api.commemorative.updatePurchaseStatus, {
-        transactionHash: TxHash,
+        transactionHash: txHash,
         status: 'completed',
         nftTokenId: NotificationSaleNfts?.[0]?.AssetId || undefined,
         paymentAmount: Price ? Price.toString() : undefined,
@@ -194,7 +194,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
         }
       });
 
-      console.log(`✓ Successfully updated purchase status for tx: ${TxHash}`);
+      console.log(`✓ Successfully updated purchase status for tx: ${txHash}`);
 
       // Record NFT claim in claims table
       if (ReceiverStakeAddress && NotificationSaleNfts && NotificationSaleNfts.length > 0) {
@@ -202,7 +202,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
           const nft = NotificationSaleNfts[0];
           await convex.mutation(api.commemorativeNFTClaims.recordClaim, {
             walletAddress: ReceiverStakeAddress,
-            transactionHash: TxHash,
+            transactionHash: txHash,
             nftName: nft.NftName || 'Bronze Token',
             nftAssetId: nft.AssetId || '',
             metadata: {
@@ -232,7 +232,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
 
           if (!eligibility.eligible) {
             console.error('[🛡️WEBHOOK-SECURITY] ❌ Purchase from non-whitelisted address:', ReceiverStakeAddress);
-            console.error('[🛡️WEBHOOK-SECURITY] Transaction hash:', TxHash);
+            console.error('[🛡️WEBHOOK-SECURITY] Transaction hash:', txHash);
             console.error('[🛡️WEBHOOK-SECURITY] This requires manual review - blockchain transaction already completed');
 
             // Log for manual review (still complete the sale since blockchain tx succeeded)
@@ -250,7 +250,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
             api.commemorativeNFTReservations.completeReservationByWallet,
             {
               walletAddress: ReceiverStakeAddress,
-              transactionHash: TxHash,
+              transactionHash: txHash,
             }
           );
 
@@ -271,7 +271,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
                 api.commemorativeNFTInventorySetup.markInventoryAsSoldByUid,
                 {
                   nftUid: nftUid,
-                  transactionHash: TxHash,
+                  transactionHash: txHash,
                 }
               );
 
@@ -291,16 +291,16 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
         }
 
         // CRITICAL SECURITY FIX #3: Record that this webhook was successfully processed
-        if (TxHash && NotificationSaleNfts?.[0]?.NftUid) {
+        if (txHash && NotificationSaleNfts?.[0]?.NftUid) {
           try {
             await convex.mutation(api.webhooks.recordProcessedWebhook, {
-              transactionHash: TxHash,
+              transactionHash: txHash,
               stakeAddress: ReceiverStakeAddress,
               nftUid: NotificationSaleNfts[0].NftUid,
               reservationId: undefined, // We don't have this at this level
               eventType: EventType,
             });
-            console.log('[🛡️WEBHOOK-SECURITY] ✓ Webhook processing recorded:', TxHash);
+            console.log('[🛡️WEBHOOK-SECURITY] ✓ Webhook processing recorded:', txHash);
           } catch (recordError) {
             console.error('[🛡️WEBHOOK-SECURITY] Failed to record webhook (non-critical):', recordError);
           }
