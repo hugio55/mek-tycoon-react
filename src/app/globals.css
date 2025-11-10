@@ -140,6 +140,31 @@
   .animate-power-click {
     animation: power-click 0.3s ease forwards;
   }
+
+  /* Continuous pulsating glow animation - mobile optimized */
+  @keyframes power-pulse {
+    0%, 100% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+  .animate-power-pulse {
+    animation: power-pulse 2s ease-in-out infinite;
+    will-change: opacity, transform;
+  }
+
+  /* Respect reduced motion preference for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-power-pulse {
+      animation: none;
+      opacity: 0.6;
+      transform: scale(1);
+    }
+  }
 }
 
 /* Global overflow prevention - mobile-friendly */
