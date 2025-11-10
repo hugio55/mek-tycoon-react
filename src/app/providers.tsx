@@ -60,9 +60,10 @@ export function Providers({ children }: { children: ReactNode }) {
   // Pages that should NOT have the header
   const isWelcomePage = pathname === "/";
   const isTalentBuilder = pathname === "/talent-builder";
+  const isLandingPage = pathname === "/landing";
 
-  // Show unified header on all pages except welcome and talent-builder
-  const showHeader = !isWelcomePage && !isTalentBuilder;
+  // Show unified header on all pages except welcome, talent-builder, and landing
+  const showHeader = !isWelcomePage && !isTalentBuilder && !isLandingPage;
 
   return (
     <LoaderProvider>
@@ -72,7 +73,7 @@ export function Providers({ children }: { children: ReactNode }) {
             <EssenceProviderWrapper>
               <SoundProvider>
                 <ContentWithLoadingState>
-                  <div className="min-h-screen relative">
+                  <div className={showHeader ? "min-h-screen relative" : "min-h-screen relative w-full"} style={!showHeader ? { margin: 0, padding: 0, width: '100vw', maxWidth: '100vw' } : undefined}>
                     {showHeader ? (
                       // Pages with header - wrapped in centered container
                       <div className="max-w-7xl mx-auto relative px-4 sm:px-8">
@@ -82,8 +83,8 @@ export function Providers({ children }: { children: ReactNode }) {
                         </div>
                       </div>
                     ) : (
-                      // Pages without header - no wrapper
-                      <div className="relative z-10">
+                      // Pages without header - no wrapper, full viewport
+                      <div className="relative z-10 w-full" style={{ margin: 0, padding: 0, width: '100vw', maxWidth: '100vw' }}>
                         {children}
                       </div>
                     )}

@@ -1,6 +1,6 @@
 // Force cache bust: fabulous-sturgeon-691 deployment
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Orbitron, Inter, Cinzel, Lora, Rajdhani, Space_Grotesk, Exo_2, Saira_Condensed, Teko, Abel, Josefin_Sans, Economica, Advent_Pro, Archivo_Narrow } from "next/font/google";
+import { Geist, Geist_Mono, Orbitron, Inter, Cinzel, Lora, Rajdhani, Space_Grotesk, Exo_2, Saira_Condensed, Teko, Abel, Josefin_Sans, Economica, Advent_Pro, Archivo_Narrow, Electrolize, Audiowide, Michroma, Play, Quantico, Saira } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import "@/styles/special-buttons.css";
@@ -109,6 +109,42 @@ const archivoNarrow = Archivo_Narrow({
   weight: ["400", "500", "600", "700"],
 });
 
+const electrolize = Electrolize({
+  variable: "--font-electrolize",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
+const audiowide = Audiowide({
+  variable: "--font-audiowide",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
+const michroma = Michroma({
+  variable: "--font-michroma",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
+const play = Play({
+  variable: "--font-play",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
+const quantico = Quantico({
+  variable: "--font-quantico",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
+const saira = Saira({
+  variable: "--font-saira",
+  subsets: ["latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: "Mek Employment",
   description: "This website is for testing a core mechanic of a future Over Exposed product. It is not an actual game and it offers no rewards. Bugs or comments? Head here: https://discord.gg/kHkvnPbfmm",
@@ -123,8 +159,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
+  userScalable: true,
+  minimumScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -138,7 +176,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} ${inter.variable} ${cinzel.variable} ${lora.variable} ${rajdhani.variable} ${spaceGrotesk.variable} ${exo2.variable} ${sairaCondensed.variable} ${teko.variable} ${abel.variable} ${josefinSans.variable} ${economica.variable} ${adventPro.variable} ${archivoNarrow.variable} antialiased min-h-screen overflow-x-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} ${inter.variable} ${cinzel.variable} ${lora.variable} ${rajdhani.variable} ${spaceGrotesk.variable} ${exo2.variable} ${sairaCondensed.variable} ${teko.variable} ${abel.variable} ${josefinSans.variable} ${economica.variable} ${adventPro.variable} ${archivoNarrow.variable} ${electrolize.variable} ${audiowide.variable} ${michroma.variable} ${play.variable} ${quantico.variable} ${saira.variable} antialiased min-h-screen overflow-x-hidden`}
         style={{ backgroundColor: '#0a0a0a', width: '100vw', maxWidth: '100vw', margin: 0, padding: 0 }}
       >
         {/* Global background with animated stars and particles */}

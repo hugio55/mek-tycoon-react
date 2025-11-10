@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 interface Chapter {
@@ -27,6 +27,12 @@ export default function ChaptersPage() {
   const [currentChapterIndex, setCurrentChapterIndex] = useState<number>(0);
   const [particles, setParticles] = useState<Array<{id: number, left: string, top: string, delay: string, duration: string}>>([]);
   const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean}>>([]);
+
+  // Touch swipe state
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [cardWidth, setCardWidth] = useState<number>(280);
 
   // Random mek images for chapters
   const mekImages = [
@@ -175,7 +181,7 @@ export default function ChaptersPage() {
       duration: `${5 + Math.random() * 5}s`,
     }));
     setParticles(generatedParticles);
-    
+
     const generatedStars = [...Array(60)].map((_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
@@ -185,6 +191,15 @@ export default function ChaptersPage() {
       twinkle: Math.random() > 0.5,
     }));
     setStars(generatedStars);
+
+    // Update card width on resize
+    const updateCardWidth = () => {
+      const width = Math.min(280, window.innerWidth * 0.9);
+      setCardWidth(width);
+    };
+    updateCardWidth();
+    window.addEventListener('resize', updateCardWidth);
+    return () => window.removeEventListener('resize', updateCardWidth);
   }, []);
 
   const handleChapterClick = (chapter: Chapter) => {
@@ -201,8 +216,36 @@ export default function ChaptersPage() {
     }
   };
 
+  // Touch swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const swipeThreshold = 50; // Minimum distance for swipe
+    const diff = touchStartX.current - touchEndX.current;
+
+    if (Math.abs(diff) > swipeThreshold) {
+      if (diff > 0) {
+        // Swiped left - go to next
+        navigateCarousel('next');
+      } else {
+        // Swiped right - go to prev
+        navigateCarousel('prev');
+      }
+    }
+
+    // Reset
+    touchStartX.current = 0;
+    touchEndX.current = 0;
+  };
+
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden relative">
+    <div className="min-h-screen bg-black text-white overflow-x-hidden overflow-y-auto relative">
       {/* Animated background */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div
@@ -265,16 +308,16 @@ export default function ChaptersPage() {
       </div>
       
       {/* Main content */}
-      <div className="relative z-10 p-8">
+      <div className="relative z-10 p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 
+          <div className="text-center mb-6 sm:mb-8 px-4">
+            <h1
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl"
               style={{
                 fontFamily: "'Orbitron', 'Rajdhani', 'Bebas Neue', sans-serif",
-                fontSize: '48px',
                 fontWeight: 900,
-                letterSpacing: '2px',
+                letterSpacing: '1px',
                 textShadow: '0 0 30px rgba(250, 182, 23, 0.6)',
                 background: 'linear-gradient(135deg, #fab617 0%, #ffdd00 50%, #fab617 100%)',
                 WebkitBackgroundClip: 'text',
@@ -284,22 +327,24 @@ export default function ChaptersPage() {
             >
               STORY MODE CHAPTERS
             </h1>
-            <p className="text-gray-400">Choose your chapter • 400 nodes each • Progressive unlocking</p>
+            <p className="text-gray-400 text-xs sm:text-sm md:text-base">
+              Choose your chapter • 400 nodes each • Progressive unlocking
+            </p>
           </div>
           
           {/* Controls */}
-          <div className="flex justify-between items-center mb-6">
-            <button 
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-0 mb-6 px-4">
+            <button
               onClick={() => router.push('/contracts')}
-              className="px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600 hover:border-yellow-400 rounded-lg transition-all text-gray-400 hover:text-white"
+              className="px-3 sm:px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 active:bg-gray-600/50 border border-gray-600 hover:border-yellow-400 rounded-lg transition-all text-gray-400 hover:text-white text-sm sm:text-base touch-manipulation"
             >
               ← Back to Mode Selection
             </button>
-            
+
             <select
               value={layoutOption}
               onChange={(e) => setLayoutOption(Number(e.target.value))}
-              className="px-4 py-2 bg-black/60 border border-yellow-500/40 rounded-lg text-yellow-400 focus:border-yellow-500 focus:outline-none"
+              className="px-3 sm:px-4 py-2 bg-black/60 border border-yellow-500/40 rounded-lg text-yellow-400 focus:border-yellow-500 focus:outline-none text-sm sm:text-base touch-manipulation"
             >
               <option value={3}>Zigzag Timeline</option>
               <option value={11}>Card Carousel</option>
@@ -405,58 +450,67 @@ export default function ChaptersPage() {
           
           {/* Card Carousel Layout */}
           {layoutOption === 11 && (
-            <div className="relative" style={{ height: '500px' }}>
-              {/* Navigation Arrows */}
+            <div className="relative h-[400px] sm:h-[500px] md:h-[550px]">
+              {/* Navigation Arrows - smaller and repositioned on mobile */}
               <button
                 onClick={() => navigateCarousel('prev')}
-                className={`absolute left-0 top-1/2 -translate-y-1/2 z-20 p-4 ${
-                  currentChapterIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:scale-110'
-                } transition-all`}
+                className={`absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-4 ${
+                  currentChapterIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:scale-110 active:scale-95'
+                } transition-all touch-manipulation`}
                 disabled={currentChapterIndex === 0}
+                aria-label="Previous chapter"
               >
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                <svg className="w-6 h-6 sm:w-10 sm:h-10" viewBox="0 0 24 24" fill="none">
                   <path d="M15 18l-6-6 6-6" stroke="#fab617" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
-              
+
               <button
                 onClick={() => navigateCarousel('next')}
-                className={`absolute right-0 top-1/2 -translate-y-1/2 z-20 p-4 ${
-                  currentChapterIndex === chapters.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:scale-110'
-                } transition-all`}
+                className={`absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-4 ${
+                  currentChapterIndex === chapters.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:scale-110 active:scale-95'
+                } transition-all touch-manipulation`}
                 disabled={currentChapterIndex === chapters.length - 1}
+                aria-label="Next chapter"
               >
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                <svg className="w-6 h-6 sm:w-10 sm:h-10" viewBox="0 0 24 24" fill="none">
                   <path d="M9 18l6-6-6-6" stroke="#fab617" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
-              
-              {/* Cards Container */}
-              <div className="relative h-full flex items-center justify-center overflow-hidden">
-                <div 
-                  className="flex transition-transform duration-500 ease-out gap-6 absolute"
+
+              {/* Cards Container with touch support */}
+              <div
+                ref={carouselRef}
+                className="relative h-full flex items-center justify-center overflow-hidden touch-pan-y"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{ WebkitOverflowScrolling: 'touch' }}
+              >
+                <div
+                  className="flex transition-transform duration-500 ease-out gap-4 absolute will-change-transform"
                   style={{
-                    transform: `translateX(${-currentChapterIndex * 400 + 0}px)`,
+                    transform: `translateX(${-currentChapterIndex * (cardWidth + 16)}px)`,
                     left: '50%',
-                    marginLeft: '-200px'
+                    marginLeft: `${-cardWidth / 2}px`
                   }}
                 >
                   {chapters.map((chapter, index) => {
                     const isCenter = index === currentChapterIndex;
                     const isAdjacent = Math.abs(index - currentChapterIndex) === 1;
                     const isVisible = Math.abs(index - currentChapterIndex) <= 2;
-                    
+
                     return (
                       <div
                         key={chapter.id}
                         className={`flex-shrink-0 transition-all duration-500 ${
                           chapter.unlocked && isCenter ? 'cursor-pointer' : 'cursor-not-allowed'
-                        }`}
+                        } touch-manipulation will-change-transform`}
                         style={{
-                          width: '380px',
-                          height: '450px',
-                          opacity: isCenter ? 1 : isAdjacent ? 0.4 : 0,
-                          transform: isCenter ? 'scale(1)' : 'scale(0.85)',
+                          width: `${cardWidth}px`,
+                          height: `${Math.min(cardWidth * 1.36, window.innerHeight * 0.7)}px`,
+                          opacity: isCenter ? 1 : isAdjacent ? 0.5 : 0.2,
+                          transform: isCenter ? 'scale(1)' : 'scale(0.75)',
                           pointerEvents: isVisible ? 'auto' : 'none',
                         }}
                         onClick={() => isCenter && handleChapterClick(chapter)}
@@ -488,22 +542,22 @@ export default function ChaptersPage() {
                           </div>
                           
                           {/* Content */}
-                          <div className="relative h-full flex flex-col justify-between p-8">
+                          <div className="relative h-full flex flex-col justify-between p-4 sm:p-6 md:p-8">
                             {/* Top Section */}
                             <div>
-                              <div className="text-yellow-400 text-sm font-bold mb-2">{chapter.subtitle}</div>
-                              <h2 className="text-3xl font-bold text-white mb-3">{chapter.title}</h2>
-                              <p className="text-gray-400 text-sm">{chapter.description}</p>
+                              <div className="text-yellow-400 text-xs sm:text-sm font-bold mb-1 sm:mb-2">{chapter.subtitle}</div>
+                              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2 sm:mb-3 leading-tight">{chapter.title}</h2>
+                              <p className="text-gray-400 text-xs sm:text-sm line-clamp-2 sm:line-clamp-none">{chapter.description}</p>
                             </div>
-                            
+
                             {/* Middle Section - Lock Status */}
-                            <div className="flex-1 flex items-center justify-center">
+                            <div className="flex-1 flex items-center justify-center py-2">
                               {!chapter.unlocked && (
                                 <div className="text-center">
-                                  <div className="text-6xl mb-4">🔒</div>
-                                  <div className="bg-black/80 rounded-lg p-4">
-                                    <p className="text-yellow-400 text-sm font-bold">LOCKED</p>
-                                    <p className="text-gray-400 text-xs mt-2">
+                                  <div className="text-4xl sm:text-5xl md:text-6xl mb-2 sm:mb-4">🔒</div>
+                                  <div className="bg-black/80 rounded-lg p-2 sm:p-3 md:p-4">
+                                    <p className="text-yellow-400 text-xs sm:text-sm font-bold">LOCKED</p>
+                                    <p className="text-gray-400 text-xs mt-1 sm:mt-2">
                                       Complete Chapter {chapter.id - 1} to unlock
                                     </p>
                                   </div>
@@ -512,37 +566,37 @@ export default function ChaptersPage() {
                               {chapter.unlocked && (
                                 <div className="text-center">
                                   {chapter.progress > 0 && (
-                                    <div className="mb-4">
-                                      <div className="text-yellow-400 text-2xl font-bold">{chapter.progress}%</div>
+                                    <div className="mb-2 sm:mb-4">
+                                      <div className="text-yellow-400 text-xl sm:text-2xl font-bold">{chapter.progress}%</div>
                                       <div className="text-gray-400 text-xs">PROGRESS</div>
                                     </div>
                                   )}
                                 </div>
                               )}
                             </div>
-                            
+
                             {/* Bottom Section - Rewards */}
-                            <div className="bg-black/60 rounded-lg p-4">
-                              <div className="text-xs text-gray-400 mb-2">REWARDS</div>
-                              <div className="flex justify-around">
-                                <div className="text-center">
-                                  <div className="text-yellow-400 font-bold">{chapter.rewards.gold.toLocaleString()}</div>
+                            <div className="bg-black/60 rounded-lg p-2 sm:p-3 md:p-4">
+                              <div className="text-xs text-gray-400 mb-1 sm:mb-2">REWARDS</div>
+                              <div className="flex justify-around gap-1">
+                                <div className="text-center flex-1">
+                                  <div className="text-yellow-400 font-bold text-xs sm:text-sm md:text-base">{chapter.rewards.gold.toLocaleString()}</div>
                                   <div className="text-xs text-gray-500">Gold</div>
                                 </div>
-                                <div className="text-center">
-                                  <div className="text-cyan-400 font-bold">{chapter.rewards.essence}</div>
+                                <div className="text-center flex-1">
+                                  <div className="text-cyan-400 font-bold text-xs sm:text-sm md:text-base">{chapter.rewards.essence}</div>
                                   <div className="text-xs text-gray-500">Essence</div>
                                 </div>
-                                <div className="text-center">
-                                  <div className="text-purple-400 font-bold">{chapter.rewards.powerChips}</div>
+                                <div className="text-center flex-1">
+                                  <div className="text-purple-400 font-bold text-xs sm:text-sm md:text-base">{chapter.rewards.powerChips}</div>
                                   <div className="text-xs text-gray-500">Chips</div>
                                 </div>
                               </div>
                             </div>
-                            
+
                             {/* Play Button for unlocked center card */}
                             {chapter.unlocked && isCenter && (
-                              <button className="mt-4 w-full py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-black font-bold rounded-lg transition-all transform hover:scale-105 shadow-lg">
+                              <button className="mt-2 sm:mt-3 md:mt-4 w-full py-2 sm:py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 active:from-yellow-600 active:to-yellow-700 text-black font-bold text-sm sm:text-base rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg touch-manipulation">
                                 ENTER CHAPTER
                               </button>
                             )}
@@ -555,16 +609,17 @@ export default function ChaptersPage() {
               </div>
               
               {/* Chapter Indicators */}
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-2 pb-4">
+              <div className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 pb-2 sm:pb-4">
                 {chapters.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentChapterIndex(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      index === currentChapterIndex 
-                        ? 'w-8 bg-yellow-400' 
-                        : 'bg-gray-600 hover:bg-gray-500'
+                    className={`h-2 rounded-full transition-all touch-manipulation ${
+                      index === currentChapterIndex
+                        ? 'w-6 sm:w-8 bg-yellow-400'
+                        : 'w-2 bg-gray-600 hover:bg-gray-500 active:bg-gray-400'
                     }`}
+                    aria-label={`Go to chapter ${index + 1}`}
                   />
                 ))}
               </div>
