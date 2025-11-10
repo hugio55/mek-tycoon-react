@@ -630,15 +630,17 @@ export default function LandingPage() {
             />
           </div>
 
-          {/* Description - Mobile Optimized */}
+          {/* Description - Mobile Optimized with Glass Card */}
           <div className="w-full max-w-xs sm:max-w-md md:max-w-xl lg:max-w-2xl px-4 sm:px-6 text-center"
                style={{ transform: `translate(${descriptionXOffset}px, ${descriptionYOffset}px)` }}>
-            <p className={`${descriptionColor}
-                          tracking-wide leading-relaxed
-                          break-words`}
-               style={{ fontFamily: selectedFont, fontSize: `${descriptionFontSize}px` }}>
-              {descriptionText}
-            </p>
+            <div className="relative bg-black/40 backdrop-blur-[40px] border border-white/[0.15] rounded-2xl p-6 md:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+              <p className={`${descriptionColor}
+                            tracking-wide leading-relaxed
+                            break-words`}
+                 style={{ fontFamily: selectedFont, fontSize: `${descriptionFontSize}px` }}>
+                {descriptionText}
+              </p>
+            </div>
           </div>
 
           {/* Speaker Button - Above Phase Timeline */}
