@@ -26,6 +26,8 @@ const DEFAULT_CONFIG = {
   soundLabelSize: 16,
   soundLabelColor: 'text-yellow-400/90',
   soundLabelVerticalOffset: 0,
+  motionBlurEnabled2: false,
+  blurIntensity2: 50,
 };
 
 export default function LandingDebugPage() {
@@ -111,47 +113,47 @@ export default function LandingDebugPage() {
   };
 
   return (
-    <div className={`min-h-screen ${viewMode === 'split-view' ? 'flex' : 'bg-gradient-to-br from-black via-gray-900 to-black p-6'}`}>
-      <div className={viewMode === 'split-view' ? 'w-1/2 bg-gradient-to-br from-black via-gray-900 to-black p-4 overflow-y-auto border-r-2 border-yellow-500/50' : 'max-w-4xl mx-auto'}>
+    <div className={`min-h-screen ${viewMode === 'split-view' ? 'flex' : 'bg-gray-50 p-3'}`}>
+      <div className={viewMode === 'split-view' ? 'w-1/2 bg-white p-3 overflow-y-auto border-r border-gray-300' : 'max-w-5xl mx-auto'}>
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-orbitron uppercase tracking-wider text-yellow-400 mb-1.5">
+        <div className="mb-3">
+          <h1 className="text-lg font-semibold text-gray-800 mb-1">
             Landing Page Debug Controls
           </h1>
-          <p className="text-gray-400 text-xs">
-            Open <code className="bg-black/50 px-1.5 py-0.5 rounded text-yellow-500">/landing</code> in another tab to see changes in real-time
+          <p className="text-xs text-gray-600">
+            Open <code className="bg-gray-100 px-1 py-0.5 rounded text-gray-700 text-xs">/landing</code> in another tab to see changes in real-time
           </p>
-          <div className="mt-3 flex gap-3 flex-wrap">
+          <div className="mt-2 flex gap-2 flex-wrap">
             <a
               href="/landing"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 font-orbitron text-xs uppercase tracking-wide hover:bg-yellow-500/30 transition-all"
+              className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-gray-700 text-xs hover:bg-gray-200"
             >
               Open Landing Page
             </a>
             <button
               onClick={() => setViewMode(viewMode === 'controls-only' ? 'split-view' : 'controls-only')}
-              className="px-3 py-1.5 bg-blue-500/20 border border-blue-500/50 rounded text-blue-400 font-orbitron text-xs uppercase tracking-wide hover:bg-blue-500/30 transition-all"
+              className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-gray-700 text-xs hover:bg-gray-200"
             >
               {viewMode === 'controls-only' ? 'Show Preview' : 'Hide Preview'}
             </button>
             <button
               onClick={handleSave}
               disabled={saveState === 'saving'}
-              className={`px-3 py-1.5 rounded font-orbitron text-xs uppercase tracking-wide transition-all ${
+              className={`px-2 py-1 rounded text-xs ${
                 saveState === 'saved'
-                  ? 'bg-green-500/40 border-2 border-green-400 text-green-300'
+                  ? 'bg-green-100 border border-green-400 text-green-700'
                   : saveState === 'saving'
-                  ? 'bg-yellow-500/30 border border-yellow-400/70 text-yellow-300 cursor-wait'
-                  : 'bg-green-500/20 border border-green-500/50 text-green-400 hover:bg-green-500/30'
+                  ? 'bg-gray-100 border border-gray-300 text-gray-500 cursor-wait'
+                  : 'bg-gray-100 border border-gray-300 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {saveState === 'saved' ? '✓ Settings Saved!' : saveState === 'saving' ? 'Saving...' : 'Save Settings'}
+              {saveState === 'saved' ? 'Settings Saved' : saveState === 'saving' ? 'Saving...' : 'Save Settings'}
             </button>
             <button
               onClick={resetToDefaults}
-              className="px-3 py-1.5 bg-red-500/20 border border-red-500/50 rounded text-red-400 font-orbitron text-xs uppercase tracking-wide hover:bg-red-500/30 transition-all"
+              className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-gray-700 text-xs hover:bg-gray-200"
             >
               Reset to Defaults
             </button>
@@ -159,17 +161,17 @@ export default function LandingDebugPage() {
         </div>
 
         {/* Debug Controls Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
 
           {/* Star Controls Section - Layer 1 */}
-          <div className="bg-black/40 backdrop-blur-sm border-2 border-yellow-500/50 rounded-lg p-4">
-            <h2 className="text-base font-orbitron uppercase text-yellow-400 mb-3 border-b border-yellow-500/30 pb-1.5">
-              <span className="text-yellow-500">Layer 1</span> Star Field Controls
+          <div className="bg-white border border-gray-300 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-800 mb-2 pb-1 border-b border-gray-200">
+              Layer 1 Star Field
             </h2>
 
             {/* Star Scale */}
-            <div className="mb-3">
-              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+            <div className="mb-2">
+              <label className="block text-xs text-gray-700 mb-1">
                 Star Scale
               </label>
               <input
@@ -179,16 +181,16 @@ export default function LandingDebugPage() {
                 step="0.1"
                 value={config.starScale}
                 onChange={(e) => updateConfig('starScale', parseFloat(e.target.value))}
-                className="w-full debug-slider"
+                className="w-full"
               />
-              <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
+              <div className="text-xs text-gray-600 text-center mt-0.5">
                 {config.starScale.toFixed(1)}x
               </div>
             </div>
 
             {/* Star Speed */}
-            <div className="mb-3">
-              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+            <div className="mb-2">
+              <label className="block text-xs text-gray-700 mb-1">
                 Star Speed
               </label>
               <input
@@ -198,16 +200,16 @@ export default function LandingDebugPage() {
                 step="0.5"
                 value={config.starSpeed}
                 onChange={(e) => updateConfig('starSpeed', parseFloat(e.target.value))}
-                className="w-full debug-slider"
+                className="w-full"
               />
-              <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
+              <div className="text-xs text-gray-600 text-center mt-0.5">
                 {config.starSpeed.toFixed(1)}x
               </div>
             </div>
 
             {/* Star Density */}
-            <div className="mb-3">
-              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+            <div className="mb-2">
+              <label className="block text-xs text-gray-700 mb-1">
                 Star Density
               </label>
               <input
@@ -217,23 +219,23 @@ export default function LandingDebugPage() {
                 step="10"
                 value={config.starFrequency}
                 onChange={(e) => updateConfig('starFrequency', parseInt(e.target.value))}
-                className="w-full debug-slider"
+                className="w-full"
               />
-              <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
+              <div className="text-xs text-gray-600 text-center mt-0.5">
                 {config.starFrequency} stars
               </div>
             </div>
           </div>
 
           {/* Star Controls Section - Layer 2 */}
-          <div className="bg-black/40 backdrop-blur-sm border-2 border-blue-500/50 rounded-lg p-4">
-            <h2 className="text-base font-orbitron uppercase text-blue-400 mb-3 border-b border-blue-500/30 pb-1.5">
-              <span className="text-blue-500">Layer 2</span> Star Field Controls
+          <div className="bg-white border border-gray-300 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-800 mb-2 pb-1 border-b border-gray-200">
+              Layer 2 Star Field
             </h2>
 
             {/* Star Scale 2 */}
-            <div className="mb-3">
-              <label className="block text-blue-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+            <div className="mb-2">
+              <label className="block text-xs text-gray-700 mb-1">
                 Star Scale
               </label>
               <input
@@ -243,16 +245,16 @@ export default function LandingDebugPage() {
                 step="0.1"
                 value={config.starScale2}
                 onChange={(e) => updateConfig('starScale2', parseFloat(e.target.value))}
-                className="w-full debug-slider"
+                className="w-full"
               />
-              <div className="text-blue-500 text-xs font-mono text-center mt-0.5">
+              <div className="text-xs text-gray-600 text-center mt-0.5">
                 {config.starScale2.toFixed(1)}x
               </div>
             </div>
 
             {/* Star Speed 2 */}
-            <div className="mb-3">
-              <label className="block text-blue-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+            <div className="mb-2">
+              <label className="block text-xs text-gray-700 mb-1">
                 Star Speed
               </label>
               <input
@@ -262,16 +264,16 @@ export default function LandingDebugPage() {
                 step="0.5"
                 value={config.starSpeed2}
                 onChange={(e) => updateConfig('starSpeed2', parseFloat(e.target.value))}
-                className="w-full debug-slider"
+                className="w-full"
               />
-              <div className="text-blue-500 text-xs font-mono text-center mt-0.5">
+              <div className="text-xs text-gray-600 text-center mt-0.5">
                 {config.starSpeed2.toFixed(1)}x
               </div>
             </div>
 
             {/* Star Density 2 */}
-            <div className="mb-3">
-              <label className="block text-blue-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+            <div className="mb-2">
+              <label className="block text-xs text-gray-700 mb-1">
                 Star Density
               </label>
               <input
@@ -281,23 +283,23 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.starFrequency2}
                 onChange={(e) => updateConfig('starFrequency2', parseInt(e.target.value))}
-                className="w-full debug-slider"
+                className="w-full"
               />
-              <div className="text-blue-500 text-xs font-mono text-center mt-0.5">
+              <div className="text-xs text-gray-600 text-center mt-0.5">
                 {config.starFrequency2} stars
               </div>
             </div>
           </div>
 
           {/* Layout Controls Section */}
-          <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-4">
-            <h2 className="text-base font-orbitron uppercase text-yellow-400 mb-3 border-b border-yellow-500/30 pb-1.5">
+          <div className="bg-white border border-gray-300 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-800 mb-2 pb-1 border-b border-gray-200">
               Layout & Positioning
             </h2>
 
             {/* Logo Size */}
-            <div className="mb-3">
-              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+            <div className="mb-2">
+              <label className="block text-xs text-gray-700 mb-1">
                 Logo Size
               </label>
               <input
@@ -307,16 +309,16 @@ export default function LandingDebugPage() {
                 step="10"
                 value={config.logoSize}
                 onChange={(e) => updateConfig('logoSize', parseInt(e.target.value))}
-                className="w-full debug-slider"
+                className="w-full"
               />
-              <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
+              <div className="text-xs text-gray-600 text-center mt-0.5">
                 {config.logoSize}px
               </div>
             </div>
 
             {/* Logo Y Position */}
-            <div className="mb-3">
-              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+            <div className="mb-2">
+              <label className="block text-xs text-gray-700 mb-1">
                 Logo Vertical Position
               </label>
               <input
@@ -326,16 +328,16 @@ export default function LandingDebugPage() {
                 step="1"
                 value={config.logoYPosition}
                 onChange={(e) => updateConfig('logoYPosition', parseInt(e.target.value))}
-                className="w-full debug-slider"
+                className="w-full"
               />
-              <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
+              <div className="text-xs text-gray-600 text-center mt-0.5">
                 {config.logoYPosition}% from top
               </div>
             </div>
 
             {/* Background Y Position */}
-            <div className="mb-3">
-              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+            <div className="mb-2">
+              <label className="block text-xs text-gray-700 mb-1">
                 Background Vertical Position
               </label>
               <input
@@ -345,31 +347,31 @@ export default function LandingDebugPage() {
                 step="1"
                 value={config.bgYPosition}
                 onChange={(e) => updateConfig('bgYPosition', parseInt(e.target.value))}
-                className="w-full debug-slider"
+                className="w-full"
               />
-              <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
+              <div className="text-xs text-gray-600 text-center mt-0.5">
                 {config.bgYPosition}%
               </div>
             </div>
           </div>
 
           {/* Motion Blur Controls Section */}
-          <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-4">
-            <h2 className="text-base font-orbitron uppercase text-yellow-400 mb-3 border-b border-yellow-500/30 pb-1.5">
+          <div className="bg-white border border-gray-300 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-800 mb-2 pb-1 border-b border-gray-200">
               Motion Blur Effects
             </h2>
 
             {/* Motion Blur Enabled Toggle */}
-            <div className="mb-3">
-              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-2">
+            <div className="mb-2">
+              <label className="block text-xs text-gray-700 mb-1">
                 Enable Motion Blur
               </label>
               <button
                 onClick={() => updateConfig('motionBlurEnabled', !config.motionBlurEnabled)}
-                className={`w-full px-3 py-2 text-xs rounded transition-all font-orbitron uppercase tracking-wide ${
+                className={`w-full px-2 py-1 text-xs rounded ${
                   config.motionBlurEnabled
-                    ? 'bg-yellow-500/30 border-2 border-yellow-400 text-yellow-300'
-                    : 'bg-black/50 border border-yellow-500/30 text-yellow-500/70 hover:bg-yellow-500/10 hover:border-yellow-400/50'
+                    ? 'bg-blue-100 border border-blue-300 text-blue-700'
+                    : 'bg-gray-100 border border-gray-300 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 {config.motionBlurEnabled ? 'Enabled' : 'Disabled'}
@@ -377,8 +379,8 @@ export default function LandingDebugPage() {
             </div>
 
             {/* Blur Intensity */}
-            <div className="mb-3">
-              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+            <div className="mb-2">
+              <label className="block text-xs text-gray-700 mb-1">
                 Blur Intensity
               </label>
               <input
@@ -388,30 +390,30 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.blurIntensity}
                 onChange={(e) => updateConfig('blurIntensity', parseInt(e.target.value))}
-                className="w-full debug-slider"
+                className="w-full"
                 disabled={!config.motionBlurEnabled}
               />
-              <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
+              <div className="text-xs text-gray-600 text-center mt-0.5">
                 {config.blurIntensity}%
               </div>
             </div>
           </div>
 
           {/* Typography Controls Section */}
-          <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-4">
-            <h2 className="text-base font-orbitron uppercase text-yellow-400 mb-3 border-b border-yellow-500/30 pb-1.5">
+          <div className="bg-white border border-gray-300 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-800 mb-2 pb-1 border-b border-gray-200">
               Typography
             </h2>
 
             {/* Element Selector Dropdown */}
-            <div className="mb-4">
-              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+            <div className="mb-2">
+              <label className="block text-xs text-gray-700 mb-1">
                 Edit Element
               </label>
               <select
                 value={selectedTypographyElement}
                 onChange={(e) => setSelectedTypographyElement(e.target.value as 'description' | 'soundLabel')}
-                className="w-full bg-black/90 border-2 border-yellow-500/70 rounded px-3 py-2 text-yellow-400 text-xs font-orbitron uppercase cursor-pointer hover:border-yellow-400 transition-all focus:outline-none focus:border-yellow-400"
+                className="w-full bg-white border border-gray-300 rounded px-2 py-1 text-gray-700 text-xs focus:outline-none focus:border-gray-400"
               >
                 <option value="description">Description Text</option>
                 <option value="soundLabel">Sound Label</option>
@@ -419,8 +421,8 @@ export default function LandingDebugPage() {
             </div>
 
             {/* Font Family */}
-            <div className="mb-3">
-              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+            <div className="mb-2">
+              <label className="block text-xs text-gray-700 mb-1">
                 Font Family
               </label>
               <select
@@ -429,7 +431,7 @@ export default function LandingDebugPage() {
                   selectedTypographyElement === 'description' ? 'selectedFont' : 'soundLabelFont',
                   e.target.value
                 )}
-                className="w-full bg-black/90 border border-yellow-500/50 rounded px-2 py-1.5 text-yellow-400 text-xs font-orbitron uppercase cursor-pointer hover:border-yellow-400/70 transition-all focus:outline-none focus:border-yellow-400"
+                className="w-full bg-white border border-gray-300 rounded px-2 py-1 text-gray-700 text-xs focus:outline-none focus:border-gray-400"
                 style={{ fontFamily: selectedTypographyElement === 'description' ? config.selectedFont : config.soundLabelFont }}
               >
                 {fonts.map((font) => (
@@ -441,8 +443,8 @@ export default function LandingDebugPage() {
             </div>
 
             {/* Font Size */}
-            <div className="mb-3">
-              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+            <div className="mb-2">
+              <label className="block text-xs text-gray-700 mb-1">
                 Font Size
               </label>
               <input
@@ -455,16 +457,16 @@ export default function LandingDebugPage() {
                   selectedTypographyElement === 'description' ? 'descriptionFontSize' : 'soundLabelSize',
                   parseInt(e.target.value)
                 )}
-                className="w-full debug-slider"
+                className="w-full"
               />
-              <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
+              <div className="text-xs text-gray-600 text-center mt-0.5">
                 {selectedTypographyElement === 'description' ? config.descriptionFontSize : config.soundLabelSize}px
               </div>
             </div>
 
             {/* Color */}
-            <div className="mb-3">
-              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+            <div className="mb-2">
+              <label className="block text-xs text-gray-700 mb-1">
                 Color
               </label>
               <select
@@ -473,7 +475,7 @@ export default function LandingDebugPage() {
                   selectedTypographyElement === 'description' ? 'descriptionColor' : 'soundLabelColor',
                   e.target.value
                 )}
-                className="w-full bg-black/90 border border-yellow-500/50 rounded px-2 py-1.5 text-yellow-400 text-xs font-orbitron uppercase cursor-pointer hover:border-yellow-400/70 transition-all focus:outline-none focus:border-yellow-400"
+                className="w-full bg-white border border-gray-300 rounded px-2 py-1 text-gray-700 text-xs focus:outline-none focus:border-gray-400"
               >
                 {colorOptions.map((color) => (
                   <option key={color.class} value={color.class}>
@@ -485,8 +487,8 @@ export default function LandingDebugPage() {
 
             {/* Vertical Offset (Sound Label Only) */}
             {selectedTypographyElement === 'soundLabel' && (
-              <div className="mb-3">
-                <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-1.5">
+              <div className="mb-2">
+                <label className="block text-xs text-gray-700 mb-1">
                   Vertical Offset
                 </label>
                 <input
@@ -496,17 +498,17 @@ export default function LandingDebugPage() {
                   step="1"
                   value={config.soundLabelVerticalOffset}
                   onChange={(e) => updateConfig('soundLabelVerticalOffset', parseInt(e.target.value))}
-                  className="w-full debug-slider"
+                  className="w-full"
                 />
-                <div className="text-yellow-500 text-xs font-mono text-center mt-0.5">
+                <div className="text-xs text-gray-600 text-center mt-0.5">
                   {config.soundLabelVerticalOffset}px
                 </div>
               </div>
             )}
 
             {/* Preview Text */}
-            <div className="mt-4 p-3 bg-black/50 rounded border border-yellow-500/20">
-              <p className="text-[10px] text-yellow-500/50 mb-1.5 font-orbitron uppercase">Preview:</p>
+            <div className="mt-2 p-2 bg-gray-50 rounded border border-gray-200">
+              <p className="text-[10px] text-gray-500 mb-1">Preview:</p>
               {selectedTypographyElement === 'description' ? (
                 <p
                   className={config.descriptionColor}
@@ -534,25 +536,25 @@ export default function LandingDebugPage() {
           </div>
 
           {/* Phase Carousel Design Section */}
-          <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-4">
-            <h2 className="text-base font-orbitron uppercase text-yellow-400 mb-3 border-b border-yellow-500/30 pb-1.5">
+          <div className="bg-white border border-gray-300 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-800 mb-2 pb-1 border-b border-gray-200">
               Phase Carousel Design
             </h2>
 
             {/* Design Variation */}
-            <div className="mb-3">
-              <label className="block text-yellow-400/80 font-orbitron text-xs uppercase tracking-wide mb-2">
+            <div className="mb-2">
+              <label className="block text-xs text-gray-700 mb-1">
                 Design Variation
               </label>
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 {(['modern', 'industrial', 'neon'] as const).map((variation) => (
                   <button
                     key={variation}
                     onClick={() => updateConfig('designVariation', variation)}
-                    className={`w-full px-3 py-2 text-xs rounded transition-all font-orbitron uppercase tracking-wide ${
+                    className={`w-full px-2 py-1 text-xs rounded ${
                       config.designVariation === variation
-                        ? 'bg-yellow-500/30 border-2 border-yellow-400 text-yellow-300'
-                        : 'bg-black/50 border border-yellow-500/30 text-yellow-500/70 hover:bg-yellow-500/10 hover:border-yellow-400/50'
+                        ? 'bg-blue-100 border border-blue-300 text-blue-700'
+                        : 'bg-gray-100 border border-gray-300 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
                     {variation}
@@ -565,11 +567,11 @@ export default function LandingDebugPage() {
         </div>
 
         {/* Current Config JSON (for debugging) */}
-        <div className="mt-6 bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-4">
-          <h2 className="text-base font-orbitron uppercase text-yellow-400 mb-3 border-b border-yellow-500/30 pb-1.5">
+        <div className="mt-3 bg-white border border-gray-300 rounded p-3">
+          <h2 className="text-sm font-semibold text-gray-800 mb-2 pb-1 border-b border-gray-200">
             Current Configuration
           </h2>
-          <pre className="text-[10px] text-gray-400 font-mono overflow-x-auto">
+          <pre className="text-[10px] text-gray-600 font-mono overflow-x-auto">
             {JSON.stringify(config, null, 2)}
           </pre>
         </div>
@@ -577,12 +579,12 @@ export default function LandingDebugPage() {
 
       {/* Live Preview Section (Split View Only) */}
       {viewMode === 'split-view' && (
-        <div className="w-1/2 bg-gray-900 relative flex flex-col">
-          <div className="bg-gray-900/95 backdrop-blur-sm border-b-2 border-yellow-500/50 p-3">
-            <h2 className="text-yellow-400 font-orbitron text-base uppercase tracking-wider">
+        <div className="w-1/2 bg-gray-100 relative flex flex-col">
+          <div className="bg-white border-b border-gray-300 p-2">
+            <h2 className="text-gray-800 text-sm font-semibold">
               Live Preview
             </h2>
-            <p className="text-yellow-500/60 text-[10px] mt-0.5">
+            <p className="text-gray-600 text-[10px] mt-0.5">
               Changes update in real-time via localStorage sync
             </p>
           </div>

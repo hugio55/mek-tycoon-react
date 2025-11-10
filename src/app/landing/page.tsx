@@ -38,6 +38,8 @@ const DEFAULT_CONFIG = {
   bgYPosition: 0,
   motionBlurEnabled: true,
   blurIntensity: 50,
+  motionBlurEnabled2: true,
+  blurIntensity2: 50,
   descriptionColor: 'text-yellow-400/90',
   designVariation: 'modern' as 'modern' | 'industrial' | 'neon',
   soundLabelFont: 'Orbitron',
@@ -67,9 +69,13 @@ export default function LandingPage() {
   const [descriptionFontSize, setDescriptionFontSize] = useState(DEFAULT_CONFIG.descriptionFontSize);
   const [bgYPosition, setBgYPosition] = useState(DEFAULT_CONFIG.bgYPosition);
 
-  // Motion blur controls
+  // Motion blur controls - Layer 1
   const [motionBlurEnabled, setMotionBlurEnabled] = useState(DEFAULT_CONFIG.motionBlurEnabled);
   const [blurIntensity, setBlurIntensity] = useState(DEFAULT_CONFIG.blurIntensity);
+
+  // Motion blur controls - Layer 2
+  const [motionBlurEnabled2, setMotionBlurEnabled2] = useState(DEFAULT_CONFIG.motionBlurEnabled2);
+  const [blurIntensity2, setBlurIntensity2] = useState(DEFAULT_CONFIG.blurIntensity2);
 
   // Description text color
   const [descriptionColor, setDescriptionColor] = useState(DEFAULT_CONFIG.descriptionColor);
@@ -105,6 +111,8 @@ export default function LandingPage() {
           setBgYPosition(config.bgYPosition ?? DEFAULT_CONFIG.bgYPosition);
           setMotionBlurEnabled(config.motionBlurEnabled ?? DEFAULT_CONFIG.motionBlurEnabled);
           setBlurIntensity(config.blurIntensity ?? DEFAULT_CONFIG.blurIntensity);
+          setMotionBlurEnabled2(config.motionBlurEnabled2 ?? DEFAULT_CONFIG.motionBlurEnabled2);
+          setBlurIntensity2(config.blurIntensity2 ?? DEFAULT_CONFIG.blurIntensity2);
           setDescriptionColor(config.descriptionColor ?? DEFAULT_CONFIG.descriptionColor);
           setDesignVariation(config.designVariation ?? DEFAULT_CONFIG.designVariation);
           setSoundLabelFont(config.soundLabelFont ?? DEFAULT_CONFIG.soundLabelFont);
@@ -312,33 +320,6 @@ export default function LandingPage() {
           ctx.beginPath();
           ctx.arc(x, y, size, 0, Math.PI * 2);
           ctx.fill();
-
-          // Draw star trails for closer stars (with motion blur controls)
-          if (star.z < 500 && motionBlurEnabled) {
-            const velocity = starSpeed;
-            const intensityMultiplier = blurIntensity / 100; // Convert 0-100 to 0-1
-            const blurLength = velocity * 0.5 * 2 * intensityMultiplier;
-            const trailOpacity = opacity * 0.5 * 0.5 * intensityMultiplier;
-
-            ctx.strokeStyle = `rgba(255, 255, 255, ${trailOpacity})`;
-            ctx.lineWidth = size / 2;
-
-            if (velocity > 2) {
-              const blurAmount = Math.min(velocity * 0.5 * 0.3 * intensityMultiplier, 3);
-              ctx.filter = `blur(${blurAmount}px)`;
-            }
-
-            ctx.beginPath();
-            const prevZ = star.z + starSpeed * blurLength;
-            const prevScale = 1000 / prevZ;
-            const prevX = star.x * prevScale + centerX;
-            const prevY = star.y * prevScale + centerY;
-            ctx.moveTo(prevX, prevY);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-
-            ctx.filter = 'none';
-          }
         }
       });
 
@@ -365,10 +346,10 @@ export default function LandingPage() {
           ctx.arc(x, y, size, 0, Math.PI * 2);
           ctx.fill();
 
-          // Draw star trails for closer stars (with motion blur controls)
-          if (star.z < 500 && motionBlurEnabled) {
+          // Draw star trails for closer stars (with Layer 2 motion blur controls)
+          if (star.z < 500 && motionBlurEnabled2) {
             const velocity = starSpeed2;
-            const intensityMultiplier = blurIntensity / 100; // Convert 0-100 to 0-1
+            const intensityMultiplier = blurIntensity2 / 100; // Convert 0-100 to 0-1
             const blurLength = velocity * 0.5 * 2 * intensityMultiplier;
             const trailOpacity = opacity * 0.5 * 0.5 * intensityMultiplier;
 
@@ -403,7 +384,7 @@ export default function LandingPage() {
       window.removeEventListener('resize', updateCanvasSize);
       cancelAnimationFrame(animationId);
     };
-  }, [starScale, starSpeed, starFrequency, starScale2, starSpeed2, starFrequency2, motionBlurEnabled, blurIntensity]);
+  }, [starScale, starSpeed, starFrequency, starScale2, starSpeed2, starFrequency2, motionBlurEnabled, blurIntensity, motionBlurEnabled2, blurIntensity2]);
 
   return (
     <div
