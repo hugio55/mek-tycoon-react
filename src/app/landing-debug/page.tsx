@@ -123,16 +123,26 @@ export default function LandingDebugPage() {
 
   // Save config to localStorage whenever any value changes
   useEffect(() => {
-    const config = {
-      starScale, starSpeed, starFrequency, twinkleAmount, twinkleSpeed, sizeRandomness,
-      starScale2, starSpeed2, starFrequency2, lineLength2, twinkleAmount2, twinkleSpeed2, sizeRandomness2,
-      starScale3, starSpeed3, starFrequency3, lineLength3, spawnDelay3, twinkleAmount3, twinkleSpeed3, sizeRandomness3,
-      bgStarTwinkleAmount, bgStarTwinkleSpeed, bgStarSizeRandomness, bgStarCount, bgStarMinBrightness, bgStarMaxBrightness,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    try {
+      const config = {
+        starScale, starSpeed, starFrequency, twinkleAmount, twinkleSpeed, sizeRandomness,
+        starScale2, starSpeed2, starFrequency2, lineLength2, twinkleAmount2, twinkleSpeed2, sizeRandomness2,
+        starScale3, starSpeed3, starFrequency3, lineLength3, spawnDelay3, twinkleAmount3, twinkleSpeed3, sizeRandomness3,
+        bgStarTwinkleAmount, bgStarTwinkleSpeed, bgStarSizeRandomness, bgStarCount, bgStarMinBrightness, bgStarMaxBrightness,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
 
-    // Dispatch custom event to notify landing page
-    window.dispatchEvent(new Event('mek-landing-config-updated'));
+      // Dispatch custom event to notify landing page - defer to avoid blocking React state updates
+      setTimeout(() => {
+        try {
+          window.dispatchEvent(new Event('mek-landing-config-updated'));
+        } catch (eventError) {
+          console.error('[DEBUG] Error dispatching config update event:', eventError);
+        }
+      }, 0);
+    } catch (error) {
+      console.error('[DEBUG] Error saving config:', error);
+    }
   }, [
     starScale, starSpeed, starFrequency, twinkleAmount, twinkleSpeed, sizeRandomness,
     starScale2, starSpeed2, starFrequency2, lineLength2, twinkleAmount2, twinkleSpeed2, sizeRandomness2,

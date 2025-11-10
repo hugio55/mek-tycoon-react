@@ -225,17 +225,23 @@ export default function LandingPage() {
 
   // Check for audio consent on mount
   useEffect(() => {
-    const consent = localStorage.getItem(AUDIO_CONSENT_KEY);
-    if (!consent) {
-      // First-time visitor - show consent lightbox
-      setShowAudioConsent(true);
-    } else {
-      // User has already given consent
-      const consentData = JSON.parse(consent);
-      if (consentData.audioEnabled) {
-        // User previously enabled audio - auto-play on load
-        setAudioPlaying(true);
+    try {
+      const consent = localStorage.getItem(AUDIO_CONSENT_KEY);
+      if (!consent) {
+        // First-time visitor - show consent lightbox
+        setShowAudioConsent(true);
+      } else {
+        // User has already given consent
+        const consentData = JSON.parse(consent);
+        if (consentData.audioEnabled) {
+          // User previously enabled audio - auto-play on load
+          setAudioPlaying(true);
+        }
       }
+    } catch (e) {
+      console.error('[LANDING] Error loading audio consent:', e);
+      // On error, show consent lightbox (safe fallback)
+      setShowAudioConsent(true);
     }
 
     // Listen for debug trigger events from localStorage and postMessage
@@ -256,14 +262,22 @@ export default function LandingPage() {
     };
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'mek-debug-trigger') {
-        checkDebugTrigger();
+      try {
+        if (e.key === 'mek-debug-trigger') {
+          checkDebugTrigger();
+        }
+      } catch (error) {
+        console.error('[LANDING] Error in audio consent handleStorageChange:', error);
       }
     };
 
     const handlePostMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'mek-debug-trigger' && event.data?.action === 'show-audio-consent') {
-        setShowAudioConsent(true);
+      try {
+        if (event.data?.type === 'mek-debug-trigger' && event.data?.action === 'show-audio-consent') {
+          setShowAudioConsent(true);
+        }
+      } catch (error) {
+        console.error('[LANDING] Error in audio consent handlePostMessage:', error);
       }
     };
 
