@@ -16,6 +16,10 @@ interface HorizontalTimelineProps {
   phaseHeaderColor?: string;
   phaseDescriptionFont?: string;
   phaseDescriptionFontSize?: number;
+  imageDarkness?: number;
+  imageBlur?: number;
+  columnHeight?: number;
+  fadePosition?: number;
 }
 
 const timelineData: TimelineItem[] = [

@@ -60,8 +60,10 @@ const DEFAULT_CONFIG = {
   phaseImage4: '',
 };
 
+type ConfigType = typeof DEFAULT_CONFIG;
+
 export default function LandingDebugPage() {
-  const [config, setConfig] = useState(DEFAULT_CONFIG);
+  const [config, setConfig] = useState<ConfigType>(DEFAULT_CONFIG);
   const [viewMode, setViewMode] = useState<'controls-only' | 'split-view'>('controls-only');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel'>('description');
@@ -75,7 +77,11 @@ export default function LandingDebugPage() {
   const initializeDefaultPhaseCards = useMutation(api.phaseCards.initializeDefaultPhaseCards);
 
   const [editingPhaseId, setEditingPhaseId] = useState<Id<"phaseCards"> | null>(null);
-  const [newPhaseForm, setNewPhaseForm] = useState({
+  const [newPhaseForm, setNewPhaseForm] = useState<{
+    title: string;
+    description: string;
+    locked: boolean;
+  }>({
     title: '',
     description: '',
     locked: false,
@@ -114,7 +120,14 @@ export default function LandingDebugPage() {
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        setConfig({ ...DEFAULT_CONFIG, ...parsed });
+        // Merge with DEFAULT_CONFIG to ensure all fields have defined values
+        const mergedConfig: ConfigType = { ...DEFAULT_CONFIG };
+        for (const key in parsed) {
+          if (key in DEFAULT_CONFIG && parsed[key] !== undefined) {
+            (mergedConfig as any)[key] = parsed[key];
+          }
+        }
+        setConfig(mergedConfig);
       } catch (e) {
         console.error('Failed to parse stored config:', e);
       }
@@ -128,7 +141,7 @@ export default function LandingDebugPage() {
     window.dispatchEvent(new Event('storage'));
   }, [config]);
 
-  const updateConfig = (key: keyof typeof config, value: any) => {
+  const updateConfig = <K extends keyof ConfigType>(key: K, value: ConfigType[K]) => {
     setConfig(prev => ({ ...prev, [key]: value }));
   };
 
