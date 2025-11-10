@@ -361,7 +361,30 @@ export default function LandingDebugPage() {
               Show Audio Consent
             </button>
           </div>
+
+          {/* Audio Consent Layout Selector */}
+          <div className="mt-2 flex gap-1 flex-wrap">
+            <span className="text-xs text-gray-400 mr-2">Layout:</span>
+            {['minimal', 'compact', 'card', 'fullscreen', 'centered'].map((layoutOption) => (
+              <button
+                key={layoutOption}
+                onClick={() => {
+                  localStorage.setItem('mek-audio-consent-layout', layoutOption);
+                  // Trigger a re-render by dispatching storage event
+                  window.dispatchEvent(new Event('storage'));
+                }}
+                className={`px-2 py-1 border rounded text-xs transition-colors ${
+                  localStorage.getItem('mek-audio-consent-layout') === layoutOption
+                    ? 'bg-yellow-700 border-yellow-600 text-yellow-200'
+                    : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                {layoutOption.charAt(0).toUpperCase() + layoutOption.slice(1)}
+              </button>
+            ))}
+          </div>
         </div>
+      </div>
 
         {/* Debug Controls Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">

@@ -8,26 +8,35 @@ interface AudioConsentLightboxProps {
   isVisible: boolean;
 }
 
+const STORAGE_KEY_LAYOUT = 'mek-audio-consent-layout';
+
 export default function AudioConsentLightbox({ onProceed, isVisible }: AudioConsentLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [animating, setAnimating] = useState(false);
+  const [layout, setLayout] = useState<'minimal' | 'compact' | 'card' | 'fullscreen' | 'centered'>('minimal');
 
   useEffect(() => {
     setMounted(true);
+
+    // Load layout preference
+    const savedLayout = localStorage.getItem(STORAGE_KEY_LAYOUT);
+    if (savedLayout) {
+      setLayout(savedLayout as any);
+    }
+
     return () => setMounted(false);
   }, []);
 
   useEffect(() => {
     if (isVisible && mounted) {
-      // Lock body scroll when lightbox is open
       document.body.style.overflow = 'hidden';
 
-      // Trigger initial "turning on" animation after a short delay
+      // Trigger initial animation
       setTimeout(() => {
         setAnimating(true);
-        setTimeout(() => setAnimating(false), 800);
-      }, 300);
+        setTimeout(() => setAnimating(false), 600);
+      }, 200);
     } else {
       document.body.style.overflow = '';
     }
@@ -40,7 +49,7 @@ export default function AudioConsentLightbox({ onProceed, isVisible }: AudioCons
   const handleToggle = () => {
     setAnimating(true);
     setAudioEnabled(!audioEnabled);
-    setTimeout(() => setAnimating(false), 800);
+    setTimeout(() => setAnimating(false), 600);
   };
 
   const handleProceed = () => {
@@ -49,119 +58,179 @@ export default function AudioConsentLightbox({ onProceed, isVisible }: AudioCons
 
   if (!mounted || !isVisible) return null;
 
-  const lightboxContent = (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black"
-      onClick={(e) => e.stopPropagation()}
+  // Power button SVG with correct animation
+  const PowerButton = () => (
+    <button
+      onClick={handleToggle}
+      className="relative flex items-center justify-center bg-gray-950/50 rounded-lg border border-gray-700 cursor-pointer transition-all duration-300 hover:border-yellow-500/50"
+      style={{
+        width: layout === 'minimal' ? '120px' : '150px',
+        height: layout === 'minimal' ? '120px' : '150px',
+      }}
+      aria-label={audioEnabled ? 'Disable audio' : 'Enable audio'}
     >
-      {/* Lightbox Card */}
-      <div className="relative w-full max-w-md mx-4 bg-gray-900 border-2 border-yellow-500/50 rounded-lg p-8 shadow-2xl">
-        {/* Header */}
-        <div className="mb-6 text-center">
-          <h2 className="text-2xl font-bold text-yellow-500 tracking-wider mb-3" style={{ fontFamily: 'Orbitron' }}>
-            POWER SWITCH TOGGLE
-          </h2>
-          <p className="text-gray-300 text-sm leading-relaxed">
+      <svg
+        width={layout === 'minimal' ? '60' : '80'}
+        height={layout === 'minimal' ? '60' : '80'}
+        viewBox="0 0 100 100"
+        style={{
+          filter: audioEnabled
+            ? 'drop-shadow(0 0 16px rgba(251, 191, 36, 0.6))'
+            : 'none',
+          transition: 'filter 0.6s ease-in-out',
+        }}
+      >
+        {/* Power button circle arc */}
+        <circle
+          cx="50"
+          cy="50"
+          r="35"
+          fill="none"
+          stroke={audioEnabled ? '#fbbf24' : '#4b5563'}
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeDasharray={audioEnabled ? "220" : "165"}
+          strokeDashoffset="55"
+          style={{
+            transform: `rotate(${audioEnabled ? '0' : '-30'}deg)`,
+            transformOrigin: '50% 50%',
+            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        />
+        {/* Power button line */}
+        <line
+          x1="50"
+          y1={audioEnabled ? "20" : "25"}
+          x2="50"
+          y2="50"
+          stroke={audioEnabled ? '#fbbf24' : '#4b5563'}
+          strokeWidth="5"
+          strokeLinecap="round"
+          style={{
+            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        />
+      </svg>
+
+      {/* Status text */}
+      <div className="absolute bottom-2 text-center w-full">
+        <span
+          className={`text-xs font-semibold tracking-wide transition-colors duration-600 ${
+            audioEnabled ? 'text-yellow-500' : 'text-gray-600'
+          }`}
+        >
+          {audioEnabled ? 'ON' : 'OFF'}
+        </span>
+      </div>
+    </button>
+  );
+
+  // Layout variations
+  const layouts = {
+    minimal: (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95">
+        <div className="flex flex-col items-center gap-6">
+          <p className="text-gray-300 text-sm max-w-xs text-center">
             This website uses atmospheric sound. We highly encourage the immersion into the bath of sonic waves.
           </p>
+          <PowerButton />
+          <button
+            onClick={handleProceed}
+            className="px-8 py-3 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold rounded-lg transition-all duration-300"
+            style={{ fontFamily: 'Orbitron' }}
+          >
+            PROCEED
+          </button>
         </div>
+      </div>
+    ),
 
-        {/* Power Switch Container */}
-        <div className="mb-6 flex flex-col items-center">
-          <div className="relative mb-2">
-            <button
-              onClick={handleToggle}
-              className="relative w-48 h-48 flex items-center justify-center bg-gray-950 rounded-lg border border-gray-700 cursor-pointer transition-all duration-300 hover:border-yellow-500/50"
-              aria-label={audioEnabled ? 'Disable audio' : 'Enable audio'}
-            >
-              {/* Power Icon */}
-              <svg
-                width="80"
-                height="80"
-                viewBox="0 0 100 100"
-                className={`transition-all duration-800 ${
-                  animating ? 'animate-pulse' : ''
-                }`}
-                style={{
-                  filter: audioEnabled
-                    ? 'drop-shadow(0 0 20px rgba(251, 191, 36, 0.8))'
-                    : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0))',
-                  transition: 'filter 0.8s ease-in-out',
-                }}
-              >
-                {/* Power button circle */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="35"
-                  fill="none"
-                  stroke={audioEnabled ? '#fbbf24' : '#6b7280'}
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                  strokeDasharray="165 220"
-                  strokeDashoffset="55"
-                  className="transition-all duration-800"
-                  style={{
-                    transform: audioEnabled ? 'rotate(0deg)' : 'rotate(-30deg)',
-                    transformOrigin: 'center',
-                  }}
-                />
-                {/* Power button line */}
-                <line
-                  x1="50"
-                  y1="25"
-                  x2="50"
-                  y2="50"
-                  stroke={audioEnabled ? '#fbbf24' : '#6b7280'}
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                  className="transition-all duration-800"
-                />
-              </svg>
-
-              {/* Click to Toggle Text */}
-              <div className="absolute top-4 left-0 right-0 text-center text-xs text-gray-500 tracking-wider">
-                CLICK TO TOGGLE
-              </div>
-
-              {/* Status Text */}
-              <div className="absolute bottom-4 left-0 right-0 text-center">
-                <span
-                  className={`text-sm font-semibold tracking-wide transition-colors duration-800 ${
-                    audioEnabled ? 'text-yellow-500' : 'text-gray-500'
-                  }`}
-                >
-                  Status: {audioEnabled ? 'ON' : 'OFF'} {audioEnabled ? '' : '(Dim)'}
-                </span>
-              </div>
-            </button>
-          </div>
-
-          {/* Helper Text */}
-          <p className="text-xs text-gray-400 text-center mt-2">
-            {audioEnabled ? 'Click to disable sound' : 'Click to enable sound'}
+    compact: (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90">
+        <div className="bg-gray-900/80 border border-yellow-500/30 rounded-lg p-6 max-w-sm mx-4">
+          <p className="text-gray-300 text-sm text-center mb-4">
+            This website uses atmospheric sound. We highly encourage the immersion into the bath of sonic waves.
           </p>
+          <div className="flex items-center justify-center mb-4">
+            <PowerButton />
+          </div>
+          <button
+            onClick={handleProceed}
+            className="w-full py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold rounded-lg transition-all duration-300"
+            style={{ fontFamily: 'Orbitron' }}
+          >
+            PROCEED
+          </button>
         </div>
+      </div>
+    ),
 
-        {/* Proceed Button */}
+    card: (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85">
+        <div className="bg-gray-900 border-2 border-yellow-500/50 rounded-lg p-8 max-w-md mx-4 shadow-2xl">
+          <h2 className="text-xl font-bold text-yellow-500 text-center mb-4" style={{ fontFamily: 'Orbitron' }}>
+            AUDIO CONSENT
+          </h2>
+          <p className="text-gray-300 text-sm text-center mb-6">
+            This website uses atmospheric sound. We highly encourage the immersion into the bath of sonic waves.
+          </p>
+          <div className="flex items-center justify-center mb-6">
+            <PowerButton />
+          </div>
+          <button
+            onClick={handleProceed}
+            className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold text-lg rounded-lg transition-all duration-300"
+            style={{ fontFamily: 'Orbitron' }}
+          >
+            PROCEED
+          </button>
+        </div>
+      </div>
+    ),
+
+    fullscreen: (
+      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black">
+        <h2 className="text-3xl font-bold text-yellow-500 mb-8" style={{ fontFamily: 'Orbitron' }}>
+          AUDIO CONSENT
+        </h2>
+        <p className="text-gray-300 text-base max-w-md text-center mb-12">
+          This website uses atmospheric sound. We highly encourage the immersion into the bath of sonic waves.
+        </p>
+        <div className="mb-12">
+          <PowerButton />
+        </div>
         <button
           onClick={handleProceed}
-          className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold text-lg rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/50"
+          className="px-12 py-4 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold text-xl rounded-lg transition-all duration-300"
           style={{ fontFamily: 'Orbitron' }}
         >
           PROCEED
         </button>
+      </div>
+    ),
 
-        {/* Source Attribution */}
-        <div className="mt-4 text-center text-[10px] text-gray-600">
-          <p>Source: External HTML/CSS/SVG</p>
-          <p>Transformed: React/TypeScript/Tailwind v3</p>
-          <p>Features: Click animation, line bounce, circle rotation (partial→full), radial glow when ON</p>
-          <p>Colors: White → Gold (#fbbf24)</p>
+    centered: (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80">
+        <div className="text-center">
+          <p className="text-gray-300 text-sm max-w-sm mx-auto mb-6">
+            This website uses atmospheric sound. We highly encourage the immersion into the bath of sonic waves.
+          </p>
+          <div className="inline-block mb-6">
+            <PowerButton />
+          </div>
+          <div>
+            <button
+              onClick={handleProceed}
+              className="px-10 py-3 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold rounded-lg transition-all duration-300"
+              style={{ fontFamily: 'Orbitron' }}
+            >
+              PROCEED
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    ),
+  };
 
-  return createPortal(lightboxContent, document.body);
+  return createPortal(layouts[layout], document.body);
 }
