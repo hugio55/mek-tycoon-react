@@ -69,10 +69,7 @@ const DEFAULT_CONFIG = {
   phaseBlurAmount: 20,
   phaseColumnHeight: 288,
   phaseFadePosition: 50,
-  phaseImage1: '',
-  phaseImage2: '',
-  phaseImage3: '',
-  phaseImage4: '',
+  // Note: phaseImage1-4 not in DEFAULT_CONFIG - PhaseCarousel manages these
 };
 
 export default function LandingPage() {
@@ -145,15 +142,12 @@ export default function LandingPage() {
   // Speaker icon style
   const [speakerIconStyle, setSpeakerIconStyle] = useState<SpeakerIconStyle>(DEFAULT_CONFIG.speakerIconStyle);
 
-  // Phase Carousel controls
+  // Phase Carousel controls (used by HorizontalTimeline)
   const [phaseImageDarkening, setPhaseImageDarkening] = useState(DEFAULT_CONFIG.phaseImageDarkening);
   const [phaseBlurAmount, setPhaseBlurAmount] = useState(DEFAULT_CONFIG.phaseBlurAmount);
   const [phaseColumnHeight, setPhaseColumnHeight] = useState(DEFAULT_CONFIG.phaseColumnHeight);
   const [phaseFadePosition, setPhaseFadePosition] = useState(DEFAULT_CONFIG.phaseFadePosition);
-  const [phaseImage1, setPhaseImage1] = useState(DEFAULT_CONFIG.phaseImage1);
-  const [phaseImage2, setPhaseImage2] = useState(DEFAULT_CONFIG.phaseImage2);
-  const [phaseImage3, setPhaseImage3] = useState(DEFAULT_CONFIG.phaseImage3);
-  const [phaseImage4, setPhaseImage4] = useState(DEFAULT_CONFIG.phaseImage4);
+  // Note: phaseImage1-4 not needed here - PhaseCarousel reads directly from localStorage
 
   // Load config from localStorage and listen for changes from debug page
   useEffect(() => {
@@ -205,10 +199,7 @@ export default function LandingPage() {
           setPhaseBlurAmount(config.phaseBlurAmount ?? DEFAULT_CONFIG.phaseBlurAmount);
           setPhaseColumnHeight(config.phaseColumnHeight ?? DEFAULT_CONFIG.phaseColumnHeight);
           setPhaseFadePosition(config.phaseFadePosition ?? DEFAULT_CONFIG.phaseFadePosition);
-          setPhaseImage1(config.phaseImage1 ?? DEFAULT_CONFIG.phaseImage1);
-          setPhaseImage2(config.phaseImage2 ?? DEFAULT_CONFIG.phaseImage2);
-          setPhaseImage3(config.phaseImage3 ?? DEFAULT_CONFIG.phaseImage3);
-          setPhaseImage4(config.phaseImage4 ?? DEFAULT_CONFIG.phaseImage4);
+          // Note: phaseImage1-4 not loaded here - PhaseCarousel reads directly from localStorage
         } catch (e) {
           console.error('Failed to load debug config:', e);
         }
@@ -644,16 +635,6 @@ export default function LandingPage() {
           <div className="w-full mt-8 sm:mt-12 md:mt-16 max-w-7xl">
             <PhaseCarousel
               designVariation={designVariation}
-              imageDarkness={phaseImageDarkening}
-              imageBlur={phaseBlurAmount}
-              columnHeight={phaseColumnHeight}
-              fadePosition={phaseFadePosition}
-              customImages={{
-                phase1: phaseImage1,
-                phase2: phaseImage2,
-                phase3: phaseImage3,
-                phase4: phaseImage4,
-              }}
             />
           </div>
         </div>
