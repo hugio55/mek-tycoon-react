@@ -617,7 +617,7 @@ export default function LandingPage() {
       style={{
         margin: 0,
         padding: 0,
-        minHeight: '300vh',
+        minHeight: '100vh',
         height: 'auto',
         overflowX: 'hidden',
         overflowY: 'scroll',
@@ -655,10 +655,11 @@ export default function LandingPage() {
           paddingTop: viewportHeight > 0
             ? `calc(50vh - ${logoSize / 2}px - ${logoYPosition}vh)`
             : '50vh',
-          minHeight: '300vh'
+          minHeight: `calc(100vh - ${columnHeight}px)`,
+          paddingBottom: `${columnHeight}px`
         }}
       >
-        <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full pb-[100vh]">
+        <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full">
           <div className="relative max-w-[80vw] max-h-[80vw]" style={{ width: `${logoSize}px`, height: `${logoSize}px` }}>
             <video
               src="/random-images/Everydays_00000.webm"
@@ -727,13 +728,11 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Phase Timeline - Full Width, Outside Centered Container */}
+      {/* Phase Timeline - Fixed to Bottom */}
       <div
-        className="relative w-screen z-[20] mt-8 sm:mt-12 md:mt-16"
+        className="fixed bottom-0 left-0 w-screen z-[20]"
         style={{
           transform: `translateY(${phaseColumnYOffset}px)`,
-          marginLeft: 0,
-          marginRight: 0,
         }}
       >
         <HorizontalTimeline

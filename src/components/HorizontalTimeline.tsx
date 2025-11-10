@@ -198,55 +198,62 @@ export default function HorizontalTimeline({
               onMouseLeave={handleHoverLeave}
               onClick={() => handlePhaseClick(index)}
             >
-              {/* Blend Mode Wrapper - contains ALL visual layers so they blend together */}
+              {/* Isolation wrapper - prevents backdrop-filter from interfering with blend mode */}
               <div
                 className="absolute inset-0"
                 style={{
-                  mixBlendMode: imageBlendMode,
+                  isolation: 'isolate',
                 }}
               >
-                {/* Timeline Background Image with each phase having its own Mek image */}
+                {/* Blend Mode Wrapper - contains visual layers that need to blend */}
                 <div
-                  className="absolute inset-0 bg-cover bg-center transition-all duration-500"
+                  className="absolute inset-0"
                   style={{
-                    backgroundImage: `url(${item.imageUrl})`,
-                    opacity: isActive ? 0.85 : 0.5,
-                    maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
-                    WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
-                    filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected : imageBlur}px)`,
-                    transform: `scale(${1 + ((isActive ? imageBlurSelected : imageBlur) * 0.015)})`,
-                    transformOrigin: 'center',
+                    mixBlendMode: imageBlendMode,
                   }}
-                />
+                >
+                  {/* Timeline Background Image with each phase having its own Mek image */}
+                  <div
+                    className="absolute inset-0 bg-cover bg-center transition-all duration-500"
+                    style={{
+                      backgroundImage: `url(${item.imageUrl})`,
+                      opacity: isActive ? 0.85 : 0.5,
+                      maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
+                      WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
+                      filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected : imageBlur}px)`,
+                      transform: `scale(${1 + ((isActive ? imageBlurSelected : imageBlur) * 0.015)})`,
+                      transformOrigin: 'center',
+                    }}
+                  />
 
-                {/* Darkening Overlay - controlled by imageDarkness parameter */}
-                <div
-                  className="absolute inset-0 bg-black transition-opacity duration-500"
-                  style={{
-                    opacity: imageDarkness / 100
-                  }}
-                />
+                  {/* Darkening Overlay - controlled by imageDarkness parameter */}
+                  <div
+                    className="absolute inset-0 bg-black transition-opacity duration-500"
+                    style={{
+                      opacity: imageDarkness / 100
+                    }}
+                  />
 
-                {/* Dark Gradient Overlay - appears on hover/click, concentrated at bottom */}
-                {/* Now INSIDE blend mode wrapper so it participates in blend mode */}
-                <div
-                  className={`
-                    absolute inset-0
-                    transition-opacity duration-500
-                    ${isActive ? 'opacity-100' : 'opacity-0'}
-                  `}
-                  style={{
-                    background: `linear-gradient(to top, rgba(0,0,0,${0.9 * (hoverDarkenIntensity / 100)}) 0%, rgba(0,0,0,${0.6 * (hoverDarkenIntensity / 100)}) 30%, rgba(0,0,0,${0.2 * (hoverDarkenIntensity / 100)}) 50%, transparent 70%)`
-                  }}
-                />
+                  {/* Dark Gradient Overlay - appears on hover/click, concentrated at bottom */}
+                  <div
+                    className={`
+                      absolute inset-0
+                      transition-opacity duration-500
+                      ${isActive ? 'opacity-100' : 'opacity-0'}
+                    `}
+                    style={{
+                      background: `linear-gradient(to top, rgba(0,0,0,${0.9 * (hoverDarkenIntensity / 100)}) 0%, rgba(0,0,0,${0.6 * (hoverDarkenIntensity / 100)}) 30%, rgba(0,0,0,${0.2 * (hoverDarkenIntensity / 100)}) 50%, transparent 70%)`
+                    }}
+                  />
+                </div>
 
-                {/* Frosted Glass Backdrop Blur Overlay - blurs the layers beneath it */}
-                {/* Now INSIDE blend mode wrapper so it participates in blend mode */}
+                {/* Frosted Glass Backdrop Blur Overlay - separate layer with pointer-events-none */}
                 <div
                   className={`
                     absolute inset-0
                     transition-all duration-500
                     ${isActive ? 'opacity-100' : 'opacity-0'}
+                    pointer-events-none
                   `}
                   style={{
                     backdropFilter: blurValue,
