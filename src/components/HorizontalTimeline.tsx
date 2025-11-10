@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 interface TimelineItem {
-  year: string;
+  phase: string;
   title: string;
   description: string;
   imageUrl: string;
@@ -11,25 +11,25 @@ interface TimelineItem {
 
 const timelineData: TimelineItem[] = [
   {
-    year: '2023',
+    phase: 'Phase I',
     title: 'Foundation',
     description: 'Project inception and initial concept development. The vision for Mek Tycoon begins to take shape.',
     imageUrl: '/timeline/2023.webp',
   },
   {
-    year: '2024',
+    phase: 'Phase II',
     title: 'Development',
     description: 'Building the core ecosystem. Smart contracts, game mechanics, and NFT infrastructure come to life.',
     imageUrl: '/timeline/2024.webp',
   },
   {
-    year: '2025',
+    phase: 'Phase III',
     title: 'Launch',
     description: 'Going live with the mainnet. The Mek Tycoon universe opens its doors to the community.',
     imageUrl: '/timeline/2025.webp',
   },
   {
-    year: '2026',
+    phase: 'Phase IV',
     title: 'Expansion',
     description: 'Growing the community. New features, partnerships, and gameplay experiences emerge.',
     imageUrl: '/timeline/2026.webp',
@@ -40,7 +40,17 @@ export default function HorizontalTimeline() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
-    <div className="w-full h-screen min-h-[600px] relative overflow-hidden bg-[#031625]">
+    <div className="w-full h-[60vh] min-h-[400px] relative overflow-hidden">
+      {/* Mek Background Image with Fade Effect */}
+      <div
+        className="absolute inset-0 bg-cover bg-bottom"
+        style={{
+          backgroundImage: 'url(/mek-images/1000px/ae1-er3-lg2.webp)',
+          maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%)',
+          WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%)',
+        }}
+      />
+
       <div className="absolute inset-0 flex">
         {timelineData.map((item, index) => {
           const isHovered = hoveredIndex === index;
@@ -87,13 +97,13 @@ export default function HorizontalTimeline() {
                 `}
               />
 
-              {/* Year Label - always visible, centered */}
+              {/* Phase Label - always visible, centered */}
               <div className="absolute inset-0 flex items-center justify-center z-10">
                 <h2
                   className="
-                    text-8xl md:text-9xl
+                    text-4xl md:text-5xl
                     font-bold
-                    text-white/90
+                    text-white/70
                     font-['Orbitron']
                     tracking-wider
                     transition-all duration-500
@@ -103,7 +113,7 @@ export default function HorizontalTimeline() {
                     textShadow: '0 0 40px rgba(0, 0, 0, 0.8)',
                   }}
                 >
-                  {item.year}
+                  {item.phase}
                 </h2>
               </div>
 
