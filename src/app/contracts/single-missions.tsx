@@ -1877,11 +1877,13 @@ export default function ContractsLayoutOption11() {
           <div className="mek-overlay-diagonal-stripes"></div>
         </div>
         
-        {/* Grid Layout */}
-        <div className="grid grid-cols-2 gap-5">
+        {/* Grid Layout - Fixed width columns to prevent hover jank */}
+        <div className="grid grid-cols-2 gap-5" style={{ gridTemplateColumns: '1fr 1fr' }}>
           {/* Global Event */}
-          {renderContract(null, true)}
-          
+          <div className="min-w-0">
+            {renderContract(null, true)}
+          </div>
+
           {/* Regular Contracts */}
           {[
             { id: 'c1', name: 'mining outpost delta', mekSlots: 3 },
@@ -1889,7 +1891,11 @@ export default function ContractsLayoutOption11() {
             { id: 'c3', name: 'defense grid omega', mekSlots: 4 },
             { id: 'c4', name: 'trade depot alpha', mekSlots: 2 },
             { id: 'c5', name: 'salvage yard beta', mekSlots: 3 },
-          ].map(contract => <div key={contract.id}>{renderContract(contract, false)}</div>)}
+          ].map(contract => (
+            <div key={contract.id} className="min-w-0">
+              {renderContract(contract, false)}
+            </div>
+          ))}
         </div>
       </div>
       

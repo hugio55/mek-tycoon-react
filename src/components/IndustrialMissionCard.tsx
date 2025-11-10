@@ -186,19 +186,20 @@ export default function IndustrialMissionCard({
   };
   
   return (
-    <div className="relative">
-      <div 
+    <div className="relative w-full">
+      <div
         className={`relative overflow-hidden ${getBorderClasses(borderStyle)}`}
         style={{
           background: `
-            linear-gradient(135deg, 
-              ${isGlobal ? 'rgba(250, 182, 23, 0.02)' : 'rgba(255, 255, 255, 0.02)'} 0%, 
-              ${isGlobal ? 'rgba(250, 182, 23, 0.05)' : 'rgba(255, 255, 255, 0.05)'} 50%, 
+            linear-gradient(135deg,
+              ${isGlobal ? 'rgba(250, 182, 23, 0.02)' : 'rgba(255, 255, 255, 0.02)'} 0%,
+              ${isGlobal ? 'rgba(250, 182, 23, 0.05)' : 'rgba(255, 255, 255, 0.05)'} 50%,
               ${isGlobal ? 'rgba(250, 182, 23, 0.02)' : 'rgba(255, 255, 255, 0.02)'} 100%)`,
           backdropFilter: 'blur(6px)',
-          boxShadow: isGlobal 
-            ? 'inset 0 0 40px rgba(250, 182, 23, 0.03)' 
+          boxShadow: isGlobal
+            ? 'inset 0 0 40px rgba(250, 182, 23, 0.03)'
             : 'inset 0 0 40px rgba(255, 255, 255, 0.03)',
+          willChange: 'auto',
         }}
       >
         {/* Glass effect overlays - Style J */}
@@ -405,7 +406,7 @@ export default function IndustrialMissionCard({
                             className={`
                             relative w-[60px] h-[60px] rounded-full bg-black/60 border-2 overflow-hidden cursor-pointer
                             ${isMatched ? 'border-yellow-400 shadow-lg shadow-yellow-400/30' : 'border-gray-700'}
-                            transition-all hover:scale-110
+                            transition-transform duration-200 hover:scale-110
                           `}>
                             <Image
                               src={mult.image}
@@ -452,7 +453,7 @@ export default function IndustrialMissionCard({
                           onClick={() => {
                             onGenesisBuffClick?.(buff);
                           }}
-                          className="relative w-[60px] h-[60px] rounded-full bg-black/60 border-2 border-gray-700 overflow-hidden cursor-pointer transition-all hover:scale-110 hover:border-yellow-400"
+                          className="relative w-[60px] h-[60px] rounded-full bg-black/60 border-2 border-gray-700 overflow-hidden cursor-pointer transition-[transform,border-color] duration-200 hover:scale-110 hover:border-yellow-400"
                         >
                           <Image
                             src={buff.image}
@@ -501,7 +502,7 @@ export default function IndustrialMissionCard({
                       }}
                       onMouseLeave={() => onMekHover?.(null)}
                       className={`
-                        w-full h-full flex flex-col items-center justify-center transition-all relative
+                        w-full h-full flex flex-col items-center justify-center transition-[border-color,box-shadow,background-color,opacity] duration-200 relative
                         ${isLocked
                           ? 'bg-black/80 opacity-30'
                           : assignedMek
@@ -574,16 +575,16 @@ export default function IndustrialMissionCard({
                               e.stopPropagation();
                               onMekChange?.(i);
                             }}
-                            className="flex-1 px-2 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 rounded text-xs text-yellow-400 font-bold transition-all"
+                            className="flex-1 px-2 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 rounded text-xs text-yellow-400 font-bold transition-[background-color] duration-200"
                           >
                             Change
                           </button>
-                          <button 
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               onMekRemove?.(i);
                             }}
-                            className="flex-1 px-2 py-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded text-xs text-red-400 font-bold transition-all"
+                            className="flex-1 px-2 py-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded text-xs text-red-400 font-bold transition-[background-color] duration-200"
                           >
                             Remove
                           </button>
@@ -600,8 +601,8 @@ export default function IndustrialMissionCard({
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs text-gray-500 uppercase tracking-wider">Success Chance</span>
-              <span className={`text-lg font-bold transition-all duration-500 ${
-                (animatedSuccessRate || successRate) >= 80 ? 'text-green-400' : 
+              <span className={`text-lg font-bold transition-colors duration-500 ${
+                (animatedSuccessRate || successRate) >= 80 ? 'text-green-400' :
                 (animatedSuccessRate || successRate) >= 50 ? 'text-yellow-400' : 'text-orange-400'
               }`}>
                 {animatedSuccessRate || successRate}%
@@ -621,7 +622,7 @@ export default function IndustrialMissionCard({
             </div>
             <button
               onClick={onDeploy}
-              className="relative px-12 py-4 bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black rounded font-bold text-lg uppercase tracking-[0.2em] transition-all shadow-lg hover:shadow-yellow-500/30 overflow-hidden group"
+              className="relative px-12 py-4 bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black rounded font-bold text-lg uppercase tracking-[0.2em] transition-[background,box-shadow] duration-300 shadow-lg hover:shadow-yellow-500/30 overflow-hidden group"
               style={{ fontFamily: "'Orbitron', sans-serif" }}
             >
               {/* Particle effect overlay */}
