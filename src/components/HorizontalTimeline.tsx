@@ -22,6 +22,8 @@ interface HorizontalTimelineProps {
   columnHeight?: number;
   fadePosition?: number;
   imageBlendMode?: 'normal' | 'screen' | 'lighten' | 'lighter';
+  hoverDarkenIntensity?: number; // 0-100: scales the gradient overlay darkness on hover/active
+  idleBackdropBlur?: number; // 0-50px: backdrop blur on idle (non-active) columns
 }
 
 const STORAGE_KEY = 'mek-landing-debug-config';
@@ -68,7 +70,9 @@ export default function HorizontalTimeline({
   imageBlurSelected = 5,
   columnHeight = 288,
   fadePosition = 50,
-  imageBlendMode = 'normal'
+  imageBlendMode = 'normal',
+  hoverDarkenIntensity = 90,
+  idleBackdropBlur = 0
 }: HorizontalTimelineProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -169,6 +173,12 @@ export default function HorizontalTimeline({
                 transition: isActive
                   ? 'all 0.5s ease-in-out 0s'
                   : 'all 0.5s ease-in-out 0.25s',
+                backdropFilter: !isActive && idleBackdropBlur > 0
+                  ? `blur(${idleBackdropBlur}px)`
+                  : 'none',
+                WebkitBackdropFilter: !isActive && idleBackdropBlur > 0
+                  ? `blur(${idleBackdropBlur}px)`
+                  : 'none',
               }}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
@@ -209,7 +219,7 @@ export default function HorizontalTimeline({
                     ${isActive ? 'opacity-100' : 'opacity-0'}
                   `}
                   style={{
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.2) 50%, transparent 70%)'
+                    background: `linear-gradient(to top, rgba(0,0,0,${0.9 * (hoverDarkenIntensity / 100)}) 0%, rgba(0,0,0,${0.6 * (hoverDarkenIntensity / 100)}) 30%, rgba(0,0,0,${0.2 * (hoverDarkenIntensity / 100)}) 50%, transparent 70%)`
                   }}
                 />
               </div>
@@ -234,19 +244,23 @@ export default function HorizontalTimeline({
                 </h2>
               </div>
 
-              {/* Content - fades in from bottom on hover/click */}
+              {/* Content - slides up on entrance, slides down on exit */}
               <div
                 className={`
                   absolute bottom-0 left-0 right-0
                   p-8 md:p-12
                   z-20
                   ${isActive
-                    ? 'translate-y-0'
-                    : 'translate-y-8'
+                    ? 'translate-y-0 opacity-100'
+                    : 'translate-y-4 opacity-0'
                   }
                 `}
                 style={{
-                  transition: 'transform 0.5s ease-in-out',
+                  transition: isActive
+                    ? 'transform 0.4s ease-out 0.2s, opacity 0.3s ease-out 0.2s'
+                    : 'transform 0.3s ease-in, opacity 0.2s ease-in',
+                  minWidth: '30%',
+                  width: '100%',
                 }}
               >
                 <h3
@@ -257,10 +271,12 @@ export default function HorizontalTimeline({
                     mb-2
                     font-['Orbitron']
                     tracking-wide
-                    ${isActive ? 'opacity-100' : 'opacity-0'}
+                    ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
                   `}
                   style={{
-                    transition: isActive ? 'opacity 0.3s ease-in-out 0.4s' : 'opacity 0.2s ease-in-out 0s',
+                    transition: isActive
+                      ? 'opacity 0.3s ease-out 0.4s, transform 0.3s ease-out 0.4s'
+                      : 'opacity 0.2s ease-in, transform 0.2s ease-in',
                   }}
                 >
                   {item.title}
@@ -269,10 +285,12 @@ export default function HorizontalTimeline({
                   <p
                     className={`
                       text-gray-300/80 text-sm md:text-base mb-3 italic
-                      ${isActive ? 'opacity-100' : 'opacity-0'}
+                      ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
                     `}
                     style={{
-                      transition: isActive ? 'opacity 0.3s ease-in-out 0.4s' : 'opacity 0.2s ease-in-out 0s',
+                      transition: isActive
+                        ? 'opacity 0.3s ease-out 0.45s, transform 0.3s ease-out 0.45s'
+                        : 'opacity 0.2s ease-in, transform 0.2s ease-in',
                     }}
                   >
                     {item.subtitle}
@@ -281,12 +299,14 @@ export default function HorizontalTimeline({
                 <p
                   className={`
                     text-white/90 leading-relaxed
-                    ${isActive ? 'opacity-100' : 'opacity-0'}
+                    ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
                   `}
                   style={{
                     fontFamily: phaseDescriptionFont,
                     fontSize: `${phaseDescriptionFontSize}px`,
-                    transition: isActive ? 'opacity 0.3s ease-in-out 0.4s' : 'opacity 0.2s ease-in-out 0s',
+                    transition: isActive
+                      ? 'opacity 0.3s ease-out 0.5s, transform 0.3s ease-out 0.5s'
+                      : 'opacity 0.2s ease-in, transform 0.2s ease-in',
                   }}
                 >
                   {item.description}

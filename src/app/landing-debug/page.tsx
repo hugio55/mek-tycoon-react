@@ -62,6 +62,8 @@ const DEFAULT_CONFIG = {
   phaseImage3: '',
   phaseImage4: '',
   phaseImageBlendMode: 'normal' as 'normal' | 'screen' | 'lighten' | 'lighter',
+  phaseHoverDarkeningIntensity: 90,
+  phaseIdleBackdropBlur: 0,
 };
 
 type ConfigType = typeof DEFAULT_CONFIG;
@@ -1189,6 +1191,44 @@ export default function LandingDebugPage() {
               </div>
               <div className="text-xs text-cyan-400 text-center mt-1">
                 Current: {config.phaseImageBlendMode === 'lighter' ? 'Add' : config.phaseImageBlendMode}
+              </div>
+            </div>
+
+            {/* Hover Darkening Intensity */}
+            <div className="mb-2">
+              <label className="block text-xs text-cyan-300 mb-1">
+                Hover Darkening (gradient intensity)
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.phaseHoverDarkeningIntensity}
+                onChange={(e) => updateConfig('phaseHoverDarkeningIntensity', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-cyan-400 text-center mt-0.5">
+                {config.phaseHoverDarkeningIntensity}% opacity
+              </div>
+            </div>
+
+            {/* Idle Backdrop Blur */}
+            <div className="mb-2">
+              <label className="block text-xs text-cyan-300 mb-1">
+                Idle Backdrop Blur (background behind column)
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                step="1"
+                value={config.phaseIdleBackdropBlur}
+                onChange={(e) => updateConfig('phaseIdleBackdropBlur', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-cyan-400 text-center mt-0.5">
+                {config.phaseIdleBackdropBlur}px blur
               </div>
             </div>
           </div>

@@ -215,6 +215,8 @@ export default function LandingPage() {
           setPhaseColumnHeight(config.phaseColumnHeight ?? DEFAULT_CONFIG.phaseColumnHeight);
           setPhaseFadePosition(config.phaseFadePosition ?? DEFAULT_CONFIG.phaseFadePosition);
           setPhaseImageBlendMode(config.phaseImageBlendMode ?? DEFAULT_CONFIG.phaseImageBlendMode);
+          setPhaseHoverDarkeningIntensity(config.phaseHoverDarkeningIntensity ?? DEFAULT_CONFIG.phaseHoverDarkeningIntensity);
+          setPhaseIdleBackdropBlur(config.phaseIdleBackdropBlur ?? DEFAULT_CONFIG.phaseIdleBackdropBlur);
           // Note: phaseImage1-4 not loaded here - PhaseCarousel reads directly from localStorage
         } catch (e) {
           console.error('Failed to load debug config:', e);
@@ -567,9 +569,9 @@ export default function LandingPage() {
         WebkitOverflowScrolling: 'touch',
       }}
     >
-      {/* Fixed background layer */}
+      {/* Scrolling background layer */}
       <div
-        className="fixed inset-0 w-full h-full bg-black z-0"
+        className="absolute inset-0 w-full h-full bg-black z-0"
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: 'cover',
@@ -580,10 +582,10 @@ export default function LandingPage() {
         }}
       />
 
-      {/* Fixed canvas layer */}
+      {/* Scrolling canvas layer */}
       <canvas
         ref={canvasRef}
-        className="fixed inset-0 w-full h-full z-[1] pointer-events-none"
+        className="absolute inset-0 w-full h-full z-[1] pointer-events-none"
         style={{ display: 'block', touchAction: 'none' }}
       />
 
@@ -665,6 +667,8 @@ export default function LandingPage() {
               columnHeight={phaseColumnHeight}
               fadePosition={phaseFadePosition}
               imageBlendMode={phaseImageBlendMode}
+              hoverDarkenIntensity={phaseHoverDarkeningIntensity}
+              idleBackdropBlur={phaseIdleBackdropBlur}
             />
           </div>
         </div>

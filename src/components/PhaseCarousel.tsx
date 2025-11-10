@@ -196,10 +196,11 @@ export default function PhaseCarousel({
     const dragOpacity = isDragging && isCenter ? Math.max(0.7, 1 - Math.abs(offset) / 500) : baseOpacity;
 
     const positionStyles = {
-      transform: `translateX(${finalTranslateX}%) scale(${dragScale})`,
+      transform: `translateX(${finalTranslateX}%) translateY(0) scale(${dragScale})`,
       opacity: dragOpacity,
       zIndex: isCenter ? 10 : 0,
       transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s',
+      animation: 'slideUpEntrance 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards',
     };
 
     // Get custom image for this phase based on order
@@ -230,7 +231,7 @@ export default function PhaseCarousel({
                        will-change-[transform,box-shadow]`,
             lockIcon: 'w-16 h-16 md:w-20 md:h-20 text-gray-400/30 mb-4 group-hover:text-gray-300/45 group-hover:scale-105 transition-all duration-700',
             title: `text-2xl md:text-3xl ${phase.locked ? 'text-gray-400/50 group-hover:text-gray-300/60' : 'bg-gradient-to-br from-white via-white/95 to-white/75 bg-clip-text text-transparent group-hover:from-white group-hover:via-white group-hover:to-white/85 drop-shadow-[0_2px_20px_rgba(255,255,255,0.15)]'} font-semibold tracking-tight transition-all duration-700`,
-            description: 'text-sm md:text-base text-gray-300/60 font-light tracking-wide leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:delay-[450ms] delay-0',
+            description: 'text-sm md:text-base text-gray-300/60 font-light tracking-wide leading-relaxed invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-[opacity,visibility] duration-300 group-hover:delay-[450ms] delay-0',
           };
 
         case 'industrial':
@@ -242,7 +243,7 @@ export default function PhaseCarousel({
                        group cursor-pointer`,
             lockIcon: 'w-16 h-16 md:w-20 md:h-20 text-yellow-500/20 mb-4 transition-all duration-500',
             title: `text-2xl md:text-3xl font-bold tracking-wider uppercase ${phase.locked ? 'text-gray-500' : 'text-yellow-400 mek-text-shadow'} transition-all duration-500`,
-            description: 'text-sm md:text-base text-gray-400 tracking-wide uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:delay-[450ms] delay-0',
+            description: 'text-sm md:text-base text-gray-400 tracking-wide uppercase invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-[opacity,visibility] duration-300 group-hover:delay-[450ms] delay-0',
           };
 
         case 'neon':
@@ -254,7 +255,7 @@ export default function PhaseCarousel({
                        group cursor-pointer`,
             lockIcon: 'w-16 h-16 md:w-20 md:h-20 text-cyan-400/30 mb-4 transition-all duration-500',
             title: `text-2xl md:text-3xl font-bold tracking-wider ${phase.locked ? 'text-gray-500' : 'text-cyan-400'} transition-all duration-500`,
-            description: 'text-sm md:text-base text-cyan-300/60 tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:delay-[450ms] delay-0',
+            description: 'text-sm md:text-base text-cyan-300/60 tracking-wide invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-[opacity,visibility] duration-300 group-hover:delay-[450ms] delay-0',
           };
       }
     };
