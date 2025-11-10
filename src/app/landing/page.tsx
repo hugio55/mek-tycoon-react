@@ -503,26 +503,25 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Sound Toggle - Centered Below Description */}
-          <div className="flex flex-col items-center gap-0.5 mt-4">
-            <div className="power-button-pulse">
-              <PowerSwitchToggle
-                checked={audioPlaying}
-                onChange={handleAudioToggle}
-                className="w-24 h-24"
-                scale={powerButtonScale}
-                verticalOffset={powerButtonVerticalOffset}
-              />
-            </div>
+          {/* Sound Toggle - Top Right Corner (Fixed Position) */}
+          <div className="fixed top-4 right-4 z-[30] flex flex-row items-center gap-3">
             <div
               className={`${soundLabelColor} uppercase tracking-wider`}
               style={{
                 fontFamily: soundLabelFont,
                 fontSize: `${soundLabelSize}px`,
-                marginTop: `${soundLabelVerticalOffset}px`
               }}
             >
               aural
+            </div>
+            <div className="power-button-pulse">
+              <PowerSwitchToggle
+                checked={audioPlaying}
+                onChange={handleAudioToggle}
+                className="w-16 h-16"
+                scale={powerButtonScale}
+                verticalOffset={powerButtonVerticalOffset}
+              />
             </div>
           </div>
 
