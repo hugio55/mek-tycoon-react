@@ -217,11 +217,11 @@ export default function HorizontalTimeline({
                     className="absolute inset-0 bg-cover bg-center transition-all duration-500"
                     style={{
                       backgroundImage: `url(${item.imageUrl})`,
-                      opacity: isActive ? 0.85 : 0.5,
+                      opacity: 0.85,
                       maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                       WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
-                      filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected : imageBlur}px)`,
-                      transform: `scale(${1 + ((isActive ? imageBlurSelected : imageBlur) * 0.015)})`,
+                      filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${imageBlur}px)`,
+                      transform: `scale(${1 + (imageBlur * 0.015)})`,
                       transformOrigin: 'center',
                     }}
                   />
