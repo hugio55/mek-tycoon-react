@@ -97,15 +97,14 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
     });
 
     // CRITICAL SECURITY FIX #1: Check for duplicate webhooks (idempotency)
-    const { TxHash } = payload;
-    if (TxHash) {
+    if (payload.TxHash) {
       const existingWebhook = await convex.query(
         api.webhooks.checkProcessedWebhook,
-        { transactionHash: TxHash }
+        { transactionHash: payload.TxHash }
       );
 
       if (existingWebhook) {
-        console.log('[🛡️WEBHOOK-SECURITY] ✓ Duplicate webhook detected, already processed:', TxHash);
+        console.log('[🛡️WEBHOOK-SECURITY] ✓ Duplicate webhook detected, already processed:', payload.TxHash);
         return; // Already processed, skip
       }
     }
