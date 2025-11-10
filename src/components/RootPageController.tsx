@@ -10,10 +10,11 @@ import LandingPage from "@/app/landing/page";
  * Root Page Controller
  *
  * Checks site settings to determine whether to show:
- * - Landing page facade (when landingPageEnabled = true AND on production domain)
- * - Game interface (when landingPageEnabled = false OR on localhost) - redirects to /home
+ * - Landing page facade (when landingPageEnabled = true)
+ * - Game interface (when landingPageEnabled = false OR on localhost with bypass enabled) - redirects to /home
  *
- * IMPORTANT: Localhost always bypasses landing page for development convenience
+ * IMPORTANT: By default, localhost bypasses landing page for development convenience
+ * However, "Ignore Localhost Rule" toggle can force localhost to act like production for testing
  */
 export default function RootPageController() {
   const router = useRouter();
@@ -29,11 +30,15 @@ export default function RootPageController() {
     setIsLocalhost(hostname === 'localhost' || hostname === '127.0.0.1');
   }, []);
 
-  // Redirect to /home if landing page is disabled OR if on localhost
+  // Redirect to /home if landing page is disabled OR if on localhost (unless ignoreLocalhostRule is true)
   useEffect(() => {
     if (mounted && siteSettings !== undefined) {
-      // Always bypass landing page on localhost for development
-      if (isLocalhost || !siteSettings.landingPageEnabled) {
+      const shouldBypassOnLocalhost = isLocalhost && !siteSettings.ignoreLocalhostRule;
+
+      // Bypass landing page if:
+      // 1. Landing page is disabled globally, OR
+      // 2. We're on localhost AND ignoreLocalhostRule is false (default behavior)
+      if (!siteSettings.landingPageEnabled || shouldBypassOnLocalhost) {
         router.push('/home');
       }
     }
@@ -48,8 +53,9 @@ export default function RootPageController() {
     );
   }
 
-  // Show landing page if enabled (but NOT on localhost)
-  if (siteSettings.landingPageEnabled && !isLocalhost) {
+  // Show landing page if enabled AND (not on localhost OR ignoreLocalhostRule is true)
+  const shouldShowLanding = siteSettings.landingPageEnabled && (!isLocalhost || siteSettings.ignoreLocalhostRule);
+  if (shouldShowLanding) {
     return <LandingPage />;
   }
 
