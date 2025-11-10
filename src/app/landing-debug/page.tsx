@@ -673,11 +673,14 @@ export default function LandingDebugPage() {
             </div>
           </div>
 
-          {/* Power Button Controls Section */}
+          {/* Power Button & Sound Label Controls Section */}
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
-              Power Button
+              Power Button & Sound Label
             </h2>
+            <p className="text-xs text-gray-400 mb-2">
+              Fixed top-right corner • Horizontal layout
+            </p>
 
             {/* Power Button Scale */}
             <div className="mb-2">
@@ -686,8 +689,8 @@ export default function LandingDebugPage() {
               </label>
               <input
                 type="range"
-                min="0.5"
-                max="2"
+                min="0.3"
+                max="1.5"
                 step="0.05"
                 value={config.powerButtonScale}
                 onChange={(e) => updateConfig('powerButtonScale', parseFloat(e.target.value))}
@@ -701,7 +704,7 @@ export default function LandingDebugPage() {
             {/* Power Button Vertical Offset */}
             <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">
-                Vertical Position
+                Vertical Offset
               </label>
               <input
                 type="range"
