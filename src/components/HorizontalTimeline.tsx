@@ -256,7 +256,7 @@ export default function HorizontalTimeline({
               </div>
 
               {/* Phase Label - always visible, centered */}
-              <div className="absolute inset-0 flex items-center justify-center z-10">
+              <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                 <h2
                   className={`
                     font-bold
