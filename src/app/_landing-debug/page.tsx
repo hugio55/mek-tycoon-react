@@ -866,50 +866,69 @@ export default function LandingDebugPage() {
                 min="100"
                 max="2000"
                 step="50"
-                value={config.bgStarsCount}
-                onChange={(e) => updateConfig('bgStarsCount', parseInt(e.target.value))}
+                value={config.bgStarCount}
+                onChange={(e) => updateConfig('bgStarCount', parseInt(e.target.value))}
                 className="w-full"
               />
               <div className="text-xs text-blue-400 text-center mt-0.5">
-                {config.bgStarsCount} stars
+                {config.bgStarCount} stars
               </div>
             </div>
 
-            {/* Star Size */}
+            {/* Min Brightness */}
             <div className="mb-2">
               <label className="block text-xs text-blue-300 mb-1">
-                Star Size
-              </label>
-              <input
-                type="range"
-                min="0.1"
-                max="2"
-                step="0.1"
-                value={config.bgStarsSize}
-                onChange={(e) => updateConfig('bgStarsSize', parseFloat(e.target.value))}
-                className="w-full"
-              />
-              <div className="text-xs text-blue-400 text-center mt-0.5">
-                {config.bgStarsSize.toFixed(1)}px
-              </div>
-            </div>
-
-            {/* Star Opacity */}
-            <div className="mb-2">
-              <label className="block text-xs text-blue-300 mb-1">
-                Star Brightness
+                Min Brightness
               </label>
               <input
                 type="range"
                 min="0"
                 max="100"
                 step="5"
-                value={config.bgStarsOpacity * 100}
-                onChange={(e) => updateConfig('bgStarsOpacity', parseFloat(e.target.value) / 100)}
+                value={config.bgStarMinBrightness * 100}
+                onChange={(e) => updateConfig('bgStarMinBrightness', parseFloat(e.target.value) / 100)}
                 className="w-full"
               />
               <div className="text-xs text-blue-400 text-center mt-0.5">
-                {(config.bgStarsOpacity * 100).toFixed(0)}%
+                {(config.bgStarMinBrightness * 100).toFixed(0)}%
+              </div>
+            </div>
+
+            {/* Max Brightness */}
+            <div className="mb-2">
+              <label className="block text-xs text-blue-300 mb-1">
+                Max Brightness
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.bgStarMaxBrightness * 100}
+                onChange={(e) => updateConfig('bgStarMaxBrightness', parseFloat(e.target.value) / 100)}
+                className="w-full"
+              />
+              <div className="text-xs text-blue-400 text-center mt-0.5">
+                {(config.bgStarMaxBrightness * 100).toFixed(0)}%
+              </div>
+            </div>
+
+            {/* Twinkle Amount */}
+            <div className="mb-2">
+              <label className="block text-xs text-blue-300 mb-1">
+                Twinkle Amount
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.bgStarTwinkleAmount}
+                onChange={(e) => updateConfig('bgStarTwinkleAmount', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-blue-400 text-center mt-0.5">
+                {config.bgStarTwinkleAmount}%
               </div>
             </div>
 
@@ -921,14 +940,33 @@ export default function LandingDebugPage() {
               <input
                 type="range"
                 min="0"
-                max="0.0005"
-                step="0.00001"
-                value={config.bgStarsTwinkleSpeed}
-                onChange={(e) => updateConfig('bgStarsTwinkleSpeed', parseFloat(e.target.value))}
+                max="5"
+                step="0.1"
+                value={config.bgStarTwinkleSpeed}
+                onChange={(e) => updateConfig('bgStarTwinkleSpeed', parseFloat(e.target.value))}
                 className="w-full"
               />
               <div className="text-xs text-blue-400 text-center mt-0.5">
-                {(config.bgStarsTwinkleSpeed * 100000).toFixed(1)}x
+                {config.bgStarTwinkleSpeed.toFixed(1)}x
+              </div>
+            </div>
+
+            {/* Size Randomness */}
+            <div className="mb-2">
+              <label className="block text-xs text-blue-300 mb-1">
+                Size Randomness
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.bgStarSizeRandomness}
+                onChange={(e) => updateConfig('bgStarSizeRandomness', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-blue-400 text-center mt-0.5">
+                {config.bgStarSizeRandomness}%
               </div>
             </div>
           </div>
