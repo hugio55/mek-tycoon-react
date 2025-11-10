@@ -693,9 +693,8 @@ export default function LandingPage() {
       style={{
         margin: 0,
         padding: 0,
-        height: '100vh',
+        minHeight: '100vh',
         overflowX: 'hidden',
-        overflowY: 'auto',
         position: 'relative',
         touchAction: 'pan-y',
         WebkitOverflowScrolling: 'touch',
@@ -730,7 +729,6 @@ export default function LandingPage() {
           paddingTop: viewportHeight > 0
             ? `calc(50vh - ${logoSize / 2}px - ${logoYPosition}vh)`
             : '50vh',
-          minHeight: '100vh',
         }}
       >
         <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full">
@@ -802,9 +800,9 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Phase Timeline - Fixed to Bottom */}
+      {/* Phase Timeline - Positioned by Debug Slider */}
       <div
-        className="fixed bottom-0 left-0 w-screen z-[20]"
+        className="relative w-screen z-[20]"
         style={{
           transform: `translateY(${phaseColumnYOffset}px)`,
         }}
