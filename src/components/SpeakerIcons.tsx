@@ -94,6 +94,25 @@ export const GeometricSpeakerIcon = ({ size = 48, isPlaying, className = '' }: S
     className={className}
     style={{ transition: 'all 0.8s ease-in-out' }}
   >
+    <style>
+      {`
+        @keyframes arrowPulse1 {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+        @keyframes arrowPulse2 {
+          0%, 100% { opacity: 0.7; }
+          50% { opacity: 0.2; }
+        }
+        @keyframes arrowPulse3 {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 0.15; }
+        }
+        .arrow-1 { animation: arrowPulse1 2.5s ease-in-out infinite; }
+        .arrow-2 { animation: arrowPulse2 2.5s ease-in-out infinite 0.3s; }
+        .arrow-3 { animation: arrowPulse3 2.5s ease-in-out infinite 0.6s; }
+      `}
+    </style>
     <path
       d="M10 16 L18 16 L28 8 L28 40 L18 32 L10 32 Z"
       stroke="currentColor"
@@ -104,21 +123,31 @@ export const GeometricSpeakerIcon = ({ size = 48, isPlaying, className = '' }: S
     {isPlaying ? (
       <>
         <path
-          d="M34 20 L38 24 L34 28"
+          className="arrow-1"
+          d="M32 20 L36 24 L32 28"
           stroke="currentColor"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          style={{ transition: 'stroke 0.8s ease-in-out, opacity 0.8s ease-in-out' }}
+          style={{ transition: 'stroke 0.8s ease-in-out' }}
         />
         <path
-          d="M36 14 L42 24 L36 34"
+          className="arrow-2"
+          d="M36 16 L42 24 L36 32"
           stroke="currentColor"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          opacity="0.5"
-          style={{ transition: 'stroke 0.8s ease-in-out, opacity 0.8s ease-in-out' }}
+          style={{ transition: 'stroke 0.8s ease-in-out' }}
+        />
+        <path
+          className="arrow-3"
+          d="M40 12 L48 24 L40 36"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ transition: 'stroke 0.8s ease-in-out' }}
         />
       </>
     ) : (

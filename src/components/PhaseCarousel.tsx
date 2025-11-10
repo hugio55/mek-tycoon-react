@@ -32,6 +32,7 @@ export default function PhaseCarousel({
   const [config, setConfig] = useState({
     phaseImageDarkening: 30,
     phaseBlurAmount: 20,
+    phaseBlurAmountSelected: 5,
     phaseColumnHeight: 288,
     phaseFadePosition: 50,
     phaseImage1: '',
@@ -49,6 +50,7 @@ export default function PhaseCarousel({
           setConfig({
             phaseImageDarkening: parsed.phaseImageDarkening ?? 30,
             phaseBlurAmount: parsed.phaseBlurAmount ?? 20,
+            phaseBlurAmountSelected: parsed.phaseBlurAmountSelected ?? 5,
             phaseColumnHeight: parsed.phaseColumnHeight ?? 288,
             phaseFadePosition: parsed.phaseFadePosition ?? 50,
             phaseImage1: parsed.phaseImage1 ?? '',
@@ -266,7 +268,7 @@ export default function PhaseCarousel({
               className="absolute inset-0 bg-cover bg-center transition-all duration-300"
               style={{
                 backgroundImage: `url(${phaseImage})`,
-                filter: `brightness(${1 - config.phaseImageDarkening / 100}) blur(${isCenter ? config.phaseBlurAmount : 0}px)`,
+                filter: `brightness(${1 - config.phaseImageDarkening / 100}) blur(${isCenter ? config.phaseBlurAmountSelected : config.phaseBlurAmount}px)`,
               }}
             />
           )}
@@ -348,8 +350,8 @@ export default function PhaseCarousel({
 
   return (
     <div className="w-full py-8 md:py-12 relative select-none" style={{ touchAction: 'pan-y' }}>
-      {/* Carousel Container */}
-      <div className="relative max-w-5xl mx-auto px-4" style={{ height: `${config.phaseColumnHeight}px` }}>
+      {/* Carousel Container - Full Width */}
+      <div className="relative w-full" style={{ height: `${config.phaseColumnHeight}px` }}>
         {/* Background layer for blur effect - colorful gradient behind cards */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="w-[80%] max-w-2xl rounded-3xl bg-gradient-to-br from-blue-500/30 via-purple-500/30 to-pink-500/30 blur-xl opacity-40" style={{ height: `${config.phaseColumnHeight}px` }} />
