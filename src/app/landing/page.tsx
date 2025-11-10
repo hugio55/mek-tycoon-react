@@ -6,6 +6,7 @@ import PhaseCarousel from '@/components/PhaseCarousel';
 import PowerSwitchToggle from '@/components/controls/PowerSwitchToggle';
 import MekGalleryCarousel from '@/components/MekGalleryCarousel';
 import EmotionsSlider from '@/components/EmotionsSlider';
+import { Volume2, VolumeX } from 'lucide-react';
 
 interface Star {
   x: number;
@@ -513,6 +514,35 @@ export default function LandingPage() {
               A futuristic idle tycoon game featuring collectible Mek NFTs. Build your empire through resource management, strategic crafting, and automated gold generation.
             </p>
           </div>
+
+          {/* Speaker Button - Below Description */}
+          <button
+            onClick={() => handleAudioToggle(!audioPlaying)}
+            className={`
+              relative
+              transition-all duration-300 ease-out
+              hover:scale-110 active:scale-95
+              cursor-pointer
+              ${audioPlaying ? 'text-yellow-400' : 'text-gray-400'}
+            `}
+            aria-label={audioPlaying ? 'Mute audio' : 'Play audio'}
+            style={{
+              marginTop: '-1rem',
+              filter: audioPlaying ? 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.6))' : 'none',
+            }}
+          >
+            {audioPlaying ? (
+              <div className="relative">
+                <Volume2 size={48} strokeWidth={2} />
+                {/* Pulsing animation when playing */}
+                <div className="absolute inset-0 animate-ping opacity-20">
+                  <Volume2 size={48} strokeWidth={2} />
+                </div>
+              </div>
+            ) : (
+              <VolumeX size={48} strokeWidth={2} />
+            )}
+          </button>
 
           {/* Sound Toggle - Top Right Corner (Fixed Position) */}
           <div
