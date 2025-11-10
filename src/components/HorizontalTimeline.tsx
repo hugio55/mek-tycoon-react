@@ -214,21 +214,13 @@ export default function HorizontalTimeline({
               onMouseLeave={handleHoverLeave}
               onClick={() => handlePhaseClick(index)}
             >
-              {/* Isolation wrapper - prevents backdrop-filter from interfering with blend mode */}
+              {/* Blend Mode Wrapper - contains visual layers that need to blend */}
               <div
                 className="absolute inset-0"
                 style={{
-                  isolation: 'isolate',
-                  backgroundColor: '#000', // Solid black background to prevent any gap visibility
+                  mixBlendMode: imageBlendMode,
                 }}
               >
-                {/* Blend Mode Wrapper - contains visual layers that need to blend */}
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    mixBlendMode: imageBlendMode,
-                  }}
-                >
                   {/* Timeline Background Image with each phase having its own Mek image */}
                   <div
                     className="absolute inset-0 bg-cover bg-center transition-all duration-500"
