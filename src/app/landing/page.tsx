@@ -323,7 +323,7 @@ export default function LandingPage() {
         }
       });
 
-      // Draw Layer 2 stars (on top of Layer 1)
+      // Draw Layer 2 stars as lines (fast-moving streaks)
       stars2.forEach((star) => {
         star.z -= starSpeed2;
 
@@ -341,37 +341,25 @@ export default function LandingPage() {
 
         if (x >= 0 && x <= canvas.width && y >= 0 && y <= canvas.height) {
           const opacity = Math.min(1, (maxZ - star.z) / maxZ);
-          ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+
+          // Calculate line length based on speed (faster = longer lines)
+          const lineLength = starSpeed2 * 2; // Adjust multiplier for desired streak length
+
+          // Calculate previous position to create streak effect
+          const prevZ = star.z + starSpeed2;
+          const prevScale = 1000 / prevZ;
+          const prevX = star.x * prevScale + centerX;
+          const prevY = star.y * prevScale + centerY;
+
+          // Draw star as a line (streak) instead of a dot
+          ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+          ctx.lineWidth = size * 0.5; // Thinner line for streak effect
+          ctx.lineCap = 'round'; // Smooth ends
+
           ctx.beginPath();
-          ctx.arc(x, y, size, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Draw star trails for closer stars (with Layer 2 motion blur controls)
-          if (star.z < 500 && motionBlurEnabled2) {
-            const velocity = starSpeed2;
-            const intensityMultiplier = blurIntensity2 / 100; // Convert 0-100 to 0-1
-            const blurLength = velocity * 0.5 * 2 * intensityMultiplier;
-            const trailOpacity = opacity * 0.5 * 0.5 * intensityMultiplier;
-
-            ctx.strokeStyle = `rgba(255, 255, 255, ${trailOpacity})`;
-            ctx.lineWidth = size / 2;
-
-            if (velocity > 2) {
-              const blurAmount = Math.min(velocity * 0.5 * 0.3 * intensityMultiplier, 3);
-              ctx.filter = `blur(${blurAmount}px)`;
-            }
-
-            ctx.beginPath();
-            const prevZ = star.z + starSpeed2 * blurLength;
-            const prevScale = 1000 / prevZ;
-            const prevX = star.x * prevScale + centerX;
-            const prevY = star.y * prevScale + centerY;
-            ctx.moveTo(prevX, prevY);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-
-            ctx.filter = 'none';
-          }
+          ctx.moveTo(prevX, prevY);
+          ctx.lineTo(x, y);
+          ctx.stroke();
         }
       });
 
