@@ -1,7 +1,7 @@
 'use client';
 
 import { Lock, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 
 interface Phase {
   id: number;
@@ -48,14 +48,95 @@ interface PhaseCarouselProps {
 
 export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
 
-  const handlePrevious = () => {
+  const touchStartXRef = useRef<number>(0);
+  const touchStartYRef = useRef<number>(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const velocityRef = useRef<number>(0);
+  const lastTouchXRef = useRef<number>(0);
+  const lastTouchTimeRef = useRef<number>(0);
+  const dragDirectionLockedRef = useRef<'horizontal' | 'vertical' | null>(null);
+
+  const handlePrevious = useCallback(() => {
     setCurrentIndex((prev) => (prev === 0 ? phases.length - 1 : prev - 1));
-  };
+  }, []);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setCurrentIndex((prev) => (prev === phases.length - 1 ? 0 : prev + 1));
-  };
+  }, []);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartXRef.current = touch.clientX;
+    touchStartYRef.current = touch.clientY;
+    lastTouchXRef.current = touch.clientX;
+    lastTouchTimeRef.current = Date.now();
+    velocityRef.current = 0;
+    dragDirectionLockedRef.current = null;
+    setIsDragging(true);
+    setDragOffset(0);
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDragging) return;
+
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - touchStartXRef.current;
+    const deltaY = touch.clientY - touchStartYRef.current;
+
+    if (dragDirectionLockedRef.current === null) {
+      const absX = Math.abs(deltaX);
+      const absY = Math.abs(deltaY);
+
+      if (absX > 10 || absY > 10) {
+        dragDirectionLockedRef.current = absX > absY ? 'horizontal' : 'vertical';
+      }
+    }
+
+    if (dragDirectionLockedRef.current === 'vertical') {
+      return;
+    }
+
+    if (dragDirectionLockedRef.current === 'horizontal') {
+      e.preventDefault();
+    }
+
+    const now = Date.now();
+    const timeDelta = now - lastTouchTimeRef.current;
+
+    if (timeDelta > 0) {
+      velocityRef.current = (touch.clientX - lastTouchXRef.current) / timeDelta;
+    }
+
+    lastTouchXRef.current = touch.clientX;
+    lastTouchTimeRef.current = now;
+    setDragOffset(deltaX);
+  }, [isDragging]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!isDragging) return;
+
+    const SWIPE_THRESHOLD = 50;
+    const VELOCITY_THRESHOLD = 0.3;
+
+    const shouldSwipe =
+      Math.abs(dragOffset) > SWIPE_THRESHOLD ||
+      Math.abs(velocityRef.current) > VELOCITY_THRESHOLD;
+
+    if (shouldSwipe) {
+      if (dragOffset > 0 || velocityRef.current > 0) {
+        handlePrevious();
+      } else {
+        handleNext();
+      }
+    }
+
+    setIsDragging(false);
+    setDragOffset(0);
+    dragDirectionLockedRef.current = null;
+  }, [isDragging, dragOffset, handlePrevious, handleNext]);
 
   const getVisiblePhases = () => {
     const prev = currentIndex === 0 ? phases.length - 1 : currentIndex - 1;
@@ -85,10 +166,11 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
                        backdrop-blur-2xl backdrop-saturate-150
                        border border-white/[0.08]
                        ${isCenter ? 'hover:border-white/[0.15] hover:bg-gradient-to-br hover:from-white/[0.1] hover:via-white/[0.05] hover:to-white/[0.1]' : ''}
-                       transition-all duration-700 ease-out
+                       transition-all duration-500 ease-out
                        shadow-[0_8px_32px_rgba(0,0,0,0.15),0_0_1px_rgba(255,255,255,0.05)_inset]
                        ${isCenter ? 'hover:shadow-[0_20px_60px_rgba(0,0,0,0.25),0_0_1px_rgba(255,255,255,0.1)_inset]' : ''}
-                       group cursor-pointer`,
+                       group cursor-pointer
+                       will-change-[transform,box-shadow]`,
             lockIcon: 'w-16 h-16 md:w-20 md:h-20 text-gray-400/30 mb-4 group-hover:text-gray-300/45 group-hover:scale-105 transition-all duration-700',
             title: `text-2xl md:text-3xl ${phase.locked ? 'text-gray-400/50 group-hover:text-gray-300/60' : 'bg-gradient-to-br from-white via-white/95 to-white/75 bg-clip-text text-transparent group-hover:from-white group-hover:via-white group-hover:to-white/85 drop-shadow-[0_2px_20px_rgba(255,255,255,0.15)]'} font-semibold tracking-tight transition-all duration-700`,
             description: 'text-sm md:text-base text-gray-300/60 font-light tracking-wide leading-relaxed group-hover:text-gray-200/70 transition-colors duration-700',
@@ -124,9 +206,14 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
 
     return (
       <div
-        className={`absolute inset-x-0 mx-auto w-[60%] max-w-md md:max-w-lg transition-all duration-700 ease-out ${positionClasses[position]}`}
+        className={`absolute inset-x-0 mx-auto w-[60%] max-w-md md:max-w-lg ${positionClasses[position]}`}
         style={{
           transformStyle: 'preserve-3d',
+          willChange: 'transform, opacity',
+          transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          perspective: 1000,
         }}
       >
         <div className={styles.container}>
@@ -184,7 +271,7 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
         {/* Left Arrow */}
         <button
           onClick={handlePrevious}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 min-w-[44px] min-h-[44px] w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-black/80 hover:border-white/40 transition-all duration-300 hover:scale-110 touch-manipulation"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 min-w-[44px] min-h-[44px] w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-black/80 hover:border-white/40 transition-all duration-200 hover:scale-110 touch-manipulation will-change-transform"
           style={{ touchAction: 'manipulation' }}
           aria-label="Previous phase"
         >
@@ -192,7 +279,13 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
         </button>
 
         {/* Carousel Track */}
-        <div className="relative w-full h-64 md:h-72">
+        <div
+          className="relative w-full h-64 md:h-72 overflow-hidden"
+          style={{
+            transform: 'translateZ(0)',
+            willChange: 'transform',
+          }}
+        >
           {visibleIndices.map((phaseIndex, i) => {
             const position = i === 0 ? 'left' : i === 1 ? 'center' : 'right';
             return (
@@ -206,7 +299,7 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
         {/* Right Arrow */}
         <button
           onClick={handleNext}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 min-w-[44px] min-h-[44px] w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-black/80 hover:border-white/40 transition-all duration-300 hover:scale-110 touch-manipulation"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 min-w-[44px] min-h-[44px] w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-black/80 hover:border-white/40 transition-all duration-200 hover:scale-110 touch-manipulation will-change-transform"
           style={{ touchAction: 'manipulation' }}
           aria-label="Next phase"
         >
@@ -228,11 +321,16 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
             style={{ touchAction: 'manipulation' }}
             aria-label={`Go to ${phase.title}`}
           >
-            <span className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              index === currentIndex
-                ? 'bg-white w-8'
-                : 'bg-white/30'
-            }`} />
+            <span
+              className={`w-2 h-2 rounded-full transition-all duration-300 will-change-[width,background-color] ${
+                index === currentIndex
+                  ? 'bg-white w-8'
+                  : 'bg-white/30'
+              }`}
+              style={{
+                transform: 'translateZ(0)',
+              }}
+            />
           </button>
         ))}
       </div>
