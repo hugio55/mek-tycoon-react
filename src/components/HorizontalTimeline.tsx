@@ -5,6 +5,7 @@ import { useState } from 'react';
 interface TimelineItem {
   phase: string;
   title: string;
+  subtitle?: string;
   description: string;
   imageUrl: string;
 }
@@ -19,24 +20,28 @@ const timelineData: TimelineItem[] = [
   {
     phase: 'Phase I',
     title: 'Foundation',
+    subtitle: 'The Beginning',
     description: 'Project inception and initial concept development. The vision for Mek Tycoon begins to take shape.',
     imageUrl: '/mek-images/1000px/dj1-bf3-mt1.webp',
   },
   {
     phase: 'Phase II',
     title: 'Development',
+    subtitle: 'Building the Future',
     description: 'Building the core ecosystem. Smart contracts, game mechanics, and NFT infrastructure come to life.',
     imageUrl: '/mek-images/1000px/dp1-er3-lg2.webp',
   },
   {
     phase: 'Phase III',
     title: 'Launch',
+    subtitle: 'Going Live',
     description: 'Going live with the mainnet. The Mek Tycoon universe opens its doors to the community.',
     imageUrl: '/mek-images/1000px/dp2-jg1-nm1.webp',
   },
   {
     phase: 'Phase IV',
     title: 'Expansion',
+    subtitle: 'Growing Together',
     description: 'Growing the community. New features, partnerships, and gameplay experiences emerge.',
     imageUrl: '/mek-images/1000px/fn4-cu1-de1.webp',
   },
@@ -50,7 +55,7 @@ export default function HorizontalTimeline({
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
-    <div className="w-full h-[48vh] min-h-[320px] relative overflow-hidden">
+    <div className="w-full h-[38vh] min-h-[280px] relative overflow-hidden">
       <div className="absolute inset-0 flex">
         {timelineData.map((item, index) => {
           const isHovered = hoveredIndex === index;
@@ -140,13 +145,18 @@ export default function HorizontalTimeline({
                     text-2xl md:text-3xl
                     font-bold
                     text-[#1779cf]
-                    mb-4
+                    mb-2
                     font-['Orbitron']
                     tracking-wide
                   "
                 >
                   {item.title}
                 </h3>
+                {item.subtitle && (
+                  <p className="text-gray-300/80 text-sm md:text-base mb-3 italic">
+                    {item.subtitle}
+                  </p>
+                )}
                 <p className="text-white/90 text-base md:text-lg leading-relaxed">
                   {item.description}
                 </p>
