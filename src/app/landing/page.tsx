@@ -542,8 +542,8 @@ export default function LandingPage() {
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.filter = audioPlaying
-                ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8)) brightness(1.2)'
-                : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0)) brightness(1.2)';
+                ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8)) brightness(1.4)'
+                : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0)) brightness(1.4)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.filter = audioPlaying
@@ -553,7 +553,7 @@ export default function LandingPage() {
           >
             {(() => {
               const SelectedIcon = SPEAKER_ICON_STYLES.find(s => s.id === speakerIconStyle)?.component || SPEAKER_ICON_STYLES[0].component;
-              return <SelectedIcon size={audioPlaying ? 48 : 58} isPlaying={audioPlaying} />;
+              return <SelectedIcon size={58} isPlaying={audioPlaying} />;
             })()}
           </button>
 
