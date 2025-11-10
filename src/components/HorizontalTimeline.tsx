@@ -234,17 +234,19 @@ export default function HorizontalTimeline({
                     }}
                   />
 
-                  {/* Dark Gradient Overlay - appears on hover/click, concentrated at bottom */}
-                  <div
-                    className={`
-                      absolute inset-0
-                      transition-opacity duration-500
-                      ${isActive ? 'opacity-100' : 'opacity-0'}
-                    `}
-                    style={{
-                      background: `linear-gradient(to top, rgba(0,0,0,${0.9 * (hoverDarkenIntensity / 100)}) 0%, rgba(0,0,0,${0.6 * (hoverDarkenIntensity / 100)}) 30%, rgba(0,0,0,${0.2 * (hoverDarkenIntensity / 100)}) 50%, transparent 70%)`
-                    }}
-                  />
+                  {/* Dark Gradient Overlay - only when using 'normal' blend mode (not lighten modes) */}
+                  {imageBlendMode === 'normal' && (
+                    <div
+                      className={`
+                        absolute inset-0
+                        transition-opacity duration-500
+                        ${isActive ? 'opacity-100' : 'opacity-0'}
+                      `}
+                      style={{
+                        background: `linear-gradient(to top, rgba(0,0,0,${0.9 * (hoverDarkenIntensity / 100)}) 0%, rgba(0,0,0,${0.6 * (hoverDarkenIntensity / 100)}) 30%, rgba(0,0,0,${0.2 * (hoverDarkenIntensity / 100)}) 50%, transparent 70%)`
+                      }}
+                    />
+                  )}
                 </div>
 
                 {/* Frosted Glass Backdrop Blur Overlay - separate layer with pointer-events-none */}

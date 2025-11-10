@@ -202,15 +202,48 @@ export default function LandingPage() {
       }
     }
 
-    // Listen for debug trigger events
-    const handleDebugTrigger = (event: CustomEvent) => {
-      if (event.detail?.action === 'show-audio-consent') {
+    // Listen for debug trigger events from localStorage and postMessage
+    const checkDebugTrigger = () => {
+      const trigger = localStorage.getItem('mek-debug-trigger');
+      if (trigger) {
+        try {
+          const triggerData = JSON.parse(trigger);
+          if (triggerData.action === 'show-audio-consent') {
+            setShowAudioConsent(true);
+            // Clear the trigger so it doesn't fire again
+            localStorage.removeItem('mek-debug-trigger');
+          }
+        } catch (e) {
+          console.error('Failed to parse debug trigger:', e);
+        }
+      }
+    };
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'mek-debug-trigger') {
+        checkDebugTrigger();
+      }
+    };
+
+    const handlePostMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'mek-debug-trigger' && event.data?.action === 'show-audio-consent') {
         setShowAudioConsent(true);
       }
     };
 
-    window.addEventListener('mek-debug-trigger' as any, handleDebugTrigger);
-    return () => window.removeEventListener('mek-debug-trigger' as any, handleDebugTrigger);
+    // Check on mount in case trigger was set before page loaded
+    checkDebugTrigger();
+
+    // Listen for storage events from other tabs
+    window.addEventListener('storage', handleStorageChange);
+
+    // Listen for postMessage from iframe parent
+    window.addEventListener('message', handlePostMessage);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('message', handlePostMessage);
+    };
   }, []);
 
   // Load config from localStorage and listen for changes from debug page
@@ -660,10 +693,9 @@ export default function LandingPage() {
       style={{
         margin: 0,
         padding: 0,
-        minHeight: '100vh',
-        height: 'auto',
+        height: '100vh',
         overflowX: 'hidden',
-        overflowY: 'scroll',
+        overflowY: 'auto',
         position: 'relative',
         touchAction: 'pan-y',
         WebkitOverflowScrolling: 'touch',
@@ -698,6 +730,7 @@ export default function LandingPage() {
           paddingTop: viewportHeight > 0
             ? `calc(50vh - ${logoSize / 2}px - ${logoYPosition}vh)`
             : '50vh',
+          minHeight: '100vh',
         }}
       >
         <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full">
