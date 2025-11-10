@@ -68,11 +68,11 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
   const renderCard = (phase: Phase, position: 'left' | 'center' | 'right') => {
     const isCenter = position === 'center';
 
-    // Base positioning and scaling classes
+    // Base positioning and scaling - all cards centered by default, then transformed
     const positionClasses = {
-      left: 'translate-x-[-85%] scale-[0.8] opacity-50 z-0',
+      left: '-translate-x-[45%] scale-[0.85] opacity-40 z-0',
       center: 'translate-x-0 scale-100 opacity-100 z-10',
-      right: 'translate-x-[85%] scale-[0.8] opacity-50 z-0',
+      right: 'translate-x-[45%] scale-[0.85] opacity-40 z-0',
     };
 
     // Variation-specific styles
