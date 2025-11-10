@@ -629,7 +629,7 @@ export default function LandingPage() {
       </div>
 
       {/* Horizontal Timeline - Full Width at Bottom */}
-      <div className="relative z-[20] w-full">
+      <div className="relative z-[20] w-full -mt-64">
         <HorizontalTimeline />
       </div>
     </div>
