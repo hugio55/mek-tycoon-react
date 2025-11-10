@@ -788,7 +788,7 @@ export default function AdminMasterDataPage() {
 
         {/* Landing Page Toggle - Compact */}
         <div className="mb-4 inline-flex items-center gap-3 bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2">
-          <span className="text-sm font-semibold text-gray-300">Landing Page</span>
+          <span className="text-sm font-semibold text-gray-300">Landing Page (Production Only)</span>
           <Switch.Root
             checked={siteSettings?.landingPageEnabled ?? false}
             onCheckedChange={async (enabled) => {
@@ -801,6 +801,7 @@ export default function AdminMasterDataPage() {
           <span className={`text-xs font-bold ${siteSettings?.landingPageEnabled ? 'text-yellow-400' : 'text-gray-400'}`}>
             {siteSettings?.landingPageEnabled ? 'ON' : 'OFF'}
           </span>
+          <span className="text-xs text-gray-500 ml-2">(localhost always shows game)</span>
         </div>
 
         {/* Message Display */}

@@ -124,7 +124,8 @@ export default function AdminPage() {
               </p>
               <div className="text-xs text-gray-500">
                 <span className="font-semibold text-gray-400">OFF:</span> Shows game interface (redirects to /home)<br />
-                <span className="font-semibold text-gray-400">ON:</span> Shows marketing landing page
+                <span className="font-semibold text-gray-400">ON:</span> Shows marketing landing page<br />
+                <span className="font-semibold text-yellow-400">Note:</span> Localhost always bypasses landing page (dev convenience)
               </div>
             </div>
             <div className="flex flex-col items-center gap-2">

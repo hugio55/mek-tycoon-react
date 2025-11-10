@@ -28,6 +28,8 @@ const DEFAULT_CONFIG = {
   soundLabelVerticalOffset: 0,
   motionBlurEnabled2: false,
   blurIntensity2: 50,
+  powerButtonScale: 1,
+  powerButtonVerticalOffset: 0,
 };
 
 export default function LandingDebugPage() {
@@ -560,6 +562,51 @@ export default function LandingDebugPage() {
                     {variation}
                   </button>
                 ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Power Button Controls Section */}
+          <div className="bg-gray-800 border border-gray-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
+              Power Button
+            </h2>
+
+            {/* Power Button Scale */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Button Scale
+              </label>
+              <input
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.05"
+                value={config.powerButtonScale}
+                onChange={(e) => updateConfig('powerButtonScale', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.powerButtonScale.toFixed(2)}x
+              </div>
+            </div>
+
+            {/* Power Button Vertical Offset */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Vertical Position
+              </label>
+              <input
+                type="range"
+                min="-50"
+                max="50"
+                step="1"
+                value={config.powerButtonVerticalOffset}
+                onChange={(e) => updateConfig('powerButtonVerticalOffset', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.powerButtonVerticalOffset}px
               </div>
             </div>
           </div>
