@@ -168,7 +168,7 @@ export default function HorizontalTimeline({
           const isAnyActive = hoveredIndex !== null || selectedIndex !== null;
 
           let widthStyle: string;
-          let marginStyle: string = '0'; // Overlap to bridge sub-pixel gaps
+          let marginStyle: string = '-1px'; // Default: Overlap to bridge sub-pixel gaps
 
           if (isAnyActive) {
             if (isActive) {
@@ -178,7 +178,8 @@ export default function HorizontalTimeline({
               marginStyle = '-1px'; // Negative margin to overlap and eliminate gaps
             }
           } else {
-            widthStyle = '25%';
+            widthStyle = 'calc(25% + 1px)'; // Add 1px to compensate for -1px margin
+            marginStyle = '-1px'; // Always overlap to prevent gaps
           }
 
           // Calculate blur value
