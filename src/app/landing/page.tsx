@@ -535,13 +535,25 @@ export default function LandingPage() {
             aria-label={audioPlaying ? 'Mute audio' : 'Play audio'}
             style={{
               marginTop: '-1rem',
-              filter: audioPlaying ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8))' : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0))',
-              transition: 'filter 0.5s ease-in-out, transform 0.3s ease-out',
+              filter: audioPlaying
+                ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8))'
+                : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0))',
+              transition: 'filter 0.8s ease-in-out, transform 0.3s ease-out, color 0.8s ease-in-out',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.filter = audioPlaying
+                ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8)) brightness(1.2)'
+                : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0)) brightness(1.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.filter = audioPlaying
+                ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8))'
+                : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0))';
             }}
           >
             {(() => {
               const SelectedIcon = SPEAKER_ICON_STYLES.find(s => s.id === speakerIconStyle)?.component || SPEAKER_ICON_STYLES[0].component;
-              return <SelectedIcon size={48} isPlaying={audioPlaying} />;
+              return <SelectedIcon size={audioPlaying ? 48 : 58} isPlaying={audioPlaying} />;
             })()}
           </button>
 
