@@ -4807,7 +4807,7 @@ export default function StoryClimbPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-y-auto">
       {/* Story Mode Title Card with Style Selector */}
       <StoryModeTitleCard
         chapter={previewMode ? `CHAPTER ${previewChapter}` : "CHAPTER 1"}
@@ -5083,17 +5083,15 @@ export default function StoryClimbPage() {
           {/* Left Column - Tree Canvas - fixed width */}
           <div ref={containerRef} className="flex-shrink-0 overflow-hidden" style={{ width: '503px' }}>
             {/* Canvas Container with Style Q background */}
-            <div 
-              className="relative rounded-lg" 
-              style={{ 
+            <div
+              className="relative rounded-lg"
+              style={{
                 width: `${canvasSize.width}px`,
                 height: `${canvasSize.height}px`,
                 background: 'rgba(255, 255, 255, 0.005)',
                 backdropFilter: 'blur(1px)',
                 border: '1px solid rgba(255, 255, 255, 0.015)',
-                boxShadow: '0 0 25px rgba(0, 0, 0, 0.3) inset',
-                touchAction: 'none',  // Prevent touch scrolling
-                overscrollBehavior: 'none'  // Prevent scroll chaining
+                boxShadow: '0 0 25px rgba(0, 0, 0, 0.3) inset'
               }}
               onWheel={handleWheel}
             >

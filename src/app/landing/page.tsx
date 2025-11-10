@@ -436,7 +436,7 @@ export default function LandingPage() {
         minHeight: '100vh',
         height: 'auto',
         overflowX: 'hidden',
-        overflowY: 'visible',
+        overflowY: 'auto',
         touchAction: 'pan-y',
         WebkitOverflowScrolling: 'touch',
       }}
@@ -471,35 +471,13 @@ export default function LandingPage() {
         </span>
       </button>
 
-      {/* Right Debug Panel - Design Variation & Background Controls */}
+      {/* Right Debug Panel - Background Controls Only */}
       {showDebugPanel && (
         <div className="fixed right-4 top-20 z-[9999] w-72 bg-black/95 border-2 border-yellow-500/50 rounded-lg shadow-2xl pointer-events-auto max-h-[calc(100vh-100px)] overflow-y-auto">
           <div className="p-4">
             <h3 className="text-yellow-400 text-xs font-bold uppercase tracking-wider mb-3 border-b border-yellow-500/30 pb-2">
-              Design Controls
+              Background Controls
             </h3>
-
-            {/* Design Variation */}
-            <div className="mb-4">
-              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-2">
-                Phase Carousel Design
-              </label>
-              <div className="space-y-2">
-                {(['modern', 'industrial', 'neon'] as const).map((variation) => (
-                  <button
-                    key={variation}
-                    onClick={() => updateConfig('designVariation', variation)}
-                    className={`w-full px-3 py-2 text-xs rounded transition-all font-orbitron uppercase tracking-wide ${
-                      designVariation === variation
-                        ? 'bg-yellow-500/30 border-2 border-yellow-400 text-yellow-300'
-                        : 'bg-black/50 border border-yellow-500/30 text-yellow-500/70 hover:bg-yellow-500/10 hover:border-yellow-400/50'
-                    }`}
-                  >
-                    {variation}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {/* Background Y Position */}
             <div className="mb-4">
