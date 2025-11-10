@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import HorizontalTimeline from '@/components/HorizontalTimeline';
+import PhaseCarousel from '@/components/PhaseCarousel';
 import { SPEAKER_ICON_STYLES, type SpeakerIconStyle } from '@/components/SpeakerIcons';
 
 interface Star {
@@ -64,6 +65,14 @@ const DEFAULT_CONFIG = {
   powerButtonHorizontalOffset: 0,
   powerButtonGlowEnabled: true,
   speakerIconStyle: 'minimal' as SpeakerIconStyle,
+  phaseImageDarkness: 50,
+  phaseImageBlur: 5,
+  phaseColumnHeight: 288,
+  phaseFadePosition: 60,
+  phaseImage1: '',
+  phaseImage2: '',
+  phaseImage3: '',
+  phaseImage4: '',
 };
 
 export default function LandingPage() {
@@ -136,6 +145,15 @@ export default function LandingPage() {
   // Speaker icon style
   const [speakerIconStyle, setSpeakerIconStyle] = useState<SpeakerIconStyle>(DEFAULT_CONFIG.speakerIconStyle);
 
+  // Phase Carousel controls
+  const [phaseImageDarkness, setPhaseImageDarkness] = useState(DEFAULT_CONFIG.phaseImageDarkness);
+  const [phaseImageBlur, setPhaseImageBlur] = useState(DEFAULT_CONFIG.phaseImageBlur);
+  const [phaseColumnHeight, setPhaseColumnHeight] = useState(DEFAULT_CONFIG.phaseColumnHeight);
+  const [phaseFadePosition, setPhaseFadePosition] = useState(DEFAULT_CONFIG.phaseFadePosition);
+  const [phaseImage1, setPhaseImage1] = useState(DEFAULT_CONFIG.phaseImage1);
+  const [phaseImage2, setPhaseImage2] = useState(DEFAULT_CONFIG.phaseImage2);
+  const [phaseImage3, setPhaseImage3] = useState(DEFAULT_CONFIG.phaseImage3);
+  const [phaseImage4, setPhaseImage4] = useState(DEFAULT_CONFIG.phaseImage4);
 
   // Load config from localStorage and listen for changes from debug page
   useEffect(() => {
@@ -183,6 +201,14 @@ export default function LandingPage() {
           setPowerButtonHorizontalOffset(config.powerButtonHorizontalOffset ?? DEFAULT_CONFIG.powerButtonHorizontalOffset);
           setPowerButtonGlowEnabled(config.powerButtonGlowEnabled ?? DEFAULT_CONFIG.powerButtonGlowEnabled);
           setSpeakerIconStyle(config.speakerIconStyle ?? DEFAULT_CONFIG.speakerIconStyle);
+          setPhaseImageDarkness(config.phaseImageDarkness ?? DEFAULT_CONFIG.phaseImageDarkness);
+          setPhaseImageBlur(config.phaseImageBlur ?? DEFAULT_CONFIG.phaseImageBlur);
+          setPhaseColumnHeight(config.phaseColumnHeight ?? DEFAULT_CONFIG.phaseColumnHeight);
+          setPhaseFadePosition(config.phaseFadePosition ?? DEFAULT_CONFIG.phaseFadePosition);
+          setPhaseImage1(config.phaseImage1 ?? DEFAULT_CONFIG.phaseImage1);
+          setPhaseImage2(config.phaseImage2 ?? DEFAULT_CONFIG.phaseImage2);
+          setPhaseImage3(config.phaseImage3 ?? DEFAULT_CONFIG.phaseImage3);
+          setPhaseImage4(config.phaseImage4 ?? DEFAULT_CONFIG.phaseImage4);
         } catch (e) {
           console.error('Failed to load debug config:', e);
         }
@@ -566,7 +592,7 @@ export default function LandingPage() {
             className={`
               relative
               transition-all duration-500 ease-out
-              hover:scale-110 active:scale-95
+              active:scale-95
               cursor-pointer
               mt-8 sm:mt-12 md:mt-16
               ${audioPlaying ? 'text-yellow-400' : 'text-gray-400'}
@@ -580,11 +606,13 @@ export default function LandingPage() {
               transition: 'filter 0.8s ease-in-out, transform 0.3s ease-out, color 0.8s ease-in-out',
             }}
             onMouseEnter={(e) => {
+              e.currentTarget.style.transform = `scale(${powerButtonScale * 1.1}) translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px)`;
               e.currentTarget.style.filter = powerButtonGlowEnabled && audioPlaying
                 ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8)) brightness(1.4)'
                 : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0)) brightness(1.4)';
             }}
             onMouseLeave={(e) => {
+              e.currentTarget.style.transform = `scale(${powerButtonScale}) translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px)`;
               e.currentTarget.style.filter = powerButtonGlowEnabled && audioPlaying
                 ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8))'
                 : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0))';
