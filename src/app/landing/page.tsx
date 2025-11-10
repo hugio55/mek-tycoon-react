@@ -31,6 +31,11 @@ const DEFAULT_CONFIG = {
   starScale2: 1,
   starSpeed2: 10,
   starFrequency2: 100,
+  lineLength2: 2,
+  starScale3: 1,
+  starSpeed3: 10,
+  starFrequency3: 100,
+  lineLength3: 2,
   logoSize: 600,
   logoYPosition: 50,
   selectedFont: 'Orbitron',
@@ -63,6 +68,13 @@ export default function LandingPage() {
   const [starScale2, setStarScale2] = useState(DEFAULT_CONFIG.starScale2);
   const [starSpeed2, setStarSpeed2] = useState(DEFAULT_CONFIG.starSpeed2);
   const [starFrequency2, setStarFrequency2] = useState(DEFAULT_CONFIG.starFrequency2);
+  const [lineLength2, setLineLength2] = useState(DEFAULT_CONFIG.lineLength2);
+
+  // Control states - Layer 3
+  const [starScale3, setStarScale3] = useState(DEFAULT_CONFIG.starScale3);
+  const [starSpeed3, setStarSpeed3] = useState(DEFAULT_CONFIG.starSpeed3);
+  const [starFrequency3, setStarFrequency3] = useState(DEFAULT_CONFIG.starFrequency3);
+  const [lineLength3, setLineLength3] = useState(DEFAULT_CONFIG.lineLength3);
 
   // Layout controls
   const [logoSize, setLogoSize] = useState(DEFAULT_CONFIG.logoSize);
@@ -110,6 +122,11 @@ export default function LandingPage() {
           setStarScale2(config.starScale2 ?? DEFAULT_CONFIG.starScale2);
           setStarSpeed2(config.starSpeed2 ?? DEFAULT_CONFIG.starSpeed2);
           setStarFrequency2(config.starFrequency2 ?? DEFAULT_CONFIG.starFrequency2);
+          setLineLength2(config.lineLength2 ?? DEFAULT_CONFIG.lineLength2);
+          setStarScale3(config.starScale3 ?? DEFAULT_CONFIG.starScale3);
+          setStarSpeed3(config.starSpeed3 ?? DEFAULT_CONFIG.starSpeed3);
+          setStarFrequency3(config.starFrequency3 ?? DEFAULT_CONFIG.starFrequency3);
+          setLineLength3(config.lineLength3 ?? DEFAULT_CONFIG.lineLength3);
           setLogoSize(config.logoSize ?? DEFAULT_CONFIG.logoSize);
           setLogoYPosition(config.logoYPosition ?? DEFAULT_CONFIG.logoYPosition);
           setSelectedFont(config.selectedFont ?? DEFAULT_CONFIG.selectedFont);
@@ -285,6 +302,18 @@ export default function LandingPage() {
       });
     }
 
+    // Initialize Layer 3 stars (third starfield)
+    const stars3: Star[] = [];
+    for (let i = 0; i < starFrequency3; i++) {
+      const { x, y } = initializeStar();
+      stars3.push({
+        x,
+        y,
+        z: Math.random() * maxZ,
+        size: Math.random() * 2 + 1,
+      });
+    }
+
 
     let animationId: number;
     const animate = () => {
@@ -350,11 +379,45 @@ export default function LandingPage() {
         if (x >= 0 && x <= canvas.width && y >= 0 && y <= canvas.height) {
           const opacity = Math.min(1, (maxZ - star.z) / maxZ);
 
-          // Calculate line length based on speed (faster = longer lines)
-          const lineLength = starSpeed2 * 2; // Adjust multiplier for desired streak length
-
           // Calculate previous position to create streak effect
           const prevZ = star.z + starSpeed2;
+          const prevScale = 1000 / prevZ;
+          const prevX = star.x * prevScale + centerX;
+          const prevY = star.y * prevScale + centerY;
+
+          // Draw star as a line (streak) instead of a dot
+          ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+          ctx.lineWidth = size * 0.5; // Thinner line for streak effect
+          ctx.lineCap = 'round'; // Smooth ends
+
+          ctx.beginPath();
+          ctx.moveTo(prevX, prevY);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+        }
+      });
+
+      // Draw Layer 3 stars as lines (ultra-fast-moving streaks)
+      stars3.forEach((star) => {
+        star.z -= starSpeed3;
+
+        if (star.z <= 0) {
+          const { x, y } = initializeStar();
+          star.x = x;
+          star.y = y;
+          star.z = maxZ;
+        }
+
+        const scale = 1000 / star.z;
+        const x = star.x * scale + centerX;
+        const y = star.y * scale + centerY;
+        const size = (star.size * scale) * starScale3;
+
+        if (x >= 0 && x <= canvas.width && y >= 0 && y <= canvas.height) {
+          const opacity = Math.min(1, (maxZ - star.z) / maxZ);
+
+          // Calculate previous position to create streak effect
+          const prevZ = star.z + starSpeed3;
           const prevScale = 1000 / prevZ;
           const prevX = star.x * prevScale + centerX;
           const prevY = star.y * prevScale + centerY;
@@ -380,7 +443,7 @@ export default function LandingPage() {
       window.removeEventListener('resize', updateCanvasSize);
       cancelAnimationFrame(animationId);
     };
-  }, [starScale, starSpeed, starFrequency, starScale2, starSpeed2, starFrequency2, motionBlurEnabled, blurIntensity, motionBlurEnabled2, blurIntensity2]);
+  }, [starScale, starSpeed, starFrequency, starScale2, starSpeed2, starFrequency2, lineLength2, starScale3, starSpeed3, starFrequency3, lineLength3, motionBlurEnabled, blurIntensity, motionBlurEnabled2, blurIntensity2]);
 
   return (
     <div
