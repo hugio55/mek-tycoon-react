@@ -10,12 +10,15 @@ interface Star {
   y: number;
   z: number;
   size: number;
+  baseSize: number; // Base size for randomness calculation
+  twinkleOffset: number; // Phase offset for twinkle effect
 }
 
 interface BackgroundStar {
   x: number;
   y: number;
   brightness: number;
+  baseSize: number; // Base size for size randomness
   twinkleOffset: number;
 }
 
@@ -29,15 +32,30 @@ const DEFAULT_CONFIG = {
   starScale: 1,
   starSpeed: 3,
   starFrequency: 200,
+  twinkleAmount: 0,
+  twinkleSpeed: 1,
+  sizeRandomness: 50,
   starScale2: 1,
   starSpeed2: 10,
   starFrequency2: 100,
   lineLength2: 2,
+  twinkleAmount2: 0,
+  twinkleSpeed2: 1,
+  sizeRandomness2: 50,
   starScale3: 1,
   starSpeed3: 10,
   starFrequency3: 100,
   lineLength3: 2,
   spawnDelay3: 50,
+  twinkleAmount3: 0,
+  twinkleSpeed3: 1,
+  sizeRandomness3: 50,
+  bgStarTwinkleAmount: 30,
+  bgStarTwinkleSpeed: 0.5,
+  bgStarSizeRandomness: 50,
+  bgStarCount: 800,
+  bgStarMinBrightness: 0.1,
+  bgStarMaxBrightness: 0.4,
   logoSize: 600,
   logoYPosition: 0, // Percentage offset from center (-50 to +50)
   selectedFont: 'Orbitron',
@@ -91,12 +109,18 @@ export default function LandingPage() {
   const [starScale, setStarScale] = useState(DEFAULT_CONFIG.starScale);
   const [starSpeed, setStarSpeed] = useState(DEFAULT_CONFIG.starSpeed);
   const [starFrequency, setStarFrequency] = useState(DEFAULT_CONFIG.starFrequency);
+  const [twinkleAmount, setTwinkleAmount] = useState(DEFAULT_CONFIG.twinkleAmount);
+  const [twinkleSpeed, setTwinkleSpeed] = useState(DEFAULT_CONFIG.twinkleSpeed);
+  const [sizeRandomness, setSizeRandomness] = useState(DEFAULT_CONFIG.sizeRandomness);
 
   // Control states - Layer 2
   const [starScale2, setStarScale2] = useState(DEFAULT_CONFIG.starScale2);
   const [starSpeed2, setStarSpeed2] = useState(DEFAULT_CONFIG.starSpeed2);
   const [starFrequency2, setStarFrequency2] = useState(DEFAULT_CONFIG.starFrequency2);
   const [lineLength2, setLineLength2] = useState(DEFAULT_CONFIG.lineLength2);
+  const [twinkleAmount2, setTwinkleAmount2] = useState(DEFAULT_CONFIG.twinkleAmount2);
+  const [twinkleSpeed2, setTwinkleSpeed2] = useState(DEFAULT_CONFIG.twinkleSpeed2);
+  const [sizeRandomness2, setSizeRandomness2] = useState(DEFAULT_CONFIG.sizeRandomness2);
 
   // Control states - Layer 3
   const [starScale3, setStarScale3] = useState(DEFAULT_CONFIG.starScale3);
@@ -104,6 +128,17 @@ export default function LandingPage() {
   const [starFrequency3, setStarFrequency3] = useState(DEFAULT_CONFIG.starFrequency3);
   const [lineLength3, setLineLength3] = useState(DEFAULT_CONFIG.lineLength3);
   const [spawnDelay3, setSpawnDelay3] = useState(DEFAULT_CONFIG.spawnDelay3);
+  const [twinkleAmount3, setTwinkleAmount3] = useState(DEFAULT_CONFIG.twinkleAmount3);
+  const [twinkleSpeed3, setTwinkleSpeed3] = useState(DEFAULT_CONFIG.twinkleSpeed3);
+  const [sizeRandomness3, setSizeRandomness3] = useState(DEFAULT_CONFIG.sizeRandomness3);
+
+  // Control states - Background Static Stars
+  const [bgStarTwinkleAmount, setBgStarTwinkleAmount] = useState(DEFAULT_CONFIG.bgStarTwinkleAmount);
+  const [bgStarTwinkleSpeed, setBgStarTwinkleSpeed] = useState(DEFAULT_CONFIG.bgStarTwinkleSpeed);
+  const [bgStarSizeRandomness, setBgStarSizeRandomness] = useState(DEFAULT_CONFIG.bgStarSizeRandomness);
+  const [bgStarCount, setBgStarCount] = useState(DEFAULT_CONFIG.bgStarCount);
+  const [bgStarMinBrightness, setBgStarMinBrightness] = useState(DEFAULT_CONFIG.bgStarMinBrightness);
+  const [bgStarMaxBrightness, setBgStarMaxBrightness] = useState(DEFAULT_CONFIG.bgStarMaxBrightness);
 
   // Layout controls
   const [logoSize, setLogoSize] = useState(DEFAULT_CONFIG.logoSize);
@@ -258,15 +293,30 @@ export default function LandingPage() {
           setStarScale(config.starScale ?? DEFAULT_CONFIG.starScale);
           setStarSpeed(config.starSpeed ?? DEFAULT_CONFIG.starSpeed);
           setStarFrequency(config.starFrequency ?? DEFAULT_CONFIG.starFrequency);
+          setTwinkleAmount(config.twinkleAmount ?? DEFAULT_CONFIG.twinkleAmount);
+          setTwinkleSpeed(config.twinkleSpeed ?? DEFAULT_CONFIG.twinkleSpeed);
+          setSizeRandomness(config.sizeRandomness ?? DEFAULT_CONFIG.sizeRandomness);
           setStarScale2(config.starScale2 ?? DEFAULT_CONFIG.starScale2);
           setStarSpeed2(config.starSpeed2 ?? DEFAULT_CONFIG.starSpeed2);
           setStarFrequency2(config.starFrequency2 ?? DEFAULT_CONFIG.starFrequency2);
           setLineLength2(config.lineLength2 ?? DEFAULT_CONFIG.lineLength2);
+          setTwinkleAmount2(config.twinkleAmount2 ?? DEFAULT_CONFIG.twinkleAmount2);
+          setTwinkleSpeed2(config.twinkleSpeed2 ?? DEFAULT_CONFIG.twinkleSpeed2);
+          setSizeRandomness2(config.sizeRandomness2 ?? DEFAULT_CONFIG.sizeRandomness2);
           setStarScale3(config.starScale3 ?? DEFAULT_CONFIG.starScale3);
           setStarSpeed3(config.starSpeed3 ?? DEFAULT_CONFIG.starSpeed3);
           setStarFrequency3(config.starFrequency3 ?? DEFAULT_CONFIG.starFrequency3);
           setLineLength3(config.lineLength3 ?? DEFAULT_CONFIG.lineLength3);
           setSpawnDelay3(config.spawnDelay3 ?? DEFAULT_CONFIG.spawnDelay3);
+          setTwinkleAmount3(config.twinkleAmount3 ?? DEFAULT_CONFIG.twinkleAmount3);
+          setTwinkleSpeed3(config.twinkleSpeed3 ?? DEFAULT_CONFIG.twinkleSpeed3);
+          setSizeRandomness3(config.sizeRandomness3 ?? DEFAULT_CONFIG.sizeRandomness3);
+          setBgStarTwinkleAmount(config.bgStarTwinkleAmount ?? DEFAULT_CONFIG.bgStarTwinkleAmount);
+          setBgStarTwinkleSpeed(config.bgStarTwinkleSpeed ?? DEFAULT_CONFIG.bgStarTwinkleSpeed);
+          setBgStarSizeRandomness(config.bgStarSizeRandomness ?? DEFAULT_CONFIG.bgStarSizeRandomness);
+          setBgStarCount(config.bgStarCount ?? DEFAULT_CONFIG.bgStarCount);
+          setBgStarMinBrightness(config.bgStarMinBrightness ?? DEFAULT_CONFIG.bgStarMinBrightness);
+          setBgStarMaxBrightness(config.bgStarMaxBrightness ?? DEFAULT_CONFIG.bgStarMaxBrightness);
           setLogoSize(config.logoSize ?? DEFAULT_CONFIG.logoSize);
           setLogoYPosition(config.logoYPosition ?? DEFAULT_CONFIG.logoYPosition);
           setSelectedFont(config.selectedFont ?? DEFAULT_CONFIG.selectedFont);
@@ -471,12 +521,14 @@ export default function LandingPage() {
 
     // Create distant background star field (static/very slow)
     const backgroundStars: BackgroundStar[] = [];
-    const numBackgroundStars = 800;
-    for (let i = 0; i < numBackgroundStars; i++) {
+    for (let i = 0; i < bgStarCount; i++) {
+      const baseSize = 0.5;
+      const sizeVariation = (bgStarSizeRandomness / 100) * baseSize;
       backgroundStars.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        brightness: Math.random() * 0.3 + 0.1, // Very dim
+        brightness: Math.random() * (bgStarMaxBrightness - bgStarMinBrightness) + bgStarMinBrightness,
+        baseSize: baseSize + (Math.random() * 2 - 1) * sizeVariation, // Apply size randomness
         twinkleOffset: Math.random() * Math.PI * 2,
       });
     }
@@ -510,11 +562,15 @@ export default function LandingPage() {
 
     for (let i = 0; i < starFrequency; i++) {
       const { x, y } = initializeStar();
+      const baseSize = Math.random() * 2 + 1;
+      const sizeVariation = (sizeRandomness / 100) * baseSize;
       stars.push({
         x,
         y,
         z: Math.random() * maxZ,
-        size: Math.random() * 2 + 1,
+        size: baseSize,
+        baseSize: baseSize + (Math.random() * 2 - 1) * sizeVariation,
+        twinkleOffset: Math.random() * Math.PI * 2,
       });
     }
 
@@ -522,11 +578,15 @@ export default function LandingPage() {
     const stars2: Star[] = [];
     for (let i = 0; i < starFrequency2; i++) {
       const { x, y } = initializeStar();
+      const baseSize = Math.random() * 2 + 1;
+      const sizeVariation = (sizeRandomness2 / 100) * baseSize;
       stars2.push({
         x,
         y,
         z: Math.random() * maxZ,
-        size: Math.random() * 2 + 1,
+        size: baseSize,
+        baseSize: baseSize + (Math.random() * 2 - 1) * sizeVariation,
+        twinkleOffset: Math.random() * Math.PI * 2,
       });
     }
 
@@ -534,11 +594,15 @@ export default function LandingPage() {
     const stars3: Star[] = [];
     for (let i = 0; i < starFrequency3; i++) {
       const { x, y } = initializeStar();
+      const baseSize = Math.random() * 2 + 1;
+      const sizeVariation = (sizeRandomness3 / 100) * baseSize;
       stars3.push({
         x,
         y,
         z: Math.random() * maxZ,
-        size: Math.random() * 2 + 1,
+        size: baseSize,
+        baseSize: baseSize + (Math.random() * 2 - 1) * sizeVariation,
+        twinkleOffset: Math.random() * Math.PI * 2,
       });
     }
 
@@ -552,14 +616,17 @@ export default function LandingPage() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Draw distant background stars (very slow drift)
-      const time = Date.now() * 0.00005; // Very slow movement
+      const time = Date.now() * 0.001; // Convert to seconds
       backgroundStars.forEach((star) => {
-        const twinkle = Math.sin(time + star.twinkleOffset) * 0.1 + 0.9;
-        const opacity = star.brightness * twinkle;
+        // Calculate twinkle effect using sine wave
+        // twinkleAmount controls amplitude (0-100%), twinkleSpeed controls frequency
+        const twinkleAmplitude = bgStarTwinkleAmount / 100; // Convert to 0-1 range
+        const twinkle = Math.sin(time * bgStarTwinkleSpeed + star.twinkleOffset) * twinkleAmplitude;
+        const opacity = star.brightness * (1 + twinkle); // Brightness varies by ±twinkleAmount
 
         ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
         ctx.beginPath();
-        ctx.arc(star.x, star.y, 0.5, 0, Math.PI * 2);
+        ctx.arc(star.x, star.y, star.baseSize, 0, Math.PI * 2);
         ctx.fill();
       });
 
@@ -575,15 +642,22 @@ export default function LandingPage() {
           star.x = x;
           star.y = y;
           star.z = maxZ;
+          star.twinkleOffset = Math.random() * Math.PI * 2; // Randomize twinkle phase on respawn
         }
 
         const scale = 1000 / star.z;
         const x = star.x * scale + centerX;
         const y = star.y * scale + centerY;
-        const size = (star.size * scale) * starScale;
+
+        // Apply twinkle effect to size
+        const twinkleAmplitude = twinkleAmount / 100;
+        const twinkle = Math.sin(time * twinkleSpeed + star.twinkleOffset) * twinkleAmplitude;
+        const size = (star.baseSize * scale) * starScale * (1 + twinkle);
 
         if (x >= 0 && x <= canvas.width && y >= 0 && y <= canvas.height) {
-          const opacity = Math.min(1, (maxZ - star.z) / maxZ);
+          // Apply twinkle to opacity as well
+          const baseOpacity = Math.min(1, (maxZ - star.z) / maxZ);
+          const opacity = baseOpacity * (1 + twinkle * 0.5); // Less twinkle on opacity
           ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
           ctx.beginPath();
           ctx.arc(x, y, size, 0, Math.PI * 2);
@@ -600,15 +674,21 @@ export default function LandingPage() {
           star.x = x;
           star.y = y;
           star.z = maxZ;
+          star.twinkleOffset = Math.random() * Math.PI * 2;
         }
 
         const scale = 1000 / star.z;
         const x = star.x * scale + centerX;
         const y = star.y * scale + centerY;
-        const size = (star.size * scale) * starScale2;
+
+        // Apply twinkle effect to size
+        const twinkleAmplitude = twinkleAmount2 / 100;
+        const twinkle = Math.sin(time * twinkleSpeed2 + star.twinkleOffset) * twinkleAmplitude;
+        const size = (star.baseSize * scale) * starScale2 * (1 + twinkle);
 
         if (x >= 0 && x <= canvas.width && y >= 0 && y <= canvas.height) {
-          const opacity = Math.min(1, (maxZ - star.z) / maxZ);
+          const baseOpacity = Math.min(1, (maxZ - star.z) / maxZ);
+          const opacity = baseOpacity * (1 + twinkle * 0.5);
 
           // Calculate previous position to create streak effect
           const prevZ = star.z + starSpeed2;
@@ -647,6 +727,7 @@ export default function LandingPage() {
             star.x = x;
             star.y = y;
             star.z = maxZ;
+            star.twinkleOffset = Math.random() * Math.PI * 2;
             starLastSpawnTime3.set(index, currentTime);
           } else {
             // Keep star out of view until delay passes
@@ -657,10 +738,15 @@ export default function LandingPage() {
         const scale = 1000 / star.z;
         const x = star.x * scale + centerX;
         const y = star.y * scale + centerY;
-        const size = (star.size * scale) * starScale3;
+
+        // Apply twinkle effect to size
+        const twinkleAmplitude = twinkleAmount3 / 100;
+        const twinkle = Math.sin(time * twinkleSpeed3 + star.twinkleOffset) * twinkleAmplitude;
+        const size = (star.baseSize * scale) * starScale3 * (1 + twinkle);
 
         if (x >= 0 && x <= canvas.width && y >= 0 && y <= canvas.height) {
-          const opacity = Math.min(1, (maxZ - star.z) / maxZ);
+          const baseOpacity = Math.min(1, (maxZ - star.z) / maxZ);
+          const opacity = baseOpacity * (1 + twinkle * 0.5);
 
           // Calculate previous position to create streak effect
           const prevZ = star.z + starSpeed3;
@@ -689,7 +775,13 @@ export default function LandingPage() {
       window.removeEventListener('resize', updateCanvasSize);
       cancelAnimationFrame(animationId);
     };
-  }, [starScale, starSpeed, starFrequency, starScale2, starSpeed2, starFrequency2, lineLength2, starScale3, starSpeed3, starFrequency3, lineLength3, spawnDelay3, motionBlurEnabled, blurIntensity, motionBlurEnabled2, blurIntensity2]);
+  }, [
+    starScale, starSpeed, starFrequency, twinkleAmount, twinkleSpeed, sizeRandomness,
+    starScale2, starSpeed2, starFrequency2, lineLength2, twinkleAmount2, twinkleSpeed2, sizeRandomness2,
+    starScale3, starSpeed3, starFrequency3, lineLength3, spawnDelay3, twinkleAmount3, twinkleSpeed3, sizeRandomness3,
+    bgStarTwinkleAmount, bgStarTwinkleSpeed, bgStarSizeRandomness, bgStarCount, bgStarMinBrightness, bgStarMaxBrightness,
+    motionBlurEnabled, blurIntensity, motionBlurEnabled2, blurIntensity2
+  ]);
 
   return (
     <div

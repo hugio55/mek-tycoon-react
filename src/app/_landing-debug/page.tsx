@@ -490,6 +490,63 @@ export default function LandingDebugPage() {
                 {config.starFrequency} stars
               </div>
             </div>
+
+            {/* Twinkle Amount */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Twinkle Amount
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.twinkleAmount}
+                onChange={(e) => updateConfig('twinkleAmount', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.twinkleAmount}%
+              </div>
+            </div>
+
+            {/* Twinkle Speed */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Twinkle Speed
+              </label>
+              <input
+                type="range"
+                min="0.1"
+                max="5"
+                step="0.1"
+                value={config.twinkleSpeed}
+                onChange={(e) => updateConfig('twinkleSpeed', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.twinkleSpeed.toFixed(1)}x
+              </div>
+            </div>
+
+            {/* Size Randomness */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Size Randomness
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.sizeRandomness}
+                onChange={(e) => updateConfig('sizeRandomness', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.sizeRandomness}%
+              </div>
+            </div>
           </div>
 
           {/* Star Controls Section - Layer 2 */}
@@ -571,6 +628,63 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.lineLength2.toFixed(1)}x
+              </div>
+            </div>
+
+            {/* Twinkle Amount 2 */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Twinkle Amount
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.twinkleAmount2}
+                onChange={(e) => updateConfig('twinkleAmount2', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.twinkleAmount2}%
+              </div>
+            </div>
+
+            {/* Twinkle Speed 2 */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Twinkle Speed
+              </label>
+              <input
+                type="range"
+                min="0.1"
+                max="5"
+                step="0.1"
+                value={config.twinkleSpeed2}
+                onChange={(e) => updateConfig('twinkleSpeed2', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.twinkleSpeed2.toFixed(1)}x
+              </div>
+            </div>
+
+            {/* Size Randomness 2 */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Size Randomness
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.sizeRandomness2}
+                onChange={(e) => updateConfig('sizeRandomness2', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.sizeRandomness2}%
               </div>
             </div>
           </div>
@@ -673,6 +787,146 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-purple-400 text-center mt-0.5">
                 {config.spawnDelay3}ms
+              </div>
+            </div>
+
+            {/* Twinkle Amount 3 */}
+            <div className="mb-2">
+              <label className="block text-xs text-purple-300 mb-1">
+                Twinkle Amount
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.twinkleAmount3}
+                onChange={(e) => updateConfig('twinkleAmount3', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-purple-400 text-center mt-0.5">
+                {config.twinkleAmount3}%
+              </div>
+            </div>
+
+            {/* Twinkle Speed 3 */}
+            <div className="mb-2">
+              <label className="block text-xs text-purple-300 mb-1">
+                Twinkle Speed
+              </label>
+              <input
+                type="range"
+                min="0.1"
+                max="5"
+                step="0.1"
+                value={config.twinkleSpeed3}
+                onChange={(e) => updateConfig('twinkleSpeed3', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-purple-400 text-center mt-0.5">
+                {config.twinkleSpeed3.toFixed(1)}x
+              </div>
+            </div>
+
+            {/* Size Randomness 3 */}
+            <div className="mb-2">
+              <label className="block text-xs text-purple-300 mb-1">
+                Size Randomness
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.sizeRandomness3}
+                onChange={(e) => updateConfig('sizeRandomness3', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-purple-400 text-center mt-0.5">
+                {config.sizeRandomness3}%
+              </div>
+            </div>
+          </div>
+
+          {/* Background Static Stars Controls Section */}
+          <div className="bg-gray-800 border border-blue-500 rounded p-3">
+            <h2 className="text-sm font-semibold text-blue-400 mb-2 pb-1 border-b border-blue-700">
+              Background Static Stars
+            </h2>
+
+            {/* Star Count */}
+            <div className="mb-2">
+              <label className="block text-xs text-blue-300 mb-1">
+                Star Count
+              </label>
+              <input
+                type="range"
+                min="100"
+                max="2000"
+                step="50"
+                value={config.bgStarsCount}
+                onChange={(e) => updateConfig('bgStarsCount', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-blue-400 text-center mt-0.5">
+                {config.bgStarsCount} stars
+              </div>
+            </div>
+
+            {/* Star Size */}
+            <div className="mb-2">
+              <label className="block text-xs text-blue-300 mb-1">
+                Star Size
+              </label>
+              <input
+                type="range"
+                min="0.1"
+                max="2"
+                step="0.1"
+                value={config.bgStarsSize}
+                onChange={(e) => updateConfig('bgStarsSize', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-blue-400 text-center mt-0.5">
+                {config.bgStarsSize.toFixed(1)}px
+              </div>
+            </div>
+
+            {/* Star Opacity */}
+            <div className="mb-2">
+              <label className="block text-xs text-blue-300 mb-1">
+                Star Brightness
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.bgStarsOpacity * 100}
+                onChange={(e) => updateConfig('bgStarsOpacity', parseFloat(e.target.value) / 100)}
+                className="w-full"
+              />
+              <div className="text-xs text-blue-400 text-center mt-0.5">
+                {(config.bgStarsOpacity * 100).toFixed(0)}%
+              </div>
+            </div>
+
+            {/* Twinkle Speed */}
+            <div className="mb-2">
+              <label className="block text-xs text-blue-300 mb-1">
+                Twinkle Speed
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="0.0005"
+                step="0.00001"
+                value={config.bgStarsTwinkleSpeed}
+                onChange={(e) => updateConfig('bgStarsTwinkleSpeed', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-blue-400 text-center mt-0.5">
+                {(config.bgStarsTwinkleSpeed * 100000).toFixed(1)}x
               </div>
             </div>
           </div>
