@@ -23,7 +23,7 @@ interface HorizontalTimelineProps {
   fadePosition?: number;
   imageBlendMode?: 'normal' | 'screen' | 'lighten' | 'lighter';
   hoverDarkenIntensity?: number; // 0-100: scales the gradient overlay darkness on hover/active
-  idleBackdropBlur?: number; // 0-50px: backdrop blur on idle (non-active) columns
+  idleBackdropBlur?: number; // 0-50px: backdrop blur on hover/active columns (blurs background behind card)
 }
 
 const STORAGE_KEY = 'mek-landing-debug-config';
