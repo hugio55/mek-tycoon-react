@@ -505,13 +505,15 @@ export default function LandingPage() {
 
           {/* Sound Toggle - Centered Below Description */}
           <div className="flex flex-col items-center gap-0.5 mt-4">
-            <PowerSwitchToggle
-              checked={audioPlaying}
-              onChange={handleAudioToggle}
-              className="w-24 h-24"
-              scale={powerButtonScale}
-              verticalOffset={powerButtonVerticalOffset}
-            />
+            <div className="power-button-pulse">
+              <PowerSwitchToggle
+                checked={audioPlaying}
+                onChange={handleAudioToggle}
+                className="w-24 h-24"
+                scale={powerButtonScale}
+                verticalOffset={powerButtonVerticalOffset}
+              />
+            </div>
             <div
               className={`${soundLabelColor} uppercase tracking-wider`}
               style={{

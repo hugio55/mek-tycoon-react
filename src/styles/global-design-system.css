@@ -727,6 +727,25 @@
   animation: shimmer 2s linear infinite;
 }
 
+/* Power Button Pulsating Glow Animation */
+@keyframes power-button-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(250, 182, 23, 0.4))
+            drop-shadow(0 0 20px rgba(250, 182, 23, 0.3));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 25px rgba(250, 182, 23, 0.8))
+            drop-shadow(0 0 40px rgba(250, 182, 23, 0.6))
+            drop-shadow(0 0 60px rgba(250, 182, 23, 0.4));
+    transform: scale(1.05);
+  }
+}
+
+.power-button-pulse {
+  animation: power-button-pulse 2s ease-in-out infinite;
+}
+
 /* ===========================
    ESSENCE DONUT PAGE STYLES
    =========================== */
@@ -889,6 +908,71 @@
 
 .neon-edge-badge-cyan {
   @apply border border-cyan-400/50;
+}
+
+/* ===========================
+   POWER BUTTON PULSATING EFFECT
+   =========================== */
+
+@keyframes mek-power-button-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(250, 182, 23, 0.4));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(250, 182, 23, 0.8))
+            drop-shadow(0 0 40px rgba(250, 182, 23, 0.4));
+    transform: scale(1.05);
+  }
+}
+
+@keyframes mek-power-button-glow-ring {
+  0%, 100% {
+    box-shadow:
+      0 0 15px rgba(250, 182, 23, 0.3),
+      0 0 30px rgba(250, 182, 23, 0.2),
+      inset 0 0 10px rgba(250, 182, 23, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 30px rgba(250, 182, 23, 0.6),
+      0 0 60px rgba(250, 182, 23, 0.4),
+      0 0 90px rgba(250, 182, 23, 0.2),
+      inset 0 0 20px rgba(250, 182, 23, 0.2);
+  }
+}
+
+.mek-power-button-container {
+  animation: mek-power-button-pulse 2.5s ease-in-out infinite;
+}
+
+.mek-power-button-glow {
+  position: relative;
+}
+
+.mek-power-button-glow::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  animation: mek-power-button-glow-ring 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Subtle variant - less intense */
+@keyframes mek-power-button-pulse-subtle {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px rgba(250, 182, 23, 0.3));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(250, 182, 23, 0.5));
+    transform: scale(1.02);
+  }
+}
+
+.mek-power-button-container-subtle {
+  animation: mek-power-button-pulse-subtle 3s ease-in-out infinite;
 }
 
 /* ===========================

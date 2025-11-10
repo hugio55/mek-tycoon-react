@@ -32,12 +32,13 @@ export default function PowerSwitchToggle({
   return (
     <div
       className={`
-        relative inline-flex items-center justify-center
+        relative flex items-center justify-center
         ${className || 'w-[150px] h-[150px]'}
       `}
       style={{
         transform: `scale(${scale}) translateY(${verticalOffset}px)`,
-        transformOrigin: 'center center'
+        transformOrigin: 'center center',
+        margin: '0 auto'
       }}
     >
       {/* Hidden checkbox input for state */}
@@ -50,13 +51,13 @@ export default function PowerSwitchToggle({
 
       {/* Button container - ensure SVGs are centered within container */}
       <div className="relative w-full h-full flex items-center justify-center">
-        {/* Glow effect backdrop - only visible when checked */}
+        {/* Glow effect backdrop - only visible when checked, with pulsating animation */}
         <div
           className={`
             absolute w-full h-full
             transition-all duration-1000 ease-out
             ${checked
-              ? 'opacity-15 scale-[2]'
+              ? 'opacity-15 scale-[2] animate-power-pulse'
               : 'opacity-0 scale-100'
             }
           `}
@@ -64,7 +65,9 @@ export default function PowerSwitchToggle({
             background: 'radial-gradient(circle closest-side, #fab617, transparent)',
             filter: 'blur(20px)',
             transform: 'perspective(1px) translateZ(0)',
-            backfaceVisibility: 'hidden'
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            WebkitTransform: 'perspective(1px) translateZ(0)'
           }}
         />
 
