@@ -942,6 +942,68 @@ export default function LandingDebugPage() {
             </div>
           </div>
 
+          {/* Description Glass Card Controls Section */}
+          <div className="bg-gray-800 border border-green-500 rounded p-3">
+            <h2 className="text-sm font-semibold text-green-400 mb-2 pb-1 border-b border-green-700">
+              Description Card Glass Effect
+            </h2>
+
+            {/* Blur Slider */}
+            <div className="mb-2">
+              <label className="block text-xs text-green-300 mb-1">
+                Description Card Blur
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                step="1"
+                value={config.descriptionCardBlur}
+                onChange={(e) => updateConfig('descriptionCardBlur', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-green-400 text-center mt-0.5">
+                {config.descriptionCardBlur}px
+              </div>
+            </div>
+
+            {/* Darkness Slider */}
+            <div className="mb-2">
+              <label className="block text-xs text-green-300 mb-1">
+                Description Card Darkness
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.descriptionCardDarkness}
+                onChange={(e) => updateConfig('descriptionCardDarkness', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-green-400 text-center mt-0.5">
+                {config.descriptionCardDarkness}%
+              </div>
+            </div>
+
+            {/* Border Toggle */}
+            <div className="mb-2">
+              <label className="block text-xs text-green-300 mb-1">
+                Description Card Border
+              </label>
+              <button
+                onClick={() => updateConfig('descriptionCardBorder', !config.descriptionCardBorder)}
+                className={`w-full px-2 py-1 text-xs rounded ${
+                  config.descriptionCardBorder
+                    ? 'bg-green-900/50 border border-green-700 text-green-200'
+                    : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                {config.descriptionCardBorder ? 'Enabled' : 'Disabled'}
+              </button>
+            </div>
+          </div>
+
           {/* Phase Carousel Design Section */}
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
@@ -1006,9 +1068,9 @@ export default function LandingDebugPage() {
               </label>
               <input
                 type="range"
-                min="-50"
-                max="50"
-                step="1"
+                min="-1000"
+                max="1000"
+                step="10"
                 value={config.powerButtonVerticalOffset}
                 onChange={(e) => updateConfig('powerButtonVerticalOffset', parseInt(e.target.value))}
                 className="w-full"
@@ -1254,6 +1316,68 @@ export default function LandingDebugPage() {
               <div className="text-xs text-cyan-400 text-center mt-0.5">
                 {config.phaseColumnYOffset > 0 ? '+' : ''}{config.phaseColumnYOffset}px
               </div>
+            </div>
+          </div>
+
+          {/* Description Glass Card Controls Section */}
+          <div className="bg-gray-800 border border-green-500 rounded p-3">
+            <h2 className="text-sm font-semibold text-green-400 mb-2 pb-1 border-b border-green-700">
+              Description Glass Card
+            </h2>
+
+            {/* Blur Amount */}
+            <div className="mb-2">
+              <label className="block text-xs text-green-300 mb-1">
+                Backdrop Blur
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                step="1"
+                value={config.descriptionCardBlur}
+                onChange={(e) => updateConfig('descriptionCardBlur', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-green-400 text-center mt-0.5">
+                {config.descriptionCardBlur}px
+              </div>
+            </div>
+
+            {/* Darkening/Opacity */}
+            <div className="mb-2">
+              <label className="block text-xs text-green-300 mb-1">
+                Background Darkness
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.descriptionCardDarkness}
+                onChange={(e) => updateConfig('descriptionCardDarkness', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-green-400 text-center mt-0.5">
+                {config.descriptionCardDarkness}%
+              </div>
+            </div>
+
+            {/* Border Toggle */}
+            <div className="mb-2">
+              <label className="block text-xs text-green-300 mb-1">
+                Border Stroke
+              </label>
+              <button
+                onClick={() => updateConfig('descriptionCardBorder', !config.descriptionCardBorder)}
+                className={`w-full px-2 py-1 text-xs rounded ${
+                  config.descriptionCardBorder
+                    ? 'bg-green-900/50 border border-green-700 text-green-200'
+                    : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                {config.descriptionCardBorder ? 'Enabled' : 'Disabled'}
+              </button>
             </div>
           </div>
 
