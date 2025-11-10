@@ -429,10 +429,14 @@ export default function LandingPage() {
 
   return (
     <div
-      className="min-h-screen w-screen bg-black overflow-x-hidden overflow-y-auto relative z-0"
+      className="w-screen bg-black relative z-0"
       style={{
         margin: 0,
         padding: 0,
+        minHeight: '100vh',
+        height: 'auto',
+        overflowX: 'hidden',
+        overflowY: 'visible',
         touchAction: 'pan-y',
         WebkitOverflowScrolling: 'touch',
       }}
@@ -517,8 +521,8 @@ export default function LandingPage() {
       )}
 
       {/* Scrollable content layer */}
-      <div className="relative flex justify-center z-[20] px-4 py-8 min-h-[200vh]" style={{ alignItems: 'flex-start', paddingTop: `${logoYPosition}vh` }}>
-        <div className="flex flex-col items-center gap-4 sm:gap-6 md:gap-8 w-full max-w-7xl pb-64">
+      <div className="relative flex justify-center z-[20] px-4 py-8" style={{ alignItems: 'flex-start', paddingTop: `${logoYPosition}vh`, minHeight: '250vh' }}>
+        <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full max-w-7xl pb-96">
           <div className="relative max-w-[80vw] max-h-[80vw]" style={{ width: `${logoSize}px`, height: `${logoSize}px` }}>
             <Image
               src="/logo/multi-color-big-3.webp"
@@ -555,7 +559,7 @@ export default function LandingPage() {
           </div>
 
           {/* Phase Carousel */}
-          <div className="w-full mt-8 sm:mt-12">
+          <div className="w-full mt-16 sm:mt-24 md:mt-32">
             <PhaseCarousel designVariation={designVariation} />
           </div>
         </div>
