@@ -142,8 +142,43 @@ export default function LandingDebugPage() {
     window.dispatchEvent(new Event('storage'));
   }, [config]);
 
+  // Helper function to convert Windows absolute paths to web-relative paths
+  const convertToWebPath = (path: string): string => {
+    // Remove quotes if present
+    let cleanPath = path.trim().replace(/^["']|["']$/g, '');
+
+    // If it's already a web path (starts with / or http), return as-is
+    if (cleanPath.startsWith('/') || cleanPath.startsWith('http')) {
+      return cleanPath;
+    }
+
+    // Convert Windows path to web path
+    // Extract everything after "public\" or "public/"
+    const publicIndex = cleanPath.toLowerCase().lastIndexOf('public\\');
+    const publicIndexForward = cleanPath.toLowerCase().lastIndexOf('public/');
+
+    if (publicIndex !== -1) {
+      // Found "public\" - extract path after it and convert backslashes to forward slashes
+      const webPath = '/' + cleanPath.substring(publicIndex + 7).replace(/\\/g, '/');
+      return webPath;
+    } else if (publicIndexForward !== -1) {
+      // Found "public/" - extract path after it
+      const webPath = '/' + cleanPath.substring(publicIndexForward + 7);
+      return webPath;
+    }
+
+    // If no "public" found, return the original (might be relative path)
+    return cleanPath;
+  };
+
   const updateConfig = <K extends keyof ConfigType>(key: K, value: ConfigType[K]) => {
-    setConfig(prev => ({ ...prev, [key]: value }));
+    // Auto-convert image paths for phase image fields
+    if ((key === 'phaseImage1' || key === 'phaseImage2' || key === 'phaseImage3' || key === 'phaseImage4') && typeof value === 'string') {
+      const convertedPath = convertToWebPath(value);
+      setConfig(prev => ({ ...prev, [key]: convertedPath as ConfigType[K] }));
+    } else {
+      setConfig(prev => ({ ...prev, [key]: value }));
+    }
   };
 
   const resetToDefaults = () => {
@@ -1085,11 +1120,11 @@ export default function LandingDebugPage() {
               Phase Background Images
             </h2>
             <p className="text-xs text-cyan-300/70 mb-2">
-              Paste image URLs for each phase card
+              Paste Windows paths or URLs - auto-converts to web paths
             </p>
 
             {/* Phase I */}
-            <div className="mb-2">
+            <div className="mb-3">
               <label className="block text-xs text-cyan-300 mb-1">
                 Phase I Image URL
               </label>
@@ -1097,13 +1132,32 @@ export default function LandingDebugPage() {
                 type="text"
                 value={config.phaseImage1}
                 onChange={(e) => updateConfig('phaseImage1', e.target.value)}
-                placeholder="https://..."
-                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500"
+                placeholder="C:\Users\...\public\mek-images\1000px\image.webp"
+                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500 mb-1"
               />
+              {config.phaseImage1 && (
+                <div className="mt-1 p-2 bg-gray-900 rounded border border-gray-700">
+                  <p className="text-[10px] text-gray-500 mb-1">Preview:</p>
+                  <div className="relative w-full h-20 bg-gray-950 rounded overflow-hidden">
+                    <img
+                      src={config.phaseImage1}
+                      alt="Phase I preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const errorText = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (errorText) errorText.style.display = 'block';
+                      }}
+                    />
+                    <div className="hidden text-xs text-red-400 p-2">Failed to load image</div>
+                  </div>
+                  <p className="text-[10px] text-cyan-400 mt-1 break-all">{config.phaseImage1}</p>
+                </div>
+              )}
             </div>
 
             {/* Phase II */}
-            <div className="mb-2">
+            <div className="mb-3">
               <label className="block text-xs text-cyan-300 mb-1">
                 Phase II Image URL
               </label>
@@ -1111,13 +1165,32 @@ export default function LandingDebugPage() {
                 type="text"
                 value={config.phaseImage2}
                 onChange={(e) => updateConfig('phaseImage2', e.target.value)}
-                placeholder="https://..."
-                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500"
+                placeholder="C:\Users\...\public\mek-images\1000px\image.webp"
+                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500 mb-1"
               />
+              {config.phaseImage2 && (
+                <div className="mt-1 p-2 bg-gray-900 rounded border border-gray-700">
+                  <p className="text-[10px] text-gray-500 mb-1">Preview:</p>
+                  <div className="relative w-full h-20 bg-gray-950 rounded overflow-hidden">
+                    <img
+                      src={config.phaseImage2}
+                      alt="Phase II preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const errorText = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (errorText) errorText.style.display = 'block';
+                      }}
+                    />
+                    <div className="hidden text-xs text-red-400 p-2">Failed to load image</div>
+                  </div>
+                  <p className="text-[10px] text-cyan-400 mt-1 break-all">{config.phaseImage2}</p>
+                </div>
+              )}
             </div>
 
             {/* Phase III */}
-            <div className="mb-2">
+            <div className="mb-3">
               <label className="block text-xs text-cyan-300 mb-1">
                 Phase III Image URL
               </label>
@@ -1125,13 +1198,32 @@ export default function LandingDebugPage() {
                 type="text"
                 value={config.phaseImage3}
                 onChange={(e) => updateConfig('phaseImage3', e.target.value)}
-                placeholder="https://..."
-                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500"
+                placeholder="C:\Users\...\public\mek-images\1000px\image.webp"
+                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500 mb-1"
               />
+              {config.phaseImage3 && (
+                <div className="mt-1 p-2 bg-gray-900 rounded border border-gray-700">
+                  <p className="text-[10px] text-gray-500 mb-1">Preview:</p>
+                  <div className="relative w-full h-20 bg-gray-950 rounded overflow-hidden">
+                    <img
+                      src={config.phaseImage3}
+                      alt="Phase III preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const errorText = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (errorText) errorText.style.display = 'block';
+                      }}
+                    />
+                    <div className="hidden text-xs text-red-400 p-2">Failed to load image</div>
+                  </div>
+                  <p className="text-[10px] text-cyan-400 mt-1 break-all">{config.phaseImage3}</p>
+                </div>
+              )}
             </div>
 
             {/* Phase IV */}
-            <div className="mb-2">
+            <div className="mb-3">
               <label className="block text-xs text-cyan-300 mb-1">
                 Phase IV Image URL
               </label>
@@ -1139,9 +1231,28 @@ export default function LandingDebugPage() {
                 type="text"
                 value={config.phaseImage4}
                 onChange={(e) => updateConfig('phaseImage4', e.target.value)}
-                placeholder="https://..."
-                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500"
+                placeholder="C:\Users\...\public\mek-images\1000px\image.webp"
+                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500 mb-1"
               />
+              {config.phaseImage4 && (
+                <div className="mt-1 p-2 bg-gray-900 rounded border border-gray-700">
+                  <p className="text-[10px] text-gray-500 mb-1">Preview:</p>
+                  <div className="relative w-full h-20 bg-gray-950 rounded overflow-hidden">
+                    <img
+                      src={config.phaseImage4}
+                      alt="Phase IV preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const errorText = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (errorText) errorText.style.display = 'block';
+                      }}
+                    />
+                    <div className="hidden text-xs text-red-400 p-2">Failed to load image</div>
+                  </div>
+                  <p className="text-[10px] text-cyan-400 mt-1 break-all">{config.phaseImage4}</p>
+                </div>
+              )}
             </div>
           </div>
 
