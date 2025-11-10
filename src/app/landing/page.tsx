@@ -84,38 +84,6 @@ export default function LandingPage() {
   const [soundLabelColor, setSoundLabelColor] = useState(DEFAULT_CONFIG.soundLabelColor);
   const [soundLabelVerticalOffset, setSoundLabelVerticalOffset] = useState(DEFAULT_CONFIG.soundLabelVerticalOffset);
 
-  // Debug panel controls
-  const [showDebugPanel, setShowDebugPanel] = useState(false);
-
-  // Function to update config and persist to localStorage
-  const updateConfig = (key: keyof typeof DEFAULT_CONFIG, value: any) => {
-    const newConfig = {
-      starScale,
-      starSpeed,
-      starFrequency,
-      starScale2,
-      starSpeed2,
-      starFrequency2,
-      logoSize,
-      logoYPosition,
-      selectedFont,
-      descriptionFontSize,
-      bgYPosition,
-      motionBlurEnabled,
-      blurIntensity,
-      descriptionColor,
-      designVariation,
-      [key]: value,
-    };
-
-    // Update state based on key
-    if (key === 'designVariation') setDesignVariation(value);
-    if (key === 'bgYPosition') setBgYPosition(value);
-
-    // Persist to localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newConfig));
-    window.dispatchEvent(new Event('storage'));
-  };
 
   // Load config from localStorage and listen for changes from debug page
   useEffect(() => {
@@ -471,43 +439,6 @@ export default function LandingPage() {
         className="fixed inset-0 w-full h-full z-[1] pointer-events-none"
         style={{ display: 'block', touchAction: 'none' }}
       />
-
-      {/* Debug Panel Toggle Button */}
-      <button
-        onClick={() => setShowDebugPanel(!showDebugPanel)}
-        className="fixed top-4 right-4 z-[9999] px-4 py-2 bg-black/80 border-2 border-cyan-500/50 rounded hover:bg-cyan-500/20 hover:border-cyan-500 transition-all pointer-events-auto"
-      >
-        <span className="text-cyan-400 text-xs font-bold uppercase tracking-wider">
-          {showDebugPanel ? 'Hide Debug' : 'Show Debug'}
-        </span>
-      </button>
-
-      {/* Right Debug Panel - Background Controls Only */}
-      {showDebugPanel && (
-        <div className="fixed right-4 top-20 z-[9999] w-72 bg-black/95 border-2 border-yellow-500/50 rounded-lg shadow-2xl pointer-events-auto max-h-[calc(100vh-100px)] overflow-y-auto">
-          <div className="p-4">
-            <h3 className="text-yellow-400 text-xs font-bold uppercase tracking-wider mb-3 border-b border-yellow-500/30 pb-2">
-              Background Controls
-            </h3>
-
-            {/* Background Y Position */}
-            <div className="mb-4">
-              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-                BG Y-Pos: {bgYPosition}%
-              </label>
-              <input
-                type="range"
-                min="-100"
-                max="100"
-                step="1"
-                value={bgYPosition}
-                onChange={(e) => updateConfig('bgYPosition', parseInt(e.target.value))}
-                className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-yellow-500"
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Scrollable content layer */}
       <div className="relative flex justify-center z-[20] px-4 py-8" style={{ alignItems: 'flex-start', paddingTop: `${logoYPosition}vh`, minHeight: '300vh' }}>
