@@ -157,8 +157,7 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
                        shadow-[0_8px_32px_rgba(0,0,0,0.3),0_0_1px_rgba(255,255,255,0.1)_inset]
                        ${isCenter ? 'hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_0_1px_rgba(255,255,255,0.15)_inset]' : ''}
                        group cursor-pointer
-                       will-change-[transform,box-shadow]
-                       isolate`,
+                       will-change-[transform,box-shadow]`,
             lockIcon: 'w-16 h-16 md:w-20 md:h-20 text-gray-400/30 mb-4 group-hover:text-gray-300/45 group-hover:scale-105 transition-all duration-700',
             title: `text-2xl md:text-3xl ${phase.locked ? 'text-gray-400/50 group-hover:text-gray-300/60' : 'bg-gradient-to-br from-white via-white/95 to-white/75 bg-clip-text text-transparent group-hover:from-white group-hover:via-white group-hover:to-white/85 drop-shadow-[0_2px_20px_rgba(255,255,255,0.15)]'} font-semibold tracking-tight transition-all duration-700`,
             description: 'text-sm md:text-base text-gray-300/60 font-light tracking-wide leading-relaxed group-hover:text-gray-200/70 transition-colors duration-700',
