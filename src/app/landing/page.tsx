@@ -106,6 +106,9 @@ export default function LandingPage() {
   const [descriptionText, setDescriptionText] = useState(DEFAULT_CONFIG.descriptionText);
   const [bgYPosition, setBgYPosition] = useState(DEFAULT_CONFIG.bgYPosition);
 
+  // Dynamic viewport height tracking
+  const [viewportHeight, setViewportHeight] = useState(0);
+
   // Motion blur controls - Layer 1
   const [motionBlurEnabled, setMotionBlurEnabled] = useState(DEFAULT_CONFIG.motionBlurEnabled);
   const [blurIntensity, setBlurIntensity] = useState(DEFAULT_CONFIG.blurIntensity);
@@ -251,6 +254,20 @@ export default function LandingPage() {
       window.removeEventListener('mek-landing-config-updated', handleStorageChange);
       window.removeEventListener('message', handleMessage);
     };
+  }, []);
+
+  // Track viewport height for dynamic logo centering
+  useEffect(() => {
+    const updateViewportHeight = () => {
+      setViewportHeight(window.innerHeight);
+    };
+
+    // Set initial height
+    updateViewportHeight();
+
+    // Update on resize
+    window.addEventListener('resize', updateViewportHeight);
+    return () => window.removeEventListener('resize', updateViewportHeight);
   }, []);
 
   // Initialize audio on component mount
@@ -575,7 +592,9 @@ export default function LandingPage() {
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: 'cover',
-          backgroundPosition: `center ${bgYPosition}%`,
+          backgroundPosition: viewportHeight > 0
+            ? `center calc(50% + ${bgYPosition}px)`
+            : `center ${bgYPosition}%`,
           backgroundRepeat: 'no-repeat',
           touchAction: 'none',
           pointerEvents: 'none',
@@ -590,7 +609,15 @@ export default function LandingPage() {
       />
 
       {/* Scrollable content layer */}
-      <div className="relative flex justify-center z-[20] px-4 py-8" style={{ alignItems: 'flex-start', paddingTop: `${logoYPosition}px`, minHeight: '300vh' }}>
+      <div
+        className="relative flex justify-center z-[20] px-4"
+        style={{
+          paddingTop: viewportHeight > 0
+            ? `calc(50vh - ${logoSize / 2}px)`
+            : `${logoYPosition}px`,
+          minHeight: '300vh'
+        }}
+      >
         <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full max-w-7xl pb-[100vh]">
           <div className="relative max-w-[80vw] max-h-[80vw]" style={{ width: `${logoSize}px`, height: `${logoSize}px` }}>
             <video
