@@ -23,7 +23,7 @@ const DEFAULT_CONFIG = {
   lineLength3: 2,
   spawnDelay3: 50,
   logoSize: 600,
-  logoYPosition: 400,
+  logoYPosition: 0, // Now percentage offset from center (-50 to +50)
   selectedFont: 'Orbitron',
   descriptionFontSize: 18,
   descriptionText: 'A futuristic idle tycoon game featuring collectible Mek NFTs. Build your empire through resource management, strategic crafting, and automated gold generation.',
@@ -619,19 +619,20 @@ export default function LandingDebugPage() {
             {/* Logo Y Position */}
             <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">
-                Logo Vertical Position
+                Logo Vertical Position (% from center)
               </label>
               <input
                 type="range"
-                min="0"
-                max="2000"
-                step="10"
+                min="-50"
+                max="50"
+                step="1"
                 value={config.logoYPosition}
                 onChange={(e) => updateConfig('logoYPosition', parseInt(e.target.value))}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
-                {config.logoYPosition}px from top
+                {config.logoYPosition > 0 ? '+' : ''}{config.logoYPosition}% from center
+                {config.logoYPosition > 0 ? ' (higher)' : config.logoYPosition < 0 ? ' (lower)' : ' (centered)'}
               </div>
             </div>
 

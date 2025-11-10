@@ -198,7 +198,7 @@ export default function HorizontalTimeline({
               onMouseLeave={handleHoverLeave}
               onClick={() => handlePhaseClick(index)}
             >
-              {/* Blend Mode Wrapper - contains image + darkening overlay so they blend together */}
+              {/* Blend Mode Wrapper - contains ALL visual layers so they blend together */}
               <div
                 className="absolute inset-0"
                 style={{
@@ -226,33 +226,34 @@ export default function HorizontalTimeline({
                     opacity: imageDarkness / 100
                   }}
                 />
+
+                {/* Dark Gradient Overlay - appears on hover/click, concentrated at bottom */}
+                {/* Now INSIDE blend mode wrapper so it participates in blend mode */}
+                <div
+                  className={`
+                    absolute inset-0
+                    transition-opacity duration-500
+                    ${isActive ? 'opacity-100' : 'opacity-0'}
+                  `}
+                  style={{
+                    background: `linear-gradient(to top, rgba(0,0,0,${0.9 * (hoverDarkenIntensity / 100)}) 0%, rgba(0,0,0,${0.6 * (hoverDarkenIntensity / 100)}) 30%, rgba(0,0,0,${0.2 * (hoverDarkenIntensity / 100)}) 50%, transparent 70%)`
+                  }}
+                />
+
+                {/* Frosted Glass Backdrop Blur Overlay - blurs the layers beneath it */}
+                {/* Now INSIDE blend mode wrapper so it participates in blend mode */}
+                <div
+                  className={`
+                    absolute inset-0
+                    transition-all duration-500
+                    ${isActive ? 'opacity-100' : 'opacity-0'}
+                  `}
+                  style={{
+                    backdropFilter: blurValue,
+                    WebkitBackdropFilter: blurValue,
+                  }}
+                />
               </div>
-
-              {/* Dark Gradient Overlay - appears on hover/click, concentrated at bottom */}
-              {/* Outside blend mode wrapper so it's not affected by lightening blend modes */}
-              <div
-                className={`
-                  absolute inset-0
-                  transition-opacity duration-500
-                  ${isActive ? 'opacity-100' : 'opacity-0'}
-                `}
-                style={{
-                  background: `linear-gradient(to top, rgba(0,0,0,${0.9 * (hoverDarkenIntensity / 100)}) 0%, rgba(0,0,0,${0.6 * (hoverDarkenIntensity / 100)}) 30%, rgba(0,0,0,${0.2 * (hoverDarkenIntensity / 100)}) 50%, transparent 70%)`
-                }}
-              />
-
-              {/* Frosted Glass Backdrop Blur Overlay - blurs the layers beneath it */}
-              <div
-                className={`
-                  absolute inset-0
-                  transition-all duration-500
-                  ${isActive ? 'opacity-100' : 'opacity-0'}
-                `}
-                style={{
-                  backdropFilter: blurValue,
-                  WebkitBackdropFilter: blurValue,
-                }}
-              />
 
               {/* Phase Label - always visible, centered */}
               <div className="absolute inset-0 flex items-center justify-center z-10">
