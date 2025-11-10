@@ -336,6 +336,17 @@ export default function LandingDebugPage() {
             >
               Reset to Defaults
             </button>
+            <button
+              onClick={() => {
+                // Trigger audio consent lightbox in landing page
+                window.dispatchEvent(new CustomEvent('mek-debug-trigger', {
+                  detail: { action: 'show-audio-consent' }
+                }));
+              }}
+              className="px-2 py-1 bg-yellow-700 border border-yellow-600 rounded text-yellow-200 text-xs hover:bg-yellow-600"
+            >
+              Show Audio Consent
+            </button>
           </div>
         </div>
 
