@@ -75,7 +75,29 @@ const DEFAULT_CONFIG = {
 type ConfigType = typeof DEFAULT_CONFIG;
 
 export default function LandingDebugPage() {
-  const [config, setConfig] = useState<ConfigType>(DEFAULT_CONFIG);
+  // Initialize config from localStorage synchronously to prevent race condition
+  const [config, setConfig] = useState<ConfigType>(() => {
+    if (typeof window === 'undefined') return DEFAULT_CONFIG;
+
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return DEFAULT_CONFIG;
+
+      const parsed = JSON.parse(stored);
+      // Defensive merge: only copy defined values that exist in DEFAULT_CONFIG
+      const merged: ConfigType = { ...DEFAULT_CONFIG };
+      for (const key in parsed) {
+        if (key in DEFAULT_CONFIG && parsed[key] !== undefined) {
+          (merged as any)[key] = parsed[key];
+        }
+      }
+      console.log('[AUTO-SAVE] Settings loaded from localStorage:', merged);
+      return merged;
+    } catch (e) {
+      console.error('[AUTO-SAVE] Failed to load settings, using defaults:', e);
+      return DEFAULT_CONFIG;
+    }
+  });
   const [viewMode, setViewMode] = useState<'controls-only' | 'split-view'>('controls-only');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel'>('description');
@@ -126,43 +148,30 @@ export default function LandingDebugPage() {
     { name: 'Yellow', class: 'text-yellow-400/90' }
   ];
 
-  // Load config from localStorage on mount
+  // Auto-save config to localStorage whenever it changes
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        // Merge with DEFAULT_CONFIG to ensure all fields have defined values
-        const mergedConfig: ConfigType = { ...DEFAULT_CONFIG };
-        for (const key in parsed) {
-          if (key in DEFAULT_CONFIG && parsed[key] !== undefined) {
-            (mergedConfig as any)[key] = parsed[key];
-          }
-        }
-        setConfig(mergedConfig);
-      } catch (e) {
-        console.error('Failed to parse stored config:', e);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+      console.log('[AUTO-SAVE] Settings auto-saved at', new Date().toLocaleTimeString());
+
+      // Dispatch storage event for other tabs/windows
+      window.dispatchEvent(new Event('storage'));
+
+      // Dispatch custom event for same tab
+      window.dispatchEvent(new Event('mek-landing-config-updated'));
+
+      // Post message to iframe if present
+      const iframe = document.querySelector('iframe[title="Landing Page Preview"]') as HTMLIFrameElement;
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage({
+          type: 'mek-landing-config-updated',
+          config
+        }, '*');
       }
+    } catch (e) {
+      console.error('[AUTO-SAVE] Failed to save settings:', e);
     }
-  }, []);
-
-  // Save config to localStorage whenever it changes
-  useEffect(() => {
-    console.log('[💾SAVE] Saving config to localStorage:', config);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-    console.log('[💾SAVE] Saved. Verifying by reading back:', localStorage.getItem(STORAGE_KEY));
-
-    // Dispatch custom event to notify components in same tab
-    window.dispatchEvent(new Event('mek-landing-config-updated'));
-    // Also dispatch storage event for other tabs (standard behavior)
-    window.dispatchEvent(new Event('storage'));
-
-    // If in split-view mode, notify the iframe
-    const iframe = document.querySelector('iframe[title="Landing Page Preview"]') as HTMLIFrameElement;
-    if (iframe && iframe.contentWindow) {
-      iframe.contentWindow.postMessage({ type: 'mek-landing-config-updated' }, '*');
-    }
-  }, [config, viewMode]);
+  }, [config]);
 
   // Helper function to convert Windows absolute paths to web-relative paths
   const convertToWebPath = (path: string): string => {
