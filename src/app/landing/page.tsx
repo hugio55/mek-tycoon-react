@@ -7,7 +7,7 @@ import PowerSwitchToggle from '@/components/controls/PowerSwitchToggle';
 import MekGalleryCarousel from '@/components/MekGalleryCarousel';
 import EmotionsSlider from '@/components/EmotionsSlider';
 import TeamCarousel from '@/components/TeamCarousel';
-import { Volume2, VolumeX } from 'lucide-react';
+import { SPEAKER_ICON_STYLES, type SpeakerIconStyle } from '@/components/SpeakerIcons';
 
 interface Star {
   x: number;
@@ -60,6 +60,7 @@ const DEFAULT_CONFIG = {
   powerButtonVerticalOffset: 0,
   powerButtonHorizontalOffset: 0,
   powerButtonGlowEnabled: true,
+  speakerIconStyle: 'minimal' as SpeakerIconStyle,
 };
 
 export default function LandingPage() {
@@ -118,6 +119,9 @@ export default function LandingPage() {
   const [powerButtonHorizontalOffset, setPowerButtonHorizontalOffset] = useState(DEFAULT_CONFIG.powerButtonHorizontalOffset);
   const [powerButtonGlowEnabled, setPowerButtonGlowEnabled] = useState(DEFAULT_CONFIG.powerButtonGlowEnabled);
 
+  // Speaker icon style
+  const [speakerIconStyle, setSpeakerIconStyle] = useState<SpeakerIconStyle>(DEFAULT_CONFIG.speakerIconStyle);
+
 
   // Load config from localStorage and listen for changes from debug page
   useEffect(() => {
@@ -157,6 +161,7 @@ export default function LandingPage() {
           setPowerButtonVerticalOffset(config.powerButtonVerticalOffset ?? DEFAULT_CONFIG.powerButtonVerticalOffset);
           setPowerButtonHorizontalOffset(config.powerButtonHorizontalOffset ?? DEFAULT_CONFIG.powerButtonHorizontalOffset);
           setPowerButtonGlowEnabled(config.powerButtonGlowEnabled ?? DEFAULT_CONFIG.powerButtonGlowEnabled);
+          setSpeakerIconStyle(config.speakerIconStyle ?? DEFAULT_CONFIG.speakerIconStyle);
         } catch (e) {
           console.error('Failed to load debug config:', e);
         }
@@ -521,7 +526,7 @@ export default function LandingPage() {
             onClick={() => handleAudioToggle(!audioPlaying)}
             className={`
               relative
-              transition-all duration-300 ease-out
+              transition-all duration-500 ease-out
               hover:scale-110 active:scale-95
               cursor-pointer
               ${audioPlaying ? 'text-yellow-400' : 'text-gray-400'}
@@ -529,20 +534,14 @@ export default function LandingPage() {
             aria-label={audioPlaying ? 'Mute audio' : 'Play audio'}
             style={{
               marginTop: '-1rem',
-              filter: audioPlaying ? 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.6))' : 'none',
+              filter: audioPlaying ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8))' : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0))',
+              transition: 'filter 0.5s ease-in-out, transform 0.3s ease-out',
             }}
           >
-            {audioPlaying ? (
-              <div className="relative">
-                <Volume2 size={48} strokeWidth={2} />
-                {/* Pulsing animation when playing */}
-                <div className="absolute inset-0 animate-ping opacity-20">
-                  <Volume2 size={48} strokeWidth={2} />
-                </div>
-              </div>
-            ) : (
-              <VolumeX size={48} strokeWidth={2} />
-            )}
+            {(() => {
+              const SelectedIcon = SPEAKER_ICON_STYLES.find(s => s.id === speakerIconStyle)?.component || SPEAKER_ICON_STYLES[0].component;
+              return <SelectedIcon size={48} isPlaying={audioPlaying} />;
+            })()}
           </button>
 
           {/* Sound Toggle - Top Right Corner (Fixed Position) */}
