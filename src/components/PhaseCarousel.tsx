@@ -124,12 +124,9 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
 
     return (
       <div
-        className={`absolute w-full max-w-md md:max-w-lg transition-all duration-700 ease-out ${positionClasses[position]}`}
+        className={`absolute inset-x-0 mx-auto w-[60%] max-w-md md:max-w-lg transition-all duration-700 ease-out ${positionClasses[position]}`}
         style={{
-          transform: 'translateZ(0)',
-          backfaceVisibility: 'hidden',
-          left: '50%',
-          marginLeft: '-50%',
+          transformStyle: 'preserve-3d',
         }}
       >
         <div className={styles.container}>
@@ -195,19 +192,15 @@ export default function PhaseCarousel({ designVariation = 'modern' }: PhaseCarou
         </button>
 
         {/* Carousel Track */}
-        <div className="relative w-full h-64 md:h-72 overflow-visible">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative w-full max-w-2xl md:max-w-4xl">
-              {visibleIndices.map((phaseIndex, i) => {
-                const position = i === 0 ? 'left' : i === 1 ? 'center' : 'right';
-                return (
-                  <div key={`${phaseIndex}-${position}`}>
-                    {renderCard(phases[phaseIndex], position)}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+        <div className="relative w-full h-64 md:h-72">
+          {visibleIndices.map((phaseIndex, i) => {
+            const position = i === 0 ? 'left' : i === 1 ? 'center' : 'right';
+            return (
+              <div key={`${phaseIndex}-${position}`}>
+                {renderCard(phases[phaseIndex], position)}
+              </div>
+            );
+          })}
         </div>
 
         {/* Right Arrow */}
