@@ -698,8 +698,6 @@ export default function LandingPage() {
           paddingTop: viewportHeight > 0
             ? `calc(50vh - ${logoSize / 2}px - ${logoYPosition}vh)`
             : '50vh',
-          minHeight: `calc(100vh - ${phaseColumnHeight}px)`,
-          paddingBottom: `${phaseColumnHeight}px`
         }}
       >
         <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full">
