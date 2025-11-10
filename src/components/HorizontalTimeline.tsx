@@ -182,36 +182,57 @@ export default function HorizontalTimeline({
                 className={`
                   absolute bottom-0 left-0 right-0
                   p-8 md:p-12
-                  transition-all duration-500
                   z-20
                   ${isActive
-                    ? 'translate-y-0 opacity-100'
-                    : 'translate-y-8 opacity-0'
+                    ? 'translate-y-0'
+                    : 'translate-y-8'
                   }
                 `}
+                style={{
+                  transition: 'transform 0.5s ease-in-out',
+                }}
               >
                 <h3
-                  className="
+                  className={`
                     text-2xl md:text-3xl
                     font-bold
                     text-[#1779cf]
                     mb-2
                     font-['Orbitron']
                     tracking-wide
-                  "
+                    transition-opacity duration-300
+                    ${isActive ? 'opacity-100' : 'opacity-0'}
+                  `}
+                  style={{
+                    transitionDelay: isActive ? '550ms' : '0ms',
+                  }}
                 >
                   {item.title}
                 </h3>
                 {item.subtitle && (
-                  <p className="text-gray-300/80 text-sm md:text-base mb-3 italic">
+                  <p
+                    className={`
+                      text-gray-300/80 text-sm md:text-base mb-3 italic
+                      transition-opacity duration-300
+                      ${isActive ? 'opacity-100' : 'opacity-0'}
+                    `}
+                    style={{
+                      transitionDelay: isActive ? '550ms' : '0ms',
+                    }}
+                  >
                     {item.subtitle}
                   </p>
                 )}
                 <p
-                  className="text-white/90 leading-relaxed"
+                  className={`
+                    text-white/90 leading-relaxed
+                    transition-opacity duration-300
+                    ${isActive ? 'opacity-100' : 'opacity-0'}
+                  `}
                   style={{
                     fontFamily: phaseDescriptionFont,
-                    fontSize: `${phaseDescriptionFontSize}px`
+                    fontSize: `${phaseDescriptionFontSize}px`,
+                    transitionDelay: isActive ? '550ms' : '0ms',
                   }}
                 >
                   {item.description}
