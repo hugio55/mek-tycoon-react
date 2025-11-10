@@ -39,6 +39,9 @@ export default function PhaseCarousel({
     phaseImage2: '',
     phaseImage3: '',
     phaseImage4: '',
+    phaseImageBlendMode: 'normal' as 'normal' | 'screen' | 'lighten' | 'lighter',
+    phaseIdleBackdropBlur: 0,
+    phaseCardOpacity: 40, // Background opacity percentage (0-100)
   });
 
   useEffect(() => {
@@ -57,6 +60,9 @@ export default function PhaseCarousel({
             phaseImage2: parsed.phaseImage2 ?? '',
             phaseImage3: parsed.phaseImage3 ?? '',
             phaseImage4: parsed.phaseImage4 ?? '',
+            phaseImageBlendMode: parsed.phaseImageBlendMode ?? 'normal',
+            phaseIdleBackdropBlur: parsed.phaseIdleBackdropBlur ?? 0,
+            phaseCardOpacity: parsed.phaseCardOpacity ?? 40,
           });
         } catch (e) {
           console.error('Failed to parse debug config:', e);
@@ -220,10 +226,8 @@ export default function PhaseCarousel({
         case 'modern':
           return {
             container: `relative rounded-3xl overflow-hidden
-                       bg-black/40
-                       ${isCenter ? 'backdrop-blur-[40px]' : ''}
                        border border-white/[0.15]
-                       ${isCenter ? 'hover:border-white/[0.25] hover:bg-black/50' : ''}
+                       ${isCenter ? 'hover:border-white/[0.25]' : ''}
                        transition-all duration-300 ease-out
                        shadow-[0_8px_32px_rgba(0,0,0,0.3),0_0_1px_rgba(255,255,255,0.1)_inset]
                        ${isCenter ? 'hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_0_1px_rgba(255,255,255,0.15)_inset]' : ''}
@@ -274,7 +278,15 @@ export default function PhaseCarousel({
           perspective: 1000,
         }}
       >
-        <div className={styles.container} style={{ height: `${config.phaseColumnHeight}px` }}>
+        <div
+          className={styles.container}
+          style={{
+            height: `${config.phaseColumnHeight}px`,
+            backgroundColor: `rgba(0, 0, 0, ${config.phaseCardOpacity / 100})`,
+            backdropFilter: isCenter ? `blur(${config.phaseIdleBackdropBlur}px)` : 'none',
+            WebkitBackdropFilter: isCenter ? `blur(${config.phaseIdleBackdropBlur}px)` : 'none',
+          }}
+        >
           {/* Background Image with Effects */}
           {phaseImage && (
             <div
@@ -284,6 +296,7 @@ export default function PhaseCarousel({
                 filter: `brightness(${1 - config.phaseImageDarkening / 100}) blur(${isCenter ? config.phaseBlurAmountSelected : config.phaseBlurAmount}px)`,
                 transform: `scale(${1 + ((isCenter ? config.phaseBlurAmountSelected : config.phaseBlurAmount) * 0.015)})`,
                 transformOrigin: 'center',
+                mixBlendMode: config.phaseImageBlendMode === 'lighter' ? 'plus-lighter' : config.phaseImageBlendMode,
               }}
             />
           )}

@@ -20,12 +20,37 @@ export default function AudioConsentLightbox({ onProceed, isVisible }: AudioCons
     setMounted(true);
 
     // Load layout preference
-    const savedLayout = localStorage.getItem(STORAGE_KEY_LAYOUT);
-    if (savedLayout) {
-      setLayout(savedLayout as any);
-    }
+    const loadLayout = () => {
+      const savedLayout = localStorage.getItem(STORAGE_KEY_LAYOUT);
+      if (savedLayout) {
+        setLayout(savedLayout as any);
+      }
+    };
 
-    return () => setMounted(false);
+    loadLayout();
+
+    // Listen for storage changes from other tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY_LAYOUT) {
+        loadLayout();
+      }
+    };
+
+    // Listen for custom event from same tab (debug page)
+    const handleLayoutChange = (e: CustomEvent) => {
+      if (e.detail?.layout) {
+        setLayout(e.detail.layout);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('mek-layout-change' as any, handleLayoutChange);
+
+    return () => {
+      setMounted(false);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('mek-layout-change' as any, handleLayoutChange);
+    };
   }, []);
 
   useEffect(() => {
