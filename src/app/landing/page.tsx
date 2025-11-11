@@ -1066,6 +1066,76 @@ export default function LandingPage() {
             </p>
           </div>
 
+          {/* Join Beta Button - Industrial Glass Design */}
+          <button
+            onClick={() => {
+              // TODO: Implement beta signup functionality
+              console.log('[🎮BETA] Join Beta clicked');
+            }}
+            className="
+              relative
+              mt-8 sm:mt-10
+              px-8 sm:px-12 md:px-16
+              py-3 sm:py-4
+              overflow-hidden
+              transition-all duration-300 ease-out
+              hover:scale-105 hover:brightness-110
+              active:scale-95
+              cursor-pointer
+            "
+            style={{
+              fontFamily: 'Orbitron, sans-serif',
+              fontSize: 'clamp(14px, 2.5vw, 18px)',
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              opacity: hasScrolled ? 1 : 0,
+              transform: hasScrolled ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'opacity 0.7s ease-out 0.3s, transform 0.7s ease-out 0.3s',
+            }}
+          >
+            {/* Rotating conic gradient border */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'conic-gradient(from 0deg, #fab617, #fbbf24, #fab617)',
+                animation: 'spin 4s linear infinite',
+                padding: '2px',
+                WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                WebkitMaskComposite: 'xor',
+                maskComposite: 'exclude',
+              }}
+            />
+
+            {/* Hazard stripes background with glass-morphism */}
+            <div
+              className="absolute inset-0 backdrop-blur-md"
+              style={{
+                background: `
+                  repeating-linear-gradient(
+                    45deg,
+                    rgba(0, 0, 0, 0.8),
+                    rgba(0, 0, 0, 0.8) 10px,
+                    rgba(250, 182, 23, 0.3) 10px,
+                    rgba(250, 182, 23, 0.3) 20px
+                  )
+                `,
+              }}
+            />
+
+            {/* Linear gradient shine effect */}
+            <div
+              className="absolute inset-0 opacity-30 pointer-events-none"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.2) 100%)',
+              }}
+            />
+
+            {/* Button text */}
+            <span className="relative z-10 text-white font-bold">
+              Join Beta
+            </span>
+          </button>
+
           {/* Speaker Button - Above Phase Timeline */}
           <button
             onClick={() => handleAudioToggle(!audioPlaying)}
