@@ -971,10 +971,10 @@ export default function LandingPage() {
       }}
     >
       {/* Dark overlay when lightbox is visible */}
-      {showAudioConsent && (
+      {showAudioConsent && lightboxBackdropDarkness > 0 && (
         <div
           className="fixed inset-0 bg-black z-[9998] transition-opacity duration-500"
-          style={{ opacity: 0.8 }}
+          style={{ opacity: lightboxBackdropDarkness / 100 }}
         />
       )}
 
