@@ -20,16 +20,20 @@ export default function ClaudeMdSummary() {
 
   async function loadClaudeMd() {
     try {
+      console.log('[CLAUDE_MD] Fetching from /api/claude-md...');
       const response = await fetch('/api/claude-md');
       if (!response.ok) {
         throw new Error(`Failed to load CLAUDE.md: ${response.status}`);
       }
 
       const content = await response.text();
+      console.log('[CLAUDE_MD] Received content, length:', content.length);
       const parsedSections = parseClaudeMd(content);
+      console.log('[CLAUDE_MD] Parsed sections:', parsedSections.length);
+      console.log('[CLAUDE_MD] First 5 sections:', parsedSections.slice(0, 5));
       setSections(parsedSections);
     } catch (err) {
-      console.error('Error loading CLAUDE.md:', err);
+      console.error('[CLAUDE_MD] Error loading:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
