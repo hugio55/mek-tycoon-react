@@ -90,6 +90,11 @@ export default function AudioConsentLightbox({
         className="relative flex flex-col items-center gap-6 sm:gap-8"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header Text */}
+        <p className="text-white/70 text-base sm:text-lg font-light tracking-wide text-center">
+          For full immersion...
+        </p>
+
         {/* Toggle Switch and Text Container - Horizontal Layout */}
         <div className="flex items-center gap-6">
           {/* Toggle Switch - Responsive sizing with minimum touch target */}
