@@ -892,6 +892,7 @@ export default function LandingDebugPage() {
           )}
 
           {/* Star Controls Section - Layer 3 */}
+          {config.activeTab === 'layer3' && (
           <div className="bg-gray-800 border border-purple-500 rounded p-3">
             <h2 className="text-sm font-semibold text-purple-400 mb-2 pb-1 border-b border-purple-700">
               Layer 3 Star Field
@@ -992,8 +993,10 @@ export default function LandingDebugPage() {
               </div>
             </div>
           </div>
+          )}
 
           {/* Background Stars (Static) Controls */}
+          {config.activeTab === 'bgstars' && (
           <div className="bg-gray-800 border border-orange-500 rounded p-3">
             <h2 className="text-sm font-semibold text-orange-400 mb-2 pb-1 border-b border-orange-700">
               Background Stars (Static)
@@ -1132,8 +1135,10 @@ export default function LandingDebugPage() {
               </div>
             </div>
           </div>
+          )}
 
           {/* Layout Controls Section */}
+          {config.activeTab === 'logo' && (
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Layout & Positioning
@@ -1197,8 +1202,10 @@ export default function LandingDebugPage() {
               </div>
             </div>
           </div>
+          )}
 
           {/* Motion Blur Controls Section */}
+          {config.activeTab === 'motion' && (
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Motion Blur Effects
@@ -1241,8 +1248,11 @@ export default function LandingDebugPage() {
               </div>
             </div>
           </div>
+          )}
 
           {/* Typography Controls Section */}
+          {config.activeTab === 'description' && (
+          <>
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Typography
@@ -1551,8 +1561,12 @@ export default function LandingDebugPage() {
               </button>
             </div>
           </div>
+          </>
+          )}
 
           {/* Phase Carousel Design Section */}
+          {config.activeTab === 'phases' && (
+          <>
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Phase Carousel Design
@@ -1582,6 +1596,7 @@ export default function LandingDebugPage() {
           </div>
 
           {/* Power Button & Sound Label Controls Section */}
+          {config.activeTab === 'other' && (
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Power Button & Sound Label
@@ -1682,8 +1697,10 @@ export default function LandingDebugPage() {
               </select>
             </div>
           </div>
+          )}
 
           {/* Audio Consent Lightbox Controls Section */}
+          {config.activeTab === 'audio' && (
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Audio Consent Lightbox Controls
