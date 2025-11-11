@@ -176,17 +176,17 @@ export default function HorizontalTimeline({
           const isActive = isHovered || isSelected; // Active if hovered OR selected
           const isAnyActive = hoveredIndex !== null || selectedIndex !== null;
 
-          // Perfect edge-to-edge with minimal overlap - no transform needed
+          // Increased overlap to eliminate black lines completely
           let widthPercent: number;
 
           if (isAnyActive) {
             if (isActive) {
-              widthPercent = 30.1; // Active column with minimal overlap
+              widthPercent = 30.3; // Active column with increased overlap
             } else {
-              widthPercent = 23.35; // Inactive columns (70/3 + 0.02 for sub-pixel gap prevention)
+              widthPercent = 23.4; // Inactive columns with increased overlap
             }
           } else {
-            widthPercent = 25.05; // All equal: 25.05% × 4 = 100.20% (0.20% overlap prevents sub-pixel gaps)
+            widthPercent = 25.15; // All equal: increased overlap for gap prevention (25.15% × 4 = 100.60%)
           }
 
           // Calculate blur value
@@ -205,7 +205,7 @@ export default function HorizontalTimeline({
               `}
               style={{
                 width: `${widthPercent}%`,
-                marginRight: index < timelineData.length - 1 ? '-2px' : '0', // Overlap cards by 2px to eliminate sub-pixel gaps
+                marginRight: index < timelineData.length - 1 ? '-6px' : '0', // Increased overlap to -6px to eliminate black lines
                 transition: 'width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
                 willChange: isAnyActive ? 'width' : 'auto',
                 zIndex: isActive ? 20 : 10 - index,
@@ -213,7 +213,8 @@ export default function HorizontalTimeline({
                 WebkitBackfaceVisibility: 'hidden',
                 border: 'none',
                 outline: 'none',
-                boxShadow: 'none',
+                // Add inset shadow on left edge to create dark blend at seams (backup for any micro-gaps)
+                boxShadow: index > 0 ? 'inset 3px 0 6px rgba(0,0,0,0.6)' : 'none',
                 backgroundColor: 'transparent',
               }}
               onMouseEnter={() => handleHoverEnter(index)}

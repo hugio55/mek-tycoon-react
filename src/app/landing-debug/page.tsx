@@ -444,7 +444,7 @@ export default function LandingDebugPage() {
   ];
 
   return (
-    <div className={`min-h-screen ${viewMode === 'split-view' ? 'flex' : 'bg-gray-900 p-3'}`}>
+    <div className={`min-h-screen ${viewMode === 'split-view' ? 'flex' : 'bg-gray-900 p-3'}`} style={{ zoom: 0.75 }}>
       <div className={viewMode === 'split-view' ? 'w-1/2 bg-gray-800 p-3 overflow-y-auto border-r border-gray-700' : 'max-w-5xl mx-auto'}>
         {/* Header */}
         <div className="mb-3">
@@ -534,7 +534,6 @@ export default function LandingDebugPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
 
           {/* Star Controls Section - Layer 1 */}
-          {config.activeTab === 'layer1' && (
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Layer 1 Star Field
@@ -596,10 +595,8 @@ export default function LandingDebugPage() {
               </div>
             </div>
           </div>
-          )}
 
           {/* Layer 1 Twinkling Controls */}
-          {config.activeTab === 'layer1' && (
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Layer 1 Twinkling
