@@ -211,9 +211,14 @@ export default function LandingPage() {
   const [animationStage, setAnimationStage] = useState<'initial' | 'stars' | 'logo'>('initial');
   const [useVideoLogo, setUseVideoLogo] = useState(false);
 
-  // Debug logging for useVideoLogo changes
+  // Debug logging for useVideoLogo changes + video playback control
   useEffect(() => {
     console.log('[🎬SWAP] useVideoLogo state changed to:', useVideoLogo);
+    if (useVideoLogo && videoRef.current) {
+      console.log('[🎬SWAP] Resetting video to frame 1 and starting playback');
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(err => console.error('[🎬SWAP] Video play failed:', err));
+    }
   }, [useVideoLogo]);
 
   // Debug logging for animation stage changes
@@ -1193,8 +1198,8 @@ export default function LandingPage() {
               }}
             />
             <video
+              ref={videoRef}
               src="/random-images/Everydays_00000.webm"
-              autoPlay
               loop
               muted
               playsInline

@@ -41,6 +41,7 @@ export default function PhaseCarousel({
     phaseImage4: '',
     phaseImageBlendMode: 'normal' as 'normal' | 'screen' | 'lighten' | 'lighter',
     phaseIdleBackdropBlur: 0,
+    phaseImageIdleOpacity: 100,
     phaseCardOpacity: 40, // Background opacity percentage (0-100)
   });
 
@@ -62,6 +63,7 @@ export default function PhaseCarousel({
             phaseImage4: parsed.phaseImage4 ?? '',
             phaseImageBlendMode: parsed.phaseImageBlendMode ?? 'normal',
             phaseIdleBackdropBlur: parsed.phaseIdleBackdropBlur ?? 0,
+            phaseImageIdleOpacity: parsed.phaseImageIdleOpacity ?? 100,
             phaseCardOpacity: parsed.phaseCardOpacity ?? 40,
           });
         } catch (e) {
@@ -303,6 +305,7 @@ export default function PhaseCarousel({
                 transform: `scale(${1 + ((isCenter ? config.phaseBlurAmountSelected : config.phaseBlurAmount) * 0.015)})`,
                 transformOrigin: 'center',
                 mixBlendMode: config.phaseImageBlendMode === 'lighter' ? 'plus-lighter' : config.phaseImageBlendMode,
+                opacity: config.phaseImageIdleOpacity / 100,
               }}
             />
           )}

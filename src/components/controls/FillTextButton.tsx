@@ -31,6 +31,19 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
                       drop-shadow(0 0 20px rgba(61, 209, 255, 1));
             }
           }
+
+          @keyframes dark-flicker {
+            0%, 100% { opacity: 1; }
+            10% { opacity: 0.7; }
+            20% { opacity: 1; }
+            30% { opacity: 0.8; }
+            40% { opacity: 1; }
+            50% { opacity: 0.6; }
+            60% { opacity: 1; }
+            70% { opacity: 0.9; }
+            80% { opacity: 0.7; }
+            90% { opacity: 1; }
+          }
         `}
       </style>
 
@@ -63,6 +76,10 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
           color: '#3DD1FF',
           width: isHovered ? '100%' : '0%',
           transition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
+          textShadow: isHovered
+            ? '0 0 10px #3DD1FF, 0 0 20px #3DD1FF, 0 0 30px #3DD1FF'
+            : 'none',
+          animation: isHovered ? 'dark-flicker 0.4s infinite' : 'none',
         }}
         aria-hidden="true"
       >

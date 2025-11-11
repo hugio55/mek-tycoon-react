@@ -86,6 +86,7 @@ const DEFAULT_CONFIG = {
   phaseImageBlendMode: 'normal' as 'normal' | 'screen' | 'lighten' | 'lighter',
   phaseHoverDarkeningIntensity: 90,
   phaseIdleBackdropBlur: 0,
+  phaseImageIdleOpacity: 100,
   phaseColumnYOffset: 0,
   // Description glass card controls
   descriptionCardBlur: 40,
@@ -2131,6 +2132,25 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-cyan-400 text-center mt-0.5">
                 {config.phaseIdleBackdropBlur}px blur
+              </div>
+            </div>
+
+            {/* Phase Image Idle Opacity */}
+            <div className="mb-2">
+              <label className="block text-xs text-cyan-300 mb-1">
+                Phase Image Idle Opacity
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.phaseImageIdleOpacity}
+                onChange={(e) => updateConfig('phaseImageIdleOpacity', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-cyan-400 text-center mt-0.5">
+                {config.phaseImageIdleOpacity}% opacity
               </div>
             </div>
 
