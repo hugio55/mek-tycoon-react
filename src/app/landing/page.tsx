@@ -119,6 +119,7 @@ const DEFAULT_CONFIG = {
 export default function LandingPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Load settings from Convex database (with localStorage as fallback)
   const dbSettings = useQuery(api.landingDebugSettings.getLandingDebugSettings);
