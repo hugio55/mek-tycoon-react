@@ -56,18 +56,6 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
         &nbsp;{text}&nbsp;
       </span>
 
-      {/* Constant glowing line at left (idle state) */}
-      {!isHovered && (
-        <span
-          className="absolute top-0 bottom-0 left-0"
-          style={{
-            width: '3px',
-            backgroundColor: '#3DD1FF',
-            animation: 'line-glow 2s ease-in-out infinite',
-          }}
-        />
-      )}
-
       {/* Hover overlay (sweeps from left to right with bright blue) */}
       <span
         className="absolute top-0 left-0 whitespace-nowrap overflow-hidden"
@@ -84,9 +72,7 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
           style={{
             width: '3px',
             backgroundColor: '#3DD1FF',
-            animation: isHovered
-              ? 'scan-blur 500ms cubic-bezier(0.4, 0.0, 0.2, 1)'
-              : 'line-glow 2s ease-in-out infinite',
+            animation: 'scan-blur 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
           }}
         />
       </span>
