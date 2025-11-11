@@ -1218,6 +1218,19 @@ body {
   }
 }
 
+/* Zoom-in fade animation with linear start and smooth ease-out end */
+@keyframes zoomInFadeSmooth {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+    animation-timing-function: cubic-bezier(0.25, 0, 0.5, 1); /* Linear start, ease-out end */
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* Multicolor spinning glow effect */
 @keyframes spinGlow {
   0% {
