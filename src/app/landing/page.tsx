@@ -461,17 +461,85 @@ export default function LandingPage() {
     };
   }, []);
 
+  // Auto-play audio when audioPlaying state changes
+  useEffect(() => {
+    console.log('[🎵AUDIO] audioPlaying state changed:', audioPlaying);
+    if (!audioRef.current) {
+      console.log('[🎵AUDIO] No audio ref, skipping playback');
+      return;
+    }
+
+    if (audioPlaying) {
+      console.log('[🎵AUDIO] Starting audio playback with fade-in');
+      // Fade in over 500ms
+      audioRef.current.currentTime = 0;
+      audioRef.current.volume = 0;
+      audioRef.current.play()
+        .then(() => console.log('[🎵AUDIO] Audio started successfully'))
+        .catch(err => console.error('[🎵AUDIO] Audio play failed:', err));
+
+      const fadeInDuration = 500;
+      const fadeInSteps = 20;
+      const stepDuration = fadeInDuration / fadeInSteps;
+      const volumeStep = 1 / fadeInSteps;
+
+      let currentStep = 0;
+      const fadeInterval = setInterval(() => {
+        if (audioRef.current && currentStep < fadeInSteps) {
+          audioRef.current.volume = Math.min(1, audioRef.current.volume + volumeStep);
+          currentStep++;
+        } else {
+          if (audioRef.current) {
+            audioRef.current.volume = 1; // Ensure full volume
+            console.log('[🎵AUDIO] Fade-in complete, volume at 1.0');
+          }
+          clearInterval(fadeInterval);
+        }
+      }, stepDuration);
+    } else {
+      console.log('[🎵AUDIO] Stopping audio playback with fade-out');
+      // Fade out over 500ms
+      const fadeOutDuration = 500;
+      const fadeOutSteps = 20;
+      const stepDuration = fadeOutDuration / fadeOutSteps;
+      const volumeStep = audioRef.current.volume / fadeOutSteps;
+
+      let currentStep = 0;
+      const fadeInterval = setInterval(() => {
+        if (audioRef.current && currentStep < fadeOutSteps) {
+          audioRef.current.volume = Math.max(0, audioRef.current.volume - volumeStep);
+          currentStep++;
+        } else {
+          if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0; // Reset to beginning
+            audioRef.current.volume = 1; // Reset volume
+            console.log('[🎵AUDIO] Fade-out complete, audio paused');
+          }
+          clearInterval(fadeInterval);
+        }
+      }, stepDuration);
+    }
+  }, [audioPlaying]);
+
   // Handle audio consent proceeding
   const handleConsentProceed = (audioEnabled: boolean) => {
+    console.log('[🎵AUDIO] Consent proceeding with audioEnabled:', audioEnabled);
+
     // Store consent in localStorage
     localStorage.setItem(AUDIO_CONSENT_KEY, JSON.stringify({ audioEnabled, timestamp: Date.now() }));
+    console.log('[🎵AUDIO] Consent stored in localStorage');
 
     // Hide the consent lightbox
     setShowAudioConsent(false);
+    console.log('[🎵AUDIO] Consent lightbox hidden');
 
     // If audio enabled, start playing
     if (audioEnabled) {
+      console.log('[🎵AUDIO] Setting audioPlaying to true');
       setAudioPlaying(true);
+    } else {
+      console.log('[🎵AUDIO] Audio not enabled, skipping playback');
     }
   };
 
