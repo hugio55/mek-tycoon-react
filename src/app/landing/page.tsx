@@ -110,7 +110,7 @@ const DEFAULT_CONFIG = {
   descriptionCardDarkness: 40,
   descriptionCardBorder: true,
   // Audio Consent Lightbox controls
-  logoFadeDuration: 1000,
+  logoFadeDuration: 1500,
   lightboxBackdropDarkness: 95,
   audioToggleSize: 96,
   // Note: phaseImage1-4 not in DEFAULT_CONFIG - PhaseCarousel manages these
@@ -1121,8 +1121,8 @@ export default function LandingPage() {
               width: `${logoSize}px`,
               height: `${logoSize}px`,
               opacity: animationStage === 'logo' ? 1 : 0,
-              transform: animationStage === 'logo' ? 'translate3d(0, 0, 0) scale3d(1, 1, 1)' : 'translate3d(0, 0, 0) scale3d(0.95, 0.95, 1)',
-              transition: animationStage === 'logo' ? `opacity ${logoFadeDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1), transform ${logoFadeDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1)` : 'none',
+              transform: animationStage === 'logo' ? 'translate3d(0, 0, 0) scale3d(1, 1, 1)' : 'translate3d(0, 0, 0) scale3d(0.8, 0.8, 1)',
+              transition: animationStage === 'logo' ? `opacity ${logoFadeDuration}ms cubic-bezier(0.16, 1, 0.3, 1), transform ${logoFadeDuration}ms cubic-bezier(0.16, 1, 0.3, 1)` : 'none',
               visibility: animationStage === 'initial' || animationStage === 'stars' ? 'hidden' : 'visible',
               willChange: animationStage === 'stars' ? 'transform, opacity' : 'auto',
               backfaceVisibility: 'hidden',
@@ -1156,6 +1156,7 @@ export default function LandingPage() {
                 backfaceVisibility: 'hidden',
                 WebkitBackfaceVisibility: 'hidden',
                 WebkitTransform: 'translate3d(0, 0, 0)',
+                imageRendering: 'crisp-edges',
               }}
             />
           </div>

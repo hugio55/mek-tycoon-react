@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import ClaudeMdSummary from './ClaudeMdSummary';
 
 interface ClaudeFile {
   name: string;
@@ -31,6 +32,7 @@ interface ClaudeFilesResponse {
 }
 
 export default function ClaudeManagerAdmin() {
+  const [activeTab, setActiveTab] = useState<'files' | 'summary'>('files');
   const [data, setData] = useState<ClaudeFilesResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -311,6 +313,35 @@ export default function ClaudeManagerAdmin() {
 
   return (
     <div className="p-8 space-y-6">
+      {/* Tab Navigation */}
+      <div className="flex gap-2 mb-6 border-b border-gray-700">
+        <button
+          onClick={() => setActiveTab('files')}
+          className={`px-6 py-3 font-medium transition-colors relative ${
+            activeTab === 'files'
+              ? 'text-yellow-400 border-b-2 border-yellow-400'
+              : 'text-gray-400 hover:text-gray-300'
+          }`}
+        >
+          📁 Claude Files
+        </button>
+        <button
+          onClick={() => setActiveTab('summary')}
+          className={`px-6 py-3 font-medium transition-colors relative ${
+            activeTab === 'summary'
+              ? 'text-yellow-400 border-b-2 border-yellow-400'
+              : 'text-gray-400 hover:text-gray-300'
+          }`}
+        >
+          📋 CLAUDE.md Summary
+        </button>
+      </div>
+
+      {/* Render Active Tab Content */}
+      {activeTab === 'summary' ? (
+        <ClaudeMdSummary />
+      ) : (
+        <>
       {/* Header Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
@@ -558,6 +589,8 @@ export default function ClaudeManagerAdmin() {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );
