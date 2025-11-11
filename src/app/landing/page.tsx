@@ -1250,15 +1250,15 @@ export default function LandingPage() {
             <FillTextButton text="join beta" />
           </div>
 
-          {/* Speaker Button - Above Phase Timeline */}
+          {/* Speaker Button - Top Right Corner */}
           <button
             onClick={() => handleAudioToggle(!audioPlaying)}
             className={`
-              relative
+              fixed top-4 right-4
               transition-all duration-500 ease-out
               active:scale-95
               cursor-pointer
-              mt-8 sm:mt-12 md:mt-16
+              z-[100]
               ${audioPlaying ? 'text-yellow-400' : 'text-gray-400'}
             `}
             aria-label={audioPlaying ? 'Mute audio' : 'Play audio'}

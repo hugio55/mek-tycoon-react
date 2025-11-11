@@ -4,7 +4,6 @@ import { ConvexReactClient } from "convex/react";
 import { ReactNode, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import UnifiedHeader from "@/components/UnifiedHeader";
-import SoundToggle from "@/components/SoundToggle";
 import { SoundProvider } from "@/contexts/SoundContext";
 import { DemoWalletProvider, useDemoWallet } from "@/contexts/DemoWalletContext";
 import { EssenceProvider } from "@/contexts/EssenceContext";
@@ -80,7 +79,6 @@ export function Providers({ children }: { children: ReactNode }) {
             <EssenceProviderWrapper>
               <SoundProvider>
                 <ContentWithLoadingState>
-                  <SoundToggle />
                   <div className={showHeader ? "min-h-screen relative" : "min-h-screen relative w-full"} style={!showHeader ? { margin: 0, padding: 0, width: '100vw', maxWidth: '100vw' } : undefined}>
                     {showHeader ? (
                       // Pages with header - wrapped in centered container
