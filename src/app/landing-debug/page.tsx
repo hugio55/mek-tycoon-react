@@ -169,6 +169,7 @@ export default function LandingDebugPage() {
     setStarFrequency(DEFAULT_CONFIG.starFrequency);
     setTwinkleAmount(DEFAULT_CONFIG.twinkleAmount);
     setTwinkleSpeed(DEFAULT_CONFIG.twinkleSpeed);
+    setTwinkleSpeedRandomness(DEFAULT_CONFIG.twinkleSpeedRandomness);
     setSizeRandomness(DEFAULT_CONFIG.sizeRandomness);
     // Layer 2
     setStarScale2(DEFAULT_CONFIG.starScale2);
@@ -177,6 +178,7 @@ export default function LandingDebugPage() {
     setLineLength2(DEFAULT_CONFIG.lineLength2);
     setTwinkleAmount2(DEFAULT_CONFIG.twinkleAmount2);
     setTwinkleSpeed2(DEFAULT_CONFIG.twinkleSpeed2);
+    setTwinkleSpeedRandomness2(DEFAULT_CONFIG.twinkleSpeedRandomness2);
     setSizeRandomness2(DEFAULT_CONFIG.sizeRandomness2);
     // Layer 3
     setStarScale3(DEFAULT_CONFIG.starScale3);
@@ -186,10 +188,12 @@ export default function LandingDebugPage() {
     setSpawnDelay3(DEFAULT_CONFIG.spawnDelay3);
     setTwinkleAmount3(DEFAULT_CONFIG.twinkleAmount3);
     setTwinkleSpeed3(DEFAULT_CONFIG.twinkleSpeed3);
+    setTwinkleSpeedRandomness3(DEFAULT_CONFIG.twinkleSpeedRandomness3);
     setSizeRandomness3(DEFAULT_CONFIG.sizeRandomness3);
     // Background stars
     setBgStarTwinkleAmount(DEFAULT_CONFIG.bgStarTwinkleAmount);
     setBgStarTwinkleSpeed(DEFAULT_CONFIG.bgStarTwinkleSpeed);
+    setBgStarTwinkleSpeedRandomness(DEFAULT_CONFIG.bgStarTwinkleSpeedRandomness);
     setBgStarSizeRandomness(DEFAULT_CONFIG.bgStarSizeRandomness);
     setBgStarCount(DEFAULT_CONFIG.bgStarCount);
     setBgStarMinBrightness(DEFAULT_CONFIG.bgStarMinBrightness);
@@ -246,10 +250,23 @@ export default function LandingDebugPage() {
                 <input
                   type="range"
                   min="0.1"
-                  max="5"
+                  max="15"
                   step="0.1"
                   value={bgStarTwinkleSpeed}
                   onChange={(e) => setBgStarTwinkleSpeed(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-2">Twinkle Speed Randomness: {bgStarTwinkleSpeedRandomness}%</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={bgStarTwinkleSpeedRandomness}
+                  onChange={(e) => setBgStarTwinkleSpeedRandomness(Number(e.target.value))}
                   className="w-full"
                 />
               </div>
