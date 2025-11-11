@@ -595,9 +595,11 @@ export default function LandingDebugPage() {
                 {config.starFrequency} stars
               </div>
             </div>
-          </CollapsibleCard>
+          </div>
+          )}
 
           {/* Layer 1 Twinkling Controls */}
+          {config.activeTab === 'layer1' && (
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Layer 1 Twinkling
@@ -698,8 +700,11 @@ export default function LandingDebugPage() {
               </div>
             </div>
           </div>
+          )}
 
           {/* Star Controls Section - Layer 2 */}
+          {config.activeTab === 'layer2' && (
+          <>
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Layer 2 Star Field
@@ -883,6 +888,8 @@ export default function LandingDebugPage() {
               </div>
             </div>
           </div>
+          </>
+          )}
 
           {/* Star Controls Section - Layer 3 */}
           <div className="bg-gray-800 border border-purple-500 rounded p-3">
