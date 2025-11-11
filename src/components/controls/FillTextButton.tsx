@@ -23,13 +23,23 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
         {`
           @keyframes line-glow {
             0%, 100% {
-              filter: drop-shadow(0 0 12px rgba(61, 209, 255, 1))
+              filter: drop-shadow(0 0 2px rgba(255, 255, 255, 1))
+                      drop-shadow(0 0 4px rgba(255, 255, 255, 1))
+                      drop-shadow(0 0 6px rgba(255, 255, 255, 0.9))
+                      drop-shadow(0 0 4px rgba(61, 209, 255, 1))
+                      drop-shadow(0 0 6px rgba(61, 209, 255, 1))
+                      drop-shadow(0 0 12px rgba(61, 209, 255, 1))
                       drop-shadow(0 0 24px rgba(61, 209, 255, 0.9))
                       drop-shadow(0 0 40px rgba(61, 209, 255, 0.7))
                       drop-shadow(0 0 56px rgba(61, 209, 255, 0.5));
             }
             50% {
-              filter: drop-shadow(0 0 18px rgba(61, 209, 255, 1))
+              filter: drop-shadow(0 0 3px rgba(255, 255, 255, 1))
+                      drop-shadow(0 0 6px rgba(255, 255, 255, 1))
+                      drop-shadow(0 0 10px rgba(255, 255, 255, 0.9))
+                      drop-shadow(0 0 6px rgba(61, 209, 255, 1))
+                      drop-shadow(0 0 10px rgba(61, 209, 255, 1))
+                      drop-shadow(0 0 18px rgba(61, 209, 255, 1))
                       drop-shadow(0 0 36px rgba(61, 209, 255, 1))
                       drop-shadow(0 0 56px rgba(61, 209, 255, 0.9))
                       drop-shadow(0 0 72px rgba(61, 209, 255, 0.7));
@@ -55,11 +65,11 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
         `}
       </style>
 
-      {/* Base text (always visible, solid gray-white) */}
+      {/* Base text (always visible, solid white) */}
       <span
         className="inline-block whitespace-nowrap"
         style={{
-          color: 'rgba(255,255,255,0.6)',
+          color: '#FFFFFF',
         }}
       >
         &nbsp;{text}&nbsp;
@@ -79,7 +89,7 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
 
       {/* Hover overlay (sweeps from left to right with bright blue text) */}
       <span
-        className="absolute top-0 left-0 whitespace-nowrap overflow-visible"
+        className="absolute top-0 left-0 whitespace-nowrap overflow-hidden"
         style={{
           color: '#3DD1FF',
           width: isHovered ? '100%' : '0%',
