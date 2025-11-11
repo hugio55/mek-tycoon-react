@@ -158,11 +158,17 @@ export default function HorizontalTimeline({
     <div
       ref={containerRef}
       className="w-full relative overflow-hidden"
-      style={{ height: `${columnHeight}px` }}
+      style={{
+        height: `${columnHeight}px`,
+        backgroundColor: 'transparent'
+      }}
     >
       <div
         className="absolute inset-0 flex"
-        style={{ gap: 0 }}
+        style={{
+          gap: 0,
+          backgroundColor: 'transparent'
+        }}
       >
         {timelineData.map((item, index) => {
           const isHovered = hoveredIndex === index;
@@ -170,22 +176,27 @@ export default function HorizontalTimeline({
           const isActive = isHovered || isSelected; // Active if hovered OR selected
           const isAnyActive = hoveredIndex !== null || selectedIndex !== null;
 
-          // Clean percentage-based widths that sum to exactly 100%
+          // Increased overlap to eliminate black lines completely
           let widthPercent: number;
 
           if (isAnyActive) {
             if (isActive) {
-              widthPercent = 30; // Active card: 30%
+              widthPercent = 30.3; // Active column with increased overlap
             } else {
-              widthPercent = 70 / 3; // Inactive cards: 23.333% each (70% / 3)
+              widthPercent = 23.4; // Inactive columns with increased overlap
             }
           } else {
+<<<<<<< HEAD
             widthPercent = 25; // All equal: 25% each
           }
 
           // Transform origin for scaleX overlap
           // First card stretches right, others stretch left to create seamless joins
           const transformOrigin = index === 0 ? 'left center' : 'right center';
+=======
+            widthPercent = 25.15; // All equal: increased overlap for gap prevention (25.15% × 4 = 100.60%)
+          }
+>>>>>>> detached-work-2025-11-10-join-beta
 
           // Calculate blur value
           const blurValue = isActive && idleBackdropBlur > 0 ? `blur(${idleBackdropBlur}px)` : 'none';
@@ -203,10 +214,24 @@ export default function HorizontalTimeline({
               `}
               style={{
                 width: `${widthPercent}%`,
+<<<<<<< HEAD
                 transform: 'scaleX(1.02)', // 2% horizontal stretch to eliminate gaps
                 transformOrigin: transformOrigin,
                 transition: 'width 0.5s ease-in-out, transform 0.5s ease-in-out',
                 zIndex: isActive ? 20 : 10 - index, // Active card on top, rest stack left-to-right
+=======
+                marginRight: index < timelineData.length - 1 ? '-6px' : '0', // Increased overlap to -6px to eliminate black lines
+                transition: 'width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                willChange: isAnyActive ? 'width' : 'auto',
+                zIndex: isActive ? 20 : 10 - index,
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                border: 'none',
+                outline: 'none',
+                // Add inset shadow on left edge to create dark blend at seams (backup for any micro-gaps)
+                boxShadow: index > 0 ? 'inset 3px 0 6px rgba(0,0,0,0.6)' : 'none',
+                backgroundColor: 'transparent',
+>>>>>>> detached-work-2025-11-10-join-beta
               }}
               onMouseEnter={() => handleHoverEnter(index)}
               onMouseLeave={handleHoverLeave}
@@ -214,54 +239,54 @@ export default function HorizontalTimeline({
             >
               {/* Timeline Background Image - bottommost layer, blends with page background */}
               <div
-                className="absolute inset-0 bg-cover bg-center transition-all duration-500"
+                className="absolute bg-cover bg-center"
                 style={{
+                  // Extend boundaries by blur radius × 2 to prevent soft/transparent edges
+                  // When blur is applied, edges become semi-transparent. By extending the image
+                  // beyond the container, we push those soft edges outside the visible area.
+                  top: `${-(isActive ? imageBlurSelected : imageBlur) * 2}px`,
+                  left: `${-(isActive ? imageBlurSelected : imageBlur) * 2}px`,
+                  right: `${-(isActive ? imageBlurSelected : imageBlur) * 2}px`,
+                  bottom: `${-(isActive ? imageBlurSelected : imageBlur) * 2}px`,
                   backgroundImage: `url(${item.imageUrl})`,
                   opacity: imageBlendMode === 'screen' ? 0.6 : 0.4,
                   maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                   WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                   filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected : imageBlur}px)`,
-                  transform: `scale(${1 + ((isActive ? imageBlurSelected : imageBlur) * 0.015)})`,
-                  transformOrigin: 'center',
                   mixBlendMode: imageBlendMode,
+                  transition: 'filter 0.3s ease-out, top 0.3s ease-out, left 0.3s ease-out, right 0.3s ease-out, bottom 0.3s ease-out',
+                  willChange: isAnyActive ? 'filter' : 'auto',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackdropFilter: 'hidden',
+                  border: 'none',
+                  outline: 'none',
                 }}
               />
 
-              {/* Darkening Overlay - only in normal mode */}
-              {imageBlendMode === 'normal' && (
-                <div
-                  className="absolute inset-0 bg-black transition-opacity duration-500"
-                  style={{
-                    opacity: (imageDarkness / 100) * 0.5
-                  }}
-                />
-              )}
+              {/* Darkening Overlay removed - was blocking blend mode transparency */}
 
               {/* Dark Gradient Overlay - only when using 'normal' blend mode (not lighten modes) */}
               {imageBlendMode === 'normal' && (
                 <div
-                  className={`
-                    absolute inset-0
-                    transition-opacity duration-500
-                    ${isActive ? 'opacity-100' : 'opacity-0'}
-                  `}
+                  className="absolute inset-0"
                   style={{
-                    background: `linear-gradient(to top, rgba(0,0,0,${0.9 * (hoverDarkenIntensity / 100)}) 0%, rgba(0,0,0,${0.6 * (hoverDarkenIntensity / 100)}) 30%, rgba(0,0,0,${0.2 * (hoverDarkenIntensity / 100)}) 50%, transparent 70%)`
+                    background: `linear-gradient(to top, rgba(0,0,0,${0.9 * (hoverDarkenIntensity / 100)}) 0%, rgba(0,0,0,${0.6 * (hoverDarkenIntensity / 100)}) 30%, rgba(0,0,0,${0.2 * (hoverDarkenIntensity / 100)}) 50%, transparent 70%)`,
+                    opacity: isActive ? 1 : 0,
+                    transition: 'opacity 0.3s ease-out',
+                    willChange: isAnyActive ? 'opacity' : 'auto',
                   }}
                 />
               )}
 
               {/* Frosted Glass Backdrop Blur Overlay - separate layer with pointer-events-none */}
               <div
-                className={`
-                  absolute inset-0
-                  transition-all duration-500
-                  ${isActive ? 'opacity-100' : 'opacity-0'}
-                  pointer-events-none
-                `}
+                className="absolute inset-0 pointer-events-none"
                 style={{
                   backdropFilter: blurValue,
                   WebkitBackdropFilter: blurValue,
+                  opacity: isActive ? 1 : 0,
+                  transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',
+                  willChange: isAnyActive && idleBackdropBlur > 0 ? 'opacity, backdrop-filter' : 'auto',
                 }}
               />
 

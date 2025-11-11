@@ -191,7 +191,11 @@ export default function PhaseCarousel({
   const renderCard = (phase: Phase, position: 'left' | 'center' | 'right', offset: number = 0) => {
     const isCenter = position === 'center';
 
-    const baseTranslateX = position === 'left' ? -45 : position === 'right' ? 45 : 0;
+    // CRITICAL FIX: Aggressive overlap strategy to eliminate gaps
+    // - Increase card width from 60% to 65% (more coverage)
+    // - Reduce spacing from ±42% to ±35% (cards closer together)
+    // - Result: Cards overlap by ~15%, guaranteeing no gaps with transparent backgrounds
+    const baseTranslateX = position === 'left' ? -35 : position === 'right' ? 35 : 0;
     const dragInfluence = isDragging ? (offset / 10) : 0;
     const finalTranslateX = baseTranslateX + dragInfluence;
 
@@ -202,9 +206,11 @@ export default function PhaseCarousel({
     const dragOpacity = isDragging && isCenter ? Math.max(0.7, 1 - Math.abs(offset) / 500) : baseOpacity;
 
     const positionStyles = {
-      transform: `translateX(${finalTranslateX}%) translateY(0) scale(${dragScale})`,
+      // CRITICAL: translateZ(0) forces GPU acceleration and prevents sub-pixel rendering gaps
+      // Higher z-index for center ensures it overlaps side cards cleanly
+      transform: `translateX(${finalTranslateX}%) translateY(0) scale(${dragScale}) translateZ(0)`,
       opacity: dragOpacity,
-      zIndex: isCenter ? 10 : 0,
+      zIndex: isCenter ? 10 : position === 'right' ? 2 : 1, // Right card above left to prevent overlap artifacts
       transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s',
       animation: 'slideUpEntrance 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards',
     };
@@ -225,12 +231,12 @@ export default function PhaseCarousel({
       switch (designVariation) {
         case 'modern':
           return {
+            // CRITICAL FIX: Remove border completely - it creates dark lines between cards
+            // Border visual replaced with inset box-shadow for edge definition
             container: `relative rounded-3xl overflow-hidden
-                       border border-white/[0.15]
-                       ${isCenter ? 'hover:border-white/[0.25]' : ''}
                        transition-all duration-300 ease-out
-                       shadow-[0_8px_32px_rgba(0,0,0,0.3),0_0_1px_rgba(255,255,255,0.1)_inset]
-                       ${isCenter ? 'hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_0_1px_rgba(255,255,255,0.15)_inset]' : ''}
+                       shadow-[0_8px_32px_rgba(0,0,0,0.3),0_0_1px_rgba(255,255,255,0.1)_inset,0_0_0_1px_rgba(255,255,255,0.15)]
+                       ${isCenter ? 'hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_0_1px_rgba(255,255,255,0.15)_inset,0_0_0_1px_rgba(255,255,255,0.25)]' : ''}
                        group cursor-pointer
                        will-change-[transform,box-shadow]`,
             lockIcon: 'w-16 h-16 md:w-20 md:h-20 text-gray-400/30 mb-4 group-hover:text-gray-300/45 group-hover:scale-105 transition-all duration-700',
@@ -268,7 +274,7 @@ export default function PhaseCarousel({
 
     return (
       <div
-        className="absolute inset-x-0 mx-auto w-[60%] max-w-md md:max-w-lg"
+        className="absolute inset-x-0 mx-auto w-[65%] max-w-md md:max-w-lg"
         style={{
           ...positionStyles,
           transformStyle: 'preserve-3d',

@@ -1127,9 +1127,10 @@ export default function LandingDebugPage() {
               </div>
             </div>
           </div>
+          )}
 
           {/* Layout Controls Section */}
-          {true && (
+          {config.activeTab === 'logo' && (
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Layout & Positioning
@@ -1196,7 +1197,7 @@ export default function LandingDebugPage() {
           )}
 
           {/* Motion Blur Controls Section */}
-          {true && (
+          {config.activeTab === 'motion' && (
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Motion Blur Effects
@@ -1242,7 +1243,7 @@ export default function LandingDebugPage() {
           )}
 
           {/* Typography Controls Section */}
-          {true && (
+          {config.activeTab === 'description' && (
           <>
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
@@ -1556,7 +1557,7 @@ export default function LandingDebugPage() {
           )}
 
           {/* Phase Carousel Design Section */}
-          {true && (
+          {config.activeTab === 'phases' && (
           <>
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
@@ -1759,7 +1760,7 @@ export default function LandingDebugPage() {
           )}
 
           {/* Power Button Controls Section */}
-          {true && (
+          {config.activeTab === 'power' && (
           <>
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
@@ -1847,7 +1848,7 @@ export default function LandingDebugPage() {
           )}
 
           {/* Speaker Icon Controls Section */}
-          {true && (
+          {config.activeTab === 'speaker' && (
           <>
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
@@ -1879,7 +1880,7 @@ export default function LandingDebugPage() {
           )}
 
           {/* Other Controls Section (if needed for future misc controls) */}
-          {true && (
+          {config.activeTab === 'other' && (
           <>
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
@@ -1893,7 +1894,7 @@ export default function LandingDebugPage() {
           )}
 
           {/* Audio Consent Lightbox Controls Section */}
-          {true && (
+          {config.activeTab === 'audio' && (
           <>
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">

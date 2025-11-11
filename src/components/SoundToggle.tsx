@@ -14,7 +14,7 @@ export default function SoundToggle() {
   const { soundEnabled, toggleSound } = useSound();
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-center gap-2 sm:bottom-6 sm:right-6">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-row items-center gap-3 sm:gap-4 sm:bottom-6 sm:right-6">
       {/* Power Switch Toggle Button */}
       <button
         onClick={toggleSound}
@@ -81,14 +81,37 @@ export default function SoundToggle() {
         />
       </button>
 
-      {/* Label */}
+      {/* Animated Text Label - slides vertically */}
       <div
-        className={`
-          text-[10px] sm:text-xs uppercase tracking-widest font-['Orbitron'] font-bold transition-colors duration-300
-          ${soundEnabled ? 'text-yellow-500' : 'text-gray-600'}
-        `}
+        className="overflow-hidden h-5 sm:h-6"
+        style={{
+          width: 'auto',
+          minWidth: '80px',
+        }}
       >
-        SOUND
+        <div
+          className="transition-transform duration-300 ease-out"
+          style={{
+            transform: soundEnabled ? 'translateY(0)' : 'translateY(-100%)',
+          }}
+        >
+          {/* Sound On - shows when enabled */}
+          <div
+            className="text-base sm:text-lg font-['Orbitron'] font-bold text-yellow-500 h-5 sm:h-6 flex items-center"
+            style={{
+              textShadow: '0 0 8px rgba(250,182,23,0.5)',
+            }}
+          >
+            Sound On
+          </div>
+
+          {/* Sound Off - shows when disabled */}
+          <div
+            className="text-base sm:text-lg font-['Orbitron'] font-bold text-gray-400 h-5 sm:h-6 flex items-center"
+          >
+            Sound Off
+          </div>
+        </div>
       </div>
     </div>
   );
