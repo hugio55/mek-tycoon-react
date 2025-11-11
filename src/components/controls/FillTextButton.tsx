@@ -29,9 +29,9 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
                       drop-shadow(0 0 4px rgba(61, 209, 255, 1))
                       drop-shadow(0 0 6px rgba(61, 209, 255, 1))
                       drop-shadow(0 0 12px rgba(61, 209, 255, 1))
-                      drop-shadow(0 0 24px rgba(61, 209, 255, 0.9))
-                      drop-shadow(0 0 40px rgba(61, 209, 255, 0.7))
-                      drop-shadow(0 0 56px rgba(61, 209, 255, 0.5));
+                      drop-shadow(0 0 12px rgba(61, 209, 255, 0.9))
+                      drop-shadow(0 0 20px rgba(61, 209, 255, 0.7))
+                      drop-shadow(0 0 28px rgba(61, 209, 255, 0.5));
             }
             50% {
               filter: drop-shadow(0 0 3px rgba(255, 255, 255, 1))
@@ -40,9 +40,9 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
                       drop-shadow(0 0 6px rgba(61, 209, 255, 1))
                       drop-shadow(0 0 10px rgba(61, 209, 255, 1))
                       drop-shadow(0 0 18px rgba(61, 209, 255, 1))
-                      drop-shadow(0 0 36px rgba(61, 209, 255, 1))
-                      drop-shadow(0 0 56px rgba(61, 209, 255, 0.9))
-                      drop-shadow(0 0 72px rgba(61, 209, 255, 0.7));
+                      drop-shadow(0 0 18px rgba(61, 209, 255, 1))
+                      drop-shadow(0 0 28px rgba(61, 209, 255, 0.9))
+                      drop-shadow(0 0 36px rgba(61, 209, 255, 0.7));
             }
           }
 
