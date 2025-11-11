@@ -1008,7 +1008,7 @@ export default function LandingPage() {
             }}
           >
             <video
-              src="/random-images/logo webm GOLD 1.webm"
+              src="/random-images/Everydays_00000.webm"
               autoPlay
               loop
               muted
