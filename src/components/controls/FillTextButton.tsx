@@ -31,6 +31,18 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
                       drop-shadow(0 0 12px rgba(61, 209, 255, 0.7));
             }
           }
+
+          @keyframes scan-blur {
+            0% {
+              filter: blur(0px) drop-shadow(0 0 4px rgba(61, 209, 255, 0.8));
+            }
+            50% {
+              filter: blur(3px) drop-shadow(0 0 12px rgba(61, 209, 255, 1));
+            }
+            100% {
+              filter: blur(0px) drop-shadow(0 0 4px rgba(61, 209, 255, 0.8));
+            }
+          }
         `}
       </style>
 
@@ -43,6 +55,18 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
       >
         &nbsp;{text}&nbsp;
       </span>
+
+      {/* Constant glowing line at left (idle state) */}
+      {!isHovered && (
+        <span
+          className="absolute top-0 bottom-0 left-0"
+          style={{
+            width: '3px',
+            backgroundColor: '#3DD1FF',
+            animation: 'line-glow 2s ease-in-out infinite',
+          }}
+        />
+      )}
 
       {/* Hover overlay (sweeps from left to right with bright blue) */}
       <span
@@ -60,7 +84,9 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
           style={{
             width: '3px',
             backgroundColor: '#3DD1FF',
-            animation: 'line-glow 2s ease-in-out infinite',
+            animation: isHovered
+              ? 'scan-blur 500ms cubic-bezier(0.4, 0.0, 0.2, 1)'
+              : 'line-glow 2s ease-in-out infinite',
           }}
         />
       </span>

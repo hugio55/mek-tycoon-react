@@ -136,15 +136,10 @@ export default function ClaudeMdSummary() {
       });
     }
 
-    if (sectionTitles.some(t => t.includes('branch switching protection'))) {
-      recommendations.push({
-        sectionTitle: 'BRANCH SWITCHING PROTECTION',
-        reason: 'verbose',
-        shortTitle: 'Branch Switching Rules',
-        reasoning: 'This section contains extensive checklists and multiple confirmation requirements. While branch protection is important, the current implementation is very ceremonial. Could be condensed to: "Always check branch before work, ask user before switching, commit work first."',
-        confidence: 'medium'
-      });
-    }
+    // REMOVED: Branch Switching Protection - Already condensed to brief numbered rules
+    // REMOVED: Duplicate Session Protection - Already consolidated into one section
+    // REMOVED: Tailwind CSS Version Management - Already condensed significantly
+    // REMOVED: User Communication Patterns - Already converted to bullet points
 
     if (sectionTitles.some(t => t.includes('unauthorized production deployment'))) {
       recommendations.push({
@@ -163,36 +158,6 @@ export default function ClaudeMdSummary() {
         shortTitle: 'Third-Party Platform Warning',
         reasoning: 'This section warns about overconfidence with undocumented platforms like NMKR Studio. If the NMKR integration is now complete and working, or if this was a one-time issue, this warning might no longer be relevant.',
         confidence: 'low'
-      });
-    }
-
-    if (sectionTitles.filter(t => t.includes('session') || t.includes('claude code')).length > 2) {
-      recommendations.push({
-        sectionTitle: 'Session Protection (Multiple Sections)',
-        reason: 'duplicate',
-        shortTitle: 'Duplicate Session Protection Info',
-        reasoning: 'Session protection rules appear in multiple places throughout CLAUDE.md. The information about commands that kill sessions, port conflicts, and process management could be consolidated into a single comprehensive section.',
-        confidence: 'high'
-      });
-    }
-
-    if (sectionTitles.some(t => t.includes('tailwind css version'))) {
-      recommendations.push({
-        sectionTitle: 'Tailwind CSS Version Management',
-        reason: 'resolved',
-        shortTitle: 'Tailwind v3 vs v4 Warning',
-        reasoning: 'If the project has been stable on Tailwind v3 for a while and package.json is locked correctly, this extensive warning section might be overkill. The key point (use v3, not v4) could be a single bullet point in a configuration section.',
-        confidence: 'medium'
-      });
-    }
-
-    if (sectionTitles.some(t => t.includes('understanding this user\'s communication style'))) {
-      recommendations.push({
-        sectionTitle: 'Understanding This User\'s Communication Style',
-        reason: 'verbose',
-        shortTitle: 'User Communication Patterns',
-        reasoning: 'While helpful for context, this section is quite lengthy and reads more like session notes than actionable instructions. The key points (user is visual, iterative, protective of data) could be condensed to 3-4 bullet points.',
-        confidence: 'medium'
       });
     }
 
