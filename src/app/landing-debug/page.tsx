@@ -1700,9 +1700,12 @@ export default function LandingDebugPage() {
               </select>
             </div>
           </div>
+          </>
+          )}
 
           {/* Audio Consent Lightbox Controls Section */}
           {config.activeTab === 'audio' && (
+          <>
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Audio Consent Lightbox Controls
@@ -1768,7 +1771,6 @@ export default function LandingDebugPage() {
               </div>
             </div>
           </div>
-          )}
 
           {/* PhaseCarousel Visual Controls Section */}
           <div className="bg-gray-800 border border-cyan-500 rounded p-3">
