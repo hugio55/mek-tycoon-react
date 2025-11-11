@@ -1127,7 +1127,6 @@ export default function LandingDebugPage() {
               </div>
             </div>
           </div>
-          )}
 
           {/* Layout Controls Section */}
           {true && (
