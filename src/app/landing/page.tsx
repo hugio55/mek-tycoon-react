@@ -279,10 +279,10 @@ export default function LandingPage() {
       } else {
         // Return visitor - has already given consent
         const consentData = JSON.parse(consent);
-        console.log('[🎵ANIMATION] Return visitor - skipping lightbox, going straight to logo stage');
-        // Skip all animations and show everything immediately
+        console.log('[🎵ANIMATION] Return visitor - skipping lightbox, showing smooth image animation');
+        // Skip consent lightbox but show smooth image zoom animation
+        // Video swap happens automatically via timer after logoFadeDuration
         setAnimationStage('logo');
-        setUseVideoLogo(true); // Use video immediately for return visitors
 
         if (consentData.audioEnabled) {
           // Don't auto-play - just remember preference
