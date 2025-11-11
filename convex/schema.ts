@@ -3604,6 +3604,7 @@ export default defineSchema({
     header: v.optional(v.string()), // Italic header text above title (e.g., "The Beginning")
     title: v.string(), // Phase title (e.g., "Phase I", "Phase II", "Foundation")
     description: v.optional(v.string()), // Phase description text
+    imageUrl: v.optional(v.string()), // Image URL for the phase card background
     locked: v.boolean(), // Whether the phase is locked/coming soon
     order: v.number(), // Display order (lower number = earlier in carousel)
     createdAt: v.number(),

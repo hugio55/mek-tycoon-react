@@ -131,11 +131,13 @@ export default function LandingDebugPage() {
     header: string;
     title: string;
     description: string;
+    imageUrl: string;
     locked: boolean;
   }>({
     header: '',
     title: '',
     description: '',
+    imageUrl: '',
     locked: false,
   });
 
@@ -145,10 +147,12 @@ export default function LandingDebugPage() {
     header: string;
     title: string;
     description: string;
+    imageUrl: string;
   }>({
     header: '',
     title: '',
     description: '',
+    imageUrl: '',
   });
 
   // Audio Consent Lightbox Control (for landing page)
@@ -397,14 +401,15 @@ export default function LandingDebugPage() {
       header: newPhaseForm.header || undefined,
       title: newPhaseForm.title,
       description: newPhaseForm.description || undefined,
+      imageUrl: newPhaseForm.imageUrl || undefined,
       locked: newPhaseForm.locked,
       order: nextOrder,
     });
 
-    setNewPhaseForm({ header: '', title: '', description: '', locked: false });
+    setNewPhaseForm({ header: '', title: '', description: '', imageUrl: '', locked: false });
   };
 
-  const handleUpdatePhase = async (id: Id<"phaseCards">, updates: { header?: string; title?: string; description?: string; locked?: boolean }) => {
+  const handleUpdatePhase = async (id: Id<"phaseCards">, updates: { header?: string; title?: string; description?: string; imageUrl?: string; locked?: boolean }) => {
     await updatePhaseCard({ id, ...updates });
     setEditingPhaseId(null);
   };
@@ -457,6 +462,7 @@ export default function LandingDebugPage() {
           header: phase.header || '',
           title: phase.title,
           description: phase.description || '',
+          imageUrl: phase.imageUrl || '',
         });
       }
     }
@@ -470,6 +476,7 @@ export default function LandingDebugPage() {
       header: phaseEditForm.header || undefined,
       title: phaseEditForm.title,
       description: phaseEditForm.description || undefined,
+      imageUrl: phaseEditForm.imageUrl || undefined,
     });
   };
 
@@ -478,6 +485,7 @@ export default function LandingDebugPage() {
     const headerInput = document.getElementById(`edit-header-${id}`) as HTMLInputElement;
     const titleInput = document.getElementById(`edit-title-${id}`) as HTMLInputElement;
     const descInput = document.getElementById(`edit-description-${id}`) as HTMLTextAreaElement;
+    const imageUrlInput = document.getElementById(`edit-imageUrl-${id}`) as HTMLInputElement;
     const lockedInput = document.getElementById(`edit-locked-${id}`) as HTMLInputElement;
 
     if (titleInput) {
@@ -485,6 +493,7 @@ export default function LandingDebugPage() {
         header: headerInput?.value || undefined,
         title: titleInput.value,
         description: descInput?.value || undefined,
+        imageUrl: imageUrlInput?.value || undefined,
         locked: lockedInput?.checked,
       });
     }
@@ -1732,6 +1741,16 @@ export default function LandingDebugPage() {
                         onChange={(e) => setPhaseEditForm(prev => ({ ...prev, description: e.target.value }))}
                         rows={3}
                         placeholder="Description paragraph..."
+                        className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-300 mb-1">Image URL</label>
+                      <input
+                        type="text"
+                        value={phaseEditForm.imageUrl}
+                        onChange={(e) => setPhaseEditForm(prev => ({ ...prev, imageUrl: e.target.value }))}
+                        placeholder="e.g., /mek-images/50px/bi1-cb1-nm1.webp"
                         className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                       />
                     </div>

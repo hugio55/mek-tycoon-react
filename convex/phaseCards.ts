@@ -59,6 +59,7 @@ export const createPhaseCard = mutation({
     header: v.optional(v.string()),
     title: v.string(),
     description: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
     locked: v.boolean(),
     order: v.optional(v.number()),
   },
@@ -76,6 +77,7 @@ export const createPhaseCard = mutation({
       header: args.header,
       title: args.title,
       description: args.description,
+      imageUrl: args.imageUrl,
       locked: args.locked,
       order,
       createdAt: now,
@@ -95,6 +97,7 @@ export const updatePhaseCard = mutation({
     header: v.optional(v.string()),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
     locked: v.optional(v.boolean()),
     order: v.optional(v.number()),
   },
@@ -115,6 +118,7 @@ export const updatePhaseCard = mutation({
     if (updates.header !== undefined) updateData.header = updates.header;
     if (updates.title !== undefined) updateData.title = updates.title;
     if (updates.description !== undefined) updateData.description = updates.description;
+    if (updates.imageUrl !== undefined) updateData.imageUrl = updates.imageUrl;
     if (updates.locked !== undefined) updateData.locked = updates.locked;
     if (updates.order !== undefined) updateData.order = updates.order;
 
@@ -302,6 +306,7 @@ export const bulkUpdatePhaseCards = mutation({
         header: v.optional(v.string()),
         title: v.optional(v.string()),
         description: v.optional(v.string()),
+        imageUrl: v.optional(v.string()),
         locked: v.optional(v.boolean()),
         order: v.optional(v.number()),
       })
@@ -324,6 +329,7 @@ export const bulkUpdatePhaseCards = mutation({
       if (fields.header !== undefined) updateData.header = fields.header;
       if (fields.title !== undefined) updateData.title = fields.title;
       if (fields.description !== undefined) updateData.description = fields.description;
+      if (fields.imageUrl !== undefined) updateData.imageUrl = fields.imageUrl;
       if (fields.locked !== undefined) updateData.locked = fields.locked;
       if (fields.order !== undefined) updateData.order = fields.order;
 
