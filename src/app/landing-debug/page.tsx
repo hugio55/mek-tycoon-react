@@ -128,13 +128,27 @@ export default function LandingDebugPage() {
 
   const [editingPhaseId, setEditingPhaseId] = useState<Id<"phaseCards"> | null>(null);
   const [newPhaseForm, setNewPhaseForm] = useState<{
+    header: string;
     title: string;
     description: string;
     locked: boolean;
   }>({
+    header: '',
     title: '',
     description: '',
     locked: false,
+  });
+
+  // Phase text editor state
+  const [selectedPhaseForEdit, setSelectedPhaseForEdit] = useState<Id<"phaseCards"> | null>(null);
+  const [phaseEditForm, setPhaseEditForm] = useState<{
+    header: string;
+    title: string;
+    description: string;
+  }>({
+    header: '',
+    title: '',
+    description: '',
   });
 
   // Audio Consent Lightbox Control (for landing page)
@@ -379,16 +393,17 @@ export default function LandingDebugPage() {
     const nextOrder = phaseCards ? phaseCards.length + 1 : 1;
 
     await createPhaseCard({
+      header: newPhaseForm.header || undefined,
       title: newPhaseForm.title,
       description: newPhaseForm.description || undefined,
       locked: newPhaseForm.locked,
       order: nextOrder,
     });
 
-    setNewPhaseForm({ title: '', description: '', locked: false });
+    setNewPhaseForm({ header: '', title: '', description: '', locked: false });
   };
 
-  const handleUpdatePhase = async (id: Id<"phaseCards">, updates: { title?: string; description?: string; locked?: boolean }) => {
+  const handleUpdatePhase = async (id: Id<"phaseCards">, updates: { header?: string; title?: string; description?: string; locked?: boolean }) => {
     await updatePhaseCard({ id, ...updates });
     setEditingPhaseId(null);
   };
@@ -430,6 +445,59 @@ export default function LandingDebugPage() {
     if (!confirm('Initialize default phase cards? This only works if no cards exist yet.')) return;
     const result = await initializeDefaultPhaseCards();
     alert(result.message);
+  };
+
+  // Handle phase selection in text editor
+  useEffect(() => {
+    if (selectedPhaseForEdit && phaseCards) {
+      const phase = phaseCards.find(p => p._id === selectedPhaseForEdit);
+      if (phase) {
+        setPhaseEditForm({
+          title: phase.title,
+          description: phase.description || '',
+        });
+      }
+    }
+  }, [selectedPhaseForEdit, phaseCards]);
+
+  const handleSavePhaseText = async () => {
+    if (!selectedPhaseForEdit) return;
+
+    await updatePhaseCard({
+      id: selectedPhaseForEdit,
+      header: phaseEditForm.header || undefined,
+      title: phaseEditForm.title,
+      description: phaseEditForm.description || undefined,
+    });
+  };
+
+  // Missing function referenced in UI
+  const handleSavePhase = async (id: Id<"phaseCards">) => {
+    const headerInput = document.getElementById(`edit-header-${id}`) as HTMLInputElement;
+    const titleInput = document.getElementById(`edit-title-${id}`) as HTMLInputElement;
+    const descInput = document.getElementById(`edit-description-${id}`) as HTMLTextAreaElement;
+    const lockedInput = document.getElementById(`edit-locked-${id}`) as HTMLInputElement;
+
+    if (titleInput) {
+      await handleUpdatePhase(id, {
+        header: headerInput?.value || undefined,
+        title: titleInput.value,
+        description: descInput?.value || undefined,
+        locked: lockedInput?.checked,
+      });
+    }
+  };
+
+  // Missing function referenced in UI
+  const handleMovePhase = async (id: Id<"phaseCards">, direction: 'up' | 'down') => {
+    const phase = phaseCards?.find(p => p._id === id);
+    if (!phase) return;
+
+    if (direction === 'up') {
+      await handleMovePhaseUp(id, phase.order);
+    } else {
+      await handleMovePhaseDown(id, phase.order);
+    }
   };
 
   // Tab categories
@@ -1611,6 +1679,57 @@ export default function LandingDebugPage() {
               >
                 Initialize Default Phase Cards
               </button>
+            </div>
+
+            {/* Phase Text Editor */}
+            <div className="bg-gray-900 border border-gray-700 rounded p-3 mb-4">
+              <h3 className="text-sm font-semibold text-gray-100 mb-2">Edit Phase Text</h3>
+              <div className="space-y-2">
+                <div>
+                  <label className="block text-xs text-gray-300 mb-1">Select Phase</label>
+                  <select
+                    value={selectedPhaseForEdit || ''}
+                    onChange={(e) => setSelectedPhaseForEdit(e.target.value as Id<"phaseCards">)}
+                    className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                  >
+                    <option value="">Choose a phase...</option>
+                    {phaseCards?.map((phase) => (
+                      <option key={phase._id} value={phase._id}>
+                        {phase.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedPhaseForEdit && (
+                  <>
+                    <div>
+                      <label className="block text-xs text-gray-300 mb-1">Title (large cyan text)</label>
+                      <input
+                        type="text"
+                        value={phaseEditForm.title}
+                        onChange={(e) => setPhaseEditForm(prev => ({ ...prev, title: e.target.value }))}
+                        className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-300 mb-1">Description (body text)</label>
+                      <textarea
+                        value={phaseEditForm.description}
+                        onChange={(e) => setPhaseEditForm(prev => ({ ...prev, description: e.target.value }))}
+                        rows={3}
+                        className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                      />
+                    </div>
+                    <button
+                      onClick={handleSavePhaseText}
+                      className="w-full px-3 py-2 bg-green-700 border border-green-600 rounded text-white text-sm hover:bg-green-600"
+                    >
+                      Save Phase Text
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Add New Phase Card Form */}
