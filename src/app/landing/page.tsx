@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import HorizontalTimeline from '@/components/HorizontalTimeline';
 import { SPEAKER_ICON_STYLES, type SpeakerIconStyle } from '@/components/SpeakerIcons';
 import AudioConsentLightbox from '@/components/AudioConsentLightbox';
@@ -117,6 +119,9 @@ const DEFAULT_CONFIG = {
 export default function LandingPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Load settings from Convex database (with localStorage as fallback)
+  const dbSettings = useQuery(api.landingDebugSettings.getLandingDebugSettings);
 
   // Control states - Layer 1
   const [starScale, setStarScale] = useState(DEFAULT_CONFIG.starScale);
@@ -353,14 +358,13 @@ export default function LandingPage() {
     };
   }, []);
 
-  // Load config from localStorage and listen for changes from debug page
+  // Load config from Convex database (primary source) with localStorage fallback
   useEffect(() => {
-    const loadConfig = () => {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          const config = JSON.parse(stored);
-          console.log('[🔍STORAGE] Full config loaded from localStorage:', config);
+    if (!dbSettings) return; // Wait for Convex data to load
+
+    const loadConfig = (config: any) => {
+      try {
+        console.log('[🔍DATABASE] Full config loaded from Convex:', config);
           setStarScale(config.starScale ?? DEFAULT_CONFIG.starScale);
           setStarSpeed(config.starSpeed ?? DEFAULT_CONFIG.starSpeed);
           setStarFrequency(config.starFrequency ?? DEFAULT_CONFIG.starFrequency);
@@ -443,48 +447,112 @@ export default function LandingPage() {
           setLightboxBackdropDarkness(config.lightboxBackdropDarkness ?? DEFAULT_CONFIG.lightboxBackdropDarkness);
           setAudioToggleSize(config.audioToggleSize ?? DEFAULT_CONFIG.audioToggleSize);
           // Note: phaseImage1-4 not loaded here - PhaseCarousel reads directly from localStorage
+      } catch (e) {
+        console.error('Failed to load debug config:', e);
+      }
+    };
+
+    // Load config from Convex database
+    loadConfig(dbSettings);
+  }, [dbSettings]);
+
+  // Keep localStorage fallback for backward compatibility (secondary source)
+  useEffect(() => {
+    // Only use localStorage if Convex hasn't loaded yet
+    if (dbSettings) return;
+
+    const loadFromLocalStorage = () => {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          const config = JSON.parse(stored);
+          console.log('[🔍STORAGE] Fallback: Loading from localStorage:', config);
+          // Apply settings (same logic as Convex)
+          setStarScale(config.starScale ?? DEFAULT_CONFIG.starScale);
+          setStarSpeed(config.starSpeed ?? DEFAULT_CONFIG.starSpeed);
+          setStarFrequency(config.starFrequency ?? DEFAULT_CONFIG.starFrequency);
+          setTwinkleAmount(config.twinkleAmount ?? DEFAULT_CONFIG.twinkleAmount);
+          setTwinkleSpeed(config.twinkleSpeed ?? DEFAULT_CONFIG.twinkleSpeed);
+          setTwinkleSpeedRandomness(config.twinkleSpeedRandomness ?? DEFAULT_CONFIG.twinkleSpeedRandomness);
+          setSizeRandomness(config.sizeRandomness ?? DEFAULT_CONFIG.sizeRandomness);
+          setStarScale2(config.starScale2 ?? DEFAULT_CONFIG.starScale2);
+          setStarSpeed2(config.starSpeed2 ?? DEFAULT_CONFIG.starSpeed2);
+          setStarFrequency2(config.starFrequency2 ?? DEFAULT_CONFIG.starFrequency2);
+          setLineLength2(config.lineLength2 ?? DEFAULT_CONFIG.lineLength2);
+          setTwinkleAmount2(config.twinkleAmount2 ?? DEFAULT_CONFIG.twinkleAmount2);
+          setTwinkleSpeed2(config.twinkleSpeed2 ?? DEFAULT_CONFIG.twinkleSpeed2);
+          setTwinkleSpeedRandomness2(config.twinkleSpeedRandomness2 ?? DEFAULT_CONFIG.twinkleSpeedRandomness2);
+          setSizeRandomness2(config.sizeRandomness2 ?? DEFAULT_CONFIG.sizeRandomness2);
+          setStarScale3(config.starScale3 ?? DEFAULT_CONFIG.starScale3);
+          setStarSpeed3(config.starSpeed3 ?? DEFAULT_CONFIG.starSpeed3);
+          setStarFrequency3(config.starFrequency3 ?? DEFAULT_CONFIG.starFrequency3);
+          setLineLength3(config.lineLength3 ?? DEFAULT_CONFIG.lineLength3);
+          setSpawnDelay3(config.spawnDelay3 ?? DEFAULT_CONFIG.spawnDelay3);
+          setTwinkleAmount3(config.twinkleAmount3 ?? DEFAULT_CONFIG.twinkleAmount3);
+          setTwinkleSpeed3(config.twinkleSpeed3 ?? DEFAULT_CONFIG.twinkleSpeed3);
+          setTwinkleSpeedRandomness3(config.twinkleSpeedRandomness3 ?? DEFAULT_CONFIG.twinkleSpeedRandomness3);
+          setSizeRandomness3(config.sizeRandomness3 ?? DEFAULT_CONFIG.sizeRandomness3);
+          setBgStarTwinkleAmount(config.bgStarTwinkleAmount ?? DEFAULT_CONFIG.bgStarTwinkleAmount);
+          setBgStarTwinkleSpeed(config.bgStarTwinkleSpeed ?? DEFAULT_CONFIG.bgStarTwinkleSpeed);
+          setBgStarTwinkleSpeedRandomness(config.bgStarTwinkleSpeedRandomness ?? DEFAULT_CONFIG.bgStarTwinkleSpeedRandomness);
+          setBgStarSizeRandomness(config.bgStarSizeRandomness ?? DEFAULT_CONFIG.bgStarSizeRandomness);
+          setBgStarCount(config.bgStarCount ?? DEFAULT_CONFIG.bgStarCount);
+          setBgStarMinBrightness(config.bgStarMinBrightness ?? DEFAULT_CONFIG.bgStarMinBrightness);
+          setBgStarMaxBrightness(config.bgStarMaxBrightness ?? DEFAULT_CONFIG.bgStarMaxBrightness);
+          setStarFadePosition(config.starFadePosition ?? DEFAULT_CONFIG.starFadePosition);
+          setStarFadeFeatherSize(config.starFadeFeatherSize ?? DEFAULT_CONFIG.starFadeFeatherSize);
+          setLogoSize(config.logoSize ?? DEFAULT_CONFIG.logoSize);
+          setLogoYPosition(config.logoYPosition ?? DEFAULT_CONFIG.logoYPosition);
+          setSelectedFont(config.selectedFont ?? DEFAULT_CONFIG.selectedFont);
+          setDescriptionFontSize(config.descriptionFontSize ?? DEFAULT_CONFIG.descriptionFontSize);
+          setDescriptionText(config.descriptionText ?? DEFAULT_CONFIG.descriptionText);
+          setBgYPosition(config.bgYPosition ?? DEFAULT_CONFIG.bgYPosition);
+          setMotionBlurEnabled(config.motionBlurEnabled ?? DEFAULT_CONFIG.motionBlurEnabled);
+          setBlurIntensity(config.blurIntensity ?? DEFAULT_CONFIG.blurIntensity);
+          setMotionBlurEnabled2(config.motionBlurEnabled2 ?? DEFAULT_CONFIG.motionBlurEnabled2);
+          setBlurIntensity2(config.blurIntensity2 ?? DEFAULT_CONFIG.blurIntensity2);
+          setDescriptionColor(config.descriptionColor ?? DEFAULT_CONFIG.descriptionColor);
+          setDescriptionXOffset(config.descriptionXOffset ?? DEFAULT_CONFIG.descriptionXOffset);
+          setDescriptionYOffset(config.descriptionYOffset ?? DEFAULT_CONFIG.descriptionYOffset);
+          setDesignVariation(config.designVariation ?? DEFAULT_CONFIG.designVariation);
+          setPhaseHeaderFont(config.phaseHeaderFont ?? DEFAULT_CONFIG.phaseHeaderFont);
+          setPhaseHeaderFontSize(config.phaseHeaderFontSize ?? DEFAULT_CONFIG.phaseHeaderFontSize);
+          setPhaseHeaderColor(config.phaseHeaderColor ?? DEFAULT_CONFIG.phaseHeaderColor);
+          setPhaseDescriptionFont(config.phaseDescriptionFont ?? DEFAULT_CONFIG.phaseDescriptionFont);
+          setPhaseDescriptionFontSize(config.phaseDescriptionFontSize ?? DEFAULT_CONFIG.phaseDescriptionFontSize);
+          setSoundLabelFont(config.soundLabelFont ?? DEFAULT_CONFIG.soundLabelFont);
+          setSoundLabelSize(config.soundLabelSize ?? DEFAULT_CONFIG.soundLabelSize);
+          setSoundLabelColor(config.soundLabelColor ?? DEFAULT_CONFIG.soundLabelColor);
+          setSoundLabelVerticalOffset(config.soundLabelVerticalOffset ?? DEFAULT_CONFIG.soundLabelVerticalOffset);
+          setSoundLabelHorizontalOffset(config.soundLabelHorizontalOffset ?? DEFAULT_CONFIG.soundLabelHorizontalOffset);
+          setPowerButtonScale(config.powerButtonScale ?? DEFAULT_CONFIG.powerButtonScale);
+          setPowerButtonVerticalOffset(config.powerButtonVerticalOffset ?? DEFAULT_CONFIG.powerButtonVerticalOffset);
+          setPowerButtonHorizontalOffset(config.powerButtonHorizontalOffset ?? DEFAULT_CONFIG.powerButtonHorizontalOffset);
+          setPowerButtonGlowEnabled(config.powerButtonGlowEnabled ?? DEFAULT_CONFIG.powerButtonGlowEnabled);
+          setSpeakerIconStyle(config.speakerIconStyle ?? DEFAULT_CONFIG.speakerIconStyle);
+          setPhaseImageDarkening(config.phaseImageDarkening ?? DEFAULT_CONFIG.phaseImageDarkening);
+          setPhaseBlurAmount(config.phaseBlurAmount ?? DEFAULT_CONFIG.phaseBlurAmount);
+          setPhaseBlurAmountSelected(config.phaseBlurAmountSelected ?? DEFAULT_CONFIG.phaseBlurAmountSelected);
+          setPhaseColumnHeight(config.phaseColumnHeight ?? DEFAULT_CONFIG.phaseColumnHeight);
+          setPhaseFadePosition(config.phaseFadePosition ?? DEFAULT_CONFIG.phaseFadePosition);
+          setPhaseImageBlendMode(config.phaseImageBlendMode ?? DEFAULT_CONFIG.phaseImageBlendMode);
+          setPhaseHoverDarkeningIntensity(config.phaseHoverDarkeningIntensity ?? DEFAULT_CONFIG.phaseHoverDarkeningIntensity);
+          setPhaseIdleBackdropBlur(config.phaseIdleBackdropBlur ?? DEFAULT_CONFIG.phaseIdleBackdropBlur);
+          setPhaseColumnYOffset(config.phaseColumnYOffset ?? DEFAULT_CONFIG.phaseColumnYOffset);
+          setDescriptionCardBlur(config.descriptionCardBlur ?? DEFAULT_CONFIG.descriptionCardBlur);
+          setDescriptionCardDarkness(config.descriptionCardDarkness ?? DEFAULT_CONFIG.descriptionCardDarkness);
+          setDescriptionCardBorder(config.descriptionCardBorder ?? DEFAULT_CONFIG.descriptionCardBorder);
+          setLogoFadeDuration(config.logoFadeDuration ?? DEFAULT_CONFIG.logoFadeDuration);
+          setLightboxBackdropDarkness(config.lightboxBackdropDarkness ?? DEFAULT_CONFIG.lightboxBackdropDarkness);
+          setAudioToggleSize(config.audioToggleSize ?? DEFAULT_CONFIG.audioToggleSize);
         } catch (e) {
-          console.error('Failed to load debug config:', e);
+          console.error('Failed to load debug config from localStorage:', e);
         }
       }
     };
 
-    // Load initial config
-    loadConfig();
-
-    // Listen for storage changes from debug page
-    const handleStorageChange = () => {
-      try {
-        loadConfig();
-      } catch (e) {
-        console.error('[LANDING] Error in handleStorageChange:', e);
-      }
-    };
-
-    // Listen for postMessage from parent (iframe scenario)
-    const handleMessage = (event: MessageEvent) => {
-      try {
-        if (event.data?.type === 'mek-landing-config-updated') {
-          loadConfig();
-        }
-      } catch (e) {
-        console.error('[LANDING] Error in handleMessage:', e);
-      }
-    };
-
-    // Listen for both storage events:
-    // 1. 'storage' - fires in OTHER tabs when localStorage changes
-    // 2. 'mek-landing-config-updated' - custom event fired by debug page in SAME tab
-    // 3. 'message' - postMessage from parent window (when in iframe)
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('mek-landing-config-updated', handleStorageChange);
-    window.addEventListener('message', handleMessage);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('mek-landing-config-updated', handleStorageChange);
-      window.removeEventListener('message', handleMessage);
-    };
-  }, []);
+    loadFromLocalStorage();
+  }, [dbSettings]);
 
   // Track viewport height for dynamic logo centering
   useEffect(() => {
