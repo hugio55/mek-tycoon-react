@@ -3612,53 +3612,10 @@ export default defineSchema({
 
   // ===== LANDING PAGE DEBUG SETTINGS =====
   // Visual debug settings for landing page (single record, global settings)
+  // Stored as flexible config object to prevent schema breaking when adding new fields
   landingDebugSettings: defineTable({
-    // Logo & Layout
-    logoSize: v.number(),
-    logoYPosition: v.number(),
-    selectedFont: v.string(),
-    descriptionFontSize: v.number(),
-    descriptionText: v.string(),
-    descriptionXOffset: v.number(),
-    descriptionYOffset: v.number(),
-    descriptionColor: v.string(),
-    bgYPosition: v.number(),
-
-    // Motion & Effects
-    motionBlurEnabled: v.boolean(),
-    blurIntensity: v.number(),
-
-    // Phase Carousel
-    phaseHeaderFont: v.string(),
-    phaseHeaderFontSize: v.number(),
-    phaseHeaderColor: v.string(),
-    phaseDescriptionFont: v.string(),
-    phaseDescriptionFontSize: v.number(),
-    phaseImageDarkening: v.number(),
-    phaseBlurAmount: v.number(),
-    phaseBlurAmountSelected: v.number(),
-    phaseColumnHeight: v.number(),
-    phaseFadePosition: v.number(),
-    phaseImageBlendMode: v.string(),
-    phaseHoverDarkeningIntensity: v.number(),
-    phaseIdleBackdropBlur: v.number(),
-
-    // Phase Images
-    phaseImage1: v.string(),
-    phaseImage2: v.string(),
-    phaseImage3: v.string(),
-    phaseImage4: v.string(),
-
-    // Speaker & Sound
-    speakerIconStyle: v.string(),
-    soundLabelFont: v.string(),
-    soundLabelFontSize: v.number(),
-    powerButtonScale: v.number(),
-    powerButtonGlowIntensity: v.number(),
-
-    // Metadata
-    version: v.number(), // Version number for migrations
-    lastUpdated: v.number(),
-    updatedBy: v.optional(v.string()), // Optional admin tracking
+    config: v.any(), // Full config object with all ~70 visual settings
+    createdAt: v.number(),
+    updatedAt: v.number(),
   }),
 });

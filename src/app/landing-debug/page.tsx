@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import AudioConsentLightbox from '@/components/AudioConsentLightbox';
 
-// Debug control configuration storage key
+// Debug control configuration storage key (for backward compatibility and migration)
 const STORAGE_KEY = 'mek-landing-debug-config';
+const MIGRATION_FLAG = 'mek-landing-debug-migrated';
 
 // Default values matching landing page
 const DEFAULT_CONFIG = {
@@ -79,6 +80,13 @@ export default function LandingDebugPage() {
   const [viewMode, setViewMode] = useState<'controls-only' | 'split-view'>('controls-only');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel'>('description');
+  const [migrationStatus, setMigrationStatus] = useState<'pending' | 'migrating' | 'complete' | 'none'>('pending');
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Convex hooks
+  const dbSettings = useQuery(api.landingDebugSettings.getLandingDebugSettings);
+  const updateSettings = useMutation(api.landingDebugSettings.updateLandingDebugSettings);
+  const resetSettings = useMutation(api.landingDebugSettings.resetLandingDebugSettings);
 
   // Phase card management
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
@@ -129,40 +137,95 @@ export default function LandingDebugPage() {
     { name: 'Yellow', class: 'text-yellow-400/90' }
   ];
 
-  // Load config from localStorage on mount
+  // ONE-TIME MIGRATION: Load config from localStorage and migrate to Convex
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        // Merge with DEFAULT_CONFIG to ensure all fields have defined values
-        const mergedConfig: ConfigType = { ...DEFAULT_CONFIG };
-        for (const key in parsed) {
-          if (key in DEFAULT_CONFIG && parsed[key] !== undefined) {
-            (mergedConfig as any)[key] = parsed[key];
-          }
-        }
-        setConfig(mergedConfig);
-      } catch (e) {
-        console.error('Failed to parse stored config:', e);
-      }
-    }
-  }, []);
+    if (!dbSettings) return; // Wait for database to load
 
-  // Save config to localStorage whenever it changes
+    const alreadyMigrated = localStorage.getItem(MIGRATION_FLAG) === 'true';
+    const localStorageData = localStorage.getItem(STORAGE_KEY);
+
+    if (alreadyMigrated || !localStorageData) {
+      // No migration needed - use database settings
+      setConfig(dbSettings);
+      setMigrationStatus('complete');
+      return;
+    }
+
+    // Migration needed - localStorage has data but hasn't been migrated
+    setMigrationStatus('migrating');
+    console.log('[MIGRATION] Migrating localStorage settings to Convex database...');
+
+    try {
+      const parsed = JSON.parse(localStorageData);
+      const mergedConfig: ConfigType = { ...DEFAULT_CONFIG, ...parsed };
+
+      // Save to database
+      updateSettings({ config: mergedConfig }).then(() => {
+        console.log('[MIGRATION] Successfully migrated settings to database');
+        localStorage.setItem(MIGRATION_FLAG, 'true');
+        setConfig(mergedConfig);
+        setMigrationStatus('complete');
+        setSaveState('saved');
+        setTimeout(() => setSaveState('idle'), 2000);
+      }).catch((err) => {
+        console.error('[MIGRATION] Failed to migrate settings:', err);
+        setMigrationStatus('complete');
+        setConfig(mergedConfig); // Still use the merged config even if save failed
+      });
+    } catch (e) {
+      console.error('[MIGRATION] Failed to parse localStorage config:', e);
+      setConfig(dbSettings);
+      setMigrationStatus('complete');
+    }
+  }, [dbSettings, updateSettings]);
+
+  // Load settings from Convex when they change (updates from other tabs/sessions)
+  useEffect(() => {
+    if (dbSettings && migrationStatus === 'complete') {
+      setConfig(dbSettings);
+    }
+  }, [dbSettings, migrationStatus]);
+
+  // Auto-save to Convex with debouncing (500ms delay)
+  useEffect(() => {
+    if (migrationStatus !== 'complete') return; // Don't save during migration
+
+    // Clear any existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Set new timeout for debounced save
+    saveTimeoutRef.current = setTimeout(() => {
+      setSaveState('saving');
+      updateSettings({ config }).then(() => {
+        setSaveState('saved');
+        setTimeout(() => setSaveState('idle'), 1500);
+
+        // Also dispatch events for real-time preview updates
+        window.dispatchEvent(new Event('mek-landing-config-updated'));
+        const iframe = document.querySelector('iframe[title="Landing Page Preview"]') as HTMLIFrameElement;
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage({ type: 'mek-landing-config-updated' }, '*');
+        }
+      }).catch((err) => {
+        console.error('[SAVE] Failed to save settings:', err);
+        setSaveState('idle');
+      });
+    }, 500); // 500ms debounce
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [config, updateSettings, migrationStatus]);
+
+  // Also keep localStorage updated for backward compatibility with landing page
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-    // Dispatch custom event to notify components in same tab
-    window.dispatchEvent(new Event('mek-landing-config-updated'));
-    // Also dispatch storage event for other tabs (standard behavior)
     window.dispatchEvent(new Event('storage'));
-
-    // If in split-view mode, notify the iframe
-    const iframe = document.querySelector('iframe[title="Landing Page Preview"]') as HTMLIFrameElement;
-    if (iframe && iframe.contentWindow) {
-      iframe.contentWindow.postMessage({ type: 'mek-landing-config-updated' }, '*');
-    }
-  }, [config, viewMode]);
+  }, [config]);
 
   // Helper function to convert Windows absolute paths to web-relative paths
   const convertToWebPath = (path: string): string => {
@@ -208,31 +271,41 @@ export default function LandingDebugPage() {
     }
   };
 
-  const resetToDefaults = () => {
-    setConfig(DEFAULT_CONFIG);
+  const resetToDefaults = async () => {
+    if (!confirm('Reset all settings to defaults? This cannot be undone.')) return;
+
+    setSaveState('saving');
+    try {
+      await resetSettings();
+      setConfig(DEFAULT_CONFIG);
+      setSaveState('saved');
+      setTimeout(() => setSaveState('idle'), 2000);
+    } catch (err) {
+      console.error('[RESET] Failed to reset settings:', err);
+      setSaveState('idle');
+    }
   };
 
   const handleSave = () => {
-    // Trigger save state animation
+    // Settings are already auto-saving with debounce
+    // This button just provides immediate visual feedback
     setSaveState('saving');
 
-    // Ensure config is saved to localStorage (already happens automatically, but this is explicit)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-
-    // Dispatch custom event to notify components in same tab
-    window.dispatchEvent(new Event('mek-landing-config-updated'));
-    // Also dispatch storage event for other tabs (standard behavior)
-    window.dispatchEvent(new Event('storage'));
-
-    // Brief saving state
-    setTimeout(() => {
+    // Force immediate save by calling mutation directly
+    updateSettings({ config }).then(() => {
       setSaveState('saved');
+      setTimeout(() => setSaveState('idle'), 2000);
 
-      // Reset to idle after 2 seconds
-      setTimeout(() => {
-        setSaveState('idle');
-      }, 2000);
-    }, 300);
+      // Dispatch events for real-time updates
+      window.dispatchEvent(new Event('mek-landing-config-updated'));
+      const iframe = document.querySelector('iframe[title="Landing Page Preview"]') as HTMLIFrameElement;
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ type: 'mek-landing-config-updated' }, '*');
+      }
+    }).catch((err) => {
+      console.error('[SAVE] Failed to save settings:', err);
+      setSaveState('idle');
+    });
   };
 
   // Phase card management functions
@@ -300,11 +373,23 @@ export default function LandingDebugPage() {
       <div className={viewMode === 'split-view' ? 'w-1/2 bg-gray-800 p-3 overflow-y-auto border-r border-gray-700' : 'max-w-5xl mx-auto'}>
         {/* Header */}
         <div className="mb-3">
-          <h1 className="text-lg font-semibold text-gray-100 mb-1">
-            Landing Page Debug Controls
-          </h1>
+          <div className="flex items-center justify-between mb-1">
+            <h1 className="text-lg font-semibold text-gray-100">
+              Landing Page Debug Controls
+            </h1>
+            {migrationStatus === 'migrating' && (
+              <div className="px-2 py-1 bg-yellow-900/50 border border-yellow-700 rounded text-yellow-200 text-xs">
+                Migrating to database...
+              </div>
+            )}
+            {migrationStatus === 'complete' && saveState === 'idle' && (
+              <div className="px-2 py-1 bg-green-900/30 border border-green-700/50 rounded text-green-300 text-xs">
+                Auto-save enabled
+              </div>
+            )}
+          </div>
           <p className="text-xs text-gray-400">
-            Open <code className="bg-gray-700 px-1 py-0.5 rounded text-gray-200 text-xs">/landing</code> in another tab to see changes in real-time
+            Settings now saved to database (survives code refactors). Auto-saves after 500ms of inactivity.
           </p>
           <div className="mt-2 flex gap-2 flex-wrap">
             <a
