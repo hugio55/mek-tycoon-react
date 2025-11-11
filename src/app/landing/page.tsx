@@ -1121,9 +1121,16 @@ export default function LandingPage() {
               width: `${logoSize}px`,
               height: `${logoSize}px`,
               opacity: animationStage === 'logo' ? 1 : 0,
-              transform: animationStage === 'logo' ? 'scale(1)' : 'scale(0.95)',
-              transition: animationStage === 'logo' ? `opacity ${logoFadeDuration}ms ease-out, transform ${logoFadeDuration}ms ease-out` : 'none',
+              transform: animationStage === 'logo' ? 'translate3d(0, 0, 0) scale3d(1, 1, 1)' : 'translate3d(0, 0, 0) scale3d(0.95, 0.95, 1)',
+              transition: animationStage === 'logo' ? `opacity ${logoFadeDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1), transform ${logoFadeDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1)` : 'none',
               visibility: animationStage === 'initial' || animationStage === 'stars' ? 'hidden' : 'visible',
+              willChange: animationStage === 'stars' ? 'transform, opacity' : 'auto',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+              perspective: 1000,
+              WebkitPerspective: 1000,
+              transformStyle: 'preserve-3d',
+              WebkitTransformStyle: 'preserve-3d',
             }}
             onTransitionStart={() => {
               if (animationStage === 'logo') {
@@ -1144,7 +1151,11 @@ export default function LandingPage() {
               playsInline
               className="w-full h-full object-contain"
               style={{
-                opacity: 'inherit' // Video inherits opacity from parent
+                opacity: 'inherit',
+                transform: 'translate3d(0, 0, 0)',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                WebkitTransform: 'translate3d(0, 0, 0)',
               }}
             />
           </div>
