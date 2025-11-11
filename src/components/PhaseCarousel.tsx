@@ -191,10 +191,11 @@ export default function PhaseCarousel({
   const renderCard = (phase: Phase, position: 'left' | 'center' | 'right', offset: number = 0) => {
     const isCenter = position === 'center';
 
-    // CRITICAL FIX: Guarantee overlap by extending cards past their theoretical edge
-    // Left card extends +3% to the right, right card extends -3% to the left
-    // This creates guaranteed physical overlap preventing dark line gaps
-    const baseTranslateX = position === 'left' ? -42 : position === 'right' ? 42 : 0;
+    // CRITICAL FIX: Aggressive overlap strategy to eliminate gaps
+    // - Increase card width from 60% to 65% (more coverage)
+    // - Reduce spacing from ±42% to ±35% (cards closer together)
+    // - Result: Cards overlap by ~15%, guaranteeing no gaps with transparent backgrounds
+    const baseTranslateX = position === 'left' ? -35 : position === 'right' ? 35 : 0;
     const dragInfluence = isDragging ? (offset / 10) : 0;
     const finalTranslateX = baseTranslateX + dragInfluence;
 
@@ -205,10 +206,11 @@ export default function PhaseCarousel({
     const dragOpacity = isDragging && isCenter ? Math.max(0.7, 1 - Math.abs(offset) / 500) : baseOpacity;
 
     const positionStyles = {
-      // CRITICAL: Add translateZ(0) to force GPU acceleration and prevent sub-pixel gaps
+      // CRITICAL: translateZ(0) forces GPU acceleration and prevents sub-pixel rendering gaps
+      // Higher z-index for center ensures it overlaps side cards cleanly
       transform: `translateX(${finalTranslateX}%) translateY(0) scale(${dragScale}) translateZ(0)`,
       opacity: dragOpacity,
-      zIndex: isCenter ? 10 : 0,
+      zIndex: isCenter ? 10 : position === 'right' ? 2 : 1, // Right card above left to prevent overlap artifacts
       transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s',
       animation: 'slideUpEntrance 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards',
     };
@@ -272,7 +274,7 @@ export default function PhaseCarousel({
 
     return (
       <div
-        className="absolute inset-x-0 mx-auto w-[60%] max-w-md md:max-w-lg"
+        className="absolute inset-x-0 mx-auto w-[65%] max-w-md md:max-w-lg"
         style={{
           ...positionStyles,
           transformStyle: 'preserve-3d',
