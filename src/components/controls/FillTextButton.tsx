@@ -23,26 +23,26 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
         {`
           @keyframes line-glow {
             0%, 100% {
-              filter: drop-shadow(0 0 2px rgba(255, 255, 255, 1))
-                      drop-shadow(0 0 4px rgba(255, 255, 255, 1))
-                      drop-shadow(0 0 6px rgba(255, 255, 255, 0.9))
-                      drop-shadow(0 0 4px rgba(61, 209, 255, 1))
-                      drop-shadow(0 0 6px rgba(61, 209, 255, 1))
-                      drop-shadow(0 0 12px rgba(61, 209, 255, 1))
-                      drop-shadow(0 0 12px rgba(61, 209, 255, 0.9))
-                      drop-shadow(0 0 20px rgba(61, 209, 255, 0.7))
-                      drop-shadow(0 0 28px rgba(61, 209, 255, 0.5));
+              filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.5))
+                      drop-shadow(0 0 2.25px rgba(255, 255, 255, 0.5))
+                      drop-shadow(0 0 3.75px rgba(255, 255, 255, 0.45))
+                      drop-shadow(0 0 2.25px rgba(61, 209, 255, 0.5))
+                      drop-shadow(0 0 3.75px rgba(61, 209, 255, 0.5))
+                      drop-shadow(0 0 6.75px rgba(61, 209, 255, 0.5))
+                      drop-shadow(0 0 6.75px rgba(61, 209, 255, 0.45))
+                      drop-shadow(0 0 11.25px rgba(61, 209, 255, 0.35))
+                      drop-shadow(0 0 15.75px rgba(61, 209, 255, 0.25));
             }
             50% {
-              filter: drop-shadow(0 0 3px rgba(255, 255, 255, 1))
-                      drop-shadow(0 0 6px rgba(255, 255, 255, 1))
-                      drop-shadow(0 0 10px rgba(255, 255, 255, 0.9))
-                      drop-shadow(0 0 6px rgba(61, 209, 255, 1))
-                      drop-shadow(0 0 10px rgba(61, 209, 255, 1))
-                      drop-shadow(0 0 18px rgba(61, 209, 255, 1))
-                      drop-shadow(0 0 18px rgba(61, 209, 255, 1))
-                      drop-shadow(0 0 28px rgba(61, 209, 255, 0.9))
-                      drop-shadow(0 0 36px rgba(61, 209, 255, 0.7));
+              filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.5))
+                      drop-shadow(0 0 3.75px rgba(255, 255, 255, 0.5))
+                      drop-shadow(0 0 6px rgba(255, 255, 255, 0.45))
+                      drop-shadow(0 0 3.75px rgba(61, 209, 255, 0.5))
+                      drop-shadow(0 0 6px rgba(61, 209, 255, 0.5))
+                      drop-shadow(0 0 10.5px rgba(61, 209, 255, 0.5))
+                      drop-shadow(0 0 10.5px rgba(61, 209, 255, 0.5))
+                      drop-shadow(0 0 15.75px rgba(61, 209, 255, 0.45))
+                      drop-shadow(0 0 20.25px rgba(61, 209, 255, 0.35));
             }
           }
 
