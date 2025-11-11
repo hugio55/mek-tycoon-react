@@ -98,6 +98,9 @@ export default function LandingDebugPage() {
     locked: false,
   });
 
+  // Audio Consent Lightbox Control
+  const [audioConsentVisible, setAudioConsentVisible] = useState(false);
+
   // Available fonts for testing
   const fonts = [
     'Orbitron',
@@ -335,6 +338,16 @@ export default function LandingDebugPage() {
               className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-gray-300 text-xs hover:bg-gray-600"
             >
               Reset to Defaults
+            </button>
+            <button
+              onClick={() => setAudioConsentVisible(!audioConsentVisible)}
+              className={`px-2 py-1 rounded text-xs ${
+                audioConsentVisible
+                  ? 'bg-green-900/50 border border-green-700 text-green-200'
+                  : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              {audioConsentVisible ? 'Hide Audio Consent' : 'Show Audio Consent'}
             </button>
           </div>
         </div>
