@@ -233,18 +233,21 @@ export default function AdminMasterDataPage() {
   const loadConfiguration = useMutation(api.slotConfigurations.loadSlotConfiguration);
   const deleteConfiguration = useMutation(api.slotConfigurations.deleteSlotConfiguration);
 
-  // Page Loader Toggle State
-  const [pageLoaderDisabled, setPageLoaderDisabled] = useState(false);
+  // Page Loader Toggle State - Separate for Localhost and Production
+  const [pageLoaderDisabledLocalhost, setPageLoaderDisabledLocalhost] = useState(false);
+  const [pageLoaderDisabledProduction, setPageLoaderDisabledProduction] = useState(false);
   const [loaderStatusMessage, setLoaderStatusMessage] = useState<{ type: 'success' | 'info', text: string } | null>(null);
 
   // Client-side mounting check for portal
   useEffect(() => {
     setMounted(true);
 
-    // Load page loader preference from localStorage
+    // Load page loader preferences from localStorage
     if (typeof window !== 'undefined') {
-      const storedValue = localStorage.getItem('disablePageLoader');
-      setPageLoaderDisabled(storedValue === 'true');
+      const storedLocalhost = localStorage.getItem('disablePageLoaderLocalhost');
+      const storedProduction = localStorage.getItem('disablePageLoaderProduction');
+      setPageLoaderDisabledLocalhost(storedLocalhost === 'true');
+      setPageLoaderDisabledProduction(storedProduction === 'true');
     }
   }, []);
 
@@ -763,19 +766,40 @@ export default function AdminMasterDataPage() {
     });
   };
 
-  const handleTogglePageLoader = () => {
-    const newValue = !pageLoaderDisabled;
-    setPageLoaderDisabled(newValue);
+  const handleTogglePageLoaderLocalhost = () => {
+    const newValue = !pageLoaderDisabledLocalhost;
+    setPageLoaderDisabledLocalhost(newValue);
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem('disablePageLoader', newValue.toString());
+      localStorage.setItem('disablePageLoaderLocalhost', newValue.toString());
     }
 
     setLoaderStatusMessage({
       type: 'success',
       text: newValue
-        ? 'Page loader DISABLED. Refresh the page to see the change.'
-        : 'Page loader ENABLED. Refresh the page to see the change.'
+        ? 'Page loader DISABLED for localhost. Refresh the page to see the change.'
+        : 'Page loader ENABLED for localhost. Refresh the page to see the change.'
+    });
+
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      setLoaderStatusMessage(null);
+    }, 5000);
+  };
+
+  const handleTogglePageLoaderProduction = () => {
+    const newValue = !pageLoaderDisabledProduction;
+    setPageLoaderDisabledProduction(newValue);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('disablePageLoaderProduction', newValue.toString());
+    }
+
+    setLoaderStatusMessage({
+      type: 'success',
+      text: newValue
+        ? 'Page loader DISABLED for production. Refresh the page to see the change.'
+        : 'Page loader ENABLED for production. Refresh the page to see the change.'
     });
 
     // Clear message after 5 seconds
@@ -897,22 +921,43 @@ export default function AdminMasterDataPage() {
           </div>
         </div>
 
-        {/* Page Loader Toggle - Radix UI Switch */}
-        <div className="bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-2 mb-6 inline-flex items-center gap-3">
-          <label htmlFor="page-loader-switch" className="text-sm font-bold text-blue-400 cursor-pointer">
-            Page Loader
-          </label>
-          <Switch.Root
-            id="page-loader-switch"
-            checked={!pageLoaderDisabled}
-            onCheckedChange={handleTogglePageLoader}
-            className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-green-600 transition-colors"
-          >
-            <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
-          </Switch.Root>
-          <span className={`text-xs font-bold ${pageLoaderDisabled ? 'text-red-400' : 'text-green-400'}`}>
-            {pageLoaderDisabled ? 'OFF' : 'ON'}
-          </span>
+        {/* Page Loader Toggles - Separate for Localhost and Production */}
+        <div className="flex gap-4 mb-6">
+          {/* Localhost Toggle */}
+          <div className="bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-2 inline-flex items-center gap-3">
+            <label htmlFor="page-loader-localhost" className="text-sm font-bold text-blue-400 cursor-pointer">
+              Page Loader (Localhost)
+            </label>
+            <Switch.Root
+              id="page-loader-localhost"
+              checked={!pageLoaderDisabledLocalhost}
+              onCheckedChange={handleTogglePageLoaderLocalhost}
+              className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-green-600 transition-colors"
+            >
+              <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
+            </Switch.Root>
+            <span className={`text-xs font-bold ${pageLoaderDisabledLocalhost ? 'text-red-400' : 'text-green-400'}`}>
+              {pageLoaderDisabledLocalhost ? 'OFF' : 'ON'}
+            </span>
+          </div>
+
+          {/* Production Toggle */}
+          <div className="bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-2 inline-flex items-center gap-3">
+            <label htmlFor="page-loader-production" className="text-sm font-bold text-blue-400 cursor-pointer">
+              Page Loader (Production)
+            </label>
+            <Switch.Root
+              id="page-loader-production"
+              checked={!pageLoaderDisabledProduction}
+              onCheckedChange={handleTogglePageLoaderProduction}
+              className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-green-600 transition-colors"
+            >
+              <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
+            </Switch.Root>
+            <span className={`text-xs font-bold ${pageLoaderDisabledProduction ? 'text-red-400' : 'text-green-400'}`}>
+              {pageLoaderDisabledProduction ? 'OFF' : 'ON'}
+            </span>
+          </div>
         </div>
 
         {/* Tab Navigation for All Systems */}

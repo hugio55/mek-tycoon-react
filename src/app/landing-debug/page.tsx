@@ -1766,8 +1766,6 @@ export default function LandingDebugPage() {
               )}
             </div>
           </div>
-          </>
-          )}
 
           {/* Power Button Controls Section */}
           {true && (

@@ -42,4 +42,9 @@ export const COMMON_MILESTONES = [
   { at: 100, label: 'READY' },
 ];
 
-export const BYPASS_STORAGE_KEY = 'disablePageLoader';
+// Legacy key - replaced with environment-specific keys
+export const BYPASS_STORAGE_KEY = 'disablePageLoader'; // DEPRECATED - Use environment-specific keys instead
+
+// Environment-specific storage keys
+export const BYPASS_STORAGE_KEY_LOCALHOST = 'disablePageLoaderLocalhost';
+export const BYPASS_STORAGE_KEY_PRODUCTION = 'disablePageLoaderProduction';

@@ -31,10 +31,16 @@ function ContentWithLoadingState({ children }: { children: ReactNode }) {
   const [isBypassed, setIsBypassed] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
 
-  // Check if loader is bypassed (client-only, after hydration)
+  // Check if loader is bypassed based on environment (client-only, after hydration)
   useEffect(() => {
     setHasMounted(true);
-    setIsBypassed(localStorage.getItem('disablePageLoader') === 'true');
+
+    const isLocalhost = window.location.hostname === 'localhost' ||
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname.includes('localhost');
+
+    const settingKey = isLocalhost ? 'disablePageLoaderLocalhost' : 'disablePageLoaderProduction';
+    setIsBypassed(localStorage.getItem(settingKey) === 'true');
   }, []);
 
   // CRITICAL: Always render with wrapper to prevent FOUC

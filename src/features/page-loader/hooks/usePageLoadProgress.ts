@@ -10,7 +10,7 @@ import {
   snapToMilestone,
   getStageMessage,
 } from '../utils/progressCalculator';
-import { TIMING, BYPASS_STORAGE_KEY } from '../config/constants';
+import { TIMING } from '../config/constants';
 import type { LoadingProgress, LoaderConfig } from '../types';
 
 export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
@@ -41,9 +41,14 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
       return;
     }
 
-    // Check bypass flag
+    // Check bypass flag based on environment
     if (typeof window !== 'undefined') {
-      const bypass = localStorage.getItem(BYPASS_STORAGE_KEY);
+      const isLocalhost = window.location.hostname === 'localhost' ||
+                         window.location.hostname === '127.0.0.1' ||
+                         window.location.hostname.includes('localhost');
+
+      const settingKey = isLocalhost ? 'disablePageLoaderLocalhost' : 'disablePageLoaderProduction';
+      const bypass = localStorage.getItem(settingKey);
       if (bypass === 'true') {
         setIsComplete(true);
         setCanShow(false);
