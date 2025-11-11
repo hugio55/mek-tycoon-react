@@ -43,6 +43,8 @@ import GlassButtonSharp from '@/components/controls/GlassButtonSharp';
 import IsometricSocialButton from '@/components/controls/IsometricSocialButton';
 import RadialSwitch from '@/components/RadialSwitch';
 import CloseButton from '@/components/controls/CloseButton';
+import DiscordButton from '@/components/controls/DiscordButton';
+import GeneratingLoader from '@/components/loaders/GeneratingLoader';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
