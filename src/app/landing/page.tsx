@@ -1106,19 +1106,11 @@ export default function LandingPage() {
               }}
             />
 
-            {/* Hazard stripes background with glass-morphism */}
+            {/* Glass-morphism background (translucent black with backdrop blur) */}
             <div
               className="absolute inset-0 backdrop-blur-md"
               style={{
-                background: `
-                  repeating-linear-gradient(
-                    45deg,
-                    rgba(0, 0, 0, 0.8),
-                    rgba(0, 0, 0, 0.8) 10px,
-                    rgba(250, 182, 23, 0.3) 10px,
-                    rgba(250, 182, 23, 0.3) 20px
-                  )
-                `,
+                background: 'rgba(0, 0, 0, 0.3)',
               }}
             />
 
