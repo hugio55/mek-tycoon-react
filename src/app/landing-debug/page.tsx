@@ -374,10 +374,23 @@ export default function LandingDebugPage() {
                 <input
                   type="range"
                   min="0.1"
-                  max="5"
+                  max="15"
                   step="0.1"
                   value={twinkleSpeed}
                   onChange={(e) => setTwinkleSpeed(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-2">Twinkle Speed Randomness: {twinkleSpeedRandomness}%</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={twinkleSpeedRandomness}
+                  onChange={(e) => setTwinkleSpeedRandomness(Number(e.target.value))}
                   className="w-full"
                 />
               </div>
@@ -472,10 +485,23 @@ export default function LandingDebugPage() {
                 <input
                   type="range"
                   min="0.1"
-                  max="5"
+                  max="15"
                   step="0.1"
                   value={twinkleSpeed2}
                   onChange={(e) => setTwinkleSpeed2(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-2">Twinkle Speed Randomness: {twinkleSpeedRandomness2}%</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={twinkleSpeedRandomness2}
+                  onChange={(e) => setTwinkleSpeedRandomness2(Number(e.target.value))}
                   className="w-full"
                 />
               </div>
@@ -583,10 +609,23 @@ export default function LandingDebugPage() {
                 <input
                   type="range"
                   min="0.1"
-                  max="5"
+                  max="15"
                   step="0.1"
                   value={twinkleSpeed3}
                   onChange={(e) => setTwinkleSpeed3(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-2">Twinkle Speed Randomness: {twinkleSpeedRandomness3}%</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={twinkleSpeedRandomness3}
+                  onChange={(e) => setTwinkleSpeedRandomness3(Number(e.target.value))}
                   className="w-full"
                 />
               </div>
