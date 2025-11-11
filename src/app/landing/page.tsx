@@ -248,8 +248,9 @@ export default function LandingPage() {
         // User has already given consent
         const consentData = JSON.parse(consent);
         if (consentData.audioEnabled) {
-          // User previously enabled audio - auto-play on load
-          setAudioPlaying(true);
+          // Don't auto-play - just remember preference
+          // Audio will only start when user clicks speaker button
+          console.log('[🎵AUDIO] User previously enabled audio, but waiting for interaction');
         }
       }
     } catch (e) {
@@ -980,7 +981,7 @@ export default function LandingPage() {
             }}
           >
             <video
-              src="/random-images/Everydays_00000.webm"
+              src="/random-images/logo webm GOLD 1.webm"
               autoPlay
               loop
               muted
