@@ -12,7 +12,7 @@ const HoverTooltip = () => {
       >
         {/* Hint Radius (background pulse) */}
         <span
-          className={`absolute top-1/2 left-1/2 -mt-[125px] -ml-[125px] bg-white/10 rounded-full transition-all duration-700 ${
+          className={`absolute top-1/2 left-1/2 -mt-[125px] -ml-[125px] bg-white/10 rounded-full transition-all duration-[1400ms] ${
             isHovered ? 'opacity-100 visible scale-100' : 'opacity-0 invisible scale-0'
           }`}
           style={{ width: '250px', height: '250px' }}
@@ -25,21 +25,21 @@ const HoverTooltip = () => {
 
         {/* Hint Content (tooltip box) */}
         <div
-          className={`w-[300px] absolute z-[5] py-[35px] text-white pointer-events-none transition-all duration-700 ${
+          className={`w-[300px] absolute z-[5] py-[35px] text-white pointer-events-none transition-all duration-[1400ms] ${
             isHovered ? 'opacity-100 visible' : 'opacity-0 invisible'
           }`}
           style={{ bottom: '85px', left: '50%', marginLeft: '56px' }}
         >
           {/* Line before (horizontal) */}
           <div
-            className={`absolute bottom-[29px] left-0 h-[1px] bg-white transition-all duration-400 ${
+            className={`absolute bottom-[29px] left-0 h-[1px] bg-white transition-all duration-[1200ms] ${
               isHovered ? 'w-[180px]' : 'w-0'
             }`}
           />
 
           {/* Line after (diagonal) */}
           <div
-            className={`absolute bottom-[29px] left-0 w-[80px] h-[1px] bg-white transition-opacity duration-500 origin-left ${
+            className={`absolute bottom-[29px] left-0 w-[80px] h-[1px] bg-white transition-opacity duration-[1000ms] origin-left ${
               isHovered ? 'opacity-100 visible' : 'opacity-0'
             }`}
             style={{ transform: 'rotate(-225deg)' }}
