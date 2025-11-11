@@ -157,11 +157,11 @@ export default function HorizontalTimeline({
   return (
     <div
       ref={containerRef}
-      className="w-full relative overflow-hidden"
+      className="w-full relative overflow-hidden bg-black"
       style={{ height: `${columnHeight}px` }}
     >
       <div
-        className="absolute inset-0 flex"
+        className="absolute inset-0 flex bg-transparent"
         style={{ gap: 0 }}
       >
         {timelineData.map((item, index) => {
@@ -180,7 +180,7 @@ export default function HorizontalTimeline({
               widthPercent = 23.35; // Inactive columns (70/3 + 0.02 for sub-pixel gap prevention)
             }
           } else {
-            widthPercent = 25.03; // All equal: 25.03% × 4 = 100.12% (0.12% overlap prevents sub-pixel gaps)
+            widthPercent = 25.05; // All equal: 25.05% × 4 = 100.20% (0.20% overlap prevents sub-pixel gaps)
           }
 
           // Calculate blur value
@@ -199,7 +199,7 @@ export default function HorizontalTimeline({
               `}
               style={{
                 width: `${widthPercent}%`,
-                marginRight: index < timelineData.length - 1 ? '-1px' : '0', // Overlap cards by 1px to eliminate bright lines
+                marginRight: index < timelineData.length - 1 ? '-2px' : '0', // Overlap cards by 2px to eliminate sub-pixel gaps
                 transition: 'width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
                 willChange: isAnyActive ? 'width' : 'auto',
                 zIndex: isActive ? 20 : 10 - index,

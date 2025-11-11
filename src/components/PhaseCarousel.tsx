@@ -191,7 +191,10 @@ export default function PhaseCarousel({
   const renderCard = (phase: Phase, position: 'left' | 'center' | 'right', offset: number = 0) => {
     const isCenter = position === 'center';
 
-    const baseTranslateX = position === 'left' ? -45 : position === 'right' ? 45 : 0;
+    // CRITICAL FIX: Guarantee overlap by extending cards past their theoretical edge
+    // Left card extends +3% to the right, right card extends -3% to the left
+    // This creates guaranteed physical overlap preventing dark line gaps
+    const baseTranslateX = position === 'left' ? -42 : position === 'right' ? 42 : 0;
     const dragInfluence = isDragging ? (offset / 10) : 0;
     const finalTranslateX = baseTranslateX + dragInfluence;
 
@@ -202,7 +205,8 @@ export default function PhaseCarousel({
     const dragOpacity = isDragging && isCenter ? Math.max(0.7, 1 - Math.abs(offset) / 500) : baseOpacity;
 
     const positionStyles = {
-      transform: `translateX(${finalTranslateX}%) translateY(0) scale(${dragScale})`,
+      // CRITICAL: Add translateZ(0) to force GPU acceleration and prevent sub-pixel gaps
+      transform: `translateX(${finalTranslateX}%) translateY(0) scale(${dragScale}) translateZ(0)`,
       opacity: dragOpacity,
       zIndex: isCenter ? 10 : 0,
       transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s',
@@ -225,12 +229,12 @@ export default function PhaseCarousel({
       switch (designVariation) {
         case 'modern':
           return {
+            // CRITICAL FIX: Remove border completely - it creates dark lines between cards
+            // Border visual replaced with inset box-shadow for edge definition
             container: `relative rounded-3xl overflow-hidden
-                       border border-white/[0.15]
-                       ${isCenter ? 'hover:border-white/[0.25]' : ''}
                        transition-all duration-300 ease-out
-                       shadow-[0_8px_32px_rgba(0,0,0,0.3),0_0_1px_rgba(255,255,255,0.1)_inset]
-                       ${isCenter ? 'hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_0_1px_rgba(255,255,255,0.15)_inset]' : ''}
+                       shadow-[0_8px_32px_rgba(0,0,0,0.3),0_0_1px_rgba(255,255,255,0.1)_inset,0_0_0_1px_rgba(255,255,255,0.15)]
+                       ${isCenter ? 'hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_0_1px_rgba(255,255,255,0.15)_inset,0_0_0_1px_rgba(255,255,255,0.25)]' : ''}
                        group cursor-pointer
                        will-change-[transform,box-shadow]`,
             lockIcon: 'w-16 h-16 md:w-20 md:h-20 text-gray-400/30 mb-4 group-hover:text-gray-300/45 group-hover:scale-105 transition-all duration-700',
