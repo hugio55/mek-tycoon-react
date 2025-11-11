@@ -283,9 +283,10 @@ export default function HorizontalTimeline({
               {/* Content - slides up on entrance, slides down on exit */}
               <div
                 className={`
-                  absolute bottom-0 left-0
+                  absolute inset-0
                   p-8 md:p-12
                   z-20
+                  flex flex-col
                   ${isActive
                     ? 'translate-y-0 opacity-100'
                     : 'translate-y-4 opacity-0'
@@ -299,24 +300,6 @@ export default function HorizontalTimeline({
                   pointerEvents: 'none',
                 }}
               >
-                <h3
-                  className={`
-                    text-2xl md:text-3xl
-                    font-bold
-                    text-[#1779cf]
-                    mb-2
-                    font-['Orbitron']
-                    tracking-wide
-                    ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
-                  `}
-                  style={{
-                    transition: isActive
-                      ? 'opacity 0.3s ease-out 0.4s, transform 0.3s ease-out 0.4s'
-                      : 'opacity 0.2s ease-in, transform 0.2s ease-in',
-                  }}
-                >
-                  {item.title}
-                </h3>
                 {item.subtitle && (
                   <p
                     className={`
@@ -332,21 +315,42 @@ export default function HorizontalTimeline({
                     {item.subtitle}
                   </p>
                 )}
-                <p
-                  className={`
-                    text-white/90 leading-relaxed
-                    ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
-                  `}
-                  style={{
-                    fontFamily: phaseDescriptionFont,
-                    fontSize: `${phaseDescriptionFontSize}px`,
-                    transition: isActive
-                      ? 'opacity 0.3s ease-out 0.5s, transform 0.3s ease-out 0.5s'
-                      : 'opacity 0.2s ease-in, transform 0.2s ease-in',
-                  }}
-                >
-                  {item.description}
-                </p>
+                <div className="flex-1" />
+                <div>
+                  <h3
+                    className={`
+                      text-2xl md:text-3xl
+                      font-bold
+                      text-[#1779cf]
+                      mb-2
+                      font-['Orbitron']
+                      tracking-wide
+                      ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
+                    `}
+                    style={{
+                      transition: isActive
+                        ? 'opacity 0.3s ease-out 0.4s, transform 0.3s ease-out 0.4s'
+                        : 'opacity 0.2s ease-in, transform 0.2s ease-in',
+                    }}
+                  >
+                    {item.title}
+                  </h3>
+                  <p
+                    className={`
+                      text-white/90 leading-relaxed
+                      ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
+                    `}
+                    style={{
+                      fontFamily: phaseDescriptionFont,
+                      fontSize: `${phaseDescriptionFontSize}px`,
+                      transition: isActive
+                        ? 'opacity 0.3s ease-out 0.5s, transform 0.3s ease-out 0.5s'
+                        : 'opacity 0.2s ease-in, transform 0.2s ease-in',
+                    }}
+                  >
+                    {item.description}
+                  </p>
+                </div>
               </div>
             </div>
           );

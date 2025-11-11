@@ -21,14 +21,14 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
     >
       <style>
         {`
-          @keyframes border-glow {
+          @keyframes line-glow {
             0%, 100% {
-              box-shadow: 0 0 8px 2px rgba(61, 209, 255, 0.8),
-                          0 0 15px 3px rgba(61, 209, 255, 0.5);
+              filter: drop-shadow(0 0 4px rgba(61, 209, 255, 0.8))
+                      drop-shadow(0 0 8px rgba(61, 209, 255, 0.5));
             }
             50% {
-              box-shadow: 0 0 15px 3px rgba(61, 209, 255, 1),
-                          0 0 25px 5px rgba(61, 209, 255, 0.7);
+              filter: drop-shadow(0 0 8px rgba(61, 209, 255, 1))
+                      drop-shadow(0 0 12px rgba(61, 209, 255, 0.7));
             }
           }
         `}
@@ -44,20 +44,25 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
         &nbsp;{text}&nbsp;
       </span>
 
-      {/* Hover overlay (sweeps from left to right with bright blue glow) */}
+      {/* Hover overlay (sweeps from left to right with bright blue) */}
       <span
         className="absolute top-0 left-0 whitespace-nowrap overflow-hidden"
         style={{
           color: '#3DD1FF',
           width: isHovered ? '100%' : '0%',
-          borderRight: '3px solid #3DD1FF',
-          filter: isHovered ? 'drop-shadow(0 0 35px #3DD1FF) drop-shadow(0 0 20px #3DD1FF) brightness(1.3)' : 'none',
-          transition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1), filter 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-          animation: 'border-glow 2s ease-in-out infinite',
+          transition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
         }}
         aria-hidden="true"
       >
         &nbsp;{text}&nbsp;
+        <span
+          className="absolute top-0 bottom-0 right-0"
+          style={{
+            width: '3px',
+            backgroundColor: '#3DD1FF',
+            animation: 'line-glow 2s ease-in-out infinite',
+          }}
+        />
       </span>
     </button>
   );
