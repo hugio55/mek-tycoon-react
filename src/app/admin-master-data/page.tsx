@@ -3412,6 +3412,132 @@ export default function AdminMasterDataPage() {
                     </div>
                   </div>
 
+                  {/* Discord Button */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Discord Button
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Button
+                      </span>
+                    </div>
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <DiscordButton />
+                    </div>
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External React/styled-components</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> Indigo gradient with glass-morphism</div>
+                      <div><span className="text-zinc-500">Features:</span> Backdrop blur, hover animations, Discord icon, social button</div>
+                    </div>
+                  </div>
+
+                  {/* Generating Loader */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Generating Loader
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Loader
+                      </span>
+                    </div>
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <GeneratingLoader />
+                    </div>
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External styled-components</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS Modules</div>
+                      <div><span className="text-zinc-500">Colors:</span> Purple/pink gradient ring with white text</div>
+                      <div><span className="text-zinc-500">Features:</span> Rotating gradient ring, letter-by-letter animation, staggered delays</div>
+                    </div>
+                  </div>
+
+                  {/* Text Switch */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Text Switch
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <TextSwitch />
+                    </div>
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External styled-components</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> Dark background with yellow (#ffb500) checked state</div>
+                      <div><span className="text-zinc-500">Features:</span> Text label transitions, sliding thumb, opacity/transform animations</div>
+                    </div>
+                  </div>
+
+                  {/* Hover Tooltip */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Hover Tooltip
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <HoverTooltip />
+                    </div>
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External styled-components</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> White with pink border (#ffe4e4)</div>
+                      <div><span className="text-zinc-500">Features:</span> Hover reveal, animated lines, pulse background, diagonal line transform</div>
+                    </div>
+                  </div>
+
+                  {/* Fill Text Button */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Fill Text Button
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Button
+                      </span>
+                    </div>
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <FillTextButton />
+                    </div>
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External styled-components</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind + inline styles</div>
+                      <div><span className="text-zinc-500">Colors:</span> Green (#37FF8B) fill with stroke outline</div>
+                      <div><span className="text-zinc-500">Features:</span> Text stroke effect, left-to-right fill animation, drop-shadow glow, webkit-text-stroke</div>
+                    </div>
+                  </div>
+
+                  {/* Floating Label Input */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Floating Label Input
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Input
+                      </span>
+                    </div>
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <FloatingLabelInput />
+                    </div>
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External styled-components</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind + CSS Modules</div>
+                      <div><span className="text-zinc-500">Colors:</span> Blue (#5264AE) focus state with gray border</div>
+                      <div><span className="text-zinc-500">Features:</span> Material Design floating label, center-expand bar animation, highlight flash, peer utility</div>
+                    </div>
+                  </div>
+
                   {/* Pro Mode Toggle */}
                   <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
                     <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
