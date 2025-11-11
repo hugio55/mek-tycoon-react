@@ -172,7 +172,6 @@ export default function HorizontalTimeline({
 
           // Clean percentage-based widths that sum to exactly 100%
           let widthPercent: number;
-          let translateX: number = 0; // Use transform for overlap, not margins
 
           if (isAnyActive) {
             if (isActive) {
@@ -184,11 +183,9 @@ export default function HorizontalTimeline({
             widthPercent = 25; // All equal: 25% each
           }
 
-          // Apply sub-pixel perfect overlap using transform
-          // Each card (except first) overlaps by 2px to eliminate any gaps
-          if (index > 0) {
-            translateX = -2 * index; // Progressive overlap: -2px, -4px, -6px
-          }
+          // Transform origin for scaleX overlap
+          // First card stretches right, others stretch left to create seamless joins
+          const transformOrigin = index === 0 ? 'left center' : 'right center';
 
           // Calculate blur value
           const blurValue = isActive && idleBackdropBlur > 0 ? `blur(${idleBackdropBlur}px)` : 'none';
@@ -206,7 +203,8 @@ export default function HorizontalTimeline({
               `}
               style={{
                 width: `${widthPercent}%`,
-                transform: `translateX(${translateX}px)`,
+                transform: 'scaleX(1.02)', // 2% horizontal stretch to eliminate gaps
+                transformOrigin: transformOrigin,
                 transition: 'width 0.5s ease-in-out, transform 0.5s ease-in-out',
                 zIndex: isActive ? 20 : 10 - index, // Active card on top, rest stack left-to-right
               }}
@@ -362,3 +360,4 @@ export default function HorizontalTimeline({
     </div>
   );
 }
+// Updated image path
