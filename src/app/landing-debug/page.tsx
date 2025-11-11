@@ -1700,7 +1700,6 @@ export default function LandingDebugPage() {
               </select>
             </div>
           </div>
-          )}
 
           {/* Audio Consent Lightbox Controls Section */}
           {config.activeTab === 'audio' && (
