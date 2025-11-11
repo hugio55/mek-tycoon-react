@@ -121,7 +121,6 @@ import type * as initializeCache from "../initializeCache.js";
 import type * as investigateFalseClaim from "../investigateFalseClaim.js";
 import type * as investments from "../investments.js";
 import type * as landingDebugSettings from "../landingDebugSettings.js";
-import type * as landingSettings from "../landingSettings.js";
 import type * as leaderboard from "../leaderboard.js";
 import type * as leaderboardDiagnostics from "../leaderboardDiagnostics.js";
 import type * as leaderboardOptimized from "../leaderboardOptimized.js";
@@ -353,7 +352,6 @@ declare const fullApi: ApiFromModules<{
   investigateFalseClaim: typeof investigateFalseClaim;
   investments: typeof investments;
   landingDebugSettings: typeof landingDebugSettings;
-  landingSettings: typeof landingSettings;
   leaderboard: typeof leaderboard;
   leaderboardDiagnostics: typeof leaderboardDiagnostics;
   leaderboardOptimized: typeof leaderboardOptimized;
