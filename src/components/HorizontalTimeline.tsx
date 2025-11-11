@@ -100,7 +100,7 @@ export default function HorizontalTimeline({
         title: card.title || defaultItem.title,
         subtitle: defaultItem.subtitle,
         description: card.description || defaultItem.description,
-        imageUrl: defaultItem.imageUrl, // Images still from localStorage for now
+        imageUrl: card.imageUrl || defaultItem.imageUrl, // Use database imageUrl if available, fallback to default
       };
     });
 
