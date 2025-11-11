@@ -29,14 +29,14 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
         &nbsp;{text}&nbsp;
       </span>
 
-      {/* Hover overlay (sweeps from left to right with green glow) */}
+      {/* Hover overlay (sweeps from left to right with bright blue glow) */}
       <span
         className="absolute top-0 left-0 whitespace-nowrap overflow-hidden"
         style={{
-          color: '#37FF8B',
+          color: '#3DD1FF',
           width: isHovered ? '100%' : '0%',
-          borderRight: '6px solid #37FF8B',
-          filter: isHovered ? 'drop-shadow(0 0 23px #37FF8B)' : 'none',
+          borderRight: '8px solid #3DD1FF',
+          filter: isHovered ? 'drop-shadow(0 0 35px #3DD1FF) drop-shadow(0 0 20px #3DD1FF) brightness(1.3)' : 'none',
           transition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1), filter 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
         }}
         aria-hidden="true"
