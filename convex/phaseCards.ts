@@ -56,6 +56,7 @@ export const isPhaseCardsEmpty = query({
  */
 export const createPhaseCard = mutation({
   args: {
+    header: v.optional(v.string()),
     title: v.string(),
     description: v.optional(v.string()),
     locked: v.boolean(),
@@ -72,6 +73,7 @@ export const createPhaseCard = mutation({
     }
 
     const phaseId = await ctx.db.insert("phaseCards", {
+      header: args.header,
       title: args.title,
       description: args.description,
       locked: args.locked,
@@ -90,6 +92,7 @@ export const createPhaseCard = mutation({
 export const updatePhaseCard = mutation({
   args: {
     id: v.id("phaseCards"),
+    header: v.optional(v.string()),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
     locked: v.optional(v.boolean()),
@@ -109,6 +112,7 @@ export const updatePhaseCard = mutation({
       updatedAt: Date.now(),
     };
 
+    if (updates.header !== undefined) updateData.header = updates.header;
     if (updates.title !== undefined) updateData.title = updates.title;
     if (updates.description !== undefined) updateData.description = updates.description;
     if (updates.locked !== undefined) updateData.locked = updates.locked;
@@ -295,6 +299,7 @@ export const bulkUpdatePhaseCards = mutation({
     updates: v.array(
       v.object({
         id: v.id("phaseCards"),
+        header: v.optional(v.string()),
         title: v.optional(v.string()),
         description: v.optional(v.string()),
         locked: v.optional(v.boolean()),
@@ -316,6 +321,7 @@ export const bulkUpdatePhaseCards = mutation({
       }
 
       const updateData: any = { updatedAt: now };
+      if (fields.header !== undefined) updateData.header = fields.header;
       if (fields.title !== undefined) updateData.title = fields.title;
       if (fields.description !== undefined) updateData.description = fields.description;
       if (fields.locked !== undefined) updateData.locked = fields.locked;

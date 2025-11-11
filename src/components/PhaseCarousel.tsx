@@ -7,6 +7,7 @@ import { api } from '@/convex/_generated/api';
 
 interface Phase {
   _id: string;
+  header?: string;
   title: string;
   description?: string;
   locked: boolean;
@@ -325,6 +326,11 @@ export default function PhaseCarousel({
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-6 md:p-7 text-center z-20">
               <div className="w-full space-y-4">
+                {phase.header && (
+                  <p className="text-sm md:text-base text-gray-400/80 italic font-light tracking-wide">
+                    {phase.header}
+                  </p>
+                )}
                 <h3 className={styles.title}>{phase.title}</h3>
                 {phase.description && (
                   <div className="relative mt-4">

@@ -32,62 +32,14 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
             }
           }
 
-          @keyframes dark-flicker {
+          @keyframes soft-pulse {
             0%, 100% {
-              opacity: 1;
-              filter: brightness(1);
-            }
-            10% {
-              opacity: 0.85;
-              filter: brightness(0.9);
-            }
-            15% {
-              opacity: 1.1;
-              filter: brightness(1.2);
-            }
-            23% {
-              opacity: 0.9;
-              filter: brightness(0.95);
-            }
-            28% {
-              opacity: 1;
-              filter: brightness(1.1);
-            }
-            35% {
-              opacity: 0.8;
-              filter: brightness(0.85);
-            }
-            42% {
-              opacity: 1.05;
-              filter: brightness(1.15);
+              filter: drop-shadow(0 0 6px rgba(61, 209, 255, 0.6))
+                      drop-shadow(0 0 12px rgba(61, 209, 255, 0.4));
             }
             50% {
-              opacity: 0.95;
-              filter: brightness(1);
-            }
-            58% {
-              opacity: 1.1;
-              filter: brightness(1.2);
-            }
-            65% {
-              opacity: 0.88;
-              filter: brightness(0.92);
-            }
-            73% {
-              opacity: 1;
-              filter: brightness(1.05);
-            }
-            80% {
-              opacity: 0.92;
-              filter: brightness(0.95);
-            }
-            88% {
-              opacity: 1.08;
-              filter: brightness(1.18);
-            }
-            95% {
-              opacity: 0.96;
-              filter: brightness(1.02);
+              filter: drop-shadow(0 0 10px rgba(61, 209, 255, 0.8))
+                      drop-shadow(0 0 18px rgba(61, 209, 255, 0.6));
             }
           }
         `}
@@ -122,10 +74,7 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
           color: '#3DD1FF',
           width: isHovered ? '100%' : '0%',
           transition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-          textShadow: isHovered
-            ? '0 0 8px rgba(61, 209, 255, 1), 0 0 16px rgba(61, 209, 255, 0.8), 0 0 24px rgba(61, 209, 255, 0.6), 0 0 32px rgba(61, 209, 255, 0.4)'
-            : 'none',
-          animation: isHovered ? 'dark-flicker 0.4s infinite' : 'none',
+          animation: isHovered ? 'soft-pulse 3s ease-in-out infinite' : 'none',
         }}
         aria-hidden="true"
       >
