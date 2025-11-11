@@ -195,6 +195,11 @@ export default function LandingPage() {
   // Animation sequence states
   const [animationStage, setAnimationStage] = useState<'initial' | 'stars' | 'logo'>('initial');
 
+  // Debug logging for animation stage changes
+  useEffect(() => {
+    console.log('[🎬ANIMATION] Animation stage changed to:', animationStage);
+  }, [animationStage]);
+
   const [soundLabelFont, setSoundLabelFont] = useState(DEFAULT_CONFIG.soundLabelFont);
   const [soundLabelSize, setSoundLabelSize] = useState(DEFAULT_CONFIG.soundLabelSize);
   const [soundLabelColor, setSoundLabelColor] = useState(DEFAULT_CONFIG.soundLabelColor);
@@ -239,14 +244,24 @@ export default function LandingPage() {
 
   // Check for audio consent on mount
   useEffect(() => {
+    console.log('[🎬ANIMATION] === Component Mounted ===');
+    console.log('[🎬ANIMATION] Initial showAudioConsent:', showAudioConsent);
+    console.log('[🎬ANIMATION] Initial animationStage:', animationStage);
+
     try {
       const consent = localStorage.getItem(AUDIO_CONSENT_KEY);
       if (!consent) {
         // First-time visitor - show consent lightbox
+        console.log('[🎬ANIMATION] First-time visitor - showing consent lightbox');
         setShowAudioConsent(true);
+        // Keep animationStage at 'initial' (everything hidden)
       } else {
-        // User has already given consent
+        // Return visitor - has already given consent
         const consentData = JSON.parse(consent);
+        console.log('[🎵ANIMATION] Return visitor - skipping lightbox, going straight to logo stage');
+        // Skip all animations and show everything immediately
+        setAnimationStage('logo');
+
         if (consentData.audioEnabled) {
           // Don't auto-play - just remember preference
           // Audio will only start when user clicks speaker button
