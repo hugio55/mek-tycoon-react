@@ -765,6 +765,7 @@ export default function LandingPage() {
           star.y = y;
           star.z = maxZ;
           star.twinkleOffset = Math.random() * Math.PI * 2; // Randomize twinkle phase on respawn
+          star.twinkleSpeedMultiplier = 1 + (Math.random() * 2 - 1) * (twinkleSpeedRandomness / 100);
         }
 
         const scale = 1000 / star.z;
@@ -798,6 +799,7 @@ export default function LandingPage() {
           star.y = y;
           star.z = maxZ;
           star.twinkleOffset = Math.random() * Math.PI * 2;
+          star.twinkleSpeedMultiplier = 1 + (Math.random() * 2 - 1) * (twinkleSpeedRandomness2 / 100);
         }
 
         const scale = 1000 / star.z;
@@ -852,6 +854,7 @@ export default function LandingPage() {
             star.y = y;
             star.z = maxZ;
             star.twinkleOffset = Math.random() * Math.PI * 2;
+            star.twinkleSpeedMultiplier = 1 + (Math.random() * 2 - 1) * (twinkleSpeedRandomness3 / 100);
             starLastSpawnTime3.set(index, currentTime);
           } else {
             // Keep star out of view until delay passes
@@ -901,10 +904,10 @@ export default function LandingPage() {
       cancelAnimationFrame(animationId);
     };
   }, [
-    starScale, starSpeed, starFrequency, twinkleAmount, twinkleSpeed, sizeRandomness,
-    starScale2, starSpeed2, starFrequency2, lineLength2, twinkleAmount2, twinkleSpeed2, sizeRandomness2,
-    starScale3, starSpeed3, starFrequency3, lineLength3, spawnDelay3, twinkleAmount3, twinkleSpeed3, sizeRandomness3,
-    bgStarTwinkleAmount, bgStarTwinkleSpeed, bgStarSizeRandomness, bgStarCount, bgStarMinBrightness, bgStarMaxBrightness,
+    starScale, starSpeed, starFrequency, twinkleAmount, twinkleSpeed, twinkleSpeedRandomness, sizeRandomness,
+    starScale2, starSpeed2, starFrequency2, lineLength2, twinkleAmount2, twinkleSpeed2, twinkleSpeedRandomness2, sizeRandomness2,
+    starScale3, starSpeed3, starFrequency3, lineLength3, spawnDelay3, twinkleAmount3, twinkleSpeed3, twinkleSpeedRandomness3, sizeRandomness3,
+    bgStarTwinkleAmount, bgStarTwinkleSpeed, bgStarTwinkleSpeedRandomness, bgStarSizeRandomness, bgStarCount, bgStarMinBrightness, bgStarMaxBrightness,
     motionBlurEnabled, blurIntensity, motionBlurEnabled2, blurIntensity2
   ]);
 
