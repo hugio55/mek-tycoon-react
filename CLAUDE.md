@@ -12,12 +12,21 @@ The directory `mek-tycoon-react-staging` is the PRIMARY and MAIN working directo
 
 **Naming note**: Despite the word "staging" in the directory name, this is our primary development environment where ALL current work happens.
 
-## Quick Start Command
-When user says "start it up" or similar, run:
+## Dev Server Management
+**CRITICAL: User starts their own dev servers. DO NOT automatically run background dev server tasks.**
+
+### When user explicitly says "start it up" or similar:
 ```bash
 npm run dev:all
 ```
 This starts both Next.js (port 3200) and Convex in one terminal.
+
+### IMPORTANT RULES:
+- **NEVER start `npm run dev`, `npm run dev:all`, or similar as background tasks**
+- User manages their own dev servers and terminals
+- Only start dev server if user explicitly asks you to
+- If user says "the server is running" or "localhost is up" - believe them, don't verify or restart
+- Focus on code changes, not server management
 
 ---
 
