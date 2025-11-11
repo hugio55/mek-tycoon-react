@@ -220,25 +220,17 @@ export default function HorizontalTimeline({
             >
               {/* Timeline Background Image - bottommost layer, blends with page background */}
               <div
-                className="absolute bg-cover bg-center"
+                className="absolute inset-0 bg-cover bg-center"
                 style={{
-                  // Extend boundaries by blur radius × 2 to prevent soft/transparent edges
-                  // When blur is applied, edges become semi-transparent. By extending the image
-                  // beyond the container, we push those soft edges outside the visible area.
-                  top: `${-(isActive ? imageBlurSelected : imageBlur) * 2}px`,
-                  left: `${-(isActive ? imageBlurSelected : imageBlur) * 2}px`,
-                  right: `${-(isActive ? imageBlurSelected : imageBlur) * 2}px`,
-                  bottom: `${-(isActive ? imageBlurSelected : imageBlur) * 2}px`,
                   backgroundImage: `url(${item.imageUrl})`,
                   opacity: imageBlendMode === 'screen' ? 0.6 : 0.4,
                   maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                   WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
-                  filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected : imageBlur}px)`,
+                  filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected * 1.2 : imageBlur * 1.2}px)`,
                   mixBlendMode: imageBlendMode,
-                  transition: 'filter 0.3s ease-out, top 0.3s ease-out, left 0.3s ease-out, right 0.3s ease-out, bottom 0.3s ease-out',
+                  transition: 'filter 0.3s ease-out',
                   willChange: isAnyActive ? 'filter' : 'auto',
                   backfaceVisibility: 'hidden',
-                  WebkitBackdropFilter: 'hidden',
                   border: 'none',
                   outline: 'none',
                 }}
