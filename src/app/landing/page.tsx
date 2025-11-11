@@ -702,7 +702,7 @@ export default function LandingPage() {
 
         // Preload the logo image BEFORE starting animation
         const logoImage = new Image();
-        logoImage.src = '/logo-big.png';
+        logoImage.src = '/logo-first-frame.webp';
         logoImage.onload = () => {
           console.log('[🎵ANIMATION] Logo image preloaded, starting animation');
           setAnimationStage('logo');
@@ -1176,11 +1176,12 @@ export default function LandingPage() {
             }}
           >
             <img
-              src="/logo-big.png"
+              src="/logo-first-frame.webp"
               alt="Mek Tycoon Logo"
-              className="w-full h-full object-contain absolute inset-0"
+              className="w-full h-full absolute inset-0"
               style={{
                 opacity: useVideoLogo ? 0 : 'inherit',
+                objectFit: 'contain',
                 transform: 'translate3d(0, 0, 0)',
                 backfaceVisibility: 'hidden',
                 WebkitBackfaceVisibility: 'hidden',
@@ -1196,9 +1197,10 @@ export default function LandingPage() {
               loop
               muted
               playsInline
-              className="w-full h-full object-contain absolute inset-0"
+              className="w-full h-full absolute inset-0"
               style={{
                 opacity: useVideoLogo ? 'inherit' : 0,
+                objectFit: 'contain',
                 transform: 'translate3d(0, 0, 0)',
                 backfaceVisibility: 'hidden',
                 WebkitBackfaceVisibility: 'hidden',
