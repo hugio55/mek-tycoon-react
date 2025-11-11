@@ -208,6 +208,7 @@ export default function LandingPage() {
 
   // Animation sequence states
   const [animationStage, setAnimationStage] = useState<'initial' | 'stars' | 'logo'>('initial');
+  const [useVideoLogo, setUseVideoLogo] = useState(false);
 
   // Debug logging for animation stage changes
   useEffect(() => {
@@ -281,6 +282,7 @@ export default function LandingPage() {
         console.log('[🎵ANIMATION] Return visitor - skipping lightbox, going straight to logo stage');
         // Skip all animations and show everything immediately
         setAnimationStage('logo');
+        setUseVideoLogo(true); // Use video immediately for return visitors
 
         if (consentData.audioEnabled) {
           // Don't auto-play - just remember preference
@@ -687,6 +689,11 @@ export default function LandingPage() {
         console.log('[🎵ANIMATION] ==========================================');
         console.log('[🎵ANIMATION] Stage 3: Setting to "logo" - Logo fade in with zoom');
         setAnimationStage('logo');
+
+        // Swap to video after zoom completes (logoFadeDuration + 200ms buffer)
+        setTimeout(() => {
+          setUseVideoLogo(true);
+        }, logoFadeDuration + 200);
       }, 1000); // 1 second after stars start fading in
     }, 500); // 500ms for lightbox fade-out
   };
@@ -1143,22 +1150,38 @@ export default function LandingPage() {
               }
             }}
           >
-            <video
-              src="/random-images/Everydays_00000.webm"
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-contain"
-              style={{
-                opacity: 'inherit',
-                transform: 'translate3d(0, 0, 0)',
-                backfaceVisibility: 'hidden',
-                WebkitBackfaceVisibility: 'hidden',
-                WebkitTransform: 'translate3d(0, 0, 0)',
-                imageRendering: 'crisp-edges',
-              }}
-            />
+            {useVideoLogo ? (
+              <video
+                src="/random-images/Everydays_00000.webm"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-contain"
+                style={{
+                  opacity: 'inherit',
+                  transform: 'translate3d(0, 0, 0)',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  WebkitTransform: 'translate3d(0, 0, 0)',
+                  imageRendering: 'crisp-edges',
+                }}
+              />
+            ) : (
+              <img
+                src="/logo-big.png"
+                alt="Mek Tycoon Logo"
+                className="w-full h-full object-contain"
+                style={{
+                  opacity: 'inherit',
+                  transform: 'translate3d(0, 0, 0)',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  WebkitTransform: 'translate3d(0, 0, 0)',
+                  imageRendering: 'crisp-edges',
+                }}
+              />
+            )}
           </div>
 
           {/* Description - Scroll-triggered fade-in animation */}

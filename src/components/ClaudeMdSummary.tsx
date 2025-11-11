@@ -20,7 +20,7 @@ export default function ClaudeMdSummary() {
 
   async function loadClaudeMd() {
     try {
-      const response = await fetch('/CLAUDE.md');
+      const response = await fetch('/api/claude-md');
       if (!response.ok) {
         throw new Error(`Failed to load CLAUDE.md: ${response.status}`);
       }
