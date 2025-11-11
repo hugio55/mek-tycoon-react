@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 
 interface TimelineItem {
   phase: string;
@@ -79,50 +81,32 @@ export default function HorizontalTimeline({
   const [timelineData, setTimelineData] = useState<TimelineItem[]>(defaultTimelineData);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Load phase cards from Convex database
+  const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
+
   // Debug logging when prop changes
   useEffect(() => {
     console.log('[🔍BLUR] HorizontalTimeline received prop:', idleBackdropBlur);
   }, [idleBackdropBlur]);
 
-  // Load phase images from localStorage
+  // Update timeline data when phaseCards loads from database
   useEffect(() => {
-    const loadConfig = () => {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          const updatedData = defaultTimelineData.map((item, index) => {
-            const imageKey = `phaseImage${index + 1}` as keyof typeof parsed;
-            const customImage = parsed[imageKey];
-            return {
-              ...item,
-              imageUrl: customImage || item.imageUrl
-            };
-          });
-          setTimelineData(updatedData);
-          console.log('[🎯TIMELINE] Loaded phase images from config');
-        } catch (e) {
-          console.error('Failed to parse debug config:', e);
-        }
-      }
-    };
+    if (!phaseCards || phaseCards.length === 0) return;
 
-    loadConfig();
+    const updatedData = phaseCards.map((card, index) => {
+      const defaultItem = defaultTimelineData[index] || defaultTimelineData[0];
+      return {
+        phase: card.header || defaultItem.phase,
+        title: card.title || defaultItem.title,
+        subtitle: defaultItem.subtitle,
+        description: card.description || defaultItem.description,
+        imageUrl: defaultItem.imageUrl, // Images still from localStorage for now
+      };
+    });
 
-    // Listen for config updates from landing-debug
-    const handleConfigUpdate = () => {
-      console.log('[🎯TIMELINE] Received config update event, reloading...');
-      loadConfig();
-    };
-
-    window.addEventListener('storage', handleConfigUpdate);
-    window.addEventListener('mek-landing-config-updated', handleConfigUpdate);
-
-    return () => {
-      window.removeEventListener('storage', handleConfigUpdate);
-      window.removeEventListener('mek-landing-config-updated', handleConfigUpdate);
-    };
-  }, []);
+    setTimelineData(updatedData);
+    console.log('[🎯TIMELINE] Loaded phase data from Convex database:', updatedData);
+  }, [phaseCards]);
 
   // Handle clicking outside to deselect
   useEffect(() => {
