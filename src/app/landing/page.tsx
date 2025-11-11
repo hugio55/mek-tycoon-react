@@ -806,7 +806,8 @@ export default function LandingPage() {
 
         // Apply twinkle effect to size
         const twinkleAmplitude = twinkleAmount2 / 100;
-        const twinkle = Math.sin(time * twinkleSpeed2 + star.twinkleOffset) * twinkleAmplitude;
+        const effectiveSpeed = twinkleSpeed2 * star.twinkleSpeedMultiplier;
+        const twinkle = Math.sin(time * effectiveSpeed + star.twinkleOffset) * twinkleAmplitude;
         const size = (star.baseSize * scale) * starScale2 * (1 + twinkle);
 
         if (x >= 0 && x <= canvas.width && y >= 0 && y <= canvas.height) {
@@ -864,7 +865,8 @@ export default function LandingPage() {
 
         // Apply twinkle effect to size
         const twinkleAmplitude = twinkleAmount3 / 100;
-        const twinkle = Math.sin(time * twinkleSpeed3 + star.twinkleOffset) * twinkleAmplitude;
+        const effectiveSpeed = twinkleSpeed3 * star.twinkleSpeedMultiplier;
+        const twinkle = Math.sin(time * effectiveSpeed + star.twinkleOffset) * twinkleAmplitude;
         const size = (star.baseSize * scale) * starScale3 * (1 + twinkle);
 
         if (x >= 0 && x <= canvas.width && y >= 0 && y <= canvas.height) {
