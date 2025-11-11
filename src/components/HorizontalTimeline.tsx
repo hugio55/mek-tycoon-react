@@ -199,11 +199,15 @@ export default function HorizontalTimeline({
               `}
               style={{
                 width: `${widthPercent}%`,
+                marginRight: index < timelineData.length - 1 ? '-1px' : '0', // Overlap cards by 1px to eliminate bright lines
                 transition: 'width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
                 willChange: isAnyActive ? 'width' : 'auto',
                 zIndex: isActive ? 20 : 10 - index,
                 backfaceVisibility: 'hidden',
                 WebkitBackfaceVisibility: 'hidden',
+                border: 'none',
+                outline: 'none',
+                boxShadow: 'none',
               }}
               onMouseEnter={() => handleHoverEnter(index)}
               onMouseLeave={handleHoverLeave}
@@ -230,6 +234,8 @@ export default function HorizontalTimeline({
                   willChange: isAnyActive ? 'filter' : 'auto',
                   backfaceVisibility: 'hidden',
                   WebkitBackdropFilter: 'hidden',
+                  border: 'none',
+                  outline: 'none',
                 }}
               />
 
