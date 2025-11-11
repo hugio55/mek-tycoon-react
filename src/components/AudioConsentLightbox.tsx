@@ -6,6 +6,9 @@ import { createPortal } from 'react-dom';
 interface AudioConsentLightboxProps {
   onProceed: (audioEnabled: boolean) => void;
   isVisible: boolean;
+  toggleSize?: number; // Width in pixels, height will be half (default: 96)
+  backdropDarkness?: number; // 0-100 percentage (default: 95)
+  logoFadeDuration?: number; // milliseconds (default: 1000)
 }
 
 const STORAGE_KEY_AUDIO = 'mek-audio-consent';
