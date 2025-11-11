@@ -42,8 +42,11 @@ export default function AudioConsentLightbox({ onProceed, isVisible }: AudioCons
 
   const handleProceed = () => {
     console.log('[🎵LIGHTBOX] Proceed clicked with audioEnabled:', audioEnabled);
-    // Store audio preference
-    localStorage.setItem(STORAGE_KEY_AUDIO, JSON.stringify(audioEnabled));
+    // Store audio preference with timestamp (matches landing page format)
+    localStorage.setItem(STORAGE_KEY_AUDIO, JSON.stringify({
+      audioEnabled,
+      timestamp: Date.now()
+    }));
     onProceed(audioEnabled);
   };
 
