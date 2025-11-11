@@ -221,23 +221,25 @@ export default function HorizontalTimeline({
             >
               {/* Timeline Background Image - bottommost layer, blends with page background */}
               <div
-                className="absolute inset-0 bg-cover bg-center"
+                className="absolute bg-cover bg-center"
                 style={{
+                  // Extend boundaries by blur radius × 2 to prevent soft/transparent edges
+                  // When blur is applied, edges become semi-transparent. By extending the image
+                  // beyond the container, we push those soft edges outside the visible area.
+                  top: `${-(isActive ? imageBlurSelected : imageBlur) * 2}px`,
+                  left: `${-(isActive ? imageBlurSelected : imageBlur) * 2}px`,
+                  right: `${-(isActive ? imageBlurSelected : imageBlur) * 2}px`,
+                  bottom: `${-(isActive ? imageBlurSelected : imageBlur) * 2}px`,
                   backgroundImage: `url(${item.imageUrl})`,
                   opacity: imageBlendMode === 'screen' ? 0.6 : 0.4,
                   maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                   WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                   filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected : imageBlur}px)`,
-                  // Scale up by 15% to prevent transparent edges during blur, then center
-                  backgroundSize: '115% 115%',
-                  backgroundPosition: 'center',
-                  transform: `scale3d(${1 + ((isActive ? imageBlurSelected : imageBlur) * 0.015)}, ${1 + ((isActive ? imageBlurSelected : imageBlur) * 0.015)}, 1)`,
-                  transformOrigin: 'center',
                   mixBlendMode: imageBlendMode,
-                  transition: 'filter 0.3s ease-out, transform 0.3s ease-out',
-                  willChange: isAnyActive ? 'filter, transform' : 'auto',
+                  transition: 'filter 0.3s ease-out, top 0.3s ease-out, left 0.3s ease-out, right 0.3s ease-out, bottom 0.3s ease-out',
+                  willChange: isAnyActive ? 'filter' : 'auto',
                   backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
+                  WebkitBackdropFilter: 'hidden',
                 }}
               />
 
