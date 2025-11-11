@@ -111,19 +111,25 @@ export default function LandingDebugPage() {
 
   // Function to trigger audio consent lightbox on landing page
   const triggerAudioConsentOnLandingPage = () => {
+    if (!audioConsentVisible) {
+      // Show: clear consent and trigger landing page
+      localStorage.removeItem('mek-audio-consent');
+      localStorage.setItem('mek-debug-trigger', JSON.stringify({ action: 'show-audio-consent' }));
+      window.dispatchEvent(new StorageEvent('storage', { key: 'mek-debug-trigger' }));
+    } else {
+      // Hide: restore consent and trigger landing page
+      localStorage.setItem('mek-audio-consent', JSON.stringify({ audioEnabled: false, timestamp: Date.now() }));
+      localStorage.setItem('mek-debug-trigger', JSON.stringify({ action: 'hide-audio-consent' }));
+      window.dispatchEvent(new StorageEvent('storage', { key: 'mek-debug-trigger' }));
+    }
     setAudioConsentVisible(!audioConsentVisible);
-
-    // Dispatch custom event for landing page to listen to
-    window.dispatchEvent(new CustomEvent('mek-toggle-audio-consent', {
-      detail: { shouldShow: !audioConsentVisible }
-    }));
 
     // Also notify iframe if in split-view
     const iframe = document.querySelector('iframe[title="Landing Page Preview"]') as HTMLIFrameElement;
     if (iframe && iframe.contentWindow) {
       iframe.contentWindow.postMessage({
-        type: 'mek-toggle-audio-consent',
-        shouldShow: !audioConsentVisible
+        type: 'mek-debug-trigger',
+        action: !audioConsentVisible ? 'show-audio-consent' : 'hide-audio-consent'
       }, '*');
     }
   };
