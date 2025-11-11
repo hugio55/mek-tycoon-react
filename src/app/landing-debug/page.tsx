@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
+import AudioConsentLightbox from '@/components/AudioConsentLightbox';
 
 // Debug control configuration storage key
 const STORAGE_KEY = 'mek-landing-debug-config';
@@ -1745,6 +1746,15 @@ export default function LandingDebugPage() {
           </div>
         </div>
       )}
+
+      {/* Audio Consent Lightbox */}
+      <AudioConsentLightbox
+        isVisible={audioConsentVisible}
+        onProceed={(audioEnabled) => {
+          console.log('[DEBUG] Audio consent proceeded with audioEnabled:', audioEnabled);
+          setAudioConsentVisible(false);
+        }}
+      />
     </div>
   );
 }
