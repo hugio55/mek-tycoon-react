@@ -12,6 +12,7 @@ const DEFAULT_CONFIG = {
   starFrequency: 200,
   twinkleAmount: 0,
   twinkleSpeed: 1,
+  twinkleSpeedRandomness: 50,
   sizeRandomness: 50,
 
   // Layer 2 - Fast Moving Streaks
@@ -21,6 +22,7 @@ const DEFAULT_CONFIG = {
   lineLength2: 2,
   twinkleAmount2: 0,
   twinkleSpeed2: 1,
+  twinkleSpeedRandomness2: 50,
   sizeRandomness2: 50,
 
   // Layer 3 - Ultra-Fast Streaks
@@ -31,11 +33,13 @@ const DEFAULT_CONFIG = {
   spawnDelay3: 50,
   twinkleAmount3: 0,
   twinkleSpeed3: 1,
+  twinkleSpeedRandomness3: 50,
   sizeRandomness3: 50,
 
   // Background Static Stars
   bgStarTwinkleAmount: 30,
   bgStarTwinkleSpeed: 0.5,
+  bgStarTwinkleSpeedRandomness: 50,
   bgStarSizeRandomness: 50,
   bgStarCount: 800,
   bgStarMinBrightness: 0.1,
@@ -49,6 +53,7 @@ export default function LandingDebugPage() {
   const [starFrequency, setStarFrequency] = useState(DEFAULT_CONFIG.starFrequency);
   const [twinkleAmount, setTwinkleAmount] = useState(DEFAULT_CONFIG.twinkleAmount);
   const [twinkleSpeed, setTwinkleSpeed] = useState(DEFAULT_CONFIG.twinkleSpeed);
+  const [twinkleSpeedRandomness, setTwinkleSpeedRandomness] = useState(DEFAULT_CONFIG.twinkleSpeedRandomness);
   const [sizeRandomness, setSizeRandomness] = useState(DEFAULT_CONFIG.sizeRandomness);
 
   // Layer 2 controls
@@ -58,6 +63,7 @@ export default function LandingDebugPage() {
   const [lineLength2, setLineLength2] = useState(DEFAULT_CONFIG.lineLength2);
   const [twinkleAmount2, setTwinkleAmount2] = useState(DEFAULT_CONFIG.twinkleAmount2);
   const [twinkleSpeed2, setTwinkleSpeed2] = useState(DEFAULT_CONFIG.twinkleSpeed2);
+  const [twinkleSpeedRandomness2, setTwinkleSpeedRandomness2] = useState(DEFAULT_CONFIG.twinkleSpeedRandomness2);
   const [sizeRandomness2, setSizeRandomness2] = useState(DEFAULT_CONFIG.sizeRandomness2);
 
   // Layer 3 controls
@@ -68,11 +74,13 @@ export default function LandingDebugPage() {
   const [spawnDelay3, setSpawnDelay3] = useState(DEFAULT_CONFIG.spawnDelay3);
   const [twinkleAmount3, setTwinkleAmount3] = useState(DEFAULT_CONFIG.twinkleAmount3);
   const [twinkleSpeed3, setTwinkleSpeed3] = useState(DEFAULT_CONFIG.twinkleSpeed3);
+  const [twinkleSpeedRandomness3, setTwinkleSpeedRandomness3] = useState(DEFAULT_CONFIG.twinkleSpeedRandomness3);
   const [sizeRandomness3, setSizeRandomness3] = useState(DEFAULT_CONFIG.sizeRandomness3);
 
   // Background stars controls
   const [bgStarTwinkleAmount, setBgStarTwinkleAmount] = useState(DEFAULT_CONFIG.bgStarTwinkleAmount);
   const [bgStarTwinkleSpeed, setBgStarTwinkleSpeed] = useState(DEFAULT_CONFIG.bgStarTwinkleSpeed);
+  const [bgStarTwinkleSpeedRandomness, setBgStarTwinkleSpeedRandomness] = useState(DEFAULT_CONFIG.bgStarTwinkleSpeedRandomness);
   const [bgStarSizeRandomness, setBgStarSizeRandomness] = useState(DEFAULT_CONFIG.bgStarSizeRandomness);
   const [bgStarCount, setBgStarCount] = useState(DEFAULT_CONFIG.bgStarCount);
   const [bgStarMinBrightness, setBgStarMinBrightness] = useState(DEFAULT_CONFIG.bgStarMinBrightness);
@@ -90,6 +98,7 @@ export default function LandingDebugPage() {
         setStarFrequency(config.starFrequency ?? DEFAULT_CONFIG.starFrequency);
         setTwinkleAmount(config.twinkleAmount ?? DEFAULT_CONFIG.twinkleAmount);
         setTwinkleSpeed(config.twinkleSpeed ?? DEFAULT_CONFIG.twinkleSpeed);
+        setTwinkleSpeedRandomness(config.twinkleSpeedRandomness ?? DEFAULT_CONFIG.twinkleSpeedRandomness);
         setSizeRandomness(config.sizeRandomness ?? DEFAULT_CONFIG.sizeRandomness);
         // Layer 2
         setStarScale2(config.starScale2 ?? DEFAULT_CONFIG.starScale2);
@@ -98,6 +107,7 @@ export default function LandingDebugPage() {
         setLineLength2(config.lineLength2 ?? DEFAULT_CONFIG.lineLength2);
         setTwinkleAmount2(config.twinkleAmount2 ?? DEFAULT_CONFIG.twinkleAmount2);
         setTwinkleSpeed2(config.twinkleSpeed2 ?? DEFAULT_CONFIG.twinkleSpeed2);
+        setTwinkleSpeedRandomness2(config.twinkleSpeedRandomness2 ?? DEFAULT_CONFIG.twinkleSpeedRandomness2);
         setSizeRandomness2(config.sizeRandomness2 ?? DEFAULT_CONFIG.sizeRandomness2);
         // Layer 3
         setStarScale3(config.starScale3 ?? DEFAULT_CONFIG.starScale3);
@@ -107,10 +117,12 @@ export default function LandingDebugPage() {
         setSpawnDelay3(config.spawnDelay3 ?? DEFAULT_CONFIG.spawnDelay3);
         setTwinkleAmount3(config.twinkleAmount3 ?? DEFAULT_CONFIG.twinkleAmount3);
         setTwinkleSpeed3(config.twinkleSpeed3 ?? DEFAULT_CONFIG.twinkleSpeed3);
+        setTwinkleSpeedRandomness3(config.twinkleSpeedRandomness3 ?? DEFAULT_CONFIG.twinkleSpeedRandomness3);
         setSizeRandomness3(config.sizeRandomness3 ?? DEFAULT_CONFIG.sizeRandomness3);
         // Background stars
         setBgStarTwinkleAmount(config.bgStarTwinkleAmount ?? DEFAULT_CONFIG.bgStarTwinkleAmount);
         setBgStarTwinkleSpeed(config.bgStarTwinkleSpeed ?? DEFAULT_CONFIG.bgStarTwinkleSpeed);
+        setBgStarTwinkleSpeedRandomness(config.bgStarTwinkleSpeedRandomness ?? DEFAULT_CONFIG.bgStarTwinkleSpeedRandomness);
         setBgStarSizeRandomness(config.bgStarSizeRandomness ?? DEFAULT_CONFIG.bgStarSizeRandomness);
         setBgStarCount(config.bgStarCount ?? DEFAULT_CONFIG.bgStarCount);
         setBgStarMinBrightness(config.bgStarMinBrightness ?? DEFAULT_CONFIG.bgStarMinBrightness);
@@ -125,10 +137,10 @@ export default function LandingDebugPage() {
   useEffect(() => {
     try {
       const config = {
-        starScale, starSpeed, starFrequency, twinkleAmount, twinkleSpeed, sizeRandomness,
-        starScale2, starSpeed2, starFrequency2, lineLength2, twinkleAmount2, twinkleSpeed2, sizeRandomness2,
-        starScale3, starSpeed3, starFrequency3, lineLength3, spawnDelay3, twinkleAmount3, twinkleSpeed3, sizeRandomness3,
-        bgStarTwinkleAmount, bgStarTwinkleSpeed, bgStarSizeRandomness, bgStarCount, bgStarMinBrightness, bgStarMaxBrightness,
+        starScale, starSpeed, starFrequency, twinkleAmount, twinkleSpeed, twinkleSpeedRandomness, sizeRandomness,
+        starScale2, starSpeed2, starFrequency2, lineLength2, twinkleAmount2, twinkleSpeed2, twinkleSpeedRandomness2, sizeRandomness2,
+        starScale3, starSpeed3, starFrequency3, lineLength3, spawnDelay3, twinkleAmount3, twinkleSpeed3, twinkleSpeedRandomness3, sizeRandomness3,
+        bgStarTwinkleAmount, bgStarTwinkleSpeed, bgStarTwinkleSpeedRandomness, bgStarSizeRandomness, bgStarCount, bgStarMinBrightness, bgStarMaxBrightness,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
 
@@ -144,10 +156,10 @@ export default function LandingDebugPage() {
       console.error('[DEBUG] Error saving config:', error);
     }
   }, [
-    starScale, starSpeed, starFrequency, twinkleAmount, twinkleSpeed, sizeRandomness,
-    starScale2, starSpeed2, starFrequency2, lineLength2, twinkleAmount2, twinkleSpeed2, sizeRandomness2,
-    starScale3, starSpeed3, starFrequency3, lineLength3, spawnDelay3, twinkleAmount3, twinkleSpeed3, sizeRandomness3,
-    bgStarTwinkleAmount, bgStarTwinkleSpeed, bgStarSizeRandomness, bgStarCount, bgStarMinBrightness, bgStarMaxBrightness,
+    starScale, starSpeed, starFrequency, twinkleAmount, twinkleSpeed, twinkleSpeedRandomness, sizeRandomness,
+    starScale2, starSpeed2, starFrequency2, lineLength2, twinkleAmount2, twinkleSpeed2, twinkleSpeedRandomness2, sizeRandomness2,
+    starScale3, starSpeed3, starFrequency3, lineLength3, spawnDelay3, twinkleAmount3, twinkleSpeed3, twinkleSpeedRandomness3, sizeRandomness3,
+    bgStarTwinkleAmount, bgStarTwinkleSpeed, bgStarTwinkleSpeedRandomness, bgStarSizeRandomness, bgStarCount, bgStarMinBrightness, bgStarMaxBrightness,
   ]);
 
   const resetAll = () => {

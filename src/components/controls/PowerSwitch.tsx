@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 /**
  * Power Switch - Transformed from external CSS component
@@ -33,6 +33,11 @@ export default function PowerSwitch({
   label = "Power"
 }: PowerSwitchProps) {
   const [isOn, setIsOn] = useState(enabled);
+
+  // Sync internal state with prop changes
+  useEffect(() => {
+    setIsOn(enabled);
+  }, [enabled]);
 
   const handleToggle = () => {
     const newState = !isOn;

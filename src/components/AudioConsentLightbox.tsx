@@ -73,12 +73,15 @@ export default function AudioConsentLightbox({ onProceed, isVisible }: AudioCons
   }, [isVisible, mounted]);
 
   const handleToggle = () => {
+    const newState = !audioEnabled;
+    console.log('[🎵LIGHTBOX] Audio toggle clicked, new state:', newState);
     setAnimating(true);
-    setAudioEnabled(!audioEnabled);
+    setAudioEnabled(newState);
     setTimeout(() => setAnimating(false), 600);
   };
 
   const handleProceed = () => {
+    console.log('[🎵LIGHTBOX] Proceed clicked with audioEnabled:', audioEnabled);
     onProceed(audioEnabled);
   };
 
