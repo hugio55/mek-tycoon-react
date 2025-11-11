@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 
-const FillTextButton = () => {
+interface FillTextButtonProps {
+  text?: string;
+}
+
+const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -14,7 +18,7 @@ const FillTextButton = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Actual text (always visible, stroked) */}
-      <span className="inline-block">&nbsp;uiverse&nbsp;</span>
+      <span className="inline-block">&nbsp;{text}&nbsp;</span>
 
       {/* Hover text (fills from left to right) */}
       <span
@@ -28,7 +32,7 @@ const FillTextButton = () => {
         }}
         aria-hidden="true"
       >
-        &nbsp;uiverse&nbsp;
+        &nbsp;{text}&nbsp;
       </span>
     </button>
   );
