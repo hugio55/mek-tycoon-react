@@ -157,12 +157,18 @@ export default function HorizontalTimeline({
   return (
     <div
       ref={containerRef}
-      className="w-full relative overflow-hidden bg-black"
-      style={{ height: `${columnHeight}px` }}
+      className="w-full relative overflow-hidden"
+      style={{
+        height: `${columnHeight}px`,
+        backgroundColor: 'transparent'
+      }}
     >
       <div
-        className="absolute inset-0 flex bg-transparent"
-        style={{ gap: 0 }}
+        className="absolute inset-0 flex"
+        style={{
+          gap: 0,
+          backgroundColor: 'transparent'
+        }}
       >
         {timelineData.map((item, index) => {
           const isHovered = hoveredIndex === index;
@@ -208,6 +214,7 @@ export default function HorizontalTimeline({
                 border: 'none',
                 outline: 'none',
                 boxShadow: 'none',
+                backgroundColor: 'transparent',
               }}
               onMouseEnter={() => handleHoverEnter(index)}
               onMouseLeave={handleHoverLeave}
@@ -239,17 +246,7 @@ export default function HorizontalTimeline({
                 }}
               />
 
-              {/* Darkening Overlay - only in normal mode */}
-              {imageBlendMode === 'normal' && (
-                <div
-                  className="absolute inset-0 bg-black"
-                  style={{
-                    opacity: (imageDarkness / 100) * 0.5,
-                    transition: 'opacity 0.3s ease-out',
-                    willChange: isAnyActive ? 'opacity' : 'auto',
-                  }}
-                />
-              )}
+              {/* Darkening Overlay removed - was blocking blend mode transparency */}
 
               {/* Dark Gradient Overlay - only when using 'normal' blend mode (not lighten modes) */}
               {imageBlendMode === 'normal' && (
