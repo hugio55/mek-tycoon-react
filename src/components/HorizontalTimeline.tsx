@@ -360,4 +360,3 @@ export default function HorizontalTimeline({
     </div>
   );
 }
-// Updated image path
