@@ -62,6 +62,8 @@ const DEFAULT_CONFIG = {
   bgStarCount: 800,
   bgStarMinBrightness: 0.1,
   bgStarMaxBrightness: 0.4,
+  starFadePosition: 60, // Percentage from top where fade begins (0-100)
+  starFadeFeatherSize: 200, // Pixels of fade transition zone
   logoSize: 600,
   logoYPosition: 0, // Percentage offset from center (-50 to +50)
   selectedFont: 'Orbitron',
@@ -153,6 +155,8 @@ export default function LandingPage() {
   const [bgStarCount, setBgStarCount] = useState(DEFAULT_CONFIG.bgStarCount);
   const [bgStarMinBrightness, setBgStarMinBrightness] = useState(DEFAULT_CONFIG.bgStarMinBrightness);
   const [bgStarMaxBrightness, setBgStarMaxBrightness] = useState(DEFAULT_CONFIG.bgStarMaxBrightness);
+  const [starFadePosition, setStarFadePosition] = useState(DEFAULT_CONFIG.starFadePosition);
+  const [starFadeFeatherSize, setStarFadeFeatherSize] = useState(DEFAULT_CONFIG.starFadeFeatherSize);
 
   // Layout controls
   const [logoSize, setLogoSize] = useState(DEFAULT_CONFIG.logoSize);
@@ -387,6 +391,8 @@ export default function LandingPage() {
           setBgStarCount(config.bgStarCount ?? DEFAULT_CONFIG.bgStarCount);
           setBgStarMinBrightness(config.bgStarMinBrightness ?? DEFAULT_CONFIG.bgStarMinBrightness);
           setBgStarMaxBrightness(config.bgStarMaxBrightness ?? DEFAULT_CONFIG.bgStarMaxBrightness);
+          setStarFadePosition(config.starFadePosition ?? DEFAULT_CONFIG.starFadePosition);
+          setStarFadeFeatherSize(config.starFadeFeatherSize ?? DEFAULT_CONFIG.starFadeFeatherSize);
           setLogoSize(config.logoSize ?? DEFAULT_CONFIG.logoSize);
           setLogoYPosition(config.logoYPosition ?? DEFAULT_CONFIG.logoYPosition);
           setSelectedFont(config.selectedFont ?? DEFAULT_CONFIG.selectedFont);
@@ -684,12 +690,18 @@ export default function LandingPage() {
 
     // Create distant background star field (static/very slow)
     const backgroundStars: BackgroundStar[] = [];
+    // Calculate fade boundaries (only spawn stars above fade end)
+    const fadeStartY = (starFadePosition / 100) * canvas.height;
+    const fadeEndY = fadeStartY + starFadeFeatherSize;
+
     for (let i = 0; i < bgStarCount; i++) {
       const baseSize = 0.5;
       const sizeVariation = (bgStarSizeRandomness / 100) * baseSize;
+      // Only spawn stars in the visible region (above fade end)
+      const starY = Math.random() * fadeEndY;
       backgroundStars.push({
         x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
+        y: starY,
         brightness: Math.random() * (bgStarMaxBrightness - bgStarMinBrightness) + bgStarMinBrightness,
         baseSize: baseSize + (Math.random() * 2 - 1) * sizeVariation, // Apply size randomness
         twinkleOffset: Math.random() * Math.PI * 2,
@@ -782,20 +794,37 @@ export default function LandingPage() {
       // Clear with transparency to show background image
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw distant background stars (very slow drift)
+      // Draw distant background stars (very slow drift) with gradient fade
       const time = Date.now() * 0.001; // Convert to seconds
+      const fadeStartY = (starFadePosition / 100) * canvas.height;
+      const fadeEndY = fadeStartY + starFadeFeatherSize;
+
       backgroundStars.forEach((star) => {
+        // Skip stars below fade end (performance optimization)
+        if (star.y > fadeEndY) return;
+
+        // Calculate fade multiplier based on Y position
+        let fadeMultiplier = 1;
+        if (star.y > fadeStartY) {
+          // Star is in fade zone - calculate gradient
+          const fadeProgress = (star.y - fadeStartY) / starFadeFeatherSize;
+          fadeMultiplier = 1 - fadeProgress; // 1 at fadeStart, 0 at fadeEnd
+        }
+
         // Calculate twinkle effect using sine wave
         // twinkleAmount controls amplitude (0-100%), twinkleSpeed controls frequency
         const twinkleAmplitude = bgStarTwinkleAmount / 100; // Convert to 0-1 range
         const effectiveSpeed = bgStarTwinkleSpeed * star.twinkleSpeedMultiplier;
         const twinkle = Math.sin(time * effectiveSpeed + star.twinkleOffset) * twinkleAmplitude;
-        const opacity = star.brightness * (1 + twinkle); // Brightness varies by ±twinkleAmount
+        const opacity = star.brightness * (1 + twinkle) * fadeMultiplier; // Apply fade to opacity
 
-        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.baseSize, 0, Math.PI * 2);
-        ctx.fill();
+        // Only render if visible
+        if (opacity > 0.01) {
+          ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.baseSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
       });
 
       const centerX = canvas.width / 2;
@@ -954,6 +983,7 @@ export default function LandingPage() {
     starScale2, starSpeed2, starFrequency2, lineLength2, twinkleAmount2, twinkleSpeed2, twinkleSpeedRandomness2, sizeRandomness2,
     starScale3, starSpeed3, starFrequency3, lineLength3, spawnDelay3, twinkleAmount3, twinkleSpeed3, twinkleSpeedRandomness3, sizeRandomness3,
     bgStarTwinkleAmount, bgStarTwinkleSpeed, bgStarTwinkleSpeedRandomness, bgStarSizeRandomness, bgStarCount, bgStarMinBrightness, bgStarMaxBrightness,
+    starFadePosition, starFadeFeatherSize,
     motionBlurEnabled, blurIntensity, motionBlurEnabled2, blurIntensity2
   ]);
 
