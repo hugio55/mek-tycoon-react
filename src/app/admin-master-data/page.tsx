@@ -49,6 +49,7 @@ import TextSwitch from '@/components/controls/TextSwitch';
 import HoverTooltip from '@/components/controls/HoverTooltip';
 import FillTextButton from '@/components/controls/FillTextButton';
 import FloatingLabelInput from '@/components/controls/FloatingLabelInput';
+import IndustrialFlipCard from '@/components/controls/IndustrialFlipCard';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
@@ -3409,6 +3410,37 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
                       <div><span className="text-zinc-500">Colors:</span> Blue → Gold (#fab617)</div>
                       <div><span className="text-zinc-500">Features:</span> Sequential border animations with staggered delays</div>
+                    </div>
+                  </div>
+
+                  {/* Industrial Flip Card */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Industrial Flip Card
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Card
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <IndustrialFlipCard
+                        title="TACTICAL"
+                        badge="ELITE"
+                        footer="UNIT READY"
+                        icon="⚙️"
+                        backText="HOVER ME"
+                      />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External React/styled-components</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind + CSS</div>
+                      <div><span className="text-zinc-500">Colors:</span> Yellow/gold theme with glass-morphism</div>
+                      <div><span className="text-zinc-500">Features:</span> 3D flip animation, rotating border glow, blur circles, scan line effect</div>
                     </div>
                   </div>
 
