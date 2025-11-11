@@ -26,7 +26,13 @@ export default function ClaudeMdSummary() {
       }
 
       const content = await response.text();
+      console.log('[📄CLAUDE] Content length:', content.length);
+      console.log('[📄CLAUDE] First 200 chars:', content.substring(0, 200));
+
       const parsedSections = parseClaudeMd(content);
+      console.log('[📄CLAUDE] Parsed sections:', parsedSections.length);
+      console.log('[📄CLAUDE] First 5 sections:', parsedSections.slice(0, 5));
+
       setSections(parsedSections);
     } catch (err) {
       console.error('Error loading CLAUDE.md:', err);
@@ -40,10 +46,19 @@ export default function ClaudeMdSummary() {
     const lines = content.split('\n');
     const sections: Section[] = [];
 
+    console.log('[📄CLAUDE] Total lines:', lines.length);
+    console.log('[📄CLAUDE] First 10 lines:', lines.slice(0, 10));
+
+    let matchCount = 0;
     lines.forEach((line, index) => {
       // Match markdown headers (# Header, ## Header, etc.)
       const headerMatch = line.match(/^(#{1,6})\s+(.+)$/);
       if (headerMatch) {
+        matchCount++;
+        if (matchCount <= 5) {
+          console.log(`[📄CLAUDE] Match ${matchCount}:`, { line: index + 1, match: headerMatch });
+        }
+
         const level = headerMatch[1].length;
         const title = headerMatch[2].trim();
 
@@ -67,6 +82,8 @@ export default function ClaudeMdSummary() {
         });
       }
     });
+
+    console.log('[📄CLAUDE] Total matches found:', matchCount);
 
     return sections;
   }

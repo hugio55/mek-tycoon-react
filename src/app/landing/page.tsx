@@ -688,12 +688,24 @@ export default function LandingPage() {
       setTimeout(() => {
         console.log('[🎵ANIMATION] ==========================================');
         console.log('[🎵ANIMATION] Stage 3: Setting to "logo" - Logo fade in with zoom');
-        setAnimationStage('logo');
 
-        // Swap to video after zoom completes (logoFadeDuration + 200ms buffer)
-        setTimeout(() => {
-          setUseVideoLogo(true);
-        }, logoFadeDuration + 200);
+        // Preload the logo image BEFORE starting animation
+        const logoImage = new Image();
+        logoImage.src = '/logo-big.png';
+        logoImage.onload = () => {
+          console.log('[🎵ANIMATION] Logo image preloaded, starting animation');
+          setAnimationStage('logo');
+
+          // Swap to video after zoom completes (logoFadeDuration + 200ms buffer)
+          setTimeout(() => {
+            setUseVideoLogo(true);
+          }, logoFadeDuration + 200);
+        };
+        logoImage.onerror = () => {
+          console.error('[🎵ANIMATION] Logo image failed to load');
+          // Still show animation, just without the image
+          setAnimationStage('logo');
+        };
       }, 1000); // 1 second after stars start fading in
     }, 500); // 500ms for lightbox fade-out
   };
