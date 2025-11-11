@@ -170,23 +170,23 @@ export default function HorizontalTimeline({
           const isActive = isHovered || isSelected; // Active if hovered OR selected
           const isAnyActive = hoveredIndex !== null || selectedIndex !== null;
 
-          // AGGRESSIVE width + overlap to eliminate black line gaps completely
+          // Simplified width calculation - subtle overlap only to cover sub-pixel gaps
           let widthPercent: number;
           let translateX: number = 0;
 
           if (isAnyActive) {
             if (isActive) {
-              widthPercent = 31; // Active: 31% (extra 1% for gap coverage during transition)
+              widthPercent = 30; // Active column
             } else {
-              widthPercent = (70 / 3) + 0.7; // Inactive: ~24% each (extra for gap coverage)
+              widthPercent = 70 / 3; // Inactive columns: ~23.33% each
             }
           } else {
-            widthPercent = 26; // All equal: 26% each (total 104% = 4% overlap to cover all gaps)
+            widthPercent = 25.2; // All equal: 25.2% each (total 100.8% = minimal 0.8% overlap)
           }
 
-          // STRONG overlap - 10px to eliminate all sub-pixel rendering gaps
+          // Minimal overlap - just 2px to cover sub-pixel rendering gaps
           if (index > 0) {
-            translateX = -10 * index; // Progressive: -10px, -20px, -30px
+            translateX = -2 * index; // Progressive: -2px, -4px, -6px
           }
 
           // Calculate blur value
@@ -228,6 +228,9 @@ export default function HorizontalTimeline({
                   maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                   WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                   filter: `grayscale(${isActive ? '0%' : '100%'}) blur(${isActive ? imageBlurSelected : imageBlur}px)`,
+                  // Scale up by 15% to prevent transparent edges during blur, then center
+                  backgroundSize: '115% 115%',
+                  backgroundPosition: 'center',
                   transform: `scale3d(${1 + ((isActive ? imageBlurSelected : imageBlur) * 0.015)}, ${1 + ((isActive ? imageBlurSelected : imageBlur) * 0.015)}, 1)`,
                   transformOrigin: 'center',
                   mixBlendMode: imageBlendMode,

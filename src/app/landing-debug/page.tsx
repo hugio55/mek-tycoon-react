@@ -90,6 +90,10 @@ const DEFAULT_CONFIG = {
   descriptionCardBlur: 40,
   descriptionCardDarkness: 40,
   descriptionCardBorder: true,
+  // Audio Consent Lightbox controls
+  logoFadeDuration: 1000,
+  lightboxBackdropDarkness: 95,
+  audioToggleSize: 96,
 };
 
 type ConfigType = typeof DEFAULT_CONFIG;
@@ -219,7 +223,9 @@ export default function LandingDebugPage() {
       });
     } catch (e) {
       console.error('[MIGRATION] Failed to parse localStorage config:', e);
-      setConfig(dbSettings);
+      // Merge with defaults even on error to ensure new properties exist
+      const mergedConfig: ConfigType = { ...DEFAULT_CONFIG, ...dbSettings };
+      setConfig(mergedConfig);
       setMigrationStatus('complete');
     }
   }, [dbSettings, updateSettings]);
@@ -227,7 +233,9 @@ export default function LandingDebugPage() {
   // Load settings from Convex when they change (updates from other tabs/sessions)
   useEffect(() => {
     if (dbSettings && migrationStatus === 'complete') {
-      setConfig(dbSettings);
+      // Merge with defaults to ensure new properties exist
+      const mergedConfig: ConfigType = { ...DEFAULT_CONFIG, ...dbSettings };
+      setConfig(mergedConfig);
     }
   }, [dbSettings, migrationStatus]);
 
@@ -1766,6 +1774,73 @@ export default function LandingDebugPage() {
                 <option value="hologram">Futuristic</option>
                 <option value="pulse">Pulse Ring</option>
               </select>
+            </div>
+          </div>
+
+          {/* Audio Consent Lightbox Controls Section */}
+          <div className="bg-gray-800 border border-gray-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
+              Audio Consent Lightbox Controls
+            </h2>
+            <p className="text-xs text-gray-400 mb-2">
+              Controls for initial audio consent lightbox appearance
+            </p>
+
+            {/* Logo Fade Duration */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Logo Fade Duration
+              </label>
+              <input
+                type="range"
+                min="300"
+                max="3000"
+                step="100"
+                value={config.logoFadeDuration}
+                onChange={(e) => updateConfig('logoFadeDuration', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.logoFadeDuration}ms
+              </div>
+            </div>
+
+            {/* Lightbox Backdrop Darkness */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Lightbox Backdrop Darkness
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.lightboxBackdropDarkness}
+                onChange={(e) => updateConfig('lightboxBackdropDarkness', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.lightboxBackdropDarkness}%
+              </div>
+            </div>
+
+            {/* Audio Toggle Size */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Audio Toggle Size
+              </label>
+              <input
+                type="range"
+                min="60"
+                max="140"
+                step="4"
+                value={config.audioToggleSize}
+                onChange={(e) => updateConfig('audioToggleSize', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.audioToggleSize}px
+              </div>
             </div>
           </div>
 

@@ -13,9 +13,32 @@ interface AudioConsentLightboxProps {
 
 const STORAGE_KEY_AUDIO = 'mek-audio-consent';
 
-export default function AudioConsentLightbox({ onProceed, isVisible }: AudioConsentLightboxProps) {
+export default function AudioConsentLightbox({
+  onProceed,
+  isVisible,
+  toggleSize = 96,
+  backdropDarkness = 95,
+  logoFadeDuration = 1000
+}: AudioConsentLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
+
+  // Calculate responsive dimensions
+  const toggleWidth = toggleSize;
+  const toggleHeight = toggleSize / 2;
+  const thumbSize = toggleHeight * 0.8; // 80% of height for proper padding
+  const thumbOffset = toggleHeight * 0.1; // 10% padding from edge
+  const thumbTranslate = toggleWidth - thumbSize - (thumbOffset * 2); // Distance to travel
+
+  // Ensure minimum touch target (44x44px WCAG requirement)
+  const minTouchSize = 44;
+  const effectiveWidth = Math.max(toggleWidth, minTouchSize);
+  const effectiveHeight = Math.max(toggleHeight, minTouchSize);
+
+  // Calculate text sizing based on toggle size (scale from base size of 96px)
+  const textScale = toggleSize / 96;
+  const labelTextSize = Math.max(24 * textScale, 16); // Min 16px, scales from 24px
+  const buttonTextSize = Math.max(16 * textScale, 14); // Min 14px, scales from 16px
 
   useEffect(() => {
     setMounted(true);
@@ -57,20 +80,30 @@ export default function AudioConsentLightbox({ onProceed, isVisible }: AudioCons
 
   const lightboxContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-black/95" onClick={(e) => e.stopPropagation()} />
+      <div
+        className="absolute inset-0"
+        style={{ backgroundColor: `rgba(0, 0, 0, ${backdropDarkness / 100})` }}
+        onClick={(e) => e.stopPropagation()}
+      />
 
       <div
         className="relative flex flex-col items-center gap-6 sm:gap-8"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Animated Text - Responsive sizing for mobile */}
-        <div className="relative h-10 sm:h-12 overflow-hidden">
+        {/* Animated Text - Responsive sizing based on toggle size */}
+        <div
+          className="relative overflow-hidden"
+          style={{ height: `${labelTextSize * 1.5}px` }}
+        >
           <div
             className={`absolute inset-0 flex items-center justify-center transition-transform duration-[400ms] ease-out will-change-transform ${
               audioEnabled ? '-translate-y-full' : 'translate-y-0'
             }`}
           >
-            <span className="text-2xl sm:text-3xl font-light text-gray-400 tracking-wide">
+            <span
+              className="font-light text-gray-400 tracking-wide"
+              style={{ fontSize: `${labelTextSize}px` }}
+            >
               Sound Off
             </span>
           </div>
@@ -79,42 +112,55 @@ export default function AudioConsentLightbox({ onProceed, isVisible }: AudioCons
               audioEnabled ? 'translate-y-0' : 'translate-y-full'
             }`}
           >
-            <span className="text-2xl sm:text-3xl font-light text-yellow-500 tracking-wide">
+            <span
+              className="font-light text-yellow-500 tracking-wide"
+              style={{ fontSize: `${labelTextSize}px` }}
+            >
               Sound On
             </span>
           </div>
         </div>
 
-        {/* Toggle Switch - Enhanced for mobile touch (44x44px minimum) */}
+        {/* Toggle Switch - Responsive sizing with minimum touch target */}
         <button
           onClick={handleToggle}
-          className={`relative w-20 h-10 sm:w-24 sm:h-12 rounded-full transition-all duration-[400ms] ease-out cursor-pointer touch-manipulation ${
+          className={`relative rounded-full transition-all duration-[400ms] ease-out cursor-pointer touch-manipulation ${
             audioEnabled
               ? 'bg-gradient-to-r from-yellow-500 to-yellow-400'
               : 'bg-gray-700'
           }`}
           style={{
+            width: `${effectiveWidth}px`,
+            height: `${effectiveHeight}px`,
             WebkitTapHighlightColor: 'transparent',
-            minWidth: '80px',
-            minHeight: '44px',
             boxShadow: audioEnabled
-              ? '0 0 20px rgba(250, 182, 23, 0.4)'
-              : '0 0 10px rgba(0, 0, 0, 0.3)'
+              ? `0 0 ${toggleSize * 0.2}px rgba(250, 182, 23, 0.4)`
+              : `0 0 ${toggleSize * 0.1}px rgba(0, 0, 0, 0.3)`
           }}
           aria-label={audioEnabled ? 'Turn sound off' : 'Turn sound on'}
         >
           <div
-            className={`absolute top-1 w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full shadow-lg transition-all duration-[400ms] ease-out will-change-transform ${
-              audioEnabled ? 'translate-x-10 sm:translate-x-12' : 'translate-x-1'
-            }`}
+            className="absolute bg-white rounded-full shadow-lg transition-all duration-[400ms] ease-out will-change-transform"
+            style={{
+              width: `${thumbSize}px`,
+              height: `${thumbSize}px`,
+              top: `${thumbOffset}px`,
+              left: `${thumbOffset}px`,
+              transform: audioEnabled ? `translateX(${thumbTranslate}px)` : 'translateX(0)'
+            }}
           />
         </button>
 
-        {/* Proceed Button - Optimized for mobile touch */}
+        {/* Proceed Button - Optimized for mobile touch with responsive sizing */}
         <button
           onClick={handleProceed}
-          className="mt-6 sm:mt-8 px-10 sm:px-12 py-3 sm:py-3.5 text-white text-base sm:text-lg font-light tracking-wider border border-white/20 rounded-full hover:border-white/40 hover:bg-white/5 active:bg-white/10 transition-all duration-300 touch-manipulation"
+          className="mt-6 sm:mt-8 text-white font-light tracking-wider border border-white/20 rounded-full hover:border-white/40 hover:bg-white/5 active:bg-white/10 transition-all duration-300 touch-manipulation"
           style={{
+            paddingLeft: `${toggleSize * 0.4}px`,
+            paddingRight: `${toggleSize * 0.4}px`,
+            paddingTop: `${toggleSize * 0.125}px`,
+            paddingBottom: `${toggleSize * 0.125}px`,
+            fontSize: `${buttonTextSize}px`,
             WebkitTapHighlightColor: 'transparent',
             minHeight: '44px'
           }}
