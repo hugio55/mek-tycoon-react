@@ -210,6 +210,11 @@ export default function LandingPage() {
   const [animationStage, setAnimationStage] = useState<'initial' | 'stars' | 'logo'>('initial');
   const [useVideoLogo, setUseVideoLogo] = useState(false);
 
+  // Debug logging for useVideoLogo changes
+  useEffect(() => {
+    console.log('[🎬SWAP] useVideoLogo state changed to:', useVideoLogo);
+  }, [useVideoLogo]);
+
   // Debug logging for animation stage changes
   useEffect(() => {
     console.log('[🎬ANIMATION] Animation stage changed to:', animationStage);
@@ -281,8 +286,14 @@ export default function LandingPage() {
         const consentData = JSON.parse(consent);
         console.log('[🎵ANIMATION] Return visitor - skipping lightbox, showing smooth image animation');
         // Skip consent lightbox but show smooth image zoom animation
-        // Video swap happens automatically via timer after logoFadeDuration
         setAnimationStage('logo');
+
+        // Video swap timer for return visitors
+        console.log('[🎬SWAP] Setting video swap timer for return visitor, duration:', logoFadeDuration, 'ms');
+        setTimeout(() => {
+          console.log('[🎬SWAP] Swapping to video logo (return visitor path)');
+          setUseVideoLogo(true);
+        }, logoFadeDuration);
 
         if (consentData.audioEnabled) {
           // Don't auto-play - just remember preference
@@ -697,7 +708,9 @@ export default function LandingPage() {
           setAnimationStage('logo');
 
           // Swap to video immediately when zoom completes
+          console.log('[🎬SWAP] Setting video swap timer (first-time visitor), duration:', logoFadeDuration, 'ms');
           setTimeout(() => {
+            console.log('[🎬SWAP] Swapping to video logo (first-time visitor path)');
             setUseVideoLogo(true);
           }, logoFadeDuration);
         };
