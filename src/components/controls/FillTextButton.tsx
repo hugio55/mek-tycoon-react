@@ -9,25 +9,25 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
 
   return (
     <button
-      className="relative text-[2em] font-['Arial'] uppercase tracking-[3px] bg-transparent border-none cursor-pointer m-0 h-auto p-0"
+      className="relative text-[2em] uppercase tracking-[3px] bg-transparent border-none cursor-pointer m-0 h-auto p-0"
       style={{
-        color: 'transparent',
-        WebkitTextStroke: '1px rgba(255,255,255,0.6)',
+        fontFamily: 'Orbitron, sans-serif',
+        color: 'rgba(255,255,255,0.6)', // Solid gray-white text for idle
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Actual text (always visible, stroked) */}
+      {/* Base text (always visible, solid color) */}
       <span className="inline-block">&nbsp;{text}&nbsp;</span>
 
-      {/* Hover text (fills from left to right) */}
+      {/* Hover overlay (sweeps from left to right with green glow) */}
       <span
         className="absolute inset-0 box-border overflow-hidden transition-all duration-500"
         style={{
+          fontFamily: 'Orbitron, sans-serif',
           color: '#37FF8B',
           width: isHovered ? '100%' : '0%',
-          borderRight: isHovered ? '6px solid #37FF8B' : '6px solid #37FF8B',
-          WebkitTextStroke: '1px #37FF8B',
+          borderRight: '6px solid #37FF8B',
           filter: isHovered ? 'drop-shadow(0 0 23px #37FF8B)' : 'none',
         }}
         aria-hidden="true"
