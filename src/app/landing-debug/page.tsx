@@ -47,6 +47,9 @@ const DEFAULT_CONFIG = {
 };
 
 export default function LandingDebugPage() {
+  // Track if initial load is complete to prevent overwriting stored settings
+  const [hasLoaded, setHasLoaded] = useState(false);
+
   // Layer 1 controls
   const [starScale, setStarScale] = useState(DEFAULT_CONFIG.starScale);
   const [starSpeed, setStarSpeed] = useState(DEFAULT_CONFIG.starSpeed);
@@ -92,6 +95,7 @@ export default function LandingDebugPage() {
     if (stored) {
       try {
         const config = JSON.parse(stored);
+        console.log('[🔄LOAD] Restoring settings from localStorage:', config);
         // Layer 1
         setStarScale(config.starScale ?? DEFAULT_CONFIG.starScale);
         setStarSpeed(config.starSpeed ?? DEFAULT_CONFIG.starSpeed);
@@ -128,13 +132,22 @@ export default function LandingDebugPage() {
         setBgStarMinBrightness(config.bgStarMinBrightness ?? DEFAULT_CONFIG.bgStarMinBrightness);
         setBgStarMaxBrightness(config.bgStarMaxBrightness ?? DEFAULT_CONFIG.bgStarMaxBrightness);
       } catch (e) {
-        console.error('Failed to load config:', e);
+        console.error('[🔄LOAD] Failed to load config:', e);
       }
+    } else {
+      console.log('[🔄LOAD] No saved settings found, using defaults');
     }
+    // Mark load as complete
+    setHasLoaded(true);
   }, []);
 
-  // Save config to localStorage whenever any value changes
+  // Save config to localStorage whenever any value changes (but not on initial load)
   useEffect(() => {
+    // Don't save during initial load to prevent overwriting stored settings
+    if (!hasLoaded) {
+      console.log('[💾SAVE] Skipping save during initial load');
+      return;
+    }
     try {
       const config = {
         starScale, starSpeed, starFrequency, twinkleAmount, twinkleSpeed, twinkleSpeedRandomness, sizeRandomness,
