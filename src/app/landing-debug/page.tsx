@@ -56,7 +56,6 @@ const DEFAULT_CONFIG = {
   motionBlurEnabled: true,
   blurIntensity: 50,
   descriptionColor: 'text-yellow-400/90',
-  designVariation: 'modern' as 'modern' | 'industrial' | 'neon',
   phaseHeaderFont: 'Orbitron',
   phaseHeaderFontSize: 48,
   phaseHeaderColor: 'text-white/70',
