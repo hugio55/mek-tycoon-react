@@ -20,8 +20,16 @@ interface LoaderContextValue {
 const LoaderContext = createContext<LoaderContextValue | null>(null);
 
 export function LoaderProvider({ children }: { children: React.ReactNode }) {
-  // Check if loader is bypassed at initialization
-  const isBypassed = typeof window !== 'undefined' && localStorage.getItem('disablePageLoader') === 'true';
+  // Detect environment and check appropriate loader setting
+  const isBypassed = typeof window !== 'undefined' && (() => {
+    const isLocalhost = window.location.hostname === 'localhost' ||
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname.includes('localhost');
+
+    // Check environment-specific setting
+    const settingKey = isLocalhost ? 'disablePageLoaderLocalhost' : 'disablePageLoaderProduction';
+    return localStorage.getItem(settingKey) === 'true';
+  })();
 
   const [queries, setQueries] = useState<Map<string, QueryState>>(new Map());
   const [isWalletLoaded, setWalletLoaded] = useState(false);

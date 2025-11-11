@@ -16,8 +16,15 @@ export function PageLoadingOverlay() {
     ],
   });
 
-  // Check if loader is bypassed
-  const isBypassed = typeof window !== 'undefined' && localStorage.getItem('disablePageLoader') === 'true';
+  // Check if loader is bypassed based on environment
+  const isBypassed = typeof window !== 'undefined' && (() => {
+    const isLocalhost = window.location.hostname === 'localhost' ||
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname.includes('localhost');
+
+    const settingKey = isLocalhost ? 'disablePageLoaderLocalhost' : 'disablePageLoaderProduction';
+    return localStorage.getItem(settingKey) === 'true';
+  })();
 
   useEffect(() => {
     // If bypassed, immediately set loading to false and hide overlay
