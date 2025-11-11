@@ -170,23 +170,17 @@ export default function HorizontalTimeline({
           const isActive = isHovered || isSelected; // Active if hovered OR selected
           const isAnyActive = hoveredIndex !== null || selectedIndex !== null;
 
-          // Simplified width calculation - subtle overlap only to cover sub-pixel gaps
+          // Perfect edge-to-edge with minimal overlap - no transform needed
           let widthPercent: number;
-          let translateX: number = 0;
 
           if (isAnyActive) {
             if (isActive) {
-              widthPercent = 30; // Active column
+              widthPercent = 30.1; // Active column with minimal overlap
             } else {
-              widthPercent = 70 / 3; // Inactive columns: ~23.33% each
+              widthPercent = 23.35; // Inactive columns (70/3 + 0.02 for sub-pixel gap prevention)
             }
           } else {
-            widthPercent = 25.2; // All equal: 25.2% each (total 100.8% = minimal 0.8% overlap)
-          }
-
-          // Minimal overlap - just 2px to cover sub-pixel rendering gaps
-          if (index > 0) {
-            translateX = -2 * index; // Progressive: -2px, -4px, -6px
+            widthPercent = 25.03; // All equal: 25.03% × 4 = 100.12% (0.12% overlap prevents sub-pixel gaps)
           }
 
           // Calculate blur value
@@ -205,15 +199,11 @@ export default function HorizontalTimeline({
               `}
               style={{
                 width: `${widthPercent}%`,
-                transform: `translate3d(${translateX}px, 0, 0)`,
-                transition: 'width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
-                willChange: isAnyActive ? 'transform, width' : 'auto',
+                transition: 'width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                willChange: isAnyActive ? 'width' : 'auto',
                 zIndex: isActive ? 20 : 10 - index,
-                boxShadow: index > 0 ? '-2px 0 4px rgba(0,0,0,0.3)' : 'none',
                 backfaceVisibility: 'hidden',
                 WebkitBackfaceVisibility: 'hidden',
-                perspective: 1000,
-                WebkitPerspective: 1000,
               }}
               onMouseEnter={() => handleHoverEnter(index)}
               onMouseLeave={handleHoverLeave}
