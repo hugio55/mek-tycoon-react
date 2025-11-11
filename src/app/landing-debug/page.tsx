@@ -94,8 +94,8 @@ const DEFAULT_CONFIG = {
   logoFadeDuration: 1000,
   lightboxBackdropDarkness: 95,
   audioToggleSize: 96,
-  // Card collapse states (key = card ID, value = collapsed boolean)
-  collapsedCards: {} as Record<string, boolean>,
+  // Active tab
+  activeTab: 'layer1' as string,
 };
 
 type ConfigType = typeof DEFAULT_CONFIG;
@@ -326,14 +326,8 @@ export default function LandingDebugPage() {
     }
   };
 
-  const toggleCardCollapse = (cardId: string) => {
-    setConfig(prev => ({
-      ...prev,
-      collapsedCards: {
-        ...prev.collapsedCards,
-        [cardId]: !prev.collapsedCards[cardId]
-      }
-    }));
+  const setActiveTab = (tabId: string) => {
+    setConfig(prev => ({ ...prev, activeTab: tabId }));
   };
 
   const resetToDefaults = async () => {
@@ -433,48 +427,21 @@ export default function LandingDebugPage() {
     alert(result.message);
   };
 
-  // CollapsibleCard wrapper component
-  const CollapsibleCard = ({
-    id,
-    title,
-    children,
-    borderColor = 'border-gray-700',
-    titleColor = 'text-gray-100',
-    borderBottomColor = 'border-gray-700'
-  }: {
-    id: string;
-    title: string;
-    children: React.ReactNode;
-    borderColor?: string;
-    titleColor?: string;
-    borderBottomColor?: string;
-  }) => {
-    const isCollapsed = config.collapsedCards[id] || false;
-
-    return (
-      <div className={`bg-gray-800 border ${borderColor} rounded p-3`}>
-        <div
-          className="flex items-center justify-between cursor-pointer select-none"
-          onClick={() => toggleCardCollapse(id)}
-        >
-          <h2 className={`text-sm font-semibold ${titleColor} pb-1 border-b ${borderBottomColor} flex-grow`}>
-            {title}
-          </h2>
-          <button
-            className="ml-2 text-gray-400 hover:text-gray-200 transition-colors"
-            aria-label={isCollapsed ? 'Expand' : 'Collapse'}
-          >
-            {isCollapsed ? '▼' : '▲'}
-          </button>
-        </div>
-        {!isCollapsed && (
-          <div className="mt-2">
-            {children}
-          </div>
-        )}
-      </div>
-    );
-  };
+  // Tab categories
+  const tabs = [
+    { id: 'layer1', label: 'Layer 1' },
+    { id: 'layer2', label: 'Layer 2' },
+    { id: 'layer3', label: 'Layer 3' },
+    { id: 'bgstars', label: 'BG Stars' },
+    { id: 'logo', label: 'Logo' },
+    { id: 'description', label: 'Description' },
+    { id: 'phases', label: 'Phases' },
+    { id: 'audio', label: 'Audio' },
+    { id: 'motion', label: 'Motion Blur' },
+    { id: 'power', label: 'Power Button' },
+    { id: 'speaker', label: 'Speaker' },
+    { id: 'other', label: 'Other' },
+  ];
 
   return (
     <div className={`min-h-screen ${viewMode === 'split-view' ? 'flex' : 'bg-gray-900 p-3'}`}>
@@ -546,11 +513,32 @@ export default function LandingDebugPage() {
           </div>
         </div>
 
+        {/* Tab Navigation */}
+        <div className="flex flex-wrap gap-2 mb-4 border-b border-gray-700 pb-2">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-3 py-1.5 rounded-t text-sm font-medium transition-colors ${
+                config.activeTab === tab.id
+                  ? 'bg-blue-600 text-white border-b-2 border-blue-400'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {/* Debug Controls Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
 
           {/* Star Controls Section - Layer 1 */}
-          <CollapsibleCard id="layer1-starfield" title="Layer 1 Star Field">
+          {config.activeTab === 'layer1' && (
+          <div className="bg-gray-800 border border-gray-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
+              Layer 1 Star Field
+            </h2>
             {/* Star Scale */}
             <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">

@@ -90,66 +90,69 @@ export default function AudioConsentLightbox({
         className="relative flex flex-col items-center gap-6 sm:gap-8"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Animated Text - Responsive sizing based on toggle size */}
-        <div
-          className="relative overflow-hidden"
-          style={{ height: `${labelTextSize * 1.5}px` }}
-        >
-          <div
-            className={`absolute inset-0 flex items-center justify-center transition-transform duration-[400ms] ease-out will-change-transform ${
-              audioEnabled ? '-translate-y-full' : 'translate-y-0'
+        {/* Toggle Switch and Text Container - Horizontal Layout */}
+        <div className="flex items-center gap-6">
+          {/* Toggle Switch - Responsive sizing with minimum touch target */}
+          <button
+            onClick={handleToggle}
+            className={`relative rounded-full transition-all duration-[400ms] ease-out cursor-pointer touch-manipulation ${
+              audioEnabled
+                ? 'bg-gradient-to-r from-yellow-500 to-yellow-400'
+                : 'bg-gray-700'
             }`}
+            style={{
+              width: `${effectiveWidth}px`,
+              height: `${effectiveHeight}px`,
+              WebkitTapHighlightColor: 'transparent',
+              boxShadow: audioEnabled
+                ? `0 0 ${toggleSize * 0.2}px rgba(250, 182, 23, 0.4)`
+                : `0 0 ${toggleSize * 0.1}px rgba(0, 0, 0, 0.3)`
+            }}
+            aria-label={audioEnabled ? 'Turn sound off' : 'Turn sound on'}
           >
-            <span
-              className="font-light text-gray-400 tracking-wide"
-              style={{ fontSize: `${labelTextSize}px` }}
-            >
-              Sound Off
-            </span>
-          </div>
+            <div
+              className="absolute bg-white rounded-full shadow-lg transition-all duration-[400ms] ease-out will-change-transform"
+              style={{
+                width: `${thumbSize}px`,
+                height: `${thumbSize}px`,
+                top: `${thumbOffset}px`,
+                left: `${thumbOffset}px`,
+                transform: audioEnabled ? `translateX(${thumbTranslate}px)` : 'translateX(0)'
+              }}
+            />
+          </button>
+
+          {/* Animated Text - Responsive sizing based on toggle size */}
           <div
-            className={`absolute inset-0 flex items-center justify-center transition-transform duration-[400ms] ease-out will-change-transform ${
-              audioEnabled ? 'translate-y-0' : 'translate-y-full'
-            }`}
+            className="relative overflow-hidden"
+            style={{ height: `${labelTextSize * 2}px`, minWidth: `${labelTextSize * 6}px` }}
           >
-            <span
-              className="font-light text-yellow-500 tracking-wide"
-              style={{ fontSize: `${labelTextSize}px` }}
+            <div
+              className={`absolute inset-0 flex items-center justify-start transition-transform duration-[400ms] ease-out will-change-transform ${
+                audioEnabled ? '-translate-y-full' : 'translate-y-0'
+              }`}
             >
-              Sound On
-            </span>
+              <span
+                className="font-light text-white tracking-wide"
+                style={{ fontSize: `${labelTextSize}px`, lineHeight: `${labelTextSize * 2}px` }}
+              >
+                Sound Off
+              </span>
+            </div>
+            <div
+              className={`absolute inset-0 flex items-center justify-start transition-transform duration-[400ms] ease-out will-change-transform ${
+                audioEnabled ? 'translate-y-0' : 'translate-y-full'
+              }`}
+            >
+              <span
+                className="font-light text-yellow-400 tracking-wide"
+                style={{ fontSize: `${labelTextSize}px`, lineHeight: `${labelTextSize * 2}px` }}
+              >
+                Sound On
+              </span>
+            </div>
           </div>
         </div>
-
-        {/* Toggle Switch - Responsive sizing with minimum touch target */}
-        <button
-          onClick={handleToggle}
-          className={`relative rounded-full transition-all duration-[400ms] ease-out cursor-pointer touch-manipulation ${
-            audioEnabled
-              ? 'bg-gradient-to-r from-yellow-500 to-yellow-400'
-              : 'bg-gray-700'
-          }`}
-          style={{
-            width: `${effectiveWidth}px`,
-            height: `${effectiveHeight}px`,
-            WebkitTapHighlightColor: 'transparent',
-            boxShadow: audioEnabled
-              ? `0 0 ${toggleSize * 0.2}px rgba(250, 182, 23, 0.4)`
-              : `0 0 ${toggleSize * 0.1}px rgba(0, 0, 0, 0.3)`
-          }}
-          aria-label={audioEnabled ? 'Turn sound off' : 'Turn sound on'}
-        >
-          <div
-            className="absolute bg-white rounded-full shadow-lg transition-all duration-[400ms] ease-out will-change-transform"
-            style={{
-              width: `${thumbSize}px`,
-              height: `${thumbSize}px`,
-              top: `${thumbOffset}px`,
-              left: `${thumbOffset}px`,
-              transform: audioEnabled ? `translateX(${thumbTranslate}px)` : 'translateX(0)'
-            }}
-          />
-        </button>
 
         {/* Proceed Button - Optimized for mobile touch with responsive sizing */}
         <button
