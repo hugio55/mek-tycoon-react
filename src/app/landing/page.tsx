@@ -696,10 +696,10 @@ export default function LandingPage() {
           console.log('[🎵ANIMATION] Logo image preloaded, starting animation');
           setAnimationStage('logo');
 
-          // Swap to video after zoom completes (logoFadeDuration + 200ms buffer)
+          // Swap to video immediately when zoom completes
           setTimeout(() => {
             setUseVideoLogo(true);
-          }, logoFadeDuration + 200);
+          }, logoFadeDuration);
         };
         logoImage.onerror = () => {
           console.error('[🎵ANIMATION] Logo image failed to load');
