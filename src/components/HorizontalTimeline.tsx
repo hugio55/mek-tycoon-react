@@ -189,10 +189,6 @@ export default function HorizontalTimeline({
             widthPercent = 25; // All equal: 25% each
           }
 
-          // Transform origin for scaleX overlap
-          // First card stretches right, others stretch left to create seamless joins
-          const transformOrigin = index === 0 ? 'left center' : 'right center';
-
           // Calculate blur value
           const blurValue = isActive && idleBackdropBlur > 0 ? `blur(${idleBackdropBlur}px)` : 'none';
 
@@ -209,10 +205,8 @@ export default function HorizontalTimeline({
               `}
               style={{
                 width: `${widthPercent}%`,
-                transform: 'scaleX(1.02)', // 2% horizontal stretch to eliminate gaps
-                transformOrigin: transformOrigin,
-                transition: 'width 0.5s ease-in-out, transform 0.5s ease-in-out',
-                zIndex: isActive ? 20 : 10 - index, // Active card on top, rest stack left-to-right
+                transition: 'width 0.5s ease-in-out',
+                zIndex: isActive ? 20 : 10, // Active card on top
               }}
               onMouseEnter={() => handleHoverEnter(index)}
               onMouseLeave={handleHoverLeave}
