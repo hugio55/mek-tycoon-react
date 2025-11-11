@@ -96,6 +96,9 @@ const DEFAULT_CONFIG = {
   logoFadeDuration: 1000,
   lightboxBackdropDarkness: 95,
   audioToggleSize: 96,
+  // Join Beta Button controls
+  joinBetaFontSize: 32,
+  joinBetaVerticalOffset: 0,
   // Active tab
   activeTab: 'layer1' as string,
 };
@@ -1594,37 +1597,6 @@ export default function LandingDebugPage() {
           </div>
           </>
           )}
-
-          {/* Phase Carousel Design Section */}
-          {true && (
-          <>
-          <div className="bg-gray-800 border border-gray-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
-              Phase Carousel Design
-            </h2>
-
-            {/* Design Variation */}
-            <div className="mb-2">
-              <label className="block text-xs text-gray-300 mb-1">
-                Design Variation
-              </label>
-              <div className="space-y-1">
-                {(['modern', 'industrial', 'neon'] as const).map((variation) => (
-                  <button
-                    key={variation}
-                    onClick={() => updateConfig('designVariation', variation)}
-                    className={`w-full px-2 py-1 text-xs rounded ${
-                      config.designVariation === variation
-                        ? 'bg-blue-900/50 border border-blue-700 text-blue-200'
-                        : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
-                    }`}
-                  >
-                    {variation}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
 
           {/* Phase Cards Management Section */}
           <div className="mt-4 bg-gray-800 border border-yellow-500 rounded p-4">
