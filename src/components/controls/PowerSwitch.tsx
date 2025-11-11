@@ -41,8 +41,20 @@ export default function PowerSwitch({
   };
 
   return (
-    <div className="relative inline-block">
-      {/* Switch Container */}
+    <div className="relative inline-flex items-center gap-4">
+      {/* OFF Label */}
+      <span
+        className="text-lg font-bold tracking-wider transition-all duration-300"
+        style={{
+          fontFamily: 'Orbitron',
+          color: !isOn ? '#22c55e' : '#4b5563',
+          textShadow: !isOn ? '0 0 8px rgba(34, 197, 94, 0.6)' : 'none'
+        }}
+      >
+        OFF
+      </span>
+
+      {/* Switch Container - Rotated 90 degrees */}
       <label
         className="block relative cursor-pointer rounded-[0.375em] w-[3.75em] h-[8.75em]"
         style={{
@@ -52,7 +64,8 @@ export default function PowerSwitch({
             0 0.125em 0 hsl(223, 10%, 40%) inset,
             0 0 0.375em hsla(223, 10%, 10%, 0.5)
           `,
-          transition: 'background-color 0.3s cubic-bezier(0.83, 0, 0.17, 1), box-shadow 0.3s cubic-bezier(0.83, 0, 0.17, 1)'
+          transition: 'background-color 0.3s cubic-bezier(0.83, 0, 0.17, 1), box-shadow 0.3s cubic-bezier(0.83, 0, 0.17, 1)',
+          transform: 'rotate(90deg)'
         }}
       >
         {/* Hidden Checkbox Input */}
@@ -181,6 +194,18 @@ export default function PowerSwitch({
           {label}
         </span>
       </label>
+
+      {/* ON Label */}
+      <span
+        className="text-lg font-bold tracking-wider transition-all duration-300"
+        style={{
+          fontFamily: 'Orbitron',
+          color: isOn ? '#22c55e' : '#4b5563',
+          textShadow: isOn ? '0 0 8px rgba(34, 197, 94, 0.6)' : 'none'
+        }}
+      >
+        ON
+      </span>
     </div>
   );
 }
