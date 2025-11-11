@@ -77,6 +77,7 @@ const DEFAULT_CONFIG = {
   phaseImageBlendMode: 'normal' as 'normal' | 'screen' | 'lighten' | 'lighter',
   phaseHoverDarkeningIntensity: 90,
   phaseIdleBackdropBlur: 0,
+  phaseImageIdleOpacity: 100,
   phaseColumnYOffset: 0,
   descriptionCardBlur: 40,
   descriptionCardDarkness: 40,
