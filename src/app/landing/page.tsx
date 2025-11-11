@@ -181,6 +181,10 @@ export default function LandingPage() {
   // Audio controls
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [showAudioConsent, setShowAudioConsent] = useState(false);
+
+  // Animation sequence states
+  const [animationStage, setAnimationStage] = useState<'initial' | 'stars' | 'logo'>('initial');
+
   const [soundLabelFont, setSoundLabelFont] = useState(DEFAULT_CONFIG.soundLabelFont);
   const [soundLabelSize, setSoundLabelSize] = useState(DEFAULT_CONFIG.soundLabelSize);
   const [soundLabelColor, setSoundLabelColor] = useState(DEFAULT_CONFIG.soundLabelColor);
@@ -524,23 +528,32 @@ export default function LandingPage() {
 
   // Handle audio consent proceeding
   const handleConsentProceed = (audioEnabled: boolean) => {
-    console.log('[🎵AUDIO] Consent proceeding with audioEnabled:', audioEnabled);
+    console.log('[🎵ANIMATION] Consent proceed clicked, audioEnabled:', audioEnabled);
 
     // Store consent in localStorage
     localStorage.setItem(AUDIO_CONSENT_KEY, JSON.stringify({ audioEnabled, timestamp: Date.now() }));
-    console.log('[🎵AUDIO] Consent stored in localStorage');
 
-    // Hide the consent lightbox
-    setShowAudioConsent(false);
-    console.log('[🎵AUDIO] Consent lightbox hidden');
-
-    // If audio enabled, start playing
+    // If audio enabled, start playing immediately
     if (audioEnabled) {
-      console.log('[🎵AUDIO] Setting audioPlaying to true');
+      console.log('[🎵ANIMATION] Starting audio playback');
       setAudioPlaying(true);
-    } else {
-      console.log('[🎵AUDIO] Audio not enabled, skipping playback');
     }
+
+    // Hide the consent lightbox with fade-out
+    setShowAudioConsent(false);
+    console.log('[🎵ANIMATION] Lightbox hidden, starting animation sequence');
+
+    // Start animation sequence: stars fade in after lightbox fades
+    setTimeout(() => {
+      console.log('[🎵ANIMATION] Stage 2: Stars fade in and start moving');
+      setAnimationStage('stars');
+
+      // Then logo fades in after stars are visible
+      setTimeout(() => {
+        console.log('[🎵ANIMATION] Stage 3: Logo fade in with zoom');
+        setAnimationStage('logo');
+      }, 1000); // 1 second after stars start fading in
+    }, 500); // 500ms for lightbox fade-out
   };
 
   // Handle audio toggle with fade-in and fade-out effects
@@ -886,9 +899,17 @@ export default function LandingPage() {
         WebkitOverflowScrolling: 'touch',
       }}
     >
-      {/* Fixed background layer */}
+      {/* Dark overlay when lightbox is visible */}
+      {showAudioConsent && (
+        <div
+          className="fixed inset-0 bg-black z-[9998] transition-opacity duration-500"
+          style={{ opacity: 0.8 }}
+        />
+      )}
+
+      {/* Fixed background layer - faded initially */}
       <div
-        className="fixed inset-0 w-full h-full bg-black z-0"
+        className="fixed inset-0 w-full h-full bg-black z-0 transition-opacity duration-1000"
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: 'cover',
@@ -898,14 +919,19 @@ export default function LandingPage() {
           backgroundRepeat: 'no-repeat',
           touchAction: 'none',
           pointerEvents: 'none',
+          opacity: animationStage === 'initial' ? 0.3 : 1, // Very faded initially
         }}
       />
 
-      {/* Fixed canvas layer */}
+      {/* Fixed canvas layer - hidden initially, fades in during stars stage */}
       <canvas
         ref={canvasRef}
-        className="fixed inset-0 w-full h-full z-[1] pointer-events-none"
-        style={{ display: 'block', touchAction: 'none' }}
+        className="fixed inset-0 w-full h-full z-[1] pointer-events-none transition-opacity duration-1000"
+        style={{
+          display: 'block',
+          touchAction: 'none',
+          opacity: animationStage === 'initial' ? 0 : 1, // Hidden initially
+        }}
       />
 
       {/* Scrollable content layer */}
@@ -918,7 +944,16 @@ export default function LandingPage() {
         }}
       >
         <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full">
-          <div className="relative max-w-[80vw] max-h-[80vw]" style={{ width: `${logoSize}px`, height: `${logoSize}px` }}>
+          {/* Logo - Hidden initially, fades in with zoom during logo stage */}
+          <div
+            className="relative max-w-[80vw] max-h-[80vw] transition-all duration-1000 ease-out"
+            style={{
+              width: `${logoSize}px`,
+              height: `${logoSize}px`,
+              opacity: animationStage === 'logo' ? 1 : 0,
+              transform: animationStage === 'logo' ? 'scale(1)' : 'scale(0.95)',
+            }}
+          >
             <video
               src="/random-images/Everydays_00000.webm"
               autoPlay
