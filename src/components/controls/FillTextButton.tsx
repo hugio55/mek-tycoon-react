@@ -35,7 +35,7 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
         style={{
           color: '#3DD1FF',
           width: isHovered ? '100%' : '0%',
-          borderRight: '8px solid #3DD1FF',
+          borderRight: '3px solid #3DD1FF',
           filter: isHovered ? 'drop-shadow(0 0 35px #3DD1FF) drop-shadow(0 0 20px #3DD1FF) brightness(1.3)' : 'none',
           transition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1), filter 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
         }}
