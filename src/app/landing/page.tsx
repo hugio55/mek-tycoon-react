@@ -1259,7 +1259,7 @@ export default function LandingPage() {
               active:scale-95
               cursor-pointer
               z-[100]
-              ${audioPlaying ? 'text-white' : 'text-gray-600'}
+              ${audioPlaying ? 'text-white' : 'text-gray-700'}
             `}
             aria-label={audioPlaying ? 'Mute audio' : 'Play audio'}
             style={{

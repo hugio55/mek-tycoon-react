@@ -1799,6 +1799,16 @@ export default function LandingDebugPage() {
                     className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                   />
                 </div>
+                <div>
+                  <label className="block text-xs text-gray-300 mb-1">Image URL (optional)</label>
+                  <input
+                    type="text"
+                    value={newPhaseForm.imageUrl}
+                    onChange={(e) => setNewPhaseForm(prev => ({ ...prev, imageUrl: e.target.value }))}
+                    placeholder="e.g., /mek-images/50px/bi1-cb1-nm1.webp"
+                    className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                  />
+                </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -1861,6 +1871,16 @@ export default function LandingDebugPage() {
                             id={`edit-description-${phase._id}`}
                             rows={2}
                             placeholder="Description paragraph..."
+                            className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-300 mb-1">Image URL</label>
+                          <input
+                            type="text"
+                            defaultValue={phase.imageUrl || ''}
+                            id={`edit-imageUrl-${phase._id}`}
+                            placeholder="e.g., /mek-images/50px/bi1-cb1-nm1.webp"
                             className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                           />
                         </div>
