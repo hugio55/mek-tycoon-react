@@ -110,7 +110,7 @@ const DEFAULT_CONFIG = {
   descriptionCardDarkness: 40,
   descriptionCardBorder: true,
   // Audio Consent Lightbox controls
-  logoFadeDuration: 1500,
+  logoFadeDuration: 3000,
   lightboxBackdropDarkness: 95,
   audioToggleSize: 96,
   // Note: phaseImage1-4 not in DEFAULT_CONFIG - PhaseCarousel manages these
