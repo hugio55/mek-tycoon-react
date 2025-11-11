@@ -104,6 +104,10 @@ const DEFAULT_CONFIG = {
   descriptionCardBlur: 40,
   descriptionCardDarkness: 40,
   descriptionCardBorder: true,
+  // Audio Consent Lightbox controls
+  logoFadeDuration: 1000,
+  lightboxBackdropDarkness: 95,
+  audioToggleSize: 96,
   // Note: phaseImage1-4 not in DEFAULT_CONFIG - PhaseCarousel manages these
 };
 
@@ -198,6 +202,7 @@ export default function LandingPage() {
   // Debug logging for animation stage changes
   useEffect(() => {
     console.log('[🎬ANIMATION] Animation stage changed to:', animationStage);
+    console.log('[🎬ANIMATION] Logo should be:', animationStage === 'logo' ? 'VISIBLE (opacity: 1)' : 'HIDDEN (opacity: 0)');
   }, [animationStage]);
 
   const [soundLabelFont, setSoundLabelFont] = useState(DEFAULT_CONFIG.soundLabelFont);
@@ -236,6 +241,11 @@ export default function LandingPage() {
   const [descriptionCardBlur, setDescriptionCardBlur] = useState(DEFAULT_CONFIG.descriptionCardBlur);
   const [descriptionCardDarkness, setDescriptionCardDarkness] = useState(DEFAULT_CONFIG.descriptionCardDarkness);
   const [descriptionCardBorder, setDescriptionCardBorder] = useState(DEFAULT_CONFIG.descriptionCardBorder);
+
+  // Audio Consent Lightbox controls
+  const [logoFadeDuration, setLogoFadeDuration] = useState(DEFAULT_CONFIG.logoFadeDuration);
+  const [lightboxBackdropDarkness, setLightboxBackdropDarkness] = useState(DEFAULT_CONFIG.lightboxBackdropDarkness);
+  const [audioToggleSize, setAudioToggleSize] = useState(DEFAULT_CONFIG.audioToggleSize);
 
   // Scroll-triggered animation state
   const [hasScrolled, setHasScrolled] = useState(false);
@@ -422,6 +432,9 @@ export default function LandingPage() {
           setDescriptionCardBlur(config.descriptionCardBlur ?? DEFAULT_CONFIG.descriptionCardBlur);
           setDescriptionCardDarkness(config.descriptionCardDarkness ?? DEFAULT_CONFIG.descriptionCardDarkness);
           setDescriptionCardBorder(config.descriptionCardBorder ?? DEFAULT_CONFIG.descriptionCardBorder);
+          setLogoFadeDuration(config.logoFadeDuration ?? DEFAULT_CONFIG.logoFadeDuration);
+          setLightboxBackdropDarkness(config.lightboxBackdropDarkness ?? DEFAULT_CONFIG.lightboxBackdropDarkness);
+          setAudioToggleSize(config.audioToggleSize ?? DEFAULT_CONFIG.audioToggleSize);
           // Note: phaseImage1-4 not loaded here - PhaseCarousel reads directly from localStorage
         } catch (e) {
           console.error('Failed to load debug config:', e);
@@ -570,7 +583,9 @@ export default function LandingPage() {
 
   // Handle audio consent proceeding
   const handleConsentProceed = (audioEnabled: boolean) => {
+    console.log('[🎵ANIMATION] ==========================================');
     console.log('[🎵ANIMATION] Consent proceed clicked, audioEnabled:', audioEnabled);
+    console.log('[🎵ANIMATION] Current animationStage:', animationStage);
 
     // Store consent in localStorage
     localStorage.setItem(AUDIO_CONSENT_KEY, JSON.stringify({ audioEnabled, timestamp: Date.now() }));
@@ -583,16 +598,19 @@ export default function LandingPage() {
 
     // Hide the consent lightbox with fade-out
     setShowAudioConsent(false);
-    console.log('[🎵ANIMATION] Lightbox hidden, starting animation sequence');
+    console.log('[🎵ANIMATION] Lightbox hidden (showAudioConsent = false)');
+    console.log('[🎵ANIMATION] Starting animation sequence in 500ms...');
 
     // Start animation sequence: stars fade in after lightbox fades
     setTimeout(() => {
-      console.log('[🎵ANIMATION] Stage 2: Stars fade in and start moving');
+      console.log('[🎵ANIMATION] ==========================================');
+      console.log('[🎵ANIMATION] Stage 2: Setting to "stars" - Stars fade in and start moving');
       setAnimationStage('stars');
 
       // Then logo fades in after stars are visible
       setTimeout(() => {
-        console.log('[🎵ANIMATION] Stage 3: Logo fade in with zoom');
+        console.log('[🎵ANIMATION] ==========================================');
+        console.log('[🎵ANIMATION] Stage 3: Setting to "logo" - Logo fade in with zoom');
         setAnimationStage('logo');
       }, 1000); // 1 second after stars start fading in
     }, 500); // 500ms for lightbox fade-out
@@ -999,12 +1017,24 @@ export default function LandingPage() {
         <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full">
           {/* Logo - Hidden initially, fades in with zoom during logo stage */}
           <div
-            className="relative max-w-[80vw] max-h-[80vw] transition-all duration-1000 ease-out"
+            className="relative max-w-[80vw] max-h-[80vw]"
             style={{
               width: `${logoSize}px`,
               height: `${logoSize}px`,
               opacity: animationStage === 'logo' ? 1 : 0,
               transform: animationStage === 'logo' ? 'scale(1)' : 'scale(0.95)',
+              transition: animationStage === 'logo' ? `opacity ${logoFadeDuration}ms ease-out, transform ${logoFadeDuration}ms ease-out` : 'none',
+              visibility: animationStage === 'initial' || animationStage === 'stars' ? 'hidden' : 'visible',
+            }}
+            onTransitionStart={() => {
+              if (animationStage === 'logo') {
+                console.log('[🎬LOGO] Transition started - fading in logo');
+              }
+            }}
+            onTransitionEnd={() => {
+              if (animationStage === 'logo') {
+                console.log('[🎬LOGO] Transition ended - logo fully visible');
+              }
             }}
           >
             <video
@@ -1014,6 +1044,9 @@ export default function LandingPage() {
               muted
               playsInline
               className="w-full h-full object-contain"
+              style={{
+                opacity: 'inherit' // Video inherits opacity from parent
+              }}
             />
           </div>
 
@@ -1102,6 +1135,8 @@ export default function LandingPage() {
       <AudioConsentLightbox
         onProceed={handleConsentProceed}
         isVisible={showAudioConsent}
+        backdropDarkness={lightboxBackdropDarkness}
+        toggleSize={audioToggleSize}
       />
 
     </div>
