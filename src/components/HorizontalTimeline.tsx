@@ -257,20 +257,23 @@ export default function HorizontalTimeline({
                 }}
               />
 
-              {/* Phase Label - always visible, centered */}
+              {/* Phase Label - fades out on hover */}
               <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                 <h2
                   className={`
                     font-bold
                     ${phaseHeaderColor}
                     tracking-wider
-                    transition-all duration-500
                     pointer-events-none
+                    ${isActive ? 'opacity-0' : 'opacity-100'}
                   `}
                   style={{
                     fontFamily: phaseHeaderFont,
                     fontSize: `${phaseHeaderFontSize}px`,
                     textShadow: '0 0 40px rgba(0, 0, 0, 0.8)',
+                    transition: isActive
+                      ? 'opacity 0.3s ease-out'
+                      : 'opacity 0.3s ease-in 0.2s',
                   }}
                 >
                   {item.phase}
