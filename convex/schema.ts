@@ -3609,4 +3609,13 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_order", ["order"]),
+
+  // ===== LANDING PAGE DEBUG SETTINGS =====
+  // Visual debug settings for landing page (single record, global settings)
+  // Stored as flexible config object to prevent schema breaking when adding new fields
+  landingDebugSettings: defineTable({
+    config: v.any(), // Full config object with all ~70 visual settings
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }),
 });

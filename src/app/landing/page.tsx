@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import HorizontalTimeline from '@/components/HorizontalTimeline';
 import { SPEAKER_ICON_STYLES, type SpeakerIconStyle } from '@/components/SpeakerIcons';
 import AudioConsentLightbox from '@/components/AudioConsentLightbox';
+import FillTextButton from '@/components/controls/FillTextButton';
 
 interface Star {
   x: number;
@@ -62,6 +63,8 @@ const DEFAULT_CONFIG = {
   bgStarCount: 800,
   bgStarMinBrightness: 0.1,
   bgStarMaxBrightness: 0.4,
+  starFadePosition: 60, // Percentage from top where fade begins (0-100)
+  starFadeFeatherSize: 200, // Pixels of fade transition zone
   logoSize: 600,
   logoYPosition: 0, // Percentage offset from center (-50 to +50)
   selectedFont: 'Orbitron',
@@ -104,6 +107,10 @@ const DEFAULT_CONFIG = {
   descriptionCardBlur: 40,
   descriptionCardDarkness: 40,
   descriptionCardBorder: true,
+  // Audio Consent Lightbox controls
+  logoFadeDuration: 1000,
+  lightboxBackdropDarkness: 95,
+  audioToggleSize: 96,
   // Note: phaseImage1-4 not in DEFAULT_CONFIG - PhaseCarousel manages these
 };
 
@@ -149,6 +156,8 @@ export default function LandingPage() {
   const [bgStarCount, setBgStarCount] = useState(DEFAULT_CONFIG.bgStarCount);
   const [bgStarMinBrightness, setBgStarMinBrightness] = useState(DEFAULT_CONFIG.bgStarMinBrightness);
   const [bgStarMaxBrightness, setBgStarMaxBrightness] = useState(DEFAULT_CONFIG.bgStarMaxBrightness);
+  const [starFadePosition, setStarFadePosition] = useState(DEFAULT_CONFIG.starFadePosition);
+  const [starFadeFeatherSize, setStarFadeFeatherSize] = useState(DEFAULT_CONFIG.starFadeFeatherSize);
 
   // Layout controls
   const [logoSize, setLogoSize] = useState(DEFAULT_CONFIG.logoSize);
@@ -195,6 +204,12 @@ export default function LandingPage() {
   // Animation sequence states
   const [animationStage, setAnimationStage] = useState<'initial' | 'stars' | 'logo'>('initial');
 
+  // Debug logging for animation stage changes
+  useEffect(() => {
+    console.log('[🎬ANIMATION] Animation stage changed to:', animationStage);
+    console.log('[🎬ANIMATION] Logo should be:', animationStage === 'logo' ? 'VISIBLE (opacity: 1)' : 'HIDDEN (opacity: 0)');
+  }, [animationStage]);
+
   const [soundLabelFont, setSoundLabelFont] = useState(DEFAULT_CONFIG.soundLabelFont);
   const [soundLabelSize, setSoundLabelSize] = useState(DEFAULT_CONFIG.soundLabelSize);
   const [soundLabelColor, setSoundLabelColor] = useState(DEFAULT_CONFIG.soundLabelColor);
@@ -232,6 +247,11 @@ export default function LandingPage() {
   const [descriptionCardDarkness, setDescriptionCardDarkness] = useState(DEFAULT_CONFIG.descriptionCardDarkness);
   const [descriptionCardBorder, setDescriptionCardBorder] = useState(DEFAULT_CONFIG.descriptionCardBorder);
 
+  // Audio Consent Lightbox controls
+  const [logoFadeDuration, setLogoFadeDuration] = useState(DEFAULT_CONFIG.logoFadeDuration);
+  const [lightboxBackdropDarkness, setLightboxBackdropDarkness] = useState(DEFAULT_CONFIG.lightboxBackdropDarkness);
+  const [audioToggleSize, setAudioToggleSize] = useState(DEFAULT_CONFIG.audioToggleSize);
+
   // Scroll-triggered animation state
   const [hasScrolled, setHasScrolled] = useState(false);
 
@@ -239,14 +259,24 @@ export default function LandingPage() {
 
   // Check for audio consent on mount
   useEffect(() => {
+    console.log('[🎬ANIMATION] === Component Mounted ===');
+    console.log('[🎬ANIMATION] Initial showAudioConsent:', showAudioConsent);
+    console.log('[🎬ANIMATION] Initial animationStage:', animationStage);
+
     try {
       const consent = localStorage.getItem(AUDIO_CONSENT_KEY);
       if (!consent) {
         // First-time visitor - show consent lightbox
+        console.log('[🎬ANIMATION] First-time visitor - showing consent lightbox');
         setShowAudioConsent(true);
+        // Keep animationStage at 'initial' (everything hidden)
       } else {
-        // User has already given consent
+        // Return visitor - has already given consent
         const consentData = JSON.parse(consent);
+        console.log('[🎵ANIMATION] Return visitor - skipping lightbox, going straight to logo stage');
+        // Skip all animations and show everything immediately
+        setAnimationStage('logo');
+
         if (consentData.audioEnabled) {
           // Don't auto-play - just remember preference
           // Audio will only start when user clicks speaker button
@@ -267,6 +297,12 @@ export default function LandingPage() {
           const triggerData = JSON.parse(trigger);
           if (triggerData.action === 'show-audio-consent') {
             setShowAudioConsent(true);
+            setAnimationStage('initial'); // Reset to initial dark state
+            // Clear the trigger so it doesn't fire again
+            localStorage.removeItem('mek-debug-trigger');
+          } else if (triggerData.action === 'hide-audio-consent') {
+            setShowAudioConsent(false);
+            setAnimationStage('logo'); // Show everything
             // Clear the trigger so it doesn't fire again
             localStorage.removeItem('mek-debug-trigger');
           }
@@ -288,8 +324,14 @@ export default function LandingPage() {
 
     const handlePostMessage = (event: MessageEvent) => {
       try {
-        if (event.data?.type === 'mek-debug-trigger' && event.data?.action === 'show-audio-consent') {
-          setShowAudioConsent(true);
+        if (event.data?.type === 'mek-debug-trigger') {
+          if (event.data?.action === 'show-audio-consent') {
+            setShowAudioConsent(true);
+            setAnimationStage('initial'); // Reset to initial dark state
+          } else if (event.data?.action === 'hide-audio-consent') {
+            setShowAudioConsent(false);
+            setAnimationStage('logo'); // Show everything
+          }
         }
       } catch (error) {
         console.error('[LANDING] Error in audio consent handlePostMessage:', error);
@@ -350,6 +392,8 @@ export default function LandingPage() {
           setBgStarCount(config.bgStarCount ?? DEFAULT_CONFIG.bgStarCount);
           setBgStarMinBrightness(config.bgStarMinBrightness ?? DEFAULT_CONFIG.bgStarMinBrightness);
           setBgStarMaxBrightness(config.bgStarMaxBrightness ?? DEFAULT_CONFIG.bgStarMaxBrightness);
+          setStarFadePosition(config.starFadePosition ?? DEFAULT_CONFIG.starFadePosition);
+          setStarFadeFeatherSize(config.starFadeFeatherSize ?? DEFAULT_CONFIG.starFadeFeatherSize);
           setLogoSize(config.logoSize ?? DEFAULT_CONFIG.logoSize);
           setLogoYPosition(config.logoYPosition ?? DEFAULT_CONFIG.logoYPosition);
           setSelectedFont(config.selectedFont ?? DEFAULT_CONFIG.selectedFont);
@@ -395,6 +439,9 @@ export default function LandingPage() {
           setDescriptionCardBlur(config.descriptionCardBlur ?? DEFAULT_CONFIG.descriptionCardBlur);
           setDescriptionCardDarkness(config.descriptionCardDarkness ?? DEFAULT_CONFIG.descriptionCardDarkness);
           setDescriptionCardBorder(config.descriptionCardBorder ?? DEFAULT_CONFIG.descriptionCardBorder);
+          setLogoFadeDuration(config.logoFadeDuration ?? DEFAULT_CONFIG.logoFadeDuration);
+          setLightboxBackdropDarkness(config.lightboxBackdropDarkness ?? DEFAULT_CONFIG.lightboxBackdropDarkness);
+          setAudioToggleSize(config.audioToggleSize ?? DEFAULT_CONFIG.audioToggleSize);
           // Note: phaseImage1-4 not loaded here - PhaseCarousel reads directly from localStorage
         } catch (e) {
           console.error('Failed to load debug config:', e);
@@ -543,7 +590,9 @@ export default function LandingPage() {
 
   // Handle audio consent proceeding
   const handleConsentProceed = (audioEnabled: boolean) => {
+    console.log('[🎵ANIMATION] ==========================================');
     console.log('[🎵ANIMATION] Consent proceed clicked, audioEnabled:', audioEnabled);
+    console.log('[🎵ANIMATION] Current animationStage:', animationStage);
 
     // Store consent in localStorage
     localStorage.setItem(AUDIO_CONSENT_KEY, JSON.stringify({ audioEnabled, timestamp: Date.now() }));
@@ -556,16 +605,19 @@ export default function LandingPage() {
 
     // Hide the consent lightbox with fade-out
     setShowAudioConsent(false);
-    console.log('[🎵ANIMATION] Lightbox hidden, starting animation sequence');
+    console.log('[🎵ANIMATION] Lightbox hidden (showAudioConsent = false)');
+    console.log('[🎵ANIMATION] Starting animation sequence in 500ms...');
 
     // Start animation sequence: stars fade in after lightbox fades
     setTimeout(() => {
-      console.log('[🎵ANIMATION] Stage 2: Stars fade in and start moving');
+      console.log('[🎵ANIMATION] ==========================================');
+      console.log('[🎵ANIMATION] Stage 2: Setting to "stars" - Stars fade in and start moving');
       setAnimationStage('stars');
 
       // Then logo fades in after stars are visible
       setTimeout(() => {
-        console.log('[🎵ANIMATION] Stage 3: Logo fade in with zoom');
+        console.log('[🎵ANIMATION] ==========================================');
+        console.log('[🎵ANIMATION] Stage 3: Setting to "logo" - Logo fade in with zoom');
         setAnimationStage('logo');
       }, 1000); // 1 second after stars start fading in
     }, 500); // 500ms for lightbox fade-out
@@ -639,12 +691,18 @@ export default function LandingPage() {
 
     // Create distant background star field (static/very slow)
     const backgroundStars: BackgroundStar[] = [];
+    // Calculate fade boundaries (only spawn stars above fade end)
+    const fadeStartY = (starFadePosition / 100) * canvas.height;
+    const fadeEndY = fadeStartY + starFadeFeatherSize;
+
     for (let i = 0; i < bgStarCount; i++) {
       const baseSize = 0.5;
       const sizeVariation = (bgStarSizeRandomness / 100) * baseSize;
+      // Only spawn stars in the visible region (above fade end)
+      const starY = Math.random() * fadeEndY;
       backgroundStars.push({
         x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
+        y: starY,
         brightness: Math.random() * (bgStarMaxBrightness - bgStarMinBrightness) + bgStarMinBrightness,
         baseSize: baseSize + (Math.random() * 2 - 1) * sizeVariation, // Apply size randomness
         twinkleOffset: Math.random() * Math.PI * 2,
@@ -737,20 +795,37 @@ export default function LandingPage() {
       // Clear with transparency to show background image
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw distant background stars (very slow drift)
+      // Draw distant background stars (very slow drift) with gradient fade
       const time = Date.now() * 0.001; // Convert to seconds
+      const fadeStartY = (starFadePosition / 100) * canvas.height;
+      const fadeEndY = fadeStartY + starFadeFeatherSize;
+
       backgroundStars.forEach((star) => {
+        // Skip stars below fade end (performance optimization)
+        if (star.y > fadeEndY) return;
+
+        // Calculate fade multiplier based on Y position
+        let fadeMultiplier = 1;
+        if (star.y > fadeStartY) {
+          // Star is in fade zone - calculate gradient
+          const fadeProgress = (star.y - fadeStartY) / starFadeFeatherSize;
+          fadeMultiplier = 1 - fadeProgress; // 1 at fadeStart, 0 at fadeEnd
+        }
+
         // Calculate twinkle effect using sine wave
         // twinkleAmount controls amplitude (0-100%), twinkleSpeed controls frequency
         const twinkleAmplitude = bgStarTwinkleAmount / 100; // Convert to 0-1 range
         const effectiveSpeed = bgStarTwinkleSpeed * star.twinkleSpeedMultiplier;
         const twinkle = Math.sin(time * effectiveSpeed + star.twinkleOffset) * twinkleAmplitude;
-        const opacity = star.brightness * (1 + twinkle); // Brightness varies by ±twinkleAmount
+        const opacity = star.brightness * (1 + twinkle) * fadeMultiplier; // Apply fade to opacity
 
-        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.baseSize, 0, Math.PI * 2);
-        ctx.fill();
+        // Only render if visible
+        if (opacity > 0.01) {
+          ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.baseSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
       });
 
       const centerX = canvas.width / 2;
@@ -909,6 +984,7 @@ export default function LandingPage() {
     starScale2, starSpeed2, starFrequency2, lineLength2, twinkleAmount2, twinkleSpeed2, twinkleSpeedRandomness2, sizeRandomness2,
     starScale3, starSpeed3, starFrequency3, lineLength3, spawnDelay3, twinkleAmount3, twinkleSpeed3, twinkleSpeedRandomness3, sizeRandomness3,
     bgStarTwinkleAmount, bgStarTwinkleSpeed, bgStarTwinkleSpeedRandomness, bgStarSizeRandomness, bgStarCount, bgStarMinBrightness, bgStarMaxBrightness,
+    starFadePosition, starFadeFeatherSize,
     motionBlurEnabled, blurIntensity, motionBlurEnabled2, blurIntensity2
   ]);
 
@@ -926,10 +1002,10 @@ export default function LandingPage() {
       }}
     >
       {/* Dark overlay when lightbox is visible */}
-      {showAudioConsent && (
+      {showAudioConsent && lightboxBackdropDarkness > 0 && (
         <div
           className="fixed inset-0 bg-black z-[9998] transition-opacity duration-500"
-          style={{ opacity: 0.8 }}
+          style={{ opacity: lightboxBackdropDarkness / 100 }}
         />
       )}
 
@@ -972,21 +1048,36 @@ export default function LandingPage() {
         <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full">
           {/* Logo - Hidden initially, fades in with zoom during logo stage */}
           <div
-            className="relative max-w-[80vw] max-h-[80vw] transition-all duration-1000 ease-out"
+            className="relative max-w-[80vw] max-h-[80vw]"
             style={{
               width: `${logoSize}px`,
               height: `${logoSize}px`,
               opacity: animationStage === 'logo' ? 1 : 0,
               transform: animationStage === 'logo' ? 'scale(1)' : 'scale(0.95)',
+              transition: animationStage === 'logo' ? `opacity ${logoFadeDuration}ms ease-out, transform ${logoFadeDuration}ms ease-out` : 'none',
+              visibility: animationStage === 'initial' || animationStage === 'stars' ? 'hidden' : 'visible',
+            }}
+            onTransitionStart={() => {
+              if (animationStage === 'logo') {
+                console.log('[🎬LOGO] Transition started - fading in logo');
+              }
+            }}
+            onTransitionEnd={() => {
+              if (animationStage === 'logo') {
+                console.log('[🎬LOGO] Transition ended - logo fully visible');
+              }
             }}
           >
             <video
-              src="/random-images/logo webm GOLD 1.webm"
+              src="/random-images/Everydays_00000.webm"
               autoPlay
               loop
               muted
               playsInline
               className="w-full h-full object-contain"
+              style={{
+                opacity: 'inherit' // Video inherits opacity from parent
+              }}
             />
           </div>
 
@@ -1004,6 +1095,22 @@ export default function LandingPage() {
             >
               {descriptionText}
             </p>
+          </div>
+
+          {/* Join Beta Button - Fill Text Style */}
+          <div
+            className="mt-8 sm:mt-10 transition-all duration-700 ease-out"
+            style={{
+              opacity: hasScrolled ? 1 : 0,
+              transform: hasScrolled ? 'translateY(0)' : 'translateY(20px)',
+              transitionDelay: '0.3s',
+            }}
+            onClick={() => {
+              // TODO: Implement beta signup functionality
+              console.log('[🎮BETA] Join Beta clicked');
+            }}
+          >
+            <FillTextButton text="join beta" />
           </div>
 
           {/* Speaker Button - Above Phase Timeline */}
@@ -1075,6 +1182,8 @@ export default function LandingPage() {
       <AudioConsentLightbox
         onProceed={handleConsentProceed}
         isVisible={showAudioConsent}
+        backdropDarkness={lightboxBackdropDarkness}
+        toggleSize={audioToggleSize}
       />
 
     </div>

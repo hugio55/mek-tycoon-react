@@ -120,6 +120,7 @@ import type * as importFullMekCollection from "../importFullMekCollection.js";
 import type * as initializeCache from "../initializeCache.js";
 import type * as investigateFalseClaim from "../investigateFalseClaim.js";
 import type * as investments from "../investments.js";
+import type * as landingDebugSettings from "../landingDebugSettings.js";
 import type * as leaderboard from "../leaderboard.js";
 import type * as leaderboardDiagnostics from "../leaderboardDiagnostics.js";
 import type * as leaderboardOptimized from "../leaderboardOptimized.js";
@@ -350,6 +351,7 @@ declare const fullApi: ApiFromModules<{
   initializeCache: typeof initializeCache;
   investigateFalseClaim: typeof investigateFalseClaim;
   investments: typeof investments;
+  landingDebugSettings: typeof landingDebugSettings;
   leaderboard: typeof leaderboard;
   leaderboardDiagnostics: typeof leaderboardDiagnostics;
   leaderboardOptimized: typeof leaderboardOptimized;
