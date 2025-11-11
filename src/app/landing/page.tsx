@@ -282,6 +282,12 @@ export default function LandingPage() {
           const triggerData = JSON.parse(trigger);
           if (triggerData.action === 'show-audio-consent') {
             setShowAudioConsent(true);
+            setAnimationStage('initial'); // Reset to initial dark state
+            // Clear the trigger so it doesn't fire again
+            localStorage.removeItem('mek-debug-trigger');
+          } else if (triggerData.action === 'hide-audio-consent') {
+            setShowAudioConsent(false);
+            setAnimationStage('logo'); // Show everything
             // Clear the trigger so it doesn't fire again
             localStorage.removeItem('mek-debug-trigger');
           }
@@ -303,8 +309,14 @@ export default function LandingPage() {
 
     const handlePostMessage = (event: MessageEvent) => {
       try {
-        if (event.data?.type === 'mek-debug-trigger' && event.data?.action === 'show-audio-consent') {
-          setShowAudioConsent(true);
+        if (event.data?.type === 'mek-debug-trigger') {
+          if (event.data?.action === 'show-audio-consent') {
+            setShowAudioConsent(true);
+            setAnimationStage('initial'); // Reset to initial dark state
+          } else if (event.data?.action === 'hide-audio-consent') {
+            setShowAudioConsent(false);
+            setAnimationStage('logo'); // Show everything
+          }
         }
       } catch (error) {
         console.error('[LANDING] Error in audio consent handlePostMessage:', error);
