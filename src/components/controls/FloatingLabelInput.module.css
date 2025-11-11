@@ -1,0 +1,38 @@
+/* Bar animation - expanding from center */
+.bar::before,
+.bar::after {
+  content: '';
+  height: 2px;
+  width: 0;
+  bottom: 1px;
+  position: absolute;
+  background: #5264AE;
+  transition: 0.2s ease all;
+}
+
+.bar::before {
+  left: 50%;
+}
+
+.bar::after {
+  right: 50%;
+}
+
+.input:focus ~ .bar::before,
+.input:focus ~ .bar::after {
+  width: 50%;
+}
+
+/* Highlight flash animation */
+@keyframes inputHighlighter {
+  from {
+    background: #5264AE;
+  }
+  to {
+    background: transparent;
+  }
+}
+
+.input:focus ~ .highlight {
+  animation: inputHighlighter 0.3s ease;
+}
