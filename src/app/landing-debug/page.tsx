@@ -94,6 +94,8 @@ const DEFAULT_CONFIG = {
   logoFadeDuration: 1000,
   lightboxBackdropDarkness: 95,
   audioToggleSize: 96,
+  // Card collapse states (key = card ID, value = collapsed boolean)
+  collapsedCards: {} as Record<string, boolean>,
 };
 
 type ConfigType = typeof DEFAULT_CONFIG;
@@ -324,6 +326,16 @@ export default function LandingDebugPage() {
     }
   };
 
+  const toggleCardCollapse = (cardId: string) => {
+    setConfig(prev => ({
+      ...prev,
+      collapsedCards: {
+        ...prev.collapsedCards,
+        [cardId]: !prev.collapsedCards[cardId]
+      }
+    }));
+  };
+
   const resetToDefaults = async () => {
     if (!confirm('Reset all settings to defaults? This cannot be undone.')) return;
 
@@ -421,6 +433,49 @@ export default function LandingDebugPage() {
     alert(result.message);
   };
 
+  // CollapsibleCard wrapper component
+  const CollapsibleCard = ({
+    id,
+    title,
+    children,
+    borderColor = 'border-gray-700',
+    titleColor = 'text-gray-100',
+    borderBottomColor = 'border-gray-700'
+  }: {
+    id: string;
+    title: string;
+    children: React.ReactNode;
+    borderColor?: string;
+    titleColor?: string;
+    borderBottomColor?: string;
+  }) => {
+    const isCollapsed = config.collapsedCards[id] || false;
+
+    return (
+      <div className={`bg-gray-800 border ${borderColor} rounded p-3`}>
+        <div
+          className="flex items-center justify-between cursor-pointer select-none"
+          onClick={() => toggleCardCollapse(id)}
+        >
+          <h2 className={`text-sm font-semibold ${titleColor} pb-1 border-b ${borderBottomColor} flex-grow`}>
+            {title}
+          </h2>
+          <button
+            className="ml-2 text-gray-400 hover:text-gray-200 transition-colors"
+            aria-label={isCollapsed ? 'Expand' : 'Collapse'}
+          >
+            {isCollapsed ? '▼' : '▲'}
+          </button>
+        </div>
+        {!isCollapsed && (
+          <div className="mt-2">
+            {children}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className={`min-h-screen ${viewMode === 'split-view' ? 'flex' : 'bg-gray-900 p-3'}`}>
       <div className={viewMode === 'split-view' ? 'w-1/2 bg-gray-800 p-3 overflow-y-auto border-r border-gray-700' : 'max-w-5xl mx-auto'}>
@@ -495,11 +550,7 @@ export default function LandingDebugPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
 
           {/* Star Controls Section - Layer 1 */}
-          <div className="bg-gray-800 border border-gray-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
-              Layer 1 Star Field
-            </h2>
-
+          <CollapsibleCard id="layer1-starfield" title="Layer 1 Star Field">
             {/* Star Scale */}
             <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">
@@ -556,7 +607,7 @@ export default function LandingDebugPage() {
                 {config.starFrequency} stars
               </div>
             </div>
-          </div>
+          </CollapsibleCard>
 
           {/* Layer 1 Twinkling Controls */}
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
@@ -1148,146 +1199,6 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.bgYPosition}%
-              </div>
-            </div>
-          </div>
-
-          {/* Background Stars Controls */}
-          <div className="bg-gray-800 border border-blue-500 rounded p-3">
-            <h2 className="text-sm font-semibold text-blue-400 mb-2 pb-1 border-b border-blue-700">
-              Background Stars
-            </h2>
-
-            {/* Star Count */}
-            <div className="mb-2">
-              <label className="block text-xs text-blue-300 mb-1">
-                Star Count
-              </label>
-              <input
-                type="range"
-                min="100"
-                max="2000"
-                step="50"
-                value={config.bgStarCount}
-                onChange={(e) => updateConfig('bgStarCount', parseInt(e.target.value))}
-                className="w-full"
-              />
-              <div className="text-xs text-blue-400 text-center mt-0.5">
-                {config.bgStarCount} stars
-              </div>
-            </div>
-
-            {/* Min Brightness */}
-            <div className="mb-2">
-              <label className="block text-xs text-blue-300 mb-1">
-                Min Brightness
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                value={config.bgStarMinBrightness}
-                onChange={(e) => updateConfig('bgStarMinBrightness', parseFloat(e.target.value))}
-                className="w-full"
-              />
-              <div className="text-xs text-blue-400 text-center mt-0.5">
-                {config.bgStarMinBrightness.toFixed(2)}
-              </div>
-            </div>
-
-            {/* Max Brightness */}
-            <div className="mb-2">
-              <label className="block text-xs text-blue-300 mb-1">
-                Max Brightness
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                value={config.bgStarMaxBrightness}
-                onChange={(e) => updateConfig('bgStarMaxBrightness', parseFloat(e.target.value))}
-                className="w-full"
-              />
-              <div className="text-xs text-blue-400 text-center mt-0.5">
-                {config.bgStarMaxBrightness.toFixed(2)}
-              </div>
-            </div>
-
-            {/* Twinkle Speed */}
-            <div className="mb-2">
-              <label className="block text-xs text-blue-300 mb-1">
-                Twinkle Speed
-              </label>
-              <input
-                type="range"
-                min="0.1"
-                max="5"
-                step="0.1"
-                value={config.bgStarTwinkleSpeed}
-                onChange={(e) => updateConfig('bgStarTwinkleSpeed', parseFloat(e.target.value))}
-                className="w-full"
-              />
-              <div className="text-xs text-blue-400 text-center mt-0.5">
-                {config.bgStarTwinkleSpeed.toFixed(1)}x
-              </div>
-            </div>
-
-            {/* Twinkle Speed Randomness */}
-            <div className="mb-2">
-              <label className="block text-xs text-blue-300 mb-1">
-                Twinkle Speed Randomness
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="5"
-                value={config.bgStarTwinkleSpeedRandomness}
-                onChange={(e) => updateConfig('bgStarTwinkleSpeedRandomness', parseInt(e.target.value))}
-                className="w-full"
-              />
-              <div className="text-xs text-blue-400 text-center mt-0.5">
-                {config.bgStarTwinkleSpeedRandomness}%
-              </div>
-            </div>
-
-            {/* Twinkle Amount */}
-            <div className="mb-2">
-              <label className="block text-xs text-blue-300 mb-1">
-                Twinkle Amount
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="5"
-                value={config.bgStarTwinkleAmount}
-                onChange={(e) => updateConfig('bgStarTwinkleAmount', parseInt(e.target.value))}
-                className="w-full"
-              />
-              <div className="text-xs text-blue-400 text-center mt-0.5">
-                {config.bgStarTwinkleAmount}%
-              </div>
-            </div>
-
-            {/* Size Randomness */}
-            <div className="mb-2">
-              <label className="block text-xs text-blue-300 mb-1">
-                Size Randomness
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="5"
-                value={config.bgStarSizeRandomness}
-                onChange={(e) => updateConfig('bgStarSizeRandomness', parseInt(e.target.value))}
-                className="w-full"
-              />
-              <div className="text-xs text-blue-400 text-center mt-0.5">
-                {config.bgStarSizeRandomness}%
               </div>
             </div>
           </div>
