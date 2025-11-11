@@ -1162,38 +1162,39 @@ export default function LandingPage() {
               }
             }}
           >
-            {useVideoLogo ? (
-              <video
-                src="/random-images/Everydays_00000.webm"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-contain"
-                style={{
-                  opacity: 'inherit',
-                  transform: 'translate3d(0, 0, 0)',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  WebkitTransform: 'translate3d(0, 0, 0)',
-                  imageRendering: 'crisp-edges',
-                }}
-              />
-            ) : (
-              <img
-                src="/logo-big.png"
-                alt="Mek Tycoon Logo"
-                className="w-full h-full object-contain"
-                style={{
-                  opacity: 'inherit',
-                  transform: 'translate3d(0, 0, 0)',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  WebkitTransform: 'translate3d(0, 0, 0)',
-                  imageRendering: 'crisp-edges',
-                }}
-              />
-            )}
+            <img
+              src="/logo-big.png"
+              alt="Mek Tycoon Logo"
+              className="w-full h-full object-contain absolute inset-0"
+              style={{
+                opacity: useVideoLogo ? 0 : 'inherit',
+                transform: 'translate3d(0, 0, 0)',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                WebkitTransform: 'translate3d(0, 0, 0)',
+                imageRendering: 'crisp-edges',
+                transition: 'opacity 0ms',
+                pointerEvents: 'none',
+              }}
+            />
+            <video
+              src="/random-images/Everydays_00000.webm"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-contain absolute inset-0"
+              style={{
+                opacity: useVideoLogo ? 'inherit' : 0,
+                transform: 'translate3d(0, 0, 0)',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                WebkitTransform: 'translate3d(0, 0, 0)',
+                imageRendering: 'crisp-edges',
+                transition: 'opacity 0ms',
+                pointerEvents: 'none',
+              }}
+            />
           </div>
 
           {/* Description - Scroll-triggered fade-in animation */}
