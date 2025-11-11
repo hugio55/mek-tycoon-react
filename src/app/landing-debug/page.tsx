@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
-import AudioConsentLightbox from '@/components/AudioConsentLightbox';
 
 // Debug control configuration storage key (for backward compatibility and migration)
 const STORAGE_KEY = 'mek-landing-debug-config';
@@ -107,8 +106,27 @@ export default function LandingDebugPage() {
     locked: false,
   });
 
-  // Audio Consent Lightbox Control
+  // Audio Consent Lightbox Control (for landing page)
   const [audioConsentVisible, setAudioConsentVisible] = useState(false);
+
+  // Function to trigger audio consent lightbox on landing page
+  const triggerAudioConsentOnLandingPage = () => {
+    setAudioConsentVisible(!audioConsentVisible);
+
+    // Dispatch custom event for landing page to listen to
+    window.dispatchEvent(new CustomEvent('mek-toggle-audio-consent', {
+      detail: { shouldShow: !audioConsentVisible }
+    }));
+
+    // Also notify iframe if in split-view
+    const iframe = document.querySelector('iframe[title="Landing Page Preview"]') as HTMLIFrameElement;
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage({
+        type: 'mek-toggle-audio-consent',
+        shouldShow: !audioConsentVisible
+      }, '*');
+    }
+  };
 
   // Available fonts for testing
   const fonts = [
@@ -426,14 +444,14 @@ export default function LandingDebugPage() {
               Reset to Defaults
             </button>
             <button
-              onClick={() => setAudioConsentVisible(!audioConsentVisible)}
+              onClick={triggerAudioConsentOnLandingPage}
               className={`px-2 py-1 rounded text-xs ${
                 audioConsentVisible
                   ? 'bg-green-900/50 border border-green-700 text-green-200'
                   : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
               }`}
             >
-              {audioConsentVisible ? 'Hide Audio Consent' : 'Show Audio Consent'}
+              {audioConsentVisible ? 'Hide Landing Audio Consent' : 'Show Landing Audio Consent'}
             </button>
           </div>
         </div>
@@ -1832,14 +1850,6 @@ export default function LandingDebugPage() {
         </div>
       )}
 
-      {/* Audio Consent Lightbox */}
-      <AudioConsentLightbox
-        isVisible={audioConsentVisible}
-        onProceed={(audioEnabled) => {
-          console.log('[DEBUG] Audio consent proceeded with audioEnabled:', audioEnabled);
-          setAudioConsentVisible(false);
-        }}
-      />
     </div>
   );
 }
