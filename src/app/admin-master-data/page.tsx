@@ -48,10 +48,7 @@ import GeneratingLoader from '@/components/loaders/GeneratingLoader';
 import TextSwitch from '@/components/controls/TextSwitch';
 import HoverTooltip from '@/components/controls/HoverTooltip';
 import FillTextButton from '@/components/controls/FillTextButton';
-<<<<<<< HEAD
 import FloatingLabelInput from '@/components/controls/FloatingLabelInput';
-=======
->>>>>>> detached-work-2025-11-10-join-beta
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
@@ -3425,11 +3422,6 @@ export default function AdminMasterDataPage() {
                         Button
                       </span>
                     </div>
-<<<<<<< HEAD
-                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
-                      <DiscordButton />
-                    </div>
-=======
 
                     {/* Component Preview */}
                     <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
@@ -3437,7 +3429,6 @@ export default function AdminMasterDataPage() {
                     </div>
 
                     {/* Component Info */}
->>>>>>> detached-work-2025-11-10-join-beta
                     <div className="text-xs text-zinc-400 space-y-1">
                       <div><span className="text-zinc-500">Source:</span> External React/styled-components</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
@@ -3456,11 +3447,6 @@ export default function AdminMasterDataPage() {
                         Loader
                       </span>
                     </div>
-<<<<<<< HEAD
-                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
-                      <GeneratingLoader />
-                    </div>
-=======
 
                     {/* Component Preview */}
                     <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
@@ -3468,7 +3454,6 @@ export default function AdminMasterDataPage() {
                     </div>
 
                     {/* Component Info */}
->>>>>>> detached-work-2025-11-10-join-beta
                     <div className="text-xs text-zinc-400 space-y-1">
                       <div><span className="text-zinc-500">Source:</span> External styled-components</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS Modules</div>
@@ -3487,11 +3472,6 @@ export default function AdminMasterDataPage() {
                         Control
                       </span>
                     </div>
-<<<<<<< HEAD
-                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
-                      <TextSwitch />
-                    </div>
-=======
 
                     {/* Component Preview */}
                     <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
@@ -3499,7 +3479,6 @@ export default function AdminMasterDataPage() {
                     </div>
 
                     {/* Component Info */}
->>>>>>> detached-work-2025-11-10-join-beta
                     <div className="text-xs text-zinc-400 space-y-1">
                       <div><span className="text-zinc-500">Source:</span> External styled-components</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
@@ -3518,11 +3497,6 @@ export default function AdminMasterDataPage() {
                         Control
                       </span>
                     </div>
-<<<<<<< HEAD
-                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
-                      <HoverTooltip />
-                    </div>
-=======
 
                     {/* Component Preview */}
                     <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
@@ -3530,7 +3504,6 @@ export default function AdminMasterDataPage() {
                     </div>
 
                     {/* Component Info */}
->>>>>>> detached-work-2025-11-10-join-beta
                     <div className="text-xs text-zinc-400 space-y-1">
                       <div><span className="text-zinc-500">Source:</span> External styled-components</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
@@ -3549,11 +3522,6 @@ export default function AdminMasterDataPage() {
                         Button
                       </span>
                     </div>
-<<<<<<< HEAD
-                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
-                      <FillTextButton />
-                    </div>
-=======
 
                     {/* Component Preview */}
                     <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
@@ -3561,7 +3529,6 @@ export default function AdminMasterDataPage() {
                     </div>
 
                     {/* Component Info */}
->>>>>>> detached-work-2025-11-10-join-beta
                     <div className="text-xs text-zinc-400 space-y-1">
                       <div><span className="text-zinc-500">Source:</span> External styled-components</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind + inline styles</div>
@@ -3570,7 +3537,6 @@ export default function AdminMasterDataPage() {
                     </div>
                   </div>
 
-<<<<<<< HEAD
                   {/* Floating Label Input */}
                   <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
                     <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
@@ -3581,9 +3547,13 @@ export default function AdminMasterDataPage() {
                         Input
                       </span>
                     </div>
+
+                    {/* Component Preview */}
                     <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
                       <FloatingLabelInput />
                     </div>
+
+                    {/* Component Info */}
                     <div className="text-xs text-zinc-400 space-y-1">
                       <div><span className="text-zinc-500">Source:</span> External styled-components</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind + CSS Modules</div>
@@ -3592,8 +3562,6 @@ export default function AdminMasterDataPage() {
                     </div>
                   </div>
 
-=======
->>>>>>> detached-work-2025-11-10-join-beta
                   {/* Pro Mode Toggle */}
                   <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
                     <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
