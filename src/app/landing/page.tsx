@@ -1154,7 +1154,7 @@ export default function LandingPage() {
               height: `${logoSize}px`,
               opacity: animationStage === 'logo' ? 1 : 0,
               transform: animationStage === 'logo' ? 'translate3d(0, 0, 0) scale3d(1, 1, 1)' : 'translate3d(0, 0, 0) scale3d(0.92, 0.92, 1)',
-              transition: animationStage === 'logo' ? `opacity ${logoFadeDuration}ms ease-out, transform ${logoFadeDuration}ms linear` : 'none',
+              transition: animationStage === 'logo' ? `opacity ${logoFadeDuration}ms ease-out, transform ${logoFadeDuration}ms cubic-bezier(0.25, 0, 0.3, 1)` : 'none',
               visibility: animationStage === 'initial' || animationStage === 'stars' ? 'hidden' : 'visible',
               willChange: animationStage === 'stars' ? 'transform, opacity' : 'auto',
               backfaceVisibility: 'hidden',

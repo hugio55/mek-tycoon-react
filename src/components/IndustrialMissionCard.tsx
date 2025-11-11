@@ -223,7 +223,7 @@ export default function IndustrialMissionCard({
         />
         
         {/* Header with Industrial Grunge Style */}
-        <div className="relative p-4 overflow-hidden" style={{
+        <div className="relative p-4 overflow-hidden flex flex-col" style={{
           background: `
             repeating-linear-gradient(
               45deg,
