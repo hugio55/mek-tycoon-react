@@ -43,6 +43,8 @@ const DEFAULT_CONFIG = {
   bgStarTwinkleSpeedRandomness: 50,
   bgStarTwinkleAmount: 30,
   bgStarSizeRandomness: 50,
+  starFadePosition: 60,
+  starFadeFeatherSize: 200,
   logoSize: 600,
   logoYPosition: 0, // Now percentage offset from center (-50 to +50)
   selectedFont: 'Orbitron',
@@ -1124,6 +1126,44 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-orange-400 text-center mt-0.5">
                 {config.bgStarSizeRandomness}%
+              </div>
+            </div>
+
+            {/* Star Fade Position */}
+            <div className="mb-2">
+              <label className="block text-xs text-orange-300 mb-1">
+                Star Fade Position
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value={config.starFadePosition}
+                onChange={(e) => updateConfig('starFadePosition', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-orange-400 text-center mt-0.5">
+                {config.starFadePosition}%
+              </div>
+            </div>
+
+            {/* Star Fade Feather Size */}
+            <div className="mb-2">
+              <label className="block text-xs text-orange-300 mb-1">
+                Star Fade Feather Size
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="500"
+                step="10"
+                value={config.starFadeFeatherSize}
+                onChange={(e) => updateConfig('starFadeFeatherSize', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-orange-400 text-center mt-0.5">
+                {config.starFadeFeatherSize}px
               </div>
             </div>
           </div>
