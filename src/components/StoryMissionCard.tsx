@@ -1945,7 +1945,7 @@ export default function StoryMissionCard({
               alt={mekName}
               width={2000}
               height={2000}
-              className="w-full h-full object-contain animate-in fade-in zoom-in-95 duration-300"
+              className="w-full h-full object-contain animate-in fade-in zoom-in-95 duration-300 [animation-fill-mode:forwards]"
               style={{ imageRendering: 'crisp-edges' }}
             />
 

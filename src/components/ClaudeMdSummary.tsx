@@ -9,10 +9,19 @@ interface Section {
   category: 'critical' | 'protection' | 'config' | 'general';
 }
 
+interface Recommendation {
+  sectionTitle: string;
+  reason: 'resolved' | 'verbose' | 'duplicate' | 'automated' | 'historical';
+  shortTitle: string;
+  reasoning: string;
+  confidence: 'high' | 'medium' | 'low';
+}
+
 export default function ClaudeMdSummary() {
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedRecommendations, setExpandedRecommendations] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadClaudeMd();
@@ -102,6 +111,147 @@ export default function ClaudeMdSummary() {
     }
   }
 
+  function generateRecommendations(sections: Section[]): Recommendation[] {
+    const recommendations: Recommendation[] = [];
+    const sectionTitles = sections.map(s => s.title.toLowerCase());
+
+    // Check for overly verbose historical incidents
+    if (sectionTitles.some(t => t.includes('real incident') && t.includes('port conflict'))) {
+      recommendations.push({
+        sectionTitle: 'REAL INCIDENT: PORT CONFLICT THAT KILLED ALL SESSIONS',
+        reason: 'historical',
+        shortTitle: 'Port Conflict Incident (Oct 24, 2025)',
+        reasoning: 'This historical incident from October 2025 is well-documented and the lesson has been learned. The key takeaway (never use taskkill /IM node.exe) is already covered in the "Session Protection" section. The lengthy incident report could be condensed to a brief warning or removed entirely.',
+        confidence: 'high'
+      });
+    }
+
+    if (sectionTitles.some(t => t.includes('git checkout') && t.includes('destroys uncommitted work'))) {
+      recommendations.push({
+        sectionTitle: 'GIT CHECKOUT DESTROYS UNCOMMITTED WORK',
+        reason: 'verbose',
+        shortTitle: 'Git Checkout Protection Rules',
+        reasoning: 'While the protection is important, this section is extremely verbose with multiple repetitions of the same warning. The core rule ("never use git checkout without asking") could be stated once with a brief example, rather than the current lengthy breakdown with multiple subsections.',
+        confidence: 'medium'
+      });
+    }
+
+    if (sectionTitles.some(t => t.includes('branch switching protection'))) {
+      recommendations.push({
+        sectionTitle: 'BRANCH SWITCHING PROTECTION',
+        reason: 'verbose',
+        shortTitle: 'Branch Switching Rules',
+        reasoning: 'This section contains extensive checklists and multiple confirmation requirements. While branch protection is important, the current implementation is very ceremonial. Could be condensed to: "Always check branch before work, ask user before switching, commit work first."',
+        confidence: 'medium'
+      });
+    }
+
+    if (sectionTitles.some(t => t.includes('unauthorized production deployment'))) {
+      recommendations.push({
+        sectionTitle: 'Real Incident - Unauthorized Production Deployment',
+        reason: 'historical',
+        shortTitle: 'Production Deployment Incident (Nov 4, 2025)',
+        reasoning: 'This incident report is very detailed but the lesson is already captured in the "Production Deployment Protection" section above it. The incident details could be removed or moved to a separate "historical incidents" appendix.',
+        confidence: 'high'
+      });
+    }
+
+    if (sectionTitles.some(t => t.includes('third-party platform caution'))) {
+      recommendations.push({
+        sectionTitle: 'THIRD-PARTY PLATFORM CAUTION',
+        reason: 'resolved',
+        shortTitle: 'Third-Party Platform Warning',
+        reasoning: 'This section warns about overconfidence with undocumented platforms like NMKR Studio. If the NMKR integration is now complete and working, or if this was a one-time issue, this warning might no longer be relevant.',
+        confidence: 'low'
+      });
+    }
+
+    if (sectionTitles.filter(t => t.includes('session') || t.includes('claude code')).length > 2) {
+      recommendations.push({
+        sectionTitle: 'Session Protection (Multiple Sections)',
+        reason: 'duplicate',
+        shortTitle: 'Duplicate Session Protection Info',
+        reasoning: 'Session protection rules appear in multiple places throughout CLAUDE.md. The information about commands that kill sessions, port conflicts, and process management could be consolidated into a single comprehensive section.',
+        confidence: 'high'
+      });
+    }
+
+    if (sectionTitles.some(t => t.includes('tailwind css version'))) {
+      recommendations.push({
+        sectionTitle: 'Tailwind CSS Version Management',
+        reason: 'resolved',
+        shortTitle: 'Tailwind v3 vs v4 Warning',
+        reasoning: 'If the project has been stable on Tailwind v3 for a while and package.json is locked correctly, this extensive warning section might be overkill. The key point (use v3, not v4) could be a single bullet point in a configuration section.',
+        confidence: 'medium'
+      });
+    }
+
+    if (sectionTitles.some(t => t.includes('understanding this user\'s communication style'))) {
+      recommendations.push({
+        sectionTitle: 'Understanding This User\'s Communication Style',
+        reason: 'verbose',
+        shortTitle: 'User Communication Patterns',
+        reasoning: 'While helpful for context, this section is quite lengthy and reads more like session notes than actionable instructions. The key points (user is visual, iterative, protective of data) could be condensed to 3-4 bullet points.',
+        confidence: 'medium'
+      });
+    }
+
+    return recommendations;
+  }
+
+  function toggleRecommendation(index: number) {
+    setExpandedRecommendations(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  }
+
+  function getReasonColor(reason: Recommendation['reason']): string {
+    switch (reason) {
+      case 'resolved':
+        return 'text-green-400';
+      case 'verbose':
+        return 'text-orange-400';
+      case 'duplicate':
+        return 'text-yellow-400';
+      case 'automated':
+        return 'text-blue-400';
+      case 'historical':
+        return 'text-purple-400';
+    }
+  }
+
+  function getReasonLabel(reason: Recommendation['reason']): string {
+    switch (reason) {
+      case 'resolved':
+        return 'Possibly Resolved';
+      case 'verbose':
+        return 'Too Verbose';
+      case 'duplicate':
+        return 'Duplicate Info';
+      case 'automated':
+        return 'Now Automated';
+      case 'historical':
+        return 'Historical';
+    }
+  }
+
+  function getConfidenceIcon(confidence: Recommendation['confidence']): string {
+    switch (confidence) {
+      case 'high':
+        return '🎯';
+      case 'medium':
+        return '⚠️';
+      case 'low':
+        return '❓';
+    }
+  }
+
   if (loading) {
     return (
       <div className="p-8 text-center">
@@ -134,6 +284,7 @@ export default function ClaudeMdSummary() {
   const criticalSections = sections.filter(s => s.category === 'critical');
   const protectionSections = sections.filter(s => s.category === 'protection');
   const configSections = sections.filter(s => s.category === 'config');
+  const recommendations = generateRecommendations(sections);
 
   return (
     <div className="p-8 space-y-8">
@@ -158,6 +309,80 @@ export default function ClaudeMdSummary() {
           </div>
         </div>
       </div>
+
+      {/* Recommendations Section */}
+      {recommendations.length > 0 && (
+        <div className="bg-yellow-900/20 border-2 border-yellow-500 rounded-lg p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-3xl">💡</span>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-yellow-400">Recommendations</h3>
+              <p className="text-sm text-yellow-300/70 mt-1">
+                Sections that might be outdated, too verbose, or redundant
+              </p>
+            </div>
+            <div className="text-sm text-yellow-400 font-bold">
+              {recommendations.length} suggestions
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {recommendations.map((rec, idx) => {
+              const isExpanded = expandedRecommendations.has(idx);
+              return (
+                <div
+                  key={idx}
+                  className="bg-black/30 border border-yellow-700/30 rounded-lg overflow-hidden hover:border-yellow-600/50 transition-colors"
+                >
+                  <button
+                    onClick={() => toggleRecommendation(idx)}
+                    className="w-full px-4 py-3 flex items-start gap-3 text-left hover:bg-yellow-900/10 transition-colors"
+                  >
+                    <span className="text-xl flex-shrink-0">{getConfidenceIcon(rec.confidence)}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-yellow-400">{rec.shortTitle}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded ${getReasonColor(rec.reason)} bg-black/30`}>
+                          {getReasonLabel(rec.reason)}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Section: {rec.sectionTitle}
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0 text-yellow-400">
+                      {isExpanded ? '▼' : '▶'}
+                    </div>
+                  </button>
+
+                  {isExpanded && (
+                    <div className="px-4 py-3 bg-black/50 border-t border-yellow-700/20">
+                      <div className="text-sm text-gray-300 leading-relaxed">
+                        {rec.reasoning}
+                      </div>
+                      <div className="mt-3 flex items-center gap-2 text-xs text-gray-500">
+                        <span>Confidence:</span>
+                        <span className={`font-medium ${
+                          rec.confidence === 'high' ? 'text-green-400' :
+                          rec.confidence === 'medium' ? 'text-yellow-400' :
+                          'text-orange-400'
+                        }`}>
+                          {rec.confidence.toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 p-3 bg-yellow-900/10 border border-yellow-700/30 rounded text-xs text-yellow-300/80">
+            <strong>Note:</strong> These are suggestions based on common patterns. Review each section carefully before removing.
+            Confidence levels: 🎯 High = Safe to remove/condense, ⚠️ Medium = Review first, ❓ Low = Context-dependent
+          </div>
+        </div>
+      )}
 
       {/* Critical Sections */}
       {criticalSections.length > 0 && (
