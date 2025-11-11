@@ -41,7 +41,7 @@ const defaultTimelineData: TimelineItem[] = [
     title: 'Development',
     subtitle: 'Building the Future',
     description: 'Building the core ecosystem. Smart contracts, game mechanics, and NFT infrastructure come to life.',
-    imageUrl: '/mek-images/1000px/dp1-er3-lg2.webp',
+    imageUrl: '/mek-images/1000px/dp2-er3-lg2.webp',
   },
   {
     phase: 'Phase III',
