@@ -23,23 +23,25 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
         {`
           @keyframes line-glow {
             0%, 100% {
-              filter: drop-shadow(0 0 8px rgba(61, 209, 255, 1))
-                      drop-shadow(0 0 16px rgba(61, 209, 255, 0.8));
+              filter: drop-shadow(0 0 4px rgba(61, 209, 255, 0.6))
+                      drop-shadow(0 0 8px rgba(61, 209, 255, 0.4));
             }
             50% {
-              filter: drop-shadow(0 0 12px rgba(61, 209, 255, 1))
-                      drop-shadow(0 0 20px rgba(61, 209, 255, 1));
+              filter: drop-shadow(0 0 6px rgba(61, 209, 255, 0.8))
+                      drop-shadow(0 0 12px rgba(61, 209, 255, 0.6));
             }
           }
 
           @keyframes soft-pulse {
             0%, 100% {
-              filter: drop-shadow(0 0 6px rgba(61, 209, 255, 0.6))
-                      drop-shadow(0 0 12px rgba(61, 209, 255, 0.4));
+              text-shadow: 0 0 3px rgba(61, 209, 255, 0.4),
+                          0 0 6px rgba(61, 209, 255, 0.3),
+                          0 0 9px rgba(61, 209, 255, 0.2);
             }
             50% {
-              filter: drop-shadow(0 0 10px rgba(61, 209, 255, 0.8))
-                      drop-shadow(0 0 18px rgba(61, 209, 255, 0.6));
+              text-shadow: 0 0 5px rgba(61, 209, 255, 0.6),
+                          0 0 10px rgba(61, 209, 255, 0.4),
+                          0 0 15px rgba(61, 209, 255, 0.3);
             }
           }
         `}

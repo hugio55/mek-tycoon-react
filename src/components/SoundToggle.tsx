@@ -6,7 +6,7 @@ import { useSound } from '@/contexts/SoundContext';
 /**
  * Mobile-optimized sound toggle with power switch design
  * - 48×48px minimum touch target (WCAG AAA compliant)
- * - Fixed bottom-right positioning for mobile thumb reach
+ * - Fixed top-right positioning, sticky during scroll
  * - Industrial power switch aesthetic
  * - Responsive sizing for small screens
  */
@@ -14,7 +14,7 @@ export default function SoundToggle() {
   const { soundEnabled, toggleSound } = useSound();
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-row items-center gap-3 sm:gap-4 sm:bottom-6 sm:right-6">
+    <div className="fixed top-4 right-4 z-[9999] flex flex-row items-center gap-3 sm:gap-4 sm:top-6 sm:right-6">
       {/* Power Switch Toggle Button */}
       <button
         onClick={toggleSound}

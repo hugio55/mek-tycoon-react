@@ -299,6 +299,7 @@ export default function LandingDebugPage() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
     window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new Event('mek-config-update'));
   }, [config]);
 
   // Helper function to convert Windows absolute paths to web-relative paths
@@ -453,6 +454,7 @@ export default function LandingDebugPage() {
       const phase = phaseCards.find(p => p._id === selectedPhaseForEdit);
       if (phase) {
         setPhaseEditForm({
+          header: phase.header || '',
           title: phase.title,
           description: phase.description || '',
         });
@@ -1704,11 +1706,22 @@ export default function LandingDebugPage() {
                 {selectedPhaseForEdit && (
                   <>
                     <div>
+                      <label className="block text-xs text-gray-300 mb-1">Header (italic text above title)</label>
+                      <input
+                        type="text"
+                        value={phaseEditForm.header}
+                        onChange={(e) => setPhaseEditForm(prev => ({ ...prev, header: e.target.value }))}
+                        placeholder="e.g., The Beginning"
+                        className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                      />
+                    </div>
+                    <div>
                       <label className="block text-xs text-gray-300 mb-1">Title (large cyan text)</label>
                       <input
                         type="text"
                         value={phaseEditForm.title}
                         onChange={(e) => setPhaseEditForm(prev => ({ ...prev, title: e.target.value }))}
+                        placeholder="e.g., Foundation"
                         className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                       />
                     </div>
@@ -1718,6 +1731,7 @@ export default function LandingDebugPage() {
                         value={phaseEditForm.description}
                         onChange={(e) => setPhaseEditForm(prev => ({ ...prev, description: e.target.value }))}
                         rows={3}
+                        placeholder="Description paragraph..."
                         className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                       />
                     </div>
@@ -1737,12 +1751,22 @@ export default function LandingDebugPage() {
               <h3 className="text-sm font-semibold text-gray-100 mb-2">Add New Phase Card</h3>
               <div className="space-y-2">
                 <div>
+                  <label className="block text-xs text-gray-300 mb-1">Header (optional italic text)</label>
+                  <input
+                    type="text"
+                    value={newPhaseForm.header}
+                    onChange={(e) => setNewPhaseForm(prev => ({ ...prev, header: e.target.value }))}
+                    placeholder="e.g., The Beginning"
+                    className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                  />
+                </div>
+                <div>
                   <label className="block text-xs text-gray-300 mb-1">Title</label>
                   <input
                     type="text"
                     value={newPhaseForm.title}
                     onChange={(e) => setNewPhaseForm(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="e.g., Phase VI"
+                    placeholder="e.g., Foundation"
                     className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                   />
                 </div>
@@ -1792,20 +1816,32 @@ export default function LandingDebugPage() {
                       // Edit mode
                       <div className="space-y-2">
                         <div>
-                          <label className="block text-xs text-gray-300 mb-1">Title</label>
+                          <label className="block text-xs text-gray-300 mb-1">Header (italic)</label>
                           <input
                             type="text"
-                            defaultValue={phase.title}
-                            id={`edit-title-${phase._id}`}
+                            defaultValue={phase.header || ''}
+                            id={`edit-header-${phase._id}`}
+                            placeholder="e.g., The Beginning"
                             className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-300 mb-1">Description</label>
+                          <label className="block text-xs text-gray-300 mb-1">Title (large)</label>
+                          <input
+                            type="text"
+                            defaultValue={phase.title}
+                            id={`edit-title-${phase._id}`}
+                            placeholder="e.g., Foundation"
+                            className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-300 mb-1">Description (body)</label>
                           <textarea
                             defaultValue={phase.description || ''}
                             id={`edit-description-${phase._id}`}
                             rows={2}
+                            placeholder="Description paragraph..."
                             className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                           />
                         </div>
