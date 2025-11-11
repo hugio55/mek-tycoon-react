@@ -1594,9 +1594,12 @@ export default function LandingDebugPage() {
               </div>
             </div>
           </div>
+          </>
+          )}
 
           {/* Power Button & Sound Label Controls Section */}
           {config.activeTab === 'other' && (
+          <>
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Power Button & Sound Label
@@ -1766,6 +1769,7 @@ export default function LandingDebugPage() {
               </div>
             </div>
           </div>
+          )}
 
           {/* PhaseCarousel Visual Controls Section */}
           <div className="bg-gray-800 border border-cyan-500 rounded p-3">
@@ -2154,6 +2158,7 @@ export default function LandingDebugPage() {
               )}
             </div>
           </div>
+          )}
 
         </div>
 
