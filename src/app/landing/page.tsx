@@ -1228,6 +1228,7 @@ export default function LandingPage() {
         margin: 0,
         padding: 0,
         minHeight: '100vh',
+        paddingBottom: `${Math.max(0, phaseColumnYOffset + phaseColumnHeight + 50)}px`,
         overflowX: 'hidden',
         position: 'relative',
         touchAction: 'pan-y',
