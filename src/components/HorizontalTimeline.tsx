@@ -80,9 +80,21 @@ export default function HorizontalTimeline({
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [timelineData, setTimelineData] = useState<TimelineItem[]>(defaultTimelineData);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [expandedWidths, setExpandedWidths] = useState<{ [key: number]: number }>({});
+
+  // Detect viewport size for mobile layout
+  useEffect(() => {
+    const checkViewport = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    checkViewport();
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
+  }, []);
 
   // Detect if device supports touch (mobile/tablet)
   useEffect(() => {
@@ -227,7 +239,7 @@ export default function HorizontalTimeline({
       ref={containerRef}
       className="relative overflow-hidden"
       style={{
-        height: `${columnHeight}px`,
+        height: isMobile ? 'auto' : `${columnHeight}px`,
         width: '100%',
         backgroundColor: 'transparent',
         isolation: 'isolate',
@@ -237,7 +249,7 @@ export default function HorizontalTimeline({
       }}
     >
       <div
-        className="absolute inset-0 flex"
+        className={isMobile ? "flex flex-col" : "absolute inset-0 flex"}
         style={{
           gap: 0,
           backgroundColor: 'transparent',
@@ -250,27 +262,48 @@ export default function HorizontalTimeline({
           const isActive = isHovered || isSelected; // Active if hovered OR selected
           const isAnyActive = hoveredIndex !== null || selectedIndex !== null;
 
-          // Calculate width based on overflow detection
-          let widthPercent: number;
+          // Calculate width/height based on layout mode
+          let dimensionStyle: React.CSSProperties;
 
-          if (isAnyActive) {
+          if (isMobile) {
+            // Mobile: vertical layout with 16:9 aspect ratio
             if (isActive) {
-              // Use expanded width if overflow detected, otherwise default 30.3%
-              widthPercent = expandedWidths.activeWidth || 30.3;
+              // Expanded: auto height to show content
+              dimensionStyle = {
+                width: '100%',
+                height: 'auto',
+                minHeight: '250px',
+              };
             } else {
-              // Use calculated inactive width if expansion occurred, otherwise default 23.4%
-              widthPercent = expandedWidths.inactiveWidth || 23.4;
+              // Collapsed: 16:9 aspect ratio box
+              dimensionStyle = {
+                width: '100%',
+                paddingTop: '56.25%', // 16:9 aspect ratio (9/16 = 0.5625)
+                position: 'relative',
+              };
             }
           } else {
-            // Make last card slightly wider to ensure no gap
-            widthPercent = index === 3 ? 25.1 : 25; // Last card gets extra 0.1% to eliminate gap
+            // Desktop: horizontal layout
+            let widthPercent: number;
+
+            if (isAnyActive) {
+              if (isActive) {
+                widthPercent = expandedWidths.activeWidth || 30.3;
+              } else {
+                widthPercent = expandedWidths.inactiveWidth || 23.4;
+              }
+            } else {
+              widthPercent = index === 3 ? 25.1 : 25;
+            }
+
+            dimensionStyle = {
+              width: `${widthPercent}%`,
+              height: '100%',
+            };
           }
 
           // Calculate blur value
           const blurValue = isActive && idleBackdropBlur > 0 ? `blur(${idleBackdropBlur}px)` : 'none';
-
-          // Debug log for each column render
-          console.log(`[🔍BLUR] Column ${index} render: isActive=${isActive}, blurValue="${blurValue}", idleBackdropBlur=${idleBackdropBlur}`);
 
           return (
             <div
@@ -281,14 +314,26 @@ export default function HorizontalTimeline({
                 cursor-pointer
               `}
               style={{
-                width: `${widthPercent}%`,
-                transition: 'width 0.5s ease-in-out',
-                zIndex: isActive ? 20 : 10, // Active card on top
+                ...dimensionStyle,
+                transition: isMobile
+                  ? 'height 0.5s ease-in-out, min-height 0.5s ease-in-out, padding-top 0.5s ease-in-out'
+                  : 'width 0.5s ease-in-out',
+                zIndex: isActive ? 20 : 10,
               }}
               onMouseEnter={() => handleHoverEnter(index)}
               onMouseLeave={handleHoverLeave}
               onClick={() => handlePhaseClick(index)}
             >
+              {/* Inner wrapper for aspect ratio - only used on mobile when collapsed */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  top: isMobile && !isActive ? 0 : undefined,
+                  left: isMobile && !isActive ? 0 : undefined,
+                  right: isMobile && !isActive ? 0 : undefined,
+                  bottom: isMobile && !isActive ? 0 : undefined,
+                }}
+              >
               {/* Timeline Background Image - bottommost layer, blends with page background */}
               <div
                 className="absolute inset-0 bg-cover bg-center"
@@ -352,14 +397,14 @@ export default function HorizontalTimeline({
                   `}
                   style={{
                     fontFamily: phaseHeaderFont,
-                    fontSize: `${phaseHeaderFontSize}px`,
+                    fontSize: isMobile ? `${phaseHeaderFontSize * 0.6}px` : `${phaseHeaderFontSize}px`,
                     textShadow: '0 0 40px rgba(0, 0, 0, 0.8)',
                     transition: isActive
                       ? 'opacity 0.3s ease-out'
                       : 'opacity 0.3s ease-in 0.2s',
                   }}
                 >
-                  {item.phase}
+                  {isMobile ? `Phase ${index + 1}` : item.phase}
                 </h2>
               </div>
 
@@ -432,6 +477,7 @@ export default function HorizontalTimeline({
                   }}
                   dangerouslySetInnerHTML={{ __html: formatDescription(item.description) }}
                 />
+              </div>
               </div>
             </div>
           );
