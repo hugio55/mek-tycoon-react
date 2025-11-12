@@ -1405,9 +1405,10 @@ export default function LandingPage() {
 
       {/* Phase Timeline - Scrollable Page Content */}
       <div
-        className="absolute left-0 right-0 w-full z-[20]"
+        className="absolute left-0 z-[20]"
         style={{
           top: `calc(100vh + ${phaseColumnYOffset}px)`,
+          width: 'calc(100vw + 8px)', // Extend 8px to compensate for thin custom scrollbar
         }}
       >
         <HorizontalTimeline
