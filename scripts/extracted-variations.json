@@ -1,0 +1,2045 @@
+{
+  "heads": [
+    {
+      "name": "???",
+      "sourceKey": "BL5",
+      "allCodes": [
+        "BL5"
+      ]
+    },
+    {
+      "name": "1960's",
+      "sourceKey": "BF3",
+      "allCodes": [
+        "BF3"
+      ]
+    },
+    {
+      "name": "24K",
+      "sourceKey": "EV3",
+      "allCodes": [
+        "EV3"
+      ]
+    },
+    {
+      "name": "Ace of Spades",
+      "sourceKey": "DH3",
+      "allCodes": [
+        "DH3"
+      ]
+    },
+    {
+      "name": "Ace of Spades Ultimate",
+      "sourceKey": "222",
+      "allCodes": [
+        "222"
+      ]
+    },
+    {
+      "name": "Acid",
+      "sourceKey": "KY4",
+      "allCodes": [
+        "KY4"
+      ]
+    },
+    {
+      "name": "Acrylic",
+      "sourceKey": "HP3",
+      "allCodes": [
+        "HP3"
+      ]
+    },
+    {
+      "name": "Aqua",
+      "sourceKey": "AA1",
+      "allCodes": [
+        "AA1"
+      ]
+    },
+    {
+      "name": "Arcade",
+      "sourceKey": "BQ4",
+      "allCodes": [
+        "BQ4"
+      ]
+    },
+    {
+      "name": "Aztec",
+      "sourceKey": "IO1",
+      "allCodes": [
+        "IO1"
+      ]
+    },
+    {
+      "name": "Baby",
+      "sourceKey": "HP2",
+      "allCodes": [
+        "HP2"
+      ]
+    },
+    {
+      "name": "Ballerina",
+      "sourceKey": "EV2",
+      "allCodes": [
+        "EV2"
+      ]
+    },
+    {
+      "name": "Bark",
+      "sourceKey": "AK1",
+      "allCodes": [
+        "AK1"
+      ]
+    },
+    {
+      "name": "Big Brother",
+      "sourceKey": "CB1",
+      "allCodes": [
+        "CB1"
+      ]
+    },
+    {
+      "name": "Bone Daddy",
+      "sourceKey": "KY1",
+      "allCodes": [
+        "KY1"
+      ]
+    },
+    {
+      "name": "Boss",
+      "sourceKey": "DS1",
+      "allCodes": [
+        "DS1"
+      ]
+    },
+    {
+      "name": "Bowling",
+      "sourceKey": "CB4",
+      "allCodes": [
+        "CB4"
+      ]
+    },
+    {
+      "name": "Bubblegum",
+      "sourceKey": "BJ3",
+      "allCodes": [
+        "BJ3"
+      ]
+    },
+    {
+      "name": "Bumblebee",
+      "sourceKey": "AK3",
+      "allCodes": [
+        "AK3"
+      ]
+    },
+    {
+      "name": "Business",
+      "sourceKey": "HP1",
+      "allCodes": [
+        "HP1"
+      ]
+    },
+    {
+      "name": "Butane",
+      "sourceKey": "DC2",
+      "allCodes": [
+        "DC2"
+      ]
+    },
+    {
+      "name": "Cadillac",
+      "sourceKey": "AK2",
+      "allCodes": [
+        "AK2"
+      ]
+    },
+    {
+      "name": "Camo",
+      "sourceKey": "BF2",
+      "allCodes": [
+        "BF2"
+      ]
+    },
+    {
+      "name": "China",
+      "sourceKey": "GN3",
+      "allCodes": [
+        "GN3"
+      ]
+    },
+    {
+      "name": "Classic",
+      "sourceKey": "BF1",
+      "allCodes": [
+        "BF1"
+      ]
+    },
+    {
+      "name": "Coin",
+      "sourceKey": "CB2",
+      "allCodes": [
+        "CB2"
+      ]
+    },
+    {
+      "name": "Corroded",
+      "sourceKey": "JG1",
+      "allCodes": [
+        "JG1"
+      ]
+    },
+    {
+      "name": "Cotton Candy",
+      "sourceKey": "BF4",
+      "allCodes": [
+        "BF4"
+      ]
+    },
+    {
+      "name": "Cream",
+      "sourceKey": "JG3",
+      "allCodes": [
+        "JG3"
+      ]
+    },
+    {
+      "name": "Crimson",
+      "sourceKey": "AA2",
+      "allCodes": [
+        "AA2"
+      ]
+    },
+    {
+      "name": "Dazed Piggy",
+      "sourceKey": "BL2",
+      "allCodes": [
+        "BL2"
+      ]
+    },
+    {
+      "name": "Derelict",
+      "sourceKey": "000",
+      "allCodes": [
+        "000"
+      ]
+    },
+    {
+      "name": "desufnoC",
+      "sourceKey": "BL1",
+      "allCodes": [
+        "BL1"
+      ]
+    },
+    {
+      "name": "Disco",
+      "sourceKey": "BQ2",
+      "allCodes": [
+        "BQ2"
+      ]
+    },
+    {
+      "name": "Discomania",
+      "sourceKey": "333",
+      "allCodes": [
+        "333"
+      ]
+    },
+    {
+      "name": "Dragonfly",
+      "sourceKey": "BQ1",
+      "allCodes": [
+        "BQ1"
+      ]
+    },
+    {
+      "name": "Drill",
+      "sourceKey": "BW2",
+      "allCodes": [
+        "BW2"
+      ]
+    },
+    {
+      "name": "Dualtone",
+      "sourceKey": "BL4",
+      "allCodes": [
+        "BL4"
+      ]
+    },
+    {
+      "name": "Electrik",
+      "sourceKey": "ER3",
+      "allCodes": [
+        "ER3"
+      ]
+    },
+    {
+      "name": "Ellie Mesh",
+      "sourceKey": "888",
+      "allCodes": [
+        "888"
+      ]
+    },
+    {
+      "name": "Exposed",
+      "sourceKey": "BJ1",
+      "allCodes": [
+        "BJ1"
+      ]
+    },
+    {
+      "name": "Flaked",
+      "sourceKey": "EE3",
+      "allCodes": [
+        "EE3"
+      ]
+    },
+    {
+      "name": "Frost King",
+      "sourceKey": "555",
+      "allCodes": [
+        "555"
+      ]
+    },
+    {
+      "name": "Gold",
+      "sourceKey": "JG4",
+      "allCodes": [
+        "JG4"
+      ]
+    },
+    {
+      "name": "Grass",
+      "sourceKey": "ER1",
+      "allCodes": [
+        "ER1"
+      ]
+    },
+    {
+      "name": "Hacker",
+      "sourceKey": "DH2",
+      "allCodes": [
+        "DH2"
+      ]
+    },
+    {
+      "name": "Hades",
+      "sourceKey": "CU2",
+      "allCodes": [
+        "CU2"
+      ]
+    },
+    {
+      "name": "Hal",
+      "sourceKey": "EV1",
+      "allCodes": [
+        "EV1"
+      ]
+    },
+    {
+      "name": "Heatmap",
+      "sourceKey": "IO3",
+      "allCodes": [
+        "IO3"
+      ]
+    },
+    {
+      "name": "Ivory",
+      "sourceKey": "IO2",
+      "allCodes": [
+        "IO2"
+      ]
+    },
+    {
+      "name": "Kevlar",
+      "sourceKey": "GN1",
+      "allCodes": [
+        "GN1"
+      ]
+    },
+    {
+      "name": "Lazer",
+      "sourceKey": "LZ1",
+      "allCodes": [
+        "LZ1"
+      ]
+    },
+    {
+      "name": "Lich",
+      "sourceKey": "CU1",
+      "allCodes": [
+        "CU1"
+      ]
+    },
+    {
+      "name": "Lightning",
+      "sourceKey": "BJ2",
+      "allCodes": [
+        "BJ2"
+      ]
+    },
+    {
+      "name": "Liquid Lavender",
+      "sourceKey": "CB3",
+      "allCodes": [
+        "CB3"
+      ]
+    },
+    {
+      "name": "Log",
+      "sourceKey": "EE1",
+      "allCodes": [
+        "EE1"
+      ]
+    },
+    {
+      "name": "Mac & Cheese",
+      "sourceKey": "FD3",
+      "allCodes": [
+        "FD3"
+      ]
+    },
+    {
+      "name": "Magma",
+      "sourceKey": "BW4",
+      "allCodes": [
+        "BW4"
+      ]
+    },
+    {
+      "name": "Mahogany",
+      "sourceKey": "EE2",
+      "allCodes": [
+        "EE2"
+      ]
+    },
+    {
+      "name": "Mars Attacks",
+      "sourceKey": "BW1",
+      "allCodes": [
+        "BW1"
+      ]
+    },
+    {
+      "name": "Mesh",
+      "sourceKey": "AT2",
+      "allCodes": [
+        "AT2"
+      ]
+    },
+    {
+      "name": "Milk",
+      "sourceKey": "GN2",
+      "allCodes": [
+        "GN2"
+      ]
+    },
+    {
+      "name": "Mint",
+      "sourceKey": "AT3",
+      "allCodes": [
+        "AT3"
+      ]
+    },
+    {
+      "name": "Neon Flamingo",
+      "sourceKey": "BI2",
+      "allCodes": [
+        "BI2"
+      ]
+    },
+    {
+      "name": "Nightstalker",
+      "sourceKey": "BQ5",
+      "allCodes": [
+        "BQ5"
+      ]
+    },
+    {
+      "name": "Nuke",
+      "sourceKey": "DH1",
+      "allCodes": [
+        "DH1"
+      ]
+    },
+    {
+      "name": "Nyan",
+      "sourceKey": "AA5",
+      "allCodes": [
+        "AA5"
+      ]
+    },
+    {
+      "name": "Nyan Ultimate",
+      "sourceKey": "111",
+      "allCodes": [
+        "111"
+      ]
+    },
+    {
+      "name": "Obliterator",
+      "sourceKey": "999",
+      "allCodes": [
+        "999"
+      ]
+    },
+    {
+      "name": "Ol' Faithful",
+      "sourceKey": "FD1",
+      "allCodes": [
+        "FD1"
+      ]
+    },
+    {
+      "name": "Ornament",
+      "sourceKey": "BW3",
+      "allCodes": [
+        "BW3"
+      ]
+    },
+    {
+      "name": "Paul",
+      "sourceKey": "KY3",
+      "allCodes": [
+        "KY3"
+      ]
+    },
+    {
+      "name": "Paul Ultimate",
+      "sourceKey": "444",
+      "allCodes": [
+        "444"
+      ]
+    },
+    {
+      "name": "Pie",
+      "sourceKey": "666",
+      "allCodes": [
+        "666"
+      ]
+    },
+    {
+      "name": "Pizza",
+      "sourceKey": "ER4",
+      "allCodes": [
+        "ER4"
+      ]
+    },
+    {
+      "name": "Plastik",
+      "sourceKey": "DM2",
+      "allCodes": [
+        "DM2"
+      ]
+    },
+    {
+      "name": "Plate",
+      "sourceKey": "CX1",
+      "allCodes": [
+        "CX1"
+      ]
+    },
+    {
+      "name": "Polished",
+      "sourceKey": "JG2",
+      "allCodes": [
+        "JG2"
+      ]
+    },
+    {
+      "name": "Porcelain",
+      "sourceKey": "DS2",
+      "allCodes": [
+        "DS2"
+      ]
+    },
+    {
+      "name": "Projectionist",
+      "sourceKey": "777",
+      "allCodes": [
+        "777"
+      ]
+    },
+    {
+      "name": "Quilt",
+      "sourceKey": "AA4",
+      "allCodes": [
+        "AA4"
+      ]
+    },
+    {
+      "name": "Recon",
+      "sourceKey": "AT1",
+      "allCodes": [
+        "AT1"
+      ]
+    },
+    {
+      "name": "Ross",
+      "sourceKey": "BW5",
+      "allCodes": [
+        "BW5"
+      ]
+    },
+    {
+      "name": "Royal",
+      "sourceKey": "AA3",
+      "allCodes": [
+        "AA3"
+      ]
+    },
+    {
+      "name": "Rust",
+      "sourceKey": "FD2",
+      "allCodes": [
+        "FD2"
+      ]
+    },
+    {
+      "name": "Sahara",
+      "sourceKey": "DC3",
+      "allCodes": [
+        "DC3"
+      ]
+    },
+    {
+      "name": "Shamrock",
+      "sourceKey": "DM1",
+      "allCodes": [
+        "DM1"
+      ]
+    },
+    {
+      "name": "Silent Film",
+      "sourceKey": "BL3",
+      "allCodes": [
+        "BL3"
+      ]
+    },
+    {
+      "name": "Silicon",
+      "sourceKey": "DS3",
+      "allCodes": [
+        "DS3"
+      ]
+    },
+    {
+      "name": "Sleet",
+      "sourceKey": "FD4",
+      "allCodes": [
+        "FD4"
+      ]
+    },
+    {
+      "name": "Snapshot",
+      "sourceKey": "DC1",
+      "allCodes": [
+        "DC1"
+      ]
+    },
+    {
+      "name": "Snow",
+      "sourceKey": "AK4",
+      "allCodes": [
+        "AK4"
+      ]
+    },
+    {
+      "name": "Stained Glass",
+      "sourceKey": "BF5",
+      "allCodes": [
+        "BF5"
+      ]
+    },
+    {
+      "name": "Sterling",
+      "sourceKey": "ER2",
+      "allCodes": [
+        "ER2"
+      ]
+    },
+    {
+      "name": "Sun",
+      "sourceKey": "BQ3",
+      "allCodes": [
+        "BQ3"
+      ]
+    },
+    {
+      "name": "Taser",
+      "sourceKey": "BI1",
+      "allCodes": [
+        "BI1"
+      ]
+    },
+    {
+      "name": "Terminator",
+      "sourceKey": "KY2",
+      "allCodes": [
+        "KY2"
+      ]
+    },
+    {
+      "name": "The Lethal Dimension",
+      "sourceKey": "CU3",
+      "allCodes": [
+        "CU3"
+      ]
+    },
+    {
+      "name": "The Ram",
+      "sourceKey": "CX2",
+      "allCodes": [
+        "CX2"
+      ]
+    },
+    {
+      "name": "Tron",
+      "sourceKey": "DM3",
+      "allCodes": [
+        "DM3"
+      ]
+    },
+    {
+      "name": "Whiskey",
+      "sourceKey": "DC4",
+      "allCodes": [
+        "DC4"
+      ]
+    },
+    {
+      "name": "Wires",
+      "sourceKey": "AT4",
+      "allCodes": [
+        "AT4"
+      ]
+    }
+  ],
+  "bodies": [
+    {
+      "name": "007",
+      "sourceKey": "KU2",
+      "allCodes": [
+        "KU2"
+      ]
+    },
+    {
+      "name": "Abominable",
+      "sourceKey": "GG1",
+      "allCodes": [
+        "GG1"
+      ]
+    },
+    {
+      "name": "Arctic",
+      "sourceKey": "CF2",
+      "allCodes": [
+        "CF2"
+      ]
+    },
+    {
+      "name": "Aztec",
+      "sourceKey": "ED2",
+      "allCodes": [
+        "ED2"
+      ]
+    },
+    {
+      "name": "Bag",
+      "sourceKey": "FS3",
+      "allCodes": [
+        "FS3"
+      ]
+    },
+    {
+      "name": "Black",
+      "sourceKey": "HT1",
+      "allCodes": [
+        "HT1"
+      ]
+    },
+    {
+      "name": "Blood",
+      "sourceKey": "AE3",
+      "allCodes": [
+        "AE3"
+      ]
+    },
+    {
+      "name": "Blush",
+      "sourceKey": "AA2",
+      "allCodes": [
+        "AA2"
+      ]
+    },
+    {
+      "name": "Bone",
+      "sourceKey": "CF1",
+      "allCodes": [
+        "CF1"
+      ]
+    },
+    {
+      "name": "Burnt",
+      "sourceKey": "CF5",
+      "allCodes": [
+        "CF5"
+      ]
+    },
+    {
+      "name": "Burnt Ultimate",
+      "sourceKey": "444",
+      "allCodes": [
+        "444"
+      ]
+    },
+    {
+      "name": "Carbon",
+      "sourceKey": "FS1",
+      "allCodes": [
+        "FS1"
+      ]
+    },
+    {
+      "name": "Cartoon",
+      "sourceKey": "HH3",
+      "allCodes": [
+        "HH3"
+      ]
+    },
+    {
+      "name": "Cartoonichrome",
+      "sourceKey": "CW4",
+      "allCodes": [
+        "CW4"
+      ]
+    },
+    {
+      "name": "Carving",
+      "sourceKey": "FN5",
+      "allCodes": [
+        "FN5"
+      ]
+    },
+    {
+      "name": "Carving Ultimate",
+      "sourceKey": "666",
+      "allCodes": [
+        "666"
+      ]
+    },
+    {
+      "name": "Cheetah",
+      "sourceKey": "KI3",
+      "allCodes": [
+        "KI3"
+      ]
+    },
+    {
+      "name": "Chrome",
+      "sourceKey": "BC1",
+      "allCodes": [
+        "BC1"
+      ]
+    },
+    {
+      "name": "Chrome Ultimate",
+      "sourceKey": "888",
+      "allCodes": [
+        "888"
+      ]
+    },
+    {
+      "name": "Couch",
+      "sourceKey": "AA1",
+      "allCodes": [
+        "AA1"
+      ]
+    },
+    {
+      "name": "Cousin Itt",
+      "sourceKey": "777",
+      "allCodes": [
+        "777"
+      ]
+    },
+    {
+      "name": "Crystal Camo",
+      "sourceKey": "CL2",
+      "allCodes": [
+        "CL2"
+      ]
+    },
+    {
+      "name": "Crystal Clear",
+      "sourceKey": "CL1",
+      "allCodes": [
+        "CL1"
+      ]
+    },
+    {
+      "name": "Cubes",
+      "sourceKey": "AR1",
+      "allCodes": [
+        "AR1"
+      ]
+    },
+    {
+      "name": "Damascus",
+      "sourceKey": "BO3",
+      "allCodes": [
+        "BO3"
+      ]
+    },
+    {
+      "name": "Denim",
+      "sourceKey": "AA3",
+      "allCodes": [
+        "AA3"
+      ]
+    },
+    {
+      "name": "Doom",
+      "sourceKey": "HH2",
+      "allCodes": [
+        "HH2"
+      ]
+    },
+    {
+      "name": "Dr.",
+      "sourceKey": "IV1",
+      "allCodes": [
+        "IV1"
+      ]
+    },
+    {
+      "name": "Eyes",
+      "sourceKey": "JX2",
+      "allCodes": [
+        "JX2"
+      ]
+    },
+    {
+      "name": "Forest",
+      "sourceKey": "BC3",
+      "allCodes": [
+        "BC3"
+      ]
+    },
+    {
+      "name": "Frost Cage",
+      "sourceKey": "555",
+      "allCodes": [
+        "555"
+      ]
+    },
+    {
+      "name": "Frostbit",
+      "sourceKey": "BC5",
+      "allCodes": [
+        "BC5"
+      ]
+    },
+    {
+      "name": "Frosted",
+      "sourceKey": "CL4",
+      "allCodes": [
+        "CL4"
+      ]
+    },
+    {
+      "name": "Fury",
+      "sourceKey": "LZ2",
+      "allCodes": [
+        "LZ2"
+      ]
+    },
+    {
+      "name": "Gatsby",
+      "sourceKey": "KI4",
+      "allCodes": [
+        "KI4"
+      ]
+    },
+    {
+      "name": "Gatsby Ultimate",
+      "sourceKey": "000",
+      "allCodes": [
+        "000"
+      ]
+    },
+    {
+      "name": "Giger",
+      "sourceKey": "JX3",
+      "allCodes": [
+        "JX3"
+      ]
+    },
+    {
+      "name": "Goblin",
+      "sourceKey": "HB2",
+      "allCodes": [
+        "HB2"
+      ]
+    },
+    {
+      "name": "Granite",
+      "sourceKey": "FN8",
+      "allCodes": [
+        "FN8"
+      ]
+    },
+    {
+      "name": "Grate",
+      "sourceKey": "AE1",
+      "allCodes": [
+        "AE1"
+      ]
+    },
+    {
+      "name": "Happymeal",
+      "sourceKey": "CF3",
+      "allCodes": [
+        "CF3"
+      ]
+    },
+    {
+      "name": "Heart",
+      "sourceKey": "BC2",
+      "allCodes": [
+        "BC2"
+      ]
+    },
+    {
+      "name": "Heatwave",
+      "sourceKey": "AM3",
+      "allCodes": [
+        "AM3"
+      ]
+    },
+    {
+      "name": "Heatwave Ultimate",
+      "sourceKey": "111",
+      "allCodes": [
+        "111"
+      ]
+    },
+    {
+      "name": "Highlights",
+      "sourceKey": "GG2",
+      "allCodes": [
+        "GG2"
+      ]
+    },
+    {
+      "name": "Inner Rainbow",
+      "sourceKey": "CW3",
+      "allCodes": [
+        "CW3"
+      ]
+    },
+    {
+      "name": "Iron",
+      "sourceKey": "AK1",
+      "allCodes": [
+        "AK1"
+      ]
+    },
+    {
+      "name": "James",
+      "sourceKey": "KU1",
+      "allCodes": [
+        "KU1"
+      ]
+    },
+    {
+      "name": "Jolly Rancher",
+      "sourceKey": "CL5",
+      "allCodes": [
+        "CL5"
+      ]
+    },
+    {
+      "name": "Journey",
+      "sourceKey": "DJ3",
+      "allCodes": [
+        "DJ3"
+      ]
+    },
+    {
+      "name": "Leeloo",
+      "sourceKey": "JX1",
+      "allCodes": [
+        "JX1"
+      ]
+    },
+    {
+      "name": "Lizard",
+      "sourceKey": "ED4",
+      "allCodes": [
+        "ED4"
+      ]
+    },
+    {
+      "name": "Lord",
+      "sourceKey": "HB4",
+      "allCodes": [
+        "HB4"
+      ]
+    },
+    {
+      "name": "Luxury",
+      "sourceKey": "IY3",
+      "allCodes": [
+        "IY3"
+      ]
+    },
+    {
+      "name": "Luxury Ultimate",
+      "sourceKey": "999",
+      "allCodes": [
+        "999"
+      ]
+    },
+    {
+      "name": "Majesty",
+      "sourceKey": "HT4",
+      "allCodes": [
+        "HT4"
+      ]
+    },
+    {
+      "name": "Maple",
+      "sourceKey": "CW1",
+      "allCodes": [
+        "CW1"
+      ]
+    },
+    {
+      "name": "Maps",
+      "sourceKey": "HH1",
+      "allCodes": [
+        "HH1"
+      ]
+    },
+    {
+      "name": "Marble",
+      "sourceKey": "FN1",
+      "allCodes": [
+        "FN1"
+      ]
+    },
+    {
+      "name": "Matte",
+      "sourceKey": "BO1",
+      "allCodes": [
+        "BO1"
+      ]
+    },
+    {
+      "name": "Maze",
+      "sourceKey": "FN7",
+      "allCodes": [
+        "FN7"
+      ]
+    },
+    {
+      "name": "Meat",
+      "sourceKey": "DP2",
+      "allCodes": [
+        "DP2"
+      ]
+    },
+    {
+      "name": "Mercury",
+      "sourceKey": "GQ3",
+      "allCodes": [
+        "GQ3"
+      ]
+    },
+    {
+      "name": "Mugged",
+      "sourceKey": "IY1",
+      "allCodes": [
+        "IY1"
+      ]
+    },
+    {
+      "name": "Noob",
+      "sourceKey": "HB1",
+      "allCodes": [
+        "HB1"
+      ]
+    },
+    {
+      "name": "Nuggets",
+      "sourceKey": "GQ4",
+      "allCodes": [
+        "GQ4"
+      ]
+    },
+    {
+      "name": "Obsidian",
+      "sourceKey": "BO2",
+      "allCodes": [
+        "BO2"
+      ]
+    },
+    {
+      "name": "Ocean",
+      "sourceKey": "FN6",
+      "allCodes": [
+        "FN6"
+      ]
+    },
+    {
+      "name": "OE Dark",
+      "sourceKey": "ED1",
+      "allCodes": [
+        "ED1"
+      ]
+    },
+    {
+      "name": "OE Light",
+      "sourceKey": "ED5",
+      "allCodes": [
+        "ED5"
+      ]
+    },
+    {
+      "name": "Oil",
+      "sourceKey": "CL6",
+      "allCodes": [
+        "CL6"
+      ]
+    },
+    {
+      "name": "Ooze",
+      "sourceKey": "GQ2",
+      "allCodes": [
+        "GQ2"
+      ]
+    },
+    {
+      "name": "Pearl",
+      "sourceKey": "GQ5",
+      "allCodes": [
+        "GQ5"
+      ]
+    },
+    {
+      "name": "Peppermint",
+      "sourceKey": "CF4",
+      "allCodes": [
+        "CF4"
+      ]
+    },
+    {
+      "name": "Plush",
+      "sourceKey": "GQ1",
+      "allCodes": [
+        "GQ1"
+      ]
+    },
+    {
+      "name": "Plush Ultimate",
+      "sourceKey": "222",
+      "allCodes": [
+        "222"
+      ]
+    },
+    {
+      "name": "Poker",
+      "sourceKey": "FS2",
+      "allCodes": [
+        "FS2"
+      ]
+    },
+    {
+      "name": "Prickles",
+      "sourceKey": "AK2",
+      "allCodes": [
+        "AK2"
+      ]
+    },
+    {
+      "name": "Princess",
+      "sourceKey": "HB3",
+      "allCodes": [
+        "HB3"
+      ]
+    },
+    {
+      "name": "Prom",
+      "sourceKey": "KI2",
+      "allCodes": [
+        "KI2"
+      ]
+    },
+    {
+      "name": "Radiance",
+      "sourceKey": "AR3",
+      "allCodes": [
+        "AR3"
+      ]
+    },
+    {
+      "name": "Rattler",
+      "sourceKey": "ED3",
+      "allCodes": [
+        "ED3"
+      ]
+    },
+    {
+      "name": "Rose",
+      "sourceKey": "CW2",
+      "allCodes": [
+        "CW2"
+      ]
+    },
+    {
+      "name": "Rug",
+      "sourceKey": "IV3",
+      "allCodes": [
+        "IV3"
+      ]
+    },
+    {
+      "name": "Rust",
+      "sourceKey": "BC4",
+      "allCodes": [
+        "BC4"
+      ]
+    },
+    {
+      "name": "Sand",
+      "sourceKey": "DP1",
+      "allCodes": [
+        "DP1"
+      ]
+    },
+    {
+      "name": "Seabiscuit",
+      "sourceKey": "LZ1",
+      "allCodes": [
+        "LZ1"
+      ]
+    },
+    {
+      "name": "Seafoam",
+      "sourceKey": "BC6",
+      "allCodes": [
+        "BC6"
+      ]
+    },
+    {
+      "name": "Shipped",
+      "sourceKey": "DJ4",
+      "allCodes": [
+        "DJ4"
+      ]
+    },
+    {
+      "name": "Sir",
+      "sourceKey": "KI1",
+      "allCodes": [
+        "KI1"
+      ]
+    },
+    {
+      "name": "Sky",
+      "sourceKey": "AM1",
+      "allCodes": [
+        "AM1"
+      ]
+    },
+    {
+      "name": "Smurf",
+      "sourceKey": "DJ2",
+      "allCodes": [
+        "DJ2"
+      ]
+    },
+    {
+      "name": "Soul",
+      "sourceKey": "HT2",
+      "allCodes": [
+        "HT2"
+      ]
+    },
+    {
+      "name": "Spaghetti",
+      "sourceKey": "BC7",
+      "allCodes": [
+        "BC7"
+      ]
+    },
+    {
+      "name": "Stars",
+      "sourceKey": "FN3",
+      "allCodes": [
+        "FN3"
+      ]
+    },
+    {
+      "name": "Steam",
+      "sourceKey": "AE2",
+      "allCodes": [
+        "AE2"
+      ]
+    },
+    {
+      "name": "Sticky",
+      "sourceKey": "FN4",
+      "allCodes": [
+        "FN4"
+      ]
+    },
+    {
+      "name": "Stone",
+      "sourceKey": "DP3",
+      "allCodes": [
+        "DP3"
+      ]
+    },
+    {
+      "name": "Sunset",
+      "sourceKey": "GG3",
+      "allCodes": [
+        "GG3"
+      ]
+    },
+    {
+      "name": "Tangerine",
+      "sourceKey": "IY2",
+      "allCodes": [
+        "IY2"
+      ]
+    },
+    {
+      "name": "Tarpie",
+      "sourceKey": "ED6",
+      "allCodes": [
+        "ED6"
+      ]
+    },
+    {
+      "name": "Tat",
+      "sourceKey": "IV2",
+      "allCodes": [
+        "IV2"
+      ]
+    },
+    {
+      "name": "Tickle",
+      "sourceKey": "AM2",
+      "allCodes": [
+        "AM2"
+      ]
+    },
+    {
+      "name": "Tie Dye",
+      "sourceKey": "GG4",
+      "allCodes": [
+        "GG4"
+      ]
+    },
+    {
+      "name": "Tiles",
+      "sourceKey": "FN2",
+      "allCodes": [
+        "FN2"
+      ]
+    },
+    {
+      "name": "Trapped",
+      "sourceKey": "AK3",
+      "allCodes": [
+        "AK3"
+      ]
+    },
+    {
+      "name": "Vapor",
+      "sourceKey": "CL3",
+      "allCodes": [
+        "CL3"
+      ]
+    },
+    {
+      "name": "Victoria",
+      "sourceKey": "DJ1",
+      "allCodes": [
+        "DJ1"
+      ]
+    },
+    {
+      "name": "Waves",
+      "sourceKey": "AR2",
+      "allCodes": [
+        "AR2"
+      ]
+    },
+    {
+      "name": "White",
+      "sourceKey": "HT3",
+      "allCodes": [
+        "HT3"
+      ]
+    },
+    {
+      "name": "X Ray",
+      "sourceKey": "DP4",
+      "allCodes": [
+        "DP4"
+      ]
+    },
+    {
+      "name": "X Ray Ultimate",
+      "sourceKey": "333",
+      "allCodes": [
+        "333"
+      ]
+    }
+  ],
+  "traits": [
+    {
+      "name": "101.1 FM",
+      "sourceKey": "BC1",
+      "allCodes": [
+        "BC1"
+      ]
+    },
+    {
+      "name": "2001",
+      "sourceKey": "EY2",
+      "allCodes": [
+        "EY2"
+      ]
+    },
+    {
+      "name": "Albino",
+      "sourceKey": "AJ2",
+      "allCodes": [
+        "AJ2"
+      ]
+    },
+    {
+      "name": "Angler",
+      "sourceKey": "AS2",
+      "allCodes": [
+        "AS2"
+      ]
+    },
+    {
+      "name": "Black & White",
+      "sourceKey": "JI2",
+      "allCodes": [
+        "JI2"
+      ]
+    },
+    {
+      "name": "Black Parade",
+      "sourceKey": "CU1",
+      "allCodes": [
+        "CU1"
+      ]
+    },
+    {
+      "name": "Blasters",
+      "sourceKey": "CU3",
+      "allCodes": [
+        "CU3"
+      ]
+    },
+    {
+      "name": "Bling",
+      "sourceKey": "MX1",
+      "allCodes": [
+        "MX1"
+      ]
+    },
+    {
+      "name": "Bonebox",
+      "sourceKey": "GK2",
+      "allCodes": [
+        "GK2"
+      ]
+    },
+    {
+      "name": "Bumble Bird",
+      "sourceKey": "BC2",
+      "allCodes": [
+        "BC2"
+      ]
+    },
+    {
+      "name": "Carbonite",
+      "sourceKey": "EY1",
+      "allCodes": [
+        "EY1"
+      ]
+    },
+    {
+      "name": "Chromium",
+      "sourceKey": "CD2",
+      "allCodes": [
+        "CD2"
+      ]
+    },
+    {
+      "name": "Concrete",
+      "sourceKey": "CD1",
+      "allCodes": [
+        "CD1"
+      ]
+    },
+    {
+      "name": "Contractor",
+      "sourceKey": "LG1",
+      "allCodes": [
+        "LG1"
+      ]
+    },
+    {
+      "name": "Crow",
+      "sourceKey": "AZ1",
+      "allCodes": [
+        "AZ1"
+      ]
+    },
+    {
+      "name": "Deep Space",
+      "sourceKey": "FB2",
+      "allCodes": [
+        "FB2"
+      ]
+    },
+    {
+      "name": "Drip",
+      "sourceKey": "EY3",
+      "allCodes": [
+        "EY3"
+      ]
+    },
+    {
+      "name": "Earth",
+      "sourceKey": "AW1",
+      "allCodes": [
+        "AW1"
+      ]
+    },
+    {
+      "name": "Firebird",
+      "sourceKey": "BR2",
+      "allCodes": [
+        "BR2"
+      ]
+    },
+    {
+      "name": "Foil",
+      "sourceKey": "AJ3",
+      "allCodes": [
+        "AJ3"
+      ]
+    },
+    {
+      "name": "Fourzin",
+      "sourceKey": "EH2",
+      "allCodes": [
+        "EH2"
+      ]
+    },
+    {
+      "name": "Golden Guns",
+      "sourceKey": "CU2",
+      "allCodes": [
+        "CU2"
+      ]
+    },
+    {
+      "name": "Golden Guns Ultimate",
+      "sourceKey": "999",
+      "allCodes": [
+        "999"
+      ]
+    },
+    {
+      "name": "Gone",
+      "sourceKey": "777",
+      "allCodes": [
+        "777"
+      ]
+    },
+    {
+      "name": "Hammerheat",
+      "sourceKey": "MT1",
+      "allCodes": [
+        "MT1"
+      ]
+    },
+    {
+      "name": "Hefner",
+      "sourceKey": "BR1",
+      "allCodes": [
+        "BR1"
+      ]
+    },
+    {
+      "name": "Heliotropium",
+      "sourceKey": "MO2",
+      "allCodes": [
+        "MO2"
+      ]
+    },
+    {
+      "name": "Holographic",
+      "sourceKey": "AS3",
+      "allCodes": [
+        "AS3"
+      ]
+    },
+    {
+      "name": "Hydra",
+      "sourceKey": "AP3",
+      "allCodes": [
+        "AP3"
+      ]
+    },
+    {
+      "name": "Iced",
+      "sourceKey": "BR3",
+      "allCodes": [
+        "BR3"
+      ]
+    },
+    {
+      "name": "Icon",
+      "sourceKey": "EV2",
+      "allCodes": [
+        "EV2"
+      ]
+    },
+    {
+      "name": "Jeff",
+      "sourceKey": "EH3",
+      "allCodes": [
+        "EH3"
+      ]
+    },
+    {
+      "name": "Just Wren",
+      "sourceKey": "EV1",
+      "allCodes": [
+        "EV1"
+      ]
+    },
+    {
+      "name": "King Tut",
+      "sourceKey": "AZ3",
+      "allCodes": [
+        "AZ3"
+      ]
+    },
+    {
+      "name": "Linkinator 3000",
+      "sourceKey": "222",
+      "allCodes": [
+        "222"
+      ]
+    },
+    {
+      "name": "Lumberjack",
+      "sourceKey": "LG2",
+      "allCodes": [
+        "LG2"
+      ]
+    },
+    {
+      "name": "Luna",
+      "sourceKey": "AS1",
+      "allCodes": [
+        "AS1"
+      ]
+    },
+    {
+      "name": "LV-426",
+      "sourceKey": "AW2",
+      "allCodes": [
+        "AW2"
+      ]
+    },
+    {
+      "name": "Molten Core",
+      "sourceKey": "HN2",
+      "allCodes": [
+        "HN2"
+      ]
+    },
+    {
+      "name": "Moth",
+      "sourceKey": "IL1",
+      "allCodes": [
+        "IL1"
+      ]
+    },
+    {
+      "name": "Near Space",
+      "sourceKey": "FB1",
+      "allCodes": [
+        "FB1"
+      ]
+    },
+    {
+      "name": "Night Vision",
+      "sourceKey": "OF2",
+      "allCodes": [
+        "OF2"
+      ]
+    },
+    {
+      "name": "Nil",
+      "sourceKey": "555",
+      "allCodes": [
+        "555"
+      ]
+    },
+    {
+      "name": "None",
+      "sourceKey": "333",
+      "allCodes": [
+        "333"
+      ]
+    },
+    {
+      "name": "Nothing",
+      "sourceKey": "NM1",
+      "allCodes": [
+        "NM1"
+      ]
+    },
+    {
+      "name": "Nuclear",
+      "sourceKey": "HN3",
+      "allCodes": [
+        "HN3"
+      ]
+    },
+    {
+      "name": "Null",
+      "sourceKey": "444",
+      "allCodes": [
+        "444"
+      ]
+    },
+    {
+      "name": "Oompah",
+      "sourceKey": "666",
+      "allCodes": [
+        "666"
+      ]
+    },
+    {
+      "name": "Palace",
+      "sourceKey": "AZ2",
+      "allCodes": [
+        "AZ2"
+      ]
+    },
+    {
+      "name": "Paparazzi",
+      "sourceKey": "OF1",
+      "allCodes": [
+        "OF1"
+      ]
+    },
+    {
+      "name": "Pawn Shop",
+      "sourceKey": "GK1",
+      "allCodes": [
+        "GK1"
+      ]
+    },
+    {
+      "name": "Peacock",
+      "sourceKey": "AZ4",
+      "allCodes": [
+        "AZ4"
+      ]
+    },
+    {
+      "name": "Peacock Ultimate",
+      "sourceKey": "111",
+      "allCodes": [
+        "111"
+      ]
+    },
+    {
+      "name": "Phoenix",
+      "sourceKey": "AP2",
+      "allCodes": [
+        "AP2"
+      ]
+    },
+    {
+      "name": "Pop",
+      "sourceKey": "KQ1",
+      "allCodes": [
+        "KQ1"
+      ]
+    },
+    {
+      "name": "Purplex",
+      "sourceKey": "MT2",
+      "allCodes": [
+        "MT2"
+      ]
+    },
+    {
+      "name": "Pyrex",
+      "sourceKey": "HN1",
+      "allCodes": [
+        "HN1"
+      ]
+    },
+    {
+      "name": "R&B",
+      "sourceKey": "KQ2",
+      "allCodes": [
+        "KQ2"
+      ]
+    },
+    {
+      "name": "Rainbow Morpho",
+      "sourceKey": "IL2",
+      "allCodes": [
+        "IL2"
+      ]
+    },
+    {
+      "name": "Ring Blue",
+      "sourceKey": "DA1",
+      "allCodes": [
+        "DA1"
+      ]
+    },
+    {
+      "name": "Ring Green",
+      "sourceKey": "DA2",
+      "allCodes": [
+        "DA2"
+      ]
+    },
+    {
+      "name": "Ring Red",
+      "sourceKey": "DA3",
+      "allCodes": [
+        "DA3"
+      ]
+    },
+    {
+      "name": "Sap",
+      "sourceKey": "BC3",
+      "allCodes": [
+        "BC3"
+      ]
+    },
+    {
+      "name": "Scissors",
+      "sourceKey": "AP1",
+      "allCodes": [
+        "AP1"
+      ]
+    },
+    {
+      "name": "Screamo",
+      "sourceKey": "KQ3",
+      "allCodes": [
+        "KQ3"
+      ]
+    },
+    {
+      "name": "Silver",
+      "sourceKey": "MO1",
+      "allCodes": [
+        "MO1"
+      ]
+    },
+    {
+      "name": "Spectrum",
+      "sourceKey": "EV3",
+      "allCodes": [
+        "EV3"
+      ]
+    },
+    {
+      "name": "Splatter",
+      "sourceKey": "GK3",
+      "allCodes": [
+        "GK3"
+      ]
+    },
+    {
+      "name": "Stock",
+      "sourceKey": "DE1",
+      "allCodes": [
+        "DE1"
+      ]
+    },
+    {
+      "name": "Stolen",
+      "sourceKey": "000",
+      "allCodes": [
+        "000"
+      ]
+    },
+    {
+      "name": "Tactical",
+      "sourceKey": "DE3",
+      "allCodes": [
+        "DE3"
+      ]
+    },
+    {
+      "name": "Technicolor",
+      "sourceKey": "JI1",
+      "allCodes": [
+        "JI1"
+      ]
+    },
+    {
+      "name": "Test Track",
+      "sourceKey": "AW3",
+      "allCodes": [
+        "AW3"
+      ]
+    },
+    {
+      "name": "Vampire",
+      "sourceKey": "AJ1",
+      "allCodes": [
+        "AJ1"
+      ]
+    },
+    {
+      "name": "Vanished",
+      "sourceKey": "888",
+      "allCodes": [
+        "888"
+      ]
+    },
+    {
+      "name": "Whiteout",
+      "sourceKey": "DE2",
+      "allCodes": [
+        "DE2"
+      ]
+    },
+    {
+      "name": "Who",
+      "sourceKey": "EH1",
+      "allCodes": [
+        "EH1"
+      ]
+    }
+  ]
+}
