@@ -1580,9 +1580,9 @@ export default function LandingDebugPage() {
                   </label>
                   <input
                     type="range"
-                    min="-50"
-                    max="50"
-                    step="1"
+                    min="-500"
+                    max="500"
+                    step="5"
                     value={config.soundLabelVerticalOffset}
                     onChange={(e) => updateConfig('soundLabelVerticalOffset', parseInt(e.target.value))}
                     className="w-full"

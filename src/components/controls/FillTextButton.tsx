@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface FillTextButtonProps {
   text?: string;
@@ -18,8 +18,17 @@ const FillTextButton = ({
   verticalOffset = 0
 }: FillTextButtonProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [isGlowing, setIsGlowing] = useState(false);
-  const [isFadingOut, setIsFadingOut] = useState(false);
+  const [animationKey, setAnimationKey] = useState(0);
+
+  // Force animation restart on hover by changing key
+  useEffect(() => {
+    if (isHovered) {
+      console.log('[✨GLOW] Hover detected, restarting animation (key:', animationKey + 1, ')');
+      setAnimationKey(prev => prev + 1);
+    } else {
+      console.log('[✨GLOW] Hover ended, stopping animation');
+    }
+  }, [isHovered]);
 
   return (
     <button
@@ -31,14 +40,8 @@ const FillTextButton = ({
         letterSpacing: '3px',
         transform: `translate(${horizontalOffset}px, ${verticalOffset}px)`,
       }}
-      onMouseEnter={() => {
-        setIsHovered(true);
-        setIsGlowing(true);
-        setIsFadingOut(false);
-      }}
-      onMouseLeave={() => {
-        setIsHovered(false);
-      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <style>
         {`
@@ -103,20 +106,7 @@ const FillTextButton = ({
           width: '3px',
           left: isHovered ? 'calc(100% - 3px)' : '0',
           transition: 'left 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-          animation: isGlowing && !isFadingOut ? 'line-glow 2s ease-in-out infinite' : 'none',
-          opacity: isFadingOut ? 0 : 1,
-          filter: isFadingOut ? 'none' : undefined,
-          transitionProperty: isFadingOut ? 'left, opacity, filter' : 'left',
-          transitionDuration: isFadingOut ? '500ms, 800ms, 800ms' : '500ms',
-        }}
-        onTransitionEnd={(e) => {
-          if (e.propertyName === 'left' && !isHovered && isGlowing) {
-            setIsFadingOut(true);
-            setTimeout(() => {
-              setIsGlowing(false);
-              setIsFadingOut(false);
-            }, 800);
-          }
+          animation: isHovered ? 'line-glow 2s ease-in-out infinite' : 'none',
         }}
       >
         {/* Inner line element */}
@@ -130,17 +120,15 @@ const FillTextButton = ({
 
       {/* Glow layer (synchronized with blue text width) */}
       <span
+        key={`glow-${animationKey}`}
         className="absolute top-0 left-0 whitespace-nowrap overflow-hidden"
         style={{
           color: 'transparent',
           width: isHovered ? 'calc(100% - 3px)' : '0%',
           transition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-          animation: isGlowing && !isFadingOut ? 'soft-pulse 3s ease-in-out infinite' : 'none',
-          opacity: isFadingOut ? 0 : 1,
-          transitionProperty: isFadingOut ? 'width, opacity' : 'width',
-          transitionDuration: isFadingOut ? '500ms, 800ms' : '500ms',
           pointerEvents: 'none',
           WebkitTextStroke: '0.5px #3DD1FF',
+          animation: isHovered ? 'soft-pulse 3s ease-in-out infinite' : 'none',
         }}
         aria-hidden="true"
       >
