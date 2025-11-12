@@ -136,6 +136,7 @@ export default function LandingDebugPage() {
   const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel' | 'joinBeta' | 'audioLightboxDescription'>('description');
   const [migrationStatus, setMigrationStatus] = useState<'pending' | 'migrating' | 'complete' | 'none'>('pending');
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isUserEditingRef = useRef(false); // Track if user is actively editing to prevent race conditions
 
   // NEW: Desktop/Mobile mode toggle
   const [activeMode, setActiveMode] = useState<'desktop' | 'mobile'>('desktop');
@@ -145,20 +146,35 @@ export default function LandingDebugPage() {
   const updateUnifiedSettings = useMutation(api.landingDebugUnified.updateUnifiedLandingDebugSettings);
   const resetUnifiedSettings = useMutation(api.landingDebugUnified.resetUnifiedLandingDebugSettings);
   const migrateFromOld = useMutation(api.landingDebugUnified.migrateFromOldTables);
+  const copyDesktopToMobile = useMutation(api.landingDebugUnified.copyDesktopToMobile);
 
   // Load correct config when switching between desktop/mobile modes
+  // ONLY on mode switch, NOT on every database update (prevents race conditions)
   useEffect(() => {
+    console.log('[🔄MODE-SWITCH] Effect triggered:', {
+      hasUnifiedSettings: !!unifiedSettings,
+      migrationStatus,
+      activeMode,
+      isUserEditing: isUserEditingRef.current
+    });
+
+    // Don't reload if user is actively editing (prevents slider jump bug)
+    if (isUserEditingRef.current) {
+      console.log('[🔄MODE-SWITCH] Skipping reload - user is editing');
+      return;
+    }
+
     if (unifiedSettings && migrationStatus === 'complete') {
       const modeConfig = activeMode === 'desktop' ? unifiedSettings.desktop : unifiedSettings.mobile;
       const mergedConfig: ConfigType = { ...DEFAULT_CONFIG, ...unifiedSettings.shared, ...modeConfig };
-      console.log(`[MODE-SWITCH] Loaded ${activeMode} config:`, {
+      console.log(`[🔄MODE-SWITCH] Loaded ${activeMode} config:`, {
         logoSize: mergedConfig.logoSize,
         descriptionFontSize: mergedConfig.descriptionFontSize,
         bgStarCount: mergedConfig.bgStarCount
       });
       setConfig(mergedConfig);
     }
-  }, [activeMode, unifiedSettings]);
+  }, [activeMode, migrationStatus]); // Removed unifiedSettings from deps to prevent reload on every DB update
 
   // OLD: Keep old hooks for fallback during migration
   const oldDbSettings = useQuery(api.landingDebugSettings.getLandingDebugSettings);
@@ -468,6 +484,10 @@ export default function LandingDebugPage() {
       return; // Don't save during migration
     }
 
+    // Mark that user is editing (prevents mode-switch effect from overwriting changes)
+    isUserEditingRef.current = true;
+    console.log('[💾SAVE] User editing flag set to TRUE');
+
     // Clear any existing timeout
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -507,6 +527,12 @@ export default function LandingDebugPage() {
         setSaveState('saved');
         setTimeout(() => setSaveState('idle'), 1500);
 
+        // Clear editing flag after save completes (allow mode-switch reloads again)
+        setTimeout(() => {
+          isUserEditingRef.current = false;
+          console.log('[💾SAVE] User editing flag reset to FALSE (save complete)');
+        }, 2000); // Wait 2s after save to ensure state is stable
+
         // Also dispatch events for real-time preview updates
         window.dispatchEvent(new Event('mek-landing-config-updated'));
         const iframe = document.querySelector('iframe[title="Landing Page Preview"]') as HTMLIFrameElement;
@@ -516,6 +542,9 @@ export default function LandingDebugPage() {
       } catch (err) {
         console.error('[SAVE] Failed to save settings:', err);
         setSaveState('idle');
+        // Reset editing flag on error too
+        isUserEditingRef.current = false;
+        console.log('[💾SAVE] User editing flag reset to FALSE (save error)');
       }
     }, 500); // 500ms debounce
 
@@ -802,6 +831,38 @@ export default function LandingDebugPage() {
           <p className="text-center text-xs text-gray-400 mt-3">
             All settings below will save to {activeMode === 'desktop' ? 'desktop' : 'mobile'} configuration
           </p>
+
+          {/* Copy Desktop to Mobile Button */}
+          <div className="mt-3 pt-3 border-t border-gray-700">
+            <button
+              onClick={async () => {
+                if (!confirm('Copy all desktop settings to mobile? This will overwrite current mobile settings.')) {
+                  return;
+                }
+                try {
+                  const result = await copyDesktopToMobile();
+                  if (result.success) {
+                    alert(`✅ ${result.message}\nCopied ${result.copiedSettings} settings from desktop to mobile.`);
+                    // If currently on mobile, reload to show new settings
+                    if (activeMode === 'mobile') {
+                      window.location.reload();
+                    }
+                  } else {
+                    alert(`❌ ${result.message}`);
+                  }
+                } catch (err) {
+                  console.error('Failed to copy desktop to mobile:', err);
+                  alert('❌ Failed to copy settings. See console for details.');
+                }
+              }}
+              className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              📋 Copy Desktop Settings to Mobile
+            </button>
+            <p className="text-center text-xs text-gray-400 mt-1">
+              Use this to sync mobile with desktop. Mobile will start identical to desktop, then you can adjust specific values.
+            </p>
+          </div>
         </div>
 
         {/* Header */}
