@@ -1227,8 +1227,7 @@ export default function LandingPage() {
       style={{
         margin: 0,
         padding: 0,
-        minHeight: '100vh',
-        paddingBottom: `${Math.max(0, phaseColumnYOffset + phaseColumnHeight + 50)}px`,
+        height: `calc(100vh + ${phaseColumnYOffset}px + ${phaseColumnHeight}px)`,
         overflowX: 'hidden',
         position: 'relative',
         touchAction: 'pan-y',
@@ -1404,11 +1403,11 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Phase Timeline - Fixed to Bottom */}
+      {/* Phase Timeline - Scrollable Page Content */}
       <div
-        className="fixed bottom-0 left-0 right-0 w-full z-[20]"
+        className="absolute left-0 right-0 w-full z-[20]"
         style={{
-          transform: `translateY(${phaseColumnYOffset}px)`,
+          top: `calc(100vh - ${phaseColumnHeight}px + ${phaseColumnYOffset}px)`,
         }}
       >
         <HorizontalTimeline
