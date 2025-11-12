@@ -6,8 +6,8 @@ import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 
 // Debug control configuration storage key (for backward compatibility and migration)
-const STORAGE_KEY = 'mek-landing-debug-config';
-const MIGRATION_FLAG = 'mek-landing-debug-migrated';
+const STORAGE_KEY = 'mek-landing-debug-mobile-config';
+const MIGRATION_FLAG = 'mek-landing-debug-mobile-migrated';
 
 // Default values matching landing page
 const DEFAULT_CONFIG = {
@@ -552,29 +552,29 @@ export default function LandingDebugPage() {
   // Loading state - wait for database to load before rendering
   if (!dbSettings || migrationStatus === 'pending') {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-gray-400 text-sm">Loading debug controls...</div>
+      <div className="min-h-screen bg-purple-950 flex items-center justify-center">
+        <div className="text-purple-300 text-sm">Loading debug controls...</div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen ${viewMode === 'split-view' ? 'flex' : 'bg-gray-900 p-3'}`}>
+    <div className={`min-h-screen ${viewMode === 'split-view' ? 'flex' : 'bg-purple-950 p-3'}`}>
       <div
-        className={viewMode === 'split-view' ? 'w-1/2 bg-gray-800 p-3 overflow-y-auto border-r border-gray-700' : 'max-w-5xl mx-auto'}
+        className={viewMode === 'split-view' ? 'w-1/2 bg-purple-900/40 p-3 overflow-y-auto border-r border-purple-700' : 'max-w-5xl mx-auto'}
         style={{ zoom: 0.75 }}
       >
-        {/* Desktop Debug Identifier */}
-        <div className="mb-4 p-4 bg-gray-800 border-2 border-blue-500 rounded-lg">
-          <h1 className="text-3xl font-bold text-blue-300 text-center mb-2">
-            🖥️ DESKTOP DEBUG
+        {/* Mobile Debug Identifier */}
+        <div className="mb-4 p-4 bg-purple-900/60 border-2 border-purple-500 rounded-lg">
+          <h1 className="text-3xl font-bold text-purple-300 text-center mb-2">
+            📱 MOBILE DEBUG
           </h1>
           <div className="flex justify-center">
             <a
-              href="/landing-debug-mobile"
-              className="px-4 py-2 bg-purple-700 border border-purple-500 rounded text-white text-sm hover:bg-purple-600 transition-colors"
+              href="/landing-debug"
+              className="px-4 py-2 bg-blue-700 border border-blue-500 rounded text-white text-sm hover:bg-blue-600 transition-colors"
             >
-              📱 Switch to Mobile Debug
+              🖥️ Switch to Desktop Debug
             </a>
           </div>
         </div>
@@ -582,7 +582,7 @@ export default function LandingDebugPage() {
         {/* Header */}
         <div className="mb-3">
           <div className="flex items-center justify-between mb-1">
-            <h1 className="text-lg font-semibold text-gray-100">
+            <h1 className="text-lg font-semibold text-purple-200">
               Landing Page Debug Controls
             </h1>
             {migrationStatus === 'migrating' && (
@@ -604,13 +604,13 @@ export default function LandingDebugPage() {
               href="/landing"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-gray-300 text-xs hover:bg-gray-600"
+              className="px-2 py-1 bg-purple-700 border border-purple-600 rounded text-purple-200 text-xs hover:bg-purple-600"
             >
               Open Landing Page
             </a>
             <button
               onClick={() => setViewMode(viewMode === 'controls-only' ? 'split-view' : 'controls-only')}
-              className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-gray-300 text-xs hover:bg-gray-600"
+              className="px-2 py-1 bg-purple-700 border border-purple-600 rounded text-purple-200 text-xs hover:bg-purple-600"
             >
               {viewMode === 'controls-only' ? 'Show Preview' : 'Hide Preview'}
             </button>
@@ -621,15 +621,15 @@ export default function LandingDebugPage() {
                 saveState === 'saved'
                   ? 'bg-blue-900/50 border border-blue-700 text-blue-200'
                   : saveState === 'saving'
-                  ? 'bg-gray-700 border border-gray-600 text-gray-500 cursor-wait'
-                  : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
+                  ? 'bg-purple-700 border border-purple-600 text-purple-400 cursor-wait'
+                  : 'bg-purple-700 border border-purple-600 text-purple-200 hover:bg-purple-600'
               }`}
             >
               {saveState === 'saved' ? 'Settings Saved' : saveState === 'saving' ? 'Saving...' : 'Save Settings'}
             </button>
             <button
               onClick={resetToDefaults}
-              className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-gray-300 text-xs hover:bg-gray-600"
+              className="px-2 py-1 bg-purple-700 border border-purple-600 rounded text-purple-200 text-xs hover:bg-purple-600"
             >
               Reset to Defaults
             </button>
@@ -638,7 +638,7 @@ export default function LandingDebugPage() {
               className={`px-2 py-1 rounded text-xs ${
                 audioConsentVisible
                   ? 'bg-green-900/50 border border-green-700 text-green-200'
-                  : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
+                  : 'bg-purple-700 border border-purple-600 text-purple-200 hover:bg-purple-600'
               }`}
             >
               {audioConsentVisible ? 'Hide Landing Audio Consent' : 'Show Landing Audio Consent'}
@@ -647,15 +647,15 @@ export default function LandingDebugPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex flex-wrap gap-2 mb-4 border-b border-gray-700 pb-2">
+        <div className="flex flex-wrap gap-2 mb-4 border-b border-purple-700 pb-2">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`px-3 py-1.5 rounded-t text-sm font-medium transition-colors ${
                 config.activeTab === tab.id
-                  ? 'bg-blue-600 text-white border-b-2 border-blue-400'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  ? 'bg-purple-600 text-white border-b-2 border-purple-400'
+                  : 'bg-purple-800 text-purple-200 hover:bg-purple-700'
               }`}
             >
               {tab.label}
@@ -667,8 +667,8 @@ export default function LandingDebugPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
 
           {/* Star Controls Section - Layer 1 */}
-          <div className="bg-gray-800 border border-gray-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
+          <div className="bg-purple-900/20 border border-purple-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-purple-700">
               Layer 1 Star Field
             </h2>
             {/* Star Scale */}
@@ -730,8 +730,8 @@ export default function LandingDebugPage() {
           </div>
 
           {/* Layer 1 Twinkling Controls */}
-          <div className="bg-gray-800 border border-gray-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
+          <div className="bg-purple-900/20 border border-purple-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-purple-700">
               Layer 1 Twinkling
             </h2>
 
@@ -832,8 +832,8 @@ export default function LandingDebugPage() {
           </div>
 
           {/* Star Controls Section - Layer 2 */}
-          <div className="bg-gray-800 border border-gray-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
+          <div className="bg-purple-900/20 border border-purple-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-purple-700">
               Layer 2 Star Field
             </h2>
 
@@ -915,8 +915,8 @@ export default function LandingDebugPage() {
           </div>
 
           {/* Layer 2 Twinkling Controls */}
-          <div className="bg-gray-800 border border-gray-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
+          <div className="bg-purple-900/20 border border-purple-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-purple-700">
               Layer 2 Twinkling
             </h2>
 
@@ -1017,7 +1017,7 @@ export default function LandingDebugPage() {
           </div>
 
           {/* Star Controls Section - Layer 3 */}
-          <div className="bg-gray-800 border border-purple-500 rounded p-3">
+          <div className="bg-purple-900/20 border border-purple-500 rounded p-3">
             <h2 className="text-sm font-semibold text-purple-400 mb-2 pb-1 border-b border-purple-700">
               Layer 3 Star Field
             </h2>
@@ -1119,7 +1119,7 @@ export default function LandingDebugPage() {
           </div>
 
           {/* Background Stars (Static) Controls */}
-          <div className="bg-gray-800 border border-orange-500 rounded p-3">
+          <div className="bg-purple-900/20 border border-orange-500 rounded p-3">
             <h2 className="text-sm font-semibold text-orange-400 mb-2 pb-1 border-b border-orange-700">
               Background Stars (Static)
             </h2>
@@ -1298,8 +1298,8 @@ export default function LandingDebugPage() {
 
           {/* Layout Controls Section */}
           {true && (
-          <div className="bg-gray-800 border border-gray-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
+          <div className="bg-purple-900/20 border border-purple-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-purple-700">
               Layout & Positioning
             </h2>
 
@@ -1366,8 +1366,8 @@ export default function LandingDebugPage() {
 
           {/* Typography Controls Section */}
           {true && (
-          <div className="bg-gray-800 border border-gray-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
+          <div className="bg-purple-900/20 border border-purple-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-purple-700">
               Typography
             </h2>
 
@@ -1643,7 +1643,7 @@ export default function LandingDebugPage() {
             )}
 
             {/* Preview Text */}
-            <div className="mt-2 p-2 bg-gray-900 rounded border border-gray-700">
+            <div className="mt-2 p-2 bg-gray-900 rounded border border-purple-700">
               <p className="text-[10px] text-gray-500 mb-1">Preview:</p>
               {selectedTypographyElement === 'description' ? (
                 <p
@@ -1673,7 +1673,7 @@ export default function LandingDebugPage() {
           )}
 
           {/* Phase Cards Management Section */}
-          <div className="mt-4 bg-gray-800 border border-yellow-500 rounded p-4">
+          <div className="mt-4 bg-purple-900/20 border border-yellow-500 rounded p-4">
             <h2 className="text-lg font-semibold text-yellow-400 mb-3 pb-2 border-b border-yellow-500/30">
               Phase Cards Management
             </h2>
@@ -1688,7 +1688,7 @@ export default function LandingDebugPage() {
             </div>
 
             {/* Phase Text Editor */}
-            <div className="bg-gray-900 border border-gray-700 rounded p-3 mb-4">
+            <div className="bg-gray-900 border border-purple-700 rounded p-3 mb-4">
               <h3 className="text-sm font-semibold text-gray-100 mb-2">Edit Phase Text</h3>
               <div className="space-y-2">
                 <div>
@@ -1696,7 +1696,7 @@ export default function LandingDebugPage() {
                   <select
                     value={selectedPhaseForEdit || ''}
                     onChange={(e) => setSelectedPhaseForEdit(e.target.value as Id<"phaseCards">)}
-                    className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                    className="w-full bg-purple-900/20 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                   >
                     <option value="">Choose a phase...</option>
                     {phaseCards?.map((phase) => (
@@ -1716,7 +1716,7 @@ export default function LandingDebugPage() {
                         value={phaseEditForm.header}
                         onChange={(e) => setPhaseEditForm(prev => ({ ...prev, header: e.target.value }))}
                         placeholder="e.g., Phase I"
-                        className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                        className="w-full bg-purple-900/20 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                       />
                     </div>
                     <div>
@@ -1726,7 +1726,7 @@ export default function LandingDebugPage() {
                         value={phaseEditForm.subtitle}
                         onChange={(e) => setPhaseEditForm(prev => ({ ...prev, subtitle: e.target.value }))}
                         placeholder="e.g., The Beginning"
-                        className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                        className="w-full bg-purple-900/20 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                       />
                     </div>
                     <div>
@@ -1736,7 +1736,7 @@ export default function LandingDebugPage() {
                         value={phaseEditForm.title}
                         onChange={(e) => setPhaseEditForm(prev => ({ ...prev, title: e.target.value }))}
                         placeholder="e.g., Initialization"
-                        className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                        className="w-full bg-purple-900/20 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                       />
                     </div>
                     <div>
@@ -1746,7 +1746,7 @@ export default function LandingDebugPage() {
                         onChange={(e) => setPhaseEditForm(prev => ({ ...prev, description: e.target.value }))}
                         rows={3}
                         placeholder="Description paragraph..."
-                        className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                        className="w-full bg-purple-900/20 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                       />
                     </div>
                     <div>
@@ -1756,7 +1756,7 @@ export default function LandingDebugPage() {
                         value={phaseEditForm.imageUrl}
                         onChange={(e) => setPhaseEditForm(prev => ({ ...prev, imageUrl: e.target.value }))}
                         placeholder="e.g., /mek-images/50px/bi1-cb1-nm1.webp"
-                        className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                        className="w-full bg-purple-900/20 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                       />
                     </div>
                     <button
@@ -1771,7 +1771,7 @@ export default function LandingDebugPage() {
             </div>
 
             {/* Add New Phase Card Form */}
-            <div className="bg-gray-900 border border-gray-700 rounded p-3 mb-4">
+            <div className="bg-gray-900 border border-purple-700 rounded p-3 mb-4">
               <h3 className="text-sm font-semibold text-gray-100 mb-2">Add New Phase Card</h3>
               <div className="space-y-2">
                 <div>
@@ -1781,7 +1781,7 @@ export default function LandingDebugPage() {
                     value={newPhaseForm.header}
                     onChange={(e) => setNewPhaseForm(prev => ({ ...prev, header: e.target.value }))}
                     placeholder="e.g., The Beginning"
-                    className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                    className="w-full bg-purple-900/20 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                   />
                 </div>
                 <div>
@@ -1791,7 +1791,7 @@ export default function LandingDebugPage() {
                     value={newPhaseForm.title}
                     onChange={(e) => setNewPhaseForm(prev => ({ ...prev, title: e.target.value }))}
                     placeholder="e.g., Foundation"
-                    className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                    className="w-full bg-purple-900/20 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                   />
                 </div>
                 <div>
@@ -1801,7 +1801,7 @@ export default function LandingDebugPage() {
                     onChange={(e) => setNewPhaseForm(prev => ({ ...prev, description: e.target.value }))}
                     placeholder="Phase description..."
                     rows={2}
-                    className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                    className="w-full bg-purple-900/20 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                   />
                 </div>
                 <div>
@@ -1811,7 +1811,7 @@ export default function LandingDebugPage() {
                     value={newPhaseForm.imageUrl}
                     onChange={(e) => setNewPhaseForm(prev => ({ ...prev, imageUrl: e.target.value }))}
                     placeholder="e.g., /mek-images/50px/bi1-cb1-nm1.webp"
-                    className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                    className="w-full bg-purple-900/20 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                   />
                 </div>
                 <div className="flex items-center gap-2">
@@ -1845,7 +1845,7 @@ export default function LandingDebugPage() {
                 <div className="text-gray-400 text-sm">No phase cards yet. Add one above or initialize defaults.</div>
               ) : (
                 phaseCards.map((phase) => (
-                  <div key={phase._id} className="bg-gray-900 border border-gray-700 rounded p-3">
+                  <div key={phase._id} className="bg-gray-900 border border-purple-700 rounded p-3">
                     {editingPhaseId === phase._id ? (
                       // Edit mode
                       <div className="space-y-2">
@@ -1856,7 +1856,7 @@ export default function LandingDebugPage() {
                             defaultValue={phase.header || ''}
                             id={`edit-header-${phase._id}`}
                             placeholder="e.g., The Beginning"
-                            className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                            className="w-full bg-purple-900/20 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                           />
                         </div>
                         <div>
@@ -1866,7 +1866,7 @@ export default function LandingDebugPage() {
                             defaultValue={phase.title}
                             id={`edit-title-${phase._id}`}
                             placeholder="e.g., Foundation"
-                            className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                            className="w-full bg-purple-900/20 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                           />
                         </div>
                         <div>
@@ -1876,7 +1876,7 @@ export default function LandingDebugPage() {
                             id={`edit-description-${phase._id}`}
                             rows={2}
                             placeholder="Description paragraph..."
-                            className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                            className="w-full bg-purple-900/20 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                           />
                         </div>
                         <div>
@@ -1886,7 +1886,7 @@ export default function LandingDebugPage() {
                             defaultValue={phase.imageUrl || ''}
                             id={`edit-imageUrl-${phase._id}`}
                             placeholder="e.g., /mek-images/50px/bi1-cb1-nm1.webp"
-                            className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                            className="w-full bg-purple-900/20 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                           />
                         </div>
                         <div className="flex items-center gap-2">
@@ -1969,8 +1969,8 @@ export default function LandingDebugPage() {
 
           {/* Sound Button Controls Section */}
           {true && (
-          <div className="bg-gray-800 border border-gray-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
+          <div className="bg-purple-900/20 border border-purple-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-purple-700">
               Sound Button Controls
             </h2>
             <p className="text-xs text-gray-400 mb-2">
@@ -2055,8 +2055,8 @@ export default function LandingDebugPage() {
 
           {/* Audio Consent Lightbox Controls Section */}
           {true && (
-          <div className="bg-gray-800 border border-gray-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
+          <div className="bg-purple-900/20 border border-purple-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-purple-700">
               Audio Consent Lightbox Controls
             </h2>
             <p className="text-xs text-gray-400 mb-2">
@@ -2237,7 +2237,7 @@ export default function LandingDebugPage() {
           )}
 
           {/* PhaseCarousel Visual Controls Section */}
-          <div className="bg-gray-800 border border-cyan-500 rounded p-3">
+          <div className="bg-purple-900/20 border border-cyan-500 rounded p-3">
             <h2 className="text-sm font-semibold text-cyan-400 mb-2 pb-1 border-b border-cyan-700">
               Phase Carousel Visual Controls
             </h2>
@@ -2440,7 +2440,7 @@ export default function LandingDebugPage() {
           </div>
 
           {/* Phase Image URLs Section */}
-          <div className="bg-gray-800 border border-cyan-500 rounded p-3">
+          <div className="bg-purple-900/20 border border-cyan-500 rounded p-3">
             <h2 className="text-sm font-semibold text-cyan-400 mb-2 pb-1 border-b border-cyan-700">
               Phase Background Images
             </h2>
@@ -2461,7 +2461,7 @@ export default function LandingDebugPage() {
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500 mb-1"
               />
               {config.phaseImage1 && (
-                <div className="mt-1 p-2 bg-gray-900 rounded border border-gray-700">
+                <div className="mt-1 p-2 bg-gray-900 rounded border border-purple-700">
                   <p className="text-[10px] text-gray-500 mb-1">Preview:</p>
                   <div className="relative w-full h-20 bg-gray-950 rounded overflow-hidden">
                     <img
@@ -2494,7 +2494,7 @@ export default function LandingDebugPage() {
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500 mb-1"
               />
               {config.phaseImage2 && (
-                <div className="mt-1 p-2 bg-gray-900 rounded border border-gray-700">
+                <div className="mt-1 p-2 bg-gray-900 rounded border border-purple-700">
                   <p className="text-[10px] text-gray-500 mb-1">Preview:</p>
                   <div className="relative w-full h-20 bg-gray-950 rounded overflow-hidden">
                     <img
@@ -2527,7 +2527,7 @@ export default function LandingDebugPage() {
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500 mb-1"
               />
               {config.phaseImage3 && (
-                <div className="mt-1 p-2 bg-gray-900 rounded border border-gray-700">
+                <div className="mt-1 p-2 bg-gray-900 rounded border border-purple-700">
                   <p className="text-[10px] text-gray-500 mb-1">Preview:</p>
                   <div className="relative w-full h-20 bg-gray-950 rounded overflow-hidden">
                     <img
@@ -2560,7 +2560,7 @@ export default function LandingDebugPage() {
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500 mb-1"
               />
               {config.phaseImage4 && (
-                <div className="mt-1 p-2 bg-gray-900 rounded border border-gray-700">
+                <div className="mt-1 p-2 bg-gray-900 rounded border border-purple-700">
                   <p className="text-[10px] text-gray-500 mb-1">Preview:</p>
                   <div className="relative w-full h-20 bg-gray-950 rounded overflow-hidden">
                     <img
@@ -2587,7 +2587,7 @@ export default function LandingDebugPage() {
       {/* Live Preview Section (Split View Only) */}
       {viewMode === 'split-view' && (
         <div className="w-1/2 bg-gray-950 relative flex flex-col">
-          <div className="bg-gray-800 border-b border-gray-700 p-2">
+          <div className="bg-purple-900/20 border-b border-purple-700 p-2">
             <h2 className="text-gray-100 text-sm font-semibold">
               Live Preview
             </h2>
