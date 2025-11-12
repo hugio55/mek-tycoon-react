@@ -84,7 +84,8 @@ export default function UnifiedHeader() {
       if (source === 'polling') pollCount++;
       if (source === 'storage') storageEventCount++;
 
-      console.log(`[🔄SYNC] checkWalletAddress called from: ${source}`);
+      // COMMENTED OUT: Excessive logging that floods console
+      // console.log(`[🔄SYNC] checkWalletAddress called from: ${source}`);
 
       try {
         const session = await restoreWalletSession();
@@ -114,9 +115,11 @@ export default function UnifiedHeader() {
 
             lastAddress = address;
             lastExpires = expiresAt;
-          } else {
-            console.log(`[🔄SYNC] No change from ${source} (poll ${pollCount}, changes ${actualStateChanges})`);
           }
+          // COMMENTED OUT: Excessive logging when no changes
+          // else {
+          //   console.log(`[🔄SYNC] No change from ${source} (poll ${pollCount}, changes ${actualStateChanges})`);
+          // }
 
           // CRITICAL FIX: Only update state if values actually changed
           // This prevents unnecessary re-renders and query re-executions
@@ -134,9 +137,16 @@ export default function UnifiedHeader() {
             }
             return prevExpires;
           });
-        } else {
-          console.log(`[🔄SYNC] No session from ${source}`);
-          // Only clear if not already cleared
+        }
+        // COMMENTED OUT: Excessive "no session" logging
+        // else {
+        //   console.log(`[🔄SYNC] No session from ${source}`);
+        //   // Only clear if not already cleared
+        //   setWalletAddress(prev => prev !== null ? null : prev);
+        //   setSessionExpiresAt(prev => prev !== null ? null : prev);
+        // }
+        else {
+          // Only clear if not already cleared (silent)
           setWalletAddress(prev => prev !== null ? null : prev);
           setSessionExpiresAt(prev => prev !== null ? null : prev);
         }
