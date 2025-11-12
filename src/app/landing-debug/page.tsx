@@ -1686,6 +1686,151 @@ export default function LandingDebugPage() {
           </div>
           )}
 
+          {/* Scroll Arrow Section */}
+          <div className="mt-4 bg-gray-800 border border-yellow-500 rounded p-4">
+            <h2 className="text-lg font-semibold text-yellow-400 mb-3 pb-2 border-b border-yellow-500/30">
+              Scroll Indicator Arrow
+            </h2>
+
+            {/* Arrow Type */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Arrow Style
+              </label>
+              <select
+                value={config.scrollArrowType}
+                onChange={(e) => updateConfig('scrollArrowType', e.target.value)}
+                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-gray-500"
+              >
+                <option value="chevron">Chevron (Simple V)</option>
+                <option value="arrow">Arrow (Line with point)</option>
+                <option value="double-chevron">Double Chevron (Stacked V's)</option>
+                <option value="circle-arrow">Circle Arrow (Encircled)</option>
+                <option value="bracket">Bracket (Decorative)</option>
+                <option value="line">Line (Minimal)</option>
+                <option value="dots">Dots (Three dots)</option>
+              </select>
+            </div>
+
+            {/* Preview */}
+            <div className="mt-2 p-2 bg-gray-900 rounded border border-gray-700 flex justify-center items-center h-20">
+              <p className="text-[10px] text-gray-500 mb-1 absolute">Arrow Preview:</p>
+              <div className="mt-4">
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="text-gray-400"
+                >
+                  {config.scrollArrowType === 'chevron' && (
+                    <path
+                      d="M6 9L12 15L18 9"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  )}
+                  {config.scrollArrowType === 'arrow' && (
+                    <path
+                      d="M12 5V19M12 19L7 14M12 19L17 14"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  )}
+                  {config.scrollArrowType === 'double-chevron' && (
+                    <>
+                      <path
+                        d="M6 6L12 12L18 6"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M6 12L12 18L18 12"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </>
+                  )}
+                  {config.scrollArrowType === 'circle-arrow' && (
+                    <>
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="9"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      />
+                      <path
+                        d="M12 8V16M12 16L9 13M12 16L15 13"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </>
+                  )}
+                  {config.scrollArrowType === 'bracket' && (
+                    <>
+                      <path
+                        d="M8 8L12 12L16 8"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M7 12H17"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M8 16L12 12L16 16"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </>
+                  )}
+                  {config.scrollArrowType === 'line' && (
+                    <>
+                      <path
+                        d="M12 4V20"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M7 15L12 20L17 15"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </>
+                  )}
+                  {config.scrollArrowType === 'dots' && (
+                    <>
+                      <circle cx="12" cy="6" r="1.5" fill="currentColor" />
+                      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+                      <circle cx="12" cy="18" r="1.5" fill="currentColor" />
+                    </>
+                  )}
+                </svg>
+              </div>
+            </div>
+          </div>
+
           {/* Phase Cards Management Section */}
           <div className="mt-4 bg-gray-800 border border-yellow-500 rounded p-4">
             <h2 className="text-lg font-semibold text-yellow-400 mb-3 pb-2 border-b border-yellow-500/30">
