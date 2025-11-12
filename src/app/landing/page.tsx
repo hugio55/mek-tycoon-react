@@ -230,6 +230,12 @@ export default function LandingPage() {
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(err => console.error('[🎬SWAP] Video play failed:', err));
 
+      // Show scroll indicator 1 second after video starts playing
+      setTimeout(() => {
+        console.log('[📍SCROLL] Showing scroll indicator');
+        setShowScrollIndicator(true);
+      }, 1000);
+
       // Unlock scroll after video plays and fade-in completes
       setTimeout(() => {
         console.log('[🔓SCROLL] Unlocking scroll after video playback + fade-in');
@@ -295,6 +301,9 @@ export default function LandingPage() {
 
   // Scroll-triggered animation state
   const [hasScrolled, setHasScrolled] = useState(false);
+
+  // Scroll indicator state
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
 
   // Note: phaseImage1-4 not needed here - PhaseCarousel reads directly from localStorage
 
@@ -1373,6 +1382,48 @@ export default function LandingPage() {
         toggleScale={audioToggleScale}
         lockScroll={lockScrollForConsent}
       />
+
+      {/* Scroll Indicator - Bottom Center */}
+      {showScrollIndicator && (
+        <>
+          <style dangerouslySetInnerHTML={{
+            __html: `
+              @keyframes scroll-bounce {
+                0%, 100% { transform: translate(-50%, 0); }
+                50% { transform: translate(-50%, 12px); }
+              }
+            `
+          }} />
+          <div
+            className="fixed bottom-8 left-1/2 z-[100] pointer-events-none"
+            style={{
+              animation: 'scroll-bounce 2s ease-in-out infinite',
+              opacity: 1,
+              transition: 'opacity 700ms ease-out',
+            }}
+          >
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="text-yellow-400"
+              style={{
+                filter: 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.6))',
+              }}
+            >
+              <path
+                d="M12 4L12 20M12 20L18 14M12 20L6 14"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        </>
+      )}
 
     </div>
   );
