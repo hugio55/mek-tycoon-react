@@ -553,7 +553,7 @@ export default function LandingDebugPage() {
   if (!dbSettings || migrationStatus === 'pending') {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-purple-400/60 text-sm">Loading debug controls...</div>
+        <div className="text-gray-400 text-sm">Loading debug controls...</div>
       </div>
     );
   }
@@ -561,12 +561,12 @@ export default function LandingDebugPage() {
   return (
     <div className={`min-h-screen ${viewMode === 'split-view' ? 'flex' : 'bg-gray-950 p-3'}`}>
       <div
-        className={viewMode === 'split-view' ? 'w-1/2 bg-gray-900/60 p-3 overflow-y-auto border-r border-purple-700' : 'max-w-5xl mx-auto'}
+        className={viewMode === 'split-view' ? 'w-1/2 bg-gray-900/60 p-3 overflow-y-auto border-r border-gray-700' : 'max-w-5xl mx-auto'}
         style={{ zoom: 0.75 }}
       >
         {/* Mobile Debug Identifier */}
         <div className="mb-4 p-4 bg-gray-900 border-2 border-purple-900/50 rounded-lg">
-          <h1 className="text-3xl font-bold text-purple-300 text-center mb-2">
+          <h1 className="text-3xl font-bold text-gray-200 text-center mb-2">
             📱 MOBILE DEBUG
           </h1>
           <div className="flex justify-center">
@@ -582,7 +582,7 @@ export default function LandingDebugPage() {
         {/* Header */}
         <div className="mb-3">
           <div className="flex items-center justify-between mb-1">
-            <h1 className="text-lg font-semibold text-purple-200">
+            <h1 className="text-lg font-semibold text-gray-200">
               Landing Page Debug Controls
             </h1>
             {migrationStatus === 'migrating' && (
@@ -604,13 +604,13 @@ export default function LandingDebugPage() {
               href="/landing"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-2 py-1 bg-purple-700 border border-purple-600 rounded text-purple-200 text-xs hover:bg-purple-600"
+              className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-gray-200 text-xs hover:bg-gray-600"
             >
               Open Landing Page
             </a>
             <button
               onClick={() => setViewMode(viewMode === 'controls-only' ? 'split-view' : 'controls-only')}
-              className="px-2 py-1 bg-purple-700 border border-purple-600 rounded text-purple-200 text-xs hover:bg-purple-600"
+              className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-gray-200 text-xs hover:bg-gray-600"
             >
               {viewMode === 'controls-only' ? 'Show Preview' : 'Hide Preview'}
             </button>
@@ -621,15 +621,15 @@ export default function LandingDebugPage() {
                 saveState === 'saved'
                   ? 'bg-blue-900/50 border border-blue-700 text-blue-200'
                   : saveState === 'saving'
-                  ? 'bg-purple-700 border border-purple-600 text-purple-400 cursor-wait'
-                  : 'bg-purple-700 border border-purple-600 text-purple-200 hover:bg-purple-600'
+                  ? 'bg-gray-700 border border-gray-600 text-gray-400 cursor-wait'
+                  : 'bg-gray-700 border border-gray-600 text-gray-200 hover:bg-gray-600'
               }`}
             >
               {saveState === 'saved' ? 'Settings Saved' : saveState === 'saving' ? 'Saving...' : 'Save Settings'}
             </button>
             <button
               onClick={resetToDefaults}
-              className="px-2 py-1 bg-purple-700 border border-purple-600 rounded text-purple-200 text-xs hover:bg-purple-600"
+              className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-gray-200 text-xs hover:bg-gray-600"
             >
               Reset to Defaults
             </button>
@@ -638,7 +638,7 @@ export default function LandingDebugPage() {
               className={`px-2 py-1 rounded text-xs ${
                 audioConsentVisible
                   ? 'bg-green-900/50 border border-green-700 text-green-200'
-                  : 'bg-purple-700 border border-purple-600 text-purple-200 hover:bg-purple-600'
+                  : 'bg-gray-700 border border-gray-600 text-gray-200 hover:bg-gray-600'
               }`}
             >
               {audioConsentVisible ? 'Hide Landing Audio Consent' : 'Show Landing Audio Consent'}
@@ -647,15 +647,15 @@ export default function LandingDebugPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex flex-wrap gap-2 mb-4 border-b border-purple-700 pb-2">
+        <div className="flex flex-wrap gap-2 mb-4 border-b border-gray-700 pb-2">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`px-3 py-1.5 rounded-t text-sm font-medium transition-colors ${
                 config.activeTab === tab.id
-                  ? 'bg-purple-600 text-white border-b-2 border-purple-400'
-                  : 'bg-purple-800 text-purple-200 hover:bg-purple-700'
+                  ? 'bg-gray-600 text-white border-b-2 border-gray-400'
+                  : 'bg-gray-800 text-gray-200 hover:bg-gray-700'
               }`}
             >
               {tab.label}
@@ -667,8 +667,8 @@ export default function LandingDebugPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
 
           {/* Star Controls Section - Layer 1 */}
-          <div className="bg-gray-800/50 border border-purple-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-purple-700">
+          <div className="bg-gray-800/50 border border-gray-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Layer 1 Star Field
             </h2>
             {/* Star Scale */}
@@ -730,8 +730,8 @@ export default function LandingDebugPage() {
           </div>
 
           {/* Layer 1 Twinkling Controls */}
-          <div className="bg-gray-800/50 border border-purple-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-purple-700">
+          <div className="bg-gray-800/50 border border-gray-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Layer 1 Twinkling
             </h2>
 
@@ -832,8 +832,8 @@ export default function LandingDebugPage() {
           </div>
 
           {/* Star Controls Section - Layer 2 */}
-          <div className="bg-gray-800/50 border border-purple-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-purple-700">
+          <div className="bg-gray-800/50 border border-gray-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Layer 2 Star Field
             </h2>
 
@@ -915,8 +915,8 @@ export default function LandingDebugPage() {
           </div>
 
           {/* Layer 2 Twinkling Controls */}
-          <div className="bg-gray-800/50 border border-purple-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-purple-700">
+          <div className="bg-gray-800/50 border border-gray-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Layer 2 Twinkling
             </h2>
 
@@ -1018,13 +1018,13 @@ export default function LandingDebugPage() {
 
           {/* Star Controls Section - Layer 3 */}
           <div className="bg-gray-800/50 border border-purple-900/50 rounded p-3">
-            <h2 className="text-sm font-semibold text-purple-400 mb-2 pb-1 border-b border-purple-700">
+            <h2 className="text-sm font-semibold text-gray-400 mb-2 pb-1 border-b border-gray-700">
               Layer 3 Star Field
             </h2>
 
             {/* Star Scale 3 */}
             <div className="mb-2">
-              <label className="block text-xs text-purple-300 mb-1">
+              <label className="block text-xs text-gray-300 mb-1">
                 Star Scale
               </label>
               <input
@@ -1043,7 +1043,7 @@ export default function LandingDebugPage() {
 
             {/* Star Speed 3 */}
             <div className="mb-2">
-              <label className="block text-xs text-purple-300 mb-1">
+              <label className="block text-xs text-gray-300 mb-1">
                 Star Speed
               </label>
               <input
@@ -1062,7 +1062,7 @@ export default function LandingDebugPage() {
 
             {/* Star Density 3 */}
             <div className="mb-2">
-              <label className="block text-xs text-purple-300 mb-1">
+              <label className="block text-xs text-gray-300 mb-1">
                 Star Density
               </label>
               <input
@@ -1081,7 +1081,7 @@ export default function LandingDebugPage() {
 
             {/* Line Length 3 */}
             <div className="mb-2">
-              <label className="block text-xs text-purple-300 mb-1">
+              <label className="block text-xs text-gray-300 mb-1">
                 Line Length
               </label>
               <input
@@ -1100,7 +1100,7 @@ export default function LandingDebugPage() {
 
             {/* Spawn Delay 3 */}
             <div className="mb-2">
-              <label className="block text-xs text-purple-300 mb-1">
+              <label className="block text-xs text-gray-300 mb-1">
                 Spawn Delay (time between stars)
               </label>
               <input
@@ -1298,8 +1298,8 @@ export default function LandingDebugPage() {
 
           {/* Layout Controls Section */}
           {true && (
-          <div className="bg-gray-800/50 border border-purple-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-purple-700">
+          <div className="bg-gray-800/50 border border-gray-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Layout & Positioning
             </h2>
 
@@ -1366,8 +1366,8 @@ export default function LandingDebugPage() {
 
           {/* Typography Controls Section */}
           {true && (
-          <div className="bg-gray-800/50 border border-purple-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-purple-700">
+          <div className="bg-gray-800/50 border border-gray-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Typography
             </h2>
 
@@ -1969,8 +1969,8 @@ export default function LandingDebugPage() {
 
           {/* Sound Button Controls Section */}
           {true && (
-          <div className="bg-gray-800/50 border border-purple-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-purple-700">
+          <div className="bg-gray-800/50 border border-gray-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Sound Button Controls
             </h2>
             <p className="text-xs text-gray-400 mb-2">
@@ -2055,8 +2055,8 @@ export default function LandingDebugPage() {
 
           {/* Audio Consent Lightbox Controls Section */}
           {true && (
-          <div className="bg-gray-800/50 border border-purple-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-purple-700">
+          <div className="bg-gray-800/50 border border-gray-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Audio Consent Lightbox Controls
             </h2>
             <p className="text-xs text-gray-400 mb-2">
