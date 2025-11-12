@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { validateStakeAddress, isValidStakeAddressFormat } from '@/lib/cardanoValidation';
 
 interface BetaSignupLightboxProps {
   isVisible: boolean;
   onClose: () => void;
-  onSubmit?: (email: string) => void;
+  onSubmit?: (stakeAddress: string) => void;
 }
 
 export default function BetaSignupLightbox({
@@ -15,10 +18,13 @@ export default function BetaSignupLightbox({
   onSubmit
 }: BetaSignupLightboxProps) {
   const [mounted, setMounted] = useState(false);
-  const [email, setEmail] = useState('');
+  const [stakeAddress, setStakeAddress] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [savedScrollY, setSavedScrollY] = useState(0);
+
+  const submitBetaSignup = useMutation(api.betaSignups.submitBetaSignup);
 
   useEffect(() => {
     setMounted(true);
