@@ -3668,6 +3668,16 @@ export default defineSchema({
   })
     .index("by_timestamp", ["timestamp"]),
 
+  // UNIFIED landing page debug settings (desktop + mobile + shared in one table)
+  // Responsive design approach: CSS media queries determine which config subset to apply
+  landingDebugUnified: defineTable({
+    desktop: v.any(), // Desktop-specific settings (≥1024px)
+    mobile: v.any(), // Mobile-specific settings (<1024px)
+    shared: v.any(), // Settings that apply to both viewports
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }),
+
   // ===== BETA SIGNUPS =====
   // Beta signup stake addresses for rewarding early participants
   betaSignups: defineTable({
