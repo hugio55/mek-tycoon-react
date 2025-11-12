@@ -427,7 +427,7 @@ export default function LandingDebugPage() {
       setConfig(mergedConfig);
       setMigrationStatus('complete');
     }
-  }, [dbSettings, updateSettings]);
+  }, [dbSettings, updateSettings, config, migrationStatus]);
 
   // Load settings from Convex when they change (updates from other tabs/sessions)
   useEffect(() => {
@@ -451,7 +451,7 @@ export default function LandingDebugPage() {
         setConfig(mergedConfig);
       }
     }
-  }, [dbSettings, migrationStatus]);
+  }, [dbSettings, migrationStatus, config]);
 
   // Auto-save to Convex with debouncing (500ms delay)
   useEffect(() => {

@@ -136,11 +136,24 @@ export default function LandingPage() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkViewport = () => setIsMobile(window.innerWidth < 1024);
+    const checkViewport = () => {
+      const width = window.innerWidth;
+      const wasMobile = isMobile;
+      const nowMobile = width < 1024;
+
+      console.log('[📱VIEWPORT] Width:', width, 'isMobile:', nowMobile);
+
+      if (wasMobile !== nowMobile) {
+        console.log('[📱VIEWPORT] 🔄 CHANGED from', wasMobile ? 'mobile' : 'desktop', 'to', nowMobile ? 'mobile' : 'desktop');
+      }
+
+      setIsMobile(nowMobile);
+    };
+
     checkViewport();
     window.addEventListener('resize', checkViewport);
     return () => window.removeEventListener('resize', checkViewport);
-  }, []);
+  }, [isMobile]);
 
   // Load settings from UNIFIED Convex table (with old table fallback)
   const unifiedSettings = useQuery(api.landingDebugUnified.getUnifiedLandingDebugSettings);
@@ -150,6 +163,19 @@ export default function LandingPage() {
   const dbSettings = unifiedSettings
     ? { ...unifiedSettings.shared, ...(isMobile ? unifiedSettings.mobile : unifiedSettings.desktop) }
     : oldDbSettings; // Fallback to old system if unified doesn't exist yet
+
+  // Debug logging for config selection
+  useEffect(() => {
+    if (unifiedSettings) {
+      console.log('[⚙️CONFIG] Using unified settings. isMobile:', isMobile);
+      console.log('[⚙️CONFIG] Selected config:', isMobile ? 'MOBILE' : 'DESKTOP');
+      console.log('[⚙️CONFIG] logoSize:', dbSettings?.logoSize);
+      console.log('[⚙️CONFIG] starFrequency:', dbSettings?.starFrequency);
+      console.log('[⚙️CONFIG] bgStarCount:', dbSettings?.bgStarCount);
+    } else if (oldDbSettings) {
+      console.log('[⚙️CONFIG] Using old settings (fallback)');
+    }
+  }, [unifiedSettings, oldDbSettings, isMobile, dbSettings]);
 
   // Control states - Layer 1
   const [starScale, setStarScale] = useState(DEFAULT_CONFIG.starScale);
@@ -1558,6 +1584,32 @@ export default function LandingPage() {
           </svg>
         </div>
       </>
+
+      {/* Viewport Debug Indicator - Top Left Corner */}
+      <div
+        className="fixed top-4 left-4 z-[9999] pointer-events-none"
+        style={{
+          backgroundColor: isMobile ? 'rgba(34, 197, 94, 0.9)' : 'rgba(59, 130, 246, 0.9)',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          fontFamily: 'monospace',
+          fontSize: '14px',
+          color: 'white',
+          fontWeight: 'bold',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+          border: isMobile ? '2px solid rgb(34, 197, 94)' : '2px solid rgb(59, 130, 246)',
+        }}
+      >
+        <div style={{ marginBottom: '4px' }}>
+          {isMobile ? '📱 MOBILE CONFIG' : '🖥️ DESKTOP CONFIG'}
+        </div>
+        <div style={{ fontSize: '12px', opacity: 0.9 }}>
+          Width: {typeof window !== 'undefined' ? window.innerWidth : 0}px
+        </div>
+        <div style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>
+          Breakpoint: 1024px
+        </div>
+      </div>
 
     </div>
   );
