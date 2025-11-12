@@ -1361,9 +1361,9 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Phase Timeline - Positioned by Debug Slider */}
+      {/* Phase Timeline - Fixed to Bottom */}
       <div
-        className="relative w-screen z-[20]"
+        className="fixed bottom-0 left-0 right-0 w-full z-[20]"
         style={{
           transform: `translateY(${phaseColumnYOffset}px)`,
         }}

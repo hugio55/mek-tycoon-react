@@ -176,19 +176,22 @@ export default function HorizontalTimeline({
   return (
     <div
       ref={containerRef}
-      className="w-full relative overflow-hidden"
+      className="fixed bottom-0 left-0 right-0 overflow-hidden"
       style={{
         height: `${columnHeight}px`,
         backgroundColor: 'transparent',
         isolation: 'isolate',
         contain: 'layout style paint',
+        margin: 0,
+        padding: 0,
       }}
     >
       <div
         className="absolute inset-0 flex"
         style={{
           gap: 0,
-          backgroundColor: 'transparent'
+          backgroundColor: 'transparent',
+          width: '100vw',
         }}
       >
         {timelineData.map((item, index) => {

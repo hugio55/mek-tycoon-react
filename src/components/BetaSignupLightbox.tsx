@@ -58,13 +58,8 @@ export default function BetaSignupLightbox({
   const handleStakeAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setStakeAddress(value);
-
-    if (value.trim()) {
-      const validation = validateStakeAddress(value);
-      setValidationError(validation.error || null);
-    } else {
-      setValidationError(null);
-    }
+    // Clear any previous error when user starts typing
+    setValidationError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
