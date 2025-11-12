@@ -238,6 +238,25 @@ export default function ImageProgressTracker() {
           >
             Save Path
           </button>
+          <button
+            onClick={() => {
+              // Clear cached data for current section
+              if (activeSection === 'heads') {
+                localStorage.removeItem('imageProgressTracker_headsData');
+                setHeadsData({ path: '', variations: [] });
+              } else if (activeSection === 'bodies') {
+                localStorage.removeItem('imageProgressTracker_bodiesData');
+                setBodiesData({ path: '', variations: [] });
+              } else {
+                localStorage.removeItem('imageProgressTracker_traitsData');
+                setTraitsData({ path: '', variations: [] });
+              }
+              alert(`Cleared cached data for ${activeSection}. Click "Save Path" to rescan with updated source keys.`);
+            }}
+            className="px-6 py-2 bg-red-500 text-white font-bold rounded hover:bg-red-400 transition-colors"
+          >
+            Clear Cache
+          </button>
         </div>
         {currentData.path && (
           <div className="text-xs text-green-400">

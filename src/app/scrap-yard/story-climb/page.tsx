@@ -6060,7 +6060,7 @@ export default function StoryClimbPage() {
 
           {/* Right Column - Mission Card Details */}
           <div
-            className="flex-grow pr-5 relative"
+            className="flex-grow pr-0 relative"
             style={{ minHeight: `calc(100vh + ${phaseColumnVerticalOffset}px + 800px)` }}
           >
             <div

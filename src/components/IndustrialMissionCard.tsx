@@ -311,7 +311,7 @@ export default function IndustrialMissionCard({
           
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-lg font-bold tracking-wider text-yellow-400 mb-1 leading-tight break-words max-w-[200px]" style={{ 
+              <h2 className="text-lg font-bold tracking-wider text-yellow-400 mb-1 leading-tight break-words max-w-[350px]" style={{ 
                 fontFamily: "'Orbitron', sans-serif",
                 fontSize: 'clamp(0.75rem, 2vw, 1.125rem)',
                 lineHeight: '1.1'
