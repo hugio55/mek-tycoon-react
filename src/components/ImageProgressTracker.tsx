@@ -46,52 +46,70 @@ export default function ImageProgressTracker() {
     if (savedTraitsData) setTraitsData(JSON.parse(savedTraitsData));
   }, []);
 
+  // Scan folder and update file existence
+  const scanFolder = async (folderPath: string, type: 'heads' | 'bodies' | 'traits') => {
+    const variationsList = VARIATIONS_BY_TYPE[type];
+    const sourceKeys = variationsList.map(v => v.sourceKey);
+
+    try {
+      const response = await fetch('/api/scan-folder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folderPath, sourceKeys })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to scan folder');
+      }
+
+      const { results } = await response.json();
+
+      const variations = variationsList.map(v => ({
+        id: v.id,
+        name: v.name,
+        sourceKey: v.sourceKey,
+        exists: results[v.sourceKey] || false
+      }));
+
+      return { path: folderPath, variations };
+    } catch (error) {
+      console.error('Error scanning folder:', error);
+      alert('Failed to scan folder. Make sure the path is correct and accessible.');
+      return null;
+    }
+  };
+
   // Handle saving folder path for heads
-  const handleSaveHeadsPath = () => {
+  const handleSaveHeadsPath = async () => {
     localStorage.setItem('imageProgressTracker_headsPath', headsFolderPath);
+    const scannedData = await scanFolder(headsFolderPath, 'heads');
 
-    const variations = VARIATIONS_BY_TYPE.heads.map(v => ({
-      id: v.id,
-      name: v.name,
-      sourceKey: v.sourceKey,
-      exists: false
-    }));
-
-    const newData = { path: headsFolderPath, variations };
-    setHeadsData(newData);
-    localStorage.setItem('imageProgressTracker_headsData', JSON.stringify(newData));
+    if (scannedData) {
+      setHeadsData(scannedData);
+      localStorage.setItem('imageProgressTracker_headsData', JSON.stringify(scannedData));
+    }
   };
 
   // Handle saving folder path for bodies
-  const handleSaveBodiesPath = () => {
+  const handleSaveBodiesPath = async () => {
     localStorage.setItem('imageProgressTracker_bodiesPath', bodiesFolderPath);
+    const scannedData = await scanFolder(bodiesFolderPath, 'bodies');
 
-    const variations = VARIATIONS_BY_TYPE.bodies.map(v => ({
-      id: v.id,
-      name: v.name,
-      sourceKey: v.sourceKey,
-      exists: false
-    }));
-
-    const newData = { path: bodiesFolderPath, variations };
-    setBodiesData(newData);
-    localStorage.setItem('imageProgressTracker_bodiesData', JSON.stringify(newData));
+    if (scannedData) {
+      setBodiesData(scannedData);
+      localStorage.setItem('imageProgressTracker_bodiesData', JSON.stringify(scannedData));
+    }
   };
 
   // Handle saving folder path for traits
-  const handleSaveTraitsPath = () => {
+  const handleSaveTraitsPath = async () => {
     localStorage.setItem('imageProgressTracker_traitsPath', traitsFolderPath);
+    const scannedData = await scanFolder(traitsFolderPath, 'traits');
 
-    const variations = VARIATIONS_BY_TYPE.traits.map(v => ({
-      id: v.id,
-      name: v.name,
-      sourceKey: v.sourceKey,
-      exists: false
-    }));
-
-    const newData = { path: traitsFolderPath, variations };
-    setTraitsData(newData);
-    localStorage.setItem('imageProgressTracker_traitsData', JSON.stringify(newData));
+    if (scannedData) {
+      setTraitsData(scannedData);
+      localStorage.setItem('imageProgressTracker_traitsData', JSON.stringify(scannedData));
+    }
   };
 
   // Toggle variation status
