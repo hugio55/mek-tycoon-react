@@ -99,6 +99,9 @@ const DEFAULT_CONFIG = {
   audioToggleScale: 1.0,
   toggleTextGap: 16,
   proceedButtonSize: 1.0,
+  descriptionVerticalPosition: 0,
+  toggleGroupVerticalPosition: 0,
+  proceedButtonVerticalPosition: 0,
   // Join Beta Button controls
   joinBetaFont: 'Orbitron',
   joinBetaFontSize: 32,
@@ -170,9 +173,11 @@ export default function LandingDebugPage() {
 
   // Function to trigger audio consent lightbox on landing page
   const triggerAudioConsentOnLandingPage = () => {
+    // ALWAYS clear consent when showing the lightbox (so it appears on every refresh)
+    localStorage.removeItem('mek-audio-consent');
+
     if (!audioConsentVisible) {
-      // Show: clear consent and trigger landing page
-      localStorage.removeItem('mek-audio-consent');
+      // Show: trigger landing page to display lightbox
       localStorage.setItem('mek-debug-trigger', JSON.stringify({ action: 'show-audio-consent' }));
       window.dispatchEvent(new StorageEvent('storage', { key: 'mek-debug-trigger' }));
     } else {
@@ -2142,6 +2147,63 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.proceedButtonSize.toFixed(1)}x
+              </div>
+            </div>
+
+            {/* Description Vertical Position */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Description Vertical Position
+              </label>
+              <input
+                type="range"
+                min="-100"
+                max="100"
+                step="5"
+                value={config.descriptionVerticalPosition}
+                onChange={(e) => updateConfig('descriptionVerticalPosition', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.descriptionVerticalPosition}px
+              </div>
+            </div>
+
+            {/* Toggle Group Vertical Position */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Toggle Group Vertical Position
+              </label>
+              <input
+                type="range"
+                min="-100"
+                max="100"
+                step="5"
+                value={config.toggleGroupVerticalPosition}
+                onChange={(e) => updateConfig('toggleGroupVerticalPosition', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.toggleGroupVerticalPosition}px
+              </div>
+            </div>
+
+            {/* Proceed Button Vertical Position */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Proceed Button Vertical Position
+              </label>
+              <input
+                type="range"
+                min="-100"
+                max="100"
+                step="5"
+                value={config.proceedButtonVerticalPosition}
+                onChange={(e) => updateConfig('proceedButtonVerticalPosition', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.proceedButtonVerticalPosition}px
               </div>
             </div>
           </div>

@@ -18,6 +18,9 @@ interface AudioConsentLightboxProps {
   soundLabelVerticalOffset?: number; // Vertical offset for Sound On/Off text
   soundLabelHorizontalOffset?: number; // Horizontal offset for Sound On/Off text
   proceedButtonSize?: number; // Scale multiplier for proceed button (default: 1.0)
+  descriptionVerticalPosition?: number; // Vertical position offset for description text
+  toggleGroupVerticalPosition?: number; // Vertical position offset for toggle + text
+  proceedButtonVerticalPosition?: number; // Vertical position offset for proceed button
 }
 
 const STORAGE_KEY_AUDIO = 'mek-audio-consent';
@@ -36,7 +39,10 @@ export default function AudioConsentLightbox({
   soundLabelColor = 'text-yellow-400/90',
   soundLabelVerticalOffset = 0,
   soundLabelHorizontalOffset = 0,
-  proceedButtonSize = 1.0
+  proceedButtonSize = 1.0,
+  descriptionVerticalPosition = 0,
+  toggleGroupVerticalPosition = 0,
+  proceedButtonVerticalPosition = 0
 }: AudioConsentLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
@@ -126,12 +132,21 @@ export default function AudioConsentLightbox({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Text */}
-        <p className="text-white/70 text-base sm:text-lg font-light tracking-wide text-center">
+        <p
+          className="text-white/70 text-base sm:text-lg font-light tracking-wide text-center"
+          style={{ transform: `translateY(${descriptionVerticalPosition}px)` }}
+        >
           For full immersion...
         </p>
 
         {/* Toggle Switch and Text Container - Horizontal Layout */}
-        <div className="flex items-center" style={{ gap: `${toggleTextGap}px` }}>
+        <div
+          className="flex items-center"
+          style={{
+            gap: `${toggleTextGap}px`,
+            transform: `translateY(${toggleGroupVerticalPosition}px)`
+          }}
+        >
           {/* Toggle Switch - Responsive sizing with minimum touch target */}
           <button
             onClick={handleToggle}
@@ -219,7 +234,7 @@ export default function AudioConsentLightbox({
             fontSize: `${buttonTextSize * proceedButtonSize}px`,
             WebkitTapHighlightColor: 'transparent',
             minHeight: `${44 * proceedButtonSize}px`,
-            transform: `scale(${proceedButtonSize})`
+            transform: `scale(${proceedButtonSize}) translateY(${proceedButtonVerticalPosition}px)`
           }}
         >
           PROCEED
