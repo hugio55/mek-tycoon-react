@@ -81,6 +81,8 @@ export default function HorizontalTimeline({
   const [timelineData, setTimelineData] = useState<TimelineItem[]>(defaultTimelineData);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [expandedWidths, setExpandedWidths] = useState<{ [key: number]: number }>({});
 
   // Detect if device supports touch (mobile/tablet)
   useEffect(() => {
@@ -132,6 +134,53 @@ export default function HorizontalTimeline({
     };
   }, []);
 
+  // Detect overflow and calculate needed width expansion for active card
+  useEffect(() => {
+    const activeIndex = hoveredIndex ?? selectedIndex;
+    if (activeIndex === null) {
+      setExpandedWidths({});
+      return;
+    }
+
+    const contentElement = contentRefs.current[activeIndex];
+    if (!contentElement || !containerRef.current) return;
+
+    // Use requestAnimationFrame to ensure DOM has updated
+    requestAnimationFrame(() => {
+      const scrollWidth = contentElement.scrollWidth;
+      const clientWidth = contentElement.clientWidth;
+      const isOverflowing = scrollWidth > clientWidth;
+
+      console.log(`[📏OVERFLOW] Card ${activeIndex}: scrollWidth=${scrollWidth}, clientWidth=${clientWidth}, overflow=${isOverflowing}`);
+
+      if (isOverflowing) {
+        // Calculate additional width needed as percentage of container
+        const containerWidth = containerRef.current!.offsetWidth;
+        const additionalPixels = scrollWidth - clientWidth;
+        const additionalPercent = (additionalPixels / containerWidth) * 100;
+
+        // Calculate new active width (base 30.3% + additional needed)
+        const newActiveWidth = 30.3 + additionalPercent;
+
+        // Calculate how much to shrink inactive cards
+        // Total available: 100% - newActiveWidth
+        // Distributed among 3 inactive cards
+        const remainingWidth = 100 - newActiveWidth;
+        const inactiveWidth = remainingWidth / 3;
+
+        console.log(`[📏OVERFLOW] Expanding card ${activeIndex} from 30.3% to ${newActiveWidth.toFixed(1)}%, inactive cards: ${inactiveWidth.toFixed(1)}%`);
+
+        setExpandedWidths({
+          activeWidth: newActiveWidth,
+          inactiveWidth: inactiveWidth,
+        });
+      } else {
+        // No overflow detected, use default widths
+        setExpandedWidths({});
+      }
+    });
+  }, [hoveredIndex, selectedIndex, timelineData]);
+
   const handlePhaseClick = (index: number) => {
     // Only handle clicks on touch devices
     if (!isTouchDevice) return;
@@ -176,7 +225,7 @@ export default function HorizontalTimeline({
   return (
     <div
       ref={containerRef}
-      className="relative left-0 right-0 overflow-hidden"
+      className="relative w-full overflow-hidden"
       style={{
         height: `${columnHeight}px`,
         backgroundColor: 'transparent',
@@ -200,14 +249,16 @@ export default function HorizontalTimeline({
           const isActive = isHovered || isSelected; // Active if hovered OR selected
           const isAnyActive = hoveredIndex !== null || selectedIndex !== null;
 
-          // Increased overlap to eliminate black lines completely
+          // Calculate width based on overflow detection
           let widthPercent: number;
 
           if (isAnyActive) {
             if (isActive) {
-              widthPercent = 30.3; // Active column with increased overlap
+              // Use expanded width if overflow detected, otherwise default 30.3%
+              widthPercent = expandedWidths.activeWidth || 30.3;
             } else {
-              widthPercent = 23.4; // Inactive columns with increased overlap
+              // Use calculated inactive width if expansion occurred, otherwise default 23.4%
+              widthPercent = expandedWidths.inactiveWidth || 23.4;
             }
           } else {
             widthPercent = 25; // All equal: 25% each
@@ -312,6 +363,7 @@ export default function HorizontalTimeline({
 
               {/* Content - slides up on entrance, slides down on exit */}
               <div
+                ref={(el) => (contentRefs.current[index] = el)}
                 className={`
                   absolute inset-0
                   p-8 md:p-12
@@ -324,9 +376,10 @@ export default function HorizontalTimeline({
                 `}
                 style={{
                   transition: isActive
-                    ? 'transform 0.4s ease-out 0.2s, opacity 0.3s ease-out 0.2s'
-                    : 'transform 0.3s ease-in, opacity 0.2s ease-in',
-                  width: '30vw',
+                    ? 'transform 0.4s ease-out 0.2s, opacity 0.3s ease-out 0.2s, width 0.5s ease-in-out'
+                    : 'transform 0.3s ease-in, opacity 0.2s ease-in, width 0.5s ease-in-out',
+                  width: '100%',
+                  maxWidth: '100%',
                   pointerEvents: 'none',
                 }}
               >
