@@ -228,7 +228,7 @@ export default function HorizontalTimeline({
       className="relative overflow-hidden"
       style={{
         height: `${columnHeight}px`,
-        width: 'calc(100vw + 8px)',
+        width: '100vw',
         backgroundColor: 'transparent',
         isolation: 'isolate',
         contain: 'layout style paint',
