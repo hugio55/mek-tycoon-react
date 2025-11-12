@@ -8,6 +8,7 @@ import { SPEAKER_ICON_STYLES, type SpeakerIconStyle } from '@/components/Speaker
 import AudioConsentLightbox from '@/components/AudioConsentLightbox';
 import BetaSignupLightbox from '@/components/BetaSignupLightbox';
 import FillTextButton from '@/components/controls/FillTextButton';
+import { getMediaUrl } from '@/lib/media-url';
 
 interface Star {
   x: number;
@@ -377,13 +378,13 @@ export default function LandingPage() {
 
     // Preload logo image
     const logoImg = new Image();
-    logoImg.src = '/logo-first-frame.webp';
+    logoImg.src = getMediaUrl('/logo-first-frame.webp');
     logoImg.onload = () => console.log('[📥PRELOAD] Logo image loaded');
     logoImg.onerror = () => console.error('[📥PRELOAD] Logo image failed to load');
 
     // Preload background image
     const bgImg = new Image();
-    bgImg.src = '/colored-bg-1.webp';
+    bgImg.src = getMediaUrl('/colored-bg-1.webp');
     bgImg.onload = () => console.log('[📥PRELOAD] Background image loaded');
     bgImg.onerror = () => console.error('[📥PRELOAD] Background image failed to load');
 
@@ -749,7 +750,7 @@ export default function LandingPage() {
 
   // Initialize audio on component mount
   useEffect(() => {
-    audioRef.current = new Audio('/audio/giggliest-girl-1.mp3');
+    audioRef.current = new Audio(getMediaUrl('/audio/giggliest-girl-1.mp3'));
     audioRef.current.loop = true;
 
     return () => {
@@ -1246,7 +1247,7 @@ export default function LandingPage() {
       <div
         className="fixed inset-0 w-full h-full bg-black z-0 transition-opacity duration-1000"
         style={{
-          backgroundImage: 'url(/colored-bg-1.webp)',
+          backgroundImage: `url(${getMediaUrl('/colored-bg-1.webp')})`,
           backgroundSize: 'cover',
           backgroundPosition: viewportHeight > 0
             ? `center calc(50% + ${bgYPosition}px)`
@@ -1302,7 +1303,7 @@ export default function LandingPage() {
           >
             <video
               ref={videoRef}
-              src="/random-images/Everydays_00000.webm"
+              src={getMediaUrl('/random-images/Everydays_00000.webm')}
               loop
               muted
               playsInline

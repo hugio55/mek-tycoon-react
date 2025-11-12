@@ -404,7 +404,7 @@ export default function HorizontalTimeline({
                   className={`
                     text-2xl md:text-3xl
                     font-bold
-                    text-[#1779cf]
+                    text-[#fab617]
                     mb-2
                     font-['Orbitron']
                     tracking-wide
