@@ -823,7 +823,7 @@ export default function LandingDebugPage() {
               </label>
               <input
                 type="range"
-                min="0.3"
+                min="0.1"
                 max="3"
                 step="0.1"
                 value={config.starScale}
@@ -832,6 +832,25 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.starScale.toFixed(1)}x
+              </div>
+            </div>
+
+            {/* Size Randomness */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Size Randomness
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.sizeRandomness}
+                onChange={(e) => updateConfig('sizeRandomness', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.sizeRandomness}%
               </div>
             </div>
 
