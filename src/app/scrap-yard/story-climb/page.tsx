@@ -6061,11 +6061,11 @@ export default function StoryClimbPage() {
           {/* Right Column - Mission Card Details */}
           <div
             className="flex-grow pr-5 relative"
-            style={{ minHeight: `${800 + phaseColumnVerticalOffset}px` }}
+            style={{ minHeight: `calc(100vh + ${phaseColumnVerticalOffset}px + 800px)` }}
           >
             <div
-              className="absolute top-0 left-0 right-0"
-              style={{ transform: `translateY(${phaseColumnVerticalOffset}px)` }}
+              className="absolute left-0 right-0"
+              style={{ top: `calc(100vh - 800px + ${phaseColumnVerticalOffset}px)` }}
             >
             {/* Show card for selected node */}
             {selectedNode ? (() => {

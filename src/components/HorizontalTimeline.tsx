@@ -176,8 +176,9 @@ export default function HorizontalTimeline({
   return (
     <div
       ref={containerRef}
-      className="fixed bottom-0 left-0 right-0 overflow-hidden"
+      className="absolute left-0 right-0 overflow-hidden"
       style={{
+        bottom: 0,
         height: `${columnHeight}px`,
         backgroundColor: 'transparent',
         isolation: 'isolate',
