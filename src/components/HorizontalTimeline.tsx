@@ -98,7 +98,7 @@ export default function HorizontalTimeline({
       return {
         phase: card.header || defaultItem.phase,
         title: card.title || defaultItem.title,
-        subtitle: defaultItem.subtitle,
+        subtitle: card.subtitle || defaultItem.subtitle,
         description: card.description || defaultItem.description,
         imageUrl: card.imageUrl || defaultItem.imageUrl, // Use database imageUrl if available, fallback to default
       };

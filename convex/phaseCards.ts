@@ -57,6 +57,7 @@ export const isPhaseCardsEmpty = query({
 export const createPhaseCard = mutation({
   args: {
     header: v.optional(v.string()),
+    subtitle: v.optional(v.string()),
     title: v.string(),
     description: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
@@ -75,6 +76,7 @@ export const createPhaseCard = mutation({
 
     const phaseId = await ctx.db.insert("phaseCards", {
       header: args.header,
+      subtitle: args.subtitle,
       title: args.title,
       description: args.description,
       imageUrl: args.imageUrl,
@@ -95,6 +97,7 @@ export const updatePhaseCard = mutation({
   args: {
     id: v.id("phaseCards"),
     header: v.optional(v.string()),
+    subtitle: v.optional(v.string()),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
@@ -116,6 +119,7 @@ export const updatePhaseCard = mutation({
     };
 
     if (updates.header !== undefined) updateData.header = updates.header;
+    if (updates.subtitle !== undefined) updateData.subtitle = updates.subtitle;
     if (updates.title !== undefined) updateData.title = updates.title;
     if (updates.description !== undefined) updateData.description = updates.description;
     if (updates.imageUrl !== undefined) updateData.imageUrl = updates.imageUrl;
@@ -304,6 +308,7 @@ export const bulkUpdatePhaseCards = mutation({
       v.object({
         id: v.id("phaseCards"),
         header: v.optional(v.string()),
+        subtitle: v.optional(v.string()),
         title: v.optional(v.string()),
         description: v.optional(v.string()),
         imageUrl: v.optional(v.string()),
@@ -327,6 +332,7 @@ export const bulkUpdatePhaseCards = mutation({
 
       const updateData: any = { updatedAt: now };
       if (fields.header !== undefined) updateData.header = fields.header;
+      if (fields.subtitle !== undefined) updateData.subtitle = fields.subtitle;
       if (fields.title !== undefined) updateData.title = fields.title;
       if (fields.description !== undefined) updateData.description = fields.description;
       if (fields.imageUrl !== undefined) updateData.imageUrl = fields.imageUrl;
