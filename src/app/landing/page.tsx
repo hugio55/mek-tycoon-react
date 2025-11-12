@@ -219,6 +219,9 @@ export default function LandingPage() {
   const [animationStage, setAnimationStage] = useState<'initial' | 'stars' | 'logo'>('initial');
   const [useVideoLogo, setUseVideoLogo] = useState(false);
 
+  // Logo animation timing (must be declared before first use in useEffect below)
+  const [logoFadeDuration, setLogoFadeDuration] = useState(DEFAULT_CONFIG.logoFadeDuration);
+
   // Debug logging for useVideoLogo changes + video playback control
   useEffect(() => {
     console.log('[🎬SWAP] useVideoLogo state changed to:', useVideoLogo);
