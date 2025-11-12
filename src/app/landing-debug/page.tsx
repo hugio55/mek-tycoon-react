@@ -538,6 +538,15 @@ export default function LandingDebugPage() {
     { id: 'other', label: 'Other' },
   ];
 
+  // Loading state - wait for database to load before rendering
+  if (!dbSettings || migrationStatus === 'pending') {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-gray-400 text-sm">Loading debug controls...</div>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen ${viewMode === 'split-view' ? 'flex' : 'bg-gray-900 p-3'}`}>
       <div
