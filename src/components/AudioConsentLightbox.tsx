@@ -9,6 +9,7 @@ interface AudioConsentLightboxProps {
   toggleSize?: number; // Width in pixels, height will be half (default: 96)
   backdropDarkness?: number; // 0-100 percentage (default: 95)
   logoFadeDuration?: number; // milliseconds (default: 1000)
+  lockScroll?: boolean; // Control scroll lock independently from visibility
 }
 
 const STORAGE_KEY_AUDIO = 'mek-audio-consent';
@@ -18,7 +19,8 @@ export default function AudioConsentLightbox({
   isVisible,
   toggleSize = 96,
   backdropDarkness = 95,
-  logoFadeDuration = 1000
+  logoFadeDuration = 1000,
+  lockScroll = true
 }: AudioConsentLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
@@ -49,7 +51,7 @@ export default function AudioConsentLightbox({
   }, []);
 
   useEffect(() => {
-    if (isVisible && mounted) {
+    if (lockScroll && mounted) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -58,7 +60,7 @@ export default function AudioConsentLightbox({
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isVisible, mounted]);
+  }, [lockScroll, mounted]);
 
   const handleToggle = () => {
     const newState = !audioEnabled;
