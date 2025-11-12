@@ -128,15 +128,14 @@ const FillTextButton = ({
         />
       </span>
 
-      {/* Glow layer (visible, extends beyond boundaries for full glow effect) */}
+      {/* Glow layer (visible only on hover, extends beyond boundaries for full glow effect) */}
       <span
-        className="absolute top-0 left-0 whitespace-nowrap"
+        className="absolute top-0 left-0 whitespace-nowrap overflow-hidden"
         style={{
           color: 'transparent',
           width: isHovered ? '100%' : '0%',
           transition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
           animation: isHovered ? 'soft-pulse 3s ease-in-out infinite' : 'none',
-          overflow: 'visible',
           pointerEvents: 'none',
           WebkitTextStroke: '0.5px #3DD1FF',
         }}
@@ -145,12 +144,12 @@ const FillTextButton = ({
         &nbsp;{text}&nbsp;
       </span>
 
-      {/* Blue text overlay (clipped to prevent showing through white when idle) */}
+      {/* Blue text overlay (clipped to show only where line has passed) */}
       <span
         className="absolute top-0 left-0 whitespace-nowrap overflow-hidden"
         style={{
           color: '#3DD1FF',
-          width: isHovered ? '100%' : '0%',
+          width: isHovered ? 'calc(100% - 3px)' : '0%',
           transition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
           textShadow: 'none',
         }}
