@@ -1418,13 +1418,42 @@ export default function LandingPage() {
           `
         }} />
         <div
-          className="fixed bottom-8 left-1/2 z-[100] pointer-events-none"
+          className="fixed bottom-8 left-1/2 z-[100] cursor-pointer transition-all duration-200 hover:opacity-70 active:scale-95"
           style={{
             animation: showScrollIndicator
               ? 'scroll-bounce 3s ease-in-out infinite, scroll-fade-in 1s ease-out'
               : 'none',
             opacity: showScrollIndicator ? 0.5 : 0,
             transition: showScrollIndicator ? 'none' : 'opacity 300ms ease-out',
+            pointerEvents: showScrollIndicator ? 'auto' : 'none',
+          }}
+          onClick={() => {
+            // Smooth scroll with custom easing
+            const startY = window.scrollY;
+            const targetY = window.innerHeight * 0.85; // Scroll down 85% of viewport height
+            const duration = 1000; // 1 second
+            const startTime = performance.now();
+
+            const easeInOutCubic = (t: number): number => {
+              return t < 0.5
+                ? 4 * t * t * t
+                : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            };
+
+            const animateScroll = (currentTime: number) => {
+              const elapsed = currentTime - startTime;
+              const progress = Math.min(elapsed / duration, 1);
+              const easedProgress = easeInOutCubic(progress);
+
+              window.scrollTo(0, startY + (targetY - startY) * easedProgress);
+
+              if (progress < 1) {
+                requestAnimationFrame(animateScroll);
+              }
+            };
+
+            requestAnimationFrame(animateScroll);
+            setShowScrollIndicator(false);
           }}
         >
           <svg
