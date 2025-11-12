@@ -1377,7 +1377,7 @@ export default function LandingPage() {
               active:scale-95
               cursor-pointer
               z-[100]
-              ${audioPlaying ? 'text-white' : 'text-gray-700'}
+              ${audioPlaying ? 'text-white/60' : 'text-gray-700'}
             `}
             aria-label={audioPlaying ? 'Mute audio' : 'Play audio'}
             style={{
@@ -1391,7 +1391,7 @@ export default function LandingPage() {
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = `translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px) scale(${powerButtonScale * 1.1})`;
               e.currentTarget.style.filter = powerButtonGlowEnabled && audioPlaying
-                ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8)) brightness(1.4)'
+                ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8)) brightness(1.2)'
                 : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0)) brightness(1.4)';
             }}
             onMouseLeave={(e) => {

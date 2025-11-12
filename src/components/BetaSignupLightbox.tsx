@@ -152,11 +152,11 @@ export default function BetaSignupLightbox({
           @keyframes slideUp {
             from {
               opacity: 0;
-              transform: translateY(40px) scale(0.95);
+              transform: translate3d(0, 30px, 0);
             }
             to {
               opacity: 1;
-              transform: translateY(0) scale(1);
+              transform: translate3d(0, 0, 0);
             }
           }
           @keyframes shakeRed {
@@ -197,14 +197,14 @@ export default function BetaSignupLightbox({
           animation: 'blurIn 800ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
           willChange: 'backdrop-filter',
         }}
-        onClick={(e) => e.stopPropagation()}
       />
 
       {/* Lightbox Card */}
       <div
         className="relative w-full max-w-md"
         style={{
-          animation: 'slideUp 400ms cubic-bezier(0.25, 0, 0.3, 1)',
+          animation: 'slideUp 500ms cubic-bezier(0.16, 1, 0.3, 1)',
+          willChange: 'transform, opacity',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -215,7 +215,7 @@ export default function BetaSignupLightbox({
             background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
             boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset',
             backdropFilter: 'blur(0px)',
-            animation: 'blurIn 800ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
+            animation: 'blurIn 600ms cubic-bezier(0.4, 0, 0.2, 1) 200ms forwards',
             willChange: 'backdrop-filter',
           }}
         >
