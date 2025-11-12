@@ -382,8 +382,18 @@ export default function LandingDebugPage() {
       console.log('[🔄SYNC] No migration needed, using DB settings:', {
         logoSize: mergedConfig.logoSize,
         starScale: mergedConfig.starScale,
-        bgStarCount: mergedConfig.bgStarCount
+        bgStarCount: mergedConfig.bgStarCount,
+        isUserEditing: isUserEditingRef.current
       });
+
+      // CRITICAL FIX: Don't update config if user is actively editing (prevents slider jump-back)
+      if (isUserEditingRef.current) {
+        console.log('[🔄SYNC] Skipping config update - user is editing');
+        if (migrationStatus !== 'complete') {
+          setMigrationStatus('complete');
+        }
+        return;
+      }
 
       // Only update config if it's different (deep comparison to prevent infinite loop)
       const configChanged = JSON.stringify(config) !== JSON.stringify(mergedConfig);
