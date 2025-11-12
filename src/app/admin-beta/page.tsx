@@ -18,6 +18,16 @@ export default function AdminBetaSignups() {
     return new Date(timestamp).toLocaleString();
   };
 
+  // Calculate IP statistics
+  const ipCounts = signups.reduce((acc, signup) => {
+    const ip = signup.ipAddress || 'unknown';
+    acc[ip] = (acc[ip] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const uniqueIPs = Object.keys(ipCounts).filter(ip => ip !== 'unknown').length;
+  const duplicateIPs = Object.entries(ipCounts).filter(([ip, count]) => count > 1 && ip !== 'unknown');
+
   return (
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-6xl mx-auto">
@@ -25,9 +35,33 @@ export default function AdminBetaSignups() {
           Beta Signups
         </h1>
 
-        <div className="mb-4 text-lg">
-          Total Signups: <span className="text-yellow-400 font-bold">{signups.length}</span>
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+            <div className="text-sm text-white/60 mb-1">Total Signups</div>
+            <div className="text-3xl font-bold text-yellow-400">{signups.length}</div>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+            <div className="text-sm text-white/60 mb-1">Unique IPs</div>
+            <div className="text-3xl font-bold text-green-400">{uniqueIPs}</div>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+            <div className="text-sm text-white/60 mb-1">Duplicate IPs</div>
+            <div className="text-3xl font-bold text-red-400">{duplicateIPs.length}</div>
+          </div>
         </div>
+
+        {duplicateIPs.length > 0 && (
+          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+            <div className="text-sm font-semibold text-red-400 mb-2">⚠️ IP Addresses with Multiple Signups:</div>
+            <div className="space-y-1 text-sm">
+              {duplicateIPs.map(([ip, count]) => (
+                <div key={ip} className="text-white/70">
+                  <span className="font-mono text-red-300">{ip}</span> - <span className="text-red-400">{count} signups</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
           <table className="w-full">
@@ -40,6 +74,9 @@ export default function AdminBetaSignups() {
                   Stake Address
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-yellow-400">
+                  IP Address
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-yellow-400">
                   Submitted At
                 </th>
               </tr>
@@ -47,7 +84,7 @@ export default function AdminBetaSignups() {
             <tbody>
               {signups.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-6 py-8 text-center text-white/50">
+                  <td colSpan={4} className="px-6 py-8 text-center text-white/50">
                     No signups yet
                   </td>
                 </tr>
@@ -62,6 +99,9 @@ export default function AdminBetaSignups() {
                     </td>
                     <td className="px-6 py-4 font-mono text-sm">
                       {signup.stakeAddress}
+                    </td>
+                    <td className="px-6 py-4 font-mono text-sm text-white/70">
+                      {signup.ipAddress || 'N/A'}
                     </td>
                     <td className="px-6 py-4 text-sm text-white/70">
                       {formatDate(signup.submittedAt)}
@@ -89,8 +129,8 @@ export default function AdminBetaSignups() {
             <button
               onClick={() => {
                 const csv = [
-                  'Stake Address,Submitted At',
-                  ...signups.map(s => `${s.stakeAddress},${formatDate(s.submittedAt)}`)
+                  'Stake Address,IP Address,Submitted At',
+                  ...signups.map(s => `${s.stakeAddress},${s.ipAddress || 'N/A'},${formatDate(s.submittedAt)}`)
                 ].join('\n');
                 const blob = new Blob([csv], { type: 'text/csv' });
                 const url = URL.createObjectURL(blob);

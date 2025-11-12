@@ -3651,5 +3651,6 @@ export default defineSchema({
     submittedAt: v.number(), // Timestamp when signup was submitted
     ipAddress: v.union(v.string(), v.null()), // Optional IP tracking
   })
-    .index("by_stakeAddress", ["stakeAddress"]), // For duplicate prevention and lookups
+    .index("by_stakeAddress", ["stakeAddress"]) // For duplicate prevention and lookups
+    .index("by_ipAddress", ["ipAddress"]), // For IP duplicate prevention
 });

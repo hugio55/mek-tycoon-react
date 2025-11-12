@@ -51,9 +51,10 @@ function validateStakeAddress(address: string): { isValid: boolean; error?: stri
 export const submitBetaSignup = mutation({
   args: {
     stakeAddress: v.string(),
+    ipAddress: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    console.log('[🎮BETA-SERVER] Received signup:', args.stakeAddress);
+    console.log('[🎮BETA-SERVER] Received signup:', args.stakeAddress, 'from IP:', args.ipAddress);
 
     // Validate stake address
     const validation = validateStakeAddress(args.stakeAddress);
@@ -66,21 +67,34 @@ export const submitBetaSignup = mutation({
     const normalizedAddress = args.stakeAddress.trim().toLowerCase();
 
     // Check for existing signup with this stake address (using index for performance)
-    const existing = await ctx.db
+    const existingAddress = await ctx.db
       .query("betaSignups")
       .withIndex("by_stakeAddress", (q) => q.eq("stakeAddress", normalizedAddress))
       .first();
 
-    if (existing) {
+    if (existingAddress) {
       console.log('[🎮BETA-SERVER] Address already registered');
       throw new Error('This stake address has already been registered');
+    }
+
+    // Check for existing signup from this IP address
+    if (args.ipAddress && args.ipAddress !== 'unknown') {
+      const existingIP = await ctx.db
+        .query("betaSignups")
+        .withIndex("by_ipAddress", (q) => q.eq("ipAddress", args.ipAddress))
+        .first();
+
+      if (existingIP) {
+        console.log('[🎮BETA-SERVER] IP address already used');
+        throw new Error('A signup from your network has already been registered. Only one signup per IP address is allowed.');
+      }
     }
 
     // Store the signup
     const signupId = await ctx.db.insert("betaSignups", {
       stakeAddress: normalizedAddress,
       submittedAt: Date.now(),
-      ipAddress: null, // Could add IP tracking if needed
+      ipAddress: args.ipAddress || null,
     });
 
     console.log('[🎮BETA-SERVER] Signup successful:', signupId);

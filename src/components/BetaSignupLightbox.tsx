@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
 import { validateStakeAddress, isValidStakeAddressFormat } from '@/lib/cardanoValidation';
 
 interface BetaSignupLightboxProps {
@@ -23,8 +21,6 @@ export default function BetaSignupLightbox({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [savedScrollY, setSavedScrollY] = useState(0);
-
-  const submitBetaSignup = useMutation(api.betaSignups.submitBetaSignup);
 
   useEffect(() => {
     setMounted(true);
@@ -87,8 +83,21 @@ export default function BetaSignupLightbox({
     setValidationError(null);
 
     try {
-      console.log('[🎮BETA] Submitting to Convex...');
-      await submitBetaSignup({ stakeAddress });
+      console.log('[🎮BETA] Submitting via API route...');
+
+      const response = await fetch('/api/beta-signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ stakeAddress }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit signup');
+      }
 
       console.log('[🎮BETA] Signup successful');
       setIsSuccess(true);

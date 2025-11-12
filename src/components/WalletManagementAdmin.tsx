@@ -15,12 +15,13 @@ import SnapshotHealthDashboard from '@/components/SnapshotHealthDashboard';
 import DuplicateWalletDetector from '@/components/DuplicateWalletDetector';
 import EssenceBalancesViewer from '@/components/EssenceBalancesViewer';
 import BuffManagement from '@/components/BuffManagement';
+import BetaSignupsViewer from '@/components/BetaSignupsViewer';
 import { EssenceProvider } from '@/contexts/EssenceContext';
 
 // Lazy load heavy components
 const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryViewer'));
 
-type SubMenu = 'wallet-list' | 'storage-monitoring' | 'snapshot-history' | 'snapshot-health' | 'duplicate-detection' | 'production-launch-cleaner' | 'gold-repair';
+type SubMenu = 'wallet-list' | 'storage-monitoring' | 'snapshot-history' | 'snapshot-health' | 'duplicate-detection' | 'production-launch-cleaner' | 'gold-repair' | 'beta-signups';
 type SnapshotHealthTab = 'health' | 'logging';
 
 export default function WalletManagementAdmin() {
@@ -640,6 +641,17 @@ Check console for full timeline.
         >
           🔧 Gold Repair
         </button>
+
+        <button
+          onClick={() => setActiveSubmenu('beta-signups')}
+          className={`px-4 py-2 text-sm font-semibold transition-colors ${
+            activeSubmenu === 'beta-signups'
+              ? 'text-yellow-400 border-b-2 border-yellow-400'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          🎮 Beta Signups
+        </button>
       </div>
 
       {activeSubmenu === 'storage-monitoring' ? (
@@ -809,6 +821,8 @@ Check console for full timeline.
             </div>
           </div>
         </div>
+      ) : activeSubmenu === 'beta-signups' ? (
+        <BetaSignupsViewer />
       ) : (
         <>
           <div className="flex items-center justify-between gap-4">
