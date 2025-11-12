@@ -225,9 +225,10 @@ export default function HorizontalTimeline({
   return (
     <div
       ref={containerRef}
-      className="relative w-full overflow-hidden"
+      className="relative overflow-hidden"
       style={{
         height: `${columnHeight}px`,
+        width: 'calc(100vw + 20px)',
         backgroundColor: 'transparent',
         isolation: 'isolate',
         contain: 'layout style paint',
