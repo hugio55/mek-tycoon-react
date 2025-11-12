@@ -1968,7 +1968,6 @@ export default function LandingDebugPage() {
               )}
             </div>
           </div>
-          )}
 
           {/* Sound Button Controls Section */}
           {true && (
@@ -2488,7 +2487,6 @@ export default function LandingDebugPage() {
               )}
             </div>
           </div>
-          )}
 
         </div>
       </div>
