@@ -58,30 +58,57 @@ export default function BetaSignupLightbox({
     };
   }, [isVisible, mounted, savedScrollY]);
 
+  const handleStakeAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setStakeAddress(value);
+
+    if (value.trim()) {
+      const validation = validateStakeAddress(value);
+      setValidationError(validation.error || null);
+    } else {
+      setValidationError(null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || isSubmitting) return;
+    if (!stakeAddress || isSubmitting) return;
 
-    setIsSubmitting(true);
-    console.log('[🎮BETA] Submitting email:', email);
+    console.log('[🎮BETA] Validating stake address:', stakeAddress);
 
-    // TODO: Integrate with Convex database to store beta signup
-    // For now, just show success message
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    setIsSuccess(true);
-    if (onSubmit) {
-      onSubmit(email);
+    const validation = validateStakeAddress(stakeAddress);
+    if (!validation.isValid) {
+      console.log('[🎮BETA] Validation failed:', validation.error);
+      setValidationError(validation.error || 'Invalid stake address');
+      return;
     }
 
-    // Auto-close after success message
-    setTimeout(() => {
-      handleClose();
-    }, 2000);
+    setIsSubmitting(true);
+    setValidationError(null);
+
+    try {
+      console.log('[🎮BETA] Submitting to Convex...');
+      await submitBetaSignup({ stakeAddress });
+
+      console.log('[🎮BETA] Signup successful');
+      setIsSuccess(true);
+      if (onSubmit) {
+        onSubmit(stakeAddress);
+      }
+
+      setTimeout(() => {
+        handleClose();
+      }, 2000);
+    } catch (error) {
+      console.error('[🎮BETA] Signup error:', error);
+      setValidationError(error instanceof Error ? error.message : 'Failed to submit signup');
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
-    setEmail('');
+    setStakeAddress('');
+    setValidationError(null);
     setIsSubmitting(false);
     setIsSuccess(false);
     onClose();
@@ -195,23 +222,32 @@ export default function BetaSignupLightbox({
                     <input
                       id="stake-address"
                       type="text"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      value={stakeAddress}
+                      onChange={handleStakeAddressChange}
                       placeholder="stake1..."
                       disabled={isSubmitting}
-                      className="w-full px-4 py-3 sm:py-4 text-base sm:text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-yellow-500/50 focus:bg-white/10 transition-all touch-manipulation"
+                      className={`w-full px-4 py-3 sm:py-4 text-base sm:text-lg bg-white/5 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:bg-white/10 transition-all touch-manipulation ${
+                        validationError
+                          ? 'border-red-500/50 focus:border-red-500/70'
+                          : 'border-white/10 focus:border-yellow-500/50'
+                      }`}
                       style={{
                         minHeight: '48px',
                         WebkitTapHighlightColor: 'transparent',
                       }}
                       autoComplete="off"
                     />
+                    {validationError && (
+                      <p className="mt-2 text-sm text-red-400 font-light">
+                        {validationError}
+                      </p>
+                    )}
                   </div>
 
                   {/* Submit Button */}
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !!validationError || !stakeAddress.trim()}
                     className="w-full py-3 sm:py-4 text-base sm:text-lg font-semibold tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl hover:from-yellow-300 hover:to-yellow-400 disabled:from-gray-600 disabled:to-gray-700 disabled:text-white/50 disabled:cursor-not-allowed transition-all duration-300 touch-manipulation shadow-lg shadow-yellow-500/20 active:scale-[0.98]"
                     style={{
                       minHeight: '48px',

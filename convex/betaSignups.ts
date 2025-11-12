@@ -65,10 +65,10 @@ export const submitBetaSignup = mutation({
     // Normalize to lowercase
     const normalizedAddress = args.stakeAddress.trim().toLowerCase();
 
-    // Check for existing signup with this stake address
+    // Check for existing signup with this stake address (using index for performance)
     const existing = await ctx.db
       .query("betaSignups")
-      .filter((q) => q.eq(q.field("stakeAddress"), normalizedAddress))
+      .withIndex("by_stakeAddress", (q) => q.eq("stakeAddress", normalizedAddress))
       .first();
 
     if (existing) {
@@ -117,13 +117,28 @@ export const checkStakeAddressRegistered = query({
   handler: async (ctx, args) => {
     const normalized = args.stakeAddress.trim().toLowerCase();
 
+    // Use index for efficient lookup
     const existing = await ctx.db
       .query("betaSignups")
-      .filter((q) => q.eq(q.field("stakeAddress"), normalized))
+      .withIndex("by_stakeAddress", (q) => q.eq("stakeAddress", normalized))
       .first();
 
     return {
       isRegistered: !!existing,
     };
+  },
+});
+
+/**
+ * Get total count of beta signups (for landing page stats)
+ */
+export const getBetaSignupCount = query({
+  args: {},
+  handler: async (ctx) => {
+    const signups = await ctx.db
+      .query("betaSignups")
+      .collect();
+
+    return signups.length;
   },
 });
