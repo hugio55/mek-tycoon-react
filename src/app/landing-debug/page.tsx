@@ -595,15 +595,29 @@ export default function LandingDebugPage() {
   };
 
   const updateConfig = <K extends keyof ConfigType>(key: K, value: ConfigType[K]) => {
+    console.log(`[🎚️CHANGE] updateConfig fired:`, {
+      key,
+      value,
+      currentConfigValue: config[key],
+      timestamp: performance.now(),
+      flagBefore: isUserEditingRef.current
+    });
+
     // Mark as user editing to prevent race conditions
     isUserEditingRef.current = true;
 
     // Auto-convert image paths for phase image fields
     if ((key === 'phaseImage1' || key === 'phaseImage2' || key === 'phaseImage3' || key === 'phaseImage4') && typeof value === 'string') {
       const convertedPath = convertToWebPath(value);
-      setConfig(prev => ({ ...prev, [key]: convertedPath as ConfigType[K] }));
+      setConfig(prev => {
+        console.log(`[🎚️UPDATE] Setting config.${key} to:`, convertedPath);
+        return { ...prev, [key]: convertedPath as ConfigType[K] };
+      });
     } else {
-      setConfig(prev => ({ ...prev, [key]: value }));
+      setConfig(prev => {
+        console.log(`[🎚️UPDATE] Setting config.${key} to:`, value);
+        return { ...prev, [key]: value };
+      });
     }
 
     // Debug log for phaseIdleBackdropBlur changes
@@ -614,10 +628,18 @@ export default function LandingDebugPage() {
 
   // Handler to mark editing state
   const handleInputStart = () => {
+    console.log('[🎚️START] Mouse/touch down - user started dragging', {
+      timestamp: performance.now(),
+      flagBefore: isUserEditingRef.current
+    });
     isUserEditingRef.current = true;
   };
 
   const handleInputEnd = () => {
+    console.log('[🎚️END] Mouse/touch up - user stopped dragging', {
+      timestamp: performance.now(),
+      flagBefore: isUserEditingRef.current
+    });
     isUserEditingRef.current = false;
   };
 
@@ -953,6 +975,39 @@ export default function LandingDebugPage() {
           </div>
         </div>
 
+        {/* TEST SLIDER - Debug slider responsiveness */}
+        <div className="mb-4 p-4 bg-red-900/20 border-2 border-red-500 rounded">
+          <h3 className="text-sm font-bold text-red-300 mb-2">🚨 DEBUG TEST SLIDER</h3>
+          <p className="text-xs text-gray-300 mb-2">
+            If this slider doesn't work, the issue is NOT in the effects. Check browser console for [🎚️] logs.
+          </p>
+          <div className="flex items-center gap-3">
+            <label className="text-xs text-gray-300 whitespace-nowrap">Test Value:</label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value={config.logoSize}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                console.log('[🚨TEST] Slider onChange fired! Value:', val);
+                updateConfig('logoSize', val);
+              }}
+              onMouseDown={(e) => {
+                console.log('[🚨TEST] Mouse DOWN on slider');
+                handleInputStart();
+              }}
+              onMouseUp={(e) => {
+                console.log('[🚨TEST] Mouse UP on slider');
+                handleInputEnd();
+              }}
+              className="flex-1"
+            />
+            <span className="text-sm text-white font-mono w-12 text-center">{config.logoSize}</span>
+          </div>
+        </div>
+
         {/* Tab Navigation */}
         <div className="flex flex-wrap gap-2 mb-4 border-b border-gray-700 pb-2">
           {tabs.map(tab => (
@@ -990,6 +1045,10 @@ export default function LandingDebugPage() {
                 step="0.1"
                 value={config.starScale}
                 onChange={(e) => updateConfig('starScale', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1009,6 +1068,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.sizeRandomness}
                 onChange={(e) => updateConfig('sizeRandomness', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1028,6 +1091,10 @@ export default function LandingDebugPage() {
                 step="0.5"
                 value={config.starSpeed}
                 onChange={(e) => updateConfig('starSpeed', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1047,6 +1114,10 @@ export default function LandingDebugPage() {
                 step="10"
                 value={config.starFrequency}
                 onChange={(e) => updateConfig('starFrequency', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1073,6 +1144,10 @@ export default function LandingDebugPage() {
                 step="0.1"
                 value={config.twinkleSpeed}
                 onChange={(e) => updateConfig('twinkleSpeed', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1092,6 +1167,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.twinkleSpeedRandomness}
                 onChange={(e) => updateConfig('twinkleSpeedRandomness', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1111,6 +1190,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.twinkleAmount}
                 onChange={(e) => updateConfig('twinkleAmount', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1137,6 +1220,10 @@ export default function LandingDebugPage() {
                 step="0.1"
                 value={config.starScale2}
                 onChange={(e) => updateConfig('starScale2', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1156,6 +1243,10 @@ export default function LandingDebugPage() {
                 step="0.5"
                 value={config.starSpeed2}
                 onChange={(e) => updateConfig('starSpeed2', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1175,6 +1266,10 @@ export default function LandingDebugPage() {
                 step="1"
                 value={config.starFrequency2}
                 onChange={(e) => updateConfig('starFrequency2', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1194,6 +1289,10 @@ export default function LandingDebugPage() {
                 step="0.1"
                 value={config.lineLength2}
                 onChange={(e) => updateConfig('lineLength2', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1220,6 +1319,10 @@ export default function LandingDebugPage() {
                 step="0.1"
                 value={config.twinkleSpeed2}
                 onChange={(e) => updateConfig('twinkleSpeed2', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1239,6 +1342,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.twinkleSpeedRandomness2}
                 onChange={(e) => updateConfig('twinkleSpeedRandomness2', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1258,6 +1365,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.twinkleAmount2}
                 onChange={(e) => updateConfig('twinkleAmount2', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1284,6 +1395,10 @@ export default function LandingDebugPage() {
                 step="0.1"
                 value={config.starScale3}
                 onChange={(e) => updateConfig('starScale3', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-purple-400 text-center mt-0.5">
@@ -1303,6 +1418,10 @@ export default function LandingDebugPage() {
                 step="0.5"
                 value={config.starSpeed3}
                 onChange={(e) => updateConfig('starSpeed3', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-purple-400 text-center mt-0.5">
@@ -1322,6 +1441,10 @@ export default function LandingDebugPage() {
                 step="1"
                 value={config.starFrequency3}
                 onChange={(e) => updateConfig('starFrequency3', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-purple-400 text-center mt-0.5">
@@ -1341,6 +1464,10 @@ export default function LandingDebugPage() {
                 step="0.1"
                 value={config.lineLength3}
                 onChange={(e) => updateConfig('lineLength3', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-purple-400 text-center mt-0.5">
@@ -1360,6 +1487,10 @@ export default function LandingDebugPage() {
                 step="10"
                 value={config.spawnDelay3}
                 onChange={(e) => updateConfig('spawnDelay3', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-purple-400 text-center mt-0.5">
@@ -1386,6 +1517,10 @@ export default function LandingDebugPage() {
                 step="0.1"
                 value={config.twinkleSpeed3}
                 onChange={(e) => updateConfig('twinkleSpeed3', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-purple-400 text-center mt-0.5">
@@ -1405,6 +1540,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.twinkleSpeedRandomness3}
                 onChange={(e) => updateConfig('twinkleSpeedRandomness3', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-purple-400 text-center mt-0.5">
@@ -1424,6 +1563,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.twinkleAmount3}
                 onChange={(e) => updateConfig('twinkleAmount3', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-purple-400 text-center mt-0.5">
@@ -1450,6 +1593,10 @@ export default function LandingDebugPage() {
                 step="50"
                 value={config.bgStarCount}
                 onChange={(e) => updateConfig('bgStarCount', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-orange-400 text-center mt-0.5">
@@ -1469,6 +1616,10 @@ export default function LandingDebugPage() {
                 step="0.05"
                 value={config.bgStarMinBrightness}
                 onChange={(e) => updateConfig('bgStarMinBrightness', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-orange-400 text-center mt-0.5">
@@ -1488,6 +1639,10 @@ export default function LandingDebugPage() {
                 step="0.05"
                 value={config.bgStarMaxBrightness}
                 onChange={(e) => updateConfig('bgStarMaxBrightness', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-orange-400 text-center mt-0.5">
@@ -1507,6 +1662,10 @@ export default function LandingDebugPage() {
                 step="0.1"
                 value={config.bgStarTwinkleSpeed}
                 onChange={(e) => updateConfig('bgStarTwinkleSpeed', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-orange-400 text-center mt-0.5">
@@ -1526,6 +1685,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.bgStarTwinkleSpeedRandomness}
                 onChange={(e) => updateConfig('bgStarTwinkleSpeedRandomness', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-orange-400 text-center mt-0.5">
@@ -1545,6 +1708,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.bgStarTwinkleAmount}
                 onChange={(e) => updateConfig('bgStarTwinkleAmount', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-orange-400 text-center mt-0.5">
@@ -1564,6 +1731,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.bgStarSizeRandomness}
                 onChange={(e) => updateConfig('bgStarSizeRandomness', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-orange-400 text-center mt-0.5">
@@ -1583,6 +1754,10 @@ export default function LandingDebugPage() {
                 step="1"
                 value={config.starFadePosition}
                 onChange={(e) => updateConfig('starFadePosition', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-orange-400 text-center mt-0.5">
@@ -1602,6 +1777,10 @@ export default function LandingDebugPage() {
                 step="10"
                 value={config.starFadeFeatherSize}
                 onChange={(e) => updateConfig('starFadeFeatherSize', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-orange-400 text-center mt-0.5">
@@ -1629,6 +1808,10 @@ export default function LandingDebugPage() {
                 step="10"
                 value={config.logoSize}
                 onChange={(e) => updateConfig('logoSize', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1648,6 +1831,10 @@ export default function LandingDebugPage() {
                 step="1"
                 value={config.logoYPosition}
                 onChange={(e) => updateConfig('logoYPosition', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1668,6 +1855,10 @@ export default function LandingDebugPage() {
                 step="1"
                 value={config.bgYPosition}
                 onChange={(e) => updateConfig('bgYPosition', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1790,6 +1981,10 @@ export default function LandingDebugPage() {
                   'soundLabelSize',
                   parseInt(e.target.value)
                 )}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1847,6 +2042,10 @@ export default function LandingDebugPage() {
                     step="5"
                     value={config.descriptionXOffset}
                     onChange={(e) => updateConfig('descriptionXOffset', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                     className="w-full"
                   />
                   <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1865,6 +2064,10 @@ export default function LandingDebugPage() {
                     step="5"
                     value={config.descriptionYOffset}
                     onChange={(e) => updateConfig('descriptionYOffset', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                     className="w-full"
                   />
                   <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1888,6 +2091,10 @@ export default function LandingDebugPage() {
                     step="5"
                     value={config.soundLabelVerticalOffset}
                     onChange={(e) => updateConfig('soundLabelVerticalOffset', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                     className="w-full"
                   />
                   <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1906,6 +2113,10 @@ export default function LandingDebugPage() {
                     step="1"
                     value={config.soundLabelHorizontalOffset}
                     onChange={(e) => updateConfig('soundLabelHorizontalOffset', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                     className="w-full"
                   />
                   <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1929,6 +2140,10 @@ export default function LandingDebugPage() {
                     step="5"
                     value={config.joinBetaVerticalOffset}
                     onChange={(e) => updateConfig('joinBetaVerticalOffset', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                     className="w-full"
                   />
                   <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -1947,6 +2162,10 @@ export default function LandingDebugPage() {
                     step="5"
                     value={config.joinBetaHorizontalOffset}
                     onChange={(e) => updateConfig('joinBetaHorizontalOffset', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                     className="w-full"
                   />
                   <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -2303,6 +2522,10 @@ export default function LandingDebugPage() {
                 step="0.05"
                 value={config.powerButtonScale}
                 onChange={(e) => updateConfig('powerButtonScale', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -2322,6 +2545,10 @@ export default function LandingDebugPage() {
                 step="10"
                 value={config.powerButtonVerticalOffset}
                 onChange={(e) => updateConfig('powerButtonVerticalOffset', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -2341,6 +2568,10 @@ export default function LandingDebugPage() {
                 step="1"
                 value={config.powerButtonHorizontalOffset}
                 onChange={(e) => updateConfig('powerButtonHorizontalOffset', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -2389,6 +2620,10 @@ export default function LandingDebugPage() {
                 step="100"
                 value={config.logoFadeDuration}
                 onChange={(e) => updateConfig('logoFadeDuration', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -2408,6 +2643,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.lightboxBackdropDarkness}
                 onChange={(e) => updateConfig('lightboxBackdropDarkness', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -2427,6 +2666,10 @@ export default function LandingDebugPage() {
                 step="4"
                 value={config.audioToggleSize}
                 onChange={(e) => updateConfig('audioToggleSize', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -2446,6 +2689,10 @@ export default function LandingDebugPage() {
                 step="0.1"
                 value={config.audioToggleScale}
                 onChange={(e) => updateConfig('audioToggleScale', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -2465,6 +2712,10 @@ export default function LandingDebugPage() {
                 step="2"
                 value={config.toggleTextGap}
                 onChange={(e) => updateConfig('toggleTextGap', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -2484,6 +2735,10 @@ export default function LandingDebugPage() {
                 step="0.1"
                 value={config.proceedButtonSize}
                 onChange={(e) => updateConfig('proceedButtonSize', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -2503,6 +2758,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.descriptionVerticalPosition}
                 onChange={(e) => updateConfig('descriptionVerticalPosition', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -2522,6 +2781,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.toggleGroupVerticalPosition}
                 onChange={(e) => updateConfig('toggleGroupVerticalPosition', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -2541,6 +2804,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.proceedButtonVerticalPosition}
                 onChange={(e) => updateConfig('proceedButtonVerticalPosition', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
@@ -2634,6 +2901,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.phaseImageDarkening}
                 onChange={(e) => updateConfig('phaseImageDarkening', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-cyan-400 text-center mt-0.5">
@@ -2653,6 +2924,10 @@ export default function LandingDebugPage() {
                 step="1"
                 value={config.phaseBlurAmount}
                 onChange={(e) => updateConfig('phaseBlurAmount', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-cyan-400 text-center mt-0.5">
@@ -2672,6 +2947,10 @@ export default function LandingDebugPage() {
                 step="1"
                 value={config.phaseBlurAmountSelected}
                 onChange={(e) => updateConfig('phaseBlurAmountSelected', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-cyan-400 text-center mt-0.5">
@@ -2691,6 +2970,10 @@ export default function LandingDebugPage() {
                 step="8"
                 value={config.phaseColumnHeight}
                 onChange={(e) => updateConfig('phaseColumnHeight', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-cyan-400 text-center mt-0.5">
@@ -2710,6 +2993,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.phaseFadePosition}
                 onChange={(e) => updateConfig('phaseFadePosition', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-cyan-400 text-center mt-0.5">
@@ -2754,6 +3041,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.phaseHoverDarkeningIntensity}
                 onChange={(e) => updateConfig('phaseHoverDarkeningIntensity', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-cyan-400 text-center mt-0.5">
@@ -2773,6 +3064,10 @@ export default function LandingDebugPage() {
                 step="1"
                 value={config.phaseIdleBackdropBlur}
                 onChange={(e) => updateConfig('phaseIdleBackdropBlur', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-cyan-400 text-center mt-0.5">
@@ -2792,6 +3087,10 @@ export default function LandingDebugPage() {
                 step="5"
                 value={config.phaseImageIdleOpacity}
                 onChange={(e) => updateConfig('phaseImageIdleOpacity', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-cyan-400 text-center mt-0.5">
@@ -2811,6 +3110,10 @@ export default function LandingDebugPage() {
                 step="50"
                 value={config.phaseColumnYOffset}
                 onChange={(e) => updateConfig('phaseColumnYOffset', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
                 className="w-full"
               />
               <div className="text-xs text-cyan-400 text-center mt-0.5">
