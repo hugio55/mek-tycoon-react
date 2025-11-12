@@ -79,7 +79,17 @@ export default function HorizontalTimeline({
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [timelineData, setTimelineData] = useState<TimelineItem[]>(defaultTimelineData);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Detect if device supports touch (mobile/tablet)
+  useEffect(() => {
+    const hasTouchCapability =
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
+      window.matchMedia('(hover: none)').matches;
+    setIsTouchDevice(hasTouchCapability);
+  }, []);
 
   // Load phase cards from Convex database
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
@@ -123,17 +133,26 @@ export default function HorizontalTimeline({
   }, []);
 
   const handlePhaseClick = (index: number) => {
+    // Only handle clicks on touch devices
+    if (!isTouchDevice) return;
+
     // Toggle: if clicking the same phase, deselect it
     setSelectedIndex(selectedIndex === index ? null : index);
   };
 
   // Debug log hover state changes
   const handleHoverEnter = (index: number) => {
+    // Only handle hover on non-touch devices (desktop)
+    if (isTouchDevice) return;
+
     console.log('[🔍BLUR] Mouse entered column', index, '- idleBackdropBlur prop value:', idleBackdropBlur);
     setHoveredIndex(index);
   };
 
   const handleHoverLeave = () => {
+    // Only handle hover on non-touch devices (desktop)
+    if (isTouchDevice) return;
+
     console.log('[🔍BLUR] Mouse left column');
     setHoveredIndex(null);
   };
