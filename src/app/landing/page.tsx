@@ -7,6 +7,7 @@ import HorizontalTimeline from '@/components/HorizontalTimeline';
 import { SPEAKER_ICON_STYLES, type SpeakerIconStyle } from '@/components/SpeakerIcons';
 import AudioConsentLightbox from '@/components/AudioConsentLightbox';
 import FillTextButton from '@/components/controls/FillTextButton';
+import ScrollArrow from '@/components/ScrollArrow';
 
 interface Star {
   x: number;
@@ -120,6 +121,8 @@ const DEFAULT_CONFIG = {
   joinBetaColor: 'text-white',
   joinBetaHorizontalOffset: 0,
   joinBetaVerticalOffset: 0,
+  // Scroll Arrow controls
+  scrollArrowType: 'chevron' as 'chevron' | 'arrow' | 'double-chevron' | 'circle-arrow' | 'bracket' | 'line' | 'dots',
   // Note: phaseImage1-4 not in DEFAULT_CONFIG - PhaseCarousel manages these
 };
 
@@ -298,6 +301,9 @@ export default function LandingPage() {
   const [joinBetaColor, setJoinBetaColor] = useState(DEFAULT_CONFIG.joinBetaColor);
   const [joinBetaHorizontalOffset, setJoinBetaHorizontalOffset] = useState(DEFAULT_CONFIG.joinBetaHorizontalOffset);
   const [joinBetaVerticalOffset, setJoinBetaVerticalOffset] = useState(DEFAULT_CONFIG.joinBetaVerticalOffset);
+
+  // Scroll Arrow controls
+  const [scrollArrowType, setScrollArrowType] = useState(DEFAULT_CONFIG.scrollArrowType);
 
   // Scroll-triggered animation state
   const [hasScrolled, setHasScrolled] = useState(false);
@@ -510,6 +516,7 @@ export default function LandingPage() {
           setJoinBetaColor(config.joinBetaColor ?? DEFAULT_CONFIG.joinBetaColor);
           setJoinBetaHorizontalOffset(config.joinBetaHorizontalOffset ?? DEFAULT_CONFIG.joinBetaHorizontalOffset);
           setJoinBetaVerticalOffset(config.joinBetaVerticalOffset ?? DEFAULT_CONFIG.joinBetaVerticalOffset);
+          setScrollArrowType(config.scrollArrowType ?? DEFAULT_CONFIG.scrollArrowType);
           // Note: phaseImage1-4 not loaded here - PhaseCarousel reads directly from localStorage
       } catch (e) {
         console.error('Failed to load debug config:', e);
@@ -615,6 +622,7 @@ export default function LandingPage() {
           setJoinBetaColor(config.joinBetaColor ?? DEFAULT_CONFIG.joinBetaColor);
           setJoinBetaHorizontalOffset(config.joinBetaHorizontalOffset ?? DEFAULT_CONFIG.joinBetaHorizontalOffset);
           setJoinBetaVerticalOffset(config.joinBetaVerticalOffset ?? DEFAULT_CONFIG.joinBetaVerticalOffset);
+          setScrollArrowType(config.scrollArrowType ?? DEFAULT_CONFIG.scrollArrowType);
         } catch (e) {
           console.error('Failed to load debug config from localStorage:', e);
         }
@@ -1390,43 +1398,36 @@ export default function LandingPage() {
       />
 
       {/* Scroll Indicator - Bottom Center */}
-      {showScrollIndicator && (
-        <>
-          <style dangerouslySetInnerHTML={{
-            __html: `
-              @keyframes scroll-bounce {
-                0%, 100% { transform: translate(-50%, 0); }
-                50% { transform: translate(-50%, 12px); }
-              }
-            `
-          }} />
-          <div
-            className="fixed bottom-8 left-1/2 z-[100] pointer-events-none"
-            style={{
-              animation: 'scroll-bounce 2s ease-in-out infinite',
-              opacity: 0.4,
-              transition: 'opacity 300ms ease-out',
-            }}
-          >
-            <svg
-              width="48"
-              height="48"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="text-gray-600"
-            >
-              <path
-                d="M12 4L12 20M12 20L18 14M12 20L6 14"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-        </>
-      )}
+      <>
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            @keyframes scroll-bounce {
+              0%, 100% { transform: translate(-50%, 0); }
+              50% { transform: translate(-50%, 16px); }
+            }
+            @keyframes scroll-fade-in {
+              from { opacity: 0; }
+              to { opacity: 0.5; }
+            }
+          `
+        }} />
+        <div
+          className="fixed bottom-8 left-1/2 z-[100] pointer-events-none"
+          style={{
+            animation: showScrollIndicator
+              ? 'scroll-bounce 3s ease-in-out infinite, scroll-fade-in 1s ease-out'
+              : 'none',
+            opacity: showScrollIndicator ? 0.5 : 0,
+            transition: showScrollIndicator ? 'none' : 'opacity 300ms ease-out',
+          }}
+        >
+          <ScrollArrow
+            type={scrollArrowType}
+            size={48}
+            className="text-gray-400"
+          />
+        </div>
+      </>
 
     </div>
   );

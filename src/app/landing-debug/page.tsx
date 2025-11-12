@@ -537,6 +537,7 @@ export default function LandingDebugPage() {
     { id: 'motion', label: 'Motion Blur' },
     { id: 'power', label: 'Power Button' },
     { id: 'speaker', label: 'Speaker' },
+    { id: 'scrollarrow', label: 'Scroll Arrow' },
     { id: 'other', label: 'Other' },
   ];
 
