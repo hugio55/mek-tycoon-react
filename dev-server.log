@@ -400,3 +400,6 @@
 [1] - Preparing Convex functions...
 [1] 
 [1] ✔ 22:04:47 Convex functions ready! (9.64s)
+[1] 11/11/2025, 10:15:00 PM [CONVEX M(monitoring:cleanupOldSummaries)] [LOG] '[Cleanup] Deleted 0 monitoring summaries older than 30 days'
+[1] 11/11/2025, 10:15:44 PM [CONVEX M(walletAuthentication:cleanupExpiredNonces)] [LOG] '[Cleanup] Nonce cleanup completed: 0 expired, 0 used (>24hr old), 0 total deleted'
+[1] 11/11/2025, 10:15:45 PM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'

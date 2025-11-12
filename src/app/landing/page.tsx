@@ -115,6 +115,7 @@ const DEFAULT_CONFIG = {
   lightboxBackdropDarkness: 95,
   audioToggleSize: 96,
   audioToggleScale: 1.0,
+  toggleTextGap: 16,
   // Join Beta Button controls
   joinBetaFont: 'Orbitron',
   joinBetaFontSize: 32,
@@ -294,6 +295,7 @@ export default function LandingPage() {
   const [lightboxBackdropDarkness, setLightboxBackdropDarkness] = useState(DEFAULT_CONFIG.lightboxBackdropDarkness);
   const [audioToggleSize, setAudioToggleSize] = useState(DEFAULT_CONFIG.audioToggleSize);
   const [audioToggleScale, setAudioToggleScale] = useState(DEFAULT_CONFIG.audioToggleScale);
+  const [toggleTextGap, setToggleTextGap] = useState(DEFAULT_CONFIG.toggleTextGap);
 
   // Join Beta Button controls
   const [joinBetaFont, setJoinBetaFont] = useState(DEFAULT_CONFIG.joinBetaFont);
@@ -534,6 +536,7 @@ export default function LandingPage() {
           setLightboxBackdropDarkness(config.lightboxBackdropDarkness ?? DEFAULT_CONFIG.lightboxBackdropDarkness);
           setAudioToggleSize(config.audioToggleSize ?? DEFAULT_CONFIG.audioToggleSize);
           setAudioToggleScale(config.audioToggleScale ?? DEFAULT_CONFIG.audioToggleScale);
+          setToggleTextGap(config.toggleTextGap ?? DEFAULT_CONFIG.toggleTextGap);
           setJoinBetaFont(config.joinBetaFont ?? DEFAULT_CONFIG.joinBetaFont);
           setJoinBetaFontSize(config.joinBetaFontSize ?? DEFAULT_CONFIG.joinBetaFontSize);
           setJoinBetaColor(config.joinBetaColor ?? DEFAULT_CONFIG.joinBetaColor);
@@ -639,6 +642,7 @@ export default function LandingPage() {
           setLightboxBackdropDarkness(config.lightboxBackdropDarkness ?? DEFAULT_CONFIG.lightboxBackdropDarkness);
           setAudioToggleSize(config.audioToggleSize ?? DEFAULT_CONFIG.audioToggleSize);
           setAudioToggleScale(config.audioToggleScale ?? DEFAULT_CONFIG.audioToggleScale);
+          setToggleTextGap(config.toggleTextGap ?? DEFAULT_CONFIG.toggleTextGap);
           setJoinBetaFont(config.joinBetaFont ?? DEFAULT_CONFIG.joinBetaFont);
           setJoinBetaFontSize(config.joinBetaFontSize ?? DEFAULT_CONFIG.joinBetaFontSize);
           setJoinBetaColor(config.joinBetaColor ?? DEFAULT_CONFIG.joinBetaColor);
@@ -1247,7 +1251,7 @@ export default function LandingPage() {
               height: `${logoSize}px`,
               opacity: animationStage === 'logo' ? 1 : 0,
               transform: animationStage === 'logo' ? 'translate3d(0, 0, 0) scale3d(1, 1, 1)' : 'translate3d(0, 0, 0) scale3d(0.92, 0.92, 1)',
-              transition: animationStage === 'logo' ? `opacity ${logoFadeDuration}ms ease-out, transform ${logoFadeDuration}ms cubic-bezier(0.25, 0, 0.3, 1)` : 'none',
+              transition: animationStage === 'logo' ? `opacity ${logoFadeDuration}ms cubic-bezier(0.4, 0, 0.2, 1), transform ${logoFadeDuration}ms cubic-bezier(0.4, 0, 0.2, 1)` : 'none',
               visibility: animationStage === 'initial' || animationStage === 'stars' ? 'hidden' : 'visible',
               willChange: animationStage === 'stars' ? 'transform, opacity' : 'auto',
               backfaceVisibility: 'hidden',
@@ -1418,6 +1422,12 @@ export default function LandingPage() {
         toggleSize={audioToggleSize}
         toggleScale={audioToggleScale}
         lockScroll={lockScrollForConsent}
+        toggleTextGap={toggleTextGap}
+        soundLabelFont={soundLabelFont}
+        soundLabelSize={soundLabelSize}
+        soundLabelColor={soundLabelColor}
+        soundLabelVerticalOffset={soundLabelVerticalOffset}
+        soundLabelHorizontalOffset={soundLabelHorizontalOffset}
       />
 
       {/* Beta Signup Lightbox */}
