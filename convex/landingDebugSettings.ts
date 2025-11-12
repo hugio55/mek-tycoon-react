@@ -231,3 +231,104 @@ export const getRawLandingDebugSettings = query({
     };
   },
 });
+
+// BACKUP: Create a backup of current settings before updating
+export const createBackup = mutation({
+  args: {
+    config: v.any(), // Config to backup
+    description: v.optional(v.string()), // Optional description
+  },
+  handler: async (ctx, args) => {
+    // Insert backup into history table
+    const backupId = await ctx.db.insert("landingDebugSettingsHistory", {
+      config: args.config,
+      timestamp: Date.now(),
+      description: args.description,
+    });
+
+    // Keep only last 50 backups - delete oldest ones
+    const allBackups = await ctx.db
+      .query("landingDebugSettingsHistory")
+      .withIndex("by_timestamp")
+      .order("desc")
+      .collect();
+
+    // Delete backups beyond 50
+    if (allBackups.length > 50) {
+      const backupsToDelete = allBackups.slice(50);
+      for (const backup of backupsToDelete) {
+        await ctx.db.delete(backup._id);
+      }
+    }
+
+    return backupId;
+  },
+});
+
+// Get backup history (last 50 backups)
+export const getBackupHistory = query({
+  args: {},
+  handler: async (ctx) => {
+    const backups = await ctx.db
+      .query("landingDebugSettingsHistory")
+      .withIndex("by_timestamp")
+      .order("desc")
+      .take(50);
+
+    return backups.map(backup => ({
+      _id: backup._id,
+      timestamp: backup.timestamp,
+      description: backup.description,
+      // Sample values for preview
+      sampleValues: {
+        logoSize: backup.config.logoSize,
+        starScale: backup.config.starScale,
+        bgStarCount: backup.config.bgStarCount,
+        selectedFont: backup.config.selectedFont,
+      }
+    }));
+  },
+});
+
+// Restore from a specific backup
+export const restoreFromBackup = mutation({
+  args: {
+    backupId: v.id("landingDebugSettingsHistory"),
+  },
+  handler: async (ctx, args) => {
+    // Get the backup
+    const backup = await ctx.db.get(args.backupId);
+    if (!backup) {
+      throw new Error("Backup not found");
+    }
+
+    // Create a backup of current state before restoring (meta-backup!)
+    const currentSettings = await ctx.db
+      .query("landingDebugSettings")
+      .first();
+
+    if (currentSettings) {
+      await ctx.db.insert("landingDebugSettingsHistory", {
+        config: currentSettings.config,
+        timestamp: Date.now(),
+        description: "Auto-backup before restore",
+      });
+    }
+
+    // Update current settings with backup data
+    if (currentSettings) {
+      await ctx.db.patch(currentSettings._id, {
+        config: backup.config,
+        updatedAt: Date.now(),
+      });
+    } else {
+      await ctx.db.insert("landingDebugSettings", {
+        config: backup.config,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
+
+    return { success: true, restoredFrom: backup.timestamp };
+  },
+});
