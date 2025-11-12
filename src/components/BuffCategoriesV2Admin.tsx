@@ -106,6 +106,99 @@ function EditTenureModal({ currentValue, onClose, onSave }: EditTenureModalProps
   return createPortal(modalContent, document.body);
 }
 
+interface EditGoldModalProps {
+  currentValue: number;
+  onClose: () => void;
+  onSave: (value: number) => void;
+}
+
+function EditGoldModal({ currentValue, onClose, onSave }: EditGoldModalProps) {
+  const [mounted, setMounted] = useState(false);
+  const [inputValue, setInputValue] = useState(currentValue.toString());
+
+  React.useEffect(() => {
+    setMounted(true);
+    // Lock body scroll
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  const handleSave = () => {
+    const parsedValue = parseFloat(inputValue);
+    if (!isNaN(parsedValue) && parsedValue > 0) {
+      onSave(parsedValue);
+    }
+  };
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  if (!mounted) return null;
+
+  const modalContent = (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300"
+      onClick={handleBackdropClick}
+    >
+      <div
+        className="mek-card-industrial mek-border-sharp-gold w-full max-w-md mx-4 p-6 animate-in zoom-in-95 duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header with hazard stripes */}
+        <div className="mek-header-industrial mb-6">
+          <h2 className="mek-text-industrial text-xl text-yellow-400">
+            Configure Gold Base Rate
+          </h2>
+        </div>
+
+        {/* Input Section */}
+        <div className="space-y-4">
+          <div>
+            <label className="mek-label-uppercase text-gray-400 mb-2 block">
+              Base Gold Rate (per hour)
+            </label>
+            <input
+              type="number"
+              step="1"
+              min="1"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="w-full px-4 py-3 bg-black/60 border-2 border-yellow-500/30 text-yellow-400 text-lg font-bold focus:border-yellow-500 focus:outline-none transition-colors"
+              autoFocus
+            />
+          </div>
+          <p className="text-sm text-gray-400 leading-relaxed">
+            Base gold generation rate per hour. Can be modified by flat boosts and percentage buffs.
+          </p>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex gap-3 mt-8">
+          <button
+            onClick={onClose}
+            className="mek-button-secondary flex-1"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            className="mek-button-primary flex-1"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return createPortal(modalContent, document.body);
+}
+
 interface ExpandableRowProps {
   category: BuffCategory;
   level: number;
@@ -183,16 +276,20 @@ function ExpandableRow({ category, level, isExpanded, onToggle, onEdit }: Expand
 }
 
 export default function BuffCategoriesV2Admin() {
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['tenure']));
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['tenure', 'gold']));
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showEditGoldModal, setShowEditGoldModal] = useState(false);
 
-  // Query base rate from Convex
+  // Query base rates from Convex
   const baseRateData = useQuery(api.tenureConfig.getBaseRate);
+  const goldRateData = useQuery(api.goldConfig.getBaseGoldRate);
 
   // Mutations
   const setBaseRateMutation = useMutation(api.tenureConfig.setBaseRate);
+  const setGoldRateMutation = useMutation(api.goldConfig.setBaseGoldRate);
 
   const tenureBaseRate = baseRateData?.baseRate || 1.0;
+  const goldBaseRate = goldRateData?.baseGoldPerHour || 100;
 
   // Hierarchical buff category structure
   const buffCategories: BuffCategory[] = [
@@ -211,6 +308,32 @@ export default function BuffCategoriesV2Admin() {
         {
           id: 'global-tenure',
           name: 'Global',
+          type: 'buff',
+          baseValue: null,
+        }
+      ]
+    },
+    {
+      id: 'gold',
+      name: 'Gold',
+      type: 'config',
+      baseValue: `${goldBaseRate.toFixed(0)}/hr`,
+      children: [
+        {
+          id: 'rate-gold-per-hour',
+          name: 'Rate Gold Per Hour',
+          type: 'buff',
+          baseValue: null,
+        },
+        {
+          id: 'boost-flat',
+          name: 'Boost Flat',
+          type: 'buff',
+          baseValue: null,
+        },
+        {
+          id: 'boost-percent',
+          name: 'Boost %',
           type: 'buff',
           baseValue: null,
         }
@@ -242,6 +365,22 @@ export default function BuffCategoriesV2Admin() {
       }
     } catch (error) {
       console.error('[🔧CONFIG] Error saving tenure base rate:', error);
+      alert('An error occurred while saving');
+    }
+  };
+
+  const handleSaveGoldRate = async (newValue: number) => {
+    try {
+      const result = await setGoldRateMutation({ baseGoldPerHour: newValue });
+      if (result.success) {
+        console.log('[🔧CONFIG] Gold base rate updated:', newValue);
+        setShowEditGoldModal(false);
+      } else {
+        console.error('[🔧CONFIG] Failed to update gold base rate:', result.message);
+        alert('Failed to save: ' + result.message);
+      }
+    } catch (error) {
+      console.error('[🔧CONFIG] Error saving gold base rate:', error);
       alert('An error occurred while saving');
     }
   };
@@ -286,7 +425,13 @@ export default function BuffCategoriesV2Admin() {
                   level={0}
                   isExpanded={expandedCategories.has(category.id)}
                   onToggle={() => toggleCategory(category.id)}
-                  onEdit={() => setShowEditModal(true)}
+                  onEdit={() => {
+                    if (category.id === 'tenure') {
+                      setShowEditModal(true);
+                    } else if (category.id === 'gold') {
+                      setShowEditGoldModal(true);
+                    }
+                  }}
                 />
               ))}
             </tbody>

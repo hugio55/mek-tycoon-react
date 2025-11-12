@@ -111,6 +111,7 @@ import type * as goldBackupScheduler from "../goldBackupScheduler.js";
 import type * as goldBackups from "../goldBackups.js";
 import type * as goldCheckpointing from "../goldCheckpointing.js";
 import type * as goldCheckpointingActions from "../goldCheckpointingActions.js";
+import type * as goldConfig from "../goldConfig.js";
 import type * as goldLeaderboard from "../goldLeaderboard.js";
 import type * as goldMining from "../goldMining.js";
 import type * as goldMiningSnapshot from "../goldMiningSnapshot.js";
@@ -343,6 +344,7 @@ declare const fullApi: ApiFromModules<{
   goldBackups: typeof goldBackups;
   goldCheckpointing: typeof goldCheckpointing;
   goldCheckpointingActions: typeof goldCheckpointingActions;
+  goldConfig: typeof goldConfig;
   goldLeaderboard: typeof goldLeaderboard;
   goldMining: typeof goldMining;
   goldMiningSnapshot: typeof goldMiningSnapshot;
