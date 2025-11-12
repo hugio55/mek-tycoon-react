@@ -2,19 +2,32 @@ import React, { useState } from 'react';
 
 interface FillTextButtonProps {
   text?: string;
+  fontFamily?: string;
+  fontSize?: number;
+  color?: string;
+  horizontalOffset?: number;
+  verticalOffset?: number;
 }
 
-const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
+const FillTextButton = ({
+  text = 'uiverse',
+  fontFamily = 'Orbitron',
+  fontSize = 32,
+  color = 'text-white',
+  horizontalOffset = 0,
+  verticalOffset = 0
+}: FillTextButtonProps) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
     <button
       className="relative bg-transparent border-none cursor-pointer m-0 h-auto p-0"
       style={{
-        fontFamily: 'Orbitron, sans-serif',
-        fontSize: '2em',
+        fontFamily: `${fontFamily}, sans-serif`,
+        fontSize: `${fontSize}px`,
         textTransform: 'uppercase',
         letterSpacing: '3px',
+        transform: `translate(${horizontalOffset}px, ${verticalOffset}px)`,
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
