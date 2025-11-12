@@ -226,8 +226,14 @@ export default function LandingPage() {
       console.log('[🎬SWAP] Resetting video to frame 1 and starting playback');
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(err => console.error('[🎬SWAP] Video play failed:', err));
+
+      // Unlock scroll after video plays and fade-in completes
+      setTimeout(() => {
+        console.log('[🔓SCROLL] Unlocking scroll after video playback + fade-in');
+        setLockScrollForConsent(false);
+      }, logoFadeDuration + 500); // logoFadeDuration for fade-in + 500ms buffer
     }
-  }, [useVideoLogo]);
+  }, [useVideoLogo, logoFadeDuration]);
 
   // Debug logging for animation stage changes
   useEffect(() => {
@@ -751,9 +757,7 @@ export default function LandingPage() {
           setTimeout(() => {
             console.log('[🎬SWAP] Swapping to video logo (first-time visitor path)');
             setUseVideoLogo(true);
-            // Unlock scroll after video swap completes
-            console.log('[🔓SCROLL] Unlocking scroll after video swap');
-            setLockScrollForConsent(false);
+            // Note: Scroll unlock now happens in useEffect when video plays + fades in
           }, logoFadeDuration);
         };
         logoImage.onerror = () => {
