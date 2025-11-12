@@ -1413,7 +1413,7 @@ export default function LandingPage() {
         className="absolute left-0 z-[20]"
         style={{
           top: `calc(100vh + ${phaseColumnYOffset}px)`,
-          width: '100vw', // Full viewport width - default scrollbar width is automatically accounted for
+          width: '100%', // Full container width - correctly fills space without extending under scrollbar
         }}
       >
         <HorizontalTimeline
