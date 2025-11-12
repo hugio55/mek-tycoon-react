@@ -137,12 +137,43 @@ export default function LandingDebugPage() {
   const [migrationStatus, setMigrationStatus] = useState<'pending' | 'migrating' | 'complete' | 'none'>('pending');
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Convex hooks
-  const dbSettings = useQuery(api.landingDebugSettings.getLandingDebugSettings);
+  // NEW: Desktop/Mobile mode toggle
+  const [activeMode, setActiveMode] = useState<'desktop' | 'mobile'>('desktop');
+
+  // Load correct config when switching between desktop/mobile modes
+  useEffect(() => {
+    if (unifiedSettings && migrationStatus === 'complete') {
+      const modeConfig = activeMode === 'desktop' ? unifiedSettings.desktop : unifiedSettings.mobile;
+      const mergedConfig: ConfigType = { ...DEFAULT_CONFIG, ...unifiedSettings.shared, ...modeConfig };
+      console.log(`[MODE-SWITCH] Loaded ${activeMode} config:`, {
+        logoSize: mergedConfig.logoSize,
+        descriptionFontSize: mergedConfig.descriptionFontSize,
+        bgStarCount: mergedConfig.bgStarCount
+      });
+      setConfig(mergedConfig);
+    }
+  }, [activeMode, unifiedSettings]);
+
+  // Convex hooks - UNIFIED table
+  const unifiedSettings = useQuery(api.landingDebugUnified.getUnifiedLandingDebugSettings);
+  const updateUnifiedSettings = useMutation(api.landingDebugUnified.updateUnifiedLandingDebugSettings);
+  const resetUnifiedSettings = useMutation(api.landingDebugUnified.resetUnifiedLandingDebugSettings);
+  const migrateFromOld = useMutation(api.landingDebugUnified.migrateFromOldTables);
+
+  // OLD: Keep old hooks for fallback during migration
+  const oldDbSettings = useQuery(api.landingDebugSettings.getLandingDebugSettings);
   const rawDbData = useQuery(api.landingDebugSettings.getRawLandingDebugSettings);
-  const updateSettings = useMutation(api.landingDebugSettings.updateLandingDebugSettings);
-  const resetSettings = useMutation(api.landingDebugSettings.resetLandingDebugSettings);
-  const createBackup = useMutation(api.landingDebugSettings.createBackup);
+  const oldUpdateSettings = useMutation(api.landingDebugSettings.updateLandingDebugSettings);
+  const oldResetSettings = useMutation(api.landingDebugSettings.resetLandingDebugSettings);
+  const oldCreateBackup = useMutation(api.landingDebugSettings.createBackup);
+
+  // Use unified settings if available, fall back to old system
+  const dbSettings = unifiedSettings
+    ? { ...unifiedSettings.shared, ...(activeMode === 'desktop' ? unifiedSettings.desktop : unifiedSettings.mobile) }
+    : oldDbSettings;
+  const updateSettings = updateUnifiedSettings;
+  const resetSettings = resetUnifiedSettings;
+  const createBackup = oldCreateBackup; // Keep using old backup system for now
 
   // Phase card management
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
@@ -350,19 +381,38 @@ export default function LandingDebugPage() {
       const parsed = JSON.parse(localStorageData);
       const mergedConfig: ConfigType = { ...DEFAULT_CONFIG, ...parsed };
 
-      // Save to database
-      updateSettings({ config: mergedConfig }).then(() => {
-        console.log('[MIGRATION] Successfully migrated settings to database');
-        localStorage.setItem(MIGRATION_FLAG, 'true');
-        setConfig(mergedConfig);
-        setMigrationStatus('complete');
-        setSaveState('saved');
-        setTimeout(() => setSaveState('idle'), 2000);
-      }).catch((err) => {
-        console.error('[MIGRATION] Failed to migrate settings:', err);
-        setMigrationStatus('complete');
-        setConfig(mergedConfig); // Still use the merged config even if save failed
-      });
+      // Save to database - use UNIFIED table if available
+      if (unifiedSettings) {
+        // Save to correct section of unified table based on active mode
+        const updateData = activeMode === 'desktop'
+          ? { desktop: mergedConfig }
+          : { mobile: mergedConfig };
+
+        updateSettings(updateData).then(() => {
+          console.log('[MIGRATION] Successfully migrated settings to UNIFIED database');
+          localStorage.setItem(MIGRATION_FLAG, 'true');
+          setConfig(mergedConfig);
+          setMigrationStatus('complete');
+          setSaveState('saved');
+          setTimeout(() => setSaveState('idle'), 2000);
+        }).catch((err) => {
+          console.error('[MIGRATION] Failed to migrate settings:', err);
+        });
+      } else {
+        // Fallback to old system
+        oldUpdateSettings({ config: mergedConfig }).then(() => {
+          console.log('[MIGRATION] Successfully migrated settings to OLD database');
+          localStorage.setItem(MIGRATION_FLAG, 'true');
+          setConfig(mergedConfig);
+          setMigrationStatus('complete');
+          setSaveState('saved');
+          setTimeout(() => setSaveState('idle'), 2000);
+        }).catch((err) => {
+          console.error('[MIGRATION] Failed to migrate settings:', err);
+          setMigrationStatus('complete');
+          setConfig(mergedConfig); // Still use the merged config even if save failed
+        });
+      }
     } catch (e) {
       console.error('[MIGRATION] Failed to parse localStorage config:', e);
       // Merge with defaults even on error to ensure new properties exist
@@ -432,9 +482,17 @@ export default function LandingDebugPage() {
         });
         console.log('[💾BACKUP] Backup created successfully');
 
-        // STEP 2: Save the new settings
-        await updateSettings({ config });
-        console.log('[💾SAVE] Save successful');
+        // STEP 2: Save the new settings to correct section based on active mode
+        if (unifiedSettings) {
+          const updateData = activeMode === 'desktop'
+            ? { desktop: config }
+            : { mobile: config };
+          await updateSettings(updateData);
+          console.log(`[💾SAVE] Save successful to UNIFIED ${activeMode} section`);
+        } else {
+          await oldUpdateSettings({ config });
+          console.log('[💾SAVE] Save successful to OLD table');
+        }
         setSaveState('saved');
         setTimeout(() => setSaveState('idle'), 1500);
 
@@ -703,19 +761,36 @@ export default function LandingDebugPage() {
         className={viewMode === 'split-view' ? 'w-1/2 bg-gray-800 p-3 overflow-y-auto border-r border-gray-700' : 'max-w-5xl mx-auto'}
         style={{ zoom: 0.75 }}
       >
-        {/* Desktop Debug Identifier */}
-        <div className="mb-4 p-4 bg-gray-800 border-2 border-blue-500 rounded-lg">
-          <h1 className="text-3xl font-bold text-blue-300 text-center mb-2">
-            🖥️ DESKTOP DEBUG
+        {/* Desktop/Mobile Mode Toggle */}
+        <div className="mb-4 p-4 bg-gray-800 border-2 border-yellow-500 rounded-lg">
+          <h1 className="text-2xl font-bold text-yellow-400 text-center mb-3">
+            {activeMode === 'desktop' ? '🖥️ DESKTOP MODE' : '📱 MOBILE MODE'}
           </h1>
-          <div className="flex justify-center">
-            <a
-              href="/landing-debug-mobile"
-              className="px-4 py-2 bg-purple-700 border border-purple-500 rounded text-white text-sm hover:bg-purple-600 transition-colors"
+          <div className="flex justify-center items-center gap-4">
+            <button
+              onClick={() => setActiveMode('desktop')}
+              className={`px-6 py-3 rounded-lg font-bold transition-all ${
+                activeMode === 'desktop'
+                  ? 'bg-blue-600 text-white border-2 border-blue-400'
+                  : 'bg-gray-700 text-gray-300 border-2 border-gray-600 hover:bg-gray-600'
+              }`}
             >
-              📱 Switch to Mobile Debug
-            </a>
+              🖥️ Desktop (≥1024px)
+            </button>
+            <button
+              onClick={() => setActiveMode('mobile')}
+              className={`px-6 py-3 rounded-lg font-bold transition-all ${
+                activeMode === 'mobile'
+                  ? 'bg-green-600 text-white border-2 border-green-400'
+                  : 'bg-gray-700 text-gray-300 border-2 border-gray-600 hover:bg-gray-600'
+              }`}
+            >
+              📱 Mobile (<1024px)
+            </button>
           </div>
+          <p className="text-center text-xs text-gray-400 mt-3">
+            All settings below will save to {activeMode === 'desktop' ? 'desktop' : 'mobile'} configuration
+          </p>
         </div>
 
         {/* Header */}
