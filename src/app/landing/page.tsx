@@ -1473,6 +1473,7 @@ export default function LandingPage() {
           imageBlendMode={phaseImageBlendMode}
           hoverDarkenIntensity={phaseHoverDarkeningIntensity}
           idleBackdropBlur={phaseIdleBackdropBlur}
+          isMobile={isMobile}
         />
       </div>
 
