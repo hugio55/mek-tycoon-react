@@ -1408,7 +1408,7 @@ export default function LandingPage() {
         className="absolute left-0 z-[20]"
         style={{
           top: `calc(100vh + ${phaseColumnYOffset}px)`,
-          width: 'calc(100vw + 8px)', // Extend 8px to compensate for thin custom scrollbar
+          width: 'calc(100vw + 20px)', // Extend 20px to compensate for thin custom scrollbar
         }}
       >
         <HorizontalTimeline
