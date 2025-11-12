@@ -129,12 +129,14 @@ export default function LandingDebugPage() {
   const [editingPhaseId, setEditingPhaseId] = useState<Id<"phaseCards"> | null>(null);
   const [newPhaseForm, setNewPhaseForm] = useState<{
     header: string;
+    subtitle: string;
     title: string;
     description: string;
     imageUrl: string;
     locked: boolean;
   }>({
     header: '',
+    subtitle: '',
     title: '',
     description: '',
     imageUrl: '',
@@ -401,6 +403,7 @@ export default function LandingDebugPage() {
 
     await createPhaseCard({
       header: newPhaseForm.header || undefined,
+      subtitle: newPhaseForm.subtitle || undefined,
       title: newPhaseForm.title,
       description: newPhaseForm.description || undefined,
       imageUrl: newPhaseForm.imageUrl || undefined,
@@ -408,7 +411,7 @@ export default function LandingDebugPage() {
       order: nextOrder,
     });
 
-    setNewPhaseForm({ header: '', title: '', description: '', imageUrl: '', locked: false });
+    setNewPhaseForm({ header: '', subtitle: '', title: '', description: '', imageUrl: '', locked: false });
   };
 
   const handleUpdatePhase = async (id: Id<"phaseCards">, updates: { header?: string; title?: string; description?: string; imageUrl?: string; locked?: boolean }) => {
@@ -462,6 +465,7 @@ export default function LandingDebugPage() {
       if (phase) {
         setPhaseEditForm({
           header: phase.header || '',
+          subtitle: phase.subtitle || '',
           title: phase.title,
           description: phase.description || '',
           imageUrl: phase.imageUrl || '',
@@ -476,6 +480,7 @@ export default function LandingDebugPage() {
     await updatePhaseCard({
       id: selectedPhaseForEdit,
       header: phaseEditForm.header || undefined,
+      subtitle: phaseEditForm.subtitle || undefined,
       title: phaseEditForm.title,
       description: phaseEditForm.description || undefined,
       imageUrl: phaseEditForm.imageUrl || undefined,
@@ -1717,11 +1722,21 @@ export default function LandingDebugPage() {
                 {selectedPhaseForEdit && (
                   <>
                     <div>
-                      <label className="block text-xs text-gray-300 mb-1">Header (italic text above title)</label>
+                      <label className="block text-xs text-gray-300 mb-1">Header (phase label when idle)</label>
                       <input
                         type="text"
                         value={phaseEditForm.header}
                         onChange={(e) => setPhaseEditForm(prev => ({ ...prev, header: e.target.value }))}
+                        placeholder="e.g., Phase I"
+                        className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-300 mb-1">Subtitle (italic text above title)</label>
+                      <input
+                        type="text"
+                        value={phaseEditForm.subtitle}
+                        onChange={(e) => setPhaseEditForm(prev => ({ ...prev, subtitle: e.target.value }))}
                         placeholder="e.g., The Beginning"
                         className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                       />
@@ -1732,7 +1747,7 @@ export default function LandingDebugPage() {
                         type="text"
                         value={phaseEditForm.title}
                         onChange={(e) => setPhaseEditForm(prev => ({ ...prev, title: e.target.value }))}
-                        placeholder="e.g., Foundation"
+                        placeholder="e.g., Initialization"
                         className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                       />
                     </div>

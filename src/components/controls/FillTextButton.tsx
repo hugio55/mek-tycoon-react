@@ -75,21 +75,28 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
         &nbsp;{text}&nbsp;
       </span>
 
-      {/* Single glowing line that transitions from left to right edge */}
+      {/* Wrapper for glowing line - allows glow to extend beyond bounds */}
       <span
         className="absolute top-0 bottom-0"
         style={{
           width: '3px',
-          backgroundColor: '#3DD1FF',
-          animation: 'line-glow 2s ease-in-out infinite',
           left: isHovered ? 'calc(100% - 3px)' : '0',
           transition: 'left 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
+          animation: 'line-glow 2s ease-in-out infinite',
         }}
-      />
+      >
+        {/* Inner line element */}
+        <span
+          className="absolute inset-0"
+          style={{
+            backgroundColor: '#3DD1FF',
+          }}
+        />
+      </span>
 
       {/* Hover overlay (sweeps from left to right with bright blue text) */}
       <span
-        className="absolute top-0 left-0 whitespace-nowrap overflow-visible"
+        className="absolute top-0 left-0 whitespace-nowrap overflow-hidden"
         style={{
           color: '#3DD1FF',
           width: isHovered ? '100%' : '0%',
