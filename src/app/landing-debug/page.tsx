@@ -595,6 +595,9 @@ export default function LandingDebugPage() {
   };
 
   const updateConfig = <K extends keyof ConfigType>(key: K, value: ConfigType[K]) => {
+    // Mark as user editing to prevent race conditions
+    isUserEditingRef.current = true;
+
     // Auto-convert image paths for phase image fields
     if ((key === 'phaseImage1' || key === 'phaseImage2' || key === 'phaseImage3' || key === 'phaseImage4') && typeof value === 'string') {
       const convertedPath = convertToWebPath(value);
@@ -607,6 +610,15 @@ export default function LandingDebugPage() {
     if (key === 'phaseIdleBackdropBlur') {
       console.log('[🔍BLUR] Slider changed in landing-debug:', value);
     }
+  };
+
+  // Handler to mark editing state
+  const handleInputStart = () => {
+    isUserEditingRef.current = true;
+  };
+
+  const handleInputEnd = () => {
+    isUserEditingRef.current = false;
   };
 
   const setActiveTab = (tabId: string) => {
