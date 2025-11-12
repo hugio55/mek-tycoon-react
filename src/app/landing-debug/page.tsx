@@ -907,7 +907,7 @@ export default function LandingDebugPage() {
               <input
                 type="range"
                 min="0.1"
-                max="5"
+                max="30"
                 step="0.1"
                 value={config.twinkleSpeed}
                 onChange={(e) => updateConfig('twinkleSpeed', parseFloat(e.target.value))}
@@ -1054,7 +1054,7 @@ export default function LandingDebugPage() {
               <input
                 type="range"
                 min="0.1"
-                max="5"
+                max="30"
                 step="0.1"
                 value={config.twinkleSpeed2}
                 onChange={(e) => updateConfig('twinkleSpeed2', parseFloat(e.target.value))}
@@ -1220,7 +1220,7 @@ export default function LandingDebugPage() {
               <input
                 type="range"
                 min="0.1"
-                max="5"
+                max="30"
                 step="0.1"
                 value={config.twinkleSpeed3}
                 onChange={(e) => updateConfig('twinkleSpeed3', parseFloat(e.target.value))}
@@ -1341,7 +1341,7 @@ export default function LandingDebugPage() {
               <input
                 type="range"
                 min="0.1"
-                max="5"
+                max="30"
                 step="0.1"
                 value={config.bgStarTwinkleSpeed}
                 onChange={(e) => updateConfig('bgStarTwinkleSpeed', parseFloat(e.target.value))}
