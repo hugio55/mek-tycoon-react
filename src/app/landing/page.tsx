@@ -313,6 +313,29 @@ export default function LandingPage() {
 
   // Note: phaseImage1-4 not needed here - PhaseCarousel reads directly from localStorage
 
+  // Preload critical resources immediately on mount
+  useEffect(() => {
+    console.log('[📥PRELOAD] Starting resource preload');
+
+    // Preload logo image
+    const logoImg = new Image();
+    logoImg.src = '/logo-first-frame.webp';
+    logoImg.onload = () => console.log('[📥PRELOAD] Logo image loaded');
+    logoImg.onerror = () => console.error('[📥PRELOAD] Logo image failed to load');
+
+    // Preload background image
+    const bgImg = new Image();
+    bgImg.src = '/colored-bg-1.webp';
+    bgImg.onload = () => console.log('[📥PRELOAD] Background image loaded');
+    bgImg.onerror = () => console.error('[📥PRELOAD] Background image failed to load');
+
+    // Preload video - trigger load without playing
+    if (videoRef.current) {
+      videoRef.current.load();
+      console.log('[📥PRELOAD] Video preload started');
+    }
+  }, []);
+
   // Check for audio consent on mount
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -1266,6 +1289,7 @@ export default function LandingPage() {
               loop
               muted
               playsInline
+              preload="auto"
               className="w-full h-full absolute inset-0"
               style={{
                 opacity: useVideoLogo ? 'inherit' : 0,
