@@ -6,8 +6,8 @@ import { api } from '@/convex/_generated/api';
 import HorizontalTimeline from '@/components/HorizontalTimeline';
 import { SPEAKER_ICON_STYLES, type SpeakerIconStyle } from '@/components/SpeakerIcons';
 import AudioConsentLightbox from '@/components/AudioConsentLightbox';
+import BetaSignupLightbox from '@/components/BetaSignupLightbox';
 import FillTextButton from '@/components/controls/FillTextButton';
-import ScrollArrow from '@/components/ScrollArrow';
 
 interface Star {
   x: number;
@@ -121,8 +121,6 @@ const DEFAULT_CONFIG = {
   joinBetaColor: 'text-white',
   joinBetaHorizontalOffset: 0,
   joinBetaVerticalOffset: 0,
-  // Scroll Arrow controls
-  scrollArrowType: 'chevron' as 'chevron' | 'arrow' | 'double-chevron' | 'circle-arrow' | 'bracket' | 'line' | 'dots',
   // Note: phaseImage1-4 not in DEFAULT_CONFIG - PhaseCarousel manages these
 };
 
@@ -302,14 +300,14 @@ export default function LandingPage() {
   const [joinBetaHorizontalOffset, setJoinBetaHorizontalOffset] = useState(DEFAULT_CONFIG.joinBetaHorizontalOffset);
   const [joinBetaVerticalOffset, setJoinBetaVerticalOffset] = useState(DEFAULT_CONFIG.joinBetaVerticalOffset);
 
-  // Scroll Arrow controls
-  const [scrollArrowType, setScrollArrowType] = useState(DEFAULT_CONFIG.scrollArrowType);
-
   // Scroll-triggered animation state
   const [hasScrolled, setHasScrolled] = useState(false);
 
   // Scroll indicator state
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+
+  // Beta signup lightbox state
+  const [showBetaLightbox, setShowBetaLightbox] = useState(false);
 
   // Note: phaseImage1-4 not needed here - PhaseCarousel reads directly from localStorage
 
@@ -516,7 +514,6 @@ export default function LandingPage() {
           setJoinBetaColor(config.joinBetaColor ?? DEFAULT_CONFIG.joinBetaColor);
           setJoinBetaHorizontalOffset(config.joinBetaHorizontalOffset ?? DEFAULT_CONFIG.joinBetaHorizontalOffset);
           setJoinBetaVerticalOffset(config.joinBetaVerticalOffset ?? DEFAULT_CONFIG.joinBetaVerticalOffset);
-          setScrollArrowType(config.scrollArrowType ?? DEFAULT_CONFIG.scrollArrowType);
           // Note: phaseImage1-4 not loaded here - PhaseCarousel reads directly from localStorage
       } catch (e) {
         console.error('Failed to load debug config:', e);
@@ -622,7 +619,6 @@ export default function LandingPage() {
           setJoinBetaColor(config.joinBetaColor ?? DEFAULT_CONFIG.joinBetaColor);
           setJoinBetaHorizontalOffset(config.joinBetaHorizontalOffset ?? DEFAULT_CONFIG.joinBetaHorizontalOffset);
           setJoinBetaVerticalOffset(config.joinBetaVerticalOffset ?? DEFAULT_CONFIG.joinBetaVerticalOffset);
-          setScrollArrowType(config.scrollArrowType ?? DEFAULT_CONFIG.scrollArrowType);
         } catch (e) {
           console.error('Failed to load debug config from localStorage:', e);
         }
@@ -1308,8 +1304,8 @@ export default function LandingPage() {
               transitionDelay: '0.3s',
             }}
             onClick={() => {
-              // TODO: Implement beta signup functionality
-              console.log('[🎮BETA] Join Beta clicked');
+              console.log('[🎮BETA] Join Beta clicked - opening lightbox');
+              setShowBetaLightbox(true);
             }}
           >
             <FillTextButton
@@ -1397,6 +1393,16 @@ export default function LandingPage() {
         lockScroll={lockScrollForConsent}
       />
 
+      {/* Beta Signup Lightbox */}
+      <BetaSignupLightbox
+        isVisible={showBetaLightbox}
+        onClose={() => setShowBetaLightbox(false)}
+        onSubmit={(email) => {
+          console.log('[🎮BETA] Email submitted:', email);
+          // TODO: Store in Convex database
+        }}
+      />
+
       {/* Scroll Indicator - Bottom Center */}
       <>
         <style dangerouslySetInnerHTML={{
@@ -1421,11 +1427,29 @@ export default function LandingPage() {
             transition: showScrollIndicator ? 'none' : 'opacity 300ms ease-out',
           }}
         >
-          <ScrollArrow
-            type={scrollArrowType}
-            size={48}
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
             className="text-gray-400"
-          />
+          >
+            <path
+              d="M6 6L12 12L18 6"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M6 12L12 18L18 12"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
       </>
 

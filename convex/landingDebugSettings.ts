@@ -90,7 +90,6 @@ const DEFAULT_CONFIG = {
   joinBetaColor: 'text-white',
   joinBetaHorizontalOffset: 0,
   joinBetaVerticalOffset: 0,
-  scrollArrowType: 'chevron' as 'chevron' | 'arrow' | 'double-chevron' | 'circle-arrow' | 'bracket' | 'line' | 'dots',
 };
 
 // Get the current landing debug settings (returns default if not found)
