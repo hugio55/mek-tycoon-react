@@ -119,7 +119,15 @@ const DEFAULT_CONFIG = {
 type ConfigType = typeof DEFAULT_CONFIG;
 
 export default function LandingDebugPage() {
-  const [config, setConfig] = useState<ConfigType>(DEFAULT_CONFIG);
+  const [config, setConfig] = useState<ConfigType>(() => {
+    console.log('[🔄SYNC] Initial state set to DEFAULT_CONFIG:', {
+      logoSize: DEFAULT_CONFIG.logoSize,
+      starScale: DEFAULT_CONFIG.starScale,
+      bgStarCount: DEFAULT_CONFIG.bgStarCount,
+      timestamp: new Date().toISOString()
+    });
+    return DEFAULT_CONFIG;
+  });
   const [viewMode, setViewMode] = useState<'controls-only' | 'split-view'>('controls-only');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel' | 'joinBeta' | 'audioLightboxDescription'>('description');
@@ -128,6 +136,7 @@ export default function LandingDebugPage() {
 
   // Convex hooks
   const dbSettings = useQuery(api.landingDebugSettings.getLandingDebugSettings);
+  const rawDbData = useQuery(api.landingDebugSettings.getRawLandingDebugSettings);
   const updateSettings = useMutation(api.landingDebugSettings.updateLandingDebugSettings);
   const resetSettings = useMutation(api.landingDebugSettings.resetLandingDebugSettings);
 
