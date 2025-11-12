@@ -98,15 +98,15 @@ export const GeometricSpeakerIcon = ({ size = 48, isPlaying, className = '' }: S
       {`
         @keyframes arrowPulse1 {
           0%, 100% { opacity: 1; }
-          50% { opacity: 0.7; }
+          50% { opacity: 0.2; }
         }
         @keyframes arrowPulse2 {
           0%, 100% { opacity: 1; }
-          50% { opacity: 0.6; }
+          50% { opacity: 0.15; }
         }
         @keyframes arrowPulse3 {
-          0%, 100% { opacity: 0.95; }
-          50% { opacity: 0.55; }
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.1; }
         }
         .arrow-1 { animation: arrowPulse1 2.5s ease-in-out infinite; }
         .arrow-2 { animation: arrowPulse2 2.5s ease-in-out infinite 0.3s; }
