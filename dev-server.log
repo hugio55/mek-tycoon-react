@@ -1,0 +1,35 @@
+
+> mek-tycoon-react@0.1.0 dev:all
+> concurrently "npm run dev" "npm run dev:convex"
+
+[1] 
+[1] > mek-tycoon-react@0.1.0 dev:convex
+[1] > convex dev --typecheck=disable --url https://wry-trout-962.convex.cloud
+[1] 
+[0] 
+[0] > mek-tycoon-react@0.1.0 dev
+[0] > next dev -p 3200 -H 0.0.0.0
+[0] 
+[0]  ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+[0]  We detected multiple lockfiles and selected the directory of C:\Users\Ben Meyers\package-lock.json as the root directory.
+[0]  To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+[0]    See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+[0]  Detected additional lockfiles: 
+[0]    * C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react-staging\package-lock.json
+[0] 
+[1] - Preparing Convex functions...
+[1] 
+[0]  ⨯ Failed to start server
+[0] Error: listen EADDRINUSE: address already in use 0.0.0.0:3200
+[0]     at <unknown> (Error: listen EADDRINUSE: address already in use 0.0.0.0:3200) {
+[0]   code: 'EADDRINUSE',
+[0]   errno: -4091,
+[0]   syscall: 'listen',
+[0]   address: '0.0.0.0',
+[0]   port: 3200
+[0] }
+[0] [?25h
+[0] npm run dev exited with code 0
+[1] [36mA minor update is available for Convex[39m [2m(1.28.2 → 1.29.0)[22m
+[1] [2mChangelog:[22m [4mhttps://github.com/get-convex/convex-js/blob/main/CHANGELOG.md#changelog[24m
+[1] ✔ 21:05:38 Convex functions ready! (4.72s)
