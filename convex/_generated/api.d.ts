@@ -156,6 +156,7 @@ import type * as mekTreeTables from "../mekTreeTables.js";
 import type * as mekTreeTemplates from "../mekTreeTemplates.js";
 import type * as meks from "../meks.js";
 import type * as metadataResolution from "../metadataResolution.js";
+import type * as migrateDesktopSettings from "../migrateDesktopSettings.js";
 import type * as migratePhaseImages from "../migratePhaseImages.js";
 import type * as migrateSourceKeys from "../migrateSourceKeys.js";
 import type * as migrationUtils from "../migrationUtils.js";
@@ -393,6 +394,7 @@ declare const fullApi: ApiFromModules<{
   mekTreeTemplates: typeof mekTreeTemplates;
   meks: typeof meks;
   metadataResolution: typeof metadataResolution;
+  migrateDesktopSettings: typeof migrateDesktopSettings;
   migratePhaseImages: typeof migratePhaseImages;
   migrateSourceKeys: typeof migrateSourceKeys;
   migrationUtils: typeof migrationUtils;
