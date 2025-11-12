@@ -521,3 +521,11 @@
 [1] 11/11/2025, 11:15:45 PM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
 [1] 11/11/2025, 11:30:44 PM [CONVEX M(walletAuthentication:cleanupExpiredNonces)] [LOG] '[Cleanup] Nonce cleanup completed: 0 expired, 0 used (>24hr old), 0 total deleted'
 [1] 11/11/2025, 11:30:45 PM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
+[1] - Preparing Convex functions...
+[1] 
+[1] X [ERROR] No matching export in "src/lib/completeVariationRarity.ts" for import "VARIATIONS_BY_TYPE"
+[1] 
+[1]     convex/variationsReference.ts:3:9:
+[1]       3 │ import { VARIATIONS_BY_TYPE } from "../src/lib/completeVariationRar...
+[1]         ╵          ~~~~~~~~~~~~~~~~~~
+[1] 
