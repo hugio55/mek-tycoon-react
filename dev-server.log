@@ -331,3 +331,46 @@
 [1] - Preparing Convex functions...
 [1] 
 [1] ✔ 21:53:45 Convex functions ready! (8.67s)
+[1] 11/11/2025, 10:00:01 PM [CONVEX M(monitoring:cleanupOldEvents)] [LOG] '[Cleanup] Deleted 0 monitoring events older than 30 days'
+[1] 11/11/2025, 10:00:44 PM [CONVEX M(walletAuthentication:cleanupExpiredNonces)] [LOG] '[Cleanup] Nonce cleanup completed: 0 expired, 0 used (>24hr old), 0 total deleted'
+[1] 11/11/2025, 10:00:45 PM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 8 events, health: healthy'
+[1] - Preparing Convex functions...
+[1] 
+[1] ✔ 22:01:25 Convex functions ready! (8.21s)
+[1] Filesystem changed during push, retrying...
+[1] - Preparing Convex functions...
+[1] 
+[1] ✔ 22:01:31 Convex functions ready! (6.11s)
+[1] - Preparing Convex functions...
+[1] 
+[1] ▲ [WARNING] Duplicate key "essenceConfig" in object literal [duplicate-object-key]
+[1] 
+[1]     convex/schema.ts:3529:2:
+[1]       3529 │   essenceConfig: defineTable({
+[1]            ╵   ~~~~~~~~~~~~~
+[1] 
+[1]   The original key "essenceConfig" is here:
+[1] 
+[1]     convex/schema.ts:2345:2:
+[1]       2345 │   essenceConfig: defineTable({
+[1]            ╵   ~~~~~~~~~~~~~
+[1] 
+[1] esbuild warning: Duplicate key "essenceConfig" in object literal
+[1] ▲ [WARNING] Duplicate key "essenceConfig" in object literal [duplicate-object-key]
+[1] 
+[1]     convex/schema.ts:3529:2:
+[1]       3529 │   essenceConfig: defineTable({
+[1]            ╵   ~~~~~~~~~~~~~
+[1] 
+[1]   The original key "essenceConfig" is here:
+[1] 
+[1]     convex/schema.ts:2345:2:
+[1]       2345 │   essenceConfig: defineTable({
+[1]            ╵   ~~~~~~~~~~~~~
+[1] 
+[1] esbuild warning: Duplicate key "essenceConfig" in object literal
+[1] ✖ Schema validation failed.
+[1] Document with ID "yh75nxx4916pce1b6bbfpr7ynd7t1413" in table "essenceConfig" does not match the schema: Object is missing the required field `createdAt`. Consider wrapping the field validator in `v.optional(...)` if this is expected.
+[1] 
+[1] Object: {configType: "global", essenceCap: 10.0, essenceRate: 0.1, lastUpdated: 1761242910881.0, rarityGroup1: [], rarityGroup2: [], rarityGroup3: [], rarityGroup4: [], slot2EssenceCount: 2.0, slot2GoldCost: 10000.0, slot3EssenceCount: 3.0, slot3GoldCost: 50000.0, slot4EssenceCount: 4.0, slot4GoldCost: 150000.0, slot5EssenceCount: 5.0, slot5GoldCost: 500000.0, slot6EssenceCount: 6.0, slot6GoldCost: 1000000.0, swapBaseCost: 1000.0, swapCostIncrement: 500.0, swapCostMax: 10000.0}
+[1] Validator: v.object({createdAt: v.float64(), description: v.optional(v.string()), key: v.string(), updatedAt: v.float64(), value: v.union(v.float64(), v.string(), v.boolean())})
