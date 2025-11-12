@@ -2388,6 +2388,72 @@ export default function LandingDebugPage() {
           </div>
           )}
 
+          {/* Speaker Icon Style Section */}
+          <div className="bg-gray-800 border border-gray-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
+              Speaker Icon Style
+            </h2>
+            <p className="text-xs text-gray-400 mb-2">
+              Select the speaker/sound icon design
+            </p>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => updateConfig('speakerIconStyle', 'minimal')}
+                className={`px-3 py-2 text-xs rounded ${
+                  config.speakerIconStyle === 'minimal'
+                    ? 'bg-blue-900/50 border border-blue-700 text-blue-200'
+                    : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                Minimal Wave
+              </button>
+              <button
+                onClick={() => updateConfig('speakerIconStyle', 'geometric')}
+                className={`px-3 py-2 text-xs rounded ${
+                  config.speakerIconStyle === 'geometric'
+                    ? 'bg-blue-900/50 border border-blue-700 text-blue-200'
+                    : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                Geometric (Triple Chevron)
+              </button>
+              <button
+                onClick={() => updateConfig('speakerIconStyle', 'bars')}
+                className={`px-3 py-2 text-xs rounded ${
+                  config.speakerIconStyle === 'bars'
+                    ? 'bg-blue-900/50 border border-blue-700 text-blue-200'
+                    : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                Sound Bars
+              </button>
+              <button
+                onClick={() => updateConfig('speakerIconStyle', 'hologram')}
+                className={`px-3 py-2 text-xs rounded ${
+                  config.speakerIconStyle === 'hologram'
+                    ? 'bg-blue-900/50 border border-blue-700 text-blue-200'
+                    : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                Futuristic
+              </button>
+              <button
+                onClick={() => updateConfig('speakerIconStyle', 'pulse')}
+                className={`px-3 py-2 text-xs rounded ${
+                  config.speakerIconStyle === 'pulse'
+                    ? 'bg-blue-900/50 border border-blue-700 text-blue-200'
+                    : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                Pulse Ring
+              </button>
+            </div>
+            <div className="text-xs text-gray-400 text-center mt-2">
+              Current: {config.speakerIconStyle || 'geometric'}
+            </div>
+          </div>
+
           {/* PhaseCarousel Visual Controls Section */}
           <div className="bg-gray-800 border border-cyan-500 rounded p-3">
             <h2 className="text-sm font-semibold text-cyan-400 mb-2 pb-1 border-b border-cyan-700">

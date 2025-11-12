@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import ProModeToggle from './controls/ProModeToggle';
 
 interface AudioConsentLightboxProps {
   onProceed: (audioEnabled: boolean) => void;
@@ -222,8 +223,8 @@ export default function AudioConsentLightbox({
           </div>
         </div>
 
-        {/* Proceed Button - Optimized for mobile touch with responsive sizing */}
-        <button
+        {/* Proceed Button - ORIGINAL (Commented out, replaced with ProModeToggle) */}
+        {/* <button
           onClick={handleProceed}
           className="mt-6 sm:mt-8 text-white font-light tracking-wider border border-white/20 rounded-full hover:border-white/40 hover:bg-white/5 active:bg-white/10 transition-all duration-300 touch-manipulation"
           style={{
@@ -238,7 +239,25 @@ export default function AudioConsentLightbox({
           }}
         >
           PROCEED
-        </button>
+        </button> */}
+
+        {/* ProModeToggle replacing PROCEED button */}
+        <div
+          className="mt-6 sm:mt-8"
+          style={{
+            transform: `scale(${proceedButtonSize}) translateY(${proceedButtonVerticalPosition}px)`
+          }}
+        >
+          <ProModeToggle
+            enabled={false}
+            onChange={(enabled) => {
+              if (enabled) {
+                handleProceed();
+              }
+            }}
+            label="PROCEED"
+          />
+        </div>
       </div>
     </div>
   );
