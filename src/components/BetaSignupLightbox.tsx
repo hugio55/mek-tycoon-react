@@ -118,7 +118,7 @@ export default function BetaSignupLightbox({
 
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/45 backdrop-blur-sm"
         onClick={(e) => e.stopPropagation()}
       />
 
@@ -206,10 +206,11 @@ export default function BetaSignupLightbox({
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full py-3 sm:py-4 text-base sm:text-lg font-light tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl hover:from-yellow-300 hover:to-yellow-400 disabled:from-gray-600 disabled:to-gray-700 disabled:text-white/50 disabled:cursor-not-allowed transition-all duration-300 touch-manipulation shadow-lg shadow-yellow-500/20 active:scale-[0.98]"
+                    className="w-full py-3 sm:py-4 text-base sm:text-lg font-semibold tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl hover:from-yellow-300 hover:to-yellow-400 disabled:from-gray-600 disabled:to-gray-700 disabled:text-white/50 disabled:cursor-not-allowed transition-all duration-300 touch-manipulation shadow-lg shadow-yellow-500/20 active:scale-[0.98]"
                     style={{
                       minHeight: '48px',
                       WebkitTapHighlightColor: 'transparent',
+                      fontFamily: "'Inter', 'Arial', sans-serif",
                     }}
                   >
                     {isSubmitting ? (
@@ -225,11 +226,6 @@ export default function BetaSignupLightbox({
                     )}
                   </button>
                 </form>
-
-                {/* Footer Note */}
-                <p className="mt-4 sm:mt-6 text-xs sm:text-sm text-white/40 text-center font-light">
-                  Your stake address is optional but recommended for perks.
-                </p>
               </>
             ) : (
               /* Success Message */

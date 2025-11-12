@@ -360,7 +360,7 @@ export default function LandingPage() {
         setAnimationStage('logo');
 
         // Start video BEFORE animation completes (return visitor path)
-        const videoStartOffset = 600; // Start video 600ms before PNG animation ends
+        const videoStartOffset = 400; // Start video 400ms before PNG animation ends
         console.log('[🎬SWAP] Starting video playback in', videoStartOffset, 'ms (return visitor)');
         setTimeout(() => {
           if (videoRef.current) {
@@ -813,7 +813,7 @@ export default function LandingPage() {
           setAnimationStage('logo');
 
           // Start video BEFORE animation completes so it's ready for seamless swap
-          const videoStartOffset = 600; // Start video 600ms before PNG animation ends
+          const videoStartOffset = 400; // Start video 400ms before PNG animation ends
           console.log('[🎬SWAP] Starting video playback in', videoStartOffset, 'ms (before animation ends)');
           setTimeout(() => {
             if (videoRef.current) {
@@ -1305,7 +1305,7 @@ export default function LandingPage() {
                 WebkitBackfaceVisibility: 'hidden',
                 WebkitTransform: 'translate3d(0, 0, 0)',
                 imageRendering: 'crisp-edges',
-                transition: 'opacity 200ms ease-in-out',
+                transition: 'opacity 0ms',
                 pointerEvents: 'none',
               }}
             />
@@ -1325,7 +1325,7 @@ export default function LandingPage() {
                 WebkitBackfaceVisibility: 'hidden',
                 WebkitTransform: 'translate3d(0, 0, 0)',
                 imageRendering: 'crisp-edges',
-                transition: 'opacity 200ms ease-in-out',
+                transition: 'opacity 0ms',
                 pointerEvents: 'none',
               }}
             />

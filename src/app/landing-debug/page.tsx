@@ -1338,51 +1338,6 @@ export default function LandingDebugPage() {
           </div>
           )}
 
-          {/* Motion Blur Controls Section */}
-          {true && (
-          <div className="bg-gray-800 border border-gray-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
-              Motion Blur Effects
-            </h2>
-
-            {/* Motion Blur Enabled Toggle */}
-            <div className="mb-2">
-              <label className="block text-xs text-gray-300 mb-1">
-                Enable Motion Blur
-              </label>
-              <button
-                onClick={() => updateConfig('motionBlurEnabled', !config.motionBlurEnabled)}
-                className={`w-full px-2 py-1 text-xs rounded ${
-                  config.motionBlurEnabled
-                    ? 'bg-blue-900/50 border border-blue-700 text-blue-200'
-                    : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
-                }`}
-              >
-                {config.motionBlurEnabled ? 'Enabled' : 'Disabled'}
-              </button>
-            </div>
-
-            {/* Blur Intensity */}
-            <div className="mb-2">
-              <label className="block text-xs text-gray-300 mb-1">
-                Blur Intensity
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="5"
-                value={config.blurIntensity}
-                onChange={(e) => updateConfig('blurIntensity', parseInt(e.target.value))}
-                className="w-full"
-                disabled={!config.motionBlurEnabled}
-              />
-              <div className="text-xs text-gray-400 text-center mt-0.5">
-                {config.blurIntensity}%
-              </div>
-            </div>
-          </div>
-          )}
 
           {/* Typography Controls Section */}
           {true && (
