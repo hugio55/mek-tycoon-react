@@ -1672,6 +1672,7 @@ export default function LandingDebugPage() {
               )}
             </div>
           </div>
+          )}
 
           {/* Phase Cards Management Section */}
           <div className="mt-4 bg-gray-800 border border-yellow-500 rounded p-4">
