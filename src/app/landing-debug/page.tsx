@@ -368,8 +368,15 @@ export default function LandingDebugPage() {
         starScale: mergedConfig.starScale,
         bgStarCount: mergedConfig.bgStarCount
       });
-      setConfig(mergedConfig);
-      setMigrationStatus('complete');
+
+      // Only update config if it's different from current config (prevent infinite loop)
+      if (JSON.stringify(config) !== JSON.stringify(mergedConfig)) {
+        setConfig(mergedConfig);
+      }
+
+      if (migrationStatus !== 'complete') {
+        setMigrationStatus('complete');
+      }
       return;
     }
 
@@ -438,7 +445,11 @@ export default function LandingDebugPage() {
         starScale: mergedConfig.starScale,
         bgStarCount: mergedConfig.bgStarCount
       });
-      setConfig(mergedConfig);
+
+      // Only update config if it's different from current config (prevent infinite loop)
+      if (JSON.stringify(config) !== JSON.stringify(mergedConfig)) {
+        setConfig(mergedConfig);
+      }
     }
   }, [dbSettings, migrationStatus]);
 
