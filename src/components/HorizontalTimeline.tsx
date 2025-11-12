@@ -264,6 +264,7 @@ export default function HorizontalTimeline({
 
           // Calculate width/height based on layout mode
           let dimensionStyle: React.CSSProperties;
+          let useAspectRatio = false;
 
           if (isMobile) {
             // Mobile: vertical layout with 16:9 aspect ratio
@@ -271,16 +272,16 @@ export default function HorizontalTimeline({
               // Expanded: auto height to show content
               dimensionStyle = {
                 width: '100%',
-                height: 'auto',
-                minHeight: '250px',
+                minHeight: '300px',
               };
+              useAspectRatio = false;
             } else {
-              // Collapsed: 16:9 aspect ratio box
+              // Collapsed: 16:9 aspect ratio box using aspect-ratio CSS
               dimensionStyle = {
                 width: '100%',
-                paddingTop: '56.25%', // 16:9 aspect ratio (9/16 = 0.5625)
-                position: 'relative',
+                aspectRatio: '16 / 9',
               };
+              useAspectRatio = true;
             }
           } else {
             // Desktop: horizontal layout
@@ -300,6 +301,7 @@ export default function HorizontalTimeline({
               width: `${widthPercent}%`,
               height: '100%',
             };
+            useAspectRatio = false;
           }
 
           // Calculate blur value
@@ -316,24 +318,15 @@ export default function HorizontalTimeline({
               style={{
                 ...dimensionStyle,
                 transition: isMobile
-                  ? 'height 0.5s ease-in-out, min-height 0.5s ease-in-out, padding-top 0.5s ease-in-out'
+                  ? 'min-height 0.5s ease-in-out, aspect-ratio 0.5s ease-in-out'
                   : 'width 0.5s ease-in-out',
                 zIndex: isActive ? 20 : 10,
+                touchAction: isMobile ? 'manipulation' : 'auto',
               }}
               onMouseEnter={() => handleHoverEnter(index)}
               onMouseLeave={handleHoverLeave}
               onClick={() => handlePhaseClick(index)}
             >
-              {/* Inner wrapper for aspect ratio - only used on mobile when collapsed */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  top: isMobile && !isActive ? 0 : undefined,
-                  left: isMobile && !isActive ? 0 : undefined,
-                  right: isMobile && !isActive ? 0 : undefined,
-                  bottom: isMobile && !isActive ? 0 : undefined,
-                }}
-              >
               {/* Timeline Background Image - bottommost layer, blends with page background */}
               <div
                 className="absolute inset-0 bg-cover bg-center"
@@ -413,12 +406,12 @@ export default function HorizontalTimeline({
                 ref={(el) => (contentRefs.current[index] = el)}
                 className={`
                   absolute inset-0
-                  p-8 md:p-12
+                  ${isMobile ? 'p-6' : 'p-8 md:p-12'}
                   z-20
                   flex flex-col
                   ${isActive
                     ? 'translate-y-0 opacity-100'
-                    : 'translate-y-4 opacity-0'
+                    : isMobile ? 'translate-y-2 opacity-0' : 'translate-y-4 opacity-0'
                   }
                 `}
                 style={{
@@ -433,10 +426,11 @@ export default function HorizontalTimeline({
                 {item.subtitle && (
                   <p
                     className={`
-                      text-gray-300/80 text-sm md:text-base mb-3 italic
+                      text-gray-300/80 mb-2 italic
                       ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
                     `}
                     style={{
+                      fontSize: isMobile ? '14px' : undefined,
                       transition: isActive
                         ? 'opacity 0.3s ease-out 0.45s, transform 0.3s ease-out 0.45s'
                         : 'opacity 0.2s ease-in, transform 0.2s ease-in',
@@ -447,15 +441,15 @@ export default function HorizontalTimeline({
                 )}
                 <h3
                   className={`
-                    text-2xl md:text-3xl
                     font-bold
                     text-[#fab617]
-                    mb-2
+                    ${isMobile ? 'mb-3' : 'mb-2'}
                     font-['Orbitron']
                     tracking-wide
                     ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
                   `}
                   style={{
+                    fontSize: isMobile ? '24px' : '32px',
                     transition: isActive
                       ? 'opacity 0.3s ease-out 0.4s, transform 0.3s ease-out 0.4s'
                       : 'opacity 0.2s ease-in, transform 0.2s ease-in',
@@ -470,14 +464,13 @@ export default function HorizontalTimeline({
                   `}
                   style={{
                     fontFamily: phaseDescriptionFont,
-                    fontSize: `${phaseDescriptionFontSize}px`,
+                    fontSize: isMobile ? '15px' : `${phaseDescriptionFontSize}px`,
                     transition: isActive
                       ? 'opacity 0.3s ease-out 0.5s, transform 0.3s ease-out 0.5s'
                       : 'opacity 0.2s ease-in, transform 0.2s ease-in',
                   }}
                   dangerouslySetInnerHTML={{ __html: formatDescription(item.description) }}
                 />
-              </div>
               </div>
             </div>
           );
