@@ -563,3 +563,5 @@
 [1] - Preparing Convex functions...
 [1] 
 [1] ✔ 11:09:11 Convex functions ready! (9.98s)
+[1] 11/12/2025, 11:15:44 AM [CONVEX M(walletAuthentication:cleanupExpiredNonces)] [LOG] '[Cleanup] Nonce cleanup completed: 0 expired, 0 used (>24hr old), 0 total deleted'
+[1] 11/12/2025, 11:15:45 AM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
