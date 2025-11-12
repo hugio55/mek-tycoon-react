@@ -130,6 +130,7 @@ export default function LandingDebugPage() {
   const dbSettings = useQuery(api.landingDebugSettingsMobile.getLandingDebugSettingsMobile);
   const updateSettings = useMutation(api.landingDebugSettingsMobile.updateLandingDebugSettingsMobile);
   const resetSettings = useMutation(api.landingDebugSettingsMobile.resetLandingDebugSettingsMobile);
+  const createBackup = useMutation(api.landingDebugSettingsMobile.createBackupMobile);
 
   // Phase card management
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
@@ -293,9 +294,18 @@ export default function LandingDebugPage() {
     }
 
     // Set new timeout for debounced save
-    saveTimeoutRef.current = setTimeout(() => {
+    saveTimeoutRef.current = setTimeout(async () => {
       setSaveState('saving');
-      updateSettings({ config }).then(() => {
+
+      try {
+        // STEP 1: Create backup BEFORE saving (prevents data loss)
+        await createBackup({
+          config,
+          description: 'Auto-backup before save'
+        });
+
+        // STEP 2: Save the new settings
+        await updateSettings({ config });
         setSaveState('saved');
         setTimeout(() => setSaveState('idle'), 1500);
 
@@ -305,10 +315,10 @@ export default function LandingDebugPage() {
         if (iframe && iframe.contentWindow) {
           iframe.contentWindow.postMessage({ type: 'mek-landing-config-updated' }, '*');
         }
-      }).catch((err) => {
+      } catch (err) {
         console.error('[SAVE] Failed to save settings:', err);
         setSaveState('idle');
-      });
+      }
     }, 500); // 500ms debounce
 
     return () => {
