@@ -246,7 +246,6 @@ body::-webkit-scrollbar-thumb:hover {
 /* Firefox dark scrollbar */
 html,
 body {
-  scrollbar-width: thin;
   scrollbar-color: #1a1a1a #000000;
 }
 

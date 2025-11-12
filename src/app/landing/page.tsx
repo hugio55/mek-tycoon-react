@@ -1318,8 +1318,12 @@ export default function LandingPage() {
                 WebkitTransform: 'translateZ(0) scale3d(1, 1, 1)',
                 imageRendering: 'auto',
                 pointerEvents: 'none',
-                willChange: animationStage === 'logo' ? 'transform' : 'auto',
+                willChange: animationStage === 'logo' ? 'transform' : showBetaLightbox ? 'filter' : 'auto',
                 isolation: 'isolate',
+                filter: showBetaLightbox ? 'blur(8px)' : 'blur(0px)',
+                transition: showBetaLightbox
+                  ? 'filter 800ms cubic-bezier(0.4, 0, 0.2, 1)'
+                  : 'filter 400ms cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             />
           </div>
@@ -1409,7 +1413,7 @@ export default function LandingPage() {
         className="absolute left-0 z-[20]"
         style={{
           top: `calc(100vh + ${phaseColumnYOffset}px)`,
-          width: 'calc(100vw + 8px)', // Extend 8px to compensate for thin custom scrollbar (12px width - 4px borders)
+          width: '100vw', // Full viewport width - default scrollbar width is automatically accounted for
         }}
       >
         <HorizontalTimeline
