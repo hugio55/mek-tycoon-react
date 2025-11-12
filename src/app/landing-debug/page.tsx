@@ -211,6 +211,52 @@ export default function LandingDebugPage() {
     }
   };
 
+  // RECOVERY: Restore settings from localStorage backup
+  const recoverFromLocalStorage = () => {
+    const localStorageData = localStorage.getItem(STORAGE_KEY);
+
+    if (!localStorageData) {
+      alert('❌ No backup found in localStorage.\n\nYour custom settings may have been overwritten by the mobile debug page (which shared the same database table).\n\nThe mobile page now uses a separate table to prevent future conflicts.\n\nPlease check the console for [🔍DB-RAW] logs to see what\'s currently in the database.');
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(localStorageData);
+      console.log('[🔄RECOVERY] Found localStorage backup:', {
+        logoSize: parsed.logoSize,
+        starScale: parsed.starScale,
+        bgStarCount: parsed.bgStarCount,
+        selectedFont: parsed.selectedFont,
+        descriptionFontSize: parsed.descriptionFontSize,
+      });
+
+      if (confirm('✅ Found backup in localStorage!\n\nSample values:\n' +
+        `- Logo Size: ${parsed.logoSize}\n` +
+        `- Star Scale: ${parsed.starScale}\n` +
+        `- BG Star Count: ${parsed.bgStarCount}\n` +
+        `- Font: ${parsed.selectedFont}\n` +
+        `- Description Size: ${parsed.descriptionFontSize}\n\n` +
+        'Do you want to restore these settings to the database?')) {
+
+        const mergedConfig: ConfigType = { ...DEFAULT_CONFIG, ...parsed };
+        setSaveState('saving');
+        updateSettings({ config: mergedConfig }).then(() => {
+          console.log('[🔄RECOVERY] Successfully restored settings from localStorage');
+          setConfig(mergedConfig);
+          setSaveState('saved');
+          setTimeout(() => setSaveState('idle'), 2000);
+          alert('✅ Settings restored successfully!\n\nYour custom settings have been recovered and saved to the database.');
+        }).catch((err) => {
+          console.error('[🔄RECOVERY] Failed to restore settings:', err);
+          alert('❌ Failed to save restored settings to database.\n\nCheck console for error details.');
+        });
+      }
+    } catch (e) {
+      console.error('[🔄RECOVERY] Failed to parse localStorage backup:', e);
+      alert('❌ Found backup but failed to parse it.\n\nCheck console for error details.');
+    }
+  };
+
   // Available fonts for testing
   const fonts = [
     'Orbitron',
@@ -710,6 +756,12 @@ export default function LandingDebugPage() {
               className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-gray-300 text-xs hover:bg-gray-600"
             >
               Reset to Defaults
+            </button>
+            <button
+              onClick={recoverFromLocalStorage}
+              className="px-2 py-1 bg-yellow-700 border border-yellow-600 rounded text-yellow-100 text-xs hover:bg-yellow-600 font-semibold"
+            >
+              🔧 Recover from Backup
             </button>
             <button
               onClick={triggerAudioConsentOnLandingPage}
