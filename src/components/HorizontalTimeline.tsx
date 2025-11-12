@@ -160,7 +160,9 @@ export default function HorizontalTimeline({
       className="w-full relative overflow-hidden"
       style={{
         height: `${columnHeight}px`,
-        backgroundColor: 'transparent'
+        backgroundColor: 'transparent',
+        isolation: 'isolate',
+        contain: 'layout style paint',
       }}
     >
       <div
@@ -247,13 +249,19 @@ export default function HorizontalTimeline({
 
               {/* Frosted Glass Backdrop Blur Overlay - separate layer with pointer-events-none */}
               <div
-                className="absolute inset-0 pointer-events-none"
+                className="absolute pointer-events-none"
                 style={{
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
                   backdropFilter: blurValue,
                   WebkitBackdropFilter: blurValue,
                   opacity: isActive ? 1 : 0,
                   transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',
                   willChange: isAnyActive && idleBackdropBlur > 0 ? 'opacity, backdrop-filter' : 'auto',
+                  isolation: 'isolate',
+                  contain: 'layout style paint',
                 }}
               />
 
