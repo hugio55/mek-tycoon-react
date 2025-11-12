@@ -94,14 +94,31 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
         />
       </span>
 
-      {/* Hover overlay (sweeps from left to right with bright blue text) */}
+      {/* Glow layer (visible, extends beyond boundaries for full glow effect) */}
+      <span
+        className="absolute top-0 left-0 whitespace-nowrap"
+        style={{
+          color: 'transparent',
+          width: isHovered ? '100%' : '0%',
+          transition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
+          animation: isHovered ? 'soft-pulse 3s ease-in-out infinite' : 'none',
+          overflow: 'visible',
+          pointerEvents: 'none',
+          WebkitTextStroke: '0.5px #3DD1FF',
+        }}
+        aria-hidden="true"
+      >
+        &nbsp;{text}&nbsp;
+      </span>
+
+      {/* Blue text overlay (clipped to prevent showing through white when idle) */}
       <span
         className="absolute top-0 left-0 whitespace-nowrap overflow-hidden"
         style={{
           color: '#3DD1FF',
           width: isHovered ? '100%' : '0%',
           transition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-          animation: isHovered ? 'soft-pulse 3s ease-in-out infinite' : 'none',
+          textShadow: 'none',
         }}
         aria-hidden="true"
       >
