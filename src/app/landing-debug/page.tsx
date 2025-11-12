@@ -385,8 +385,12 @@ export default function LandingDebugPage() {
         bgStarCount: mergedConfig.bgStarCount
       });
 
-      // Update config (removed JSON comparison to prevent stale closure issues)
-      setConfig(mergedConfig);
+      // Only update config if it's different (deep comparison to prevent infinite loop)
+      const configChanged = JSON.stringify(config) !== JSON.stringify(mergedConfig);
+      if (configChanged) {
+        console.log('[🔄SYNC] Config changed, updating state');
+        setConfig(mergedConfig);
+      }
 
       if (migrationStatus !== 'complete') {
         setMigrationStatus('complete');
@@ -608,16 +612,20 @@ export default function LandingDebugPage() {
 
     // Auto-convert image paths for phase image fields
     if ((key === 'phaseImage1' || key === 'phaseImage2' || key === 'phaseImage3' || key === 'phaseImage4') && typeof value === 'string') {
+      console.log(`[🎚️PRE-UPDATE] About to call setConfig for ${key} (image path)`);
       const convertedPath = convertToWebPath(value);
       setConfig(prev => {
         console.log(`[🎚️UPDATE] Setting config.${key} to:`, convertedPath);
         return { ...prev, [key]: convertedPath as ConfigType[K] };
       });
+      console.log(`[🎚️POST-UPDATE] Called setConfig for ${key}`);
     } else {
+      console.log(`[🎚️PRE-UPDATE] About to call setConfig for ${key}, value:`, value);
       setConfig(prev => {
         console.log(`[🎚️UPDATE] Setting config.${key} to:`, value);
         return { ...prev, [key]: value };
       });
+      console.log(`[🎚️POST-UPDATE] Called setConfig for ${key}`);
     }
 
     // Debug log for phaseIdleBackdropBlur changes
