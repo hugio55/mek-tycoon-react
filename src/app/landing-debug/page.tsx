@@ -385,10 +385,8 @@ export default function LandingDebugPage() {
         bgStarCount: mergedConfig.bgStarCount
       });
 
-      // Only update config if it's different from current config (prevent infinite loop)
-      if (JSON.stringify(config) !== JSON.stringify(mergedConfig)) {
-        setConfig(mergedConfig);
-      }
+      // Update config (removed JSON comparison to prevent stale closure issues)
+      setConfig(mergedConfig);
 
       if (migrationStatus !== 'complete') {
         setMigrationStatus('complete');
@@ -443,15 +441,22 @@ export default function LandingDebugPage() {
       setConfig(mergedConfig);
       setMigrationStatus('complete');
     }
-  }, [dbSettings, updateSettings, config, migrationStatus]);
+  }, [dbSettings, updateSettings, migrationStatus]); // Removed 'config' to prevent race condition
 
   // Load settings from Convex when they change (updates from other tabs/sessions)
   useEffect(() => {
     console.log('[🔄SYNC] DB sync effect triggered', {
       dbSettingsLoaded: !!dbSettings,
       migrationStatus,
+      isUserEditing: isUserEditingRef.current,
       timestamp: new Date().toISOString()
     });
+
+    // Don't reload if user is actively editing (prevents slider jump bug)
+    if (isUserEditingRef.current) {
+      console.log('[🔄SYNC] Skipping reload - user is editing');
+      return;
+    }
 
     if (dbSettings && migrationStatus === 'complete') {
       // Merge with defaults to ensure new properties exist
@@ -462,12 +467,10 @@ export default function LandingDebugPage() {
         bgStarCount: mergedConfig.bgStarCount
       });
 
-      // Only update config if it's different from current config (prevent infinite loop)
-      if (JSON.stringify(config) !== JSON.stringify(mergedConfig)) {
-        setConfig(mergedConfig);
-      }
+      // Update config (removed JSON comparison to prevent stale closure issues)
+      setConfig(mergedConfig);
     }
-  }, [dbSettings, migrationStatus, config]);
+  }, [dbSettings, migrationStatus]); // Removed 'config' from deps to prevent race condition
 
   // Auto-save to Convex with debouncing (500ms delay)
   useEffect(() => {
