@@ -101,10 +101,11 @@ const FillTextButton = ({
 
       {/* Wrapper for glowing line - allows glow to extend beyond bounds */}
       <span
-        className="absolute top-0 bottom-0 right-0"
+        className="absolute top-0 bottom-0"
         style={{
-          width: isHovered ? '3px' : '0',
-          transition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
+          left: isHovered ? 'calc(100% - 3px)' : '0',
+          width: '3px',
+          transition: 'left 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
           animation: isHovered ? 'line-glow 2s ease-in-out infinite' : 'none',
         }}
       >
