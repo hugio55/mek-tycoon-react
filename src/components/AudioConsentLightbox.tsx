@@ -10,6 +10,7 @@ interface AudioConsentLightboxProps {
   backdropDarkness?: number; // 0-100 percentage (default: 95)
   logoFadeDuration?: number; // milliseconds (default: 1000)
   lockScroll?: boolean; // Control scroll lock independently from visibility
+  toggleScale?: number; // Scale multiplier for toggle button (default: 1.0)
 }
 
 const STORAGE_KEY_AUDIO = 'mek-audio-consent';
@@ -20,7 +21,8 @@ export default function AudioConsentLightbox({
   toggleSize = 96,
   backdropDarkness = 95,
   logoFadeDuration = 1000,
-  lockScroll = true
+  lockScroll = true,
+  toggleScale = 1.0
 }: AudioConsentLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
@@ -110,6 +112,7 @@ export default function AudioConsentLightbox({
             style={{
               width: `${effectiveWidth}px`,
               height: `${effectiveHeight}px`,
+              transform: `scale(${toggleScale})`,
               WebkitTapHighlightColor: 'transparent',
               boxShadow: audioEnabled
                 ? `0 0 ${toggleSize * 0.2}px rgba(250, 182, 23, 0.4)`

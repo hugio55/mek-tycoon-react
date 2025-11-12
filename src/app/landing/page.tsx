@@ -113,6 +113,7 @@ const DEFAULT_CONFIG = {
   logoFadeDuration: 3000,
   lightboxBackdropDarkness: 95,
   audioToggleSize: 96,
+  audioToggleScale: 1.0,
   // Join Beta Button controls
   joinBetaFont: 'Orbitron',
   joinBetaFontSize: 32,
@@ -212,6 +213,7 @@ export default function LandingPage() {
   // Audio controls
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [showAudioConsent, setShowAudioConsent] = useState(false);
+  const [lockScrollForConsent, setLockScrollForConsent] = useState(false);
 
   // Animation sequence states
   const [animationStage, setAnimationStage] = useState<'initial' | 'stars' | 'logo'>('initial');
@@ -274,6 +276,7 @@ export default function LandingPage() {
   const [logoFadeDuration, setLogoFadeDuration] = useState(DEFAULT_CONFIG.logoFadeDuration);
   const [lightboxBackdropDarkness, setLightboxBackdropDarkness] = useState(DEFAULT_CONFIG.lightboxBackdropDarkness);
   const [audioToggleSize, setAudioToggleSize] = useState(DEFAULT_CONFIG.audioToggleSize);
+  const [audioToggleScale, setAudioToggleScale] = useState(DEFAULT_CONFIG.audioToggleScale);
 
   // Join Beta Button controls
   const [joinBetaFont, setJoinBetaFont] = useState(DEFAULT_CONFIG.joinBetaFont);
@@ -299,6 +302,7 @@ export default function LandingPage() {
         // First-time visitor - show consent lightbox
         console.log('[🎬ANIMATION] First-time visitor - showing consent lightbox');
         setShowAudioConsent(true);
+        setLockScrollForConsent(true);
         // Keep animationStage at 'initial' (everything hidden)
       } else {
         // Return visitor - has already given consent
@@ -334,11 +338,13 @@ export default function LandingPage() {
           const triggerData = JSON.parse(trigger);
           if (triggerData.action === 'show-audio-consent') {
             setShowAudioConsent(true);
+            setLockScrollForConsent(true);
             setAnimationStage('initial'); // Reset to initial dark state
             // Clear the trigger so it doesn't fire again
             localStorage.removeItem('mek-debug-trigger');
           } else if (triggerData.action === 'hide-audio-consent') {
             setShowAudioConsent(false);
+            setLockScrollForConsent(false);
             setAnimationStage('logo'); // Show everything
             // Clear the trigger so it doesn't fire again
             localStorage.removeItem('mek-debug-trigger');
@@ -364,9 +370,11 @@ export default function LandingPage() {
         if (event.data?.type === 'mek-debug-trigger') {
           if (event.data?.action === 'show-audio-consent') {
             setShowAudioConsent(true);
+            setLockScrollForConsent(true);
             setAnimationStage('initial'); // Reset to initial dark state
           } else if (event.data?.action === 'hide-audio-consent') {
             setShowAudioConsent(false);
+            setLockScrollForConsent(false);
             setAnimationStage('logo'); // Show everything
           }
         }
@@ -478,6 +486,7 @@ export default function LandingPage() {
           setLogoFadeDuration(config.logoFadeDuration ?? DEFAULT_CONFIG.logoFadeDuration);
           setLightboxBackdropDarkness(config.lightboxBackdropDarkness ?? DEFAULT_CONFIG.lightboxBackdropDarkness);
           setAudioToggleSize(config.audioToggleSize ?? DEFAULT_CONFIG.audioToggleSize);
+          setAudioToggleScale(config.audioToggleScale ?? DEFAULT_CONFIG.audioToggleScale);
           setJoinBetaFont(config.joinBetaFont ?? DEFAULT_CONFIG.joinBetaFont);
           setJoinBetaFontSize(config.joinBetaFontSize ?? DEFAULT_CONFIG.joinBetaFontSize);
           setJoinBetaColor(config.joinBetaColor ?? DEFAULT_CONFIG.joinBetaColor);
@@ -582,6 +591,7 @@ export default function LandingPage() {
           setLogoFadeDuration(config.logoFadeDuration ?? DEFAULT_CONFIG.logoFadeDuration);
           setLightboxBackdropDarkness(config.lightboxBackdropDarkness ?? DEFAULT_CONFIG.lightboxBackdropDarkness);
           setAudioToggleSize(config.audioToggleSize ?? DEFAULT_CONFIG.audioToggleSize);
+          setAudioToggleScale(config.audioToggleScale ?? DEFAULT_CONFIG.audioToggleScale);
           setJoinBetaFont(config.joinBetaFont ?? DEFAULT_CONFIG.joinBetaFont);
           setJoinBetaFontSize(config.joinBetaFontSize ?? DEFAULT_CONFIG.joinBetaFontSize);
           setJoinBetaColor(config.joinBetaColor ?? DEFAULT_CONFIG.joinBetaColor);
@@ -741,6 +751,9 @@ export default function LandingPage() {
           setTimeout(() => {
             console.log('[🎬SWAP] Swapping to video logo (first-time visitor path)');
             setUseVideoLogo(true);
+            // Unlock scroll after video swap completes
+            console.log('[🔓SCROLL] Unlocking scroll after video swap');
+            setLockScrollForConsent(false);
           }, logoFadeDuration);
         };
         logoImage.onerror = () => {
@@ -1351,6 +1364,8 @@ export default function LandingPage() {
         isVisible={showAudioConsent}
         backdropDarkness={lightboxBackdropDarkness}
         toggleSize={audioToggleSize}
+        toggleScale={audioToggleScale}
+        lockScroll={lockScrollForConsent}
       />
 
     </div>
