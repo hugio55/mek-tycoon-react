@@ -159,8 +159,8 @@ export default function HorizontalTimeline({
         const additionalPixels = scrollWidth - clientWidth;
         const additionalPercent = (additionalPixels / containerWidth) * 100;
 
-        // Calculate new active width (base 30.3% + additional needed)
-        const newActiveWidth = 30.3 + additionalPercent;
+        // Calculate new active width (base 30.3% + additional needed * 2x for extra space)
+        const newActiveWidth = 30.3 + (additionalPercent * 2);
 
         // Calculate how much to shrink inactive cards
         // Total available: 100% - newActiveWidth
