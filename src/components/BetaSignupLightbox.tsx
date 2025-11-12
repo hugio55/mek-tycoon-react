@@ -197,13 +197,14 @@ export default function BetaSignupLightbox({
           animation: 'blurIn 800ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
           willChange: 'backdrop-filter',
         }}
+        onClick={handleBackdropClick}
       />
 
       {/* Lightbox Card */}
       <div
         className="relative w-full max-w-md"
         style={{
-          animation: 'slideUp 500ms cubic-bezier(0.16, 1, 0.3, 1)',
+          animation: 'slideUp 800ms cubic-bezier(0.16, 1, 0.3, 1)',
           willChange: 'transform, opacity',
         }}
         onClick={(e) => e.stopPropagation()}
