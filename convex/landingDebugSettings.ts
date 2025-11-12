@@ -201,3 +201,33 @@ export const getDefaultConfig = query({
     return DEFAULT_CONFIG;
   },
 });
+
+// Get RAW database record with timestamps (for debugging)
+export const getRawLandingDebugSettings = query({
+  args: {},
+  handler: async (ctx) => {
+    const settings = await ctx.db
+      .query("landingDebugSettings")
+      .first();
+
+    if (!settings) {
+      return null;
+    }
+
+    return {
+      _id: settings._id,
+      _creationTime: settings._creationTime,
+      createdAt: settings.createdAt,
+      updatedAt: settings.updatedAt,
+      config: settings.config,
+      // Show sample config values for quick diagnosis
+      sampleValues: {
+        logoSize: settings.config.logoSize,
+        starScale: settings.config.starScale,
+        bgStarCount: settings.config.bgStarCount,
+        selectedFont: settings.config.selectedFont,
+        descriptionFontSize: settings.config.descriptionFontSize,
+      }
+    };
+  },
+});

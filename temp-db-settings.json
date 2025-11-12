@@ -1,0 +1,44 @@
+error: unknown option '--output'
+
+Usage: convex run [options] <functionName> [args]
+
+Run a function (query, mutation, or action) on your deployment
+
+Arguments:
+  functionName                        identifier of the function to run, like
+                                      `listMessages` or `dir/file:myFunction`
+  args                                JSON-formatted arguments object to pass
+                                      to the function.
+
+Options:
+  -w, --watch                         Watch a query, printing its result if the
+                                      underlying data changes. Given function
+                                      must be a query.
+  --push                              Push code to deployment before running
+                                      the function.
+  --identity <identity>               JSON-formatted UserIdentity object, e.g.
+                                      '{ name: "John", address: "0x123" }'
+  --typecheck <mode>                  Whether to check TypeScript files with
+                                      `tsc --noEmit`. (choices: "enable",
+                                      "try", "disable", default: "try")
+  --typecheck-components              Check TypeScript files within component
+                                      implementations with `tsc --noEmit`.
+                                      (default: false)
+  --codegen <mode>                    Regenerate code in `convex/_generated/`
+                                      (choices: "enable", "disable", default:
+                                      "enable")
+  --component <path>                  Path to the component in the component
+                                      tree defined in convex.config.ts.
+  --env-file <envFile>                Path to a custom file of environment
+                                      variables, for choosing the deployment,
+                                      e.g. CONVEX_DEPLOYMENT or
+                                      CONVEX_SELF_HOSTED_URL. Same format as
+                                      .env.local or .env files, and overrides
+                                      them.
+  --prod                              Run the function on this project's
+                                      production deployment.
+  --preview-name <previewName>        Run the function on the preview
+                                      deployment with the given name.
+  --deployment-name <deploymentName>  Run the function on the specified
+                                      deployment.
+  -h, --help                          display help for command
