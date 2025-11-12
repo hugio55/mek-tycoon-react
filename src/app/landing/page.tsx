@@ -225,28 +225,28 @@ export default function LandingPage() {
   // Logo animation timing (must be declared before first use in useEffect below)
   const [logoFadeDuration, setLogoFadeDuration] = useState(DEFAULT_CONFIG.logoFadeDuration);
 
-  // Debug logging for useVideoLogo changes (video already started early)
+  // Start video when logo animation begins
   useEffect(() => {
-    console.log('[🎬SWAP] useVideoLogo state changed to:', useVideoLogo);
-    if (useVideoLogo && videoRef.current) {
-      // Video should already be playing from early start, just verify
-      console.log('[🎬SWAP] Video opacity swap complete, video should be visible and playing');
+    if (animationStage === 'logo' && videoRef.current) {
+      console.log('[🎬VIDEO] Starting video playback');
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(err => console.error('[🎬VIDEO] Video play failed:', err));
 
-      // Show scroll indicator 1 second after opacity swap (only if consent lightbox is dismissed)
+      // Show scroll indicator after animation completes
       setTimeout(() => {
         if (!showAudioConsent) {
           console.log('[📍SCROLL] Showing scroll indicator');
           setShowScrollIndicator(true);
         }
-      }, 1000);
+      }, logoFadeDuration + 1000);
 
-      // Unlock scroll after video plays and fade-in completes
+      // Unlock scroll after animation completes
       setTimeout(() => {
-        console.log('[🔓SCROLL] Unlocking scroll after video playback + fade-in');
+        console.log('[🔓SCROLL] Unlocking scroll after animation');
         setLockScrollForConsent(false);
-      }, logoFadeDuration + 500); // logoFadeDuration for fade-in + 500ms buffer
+      }, logoFadeDuration + 500);
     }
-  }, [useVideoLogo, logoFadeDuration]);
+  }, [animationStage, logoFadeDuration, showAudioConsent]);
 
   // Debug logging for animation stage changes
   useEffect(() => {
@@ -357,27 +357,9 @@ export default function LandingPage() {
       } else {
         // Return visitor - has already given consent
         const consentData = JSON.parse(consent);
-        console.log('[🎵ANIMATION] Return visitor - skipping lightbox, showing smooth image animation');
-        // Skip consent lightbox but show smooth image zoom animation
+        console.log('[🎵ANIMATION] Return visitor - skipping lightbox, showing video zoom animation');
+        // Skip consent lightbox and show video zoom animation directly
         setAnimationStage('logo');
-
-        // Start video BEFORE animation completes (return visitor path)
-        const videoStartOffset = 400; // Start video 400ms before PNG animation ends
-        console.log('[🎬SWAP] Starting video playback in', videoStartOffset, 'ms (return visitor)');
-        setTimeout(() => {
-          if (videoRef.current) {
-            console.log('[🎬SWAP] Starting video early to preload frames (return visitor)');
-            videoRef.current.currentTime = 0;
-            videoRef.current.play().catch(err => console.error('[🎬SWAP] Early video play failed:', err));
-          }
-        }, logoFadeDuration - videoStartOffset);
-
-        // Swap opacity when animation completes (return visitor path)
-        console.log('[🎬SWAP] Setting opacity swap timer for return visitor, duration:', logoFadeDuration, 'ms');
-        setTimeout(() => {
-          console.log('[🎬SWAP] Swapping opacity to video (return visitor path)');
-          setUseVideoLogo(true);
-        }, logoFadeDuration);
 
         if (consentData.audioEnabled) {
           // Don't auto-play - just remember preference
@@ -807,39 +789,8 @@ export default function LandingPage() {
       // Then logo fades in after stars are visible
       setTimeout(() => {
         console.log('[🎵ANIMATION] ==========================================');
-        console.log('[🎵ANIMATION] Stage 3: Setting to "logo" - Logo fade in with zoom');
-
-        // Preload the logo image BEFORE starting animation
-        const logoImage = new Image();
-        logoImage.src = '/logo-first-frame.webp';
-        logoImage.onload = () => {
-          console.log('[🎵ANIMATION] Logo image preloaded, starting animation');
-          setAnimationStage('logo');
-
-          // Start video BEFORE animation completes so it's ready for seamless swap
-          const videoStartOffset = 400; // Start video 400ms before PNG animation ends
-          console.log('[🎬SWAP] Starting video playback in', videoStartOffset, 'ms (before animation ends)');
-          setTimeout(() => {
-            if (videoRef.current) {
-              console.log('[🎬SWAP] Starting video early to preload frames');
-              videoRef.current.currentTime = 0;
-              videoRef.current.play().catch(err => console.error('[🎬SWAP] Early video play failed:', err));
-            }
-          }, logoFadeDuration - videoStartOffset);
-
-          // Swap opacity when animation completes (video should be playing by now)
-          console.log('[🎬SWAP] Setting opacity swap timer (first-time visitor), duration:', logoFadeDuration, 'ms');
-          setTimeout(() => {
-            console.log('[🎬SWAP] Swapping opacity to video (first-time visitor path)');
-            setUseVideoLogo(true);
-            // Note: Scroll unlock now happens in useEffect when video plays + fades in
-          }, logoFadeDuration);
-        };
-        logoImage.onerror = () => {
-          console.error('[🎵ANIMATION] Logo image failed to load');
-          // Still show animation, just without the image
-          setAnimationStage('logo');
-        };
+        console.log('[🎵ANIMATION] Stage 3: Setting to "logo" - Video zoom in');
+        setAnimationStage('logo');
       }, 1000); // 1 second after stars start fading in
     }, 500); // 500ms for lightbox fade-out
   };
@@ -1297,22 +1248,6 @@ export default function LandingPage() {
               }
             }}
           >
-            <img
-              src="/logo-first-frame.webp"
-              alt="Mek Tycoon Logo"
-              className="w-full h-full absolute inset-0"
-              style={{
-                opacity: useVideoLogo ? 0 : 'inherit',
-                objectFit: 'contain',
-                transform: 'translate3d(0, 0, 0)',
-                backfaceVisibility: 'hidden',
-                WebkitBackfaceVisibility: 'hidden',
-                WebkitTransform: 'translate3d(0, 0, 0)',
-                imageRendering: 'crisp-edges',
-                transition: 'opacity 0ms',
-                pointerEvents: 'none',
-              }}
-            />
             <video
               ref={videoRef}
               src="/random-images/Everydays_00000.webm"
@@ -1322,14 +1257,13 @@ export default function LandingPage() {
               preload="auto"
               className="w-full h-full absolute inset-0"
               style={{
-                opacity: useVideoLogo ? 'inherit' : 0,
+                opacity: 'inherit',
                 objectFit: 'contain',
                 transform: 'translate3d(0, 0, 0)',
                 backfaceVisibility: 'hidden',
                 WebkitBackfaceVisibility: 'hidden',
                 WebkitTransform: 'translate3d(0, 0, 0)',
                 imageRendering: 'crisp-edges',
-                transition: 'opacity 0ms',
                 pointerEvents: 'none',
               }}
             />
