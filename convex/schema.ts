@@ -3643,4 +3643,13 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   }),
+
+  // ===== BETA SIGNUPS =====
+  // Beta signup stake addresses for rewarding early participants
+  betaSignups: defineTable({
+    stakeAddress: v.string(), // Mainnet stake address (stake1...)
+    submittedAt: v.number(), // Timestamp when signup was submitted
+    ipAddress: v.union(v.string(), v.null()), // Optional IP tracking
+  })
+    .index("by_stakeAddress", ["stakeAddress"]), // For duplicate prevention and lookups
 });
