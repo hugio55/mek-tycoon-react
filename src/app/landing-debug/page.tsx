@@ -98,6 +98,7 @@ const DEFAULT_CONFIG = {
   audioToggleSize: 96,
   audioToggleScale: 1.0,
   toggleTextGap: 16,
+  proceedButtonSize: 1.0,
   // Join Beta Button controls
   joinBetaFont: 'Orbitron',
   joinBetaFontSize: 32,
@@ -2122,6 +2123,25 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.toggleTextGap}px
+              </div>
+            </div>
+
+            {/* Proceed Button Size */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Proceed Button Size
+              </label>
+              <input
+                type="range"
+                min="0.5"
+                max="2.0"
+                step="0.1"
+                value={config.proceedButtonSize}
+                onChange={(e) => updateConfig('proceedButtonSize', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.proceedButtonSize.toFixed(1)}x
               </div>
             </div>
           </div>

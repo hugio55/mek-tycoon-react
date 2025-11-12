@@ -17,6 +17,7 @@ interface AudioConsentLightboxProps {
   soundLabelColor?: string; // Color class for Sound On/Off text
   soundLabelVerticalOffset?: number; // Vertical offset for Sound On/Off text
   soundLabelHorizontalOffset?: number; // Horizontal offset for Sound On/Off text
+  proceedButtonSize?: number; // Scale multiplier for proceed button (default: 1.0)
 }
 
 const STORAGE_KEY_AUDIO = 'mek-audio-consent';
@@ -34,7 +35,8 @@ export default function AudioConsentLightbox({
   soundLabelSize = 16,
   soundLabelColor = 'text-yellow-400/90',
   soundLabelVerticalOffset = 0,
-  soundLabelHorizontalOffset = 0
+  soundLabelHorizontalOffset = 0,
+  proceedButtonSize = 1.0
 }: AudioConsentLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
@@ -176,7 +178,7 @@ export default function AudioConsentLightbox({
               }`}
             >
               <span
-                className={`font-light tracking-wide ${soundLabelColor}`}
+                className={`font-light tracking-wide text-gray-400`}
                 style={{
                   fontSize: `${soundLabelSize}px`,
                   lineHeight: `${soundLabelSize * 2}px`,
@@ -210,13 +212,14 @@ export default function AudioConsentLightbox({
           onClick={handleProceed}
           className="mt-6 sm:mt-8 text-white font-light tracking-wider border border-white/20 rounded-full hover:border-white/40 hover:bg-white/5 active:bg-white/10 transition-all duration-300 touch-manipulation"
           style={{
-            paddingLeft: `${toggleSize * 0.4}px`,
-            paddingRight: `${toggleSize * 0.4}px`,
-            paddingTop: `${toggleSize * 0.125}px`,
-            paddingBottom: `${toggleSize * 0.125}px`,
-            fontSize: `${buttonTextSize}px`,
+            paddingLeft: `${toggleSize * 0.4 * proceedButtonSize}px`,
+            paddingRight: `${toggleSize * 0.4 * proceedButtonSize}px`,
+            paddingTop: `${toggleSize * 0.125 * proceedButtonSize}px`,
+            paddingBottom: `${toggleSize * 0.125 * proceedButtonSize}px`,
+            fontSize: `${buttonTextSize * proceedButtonSize}px`,
             WebkitTapHighlightColor: 'transparent',
-            minHeight: '44px'
+            minHeight: `${44 * proceedButtonSize}px`,
+            transform: `scale(${proceedButtonSize})`
           }}
         >
           PROCEED
