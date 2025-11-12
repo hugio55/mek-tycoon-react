@@ -3651,6 +3651,23 @@ export default defineSchema({
     updatedAt: v.number(),
   }),
 
+  // DESKTOP landing page debug settings HISTORY (automatic backups before each save)
+  // Keeps last 50 versions with timestamps for recovery
+  landingDebugSettingsHistory: defineTable({
+    config: v.any(), // Full config object snapshot
+    timestamp: v.number(), // When this backup was created
+    description: v.optional(v.string()), // Optional description (e.g., "Before reset", "Auto-backup")
+  })
+    .index("by_timestamp", ["timestamp"]),
+
+  // MOBILE landing page debug settings HISTORY (automatic backups before each save)
+  landingDebugSettingsMobileHistory: defineTable({
+    config: v.any(), // Full config object snapshot
+    timestamp: v.number(), // When this backup was created
+    description: v.optional(v.string()), // Optional description
+  })
+    .index("by_timestamp", ["timestamp"]),
+
   // ===== BETA SIGNUPS =====
   // Beta signup stake addresses for rewarding early participants
   betaSignups: defineTable({

@@ -567,3 +567,12 @@
 [1] 11/12/2025, 11:15:45 AM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
 [1] 11/12/2025, 11:30:44 AM [CONVEX M(walletAuthentication:cleanupExpiredNonces)] [LOG] '[Cleanup] Nonce cleanup completed: 0 expired, 0 used (>24hr old), 0 total deleted'
 [1] 11/12/2025, 11:30:45 AM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
+[1] - Preparing Convex functions...
+[1] 
+[1] ✔ 11:39:41 Convex functions ready! (11.49s)
+[1] 11/12/2025, 11:39:41 AM [CONVEX M(landingDebugSettings:updateLandingDebugSettings)] Data read or written in this mutation changed while it was being run. Consider reducing the amount of data read by using indexed queries with selective index range expressions (https://docs.convex.dev/database/indexes/).
+[1] 
+[1] 11/12/2025, 11:39:43 AM [CONVEX M(landingDebugSettings:updateLandingDebugSettings)] Data read or written in this mutation changed while it was being run. Consider reducing the amount of data read by using indexed queries with selective index range expressions (https://docs.convex.dev/database/indexes/).
+[1] 
+[1] 11/12/2025, 11:39:57 AM [CONVEX M(landingDebugSettings:updateLandingDebugSettings)] Data read or written in this mutation changed while it was being run. Consider reducing the amount of data read by using indexed queries with selective index range expressions (https://docs.convex.dev/database/indexes/).
+[1] 
