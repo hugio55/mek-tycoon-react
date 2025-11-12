@@ -514,3 +514,8 @@
 [1] - Preparing Convex functions...
 [1] 
 [1] ✔ 23:06:18 Convex functions ready! (5.71s)
+[1] 11/11/2025, 11:15:00 PM [CONVEX M(snapshotCleanup:cleanupOldSnapshotLogs)] [LOG] 'Starting snapshot log cleanup: removing logs older than 11/5/2025, 4:15:00 AM'
+[1] 11/11/2025, 11:15:00 PM [CONVEX M(snapshotCleanup:cleanupOldSnapshotLogs)] [LOG] 'Found 8 old snapshot logs to delete'
+[1] 11/11/2025, 11:15:00 PM [CONVEX M(snapshotCleanup:cleanupOldSnapshotLogs)] [LOG] 'Snapshot log cleanup completed: 8 logs deleted'
+[1] 11/11/2025, 11:15:44 PM [CONVEX M(walletAuthentication:cleanupExpiredNonces)] [LOG] '[Cleanup] Nonce cleanup completed: 0 expired, 0 used (>24hr old), 0 total deleted'
+[1] 11/11/2025, 11:15:45 PM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'

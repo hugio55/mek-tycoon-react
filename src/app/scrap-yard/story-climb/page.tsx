@@ -220,6 +220,9 @@ export default function StoryClimbPage() {
   const [animationTick, setAnimationTick] = useState(0); // Minimal state for animation redraws
   const animationIdRef = useRef<number | null>(null); // Track animation ID for cleanup
 
+  // Phase Column Vertical Position Control
+  const [phaseColumnVerticalOffset, setPhaseColumnVerticalOffset] = useState(0);
+
   // Event Node Completion State Debug
   const [eventCompletionState, setEventCompletionState] = useState<'incomplete' | 'complete' | 'nft-owned'>('incomplete');
   const [showMekModal, setShowMekModal] = useState<string | null>(null);
@@ -6056,7 +6059,14 @@ export default function StoryClimbPage() {
           </div>
 
           {/* Right Column - Mission Card Details */}
-          <div className="flex-grow pr-5">
+          <div
+            className="flex-grow pr-5 relative"
+            style={{ minHeight: `${800 + phaseColumnVerticalOffset}px` }}
+          >
+            <div
+              className="absolute top-0 left-0 right-0"
+              style={{ transform: `translateY(${phaseColumnVerticalOffset}px)` }}
+            >
             {/* Show card for selected node */}
             {selectedNode ? (() => {
               const activeMission = activeMissions?.find(m => m.nodeId === selectedNode.id);
@@ -6322,6 +6332,7 @@ export default function StoryClimbPage() {
                 </button>
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
@@ -6415,6 +6426,54 @@ export default function StoryClimbPage() {
               >
                 100%
               </button>
+            </div>
+
+            {/* Column Vertical Position Control - Added below success meter */}
+            <div className="mt-3 pt-3 border-t border-purple-500/30">
+              <div className="text-xs text-purple-300 uppercase tracking-wider mb-2">
+                📐 Column Vertical Position
+              </div>
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-2xl font-bold text-cyan-400">{phaseColumnVerticalOffset}px</span>
+                <div className="flex-1 text-xs text-gray-300">
+                  Move phase cards up/down
+                </div>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="1500"
+                step="10"
+                value={phaseColumnVerticalOffset}
+                onChange={(e) => setPhaseColumnVerticalOffset(Number(e.target.value))}
+                className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer mb-2"
+              />
+              <div className="grid grid-cols-4 gap-1 text-xs">
+                <button
+                  onClick={() => setPhaseColumnVerticalOffset(0)}
+                  className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-white"
+                >
+                  0px
+                </button>
+                <button
+                  onClick={() => setPhaseColumnVerticalOffset(500)}
+                  className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-white"
+                >
+                  500px
+                </button>
+                <button
+                  onClick={() => setPhaseColumnVerticalOffset(1000)}
+                  className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-white"
+                >
+                  1000px
+                </button>
+                <button
+                  onClick={() => setPhaseColumnVerticalOffset(1500)}
+                  className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-white"
+                >
+                  1500px
+                </button>
+              </div>
             </div>
           </div>
         )}
