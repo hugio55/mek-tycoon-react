@@ -262,7 +262,8 @@ export default function HorizontalTimeline({
               widthPercent = expandedWidths.inactiveWidth || 23.4;
             }
           } else {
-            widthPercent = 25; // All equal: 25% each
+            // Make last card slightly wider to ensure no gap
+            widthPercent = index === 3 ? 25.1 : 25; // Last card gets extra 0.1% to eliminate gap
           }
 
           // Calculate blur value

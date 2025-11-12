@@ -1338,6 +1338,7 @@ export default function LandingPage() {
                 fontSize: `${descriptionFontSize}px`,
                 opacity: hasScrolled ? 1 : 0,
                 transform: hasScrolled ? 'translateY(0)' : 'translateY(20px)',
+                whiteSpace: 'pre-line',
               }}
             >
               {descriptionText}
