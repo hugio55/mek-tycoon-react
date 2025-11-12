@@ -96,6 +96,7 @@ const DEFAULT_CONFIG = {
   logoFadeDuration: 1000,
   lightboxBackdropDarkness: 95,
   audioToggleSize: 96,
+  audioToggleScale: 1.0,
   // Join Beta Button controls
   joinBetaFont: 'Orbitron',
   joinBetaFontSize: 32,
@@ -1375,7 +1376,6 @@ export default function LandingDebugPage() {
 
           {/* Typography Controls Section */}
           {true && (
-          <>
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Typography
@@ -1970,7 +1970,6 @@ export default function LandingDebugPage() {
 
           {/* Sound Button Controls Section */}
           {true && (
-          <>
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Sound Button Controls
@@ -2121,6 +2120,25 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.audioToggleSize}px
+              </div>
+            </div>
+
+            {/* Audio Toggle Scale */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Audio Toggle Scale
+              </label>
+              <input
+                type="range"
+                min="0.5"
+                max="2.0"
+                step="0.1"
+                value={config.audioToggleScale}
+                onChange={(e) => updateConfig('audioToggleScale', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.audioToggleScale.toFixed(1)}x
               </div>
             </div>
           </div>
@@ -2469,7 +2487,6 @@ export default function LandingDebugPage() {
               )}
             </div>
           </div>
-          </>
           )}
 
         </div>
