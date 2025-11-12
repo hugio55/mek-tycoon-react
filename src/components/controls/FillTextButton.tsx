@@ -133,7 +133,7 @@ const FillTextButton = ({
           style={{
             color: '#3DD1FF',
             WebkitTextStroke: '0.5px #3DD1FF',
-            animation: isHovered ? 'soft-pulse 3s ease-in-out infinite' : 'none',
+            animation: 'soft-pulse 3s ease-in-out infinite',
             // Add padding to allow glow to render, but it will be clipped by parent
             padding: '0 20px',
             margin: '0 -20px',
