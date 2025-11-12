@@ -1879,7 +1879,7 @@ export default function ContractsLayoutOption11() {
         </div>
         
         {/* Grid Layout - Absolute positioned columns */}
-        <div className="absolute grid grid-cols-2 gap-5 w-full max-w-7xl" style={{ gridTemplateColumns: '1fr 1fr', top: `${phaseCarouselVerticalOffset}px`, left: '24px', right: '24px' }}>
+        <div className="absolute grid grid-cols-2 gap-5" style={{ gridTemplateColumns: '1fr 1fr', top: `${phaseCarouselVerticalOffset}px`, left: '24px', right: 'calc(24px + 12px)', maxWidth: 'calc(1280px - 12px)' }}>
           {/* Global Event */}
           <div className="min-w-0">
             {renderContract(null, true)}
