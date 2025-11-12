@@ -85,6 +85,11 @@ const DEFAULT_CONFIG = {
   logoFadeDuration: 1000,
   lightboxBackdropDarkness: 95,
   audioToggleSize: 96,
+  joinBetaFont: 'Orbitron',
+  joinBetaFontSize: 32,
+  joinBetaColor: 'text-white',
+  joinBetaHorizontalOffset: 0,
+  joinBetaVerticalOffset: 0,
 };
 
 // Get the current landing debug settings (returns default if not found)

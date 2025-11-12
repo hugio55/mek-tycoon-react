@@ -113,6 +113,12 @@ const DEFAULT_CONFIG = {
   logoFadeDuration: 3000,
   lightboxBackdropDarkness: 95,
   audioToggleSize: 96,
+  // Join Beta Button controls
+  joinBetaFont: 'Orbitron',
+  joinBetaFontSize: 32,
+  joinBetaColor: 'text-white',
+  joinBetaHorizontalOffset: 0,
+  joinBetaVerticalOffset: 0,
   // Note: phaseImage1-4 not in DEFAULT_CONFIG - PhaseCarousel manages these
 };
 
@@ -268,6 +274,13 @@ export default function LandingPage() {
   const [logoFadeDuration, setLogoFadeDuration] = useState(DEFAULT_CONFIG.logoFadeDuration);
   const [lightboxBackdropDarkness, setLightboxBackdropDarkness] = useState(DEFAULT_CONFIG.lightboxBackdropDarkness);
   const [audioToggleSize, setAudioToggleSize] = useState(DEFAULT_CONFIG.audioToggleSize);
+
+  // Join Beta Button controls
+  const [joinBetaFont, setJoinBetaFont] = useState(DEFAULT_CONFIG.joinBetaFont);
+  const [joinBetaFontSize, setJoinBetaFontSize] = useState(DEFAULT_CONFIG.joinBetaFontSize);
+  const [joinBetaColor, setJoinBetaColor] = useState(DEFAULT_CONFIG.joinBetaColor);
+  const [joinBetaHorizontalOffset, setJoinBetaHorizontalOffset] = useState(DEFAULT_CONFIG.joinBetaHorizontalOffset);
+  const [joinBetaVerticalOffset, setJoinBetaVerticalOffset] = useState(DEFAULT_CONFIG.joinBetaVerticalOffset);
 
   // Scroll-triggered animation state
   const [hasScrolled, setHasScrolled] = useState(false);
@@ -465,6 +478,11 @@ export default function LandingPage() {
           setLogoFadeDuration(config.logoFadeDuration ?? DEFAULT_CONFIG.logoFadeDuration);
           setLightboxBackdropDarkness(config.lightboxBackdropDarkness ?? DEFAULT_CONFIG.lightboxBackdropDarkness);
           setAudioToggleSize(config.audioToggleSize ?? DEFAULT_CONFIG.audioToggleSize);
+          setJoinBetaFont(config.joinBetaFont ?? DEFAULT_CONFIG.joinBetaFont);
+          setJoinBetaFontSize(config.joinBetaFontSize ?? DEFAULT_CONFIG.joinBetaFontSize);
+          setJoinBetaColor(config.joinBetaColor ?? DEFAULT_CONFIG.joinBetaColor);
+          setJoinBetaHorizontalOffset(config.joinBetaHorizontalOffset ?? DEFAULT_CONFIG.joinBetaHorizontalOffset);
+          setJoinBetaVerticalOffset(config.joinBetaVerticalOffset ?? DEFAULT_CONFIG.joinBetaVerticalOffset);
           // Note: phaseImage1-4 not loaded here - PhaseCarousel reads directly from localStorage
       } catch (e) {
         console.error('Failed to load debug config:', e);
@@ -564,6 +582,11 @@ export default function LandingPage() {
           setLogoFadeDuration(config.logoFadeDuration ?? DEFAULT_CONFIG.logoFadeDuration);
           setLightboxBackdropDarkness(config.lightboxBackdropDarkness ?? DEFAULT_CONFIG.lightboxBackdropDarkness);
           setAudioToggleSize(config.audioToggleSize ?? DEFAULT_CONFIG.audioToggleSize);
+          setJoinBetaFont(config.joinBetaFont ?? DEFAULT_CONFIG.joinBetaFont);
+          setJoinBetaFontSize(config.joinBetaFontSize ?? DEFAULT_CONFIG.joinBetaFontSize);
+          setJoinBetaColor(config.joinBetaColor ?? DEFAULT_CONFIG.joinBetaColor);
+          setJoinBetaHorizontalOffset(config.joinBetaHorizontalOffset ?? DEFAULT_CONFIG.joinBetaHorizontalOffset);
+          setJoinBetaVerticalOffset(config.joinBetaVerticalOffset ?? DEFAULT_CONFIG.joinBetaVerticalOffset);
         } catch (e) {
           console.error('Failed to load debug config from localStorage:', e);
         }
@@ -1247,7 +1270,14 @@ export default function LandingPage() {
               console.log('[🎮BETA] Join Beta clicked');
             }}
           >
-            <FillTextButton text="join beta" />
+            <FillTextButton
+              text="join beta"
+              fontFamily={joinBetaFont}
+              fontSize={joinBetaFontSize}
+              color={joinBetaColor}
+              horizontalOffset={joinBetaHorizontalOffset}
+              verticalOffset={joinBetaVerticalOffset}
+            />
           </div>
 
           {/* Speaker Button - Top Right Corner */}
