@@ -210,10 +210,13 @@ export default function BetaSignupLightbox({
       >
         {/* Glass Card */}
         <div
-          className="relative overflow-hidden rounded-2xl backdrop-blur-xl border border-white/10"
+          className="relative overflow-hidden rounded-2xl border border-white/10"
           style={{
             background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
             boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset',
+            backdropFilter: 'blur(0px)',
+            animation: 'blurIn 800ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
+            willChange: 'backdrop-filter',
           }}
         >
           {/* Close Button - Top Right */}
@@ -284,7 +287,7 @@ export default function BetaSignupLightbox({
                       autoComplete="off"
                     />
                     {validationError && (
-                      <p className="mt-2 text-sm text-red-400 font-light">
+                      <p className="mt-3 text-sm sm:text-base text-red-400 font-light tracking-wide leading-relaxed">
                         {validationError}
                       </p>
                     )}
