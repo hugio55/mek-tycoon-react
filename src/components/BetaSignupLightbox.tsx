@@ -166,10 +166,25 @@ export default function BetaSignupLightbox({
           }
           @keyframes blurIn {
             0% { backdrop-filter: blur(0px); }
-            20% { backdrop-filter: blur(1px); }
-            40% { backdrop-filter: blur(2px); }
-            60% { backdrop-filter: blur(4px); }
-            80% { backdrop-filter: blur(6px); }
+            5% { backdrop-filter: blur(0.1px); }
+            10% { backdrop-filter: blur(0.2px); }
+            15% { backdrop-filter: blur(0.4px); }
+            20% { backdrop-filter: blur(0.6px); }
+            25% { backdrop-filter: blur(0.8px); }
+            30% { backdrop-filter: blur(1px); }
+            35% { backdrop-filter: blur(1.2px); }
+            40% { backdrop-filter: blur(1.5px); }
+            45% { backdrop-filter: blur(1.8px); }
+            50% { backdrop-filter: blur(2.2px); }
+            55% { backdrop-filter: blur(2.6px); }
+            60% { backdrop-filter: blur(3px); }
+            65% { backdrop-filter: blur(3.5px); }
+            70% { backdrop-filter: blur(4px); }
+            75% { backdrop-filter: blur(4.5px); }
+            80% { backdrop-filter: blur(5px); }
+            85% { backdrop-filter: blur(6px); }
+            90% { backdrop-filter: blur(7px); }
+            95% { backdrop-filter: blur(7.5px); }
             100% { backdrop-filter: blur(8px); }
           }
         `
@@ -179,7 +194,7 @@ export default function BetaSignupLightbox({
       <div
         className="absolute inset-0 bg-black/45"
         style={{
-          animation: 'blurIn 600ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
+          animation: 'blurIn 800ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
           willChange: 'backdrop-filter',
         }}
         onClick={(e) => e.stopPropagation()}

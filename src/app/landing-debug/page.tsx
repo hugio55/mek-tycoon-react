@@ -231,14 +231,41 @@ export default function LandingDebugPage() {
 
   // ONE-TIME MIGRATION: Load config from localStorage and migrate to Convex
   useEffect(() => {
-    if (!dbSettings) return; // Wait for database to load
+    console.log('[🔄SYNC] Migration effect triggered', {
+      dbSettingsLoaded: !!dbSettings,
+      migrationStatus,
+      timestamp: new Date().toISOString()
+    });
+
+    if (!dbSettings) {
+      console.log('[🔄SYNC] Waiting for database to load...');
+      return; // Wait for database to load
+    }
+
+    console.log('[🔄SYNC] Database settings received:', {
+      logoSize: dbSettings.logoSize,
+      starScale: dbSettings.starScale,
+      bgStarCount: dbSettings.bgStarCount,
+      sampleKeys: Object.keys(dbSettings).slice(0, 10)
+    });
 
     const alreadyMigrated = localStorage.getItem(MIGRATION_FLAG) === 'true';
     const localStorageData = localStorage.getItem(STORAGE_KEY);
 
+    console.log('[🔄SYNC] Migration check:', {
+      alreadyMigrated,
+      hasLocalStorageData: !!localStorageData,
+      migrationStatus
+    });
+
     if (alreadyMigrated || !localStorageData) {
       // No migration needed - merge database settings with defaults to ensure new properties exist
       const mergedConfig: ConfigType = { ...DEFAULT_CONFIG, ...dbSettings };
+      console.log('[🔄SYNC] No migration needed, using DB settings:', {
+        logoSize: mergedConfig.logoSize,
+        starScale: mergedConfig.starScale,
+        bgStarCount: mergedConfig.bgStarCount
+      });
       setConfig(mergedConfig);
       setMigrationStatus('complete');
       return;
@@ -276,26 +303,56 @@ export default function LandingDebugPage() {
 
   // Load settings from Convex when they change (updates from other tabs/sessions)
   useEffect(() => {
+    console.log('[🔄SYNC] DB sync effect triggered', {
+      dbSettingsLoaded: !!dbSettings,
+      migrationStatus,
+      timestamp: new Date().toISOString()
+    });
+
     if (dbSettings && migrationStatus === 'complete') {
       // Merge with defaults to ensure new properties exist
       const mergedConfig: ConfigType = { ...DEFAULT_CONFIG, ...dbSettings };
+      console.log('[🔄SYNC] Updating config from DB:', {
+        logoSize: mergedConfig.logoSize,
+        starScale: mergedConfig.starScale,
+        bgStarCount: mergedConfig.bgStarCount
+      });
       setConfig(mergedConfig);
     }
   }, [dbSettings, migrationStatus]);
 
   // Auto-save to Convex with debouncing (500ms delay)
   useEffect(() => {
-    if (migrationStatus !== 'complete') return; // Don't save during migration
+    console.log('[💾SAVE] Auto-save effect triggered', {
+      migrationStatus,
+      configLogoSize: config.logoSize,
+      configStarScale: config.starScale,
+      configBgStarCount: config.bgStarCount,
+      timestamp: new Date().toISOString()
+    });
+
+    if (migrationStatus !== 'complete') {
+      console.log('[💾SAVE] Skipping save - migration not complete');
+      return; // Don't save during migration
+    }
 
     // Clear any existing timeout
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
 
+    console.log('[💾SAVE] Scheduling save in 500ms...');
+
     // Set new timeout for debounced save
     saveTimeoutRef.current = setTimeout(() => {
+      console.log('[💾SAVE] Executing save to database:', {
+        logoSize: config.logoSize,
+        starScale: config.starScale,
+        bgStarCount: config.bgStarCount
+      });
       setSaveState('saving');
       updateSettings({ config }).then(() => {
+        console.log('[💾SAVE] Save successful');
         setSaveState('saved');
         setTimeout(() => setSaveState('idle'), 1500);
 
