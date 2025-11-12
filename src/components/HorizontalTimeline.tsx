@@ -191,7 +191,7 @@ export default function HorizontalTimeline({
         style={{
           gap: 0,
           backgroundColor: 'transparent',
-          width: '100vw',
+          width: '100%',
         }}
       >
         {timelineData.map((item, index) => {
