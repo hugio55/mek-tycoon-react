@@ -1621,8 +1621,8 @@ export default function LandingDebugPage() {
                   </label>
                   <input
                     type="range"
-                    min="-200"
-                    max="200"
+                    min="-500"
+                    max="500"
                     step="5"
                     value={config.joinBetaVerticalOffset}
                     onChange={(e) => updateConfig('joinBetaVerticalOffset', parseInt(e.target.value))}
