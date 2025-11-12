@@ -1232,6 +1232,7 @@ export default function LandingPage() {
         position: 'relative',
         touchAction: 'pan-y',
         WebkitOverflowScrolling: 'touch',
+        maxWidth: '100vw',
       }}
     >
       {/* Dark overlay when lightbox is visible */}
@@ -1408,7 +1409,7 @@ export default function LandingPage() {
         className="absolute left-0 z-[20]"
         style={{
           top: `calc(100vh + ${phaseColumnYOffset}px)`,
-          width: 'calc(100vw + 12px)', // Extend 12px to compensate for 12px custom scrollbar
+          width: 'calc(100vw + 8px)', // Extend 8px to compensate for thin custom scrollbar (12px width - 4px borders)
         }}
       >
         <HorizontalTimeline
