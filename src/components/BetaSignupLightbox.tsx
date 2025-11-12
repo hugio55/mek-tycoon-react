@@ -287,7 +287,7 @@ export default function BetaSignupLightbox({
                       autoComplete="off"
                     />
                     {validationError && (
-                      <p className="mt-3 text-sm sm:text-base text-red-400 font-light tracking-wide leading-relaxed">
+                      <p className="mt-3 text-sm sm:text-base text-red-400 font-semibold tracking-wide leading-relaxed">
                         {validationError}
                       </p>
                     )}
