@@ -138,6 +138,22 @@ export default function HorizontalTimeline({
     setHoveredIndex(null);
   };
 
+  // Format description text: convert markdown-style formatting to HTML
+  const formatDescription = (text: string) => {
+    return text
+      .split('\n')
+      .map(line => {
+        // Convert "- " at start to bullet point
+        if (line.trim().startsWith('- ')) {
+          line = '• ' + line.trim().substring(2);
+        }
+        // Convert *text* to bold
+        line = line.replace(/\*([^*]+)\*/g, '<strong>$1</strong>');
+        return line;
+      })
+      .join('<br/>');
+  };
+
   return (
     <div
       ref={containerRef}
@@ -317,7 +333,7 @@ export default function HorizontalTimeline({
                 >
                   {item.title}
                 </h3>
-                <p
+                <div
                   className={`
                     text-white/90 leading-relaxed
                     ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
@@ -329,9 +345,8 @@ export default function HorizontalTimeline({
                       ? 'opacity 0.3s ease-out 0.5s, transform 0.3s ease-out 0.5s'
                       : 'opacity 0.2s ease-in, transform 0.2s ease-in',
                   }}
-                >
-                  {item.description}
-                </p>
+                  dangerouslySetInnerHTML={{ __html: formatDescription(item.description) }}
+                />
               </div>
             </div>
           );
