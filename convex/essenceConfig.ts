@@ -75,7 +75,7 @@ export const getConfig = query({
   args: { key: v.string() },
   handler: async (ctx, args) => {
     const config = await ctx.db
-      .query("essenceConfig")
+      .query("essenceBuffConfig")
       .withIndex("by_key", (q) => q.eq("key", args.key))
       .first();
 
@@ -89,7 +89,7 @@ export const getConfig = query({
 export const getAllConfigs = query({
   args: {},
   handler: async (ctx) => {
-    const configs = await ctx.db.query("essenceConfig").collect();
+    const configs = await ctx.db.query("essenceBuffConfig").collect();
     return configs;
   },
 });
@@ -101,7 +101,7 @@ export const getBaseEssenceRate = query({
   args: {},
   handler: async (ctx) => {
     const config = await ctx.db
-      .query("essenceConfig")
+      .query("essenceBuffConfig")
       .withIndex("by_key", (q) => q.eq("key", "baseEssencePerHour"))
       .first();
 
@@ -140,7 +140,7 @@ export const setConfig = mutation({
 
     // Check if config exists
     const existing = await ctx.db
-      .query("essenceConfig")
+      .query("essenceBuffConfig")
       .withIndex("by_key", (q) => q.eq("key", args.key))
       .first();
 
@@ -161,7 +161,7 @@ export const setConfig = mutation({
       };
     } else {
       // Create new
-      const configId = await ctx.db.insert("essenceConfig", {
+      const configId = await ctx.db.insert("essenceBuffConfig", {
         key: args.key,
         value: args.value,
         description: args.description || VALIDATION_RULES[args.key]?.description || `Config for ${args.key}`,
@@ -205,7 +205,7 @@ export const deleteConfig = mutation({
   args: { key: v.string() },
   handler: async (ctx, args) => {
     const config = await ctx.db
-      .query("essenceConfig")
+      .query("essenceBuffConfig")
       .withIndex("by_key", (q) => q.eq("key", args.key))
       .first();
 
@@ -237,7 +237,7 @@ export const initializeDefaultEssenceConfig = mutation({
 
     // Initialize baseEssencePerHour config if it doesn't exist
     const existing = await ctx.db
-      .query("essenceConfig")
+      .query("essenceBuffConfig")
       .withIndex("by_key", (q) => q.eq("key", "baseEssencePerHour"))
       .first();
 
@@ -249,7 +249,7 @@ export const initializeDefaultEssenceConfig = mutation({
       });
     } else {
       // Create default baseEssencePerHour config
-      await ctx.db.insert("essenceConfig", {
+      await ctx.db.insert("essenceBuffConfig", {
         key: "baseEssencePerHour",
         value: 10, // Default: 10 essence per hour
         description: VALIDATION_RULES["baseEssencePerHour"].description,

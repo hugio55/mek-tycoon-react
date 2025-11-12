@@ -3524,9 +3524,9 @@ export default defineSchema({
   })
     .index("by_key", ["key"]),
 
-  // ===== ESSENCE SYSTEM =====
-  // Configuration for essence system (base rates, multipliers, etc.)
-  essenceConfig: defineTable({
+  // ===== ESSENCE BUFF SYSTEM =====
+  // Configuration for essence buff system (base rates, multipliers, etc.)
+  essenceBuffConfig: defineTable({
     key: v.string(), // Unique config key (e.g., "baseEssencePerHour")
     value: v.union(v.number(), v.string(), v.boolean()), // Config value
     description: v.optional(v.string()), // What this config controls

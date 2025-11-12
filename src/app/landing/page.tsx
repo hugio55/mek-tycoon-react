@@ -231,10 +231,12 @@ export default function LandingPage() {
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(err => console.error('[🎬SWAP] Video play failed:', err));
 
-      // Show scroll indicator 1 second after video starts playing
+      // Show scroll indicator 1 second after video starts playing (only if consent lightbox is dismissed)
       setTimeout(() => {
-        console.log('[📍SCROLL] Showing scroll indicator');
-        setShowScrollIndicator(true);
+        if (!showAudioConsent) {
+          console.log('[📍SCROLL] Showing scroll indicator');
+          setShowScrollIndicator(true);
+        }
       }, 1000);
 
       // Unlock scroll after video plays and fade-in completes
@@ -1420,12 +1422,12 @@ export default function LandingPage() {
         <div
           className="fixed bottom-8 left-1/2 z-[100] cursor-pointer transition-all duration-200 hover:opacity-70 active:scale-95"
           style={{
-            animation: showScrollIndicator
+            animation: showScrollIndicator && !showAudioConsent
               ? 'scroll-bounce 3s ease-in-out infinite, scroll-fade-in 1s ease-out'
               : 'none',
-            opacity: showScrollIndicator ? 0.5 : 0,
-            transition: showScrollIndicator ? 'none' : 'opacity 300ms ease-out',
-            pointerEvents: showScrollIndicator ? 'auto' : 'none',
+            opacity: showScrollIndicator && !showAudioConsent ? 0.5 : 0,
+            transition: showScrollIndicator && !showAudioConsent ? 'none' : 'opacity 300ms ease-out',
+            pointerEvents: showScrollIndicator && !showAudioConsent ? 'auto' : 'none',
           }}
           onClick={() => {
             // Smooth scroll with custom easing
