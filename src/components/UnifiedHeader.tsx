@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { restoreWalletSession, clearWalletSession } from "@/lib/walletSessionManager";
 import { CompanyNameModal } from "@/components/CompanyNameModal";
+import { getMediaUrl } from "@/lib/media-url";
 
 // Session Timer Component - Shows countdown to session expiration
 function SessionTimer({ expiresAt }: { expiresAt: number }) {
@@ -354,7 +355,7 @@ export default function UnifiedHeader() {
           rel="noopener noreferrer"
         >
           <img
-            src="/random-images/OE logo.png"
+            src={getMediaUrl('/random-images/OE logo.png')}
             alt="OE Logo"
             className="h-10 sm:h-16 w-auto opacity-90 hover:opacity-100 transition-opacity cursor-pointer"
           />
