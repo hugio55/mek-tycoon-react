@@ -1217,14 +1217,15 @@ export default function LandingPage() {
         }}
       />
 
-      {/* Fixed canvas layer - hidden initially, fades in during stars stage */}
+      {/* Fixed canvas layer - hidden initially, fades in during stars stage with smooth 1.5s transition */}
       <canvas
         ref={canvasRef}
-        className="fixed inset-0 w-full h-full z-[1] pointer-events-none transition-opacity duration-1000"
+        className="fixed inset-0 w-full h-full z-[1] pointer-events-none"
         style={{
           display: 'block',
           touchAction: 'none',
-          opacity: animationStage === 'initial' ? 0 : 1, // Hidden initially
+          opacity: animationStage === 'initial' ? 0 : 1,
+          transition: animationStage === 'initial' ? 'none' : 'opacity 1500ms ease-out',
         }}
       />
 

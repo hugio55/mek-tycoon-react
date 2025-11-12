@@ -11,6 +11,12 @@ interface AudioConsentLightboxProps {
   logoFadeDuration?: number; // milliseconds (default: 1000)
   lockScroll?: boolean; // Control scroll lock independently from visibility
   toggleScale?: number; // Scale multiplier for toggle button (default: 1.0)
+  toggleTextGap?: number; // Gap between toggle and text in pixels (default: 24)
+  soundLabelFont?: string; // Font family for Sound On/Off text
+  soundLabelSize?: number; // Font size for Sound On/Off text
+  soundLabelColor?: string; // Color class for Sound On/Off text
+  soundLabelVerticalOffset?: number; // Vertical offset for Sound On/Off text
+  soundLabelHorizontalOffset?: number; // Horizontal offset for Sound On/Off text
 }
 
 const STORAGE_KEY_AUDIO = 'mek-audio-consent';
@@ -22,7 +28,13 @@ export default function AudioConsentLightbox({
   backdropDarkness = 95,
   logoFadeDuration = 1000,
   lockScroll = true,
-  toggleScale = 1.0
+  toggleScale = 1.0,
+  toggleTextGap = 24,
+  soundLabelFont = 'Orbitron',
+  soundLabelSize = 16,
+  soundLabelColor = 'text-yellow-400/90',
+  soundLabelVerticalOffset = 0,
+  soundLabelHorizontalOffset = 0
 }: AudioConsentLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
@@ -117,7 +129,7 @@ export default function AudioConsentLightbox({
         </p>
 
         {/* Toggle Switch and Text Container - Horizontal Layout */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center" style={{ gap: `${toggleTextGap}px` }}>
           {/* Toggle Switch - Responsive sizing with minimum touch target */}
           <button
             onClick={handleToggle}
@@ -152,7 +164,11 @@ export default function AudioConsentLightbox({
           {/* Animated Text - Responsive sizing based on toggle size */}
           <div
             className="relative overflow-hidden"
-            style={{ height: `${labelTextSize * 2}px`, minWidth: `${labelTextSize * 6}px` }}
+            style={{
+              height: `${soundLabelSize * 2}px`,
+              minWidth: `${soundLabelSize * 6}px`,
+              transform: `translate(${soundLabelHorizontalOffset}px, ${soundLabelVerticalOffset}px)`
+            }}
           >
             <div
               className={`absolute inset-0 flex items-center justify-start transition-transform duration-[400ms] ease-out will-change-transform ${
@@ -160,8 +176,12 @@ export default function AudioConsentLightbox({
               }`}
             >
               <span
-                className="font-light text-white tracking-wide"
-                style={{ fontSize: `${labelTextSize}px`, lineHeight: `${labelTextSize * 2}px` }}
+                className={`font-light tracking-wide ${soundLabelColor}`}
+                style={{
+                  fontSize: `${soundLabelSize}px`,
+                  lineHeight: `${soundLabelSize * 2}px`,
+                  fontFamily: `${soundLabelFont}, sans-serif`
+                }}
               >
                 Sound Off
               </span>
@@ -172,8 +192,12 @@ export default function AudioConsentLightbox({
               }`}
             >
               <span
-                className="font-light text-yellow-400 tracking-wide"
-                style={{ fontSize: `${labelTextSize}px`, lineHeight: `${labelTextSize * 2}px` }}
+                className={`font-light tracking-wide ${soundLabelColor}`}
+                style={{
+                  fontSize: `${soundLabelSize}px`,
+                  lineHeight: `${soundLabelSize * 2}px`,
+                  fontFamily: `${soundLabelFont}, sans-serif`
+                }}
               >
                 Sound On
               </span>

@@ -97,6 +97,7 @@ const DEFAULT_CONFIG = {
   lightboxBackdropDarkness: 95,
   audioToggleSize: 96,
   audioToggleScale: 1.0,
+  toggleTextGap: 16,
   // Join Beta Button controls
   joinBetaFont: 'Orbitron',
   joinBetaFontSize: 32,
@@ -2147,6 +2148,25 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.audioToggleScale.toFixed(1)}x
+              </div>
+            </div>
+
+            {/* Toggle Text Gap */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Toggle Text Gap
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="48"
+                step="2"
+                value={config.toggleTextGap}
+                onChange={(e) => updateConfig('toggleTextGap', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.toggleTextGap}px
               </div>
             </div>
           </div>
