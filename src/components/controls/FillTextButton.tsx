@@ -128,14 +128,17 @@ const FillTextButton = ({
         />
       </span>
 
-      {/* Glow layer (visible only on hover, extends beyond boundaries for full glow effect) */}
+      {/* Glow layer (synchronized with blue text width) */}
       <span
         className="absolute top-0 left-0 whitespace-nowrap overflow-hidden"
         style={{
           color: 'transparent',
           width: isHovered ? 'calc(100% - 3px)' : '0%',
           transition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-          animation: isHovered ? 'soft-pulse 3s ease-in-out infinite' : 'none',
+          animation: isGlowing && !isFadingOut ? 'soft-pulse 3s ease-in-out infinite' : 'none',
+          opacity: isFadingOut ? 0 : 1,
+          transitionProperty: isFadingOut ? 'width, opacity' : 'width',
+          transitionDuration: isFadingOut ? '500ms, 800ms' : '500ms',
           pointerEvents: 'none',
           WebkitTextStroke: '0.5px #3DD1FF',
         }}
