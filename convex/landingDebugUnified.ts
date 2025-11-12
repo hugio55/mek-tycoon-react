@@ -321,3 +321,34 @@ export const migrateFromOldTables = mutation({
     };
   },
 });
+
+// Force update desktop settings (overwrites existing desktop config)
+export const forceUpdateDesktop = mutation({
+  args: {
+    desktop: v.any(),
+    shared: v.optional(v.any()),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("landingDebugUnified")
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        desktop: args.desktop,
+        shared: args.shared || existing.shared,
+        updatedAt: Date.now(),
+      });
+      return { success: true, message: "Desktop settings updated successfully", id: existing._id };
+    } else {
+      const id = await ctx.db.insert("landingDebugUnified", {
+        desktop: args.desktop,
+        mobile: DEFAULT_CONFIG.mobile,
+        shared: args.shared || DEFAULT_CONFIG.shared,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      return { success: true, message: "New unified settings created with desktop config", id };
+    }
+  },
+});
