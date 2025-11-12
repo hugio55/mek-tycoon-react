@@ -86,7 +86,7 @@ export const submitBetaSignup = mutation({
 
       if (existingIP) {
         console.log('[🎮BETA-SERVER] IP address already used');
-        throw new Error('A signup from your network has already been registered. Only one signup per IP address is allowed.');
+        throw new Error('We detect this could be the same user with a different stake address. We highly discourage this, since this future small perk being applied too many times could negatively affect the natural in-game economy. We care greatly about the economy unfolding in a realistic way. Thus, we would appreciate you refraining from accumulating multiple perks.');
       }
     }
 
