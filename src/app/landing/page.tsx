@@ -224,15 +224,14 @@ export default function LandingPage() {
   // Logo animation timing (must be declared before first use in useEffect below)
   const [logoFadeDuration, setLogoFadeDuration] = useState(DEFAULT_CONFIG.logoFadeDuration);
 
-  // Debug logging for useVideoLogo changes + video playback control
+  // Debug logging for useVideoLogo changes (video already started early)
   useEffect(() => {
     console.log('[🎬SWAP] useVideoLogo state changed to:', useVideoLogo);
     if (useVideoLogo && videoRef.current) {
-      console.log('[🎬SWAP] Resetting video to frame 1 and starting playback');
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(err => console.error('[🎬SWAP] Video play failed:', err));
+      // Video should already be playing from early start, just verify
+      console.log('[🎬SWAP] Video opacity swap complete, video should be visible and playing');
 
-      // Show scroll indicator 1 second after video starts playing (only if consent lightbox is dismissed)
+      // Show scroll indicator 1 second after opacity swap (only if consent lightbox is dismissed)
       setTimeout(() => {
         if (!showAudioConsent) {
           console.log('[📍SCROLL] Showing scroll indicator');
@@ -360,10 +359,21 @@ export default function LandingPage() {
         // Skip consent lightbox but show smooth image zoom animation
         setAnimationStage('logo');
 
-        // Video swap timer for return visitors
-        console.log('[🎬SWAP] Setting video swap timer for return visitor, duration:', logoFadeDuration, 'ms');
+        // Start video BEFORE animation completes (return visitor path)
+        const videoStartOffset = 600; // Start video 600ms before PNG animation ends
+        console.log('[🎬SWAP] Starting video playback in', videoStartOffset, 'ms (return visitor)');
         setTimeout(() => {
-          console.log('[🎬SWAP] Swapping to video logo (return visitor path)');
+          if (videoRef.current) {
+            console.log('[🎬SWAP] Starting video early to preload frames (return visitor)');
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(err => console.error('[🎬SWAP] Early video play failed:', err));
+          }
+        }, logoFadeDuration - videoStartOffset);
+
+        // Swap opacity when animation completes (return visitor path)
+        console.log('[🎬SWAP] Setting opacity swap timer for return visitor, duration:', logoFadeDuration, 'ms');
+        setTimeout(() => {
+          console.log('[🎬SWAP] Swapping opacity to video (return visitor path)');
           setUseVideoLogo(true);
         }, logoFadeDuration);
 
@@ -802,10 +812,21 @@ export default function LandingPage() {
           console.log('[🎵ANIMATION] Logo image preloaded, starting animation');
           setAnimationStage('logo');
 
-          // Swap to video immediately when zoom completes
-          console.log('[🎬SWAP] Setting video swap timer (first-time visitor), duration:', logoFadeDuration, 'ms');
+          // Start video BEFORE animation completes so it's ready for seamless swap
+          const videoStartOffset = 600; // Start video 600ms before PNG animation ends
+          console.log('[🎬SWAP] Starting video playback in', videoStartOffset, 'ms (before animation ends)');
           setTimeout(() => {
-            console.log('[🎬SWAP] Swapping to video logo (first-time visitor path)');
+            if (videoRef.current) {
+              console.log('[🎬SWAP] Starting video early to preload frames');
+              videoRef.current.currentTime = 0;
+              videoRef.current.play().catch(err => console.error('[🎬SWAP] Early video play failed:', err));
+            }
+          }, logoFadeDuration - videoStartOffset);
+
+          // Swap opacity when animation completes (video should be playing by now)
+          console.log('[🎬SWAP] Setting opacity swap timer (first-time visitor), duration:', logoFadeDuration, 'ms');
+          setTimeout(() => {
+            console.log('[🎬SWAP] Swapping opacity to video (first-time visitor path)');
             setUseVideoLogo(true);
             // Note: Scroll unlock now happens in useEffect when video plays + fades in
           }, logoFadeDuration);
@@ -1284,7 +1305,7 @@ export default function LandingPage() {
                 WebkitBackfaceVisibility: 'hidden',
                 WebkitTransform: 'translate3d(0, 0, 0)',
                 imageRendering: 'crisp-edges',
-                transition: 'opacity 0ms',
+                transition: 'opacity 200ms ease-in-out',
                 pointerEvents: 'none',
               }}
             />
@@ -1304,7 +1325,7 @@ export default function LandingPage() {
                 WebkitBackfaceVisibility: 'hidden',
                 WebkitTransform: 'translate3d(0, 0, 0)',
                 imageRendering: 'crisp-edges',
-                transition: 'opacity 0ms',
+                transition: 'opacity 200ms ease-in-out',
                 pointerEvents: 'none',
               }}
             />
