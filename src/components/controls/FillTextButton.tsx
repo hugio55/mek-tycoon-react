@@ -18,6 +18,8 @@ const FillTextButton = ({
   verticalOffset = 0
 }: FillTextButtonProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isGlowing, setIsGlowing] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
 
   return (
     <button
@@ -29,8 +31,14 @@ const FillTextButton = ({
         letterSpacing: '3px',
         transform: `translate(${horizontalOffset}px, ${verticalOffset}px)`,
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => {
+        setIsHovered(true);
+        setIsGlowing(true);
+        setIsFadingOut(false);
+      }}
+      onMouseLeave={() => {
+        setIsHovered(false);
+      }}
     >
       <style>
         {`
@@ -95,7 +103,20 @@ const FillTextButton = ({
           width: '3px',
           left: isHovered ? 'calc(100% - 3px)' : '0',
           transition: 'left 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-          animation: 'line-glow 2s ease-in-out infinite',
+          animation: isGlowing && !isFadingOut ? 'line-glow 2s ease-in-out infinite' : 'none',
+          opacity: isFadingOut ? 0 : 1,
+          filter: isFadingOut ? 'none' : undefined,
+          transitionProperty: isFadingOut ? 'left, opacity, filter' : 'left',
+          transitionDuration: isFadingOut ? '500ms, 800ms, 800ms' : '500ms',
+        }}
+        onTransitionEnd={(e) => {
+          if (e.propertyName === 'left' && !isHovered && isGlowing) {
+            setIsFadingOut(true);
+            setTimeout(() => {
+              setIsGlowing(false);
+              setIsFadingOut(false);
+            }, 800);
+          }
         }}
       >
         {/* Inner line element */}
