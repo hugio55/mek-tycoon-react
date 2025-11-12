@@ -225,12 +225,57 @@ export default function LandingPage() {
   // Logo animation timing (must be declared before first use in useEffect below)
   const [logoFadeDuration, setLogoFadeDuration] = useState(DEFAULT_CONFIG.logoFadeDuration);
 
+  // JavaScript requestAnimationFrame zoom animation
+  const logoContainerRef = useRef<HTMLDivElement>(null);
+
   // Start video when logo animation begins
   useEffect(() => {
     if (animationStage === 'logo' && videoRef.current) {
       console.log('[🎬VIDEO] Starting video playback');
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(err => console.error('[🎬VIDEO] Video play failed:', err));
+
+      // Custom easing function (cubic-bezier(0, 0, 0.2, 1) approximation)
+      const easeOut = (t: number): number => {
+        // cubic-bezier(0, 0, 0.2, 1) approximation - starts fast, slows gradually
+        return 1 - Math.pow(1 - t, 3);
+      };
+
+      // Animation parameters
+      const startTime = performance.now();
+      const duration = logoFadeDuration;
+      const startScale = 0.92;
+      const endScale = 1.0;
+      const startOpacity = 0;
+      const endOpacity = 1;
+
+      let animationFrameId: number;
+
+      const animate = (currentTime: number) => {
+        if (!logoContainerRef.current) return;
+
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easedProgress = easeOut(progress);
+
+        // Calculate interpolated values
+        const currentScale = startScale + (endScale - startScale) * easedProgress;
+        const currentOpacity = startOpacity + (endOpacity - startOpacity) * easedProgress;
+
+        // Apply transform and opacity
+        logoContainerRef.current.style.transform = `translate3d(0, 0, 0) scale3d(${currentScale}, ${currentScale}, 1)`;
+        logoContainerRef.current.style.opacity = currentOpacity.toString();
+
+        // Continue animation if not complete
+        if (progress < 1) {
+          animationFrameId = requestAnimationFrame(animate);
+        } else {
+          console.log('[🎬LOGO] JavaScript animation complete - final scale:', currentScale, 'opacity:', currentOpacity);
+        }
+      };
+
+      // Start animation
+      animationFrameId = requestAnimationFrame(animate);
 
       // Show scroll indicator after animation completes
       setTimeout(() => {
@@ -245,6 +290,13 @@ export default function LandingPage() {
         console.log('[🔓SCROLL] Unlocking scroll after animation');
         setLockScrollForConsent(false);
       }, logoFadeDuration + 500);
+
+      // Cleanup: cancel animation on unmount
+      return () => {
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+        }
+      };
     }
   }, [animationStage, logoFadeDuration, showAudioConsent]);
 
@@ -1228,15 +1280,15 @@ export default function LandingPage() {
         }}
       >
         <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full">
-          {/* Logo - Hidden initially, fades in with zoom during logo stage */}
+          {/* Logo - Hidden initially, JavaScript requestAnimationFrame handles zoom during logo stage */}
           <div
+            ref={logoContainerRef}
             className="relative max-w-[80vw] max-h-[80vw]"
             style={{
               width: `${logoSize}px`,
               height: `${logoSize}px`,
-              opacity: animationStage === 'logo' ? 1 : 0,
-              transform: animationStage === 'logo' ? 'translate3d(0, 0, 0) scale3d(1, 1, 1)' : 'translate3d(0, 0, 0) scale3d(0.92, 0.92, 1)',
-              transition: animationStage === 'logo' ? `opacity ${logoFadeDuration}ms cubic-bezier(0, 0, 0.2, 1), transform ${logoFadeDuration}ms cubic-bezier(0, 0, 0.2, 1)` : 'none',
+              opacity: 0,
+              transform: 'translate3d(0, 0, 0) scale3d(0.92, 0.92, 1)',
               visibility: animationStage === 'initial' || animationStage === 'stars' ? 'hidden' : 'visible',
               willChange: animationStage === 'logo' ? 'transform, opacity' : 'auto',
               backfaceVisibility: 'hidden',
@@ -1246,16 +1298,6 @@ export default function LandingPage() {
               transformStyle: 'preserve-3d',
               WebkitTransformStyle: 'preserve-3d',
               contain: 'layout style paint',
-            }}
-            onTransitionStart={() => {
-              if (animationStage === 'logo') {
-                console.log('[🎬LOGO] Transition started - fading in logo');
-              }
-            }}
-            onTransitionEnd={() => {
-              if (animationStage === 'logo') {
-                console.log('[🎬LOGO] Transition ended - logo fully visible');
-              }
             }}
           >
             <video

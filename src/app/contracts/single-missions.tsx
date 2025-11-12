@@ -93,6 +93,7 @@ export default function ContractsLayoutOption11() {
   const [buffModalStyle, setBuffModalStyle] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [deployedMissions, setDeployedMissions] = useState<Record<string, { startTime: number; duration: number; meks: any[] }>>({});
   const [selectedMissionId, setSelectedMissionId] = useState<string | null>(null);
+  const [phaseCarouselVerticalOffset, setPhaseCarouselVerticalOffset] = useState<number>(0);
   const dailyVariation = "Acid";
   
   // Update timer every second
@@ -1826,9 +1827,9 @@ export default function ContractsLayoutOption11() {
   }, [animatedSuccessRate, animatingSuccess]);
   
   return (
-    <div className="min-h-screen text-white overflow-x-hidden overflow-y-hidden relative">
+    <div className="min-h-screen text-white overflow-x-hidden relative" style={{ minHeight: `calc(100vh + ${phaseCarouselVerticalOffset}px)` }}>
       {/* Main Content */}
-      <div className="relative max-w-7xl mx-auto px-6 py-6">
+      <div className="relative max-w-7xl mx-auto px-6 py-6" style={{ minHeight: `calc(100vh + ${phaseCarouselVerticalOffset}px)` }}>
         {/* Header */}
         <div className="mek-header-industrial mb-6">
           <div className="relative z-10 flex justify-between items-start">
@@ -1877,8 +1878,8 @@ export default function ContractsLayoutOption11() {
           <div className="mek-overlay-diagonal-stripes"></div>
         </div>
         
-        {/* Grid Layout - Fixed width columns to prevent hover jank */}
-        <div className="grid grid-cols-2 gap-5" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        {/* Grid Layout - Absolute positioned columns */}
+        <div className="absolute grid grid-cols-2 gap-5 w-full max-w-7xl" style={{ gridTemplateColumns: '1fr 1fr', top: `${phaseCarouselVerticalOffset}px`, left: '24px', right: '24px' }}>
           {/* Global Event */}
           <div className="min-w-0">
             {renderContract(null, true)}
