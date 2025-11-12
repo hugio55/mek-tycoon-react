@@ -1979,49 +1979,90 @@ export default function LandingDebugPage() {
             </div>
           </div>
 
-
-          {/* Speaker Icon Controls Section */}
+          {/* Sound Button Controls Section */}
           {true && (
           <>
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
-              Speaker Icon Controls
+              Sound Button Controls
             </h2>
             <p className="text-xs text-gray-400 mb-2">
-              Audio indicator in top-right corner
+              Fixed top-right corner • Horizontal layout
             </p>
 
-            {/* Speaker Icon Style */}
+            {/* Sound Button Scale */}
             <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">
-                Speaker Icon Style
+                Button Scale
               </label>
-              <select
-                value={config.speakerIconStyle}
-                onChange={(e) => updateConfig('speakerIconStyle', e.target.value as any)}
-                className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-gray-300"
-              >
-                <option value="minimal">Minimal Wave</option>
-                <option value="geometric">Geometric</option>
-                <option value="bars">Sound Bars</option>
-                <option value="hologram">Futuristic</option>
-                <option value="pulse">Pulse Ring</option>
-              </select>
+              <input
+                type="range"
+                min="0.3"
+                max="1.5"
+                step="0.05"
+                value={config.powerButtonScale}
+                onChange={(e) => updateConfig('powerButtonScale', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.powerButtonScale.toFixed(2)}x
+              </div>
             </div>
-          </div>
-          </>
-          )}
 
-          {/* Other Controls Section (if needed for future misc controls) */}
-          {true && (
-          <>
-          <div className="bg-gray-800 border border-gray-700 rounded p-3">
-            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
-              Other Controls
-            </h2>
-            <p className="text-xs text-gray-400">
-              Miscellaneous controls will appear here
-            </p>
+            {/* Sound Button Vertical Offset */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Button Vertical Offset
+              </label>
+              <input
+                type="range"
+                min="-100"
+                max="100"
+                step="10"
+                value={config.powerButtonVerticalOffset}
+                onChange={(e) => updateConfig('powerButtonVerticalOffset', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.powerButtonVerticalOffset}px
+              </div>
+            </div>
+
+            {/* Sound Button Horizontal Offset */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Button Horizontal Offset
+              </label>
+              <input
+                type="range"
+                min="-100"
+                max="100"
+                step="1"
+                value={config.powerButtonHorizontalOffset}
+                onChange={(e) => updateConfig('powerButtonHorizontalOffset', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.powerButtonHorizontalOffset}px
+              </div>
+            </div>
+
+            {/* Flashing Glow Effect Toggle */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Flashing Glow Effect
+              </label>
+              <button
+                onClick={() => updateConfig('powerButtonGlowEnabled', !config.powerButtonGlowEnabled)}
+                className={`w-full px-2 py-1 text-xs rounded ${
+                  config.powerButtonGlowEnabled
+                    ? 'bg-blue-900/50 border border-blue-700 text-blue-200'
+                    : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                {config.powerButtonGlowEnabled ? 'Enabled' : 'Disabled'}
+              </button>
+            </div>
           </div>
           </>
           )}

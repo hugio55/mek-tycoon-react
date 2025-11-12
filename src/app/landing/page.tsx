@@ -95,7 +95,7 @@ const DEFAULT_CONFIG = {
   powerButtonVerticalOffset: 0,
   powerButtonHorizontalOffset: 0,
   powerButtonGlowEnabled: true,
-  speakerIconStyle: 'minimal' as SpeakerIconStyle,
+  speakerIconStyle: 'geometric' as SpeakerIconStyle,
   phaseImageDarkening: 30,
   phaseBlurAmount: 20,
   phaseBlurAmountSelected: 5,
