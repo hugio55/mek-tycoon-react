@@ -27,47 +27,24 @@ export default function ImageProgressTracker() {
   const [activeSection, setActiveSection] = useState<'heads' | 'bodies' | 'traits'>('heads');
   const [sortByStatus, setSortByStatus] = useState<'all' | 'exists' | 'missing'>('all');
 
-  // Load saved folder paths from localStorage
+  // Load saved data from localStorage
   useEffect(() => {
     const savedHeads = localStorage.getItem('imageProgressTracker_headsPath');
     const savedBodies = localStorage.getItem('imageProgressTracker_bodiesPath');
     const savedTraits = localStorage.getItem('imageProgressTracker_traitsPath');
 
+    const savedHeadsData = localStorage.getItem('imageProgressTracker_headsData');
+    const savedBodiesData = localStorage.getItem('imageProgressTracker_bodiesData');
+    const savedTraitsData = localStorage.getItem('imageProgressTracker_traitsData');
+
     if (savedHeads) setHeadsFolderPath(savedHeads);
     if (savedBodies) setBodiesFolderPath(savedBodies);
     if (savedTraits) setTraitsFolderPath(savedTraits);
+
+    if (savedHeadsData) setHeadsData(JSON.parse(savedHeadsData));
+    if (savedBodiesData) setBodiesData(JSON.parse(savedBodiesData));
+    if (savedTraitsData) setTraitsData(JSON.parse(savedTraitsData));
   }, []);
-
-  // Check file existence for a folder path
-  const checkFilesExistence = async (folderPath: string, variations: typeof VARIATIONS_BY_TYPE.heads) => {
-    const results: VariationStatus[] = [];
-
-    for (const variation of variations) {
-      const fileName = `${variation.sourceKey.toLowerCase()}.webp`;
-      const fullPath = path.join(folderPath, fileName);
-
-      try {
-        // Check if file exists (this would be done server-side or via API in real implementation)
-        const exists = await fetch(`/api/check-file?path=${encodeURIComponent(fullPath)}`).then(r => r.json());
-
-        results.push({
-          id: variation.id,
-          name: variation.name,
-          sourceKey: variation.sourceKey,
-          exists: exists.exists
-        });
-      } catch {
-        results.push({
-          id: variation.id,
-          name: variation.name,
-          sourceKey: variation.sourceKey,
-          exists: false
-        });
-      }
-    }
-
-    return results;
-  };
 
   // Handle saving folder path for heads
   const handleSaveHeadsPath = () => {
@@ -77,10 +54,12 @@ export default function ImageProgressTracker() {
       id: v.id,
       name: v.name,
       sourceKey: v.sourceKey,
-      exists: false // Default to false, would check actual files in production
+      exists: false
     }));
 
-    setHeadsData({ path: headsFolderPath, variations });
+    const newData = { path: headsFolderPath, variations };
+    setHeadsData(newData);
+    localStorage.setItem('imageProgressTracker_headsData', JSON.stringify(newData));
   };
 
   // Handle saving folder path for bodies
@@ -94,7 +73,9 @@ export default function ImageProgressTracker() {
       exists: false
     }));
 
-    setBodiesData({ path: bodiesFolderPath, variations });
+    const newData = { path: bodiesFolderPath, variations };
+    setBodiesData(newData);
+    localStorage.setItem('imageProgressTracker_bodiesData', JSON.stringify(newData));
   };
 
   // Handle saving folder path for traits
@@ -108,7 +89,41 @@ export default function ImageProgressTracker() {
       exists: false
     }));
 
-    setTraitsData({ path: traitsFolderPath, variations });
+    const newData = { path: traitsFolderPath, variations };
+    setTraitsData(newData);
+    localStorage.setItem('imageProgressTracker_traitsData', JSON.stringify(newData));
+  };
+
+  // Toggle variation status
+  const toggleVariationStatus = (variationId: number) => {
+    if (activeSection === 'heads') {
+      const updated = {
+        ...headsData,
+        variations: headsData.variations.map(v =>
+          v.id === variationId ? { ...v, exists: !v.exists } : v
+        )
+      };
+      setHeadsData(updated);
+      localStorage.setItem('imageProgressTracker_headsData', JSON.stringify(updated));
+    } else if (activeSection === 'bodies') {
+      const updated = {
+        ...bodiesData,
+        variations: bodiesData.variations.map(v =>
+          v.id === variationId ? { ...v, exists: !v.exists } : v
+        )
+      };
+      setBodiesData(updated);
+      localStorage.setItem('imageProgressTracker_bodiesData', JSON.stringify(updated));
+    } else if (activeSection === 'traits') {
+      const updated = {
+        ...traitsData,
+        variations: traitsData.variations.map(v =>
+          v.id === variationId ? { ...v, exists: !v.exists } : v
+        )
+      };
+      setTraitsData(updated);
+      localStorage.setItem('imageProgressTracker_traitsData', JSON.stringify(updated));
+    }
   };
 
   // Get current section data
@@ -302,11 +317,16 @@ export default function ImageProgressTracker() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      {variation.exists ? (
-                        <span className="text-green-400 text-xl">✓</span>
-                      ) : (
-                        <span className="text-red-400 text-xl">✗</span>
-                      )}
+                      <button
+                        onClick={() => toggleVariationStatus(variation.id)}
+                        className="text-2xl hover:scale-125 transition-transform cursor-pointer"
+                      >
+                        {variation.exists ? (
+                          <span className="text-green-400">✓</span>
+                        ) : (
+                          <span className="text-red-400">✗</span>
+                        )}
+                      </button>
                     </td>
                   </tr>
                 ))}

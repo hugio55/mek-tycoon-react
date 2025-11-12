@@ -637,13 +637,18 @@ export default function LandingPage() {
     return () => window.removeEventListener('resize', updateViewportHeight);
   }, []);
 
-  // Scroll detection for description text animation
+  // Scroll detection for description text animation and scroll indicator
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 50) {
         setHasScrolled(true);
       } else {
         setHasScrolled(false);
+      }
+
+      // Hide scroll indicator as soon as user starts scrolling
+      if (window.scrollY > 10) {
+        setShowScrollIndicator(false);
       }
     };
 
@@ -1398,8 +1403,8 @@ export default function LandingPage() {
             className="fixed bottom-8 left-1/2 z-[100] pointer-events-none"
             style={{
               animation: 'scroll-bounce 2s ease-in-out infinite',
-              opacity: 1,
-              transition: 'opacity 700ms ease-out',
+              opacity: 0.4,
+              transition: 'opacity 300ms ease-out',
             }}
           >
             <svg
@@ -1408,10 +1413,7 @@ export default function LandingPage() {
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className="text-yellow-400"
-              style={{
-                filter: 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.6))',
-              }}
+              className="text-gray-600"
             >
               <path
                 d="M12 4L12 20M12 20L18 14M12 20L6 14"
