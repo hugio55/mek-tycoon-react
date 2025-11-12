@@ -21,6 +21,7 @@ export default function BetaSignupLightbox({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [savedScrollY, setSavedScrollY] = useState(0);
+  const [shouldShake, setShouldShake] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -68,14 +69,22 @@ export default function BetaSignupLightbox({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stakeAddress || isSubmitting) return;
+
+    // If empty field, trigger shake animation
+    if (!stakeAddress.trim()) {
+      setShouldShake(true);
+      setTimeout(() => setShouldShake(false), 500);
+      return;
+    }
+
+    if (isSubmitting) return;
 
     console.log('[🎮BETA] Validating stake address:', stakeAddress);
 
     const validation = validateStakeAddress(stakeAddress);
     if (!validation.isValid) {
       console.log('[🎮BETA] Validation failed:', validation.error);
-      setValidationError(validation.error || 'Invalid stake address');
+      setValidationError('Sorry, this is not a valid stake address.');
       return;
     }
 
@@ -155,12 +164,24 @@ export default function BetaSignupLightbox({
               transform: translateY(0) scale(1);
             }
           }
+          @keyframes shakeRed {
+            0%, 100% { transform: translateX(0); border-color: rgba(239, 68, 68, 0.5); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
+          }
+          @keyframes blurIn {
+            from { backdrop-filter: blur(0px); }
+            to { backdrop-filter: blur(8px); }
+          }
         `
       }} />
 
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/45 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/45"
+        style={{
+          animation: 'blurIn 400ms ease-out forwards',
+        }}
         onClick={(e) => e.stopPropagation()}
       />
 
@@ -243,6 +264,7 @@ export default function BetaSignupLightbox({
                       style={{
                         minHeight: '48px',
                         WebkitTapHighlightColor: 'transparent',
+                        animation: shouldShake ? 'shakeRed 0.5s ease-in-out' : 'none',
                       }}
                       autoComplete="off"
                     />
@@ -256,7 +278,7 @@ export default function BetaSignupLightbox({
                   {/* Submit Button */}
                   <button
                     type="submit"
-                    disabled={isSubmitting || !!validationError || !stakeAddress.trim()}
+                    disabled={isSubmitting}
                     className="w-full py-3 sm:py-4 text-base sm:text-lg font-semibold tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl hover:from-yellow-300 hover:to-yellow-400 disabled:from-gray-600 disabled:to-gray-700 disabled:text-white/50 disabled:cursor-not-allowed transition-all duration-300 touch-manipulation shadow-lg shadow-yellow-500/20 active:scale-[0.98]"
                     style={{
                       minHeight: '48px',
