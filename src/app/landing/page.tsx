@@ -1232,7 +1232,6 @@ export default function LandingPage() {
         position: 'relative',
         touchAction: 'pan-y',
         WebkitOverflowScrolling: 'touch',
-        maxWidth: '100vw',
       }}
     >
       {/* Dark overlay when lightbox is visible */}
