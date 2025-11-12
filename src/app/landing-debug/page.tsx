@@ -97,7 +97,10 @@ const DEFAULT_CONFIG = {
   lightboxBackdropDarkness: 95,
   audioToggleSize: 96,
   // Join Beta Button controls
+  joinBetaFont: 'Orbitron',
   joinBetaFontSize: 32,
+  joinBetaColor: 'text-white',
+  joinBetaHorizontalOffset: 0,
   joinBetaVerticalOffset: 0,
   // Active tab
   activeTab: 'layer1' as string,
@@ -109,7 +112,7 @@ export default function LandingDebugPage() {
   const [config, setConfig] = useState<ConfigType>(DEFAULT_CONFIG);
   const [viewMode, setViewMode] = useState<'controls-only' | 'split-view'>('controls-only');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
-  const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel'>('description');
+  const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel' | 'joinBeta'>('description');
   const [migrationStatus, setMigrationStatus] = useState<'pending' | 'migrating' | 'complete' | 'none'>('pending');
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -1385,13 +1388,14 @@ export default function LandingDebugPage() {
               </label>
               <select
                 value={selectedTypographyElement}
-                onChange={(e) => setSelectedTypographyElement(e.target.value as 'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel')}
+                onChange={(e) => setSelectedTypographyElement(e.target.value as 'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel' | 'joinBeta')}
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-gray-500"
               >
                 <option value="description">Description Text</option>
                 <option value="phaseHeader">Phase Header</option>
                 <option value="phaseDescription">Phase Description</option>
                 <option value="soundLabel">Sound Label</option>
+                <option value="joinBeta">Join Beta</option>
               </select>
             </div>
 
@@ -1405,12 +1409,14 @@ export default function LandingDebugPage() {
                   selectedTypographyElement === 'description' ? config.selectedFont :
                   selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderFont :
                   selectedTypographyElement === 'phaseDescription' ? config.phaseDescriptionFont :
+                  selectedTypographyElement === 'joinBeta' ? config.joinBetaFont :
                   config.soundLabelFont
                 }
                 onChange={(e) => updateConfig(
                   selectedTypographyElement === 'description' ? 'selectedFont' :
                   selectedTypographyElement === 'phaseHeader' ? 'phaseHeaderFont' :
                   selectedTypographyElement === 'phaseDescription' ? 'phaseDescriptionFont' :
+                  selectedTypographyElement === 'joinBeta' ? 'joinBetaFont' :
                   'soundLabelFont',
                   e.target.value
                 )}
@@ -1419,6 +1425,7 @@ export default function LandingDebugPage() {
                   fontFamily: selectedTypographyElement === 'description' ? config.selectedFont :
                              selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderFont :
                              selectedTypographyElement === 'phaseDescription' ? config.phaseDescriptionFont :
+                             selectedTypographyElement === 'joinBeta' ? config.joinBetaFont :
                              config.soundLabelFont
                 }}
               >
@@ -1463,12 +1470,14 @@ export default function LandingDebugPage() {
                   selectedTypographyElement === 'description' ? config.descriptionFontSize :
                   selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderFontSize :
                   selectedTypographyElement === 'phaseDescription' ? config.phaseDescriptionFontSize :
+                  selectedTypographyElement === 'joinBeta' ? config.joinBetaFontSize :
                   config.soundLabelSize
                 }
                 onChange={(e) => updateConfig(
                   selectedTypographyElement === 'description' ? 'descriptionFontSize' :
                   selectedTypographyElement === 'phaseHeader' ? 'phaseHeaderFontSize' :
                   selectedTypographyElement === 'phaseDescription' ? 'phaseDescriptionFontSize' :
+                  selectedTypographyElement === 'joinBeta' ? 'joinBetaFontSize' :
                   'soundLabelSize',
                   parseInt(e.target.value)
                 )}
@@ -1478,6 +1487,7 @@ export default function LandingDebugPage() {
                 {selectedTypographyElement === 'description' ? config.descriptionFontSize :
                  selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderFontSize :
                  selectedTypographyElement === 'phaseDescription' ? config.phaseDescriptionFontSize :
+                 selectedTypographyElement === 'joinBeta' ? config.joinBetaFontSize :
                  config.soundLabelSize}px
               </div>
             </div>
@@ -1491,11 +1501,13 @@ export default function LandingDebugPage() {
                 value={
                   selectedTypographyElement === 'description' ? config.descriptionColor :
                   selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderColor :
+                  selectedTypographyElement === 'joinBeta' ? config.joinBetaColor :
                   config.soundLabelColor
                 }
                 onChange={(e) => updateConfig(
                   selectedTypographyElement === 'description' ? 'descriptionColor' :
                   selectedTypographyElement === 'phaseHeader' ? 'phaseHeaderColor' :
+                  selectedTypographyElement === 'joinBeta' ? 'joinBetaColor' :
                   'soundLabelColor',
                   e.target.value
                 )}
@@ -1586,6 +1598,47 @@ export default function LandingDebugPage() {
                   />
                   <div className="text-xs text-gray-400 text-center mt-0.5">
                     {config.soundLabelHorizontalOffset}px
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Vertical and Horizontal Offset (Join Beta Only) */}
+            {selectedTypographyElement === 'joinBeta' && (
+              <>
+                <div className="mb-2">
+                  <label className="block text-xs text-gray-300 mb-1">
+                    Vertical Offset
+                  </label>
+                  <input
+                    type="range"
+                    min="-200"
+                    max="200"
+                    step="5"
+                    value={config.joinBetaVerticalOffset}
+                    onChange={(e) => updateConfig('joinBetaVerticalOffset', parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-gray-400 text-center mt-0.5">
+                    {config.joinBetaVerticalOffset}px
+                  </div>
+                </div>
+
+                <div className="mb-2">
+                  <label className="block text-xs text-gray-300 mb-1">
+                    Horizontal Offset
+                  </label>
+                  <input
+                    type="range"
+                    min="-200"
+                    max="200"
+                    step="5"
+                    value={config.joinBetaHorizontalOffset}
+                    onChange={(e) => updateConfig('joinBetaHorizontalOffset', parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-gray-400 text-center mt-0.5">
+                    {config.joinBetaHorizontalOffset}px
                   </div>
                 </div>
               </>
