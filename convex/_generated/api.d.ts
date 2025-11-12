@@ -125,6 +125,7 @@ import type * as investigateFalseClaim from "../investigateFalseClaim.js";
 import type * as investments from "../investments.js";
 import type * as landingDebugSettings from "../landingDebugSettings.js";
 import type * as landingDebugSettingsMobile from "../landingDebugSettingsMobile.js";
+import type * as landingDebugUnified from "../landingDebugUnified.js";
 import type * as leaderboard from "../leaderboard.js";
 import type * as leaderboardDiagnostics from "../leaderboardDiagnostics.js";
 import type * as leaderboardOptimized from "../leaderboardOptimized.js";
@@ -361,6 +362,7 @@ declare const fullApi: ApiFromModules<{
   investments: typeof investments;
   landingDebugSettings: typeof landingDebugSettings;
   landingDebugSettingsMobile: typeof landingDebugSettingsMobile;
+  landingDebugUnified: typeof landingDebugUnified;
   leaderboard: typeof leaderboard;
   leaderboardDiagnostics: typeof leaderboardDiagnostics;
   leaderboardOptimized: typeof leaderboardOptimized;

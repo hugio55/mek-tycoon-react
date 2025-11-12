@@ -132,8 +132,24 @@ export default function LandingPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Load settings from Convex database (with localStorage as fallback)
-  const dbSettings = useQuery(api.landingDebugSettings.getLandingDebugSettings);
+  // Viewport detection for responsive settings
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkViewport = () => setIsMobile(window.innerWidth < 1024);
+    checkViewport();
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
+  }, []);
+
+  // Load settings from UNIFIED Convex table (with old table fallback)
+  const unifiedSettings = useQuery(api.landingDebugUnified.getUnifiedLandingDebugSettings);
+  const oldDbSettings = useQuery(api.landingDebugSettings.getLandingDebugSettings);
+
+  // Choose desktop or mobile config based on viewport
+  const dbSettings = unifiedSettings
+    ? { ...unifiedSettings.shared, ...(isMobile ? unifiedSettings.mobile : unifiedSettings.desktop) }
+    : oldDbSettings; // Fallback to old system if unified doesn't exist yet
 
   // Control states - Layer 1
   const [starScale, setStarScale] = useState(DEFAULT_CONFIG.starScale);
