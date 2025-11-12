@@ -165,8 +165,12 @@ export default function BetaSignupLightbox({
             20%, 40%, 60%, 80% { transform: translateX(4px); }
           }
           @keyframes blurIn {
-            from { backdrop-filter: blur(0px); }
-            to { backdrop-filter: blur(8px); }
+            0% { backdrop-filter: blur(0px); }
+            20% { backdrop-filter: blur(1px); }
+            40% { backdrop-filter: blur(2px); }
+            60% { backdrop-filter: blur(4px); }
+            80% { backdrop-filter: blur(6px); }
+            100% { backdrop-filter: blur(8px); }
           }
         `
       }} />
@@ -175,7 +179,8 @@ export default function BetaSignupLightbox({
       <div
         className="absolute inset-0 bg-black/45"
         style={{
-          animation: 'blurIn 400ms ease-out forwards',
+          animation: 'blurIn 600ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
+          willChange: 'backdrop-filter',
         }}
         onClick={(e) => e.stopPropagation()}
       />
