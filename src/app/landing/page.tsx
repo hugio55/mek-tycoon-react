@@ -309,6 +309,7 @@ export default function LandingPage() {
 
   // Check for audio consent on mount
   useEffect(() => {
+    window.scrollTo(0, 0);
     console.log('[🎬ANIMATION] === Component Mounted ===');
     console.log('[🎬ANIMATION] Initial showAudioConsent:', showAudioConsent);
     console.log('[🎬ANIMATION] Initial animationStage:', animationStage);

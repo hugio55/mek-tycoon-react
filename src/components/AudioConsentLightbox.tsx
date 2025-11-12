@@ -44,6 +44,8 @@ export default function AudioConsentLightbox({
   const labelTextSize = Math.max(24 * textScale, 16); // Min 16px, scales from 24px
   const buttonTextSize = Math.max(16 * textScale, 14); // Min 14px, scales from 16px
 
+  const [savedScrollY, setSavedScrollY] = useState(0);
+
   useEffect(() => {
     setMounted(true);
 
@@ -54,24 +56,30 @@ export default function AudioConsentLightbox({
 
   useEffect(() => {
     if (isVisible && mounted) {
+      const scrollY = window.scrollY;
+      setSavedScrollY(scrollY);
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
       document.body.style.width = '100%';
       document.body.style.touchAction = 'none';
     } else {
       document.body.style.overflow = '';
       document.body.style.position = '';
+      document.body.style.top = '';
       document.body.style.width = '';
       document.body.style.touchAction = '';
+      window.scrollTo(0, savedScrollY);
     }
 
     return () => {
       document.body.style.overflow = '';
       document.body.style.position = '';
+      document.body.style.top = '';
       document.body.style.width = '';
       document.body.style.touchAction = '';
     };
-  }, [isVisible, mounted]);
+  }, [isVisible, mounted, savedScrollY]);
 
   const handleToggle = () => {
     const newState = !audioEnabled;
