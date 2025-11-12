@@ -108,6 +108,10 @@ const DEFAULT_CONFIG = {
   joinBetaColor: 'text-white',
   joinBetaHorizontalOffset: 0,
   joinBetaVerticalOffset: 0,
+  // Audio Lightbox Description controls
+  audioLightboxDescriptionFont: 'Arial',
+  audioLightboxDescriptionFontSize: 18,
+  audioLightboxDescriptionColor: 'text-white/70',
   // Active tab
   activeTab: 'layer1' as string,
 };
@@ -118,7 +122,7 @@ export default function LandingDebugPage() {
   const [config, setConfig] = useState<ConfigType>(DEFAULT_CONFIG);
   const [viewMode, setViewMode] = useState<'controls-only' | 'split-view'>('controls-only');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
-  const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel' | 'joinBeta'>('description');
+  const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel' | 'joinBeta' | 'audioLightboxDescription'>('description');
   const [migrationStatus, setMigrationStatus] = useState<'pending' | 'migrating' | 'complete' | 'none'>('pending');
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -1359,7 +1363,7 @@ export default function LandingDebugPage() {
               </label>
               <select
                 value={selectedTypographyElement}
-                onChange={(e) => setSelectedTypographyElement(e.target.value as 'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel' | 'joinBeta')}
+                onChange={(e) => setSelectedTypographyElement(e.target.value as 'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel' | 'joinBeta' | 'audioLightboxDescription')}
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-gray-500"
               >
                 <option value="description">Description Text</option>
@@ -1367,6 +1371,7 @@ export default function LandingDebugPage() {
                 <option value="phaseDescription">Phase Description</option>
                 <option value="soundLabel">Sound Label</option>
                 <option value="joinBeta">Join Beta</option>
+                <option value="audioLightboxDescription">Audio Lightbox Description</option>
               </select>
             </div>
 
@@ -1381,12 +1386,14 @@ export default function LandingDebugPage() {
                   selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderFont :
                   selectedTypographyElement === 'phaseDescription' ? config.phaseDescriptionFont :
                   selectedTypographyElement === 'joinBeta' ? config.joinBetaFont :
+                  selectedTypographyElement === 'audioLightboxDescription' ? config.audioLightboxDescriptionFont :
                   config.soundLabelFont
                 }
                 onChange={(e) => updateConfig(
                   selectedTypographyElement === 'description' ? 'selectedFont' :
                   selectedTypographyElement === 'phaseHeader' ? 'phaseHeaderFont' :
                   selectedTypographyElement === 'phaseDescription' ? 'phaseDescriptionFont' :
+                  selectedTypographyElement === 'audioLightboxDescription' ? 'audioLightboxDescriptionFont' :
                   selectedTypographyElement === 'joinBeta' ? 'joinBetaFont' :
                   'soundLabelFont',
                   e.target.value
@@ -1442,6 +1449,7 @@ export default function LandingDebugPage() {
                   selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderFontSize :
                   selectedTypographyElement === 'phaseDescription' ? config.phaseDescriptionFontSize :
                   selectedTypographyElement === 'joinBeta' ? config.joinBetaFontSize :
+                  selectedTypographyElement === 'audioLightboxDescription' ? config.audioLightboxDescriptionFontSize :
                   config.soundLabelSize
                 }
                 onChange={(e) => updateConfig(
@@ -1449,6 +1457,7 @@ export default function LandingDebugPage() {
                   selectedTypographyElement === 'phaseHeader' ? 'phaseHeaderFontSize' :
                   selectedTypographyElement === 'phaseDescription' ? 'phaseDescriptionFontSize' :
                   selectedTypographyElement === 'joinBeta' ? 'joinBetaFontSize' :
+                  selectedTypographyElement === 'audioLightboxDescription' ? 'audioLightboxDescriptionFontSize' :
                   'soundLabelSize',
                   parseInt(e.target.value)
                 )}
@@ -1459,6 +1468,7 @@ export default function LandingDebugPage() {
                  selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderFontSize :
                  selectedTypographyElement === 'phaseDescription' ? config.phaseDescriptionFontSize :
                  selectedTypographyElement === 'joinBeta' ? config.joinBetaFontSize :
+                 selectedTypographyElement === 'audioLightboxDescription' ? config.audioLightboxDescriptionFontSize :
                  config.soundLabelSize}px
               </div>
             </div>
@@ -1473,12 +1483,14 @@ export default function LandingDebugPage() {
                   selectedTypographyElement === 'description' ? config.descriptionColor :
                   selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderColor :
                   selectedTypographyElement === 'joinBeta' ? config.joinBetaColor :
+                  selectedTypographyElement === 'audioLightboxDescription' ? config.audioLightboxDescriptionColor :
                   config.soundLabelColor
                 }
                 onChange={(e) => updateConfig(
                   selectedTypographyElement === 'description' ? 'descriptionColor' :
                   selectedTypographyElement === 'phaseHeader' ? 'phaseHeaderColor' :
                   selectedTypographyElement === 'joinBeta' ? 'joinBetaColor' :
+                  selectedTypographyElement === 'audioLightboxDescription' ? 'audioLightboxDescriptionColor' :
                   'soundLabelColor',
                   e.target.value
                 )}
