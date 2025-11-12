@@ -140,6 +140,12 @@ export default function LandingDebugPage() {
   // NEW: Desktop/Mobile mode toggle
   const [activeMode, setActiveMode] = useState<'desktop' | 'mobile'>('desktop');
 
+  // Convex hooks - UNIFIED table (must be declared before useEffect that uses them)
+  const unifiedSettings = useQuery(api.landingDebugUnified.getUnifiedLandingDebugSettings);
+  const updateUnifiedSettings = useMutation(api.landingDebugUnified.updateUnifiedLandingDebugSettings);
+  const resetUnifiedSettings = useMutation(api.landingDebugUnified.resetUnifiedLandingDebugSettings);
+  const migrateFromOld = useMutation(api.landingDebugUnified.migrateFromOldTables);
+
   // Load correct config when switching between desktop/mobile modes
   useEffect(() => {
     if (unifiedSettings && migrationStatus === 'complete') {
@@ -153,12 +159,6 @@ export default function LandingDebugPage() {
       setConfig(mergedConfig);
     }
   }, [activeMode, unifiedSettings]);
-
-  // Convex hooks - UNIFIED table
-  const unifiedSettings = useQuery(api.landingDebugUnified.getUnifiedLandingDebugSettings);
-  const updateUnifiedSettings = useMutation(api.landingDebugUnified.updateUnifiedLandingDebugSettings);
-  const resetUnifiedSettings = useMutation(api.landingDebugUnified.resetUnifiedLandingDebugSettings);
-  const migrateFromOld = useMutation(api.landingDebugUnified.migrateFromOldTables);
 
   // OLD: Keep old hooks for fallback during migration
   const oldDbSettings = useQuery(api.landingDebugSettings.getLandingDebugSettings);
@@ -785,7 +785,7 @@ export default function LandingDebugPage() {
                   : 'bg-gray-700 text-gray-300 border-2 border-gray-600 hover:bg-gray-600'
               }`}
             >
-              📱 Mobile (<1024px)
+              📱 Mobile (&lt;1024px)
             </button>
           </div>
           <p className="text-center text-xs text-gray-400 mt-3">
