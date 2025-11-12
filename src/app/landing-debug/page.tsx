@@ -145,11 +145,13 @@ export default function LandingDebugPage() {
   const [selectedPhaseForEdit, setSelectedPhaseForEdit] = useState<Id<"phaseCards"> | null>(null);
   const [phaseEditForm, setPhaseEditForm] = useState<{
     header: string;
+    subtitle: string;
     title: string;
     description: string;
     imageUrl: string;
   }>({
     header: '',
+    subtitle: '',
     title: '',
     description: '',
     imageUrl: '',

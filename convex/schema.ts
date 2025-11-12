@@ -3601,8 +3601,9 @@ export default defineSchema({
   // ===== LANDING PAGE PHASE CARDS =====
   // Phase cards displayed on landing page carousel
   phaseCards: defineTable({
-    header: v.optional(v.string()), // Italic header text above title (e.g., "The Beginning")
-    title: v.string(), // Phase title (e.g., "Phase I", "Phase II", "Foundation")
+    header: v.optional(v.string()), // Phase label in center when idle (e.g., "Phase I", "Phase II")
+    subtitle: v.optional(v.string()), // Italic header text above title (e.g., "The Beginning")
+    title: v.string(), // Phase title (e.g., "Foundation", "Initialization")
     description: v.optional(v.string()), // Phase description text
     imageUrl: v.optional(v.string()), // Image URL for the phase card background
     locked: v.boolean(), // Whether the phase is locked/coming soon
