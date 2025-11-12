@@ -455,12 +455,19 @@ export default function BuffCategoriesV2Admin() {
         </div>
       </div>
 
-      {/* Edit Modal */}
+      {/* Edit Modals */}
       {showEditModal && (
         <EditTenureModal
           currentValue={tenureBaseRate}
           onClose={() => setShowEditModal(false)}
           onSave={handleSaveTenureRate}
+        />
+      )}
+      {showEditGoldModal && (
+        <EditGoldModal
+          currentValue={goldBaseRate}
+          onClose={() => setShowEditGoldModal(false)}
+          onSave={handleSaveGoldRate}
         />
       )}
     </div>

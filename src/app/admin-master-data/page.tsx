@@ -17,7 +17,7 @@ import MekDetailViewer from '@/components/MekDetailViewer';
 import GoldBackupAdmin from '@/components/GoldBackupAdmin';
 import WalletManagementAdmin from '@/components/WalletManagementAdmin';
 import NftPurchasePlanner from '@/components/NftPurchasePlanner';
-import VariationSearchTable from '@/components/VariationSearchTable';
+import VariationsHub from '@/components/VariationsHub';
 import CommemorativeToken1Admin from '@/components/CommemorativeToken1Admin';
 import SourceKeyMigrationAdmin from '@/components/SourceKeyMigrationAdmin';
 import WhitelistManagerAdmin from '@/components/WhitelistManagerAdmin';
@@ -2216,9 +2216,9 @@ export default function AdminMasterDataPage() {
                   {expandedSections.has('variations-search') && (
                     <div className="p-4 border-t border-cyan-500/20">
                       <p className="text-sm text-gray-400 mb-4">
-                        Search and filter all 291 variations by name, style, or group. Click on any style or group to filter results.
+                        Search and filter all 291 variations by name, style, or group. Track image progress for heads, bodies, and traits.
                       </p>
-                      <VariationSearchTable />
+                      <VariationsHub />
                     </div>
                   )}
                 </div>

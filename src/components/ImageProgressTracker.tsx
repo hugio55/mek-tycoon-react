@@ -2,8 +2,6 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
-import fs from 'fs';
-import path from 'path';
 
 interface VariationStatus {
   id: number;
