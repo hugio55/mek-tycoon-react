@@ -1229,13 +1229,14 @@ export default function LandingPage() {
               transform: animationStage === 'logo' ? 'translate3d(0, 0, 0) scale3d(1, 1, 1)' : 'translate3d(0, 0, 0) scale3d(0.92, 0.92, 1)',
               transition: animationStage === 'logo' ? `opacity ${logoFadeDuration}ms cubic-bezier(0, 0, 0.2, 1), transform ${logoFadeDuration}ms cubic-bezier(0, 0, 0.2, 1)` : 'none',
               visibility: animationStage === 'initial' || animationStage === 'stars' ? 'hidden' : 'visible',
-              willChange: animationStage === 'stars' ? 'transform, opacity' : 'auto',
+              willChange: animationStage === 'logo' ? 'transform, opacity' : 'auto',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
               perspective: 1000,
               WebkitPerspective: 1000,
               transformStyle: 'preserve-3d',
               WebkitTransformStyle: 'preserve-3d',
+              contain: 'layout style paint',
             }}
             onTransitionStart={() => {
               if (animationStage === 'logo') {
@@ -1259,12 +1260,14 @@ export default function LandingPage() {
               style={{
                 opacity: 'inherit',
                 objectFit: 'contain',
-                transform: 'translate3d(0, 0, 0)',
+                transform: 'translateZ(0) scale3d(1, 1, 1)',
                 backfaceVisibility: 'hidden',
                 WebkitBackfaceVisibility: 'hidden',
-                WebkitTransform: 'translate3d(0, 0, 0)',
-                imageRendering: 'crisp-edges',
+                WebkitTransform: 'translateZ(0) scale3d(1, 1, 1)',
+                imageRendering: 'auto',
                 pointerEvents: 'none',
+                willChange: animationStage === 'logo' ? 'transform' : 'auto',
+                isolation: 'isolate',
               }}
             />
           </div>
