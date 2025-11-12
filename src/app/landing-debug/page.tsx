@@ -448,6 +448,7 @@ export default function LandingDebugPage() {
   }, [dbSettings, updateSettings, migrationStatus]); // Removed 'config' to prevent race condition
 
   // Load settings from Convex when they change (updates from other tabs/sessions)
+  // CRITICAL: Only runs on migrationStatus change, NOT on dbSettings change (prevents race condition)
   useEffect(() => {
     console.log('[🔄SYNC] DB sync effect triggered', {
       dbSettingsLoaded: !!dbSettings,
@@ -474,7 +475,7 @@ export default function LandingDebugPage() {
       // Update config (removed JSON comparison to prevent stale closure issues)
       setConfig(mergedConfig);
     }
-  }, [dbSettings, migrationStatus]); // Removed 'config' from deps to prevent race condition
+  }, [migrationStatus]); // REMOVED dbSettings to prevent effect from running on every DB update
 
   // Auto-save to Convex with debouncing (500ms delay)
   useEffect(() => {
@@ -535,10 +536,11 @@ export default function LandingDebugPage() {
         setTimeout(() => setSaveState('idle'), 1500);
 
         // Clear editing flag after save completes (allow mode-switch reloads again)
+        // EXTENDED: Wait 5 seconds to ensure DB query updates have fully propagated
         setTimeout(() => {
           isUserEditingRef.current = false;
-          console.log('[💾SAVE] User editing flag reset to FALSE (save complete)');
-        }, 2000); // Wait 2s after save to ensure state is stable
+          console.log('[💾SAVE] User editing flag reset to FALSE (save complete + DB propagated)');
+        }, 5000); // Wait 5s to cover: save (500ms) + DB processing (100ms) + query update (500ms) + buffer (3900ms)
 
         // Also dispatch events for real-time preview updates
         window.dispatchEvent(new Event('mek-landing-config-updated'));
@@ -549,9 +551,11 @@ export default function LandingDebugPage() {
       } catch (err) {
         console.error('[SAVE] Failed to save settings:', err);
         setSaveState('idle');
-        // Reset editing flag on error too
-        isUserEditingRef.current = false;
-        console.log('[💾SAVE] User editing flag reset to FALSE (save error)');
+        // Reset editing flag on error too (use timeout for consistency)
+        setTimeout(() => {
+          isUserEditingRef.current = false;
+          console.log('[💾SAVE] User editing flag reset to FALSE (save error)');
+        }, 1000); // Short delay even on error
       }
     }, 500); // 500ms debounce
 
@@ -648,7 +652,8 @@ export default function LandingDebugPage() {
       timestamp: performance.now(),
       flagBefore: isUserEditingRef.current
     });
-    isUserEditingRef.current = false;
+    // DON'T reset flag here - let auto-save timeout handle it after DB propagation completes
+    // This prevents race condition where DB query updates arrive after flag reset
   };
 
   const setActiveTab = (tabId: string) => {
