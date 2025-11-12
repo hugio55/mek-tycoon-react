@@ -352,3 +352,29 @@ export const forceUpdateDesktop = mutation({
     }
   },
 });
+
+// Copy desktop settings to mobile (so mobile starts identical to desktop)
+export const copyDesktopToMobile = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const existing = await ctx.db
+      .query("landingDebugUnified")
+      .first();
+
+    if (!existing) {
+      return { success: false, message: "No settings found to copy. Create desktop settings first." };
+    }
+
+    // Copy desktop config to mobile
+    await ctx.db.patch(existing._id, {
+      mobile: existing.desktop,
+      updatedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      message: "Desktop settings copied to mobile successfully. Mobile now starts identical to desktop.",
+      copiedSettings: Object.keys(existing.desktop).length
+    };
+  },
+});
