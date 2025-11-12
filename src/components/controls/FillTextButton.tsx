@@ -89,7 +89,7 @@ const FillTextButton = ({ text = 'uiverse' }: FillTextButtonProps) => {
 
       {/* Hover overlay (sweeps from left to right with bright blue text) */}
       <span
-        className="absolute top-0 left-0 whitespace-nowrap overflow-hidden"
+        className="absolute top-0 left-0 whitespace-nowrap overflow-visible"
         style={{
           color: '#3DD1FF',
           width: isHovered ? '100%' : '0%',
