@@ -133,7 +133,7 @@ const FillTextButton = ({
         className="absolute top-0 left-0 whitespace-nowrap overflow-hidden"
         style={{
           color: 'transparent',
-          width: isHovered ? '100%' : '0%',
+          width: isHovered ? 'calc(100% - 3px)' : '0%',
           transition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
           animation: isHovered ? 'soft-pulse 3s ease-in-out infinite' : 'none',
           pointerEvents: 'none',
