@@ -297,6 +297,9 @@ export default function LandingPage() {
   const [audioToggleScale, setAudioToggleScale] = useState(DEFAULT_CONFIG.audioToggleScale);
   const [toggleTextGap, setToggleTextGap] = useState(DEFAULT_CONFIG.toggleTextGap);
   const [proceedButtonSize, setProceedButtonSize] = useState(DEFAULT_CONFIG.proceedButtonSize || 1.0);
+  const [descriptionVerticalPosition, setDescriptionVerticalPosition] = useState(0);
+  const [toggleGroupVerticalPosition, setToggleGroupVerticalPosition] = useState(0);
+  const [proceedButtonVerticalPosition, setProceedButtonVerticalPosition] = useState(0);
 
   // Join Beta Button controls
   const [joinBetaFont, setJoinBetaFont] = useState(DEFAULT_CONFIG.joinBetaFont);
@@ -537,6 +540,9 @@ export default function LandingPage() {
           setJoinBetaColor(config.joinBetaColor ?? DEFAULT_CONFIG.joinBetaColor);
           setJoinBetaHorizontalOffset(config.joinBetaHorizontalOffset ?? DEFAULT_CONFIG.joinBetaHorizontalOffset);
           setJoinBetaVerticalOffset(config.joinBetaVerticalOffset ?? DEFAULT_CONFIG.joinBetaVerticalOffset);
+          setDescriptionVerticalPosition(config.descriptionVerticalPosition ?? 0);
+          setToggleGroupVerticalPosition(config.toggleGroupVerticalPosition ?? 0);
+          setProceedButtonVerticalPosition(config.proceedButtonVerticalPosition ?? 0);
           // Note: phaseImage1-4 not loaded here - PhaseCarousel reads directly from localStorage
       } catch (e) {
         console.error('Failed to load debug config:', e);
@@ -644,6 +650,9 @@ export default function LandingPage() {
           setJoinBetaColor(config.joinBetaColor ?? DEFAULT_CONFIG.joinBetaColor);
           setJoinBetaHorizontalOffset(config.joinBetaHorizontalOffset ?? DEFAULT_CONFIG.joinBetaHorizontalOffset);
           setJoinBetaVerticalOffset(config.joinBetaVerticalOffset ?? DEFAULT_CONFIG.joinBetaVerticalOffset);
+          setDescriptionVerticalPosition(config.descriptionVerticalPosition ?? 0);
+          setToggleGroupVerticalPosition(config.toggleGroupVerticalPosition ?? 0);
+          setProceedButtonVerticalPosition(config.proceedButtonVerticalPosition ?? 0);
         } catch (e) {
           console.error('Failed to load debug config from localStorage:', e);
         }
@@ -1391,6 +1400,9 @@ export default function LandingPage() {
         soundLabelVerticalOffset={soundLabelVerticalOffset}
         soundLabelHorizontalOffset={soundLabelHorizontalOffset}
         proceedButtonSize={proceedButtonSize}
+        descriptionVerticalPosition={descriptionVerticalPosition}
+        toggleGroupVerticalPosition={toggleGroupVerticalPosition}
+        proceedButtonVerticalPosition={proceedButtonVerticalPosition}
       />
 
       {/* Beta Signup Lightbox */}
