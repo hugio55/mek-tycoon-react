@@ -252,7 +252,9 @@ export default function BetaSignupLightbox({
                   <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed">
                     In order to join Phase II beta, all you need to do is keep your eyes on our{' '}
                     <a
-                      href="#"
+                      href="https://discord.gg/KnqMF6Ayyc"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-yellow-400 hover:text-yellow-300 transition-colors underline"
                     >
                       Discord
