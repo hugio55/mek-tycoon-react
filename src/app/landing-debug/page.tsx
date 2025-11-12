@@ -103,6 +103,8 @@ const DEFAULT_CONFIG = {
   joinBetaColor: 'text-white',
   joinBetaHorizontalOffset: 0,
   joinBetaVerticalOffset: 0,
+  // Scroll Indicator controls
+  scrollArrowType: 'chevron' as 'chevron' | 'arrow' | 'double-chevron' | 'circle-arrow' | 'bracket' | 'line' | 'dots',
   // Active tab
   activeTab: 'layer1' as string,
 };
