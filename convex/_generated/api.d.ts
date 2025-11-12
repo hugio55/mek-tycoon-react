@@ -33,6 +33,7 @@ import type * as attributeRarity from "../attributeRarity.js";
 import type * as attributeRarityManual from "../attributeRarityManual.js";
 import type * as auditLogs from "../auditLogs.js";
 import type * as bank from "../bank.js";
+import type * as betaSignups from "../betaSignups.js";
 import type * as blockchainVerification from "../blockchainVerification.js";
 import type * as blockfrostConfig from "../blockfrostConfig.js";
 import type * as blockfrostNftFetcher from "../blockfrostNftFetcher.js";
@@ -267,6 +268,7 @@ declare const fullApi: ApiFromModules<{
   attributeRarityManual: typeof attributeRarityManual;
   auditLogs: typeof auditLogs;
   bank: typeof bank;
+  betaSignups: typeof betaSignups;
   blockchainVerification: typeof blockchainVerification;
   blockfrostConfig: typeof blockfrostConfig;
   blockfrostNftFetcher: typeof blockfrostNftFetcher;
