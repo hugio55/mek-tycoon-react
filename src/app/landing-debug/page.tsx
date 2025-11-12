@@ -258,6 +258,18 @@ export default function LandingDebugPage() {
       sampleKeys: Object.keys(dbSettings).slice(0, 10)
     });
 
+    // Log raw database data with timestamps for diagnostics
+    if (rawDbData) {
+      console.log('[🔍DB-RAW] Raw database record:', {
+        _id: rawDbData._id,
+        _creationTime: new Date(rawDbData._creationTime).toISOString(),
+        createdAt: new Date(rawDbData.createdAt).toISOString(),
+        updatedAt: new Date(rawDbData.updatedAt).toISOString(),
+        sampleValues: rawDbData.sampleValues,
+        timeSinceUpdate: Math.round((Date.now() - rawDbData.updatedAt) / 1000) + ' seconds ago'
+      });
+    }
+
     const alreadyMigrated = localStorage.getItem(MIGRATION_FLAG) === 'true';
     const localStorageData = localStorage.getItem(STORAGE_KEY);
 

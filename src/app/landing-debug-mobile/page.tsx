@@ -126,10 +126,10 @@ export default function LandingDebugPage() {
   const [migrationStatus, setMigrationStatus] = useState<'pending' | 'migrating' | 'complete' | 'none'>('pending');
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Convex hooks
-  const dbSettings = useQuery(api.landingDebugSettings.getLandingDebugSettings);
-  const updateSettings = useMutation(api.landingDebugSettings.updateLandingDebugSettings);
-  const resetSettings = useMutation(api.landingDebugSettings.resetLandingDebugSettings);
+  // Convex hooks - MOBILE uses separate database table to prevent conflicts with desktop
+  const dbSettings = useQuery(api.landingDebugSettingsMobile.getLandingDebugSettingsMobile);
+  const updateSettings = useMutation(api.landingDebugSettingsMobile.updateLandingDebugSettingsMobile);
+  const resetSettings = useMutation(api.landingDebugSettingsMobile.resetLandingDebugSettingsMobile);
 
   // Phase card management
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);

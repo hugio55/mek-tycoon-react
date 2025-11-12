@@ -3644,6 +3644,13 @@ export default defineSchema({
     updatedAt: v.number(),
   }),
 
+  // MOBILE landing page debug settings (separate from desktop to prevent conflicts)
+  landingDebugSettingsMobile: defineTable({
+    config: v.any(), // Full config object with all ~70 visual settings
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }),
+
   // ===== BETA SIGNUPS =====
   // Beta signup stake addresses for rewarding early participants
   betaSignups: defineTable({
