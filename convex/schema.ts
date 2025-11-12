@@ -3524,6 +3524,17 @@ export default defineSchema({
   })
     .index("by_key", ["key"]),
 
+  // ===== ESSENCE SYSTEM =====
+  // Configuration for essence system (base rates, multipliers, etc.)
+  essenceConfig: defineTable({
+    key: v.string(), // Unique config key (e.g., "baseEssencePerHour")
+    value: v.union(v.number(), v.string(), v.boolean()), // Config value
+    description: v.optional(v.string()), // What this config controls
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_key", ["key"]),
+
   // Tracks levels/thresholds for tenure progression
   tenureLevels: defineTable({
     level: v.number(), // Tenure level (1, 2, 3, etc.)

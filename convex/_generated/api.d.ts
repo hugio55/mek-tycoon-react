@@ -83,6 +83,7 @@ import type * as discordTodos from "../discordTodos.js";
 import type * as duplicateWalletDetection from "../duplicateWalletDetection.js";
 import type * as durationConfigs from "../durationConfigs.js";
 import type * as essence from "../essence.js";
+import type * as essenceConfig from "../essenceConfig.js";
 import type * as essenceMigration from "../essenceMigration.js";
 import type * as eventNodeRewards from "../eventNodeRewards.js";
 import type * as federations from "../federations.js";
@@ -316,6 +317,7 @@ declare const fullApi: ApiFromModules<{
   duplicateWalletDetection: typeof duplicateWalletDetection;
   durationConfigs: typeof durationConfigs;
   essence: typeof essence;
+  essenceConfig: typeof essenceConfig;
   essenceMigration: typeof essenceMigration;
   eventNodeRewards: typeof eventNodeRewards;
   federations: typeof federations;

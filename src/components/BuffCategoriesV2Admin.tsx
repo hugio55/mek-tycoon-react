@@ -199,6 +199,99 @@ function EditGoldModal({ currentValue, onClose, onSave }: EditGoldModalProps) {
   return createPortal(modalContent, document.body);
 }
 
+interface EditEssenceModalProps {
+  currentValue: number;
+  onClose: () => void;
+  onSave: (value: number) => void;
+}
+
+function EditEssenceModal({ currentValue, onClose, onSave }: EditEssenceModalProps) {
+  const [mounted, setMounted] = useState(false);
+  const [inputValue, setInputValue] = useState(currentValue.toString());
+
+  React.useEffect(() => {
+    setMounted(true);
+    // Lock body scroll
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  const handleSave = () => {
+    const parsedValue = parseFloat(inputValue);
+    if (!isNaN(parsedValue) && parsedValue > 0) {
+      onSave(parsedValue);
+    }
+  };
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  if (!mounted) return null;
+
+  const modalContent = (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300"
+      onClick={handleBackdropClick}
+    >
+      <div
+        className="mek-card-industrial mek-border-sharp-gold w-full max-w-md mx-4 p-6 animate-in zoom-in-95 duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header with hazard stripes */}
+        <div className="mek-header-industrial mb-6">
+          <h2 className="mek-text-industrial text-xl text-yellow-400">
+            Configure Essence Base Rate
+          </h2>
+        </div>
+
+        {/* Input Section */}
+        <div className="space-y-4">
+          <div>
+            <label className="mek-label-uppercase text-gray-400 mb-2 block">
+              Base Essence Rate (per hour)
+            </label>
+            <input
+              type="number"
+              step="1"
+              min="1"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="w-full px-4 py-3 bg-black/60 border-2 border-yellow-500/30 text-yellow-400 text-lg font-bold focus:border-yellow-500 focus:outline-none transition-colors"
+              autoFocus
+            />
+          </div>
+          <p className="text-sm text-gray-400 leading-relaxed">
+            Base essence generation rate per hour. Can be modified by global rate buffs, individual generation buffs, flat boosts, and capacity increases.
+          </p>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex gap-3 mt-8">
+          <button
+            onClick={onClose}
+            className="mek-button-secondary flex-1"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            className="mek-button-primary flex-1"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return createPortal(modalContent, document.body);
+}
+
 interface ExpandableRowProps {
   category: BuffCategory;
   level: number;
@@ -276,20 +369,24 @@ function ExpandableRow({ category, level, isExpanded, onToggle, onEdit }: Expand
 }
 
 export default function BuffCategoriesV2Admin() {
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['tenure', 'gold']));
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['tenure', 'gold', 'essence']));
   const [showEditModal, setShowEditModal] = useState(false);
   const [showEditGoldModal, setShowEditGoldModal] = useState(false);
+  const [showEditEssenceModal, setShowEditEssenceModal] = useState(false);
 
   // Query base rates from Convex
   const baseRateData = useQuery(api.tenureConfig.getBaseRate);
   const goldRateData = useQuery(api.goldConfig.getBaseGoldRate);
+  const essenceRateData = useQuery(api.essenceConfig.getBaseEssenceRate);
 
   // Mutations
   const setBaseRateMutation = useMutation(api.tenureConfig.setBaseRate);
   const setGoldRateMutation = useMutation(api.goldConfig.setBaseGoldRate);
+  const setEssenceRateMutation = useMutation(api.essenceConfig.setBaseEssenceRate);
 
   const tenureBaseRate = baseRateData?.baseRate || 1.0;
   const goldBaseRate = goldRateData?.baseGoldPerHour || 100;
+  const essenceBaseRate = essenceRateData?.baseEssencePerHour || 10;
 
   // Hierarchical buff category structure
   const buffCategories: BuffCategory[] = [
@@ -334,6 +431,38 @@ export default function BuffCategoriesV2Admin() {
         {
           id: 'boost-percent',
           name: 'Boost %',
+          type: 'buff',
+          baseValue: null,
+        }
+      ]
+    },
+    {
+      id: 'essence',
+      name: 'Essence',
+      type: 'config',
+      baseValue: `${essenceBaseRate.toFixed(0)}/hr`,
+      children: [
+        {
+          id: 'global-essence-rate',
+          name: 'Global Essence Rate',
+          type: 'buff',
+          baseValue: null,
+        },
+        {
+          id: 'individual-essence-generation',
+          name: 'Individual Essence Generation',
+          type: 'buff',
+          baseValue: null,
+        },
+        {
+          id: 'boost-essence',
+          name: 'Boost',
+          type: 'buff',
+          baseValue: null,
+        },
+        {
+          id: 'max-capacity',
+          name: 'Max Capacity',
           type: 'buff',
           baseValue: null,
         }
@@ -385,6 +514,22 @@ export default function BuffCategoriesV2Admin() {
     }
   };
 
+  const handleSaveEssenceRate = async (newValue: number) => {
+    try {
+      const result = await setEssenceRateMutation({ baseEssencePerHour: newValue });
+      if (result.success) {
+        console.log('[🔧CONFIG] Essence base rate updated:', newValue);
+        setShowEditEssenceModal(false);
+      } else {
+        console.error('[🔧CONFIG] Failed to update essence base rate:', result.message);
+        alert('Failed to save: ' + result.message);
+      }
+    } catch (error) {
+      console.error('[🔧CONFIG] Error saving essence base rate:', error);
+      alert('An error occurred while saving');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Industrial Header */}
@@ -430,6 +575,8 @@ export default function BuffCategoriesV2Admin() {
                       setShowEditModal(true);
                     } else if (category.id === 'gold') {
                       setShowEditGoldModal(true);
+                    } else if (category.id === 'essence') {
+                      setShowEditEssenceModal(true);
                     }
                   }}
                 />
@@ -468,6 +615,13 @@ export default function BuffCategoriesV2Admin() {
           currentValue={goldBaseRate}
           onClose={() => setShowEditGoldModal(false)}
           onSave={handleSaveGoldRate}
+        />
+      )}
+      {showEditEssenceModal && (
+        <EditEssenceModal
+          currentValue={essenceBaseRate}
+          onClose={() => setShowEditEssenceModal(false)}
+          onSave={handleSaveEssenceRate}
         />
       )}
     </div>
