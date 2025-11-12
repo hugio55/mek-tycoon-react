@@ -119,20 +119,31 @@ const FillTextButton = ({
       </span>
 
       {/* Blue text overlay with glow (clipped to reveal progressively) */}
-      <span
-        key={`glow-${animationKey}`}
-        className="absolute top-0 left-0 whitespace-nowrap overflow-hidden"
+      {/* Wrapper div clips the content INCLUDING text-shadow/glow effects */}
+      <div
+        className="absolute top-0 left-0 overflow-hidden"
         style={{
-          color: '#3DD1FF',
           width: isHovered ? 'calc(100% - 3px)' : '0%',
+          height: '100%',
           transition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-          WebkitTextStroke: '0.5px #3DD1FF',
-          animation: isHovered ? 'soft-pulse 3s ease-in-out infinite' : 'none',
         }}
-        aria-hidden="true"
       >
-        &nbsp;{text}&nbsp;
-      </span>
+        <span
+          key={`glow-${animationKey}`}
+          className="inline-block whitespace-nowrap"
+          style={{
+            color: '#3DD1FF',
+            WebkitTextStroke: '0.5px #3DD1FF',
+            animation: isHovered ? 'soft-pulse 3s ease-in-out infinite' : 'none',
+            // Add padding to allow glow to render, but it will be clipped by parent
+            padding: '0 20px',
+            margin: '0 -20px',
+          }}
+          aria-hidden="true"
+        >
+          &nbsp;{text}&nbsp;
+        </span>
+      </div>
     </button>
   );
 }
