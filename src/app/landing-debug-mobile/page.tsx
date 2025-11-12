@@ -1036,7 +1036,7 @@ export default function LandingDebugPage() {
                 onChange={(e) => updateConfig('starScale3', parseFloat(e.target.value))}
                 className="w-full"
               />
-              <div className="text-xs text-purple-400 text-center mt-0.5">
+              <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.starScale3.toFixed(1)}x
               </div>
             </div>
@@ -1055,7 +1055,7 @@ export default function LandingDebugPage() {
                 onChange={(e) => updateConfig('starSpeed3', parseFloat(e.target.value))}
                 className="w-full"
               />
-              <div className="text-xs text-purple-400 text-center mt-0.5">
+              <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.starSpeed3.toFixed(1)}x
               </div>
             </div>
@@ -1074,7 +1074,7 @@ export default function LandingDebugPage() {
                 onChange={(e) => updateConfig('starFrequency3', parseInt(e.target.value))}
                 className="w-full"
               />
-              <div className="text-xs text-purple-400 text-center mt-0.5">
+              <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.starFrequency3} stars
               </div>
             </div>
@@ -1093,7 +1093,7 @@ export default function LandingDebugPage() {
                 onChange={(e) => updateConfig('lineLength3', parseFloat(e.target.value))}
                 className="w-full"
               />
-              <div className="text-xs text-purple-400 text-center mt-0.5">
+              <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.lineLength3.toFixed(1)}x
               </div>
             </div>
@@ -1112,7 +1112,7 @@ export default function LandingDebugPage() {
                 onChange={(e) => updateConfig('spawnDelay3', parseInt(e.target.value))}
                 className="w-full"
               />
-              <div className="text-xs text-purple-400 text-center mt-0.5">
+              <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.spawnDelay3}ms
               </div>
             </div>
@@ -1643,7 +1643,7 @@ export default function LandingDebugPage() {
             )}
 
             {/* Preview Text */}
-            <div className="mt-2 p-2 bg-gray-900 rounded border border-purple-700">
+            <div className="mt-2 p-2 bg-gray-900 rounded border border-gray-700">
               <p className="text-[10px] text-gray-500 mb-1">Preview:</p>
               {selectedTypographyElement === 'description' ? (
                 <p
@@ -1688,7 +1688,7 @@ export default function LandingDebugPage() {
             </div>
 
             {/* Phase Text Editor */}
-            <div className="bg-gray-900 border border-purple-700 rounded p-3 mb-4">
+            <div className="bg-gray-900 border border-gray-700 rounded p-3 mb-4">
               <h3 className="text-sm font-semibold text-gray-100 mb-2">Edit Phase Text</h3>
               <div className="space-y-2">
                 <div>
@@ -1771,7 +1771,7 @@ export default function LandingDebugPage() {
             </div>
 
             {/* Add New Phase Card Form */}
-            <div className="bg-gray-900 border border-purple-700 rounded p-3 mb-4">
+            <div className="bg-gray-900 border border-gray-700 rounded p-3 mb-4">
               <h3 className="text-sm font-semibold text-gray-100 mb-2">Add New Phase Card</h3>
               <div className="space-y-2">
                 <div>
@@ -1845,7 +1845,7 @@ export default function LandingDebugPage() {
                 <div className="text-gray-400 text-sm">No phase cards yet. Add one above or initialize defaults.</div>
               ) : (
                 phaseCards.map((phase) => (
-                  <div key={phase._id} className="bg-gray-900 border border-purple-700 rounded p-3">
+                  <div key={phase._id} className="bg-gray-900 border border-gray-700 rounded p-3">
                     {editingPhaseId === phase._id ? (
                       // Edit mode
                       <div className="space-y-2">
@@ -2461,7 +2461,7 @@ export default function LandingDebugPage() {
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500 mb-1"
               />
               {config.phaseImage1 && (
-                <div className="mt-1 p-2 bg-gray-900 rounded border border-purple-700">
+                <div className="mt-1 p-2 bg-gray-900 rounded border border-gray-700">
                   <p className="text-[10px] text-gray-500 mb-1">Preview:</p>
                   <div className="relative w-full h-20 bg-gray-950 rounded overflow-hidden">
                     <img
@@ -2494,7 +2494,7 @@ export default function LandingDebugPage() {
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500 mb-1"
               />
               {config.phaseImage2 && (
-                <div className="mt-1 p-2 bg-gray-900 rounded border border-purple-700">
+                <div className="mt-1 p-2 bg-gray-900 rounded border border-gray-700">
                   <p className="text-[10px] text-gray-500 mb-1">Preview:</p>
                   <div className="relative w-full h-20 bg-gray-950 rounded overflow-hidden">
                     <img
@@ -2527,7 +2527,7 @@ export default function LandingDebugPage() {
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500 mb-1"
               />
               {config.phaseImage3 && (
-                <div className="mt-1 p-2 bg-gray-900 rounded border border-purple-700">
+                <div className="mt-1 p-2 bg-gray-900 rounded border border-gray-700">
                   <p className="text-[10px] text-gray-500 mb-1">Preview:</p>
                   <div className="relative w-full h-20 bg-gray-950 rounded overflow-hidden">
                     <img
@@ -2560,7 +2560,7 @@ export default function LandingDebugPage() {
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-cyan-500 mb-1"
               />
               {config.phaseImage4 && (
-                <div className="mt-1 p-2 bg-gray-900 rounded border border-purple-700">
+                <div className="mt-1 p-2 bg-gray-900 rounded border border-gray-700">
                   <p className="text-[10px] text-gray-500 mb-1">Preview:</p>
                   <div className="relative w-full h-20 bg-gray-950 rounded overflow-hidden">
                     <img
@@ -2587,7 +2587,7 @@ export default function LandingDebugPage() {
       {/* Live Preview Section (Split View Only) */}
       {viewMode === 'split-view' && (
         <div className="w-1/2 bg-gray-950 relative flex flex-col">
-          <div className="bg-gray-800/50 border-b border-purple-700 p-2">
+          <div className="bg-gray-800/50 border-b border-gray-700 p-2">
             <h2 className="text-gray-100 text-sm font-semibold">
               Live Preview
             </h2>
