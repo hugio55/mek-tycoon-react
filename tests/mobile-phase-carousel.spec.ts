@@ -79,10 +79,11 @@ test.describe('Mobile Phase Carousel Animations', () => {
 
   test('should collapse previous card when expanding another', async ({ page }) => {
     // Wait for cards to load
-    await page.waitForSelector('[data-phase-card]', { state: 'visible', timeout: 10000 });
+    const cardsContainer = page.locator('.flex.flex-col > .relative.overflow-hidden.cursor-pointer');
+    await cardsContainer.first().waitFor({ state: 'visible', timeout: 10000 });
 
     // Expand first card
-    const firstCard = page.locator('[data-phase-card]').first();
+    const firstCard = cardsContainer.first();
     console.log('[📱MOBILE] Expanding first card...');
     await firstCard.click();
     await page.waitForTimeout(4000); // Wait for full expansion
@@ -93,7 +94,7 @@ test.describe('Mobile Phase Carousel Animations', () => {
     });
 
     // Click second card
-    const secondCard = page.locator('[data-phase-card]').nth(1);
+    const secondCard = cardsContainer.nth(1);
     console.log('[📱MOBILE] Clicking second card...');
     await secondCard.click();
 
@@ -133,9 +134,10 @@ test.describe('Mobile Phase Carousel Animations', () => {
     });
 
     // Wait for cards to load
-    await page.waitForSelector('[data-phase-card]', { state: 'visible', timeout: 10000 });
+    const cardsContainer = page.locator('.flex.flex-col > .relative.overflow-hidden.cursor-pointer');
+    await cardsContainer.first().waitFor({ state: 'visible', timeout: 10000 });
 
-    const cards = await page.locator('[data-phase-card]').all();
+    const cards = await cardsContainer.all();
     console.log(`[📱MOBILE] Testing consistency across ${cards.length} cards`);
 
     // Cycle through multiple cards
@@ -163,9 +165,10 @@ test.describe('Mobile Phase Carousel Animations', () => {
 
   test('should verify animation timing accuracy', async ({ page }) => {
     // Wait for cards to load
-    await page.waitForSelector('[data-phase-card]', { state: 'visible', timeout: 10000 });
+    const cardsContainer = page.locator('.flex.flex-col > .relative.overflow-hidden.cursor-pointer');
+    await cardsContainer.first().waitFor({ state: 'visible', timeout: 10000 });
 
-    const firstCard = page.locator('[data-phase-card]').first();
+    const firstCard = cardsContainer.first();
 
     // Measure animation timing
     console.log('[⏱️TIMING] Starting animation timing test...');

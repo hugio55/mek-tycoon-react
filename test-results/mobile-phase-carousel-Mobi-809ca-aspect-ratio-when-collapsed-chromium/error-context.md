@@ -74,17 +74,23 @@
   - button "Open Next.js Dev Tools" [ref=e40] [cursor=pointer]:
     - img [ref=e41]
   - alert [ref=e44]
-  - generic [ref=e47]:
-    - paragraph [ref=e48]: For full immersion...
-    - generic [ref=e49]:
-      - button "Turn sound off" [ref=e50] [cursor=pointer]
-      - generic [ref=e52]:
-        - generic [ref=e54]: Sound Off
-        - generic [ref=e56]: Sound On
-    - generic [ref=e58]:
-      - generic [ref=e59]: PROCEED
-      - generic [ref=e61]:
-        - checkbox [ref=e64]
+  - generic [ref=e46]:
+    - generic [ref=e47]:
+      - img [ref=e49]
+      - img [ref=e52]
+    - generic [ref=e69]: 100%
+    - generic [ref=e71]: READY
+  - generic [ref=e75]:
+    - paragraph [ref=e76]: For full immersion...
+    - generic [ref=e77]:
+      - button "Turn sound off" [ref=e78] [cursor=pointer]
+      - generic [ref=e80]:
+        - generic [ref=e82]: Sound Off
+        - generic [ref=e84]: Sound On
+    - generic [ref=e86]:
+      - generic [ref=e87]: PROCEED
+      - generic [ref=e89]:
+        - checkbox [ref=e92]
         - generic:
           - generic: ⬢
 ```
