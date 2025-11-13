@@ -779,7 +779,7 @@ export default function LandingPage() {
   // Scroll detection for description text animation and scroll indicator
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
+      if (window.scrollY > 0) {
         setHasScrolled(true);
       } else {
         setHasScrolled(false);
