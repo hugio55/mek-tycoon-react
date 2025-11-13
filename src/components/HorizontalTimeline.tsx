@@ -377,11 +377,11 @@ export default function HorizontalTimeline({
       className="relative"
       style={{
         height: isMobile ? 'auto' : `${columnHeight}px`,
-        minHeight: isMobile ? '100vh' : undefined, // Prevent Safari height collapse
+        minHeight: 'auto', // Let content determine height naturally - don't force 100vh
         width: '100%',
         backgroundColor: 'transparent',
         isolation: 'isolate',
-        contain: isMobile ? 'layout' : 'layout style paint', // Reduce Safari containment issues
+        contain: isMobile ? 'none' : 'layout style paint', // Disable containment on mobile for proper dynamic height
         margin: 0,
         padding: 0,
         overflow: isMobile ? 'visible' : 'hidden',
