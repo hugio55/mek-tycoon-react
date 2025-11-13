@@ -10,6 +10,7 @@ import AudioConsentLightbox from '@/components/AudioConsentLightbox';
 import BetaSignupLightbox from '@/components/BetaSignupLightbox';
 import FillTextButton from '@/components/controls/FillTextButton';
 import { getMediaUrl } from '@/lib/media-url';
+import { isSafariOrIOS } from '@/lib/browser-detection';
 
 interface Star {
   x: number;
