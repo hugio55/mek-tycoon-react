@@ -302,10 +302,10 @@ export default function HorizontalTimeline({
           if (isMobile) {
             // Mobile: vertical layout with 16:9 aspect ratio
             if (isActive) {
-              // Expanded: auto height to show full content
+              // Expanded: large max-height to show full content (allows smooth animation)
               dimensionStyle = {
                 width: '100%',
-                height: 'auto',
+                maxHeight: '2000px', // Large enough for any content
               };
               useAspectRatio = false;
               console.log(`[🎯DIMENSION] Card ${index} EXPANDED (mobile):`, dimensionStyle);
@@ -314,6 +314,7 @@ export default function HorizontalTimeline({
               dimensionStyle = {
                 width: '100%',
                 aspectRatio: '16 / 9',
+                maxHeight: '250px', // Approximate collapsed height
               };
               useAspectRatio = true;
               console.log(`[🎯DIMENSION] Card ${index} COLLAPSED (mobile):`, dimensionStyle);
@@ -353,7 +354,9 @@ export default function HorizontalTimeline({
               style={{
                 ...dimensionStyle,
                 transition: isMobile
-                  ? 'height 0.5s ease-in-out, aspect-ratio 0.5s ease-in-out'
+                  ? isActive
+                    ? 'max-height 0.7s cubic-bezier(0.4, 0.0, 0.2, 1), aspect-ratio 0.7s cubic-bezier(0.4, 0.0, 0.2, 1)'
+                    : 'max-height 0.5s cubic-bezier(0.4, 0.0, 0.2, 1), aspect-ratio 0.5s cubic-bezier(0.4, 0.0, 0.2, 1)'
                   : 'width 0.5s ease-in-out',
                 zIndex: isActive ? 20 : 10,
                 touchAction: isMobile ? 'manipulation' : 'auto',
