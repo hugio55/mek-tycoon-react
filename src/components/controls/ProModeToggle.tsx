@@ -36,6 +36,10 @@ export default function ProModeToggle({
     const newGuardState = !guardOpen;
     setGuardOpen(newGuardState);
 
+    // Play main click sound
+    const audio = new Audio('/sounds/main_click.mp3');
+    audio.play().catch(err => console.log('Audio play failed:', err));
+
     // Close guard -> turn off switch
     if (!newGuardState && switchOn) {
       setSwitchOn(false);
@@ -48,6 +52,11 @@ export default function ProModeToggle({
 
     const newSwitchState = !switchOn;
     setSwitchOn(newSwitchState);
+
+    // Play click reverb sound
+    const audio = new Audio('/sounds/click reverb 2.mp3');
+    audio.play().catch(err => console.log('Audio play failed:', err));
+
     onChange?.(newSwitchState);
   };
 

@@ -81,6 +81,10 @@ export default function AudioConsentLightbox({
   }, []);
 
   useEffect(() => {
+    const preventTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
     if (isVisible && mounted) {
       const scrollY = window.scrollY;
       setSavedScrollY(scrollY);
@@ -89,6 +93,9 @@ export default function AudioConsentLightbox({
       document.body.style.top = `-${scrollY}px`;
       document.body.style.width = '100%';
       document.body.style.touchAction = 'none';
+
+      // Prevent touchmove on the backdrop
+      document.addEventListener('touchmove', preventTouchMove, { passive: false });
     } else {
       document.body.style.overflow = '';
       document.body.style.position = '';
@@ -96,6 +103,9 @@ export default function AudioConsentLightbox({
       document.body.style.width = '';
       document.body.style.touchAction = '';
       window.scrollTo(0, savedScrollY);
+
+      // Remove touchmove prevention
+      document.removeEventListener('touchmove', preventTouchMove);
     }
 
     return () => {
@@ -104,6 +114,7 @@ export default function AudioConsentLightbox({
       document.body.style.top = '';
       document.body.style.width = '';
       document.body.style.touchAction = '';
+      document.removeEventListener('touchmove', preventTouchMove);
     };
   }, [isVisible, mounted, savedScrollY]);
 
