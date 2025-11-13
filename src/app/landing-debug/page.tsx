@@ -1899,7 +1899,7 @@ export default function LandingDebugPage() {
               <input
                 type="range"
                 min="-200"
-                max="100"
+                max="200"
                 step="1"
                 value={config.bgYPosition}
                 onChange={(e) => updateConfig('bgYPosition', parseInt(e.target.value))}
