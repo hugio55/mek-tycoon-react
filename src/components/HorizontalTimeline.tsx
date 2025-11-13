@@ -293,12 +293,14 @@ export default function HorizontalTimeline({
       className="relative overflow-hidden"
       style={{
         height: isMobile ? 'auto' : `${columnHeight}px`,
+        minHeight: isMobile ? '100vh' : undefined, // Prevent Safari height collapse
         width: '100%',
         backgroundColor: 'transparent',
         isolation: 'isolate',
-        contain: 'layout style paint',
+        contain: isMobile ? 'layout' : 'layout style paint', // Reduce Safari paint containment issues
         margin: 0,
         padding: 0,
+        WebkitOverflowScrolling: 'touch', // Smooth iOS scrolling
       }}
     >
       <div
@@ -333,7 +335,10 @@ export default function HorizontalTimeline({
           if (isMobile) {
             // Mobile: vertical layout with GPU-accelerated max-height transitions
             // Calculate collapsed height based on 16:9 aspect ratio
-            const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 400;
+            // Use visualViewport for Safari iOS to handle dynamic viewport changes
+            const viewportWidth = typeof window !== 'undefined'
+              ? (window.visualViewport?.width || window.innerWidth)
+              : 400;
             const collapsedHeight = viewportWidth * (9 / 16);
             const expandedHeight = contentHeights[index] || 800;
 
@@ -341,6 +346,7 @@ export default function HorizontalTimeline({
               // Expanded: max-height based on measured content
               dimensionStyle = {
                 width: '100%',
+                minHeight: `${collapsedHeight}px`, // Prevent shrinking below collapsed size
                 maxHeight: `${expandedHeight}px`,
               };
               useAspectRatio = false;
@@ -349,6 +355,7 @@ export default function HorizontalTimeline({
               // Collapsed: max-height based on 16:9 aspect ratio
               dimensionStyle = {
                 width: '100%',
+                minHeight: `${collapsedHeight}px`, // Maintain card size
                 maxHeight: `${collapsedHeight}px`,
               };
               useAspectRatio = true;
@@ -390,15 +397,16 @@ export default function HorizontalTimeline({
                 ...dimensionStyle,
                 overflow: 'hidden',
                 transition: isMobile
-                  ? 'max-height 0.6s cubic-bezier(0.4, 0.0, 0.2, 1)'
+                  ? 'max-height 0.6s cubic-bezier(0.4, 0.0, 0.2, 1), min-height 0.6s cubic-bezier(0.4, 0.0, 0.2, 1)'
                   : 'width 0.5s ease-in-out',
                 zIndex: isActive ? 20 : 10,
                 touchAction: isMobile ? 'manipulation' : 'auto',
-                contain: 'layout style paint',
-                contentVisibility: isMobile && !isActive && !isAnyActive ? 'auto' : 'visible',
+                contain: isMobile ? 'layout' : 'layout style paint', // Reduce Safari containment issues
                 transform: 'translateZ(0)', // Force GPU acceleration
                 backfaceVisibility: 'hidden',
-                willChange: isMobile && isAnyActive ? 'max-height' : 'auto',
+                WebkitBackfaceVisibility: 'hidden', // Safari-specific
+                willChange: 'auto', // Remove conditional to prevent Safari rendering bugs
+                isolation: 'isolate', // Prevent stacking context issues
               }}
               onMouseEnter={() => handleHoverEnter(index)}
               onMouseLeave={handleHoverLeave}
