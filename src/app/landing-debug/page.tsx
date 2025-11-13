@@ -536,6 +536,11 @@ export default function LandingDebugPage() {
           const updateData = activeMode === 'desktop'
             ? { desktop: config }
             : { mobile: config };
+          console.log(`[💾SAVE] Saving to UNIFIED ${activeMode} section:`, {
+            phaseDescriptionFontSize: config.phaseDescriptionFontSize,
+            descriptionFontSize: config.descriptionFontSize,
+            logoSize: config.logoSize
+          });
           await updateSettings(updateData);
           console.log(`[💾SAVE] Save successful to UNIFIED ${activeMode} section`);
         } else {
@@ -1995,15 +2000,17 @@ export default function LandingDebugPage() {
                   selectedTypographyElement === 'audioLightboxDescription' ? config.audioLightboxDescriptionFontSize :
                   config.soundLabelSize
                 }
-                onChange={(e) => updateConfig(
-                  selectedTypographyElement === 'description' ? 'descriptionFontSize' :
-                  selectedTypographyElement === 'phaseHeader' ? 'phaseHeaderFontSize' :
-                  selectedTypographyElement === 'phaseDescription' ? 'phaseDescriptionFontSize' :
-                  selectedTypographyElement === 'joinBeta' ? 'joinBetaFontSize' :
-                  selectedTypographyElement === 'audioLightboxDescription' ? 'audioLightboxDescriptionFontSize' :
-                  'soundLabelSize',
-                  parseInt(e.target.value)
-                )}
+                onChange={(e) => {
+                  const key = selectedTypographyElement === 'description' ? 'descriptionFontSize' :
+                              selectedTypographyElement === 'phaseHeader' ? 'phaseHeaderFontSize' :
+                              selectedTypographyElement === 'phaseDescription' ? 'phaseDescriptionFontSize' :
+                              selectedTypographyElement === 'joinBeta' ? 'joinBetaFontSize' :
+                              selectedTypographyElement === 'audioLightboxDescription' ? 'audioLightboxDescriptionFontSize' :
+                              'soundLabelSize';
+                  const value = parseInt(e.target.value);
+                  console.log('[📝TYPO] Font size slider changed:', { element: selectedTypographyElement, key, value, mode: activeMode });
+                  updateConfig(key, value);
+                }}
                 onMouseDown={handleInputStart}
                 onMouseUp={handleInputEnd}
                 onTouchStart={handleInputStart}

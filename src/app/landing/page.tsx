@@ -546,6 +546,7 @@ export default function LandingPage() {
     const loadConfig = (config: any) => {
       try {
         console.log('[🔍DATABASE] Full config loaded from Convex:', config);
+        console.log('[🔍DATABASE] Phase description font size:', config.phaseDescriptionFontSize);
           setStarScale(config.starScale ?? DEFAULT_CONFIG.starScale);
           setStarSpeed(config.starSpeed ?? DEFAULT_CONFIG.starSpeed);
           setStarFrequency(config.starFrequency ?? DEFAULT_CONFIG.starFrequency);
@@ -597,7 +598,9 @@ export default function LandingPage() {
           setPhaseHeaderFontSize(config.phaseHeaderFontSize ?? DEFAULT_CONFIG.phaseHeaderFontSize);
           setPhaseHeaderColor(config.phaseHeaderColor ?? DEFAULT_CONFIG.phaseHeaderColor);
           setPhaseDescriptionFont(config.phaseDescriptionFont ?? DEFAULT_CONFIG.phaseDescriptionFont);
-          setPhaseDescriptionFontSize(config.phaseDescriptionFontSize ?? DEFAULT_CONFIG.phaseDescriptionFontSize);
+          const phaseDescSize = config.phaseDescriptionFontSize ?? DEFAULT_CONFIG.phaseDescriptionFontSize;
+          console.log('[🔍DATABASE] Setting phaseDescriptionFontSize state to:', phaseDescSize);
+          setPhaseDescriptionFontSize(phaseDescSize);
           setSoundLabelFont(config.soundLabelFont ?? DEFAULT_CONFIG.soundLabelFont);
           setSoundLabelSize(config.soundLabelSize ?? DEFAULT_CONFIG.soundLabelSize);
           setSoundLabelColor(config.soundLabelColor ?? DEFAULT_CONFIG.soundLabelColor);
@@ -711,7 +714,9 @@ export default function LandingPage() {
           setPhaseHeaderFontSize(config.phaseHeaderFontSize ?? DEFAULT_CONFIG.phaseHeaderFontSize);
           setPhaseHeaderColor(config.phaseHeaderColor ?? DEFAULT_CONFIG.phaseHeaderColor);
           setPhaseDescriptionFont(config.phaseDescriptionFont ?? DEFAULT_CONFIG.phaseDescriptionFont);
-          setPhaseDescriptionFontSize(config.phaseDescriptionFontSize ?? DEFAULT_CONFIG.phaseDescriptionFontSize);
+          const phaseDescSize = config.phaseDescriptionFontSize ?? DEFAULT_CONFIG.phaseDescriptionFontSize;
+          console.log('[🔍DATABASE] Setting phaseDescriptionFontSize state to:', phaseDescSize);
+          setPhaseDescriptionFontSize(phaseDescSize);
           setSoundLabelFont(config.soundLabelFont ?? DEFAULT_CONFIG.soundLabelFont);
           setSoundLabelSize(config.soundLabelSize ?? DEFAULT_CONFIG.soundLabelSize);
           setSoundLabelColor(config.soundLabelColor ?? DEFAULT_CONFIG.soundLabelColor);

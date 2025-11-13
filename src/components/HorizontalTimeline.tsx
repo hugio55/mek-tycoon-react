@@ -113,6 +113,10 @@ export default function HorizontalTimeline({
     console.log('[🔍BLUR] HorizontalTimeline received prop:', idleBackdropBlur);
   }, [idleBackdropBlur]);
 
+  useEffect(() => {
+    console.log('[📝TYPO] HorizontalTimeline received phaseDescriptionFontSize:', phaseDescriptionFontSize);
+  }, [phaseDescriptionFontSize]);
+
   // Update timeline data when phaseCards loads from database
   useEffect(() => {
     if (!phaseCards || phaseCards.length === 0) return;
