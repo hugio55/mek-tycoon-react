@@ -1841,7 +1841,7 @@ export default function LandingPage() {
         className={isMobile ? "relative left-0 z-[20]" : "absolute left-0 z-[20]"}
         style={{
           top: isMobile ? 0 : `calc(100vh + ${phaseColumnYOffset}px)`,
-          marginTop: isMobile ? '96px' : undefined, // CRITICAL FIX: Increased spacing (64→96px) to prevent upward creep after position change from absolute→relative
+          marginTop: isMobile ? `${96 + phaseColumnYOffset}px` : undefined, // CRITICAL FIX: Increased spacing (64→96px) to prevent upward creep after position change from absolute→relative
           width: '100%', // Full container width - correctly fills space without extending under scrollbar
           minHeight: isMobile ? 'auto' : undefined,
         }}
