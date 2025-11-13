@@ -937,8 +937,23 @@ export default function LandingPage() {
 
   // Initialize audio on component mount
   useEffect(() => {
-    audioRef.current = new Audio(getMediaUrl('/audio/giggliest-girl-1.mp3'));
+    const audioUrl = getMediaUrl('/audio/giggliest-girl-1.mp3');
+    console.log('[🎵AUDIO] Initializing audio with URL:', audioUrl);
+    audioRef.current = new Audio(audioUrl);
     audioRef.current.loop = true;
+
+    audioRef.current.addEventListener('error', (e) => {
+      console.error('[🎵AUDIO] Audio error:', e, 'src:', audioRef.current?.src);
+    });
+    audioRef.current.addEventListener('loadstart', () => {
+      console.log('[🎵AUDIO] Audio load started');
+    });
+    audioRef.current.addEventListener('loadeddata', () => {
+      console.log('[🎵AUDIO] Audio loaded successfully');
+    });
+    audioRef.current.addEventListener('canplay', () => {
+      console.log('[🎵AUDIO] Audio can play');
+    });
 
     return () => {
       if (audioRef.current) {
@@ -1501,6 +1516,10 @@ export default function LandingPage() {
               muted
               playsInline
               preload="auto"
+              onError={(e) => console.error('[🎬VIDEO] Video error:', e, 'src:', e.currentTarget.src)}
+              onLoadStart={() => console.log('[🎬VIDEO] Video load started')}
+              onLoadedData={() => console.log('[🎬VIDEO] Video loaded successfully')}
+              onCanPlay={() => console.log('[🎬VIDEO] Video can play')}
               className="w-full h-full absolute inset-0"
               style={{
                 opacity: 'inherit',
