@@ -519,7 +519,9 @@ export default function HorizontalTimeline({
                 />
               )}
 
-              {/* Frosted Glass Backdrop Blur Overlay - separate layer with pointer-events-none */}
+              {/* Frosted Glass Backdrop Blur Overlay - DISABLED FOR MOBILE PERFORMANCE TESTING */}
+              {/* PERFORMANCE TEST 1: backdrop-blur causes 5fps jank on iPhone Safari */}
+              {/* This layer is extremely expensive on mobile devices */}
               <div
                 className="absolute pointer-events-none"
                 style={{
@@ -527,11 +529,12 @@ export default function HorizontalTimeline({
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backdropFilter: blurValue,
-                  WebkitBackdropFilter: blurValue,
+                  // backdropFilter: blurValue,  // DISABLED - Primary suspect for mobile jank
+                  // WebkitBackdropFilter: blurValue,  // DISABLED
                   opacity: isActive ? 1 : 0,
-                  transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',
-                  willChange: isAnyActive && idleBackdropBlur > 0 ? 'opacity, backdrop-filter' : 'auto',
+                  transition: 'opacity 0.3s ease-out',
+                  // transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',  // ORIGINAL
+                  // willChange: isAnyActive && idleBackdropBlur > 0 ? 'opacity, backdrop-filter' : 'auto',  // ORIGINAL
                   isolation: 'isolate',
                   contain: 'layout style paint',
                 }}
