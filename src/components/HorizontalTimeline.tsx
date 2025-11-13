@@ -89,6 +89,7 @@ export default function HorizontalTimeline({
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [expandedWidths, setExpandedWidths] = useState<{ [key: number]: number }>({});
+  const [contentHeights, setContentHeights] = useState<{ [key: number]: number }>({});
 
   // Detect viewport size for mobile layout
   useEffect(() => {
@@ -154,6 +155,36 @@ export default function HorizontalTimeline({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Measure content heights for GPU-accelerated animations (mobile only)
+  useEffect(() => {
+    if (!isMobile || timelineData.length === 0) return;
+
+    // Wait for refs to be populated and content to render
+    const timer = setTimeout(() => {
+      const heights: { [key: number]: number } = {};
+      contentRefs.current.forEach((ref, index) => {
+        if (ref) {
+          // Temporarily expand to measure full content height
+          const parent = ref.parentElement;
+          if (parent) {
+            const originalMaxHeight = (parent.parentElement as HTMLElement)?.style.maxHeight;
+            if (parent.parentElement) {
+              (parent.parentElement as HTMLElement).style.maxHeight = 'none';
+              heights[index] = ref.scrollHeight + 48; // Add padding buffer
+              (parent.parentElement as HTMLElement).style.maxHeight = originalMaxHeight || '';
+            }
+          }
+          console.log(`[📏HEIGHT] Card ${index} measured height: ${heights[index]}px`);
+        }
+      });
+      if (Object.keys(heights).length > 0) {
+        setContentHeights(heights);
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [isMobile, timelineData]);
 
   // Detect overflow and calculate needed width expansion for active card
   useEffect(() => {
@@ -300,26 +331,28 @@ export default function HorizontalTimeline({
           let useAspectRatio = false;
 
           if (isMobile) {
-            // Mobile: vertical layout with CSS Grid for smooth animation
+            // Mobile: vertical layout with GPU-accelerated max-height transitions
+            // Calculate collapsed height based on 16:9 aspect ratio
+            const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 400;
+            const collapsedHeight = viewportWidth * (9 / 16);
+            const expandedHeight = contentHeights[index] || 800;
+
             if (isActive) {
-              // Expanded: grid row expands to fit content
+              // Expanded: max-height based on measured content
               dimensionStyle = {
                 width: '100%',
-                display: 'grid',
-                gridTemplateRows: '1fr', // Expanded - content visible
+                maxHeight: `${expandedHeight}px`,
               };
               useAspectRatio = false;
-              console.log(`[🎯DIMENSION] Card ${index} EXPANDED (mobile):`, dimensionStyle);
+              console.log(`[🎯DIMENSION] Card ${index} EXPANDED (mobile): ${expandedHeight}px`);
             } else {
-              // Collapsed: 16:9 aspect ratio box with grid row collapsed
+              // Collapsed: max-height based on 16:9 aspect ratio
               dimensionStyle = {
                 width: '100%',
-                aspectRatio: '16 / 9',
-                display: 'grid',
-                gridTemplateRows: '0fr', // Collapsed - content hidden
+                maxHeight: `${collapsedHeight}px`,
               };
               useAspectRatio = true;
-              console.log(`[🎯DIMENSION] Card ${index} COLLAPSED (mobile):`, dimensionStyle);
+              console.log(`[🎯DIMENSION] Card ${index} COLLAPSED (mobile): ${collapsedHeight}px`);
             }
           } else {
             // Desktop: horizontal layout
@@ -355,13 +388,17 @@ export default function HorizontalTimeline({
               `}
               style={{
                 ...dimensionStyle,
-                overflow: 'hidden', // Critical for grid animation
+                overflow: 'hidden',
                 transition: isMobile
-                  ? 'grid-template-rows 1s ease-in-out, aspect-ratio 1s ease-in-out'
+                  ? 'max-height 0.6s cubic-bezier(0.4, 0.0, 0.2, 1)'
                   : 'width 0.5s ease-in-out',
                 zIndex: isActive ? 20 : 10,
                 touchAction: isMobile ? 'manipulation' : 'auto',
-                willChange: isMobile && isAnyActive ? 'grid-template-rows' : 'auto',
+                contain: 'layout style paint',
+                contentVisibility: isMobile && !isActive && !isAnyActive ? 'auto' : 'visible',
+                transform: 'translateZ(0)', // Force GPU acceleration
+                backfaceVisibility: 'hidden',
+                willChange: isMobile && isAnyActive ? 'max-height' : 'auto',
               }}
               onMouseEnter={() => handleHoverEnter(index)}
               onMouseLeave={handleHoverLeave}
@@ -441,47 +478,52 @@ export default function HorizontalTimeline({
                 </h2>
               </div>
 
-              {/* Content - wraps in grid item for smooth collapse/expand */}
+              {/* Content - GPU-accelerated animation wrapper */}
               <div
                 className={`
-                  ${isMobile ? 'min-h-0' : 'absolute inset-0'}
+                  ${isMobile ? 'relative' : 'absolute inset-0'}
                   z-20
                 `}
                 style={{
                   overflow: isMobile ? 'hidden' : 'visible',
+                  transform: 'translateZ(0)',
+                  willChange: isMobile && isAnyActive ? 'transform, opacity' : 'auto',
                 }}
               >
                 <div
                   ref={(el) => (contentRefs.current[index] = el)}
                   className={`
-                    ${isMobile ? 'relative' : ''}
                     ${isMobile ? 'p-6' : 'p-8 md:p-12'}
                     flex flex-col
-                    ${isActive
-                      ? 'translate-y-0 opacity-100'
-                      : isMobile ? 'translate-y-2 opacity-0' : 'translate-y-4 opacity-0'
-                    }
                   `}
                 style={{
+                  transform: isActive
+                    ? 'translate3d(0, 0, 0) scale(1)'
+                    : isMobile
+                      ? 'translate3d(0, 8px, 0) scale(0.98)'
+                      : 'translate3d(0, 16px, 0) scale(0.95)',
+                  opacity: isActive ? 1 : 0,
                   transition: isActive
-                    ? 'transform 0.4s ease-out 0.2s, opacity 0.3s ease-out 0.2s, width 0.5s ease-in-out'
-                    : 'transform 0.3s ease-in, opacity 0.2s ease-in, width 0.5s ease-in-out',
+                    ? 'transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1) 0.15s, opacity 0.4s ease-out 0.15s'
+                    : 'transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s ease-in',
                   width: '100%',
                   maxWidth: '100%',
                   pointerEvents: 'none',
+                  backfaceVisibility: 'hidden',
+                  transformStyle: 'preserve-3d',
                 }}
               >
                 {item.subtitle && (
                   <p
-                    className={`
-                      text-gray-300/80 mb-2 italic
-                      ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
-                    `}
+                    className="text-gray-300/80 mb-2 italic"
                     style={{
                       fontSize: isMobile ? '14px' : undefined,
+                      transform: isActive ? 'translate3d(0, 0, 0)' : 'translate3d(0, 4px, 0)',
+                      opacity: isActive ? 1 : 0,
                       transition: isActive
-                        ? 'opacity 0.3s ease-out 0.45s, transform 0.3s ease-out 0.45s'
-                        : 'opacity 0.2s ease-in, transform 0.2s ease-in',
+                        ? 'transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1) 0.3s, opacity 0.4s ease-out 0.3s'
+                        : 'transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.2s ease-in',
+                      backfaceVisibility: 'hidden',
                     }}
                   >
                     {item.subtitle}
@@ -494,28 +536,30 @@ export default function HorizontalTimeline({
                     ${isMobile ? 'mb-3' : 'mb-2'}
                     font-['Orbitron']
                     tracking-wide
-                    ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
                   `}
                   style={{
                     fontSize: isMobile ? '24px' : '32px',
+                    transform: isActive ? 'translate3d(0, 0, 0)' : 'translate3d(0, 4px, 0)',
+                    opacity: isActive ? 1 : 0,
                     transition: isActive
-                      ? 'opacity 0.3s ease-out 0.4s, transform 0.3s ease-out 0.4s'
-                      : 'opacity 0.2s ease-in, transform 0.2s ease-in',
+                      ? 'transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1) 0.25s, opacity 0.4s ease-out 0.25s'
+                      : 'transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.2s ease-in',
+                    backfaceVisibility: 'hidden',
                   }}
                 >
                   {item.title}
                 </h3>
                 <div
-                  className={`
-                    text-white/90 leading-relaxed
-                    ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
-                  `}
+                  className="text-white/90 leading-relaxed"
                   style={{
                     fontFamily: phaseDescriptionFont,
                     fontSize: `${phaseDescriptionFontSize}px`,
+                    transform: isActive ? 'translate3d(0, 0, 0)' : 'translate3d(0, 4px, 0)',
+                    opacity: isActive ? 1 : 0,
                     transition: isActive
-                      ? 'opacity 0.3s ease-out 0.5s, transform 0.3s ease-out 0.5s'
-                      : 'opacity 0.2s ease-in, transform 0.2s ease-in',
+                      ? 'transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1) 0.35s, opacity 0.4s ease-out 0.35s'
+                      : 'transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.2s ease-in',
+                    backfaceVisibility: 'hidden',
                   }}
                   dangerouslySetInnerHTML={{ __html: formatDescription(item.description) }}
                 />
