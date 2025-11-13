@@ -738,13 +738,48 @@ export default function LandingDebugPage() {
     }
   };
 
-  const handleSave = () => {
-    // Settings are already auto-saving with debounce
-    // This button just provides immediate visual feedback
+  const handleSave = async () => {
+    // Force immediate save by calling mutation directly
     setSaveState('saving');
 
-    // Force immediate save by calling mutation directly
-    updateSettings({ config }).then(() => {
+    try {
+      // Use the same field splitting logic as auto-save
+      if (unifiedSettings) {
+        const sharedFields = [
+          'selectedFont', 'descriptionText', 'descriptionColor', 'designVariation',
+          'phaseHeaderFont', 'phaseHeaderColor', 'phaseDescriptionFont',
+          'soundLabelFont', 'soundLabelColor', 'powerButtonGlowEnabled', 'speakerIconStyle',
+          'phaseImage1', 'phaseImage2', 'phaseImage3', 'phaseImage4', 'phaseImageBlendMode',
+          'descriptionCardBlur', 'descriptionCardDarkness', 'descriptionCardBorder',
+          'logoFadeDuration', 'lightboxBackdropDarkness', 'joinBetaFont', 'joinBetaColor',
+          'audioLightboxDescriptionFont', 'audioLightboxDescriptionColor',
+          'audioDescriptionText', 'audioConsentFadeDuration', 'forceShowAudioConsent'
+        ];
+
+        const shared: any = {};
+        const modeSpecific: any = {};
+        Object.keys(config).forEach(key => {
+          if (sharedFields.includes(key)) {
+            shared[key] = config[key as keyof ConfigType];
+          } else if (key !== 'activeTab') {
+            modeSpecific[key] = config[key as keyof ConfigType];
+          }
+        });
+
+        const updateData: any = { shared };
+        updateData[activeMode] = modeSpecific;
+
+        console.log('[💾SAVE-BUTTON] Saving to unified table:', {
+          sharedFields: Object.keys(shared).length,
+          modeFields: Object.keys(modeSpecific).length,
+          forceShowAudioConsent: shared.forceShowAudioConsent
+        });
+        await updateSettings(updateData);
+      } else {
+        // Fallback to old format
+        await oldUpdateSettings({ config });
+      }
+
       setSaveState('saved');
       setTimeout(() => setSaveState('idle'), 2000);
 
@@ -754,10 +789,10 @@ export default function LandingDebugPage() {
       if (iframe && iframe.contentWindow) {
         iframe.contentWindow.postMessage({ type: 'mek-landing-config-updated' }, '*');
       }
-    }).catch((err) => {
+    } catch (err) {
       console.error('[SAVE] Failed to save settings:', err);
       setSaveState('idle');
-    });
+    }
   };
 
   // Phase card management functions
