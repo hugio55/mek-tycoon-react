@@ -1542,8 +1542,10 @@ export default function LandingPage() {
               transitionDelay: '0.3s',
             }}
             onClick={() => {
-              console.log('[🎮BETA] Join Beta clicked - opening lightbox');
-              setShowBetaLightbox(true);
+              console.log('[🎮BETA] Join Beta clicked - opening lightbox after 500ms delay');
+              setTimeout(() => {
+                setShowBetaLightbox(true);
+              }, 500);
             }}
             ref={(el) => {
               if (el) {
@@ -1683,12 +1685,12 @@ export default function LandingPage() {
         <div
           className="fixed bottom-8 left-1/2 z-[100] cursor-pointer transition-all duration-200 hover:opacity-70 active:scale-95"
           style={{
-            animation: showScrollIndicator && !showAudioConsent
+            animation: showScrollIndicator && !showAudioConsent && !isMobile
               ? 'scroll-bounce 3s ease-in-out infinite, scroll-fade-in 1s ease-out'
               : 'none',
-            opacity: showScrollIndicator && !showAudioConsent ? 0.5 : 0,
-            transition: showScrollIndicator && !showAudioConsent ? 'none' : 'opacity 300ms ease-out',
-            pointerEvents: showScrollIndicator && !showAudioConsent ? 'auto' : 'none',
+            opacity: showScrollIndicator && !showAudioConsent && !isMobile ? 0.5 : 0,
+            transition: showScrollIndicator && !showAudioConsent && !isMobile ? 'none' : 'opacity 300ms ease-out',
+            pointerEvents: showScrollIndicator && !showAudioConsent && !isMobile ? 'auto' : 'none',
           }}
           onClick={() => {
             // Smooth scroll with custom easing
