@@ -2592,7 +2592,7 @@ export default function LandingDebugPage() {
                 type="range"
                 min="-100"
                 max="100"
-                step="10"
+                step="1"
                 value={config.powerButtonVerticalOffset}
                 onChange={(e) => updateConfig('powerButtonVerticalOffset', parseInt(e.target.value))}
                 onMouseDown={handleInputStart}
