@@ -38,6 +38,7 @@ const AUDIO_CONSENT_KEY = 'mek-audio-consent';
 
 // Default configuration
 const DEFAULT_CONFIG = {
+  starsEnabled: true,
   starScale: 1,
   starSpeed: 3,
   starFrequency: 200,
@@ -555,6 +556,9 @@ export default function LandingPage() {
   const [joinBetaHorizontalOffset, setJoinBetaHorizontalOffset] = useState(DEFAULT_CONFIG.joinBetaHorizontalOffset);
   const [joinBetaVerticalOffset, setJoinBetaVerticalOffset] = useState(DEFAULT_CONFIG.joinBetaVerticalOffset);
 
+  // Star systems master toggle
+  const [starsEnabled, setStarsEnabled] = useState(DEFAULT_CONFIG.starsEnabled);
+
   // Scroll-triggered animation state (ONE-WAY FLAG - never resets once true)
   const [hasScrolled, setHasScrolled] = useState(false);
 
@@ -821,6 +825,7 @@ export default function LandingPage() {
           setProceedButtonVerticalPosition(config.proceedButtonVerticalPosition ?? 0);
           setAudioDescriptionText(config.audioDescriptionText ?? DEFAULT_CONFIG.audioDescriptionText);
           setAudioConsentFadeDuration(config.audioConsentFadeDuration ?? DEFAULT_CONFIG.audioConsentFadeDuration);
+          setStarsEnabled(config.starsEnabled ?? DEFAULT_CONFIG.starsEnabled);
           // Note: phaseImage1-4 not loaded here - PhaseCarousel reads directly from localStorage
       } catch (e) {
         console.error('Failed to load debug config:', e);
@@ -935,6 +940,7 @@ export default function LandingPage() {
           setProceedButtonVerticalPosition(config.proceedButtonVerticalPosition ?? 0);
           setAudioDescriptionText(config.audioDescriptionText ?? DEFAULT_CONFIG.audioDescriptionText);
           setAudioConsentFadeDuration(config.audioConsentFadeDuration ?? DEFAULT_CONFIG.audioConsentFadeDuration);
+          setStarsEnabled(config.starsEnabled ?? DEFAULT_CONFIG.starsEnabled);
         } catch (e) {
           console.error('Failed to load debug config from localStorage:', e);
         }
@@ -1293,13 +1299,28 @@ export default function LandingPage() {
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
 
+    // MOBILE PERFORMANCE: Reduce particle counts dramatically on mobile
+    const mobileBgStarCount = isMobile ? Math.floor(bgStarCount * 0.15) : bgStarCount; // 800 → 120 on mobile
+    const mobileStarFrequency = isMobile ? Math.floor(starFrequency * 0.25) : starFrequency; // 200 → 50 on mobile
+    const mobileStarFrequency2 = isMobile ? Math.floor(starFrequency2 * 0.2) : starFrequency2; // 100 → 20 on mobile
+    const mobileStarFrequency3 = isMobile ? 0 : starFrequency3; // Disable layer 3 entirely on mobile
+
+    console.log('[🚀PERF] Canvas particle counts:', {
+      isMobile,
+      bgStars: mobileBgStarCount,
+      layer1: mobileStarFrequency,
+      layer2: mobileStarFrequency2,
+      layer3: mobileStarFrequency3,
+      reduction: isMobile ? '75-85% fewer particles' : 'desktop (full particles)'
+    });
+
     // Create distant background star field (static/very slow)
     const backgroundStars: BackgroundStar[] = [];
     // Calculate fade boundaries (only spawn stars above fade end)
     const fadeStartY = (starFadePosition / 100) * canvas.height;
     const fadeEndY = fadeStartY + starFadeFeatherSize;
 
-    for (let i = 0; i < bgStarCount; i++) {
+    for (let i = 0; i < mobileBgStarCount; i++) {
       const baseSize = 0.5;
       const sizeVariation = (bgStarSizeRandomness / 100) * baseSize;
       // Only spawn stars in the visible region (above fade end)
@@ -1398,6 +1419,12 @@ export default function LandingPage() {
     const animate = () => {
       // Clear with transparency to show background image
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // If stars are disabled, skip all star rendering (massive performance boost)
+      if (!starsEnabled) {
+        animationId = requestAnimationFrame(animate);
+        return;
+      }
 
       // Draw distant background stars (very slow drift) with gradient fade
       const time = Date.now() * 0.001; // Convert to seconds
