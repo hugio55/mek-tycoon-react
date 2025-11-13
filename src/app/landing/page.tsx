@@ -136,9 +136,24 @@ export default function LandingPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Canvas compositing refs for Safari/iOS (dual-video alpha compositing)
+  const colorVideoRef = useRef<HTMLVideoElement>(null);
+  const alphaVideoRef = useRef<HTMLVideoElement>(null);
+  const compositeCanvasRef = useRef<HTMLCanvasElement>(null);
+  const tempCanvasRef = useRef<HTMLCanvasElement>(null);
+
   // Viewport detection for responsive settings
   const [isMobile, setIsMobile] = useState(false);
   const [windowWidth, setWindowWidth] = useState(0);
+
+  // Browser detection for video format selection
+  const [useSafariVideo, setUseSafariVideo] = useState(false);
+
+  // Detect Safari/iOS for video format selection
+  useEffect(() => {
+    setUseSafariVideo(isSafariOrIOS());
+    console.log('[🎬VIDEO] Browser detected:', isSafariOrIOS() ? 'Safari/iOS (using H.265 canvas compositing)' : 'Chrome/Firefox (using WebM)');
+  }, []);
 
   useEffect(() => {
     const checkViewport = () => {
@@ -277,12 +292,141 @@ export default function LandingPage() {
   // JavaScript requestAnimationFrame zoom animation
   const logoContainerRef = useRef<HTMLDivElement>(null);
 
+  // Canvas compositing for Safari/iOS (dual-video alpha transparency)
+  useEffect(() => {
+    if (!useSafariVideo) return;
+    if (!compositeCanvasRef.current || !colorVideoRef.current || !alphaVideoRef.current) return;
+
+    const canvas = compositeCanvasRef.current;
+    const colorVideo = colorVideoRef.current;
+    const alphaVideo = alphaVideoRef.current;
+
+    // Set canvas size to match video dimensions (will be set once videos load metadata)
+    const initCanvas = () => {
+      if (colorVideo.videoWidth > 0 && colorVideo.videoHeight > 0) {
+        canvas.width = colorVideo.videoWidth;
+        canvas.height = colorVideo.videoHeight;
+        console.log('[🎨CANVAS] Canvas initialized:', canvas.width, 'x', canvas.height);
+      }
+    };
+
+    colorVideo.addEventListener('loadedmetadata', initCanvas);
+
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) {
+      console.error('[🎨CANVAS] Failed to get 2D context');
+      return;
+    }
+
+    // Create temp canvas for alpha extraction
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
+    if (!tempCtx) {
+      console.error('[🎨CANVAS] Failed to get temp 2D context');
+      return;
+    }
+
+    let animationFrameId: number;
+    let isCompositing = false;
+
+    const composite = () => {
+      if (!colorVideo.paused && !colorVideo.ended && colorVideo.readyState >= colorVideo.HAVE_CURRENT_DATA) {
+        // Ensure temp canvas matches size
+        if (tempCanvas.width !== canvas.width || tempCanvas.height !== canvas.height) {
+          tempCanvas.width = canvas.width;
+          tempCanvas.height = canvas.height;
+        }
+
+        try {
+          // Draw color video
+          ctx.drawImage(colorVideo, 0, 0, canvas.width, canvas.height);
+
+          // Get pixel data
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const pixels = imageData.data;
+
+          // Draw alpha mask to temp canvas
+          tempCtx.drawImage(alphaVideo, 0, 0, canvas.width, canvas.height);
+          const alphaData = tempCtx.getImageData(0, 0, canvas.width, canvas.height);
+          const alphaPixels = alphaData.data;
+
+          // Apply alpha channel (use red channel of grayscale mask as alpha)
+          for (let i = 0; i < pixels.length; i += 4) {
+            pixels[i + 3] = alphaPixels[i]; // R channel of grayscale → alpha channel
+          }
+
+          // Put composited image back
+          ctx.putImageData(imageData, 0, 0);
+        } catch (err) {
+          console.error('[🎨CANVAS] Compositing error:', err);
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(composite);
+    };
+
+    // Handle video playback events
+    const handlePlay = () => {
+      if (!isCompositing) {
+        console.log('[🎨CANVAS] Starting canvas compositing');
+        isCompositing = true;
+        composite();
+      }
+    };
+
+    const handlePause = () => {
+      console.log('[🎨CANVAS] Pausing canvas compositing');
+      isCompositing = false;
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+
+    // Sync both videos and handle looping
+    const handleLoop = () => {
+      if (colorVideo.ended && alphaVideo.ended) {
+        console.log('[🎨CANVAS] Videos ended, looping...');
+        colorVideo.currentTime = 0;
+        alphaVideo.currentTime = 0;
+        colorVideo.play().catch(err => console.error('[🎬VIDEO] Color video loop play failed:', err));
+        alphaVideo.play().catch(err => console.error('[🎬VIDEO] Alpha video loop play failed:', err));
+      }
+    };
+
+    colorVideo.addEventListener('play', handlePlay);
+    colorVideo.addEventListener('pause', handlePause);
+    colorVideo.addEventListener('ended', handleLoop);
+    alphaVideo.addEventListener('ended', handleLoop);
+
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      colorVideo.removeEventListener('loadedmetadata', initCanvas);
+      colorVideo.removeEventListener('play', handlePlay);
+      colorVideo.removeEventListener('pause', handlePause);
+      colorVideo.removeEventListener('ended', handleLoop);
+      alphaVideo.removeEventListener('ended', handleLoop);
+    };
+  }, [useSafariVideo]);
+
   // Start video when logo animation begins
   useEffect(() => {
-    if (animationStage === 'logo' && videoRef.current) {
-      console.log('[🎬VIDEO] Starting video playback');
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(err => console.error('[🎬VIDEO] Video play failed:', err));
+    if (animationStage === 'logo') {
+      // Handle Safari/iOS (dual video compositing)
+      if (useSafariVideo && colorVideoRef.current && alphaVideoRef.current) {
+        console.log('[🎬VIDEO] Starting Safari dual-video playback');
+        colorVideoRef.current.currentTime = 0;
+        alphaVideoRef.current.currentTime = 0;
+        colorVideoRef.current.play().catch(err => console.error('[🎬VIDEO] Color video play failed:', err));
+        alphaVideoRef.current.play().catch(err => console.error('[🎬VIDEO] Alpha video play failed:', err));
+      }
+      // Handle Chrome/Firefox (WebM)
+      else if (!useSafariVideo && videoRef.current) {
+        console.log('[🎬VIDEO] Starting WebM video playback');
+        videoRef.current.currentTime = 0;
+        videoRef.current.play().catch(err => console.error('[🎬VIDEO] Video play failed:', err));
+      }
 
       // Custom easing function (cubic-bezier(0, 0, 0.2, 1) approximation)
       const easeOut = (t: number): number => {
@@ -347,7 +491,7 @@ export default function LandingPage() {
         }
       };
     }
-  }, [animationStage, logoFadeDuration, showAudioConsent]);
+  }, [animationStage, logoFadeDuration, showAudioConsent, useSafariVideo]);
 
   // Debug logging for animation stage changes
   useEffect(() => {
@@ -1511,35 +1655,88 @@ export default function LandingPage() {
               contain: 'layout style paint',
             }}
           >
-            <video
-              ref={videoRef}
-              src={getMediaUrl('/random-images/Everydays_00000.webm')}
-              loop
-              muted
-              playsInline
-              preload="auto"
-              onError={(e) => console.error('[🎬VIDEO] Video error:', e, 'src:', e.currentTarget.src)}
-              onLoadStart={() => console.log('[🎬VIDEO] Video load started')}
-              onLoadedData={() => console.log('[🎬VIDEO] Video loaded successfully')}
-              onCanPlay={() => console.log('[🎬VIDEO] Video can play')}
-              className="w-full h-full absolute inset-0"
-              style={{
-                opacity: 'inherit',
-                objectFit: 'contain',
-                transform: 'translateZ(0) scale3d(1, 1, 1)',
-                backfaceVisibility: 'hidden',
-                WebkitBackfaceVisibility: 'hidden',
-                WebkitTransform: 'translateZ(0) scale3d(1, 1, 1)',
-                imageRendering: 'auto',
-                pointerEvents: 'none',
-                willChange: animationStage === 'logo' ? 'transform' : showBetaLightbox ? 'filter' : 'auto',
-                isolation: 'isolate',
-                filter: showBetaLightbox ? 'blur(8px)' : 'blur(0px)',
-                transition: showBetaLightbox
-                  ? 'filter 800ms cubic-bezier(0.4, 0, 0.2, 1)'
-                  : 'filter 400ms cubic-bezier(0.4, 0, 0.2, 1)',
-              }}
-            />
+            {useSafariVideo ? (
+              <>
+                {/* Safari/iOS: Canvas compositing with dual H.265 videos */}
+                <canvas
+                  ref={compositeCanvasRef}
+                  className="w-full h-full absolute inset-0"
+                  style={{
+                    opacity: 'inherit',
+                    objectFit: 'contain',
+                    transform: 'translateZ(0) scale3d(1, 1, 1)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    WebkitTransform: 'translateZ(0) scale3d(1, 1, 1)',
+                    imageRendering: 'auto',
+                    pointerEvents: 'none',
+                    willChange: animationStage === 'logo' ? 'transform' : showBetaLightbox ? 'filter' : 'auto',
+                    isolation: 'isolate',
+                    filter: showBetaLightbox ? 'blur(8px)' : 'blur(0px)',
+                    transition: showBetaLightbox
+                      ? 'filter 800ms cubic-bezier(0.4, 0, 0.2, 1)'
+                      : 'filter 400ms cubic-bezier(0.4, 0, 0.2, 1)',
+                  }}
+                />
+                {/* Hidden color video */}
+                <video
+                  ref={colorVideoRef}
+                  src={getMediaUrl('/random-images/logo vid for apple/logo h265 1 point 5q winner.mp4')}
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  style={{ display: 'none' }}
+                  onError={(e) => console.error('[🎬VIDEO] Color video error:', e)}
+                  onLoadStart={() => console.log('[🎬VIDEO] Color video load started')}
+                  onLoadedData={() => console.log('[🎬VIDEO] Color video loaded successfully')}
+                />
+                {/* Hidden alpha mask video */}
+                <video
+                  ref={alphaVideoRef}
+                  src={getMediaUrl('/random-images/logo vid for apple/logo h265 1 point 5q ALPHA 2.mp4')}
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  style={{ display: 'none' }}
+                  onError={(e) => console.error('[🎬VIDEO] Alpha video error:', e)}
+                  onLoadStart={() => console.log('[🎬VIDEO] Alpha video load started')}
+                  onLoadedData={() => console.log('[🎬VIDEO] Alpha video loaded successfully')}
+                />
+              </>
+            ) : (
+              /* Chrome/Firefox: WebM video */
+              <video
+                ref={videoRef}
+                src={getMediaUrl('/random-images/Everydays_00000.webm')}
+                loop
+                muted
+                playsInline
+                preload="auto"
+                onError={(e) => console.error('[🎬VIDEO] Video error:', e, 'src:', e.currentTarget.src)}
+                onLoadStart={() => console.log('[🎬VIDEO] Video load started')}
+                onLoadedData={() => console.log('[🎬VIDEO] Video loaded successfully')}
+                onCanPlay={() => console.log('[🎬VIDEO] Video can play')}
+                className="w-full h-full absolute inset-0"
+                style={{
+                  opacity: 'inherit',
+                  objectFit: 'contain',
+                  transform: 'translateZ(0) scale3d(1, 1, 1)',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  WebkitTransform: 'translateZ(0) scale3d(1, 1, 1)',
+                  imageRendering: 'auto',
+                  pointerEvents: 'none',
+                  willChange: animationStage === 'logo' ? 'transform' : showBetaLightbox ? 'filter' : 'auto',
+                  isolation: 'isolate',
+                  filter: showBetaLightbox ? 'blur(8px)' : 'blur(0px)',
+                  transition: showBetaLightbox
+                    ? 'filter 800ms cubic-bezier(0.4, 0, 0.2, 1)'
+                    : 'filter 400ms cubic-bezier(0.4, 0, 0.2, 1)',
+                }}
+              />
+            )}
           </div>
 
           {/* Description - Scroll-triggered fade-in animation */}
