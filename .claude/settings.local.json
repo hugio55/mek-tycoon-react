@@ -89,5 +89,6 @@
     "additionalDirectories": [
       "C:\\Users\\Ben Meyers\\Documents\\Mek Tycoon"
     ]
-  }
+  },
+  "spinnerTipsEnabled": false
 }
