@@ -724,3 +724,54 @@
 [1] 11/12/2025, 6:30:45 PM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
 [1] 11/12/2025, 6:45:44 PM [CONVEX M(walletAuthentication:cleanupExpiredNonces)] [LOG] '[Cleanup] Nonce cleanup completed: 0 expired, 0 used (>24hr old), 0 total deleted'
 [1] 11/12/2025, 6:45:45 PM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
+[1] 11/12/2025, 7:00:00 PM [CONVEX M(essence:dailyEssenceCheckpoint)] [LOG] '🔄 [CHECKPOINT MUTATION] Running checkpoint for' 'stake1u8zevs34vf4wrsz6xs64zuztdk4agzvpg6c8zv4plesp9ughgq076' {
+[1]   lastCalculationTime: '2025-11-12T14:21:06.896Z',
+[1]   now: '2025-11-13T00:00:00.005Z',
+[1]   daysElapsed: '0.402004',
+[1]   variationsToUpdate: 6
+[1] }
+[1] 11/12/2025, 7:00:00 PM [CONVEX M(essence:dailyEssenceCheckpoint)] [LOG] '💾 [CHECKPOINT MUTATION] Saving Corroded:' {
+[1]   oldAmount: '2.395936487269',
+[1]   essenceEarned: '0.040200357639',
+[1]   newAmount: '2.436136844907',
+[1]   rate: 0.1,
+[1]   count: 1
+[1] }
+[1] 11/12/2025, 7:00:00 PM [CONVEX M(essence:dailyEssenceCheckpoint)] [LOG] '💾 [CHECKPOINT MUTATION] Saving Blush:' {
+[1]   oldAmount: '0.859419599537',
+[1]   essenceEarned: '0.040200357639',
+[1]   newAmount: '0.899619957176',
+[1]   rate: 0.1,
+[1]   count: 1
+[1] }
+[1] 11/12/2025, 7:00:00 PM [CONVEX M(essence:dailyEssenceCheckpoint)] [LOG] '💾 [CHECKPOINT MUTATION] Saving Moth:' {
+[1]   oldAmount: '5.259419599537',
+[1]   essenceEarned: '0.040200357639',
+[1]   newAmount: '5.299619957176',
+[1]   rate: 0.1,
+[1]   count: 1
+[1] }
+[1] 11/12/2025, 7:00:00 PM [CONVEX M(essence:dailyEssenceCheckpoint)] [LOG] '💾 [CHECKPOINT MUTATION] Saving Lightning:' {
+[1]   oldAmount: '1.252012945602',
+[1]   essenceEarned: '0.040200357639',
+[1]   newAmount: '1.292213303241',
+[1]   rate: 0.1,
+[1]   count: 1
+[1] }
+[1] 11/12/2025, 7:00:00 PM [CONVEX M(essence:dailyEssenceCheckpoint)] [LOG] '💾 [CHECKPOINT MUTATION] Saving Tangerine:' {
+[1]   oldAmount: '0.255346940972',
+[1]   essenceEarned: '0.040200357639',
+[1]   newAmount: '0.295547298611',
+[1]   rate: 0.1,
+[1]   count: 1
+[1] }
+[1] 11/12/2025, 7:00:00 PM [CONVEX M(essence:dailyEssenceCheckpoint)] [LOG] '💾 [CHECKPOINT MUTATION] Saving Nothing:' {
+[1]   oldAmount: '6.864924155093',
+[1]   essenceEarned: '0.040200357639',
+[1]   newAmount: '6.905124512731',
+[1]   rate: 0.1,
+[1]   count: 1
+[1] }
+[1] 11/12/2025, 7:00:00 PM [CONVEX M(essence:dailyEssenceCheckpoint)] [LOG] 'Daily essence checkpoint completed. Updated 1 players.'
+[1] 11/12/2025, 7:00:44 PM [CONVEX M(walletAuthentication:cleanupExpiredNonces)] [LOG] '[Cleanup] Nonce cleanup completed: 0 expired, 0 used (>24hr old), 0 total deleted'
+[1] 11/12/2025, 7:00:45 PM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
