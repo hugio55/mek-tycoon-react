@@ -328,12 +328,9 @@ export default function HorizontalTimeline({
 
         console.log('[🎯SAFARI] Container height:', containerHeight, 'Document height:', documentHeight);
 
-        // Trigger Safari's layout engine by briefly adjusting scroll
-        const currentScroll = window.scrollY;
-        window.scrollTo(0, currentScroll + 1);
-        requestAnimationFrame(() => {
-          window.scrollTo(0, currentScroll);
-        });
+        // REMOVED: Scroll micro-adjustments were causing cumulative upward drift
+        // The +1/-1 scroll trick accumulated errors over multiple open/close cycles
+        // causing phase cards to creep upward and overlap Join Beta button
       }
     }, 650); // Wait for 0.6s transition + 50ms buffer
   };

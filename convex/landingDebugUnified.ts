@@ -189,6 +189,8 @@ const DEFAULT_CONFIG = {
     joinBetaColor: 'text-white',
     audioLightboxDescriptionFont: 'Arial',
     audioLightboxDescriptionColor: 'text-white/70',
+    audioDescriptionText: 'For full immersion...',
+    audioConsentFadeDuration: 500,
   },
 };
 
