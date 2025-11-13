@@ -7,6 +7,7 @@ import { api } from '@/convex/_generated/api';
 interface PhaseAccordionProps {
   phaseHeaderFont?: string;
   phaseHeaderFontSize?: number;
+  phaseHeaderColor?: string;
   phaseDescriptionFont?: string;
   phaseDescriptionFontSize?: number;
   disableBlur?: boolean;
@@ -15,6 +16,7 @@ interface PhaseAccordionProps {
 export default function PhaseAccordion({
   phaseHeaderFont = 'Orbitron',
   phaseHeaderFontSize = 16,
+  phaseHeaderColor = 'text-yellow-400',
   phaseDescriptionFont = 'Inter',
   phaseDescriptionFontSize = 14,
   disableBlur = false,
@@ -112,11 +114,11 @@ export default function PhaseAccordion({
 
               <div className="relative h-full flex items-center justify-center px-4">
                 <h3
+                  className={phaseHeaderColor}
                   style={{
                     fontFamily: phaseHeaderFont,
                     fontSize: `${phaseHeaderFontSize}px`,
                     fontWeight: '500',
-                    color: '#fab617',
                     letterSpacing: '0.8px',
                     textTransform: 'uppercase',
                     textShadow: isExpanded ? '0 0 8px rgba(250, 182, 23, 0.25)' : 'none',
