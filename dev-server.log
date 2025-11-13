@@ -1317,3 +1317,3155 @@
 [1] 11/13/2025, 10:00:45 AM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
 [1] 11/13/2025, 10:15:44 AM [CONVEX M(walletAuthentication:cleanupExpiredNonces)] [LOG] '[Cleanup] Nonce cleanup completed: 0 expired, 0 used (>24hr old), 0 total deleted'
 [1] 11/13/2025, 10:15:45 AM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
+[1] 11/13/2025, 10:30:44 AM [CONVEX M(walletAuthentication:cleanupExpiredNonces)] [LOG] '[Cleanup] Nonce cleanup completed: 0 expired, 0 used (>24hr old), 0 total deleted'
+[1] 11/13/2025, 10:30:45 AM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
+[1] 11/13/2025, 10:35:44 AM [CONVEX M(leaderboardUpdater:updateGoldLeaderboard)] [LOG] 'Leaderboard update: 16 active wallets (21 inactive skipped)'
+[1] 11/13/2025, 10:35:44 AM [CONVEX M(leaderboardUpdater:updateGoldLeaderboard)] [LOG] 'Leaderboard updated: 13 entries updated, 3 skipped (no significant change) at 2025-11-13T15:35:44.066Z'
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] === BACKEND QUERY RESULT ==='
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Returning tenure data for' 87 'meks'
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2922:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2051:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3972:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0795:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2685:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0304:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2829:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0179:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0406:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1785:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2557:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1917:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3605:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1286:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2071:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0176:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3262:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2683:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3185:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3575:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2147:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2561:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1337:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2871:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3040:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3520:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1817:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3177:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2191:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0860:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1059:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0338:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0995:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3386:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3678:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1436:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2024:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2722:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1568:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1252:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2268:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0014:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3910:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0253:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1052:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2268:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2557:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2683:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2722:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2829:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2871:' {
+[1]   tenurePoints: 538899.531,
+[1]   lastTenureUpdate: 1762753627893,
+[1]   isSlotted: true,
+[1]   slotNumber: 1
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3040:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762754111837,
+[1]   isSlotted: true,
+[1]   slotNumber: 2
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3177:' {
+[1]   tenurePoints: 543684.381,
+[1]   lastTenureUpdate: 1762753523898,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3262:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3386:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3520:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3575:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3678:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3910:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #795:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #860:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #995:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1337:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #406:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3605:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #14:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #338:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1052:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1252:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2024:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2685:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1568:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2922:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3972:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3185:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #304:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2561:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1059:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1286:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1436:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #176:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1785:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #179:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1817:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2051:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2147:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2191:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] === BACKEND QUERY RESULT ==='
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Returning tenure data for' 87 'meks'
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2922:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2051:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3972:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0795:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2685:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0304:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2829:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0179:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0406:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1785:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2557:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1917:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3605:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1286:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2071:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0176:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3262:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2683:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3185:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3575:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2147:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2561:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1337:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2871:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3040:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3520:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1817:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3177:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2191:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0860:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1059:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0338:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0995:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3386:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3678:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1436:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2024:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2722:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1568:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1252:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2268:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0014:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3910:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0253:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1052:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048324536,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2268:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2557:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2683:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2722:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2829:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2871:' {
+[1]   tenurePoints: 538899.531,
+[1]   lastTenureUpdate: 1762753627893,
+[1]   isSlotted: true,
+[1]   slotNumber: 1
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3040:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762754111837,
+[1]   isSlotted: true,
+[1]   slotNumber: 2
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3177:' {
+[1]   tenurePoints: 543684.381,
+[1]   lastTenureUpdate: 1762753523898,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3262:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3386:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3520:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3575:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3678:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3910:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #795:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #860:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #995:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1337:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #406:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3605:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #14:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #338:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1052:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1252:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2024:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2685:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1568:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2922:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3972:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3185:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #304:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2561:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1059:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1286:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1436:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #176:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1785:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #179:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1817:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2051:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2147:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:38:44 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2191:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] === BACKEND QUERY RESULT ==='
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Returning tenure data for' 87 'meks'
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2922:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2051:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3972:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0795:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2685:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0304:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2829:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0179:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0406:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1785:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2557:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1917:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3605:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1286:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2071:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0176:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3262:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2683:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3185:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3575:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2147:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2561:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1337:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2871:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3040:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3520:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1817:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3177:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2191:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0860:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1059:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0338:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0995:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3386:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3678:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1436:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2024:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2722:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1568:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1252:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2268:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0014:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3910:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0253:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1052:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2268:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2557:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2683:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2722:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2829:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2871:' {
+[1]   tenurePoints: 538899.531,
+[1]   lastTenureUpdate: 1762753627893,
+[1]   isSlotted: true,
+[1]   slotNumber: 1
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3040:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762754111837,
+[1]   isSlotted: true,
+[1]   slotNumber: 2
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3177:' {
+[1]   tenurePoints: 543684.381,
+[1]   lastTenureUpdate: 1762753523898,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3262:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3386:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3520:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3575:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3678:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3910:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #795:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #860:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #995:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1337:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #406:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3605:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #14:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #338:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1052:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1252:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2024:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2685:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1568:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2922:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3972:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3185:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #304:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2561:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1059:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1286:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1436:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #176:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1785:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #179:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1817:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2051:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2147:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2191:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] === BACKEND QUERY RESULT ==='
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Returning tenure data for' 87 'meks'
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2922:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2051:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3972:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0795:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2685:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0304:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2829:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0179:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0406:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1785:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2557:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1917:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3605:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1286:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2071:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0176:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3262:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2683:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3185:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3575:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2147:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2561:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1337:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2871:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3040:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3520:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1817:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3177:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2191:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0860:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1059:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0338:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0995:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3386:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3678:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1436:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2024:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2722:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1568:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1252:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2268:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0014:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3910:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0253:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1052:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048390413,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2268:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2557:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2683:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2722:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2829:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2871:' {
+[1]   tenurePoints: 538899.531,
+[1]   lastTenureUpdate: 1762753627893,
+[1]   isSlotted: true,
+[1]   slotNumber: 1
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3040:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762754111837,
+[1]   isSlotted: true,
+[1]   slotNumber: 2
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3177:' {
+[1]   tenurePoints: 543684.381,
+[1]   lastTenureUpdate: 1762753523898,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3262:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3386:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3520:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3575:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3678:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3910:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #795:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #860:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #995:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1337:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #406:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3605:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #14:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #338:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1052:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1252:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2024:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2685:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1568:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2922:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3972:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3185:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #304:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2561:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1059:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1286:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1436:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #176:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1785:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #179:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1817:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2051:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2147:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:39:50 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2191:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] === BACKEND QUERY RESULT ==='
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Returning tenure data for' 87 'meks'
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2922:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2051:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3972:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0795:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2685:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0304:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2829:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0179:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0406:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1785:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2557:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1917:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3605:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1286:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2071:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0176:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3262:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2683:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3185:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3575:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2147:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2561:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1337:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2871:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3040:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3520:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1817:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3177:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2191:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0860:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1059:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0338:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0995:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3386:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3678:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1436:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2024:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2722:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1568:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1252:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2268:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0014:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3910:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0253:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1052:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2268:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2557:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2683:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2722:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2829:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2871:' {
+[1]   tenurePoints: 538899.531,
+[1]   lastTenureUpdate: 1762753627893,
+[1]   isSlotted: true,
+[1]   slotNumber: 1
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3040:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762754111837,
+[1]   isSlotted: true,
+[1]   slotNumber: 2
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3177:' {
+[1]   tenurePoints: 543684.381,
+[1]   lastTenureUpdate: 1762753523898,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3262:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3386:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3520:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3575:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3678:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3910:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #795:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #860:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #995:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1337:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #406:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3605:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #14:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #338:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1052:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1252:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2024:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2685:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1568:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2922:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3972:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3185:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #304:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2561:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1059:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1286:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1436:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #176:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1785:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #179:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1817:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2051:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2147:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2191:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] === BACKEND QUERY RESULT ==='
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Returning tenure data for' 87 'meks'
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2922:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2051:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3972:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0795:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2685:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0304:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2829:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0179:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0406:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1785:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2557:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1917:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3605:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1286:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2071:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0176:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3262:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2683:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3185:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3575:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2147:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2561:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1337:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2871:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3040:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3520:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1817:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3177:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2191:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0860:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1059:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0338:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0995:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3386:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3678:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1436:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2024:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2722:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1568:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1252:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #2268:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0014:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #3910:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #0253:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mekanism #1052:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1763048436547,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2268:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2557:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2683:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2722:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2829:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2871:' {
+[1]   tenurePoints: 538899.531,
+[1]   lastTenureUpdate: 1762753627893,
+[1]   isSlotted: true,
+[1]   slotNumber: 1
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3040:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762754111837,
+[1]   isSlotted: true,
+[1]   slotNumber: 2
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3177:' {
+[1]   tenurePoints: 543684.381,
+[1]   lastTenureUpdate: 1762753523898,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3262:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3386:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3520:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3575:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3678:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3910:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #795:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #860:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #995:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1337:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #406:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3605:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #14:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #338:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1052:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1252:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2024:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2685:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1568:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2922:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3972:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #3185:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #304:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2561:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1059:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1286:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1436:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #176:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1785:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #179:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #1817:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2051:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2147:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:40:36 AM [CONVEX Q(meks:getMeksWithLevelsAndTenure)] [LOG] '[🔒TENURE-DEBUG] Mek #2191:' {
+[1]   tenurePoints: 0,
+[1]   lastTenureUpdate: 1762215914112,
+[1]   isSlotted: false,
+[1]   slotNumber: undefined
+[1] }
+[1] 11/13/2025, 10:45:44 AM [CONVEX M(walletAuthentication:cleanupExpiredNonces)] [LOG] '[Cleanup] Nonce cleanup completed: 0 expired, 0 used (>24hr old), 0 total deleted'
+[1] 11/13/2025, 10:45:45 AM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
+[1] 11/13/2025, 11:00:44 AM [CONVEX M(walletAuthentication:cleanupExpiredNonces)] [LOG] '[Cleanup] Nonce cleanup completed: 0 expired, 0 used (>24hr old), 0 total deleted'
+[1] 11/13/2025, 11:00:45 AM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
