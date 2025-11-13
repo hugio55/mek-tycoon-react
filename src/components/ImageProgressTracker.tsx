@@ -55,7 +55,7 @@ export default function ImageProgressTracker() {
       const response = await fetch('/api/scan-folder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ folderPath, sourceKeys })
+        body: JSON.stringify({ folderPath, sourceKeys, type })
       });
 
       if (!response.ok) {

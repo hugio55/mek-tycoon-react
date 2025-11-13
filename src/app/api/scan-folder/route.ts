@@ -4,9 +4,9 @@ import path from 'path';
 
 export async function POST(request: NextRequest) {
   try {
-    const { folderPath, sourceKeys } = await request.json();
+    const { folderPath, sourceKeys, type } = await request.json();
 
-    if (!folderPath || !sourceKeys || !Array.isArray(sourceKeys)) {
+    if (!folderPath || !sourceKeys || !Array.isArray(sourceKeys) || !type) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 
@@ -18,18 +18,28 @@ export async function POST(request: NextRequest) {
     // Read all files in folder
     const files = fs.readdirSync(folderPath);
 
-    // Normalize filenames (lowercase, no extension)
-    const normalizedFiles = new Set(
-      files.map(file => {
-        const parsed = path.parse(file);
-        return parsed.name.toLowerCase();
-      })
-    );
+    // Extract segments from filenames based on type
+    // Files are named like: aa1-bi1-nm1.png (body-head-trait)
+    // Position mapping: bodies=0 (first), heads=1 (middle), traits=2 (last)
+    const positionIndex = type === 'bodies' ? 0 : type === 'heads' ? 1 : 2;
+
+    // Build a set of found variation codes from files
+    const foundVariationCodes = new Set<string>();
+    files.forEach(file => {
+      const parsed = path.parse(file);
+      const filename = parsed.name.toLowerCase();
+      const segments = filename.split('-');
+
+      // Extract the relevant segment based on type
+      if (segments.length >= 3 && segments[positionIndex]) {
+        foundVariationCodes.add(segments[positionIndex]);
+      }
+    });
 
     // Check each source key (case-insensitive)
     const results: Record<string, boolean> = {};
     sourceKeys.forEach((key: string) => {
-      results[key] = normalizedFiles.has(key.toLowerCase());
+      results[key] = foundVariationCodes.has(key.toLowerCase());
     });
 
     return NextResponse.json({ results });
