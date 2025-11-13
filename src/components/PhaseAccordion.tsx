@@ -83,7 +83,7 @@ export default function PhaseAccordion({
                 }}
               />
 
-              <div className="relative h-full flex items-center justify-between px-4">
+              <div className="relative h-full flex items-center justify-center px-4">
                 <h3
                   style={{
                     fontFamily: phaseHeaderFont,
@@ -101,6 +101,8 @@ export default function PhaseAccordion({
 
                 <div
                   style={{
+                    position: 'absolute',
+                    right: '16px',
                     transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
                     transition: 'transform 150ms ease-out',
                     display: 'flex',
