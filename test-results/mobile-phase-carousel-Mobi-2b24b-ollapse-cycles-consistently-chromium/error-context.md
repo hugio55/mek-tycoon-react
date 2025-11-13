@@ -14,7 +14,7 @@
       - generic [ref=e28] [cursor=pointer]:
         - generic:
           - heading "Phase 1" [level=2]
-        - generic:
+        - generic [ref=e31]:
           - generic:
             - paragraph: Phase I
             - heading "Foundation" [level=3]
@@ -25,7 +25,7 @@
               - text: • Upgrading Meks
               - text: We had roughly 40 beta testers who put these systems through their paces, pointing out any and all issues along the way.
               - text: The modest feature set in this phase is by design; it's imperative that these core mechanics are absolutely rock solid moving forward, since so much is built upon them. Think of this phase as "the foundation" for the intricate world that is Mek Tycoon.
-      - generic [ref=e31] [cursor=pointer]:
+      - generic [ref=e32] [cursor=pointer]:
         - generic:
           - heading "Phase 2" [level=2]
         - generic:
@@ -42,7 +42,7 @@
               - text: • Skins
               - text: • And more
               - text: Phase II tackles ~40% of all the feature sets in Mek Tycoon. This is a substantial amount of work and could likely be the lengthiest phase to develop. Once completed, the beta will be a fun mini game in its own right. These beta sessions will last 1 week and be spaced out to allow for fixing of bugs between sessions. Be sure to click here to learn more about how to be part of the beta.
-      - generic [ref=e34] [cursor=pointer]:
+      - generic [ref=e35] [cursor=pointer]:
         - generic:
           - heading "Phase 3" [level=2]
         - generic:
@@ -56,7 +56,7 @@
               - text: • Revised NFT minting
               - text: • Achievements system
               - text: There are 10 chapters of the story. Only chapter 1 will be released in this phase. It will provide 3-6 months of gameplay for even the fastest of players, meaning chapter 2 will be getting polished off while chapter 1 is churning along. This phase is truly where the game can be played in a meaningful capacity.
-      - generic [ref=e37] [cursor=pointer]:
+      - generic [ref=e38] [cursor=pointer]:
         - generic:
           - heading "Phase 4" [level=2]
         - generic:
@@ -67,12 +67,12 @@
               - text: Strength in numbers! With the release of this phase, players (Corporations) can band together to create Federations. Being part of one of these entities comes with a slew of perks, challenges, and gameplay.
               - text: Federations can be formed by players who qualify, but can be joined by all. With up to 10 Corporations per Federation, there will be plenty of competition on the global leaderboards.
               - text: This phase will also include any and all community-requested features that have made it through the ranks over the course of P2-4. That said, it doesn't stop here at Phase IV... there are plenty of additions to come, but we consider this version of Mek Tycoon to be the first production release.
-    - img [ref=e41] [cursor=pointer]
+    - img [ref=e42] [cursor=pointer]
     - generic:
       - generic: 📱 MOBILE CONFIG
       - generic: "Width: 375px"
       - generic: "Breakpoint: 1024px"
-  - button "Open Next.js Dev Tools" [ref=e49] [cursor=pointer]:
-    - img [ref=e50]
-  - alert [ref=e53]
+  - button "Open Next.js Dev Tools" [ref=e50] [cursor=pointer]:
+    - img [ref=e51]
+  - alert [ref=e54]
 ```

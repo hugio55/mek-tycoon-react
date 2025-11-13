@@ -487,6 +487,26 @@ export default function LandingDebugPage() {
     }
   }, [migrationStatus]); // REMOVED dbSettings to prevent effect from running on every DB update
 
+  // Continuously clear audio consent while "Show" mode is active (for testing)
+  useEffect(() => {
+    if (!audioConsentVisible) return; // Only run when "Show" mode is active
+
+    console.log('[🎵CONSENT] Setting up continuous consent clearing for testing');
+
+    // Clear immediately
+    localStorage.removeItem('mek-audio-consent');
+
+    // Set up interval to clear every 100ms (catches it right after user clicks PROCEED)
+    const interval = setInterval(() => {
+      localStorage.removeItem('mek-audio-consent');
+    }, 100);
+
+    return () => {
+      console.log('[🎵CONSENT] Cleaning up consent clearing interval');
+      clearInterval(interval);
+    };
+  }, [audioConsentVisible]);
+
   // Auto-save to Convex with debouncing (500ms delay)
   useEffect(() => {
     console.log('[💾SAVE] Auto-save effect triggered', {

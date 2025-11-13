@@ -5,6 +5,11 @@ test.describe('Mobile Phase Carousel Animations', () => {
     // Set mobile viewport (iPhone SE size)
     await page.setViewportSize({ width: 375, height: 667 });
 
+    // Set localStorage to bypass audio consent (simpler approach)
+    await page.addInitScript(() => {
+      localStorage.setItem('mek-audio-consent', 'true');
+    });
+
     // Navigate to landing page
     await page.goto('http://localhost:3200/landing');
 
