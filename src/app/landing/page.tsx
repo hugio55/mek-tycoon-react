@@ -1615,6 +1615,7 @@ export default function LandingPage() {
         className={isMobile ? "relative left-0 z-[20]" : "absolute left-0 z-[20]"}
         style={{
           top: isMobile ? 0 : `calc(100vh + ${phaseColumnYOffset}px)`,
+          marginTop: isMobile ? '64px' : undefined, // Proper spacing buffer from Join Beta button on mobile
           width: '100%', // Full container width - correctly fills space without extending under scrollbar
           minHeight: isMobile ? 'auto' : undefined,
         }}
