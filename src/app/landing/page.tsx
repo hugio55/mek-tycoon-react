@@ -786,41 +786,58 @@ export default function LandingPage() {
   }, []);
 
   // Scroll detection for description text animation and scroll indicator
+  // Mobile-optimized: Handles touch events, iOS address bar, throttling for performance
   useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout | null = null;
+    let lastKnownScrollY = 0;
+
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const innerHeight = window.innerHeight;
-      const scrollHeight = document.documentElement.scrollHeight;
-
-      // Check body touchAction status for debugging mobile scroll issues
-      const bodyTouchAction = document.body.style.touchAction;
-      const bodyOverflow = document.body.style.overflow;
-      const bodyPosition = document.body.style.position;
-
-      console.log('[📜SCROLL] handleScroll fired:', {
-        scrollY,
-        innerHeight,
-        scrollHeight,
-        isMobile,
-        windowWidth,
-        bodyTouchAction,
-        bodyOverflow,
-        bodyPosition,
-        hasScrolled: scrollY > 0
-      });
-
-      if (scrollY > 0) {
-        console.log('[📜SCROLL] Setting hasScrolled = true');
-        setHasScrolled(true);
-      } else {
-        console.log('[📜SCROLL] Setting hasScrolled = false');
-        setHasScrolled(false);
+      // Cancel any pending timeout
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
       }
 
-      // Hide scroll indicator as soon as user starts scrolling
-      if (scrollY > 10) {
-        setShowScrollIndicator(false);
-      }
+      // Throttle for mobile performance (prevents excessive state updates during smooth scrolling)
+      scrollTimeout = setTimeout(() => {
+        // Use multiple methods to get scroll position (cross-browser compatibility, especially iOS)
+        const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
+        const innerHeight = window.innerHeight;
+        const scrollHeight = document.documentElement.scrollHeight;
+
+        // Check body touchAction status for debugging mobile scroll issues
+        const bodyTouchAction = document.body.style.touchAction;
+        const bodyOverflow = document.body.style.overflow;
+        const bodyPosition = document.body.style.position;
+
+        console.log('[📜SCROLL] handleScroll fired:', {
+          scrollY,
+          innerHeight,
+          scrollHeight,
+          isMobile,
+          windowWidth,
+          bodyTouchAction,
+          bodyOverflow,
+          bodyPosition,
+          hasScrolled: scrollY > 0,
+          changeFromLast: scrollY - lastKnownScrollY
+        });
+
+        // Trigger on ANY scroll > 1px (works reliably on both desktop and mobile)
+        if (scrollY > 1) {
+          console.log('[📜SCROLL] ✅ TRIGGERED - Setting hasScrolled = true');
+          setHasScrolled(true);
+        } else {
+          console.log('[📜SCROLL] ⬆️ RESET - Back to top, setting hasScrolled = false');
+          setHasScrolled(false);
+        }
+
+        // Hide scroll indicator as soon as user starts scrolling
+        if (scrollY > 10) {
+          setShowScrollIndicator(false);
+        }
+
+        lastKnownScrollY = scrollY;
+      }, 50); // 50ms throttle - responsive but prevents excessive updates
     };
 
     console.log('[📜SCROLL] Adding scroll listener. Initial state:', {
@@ -831,17 +848,45 @@ export default function LandingPage() {
       bodyTouchAction: document.body.style.touchAction
     });
 
-    // Run initial check immediately to handle cases where page loads with scroll position
-    handleScroll();
-
     // CRITICAL FIX: Add { passive: true } for mobile browser performance
     // Mobile browsers may throttle or ignore scroll listeners without this flag
     window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // On mobile, also check scroll position after touch events (iOS Safari quirk)
+    // iOS Safari's address bar can affect scroll detection
+    if (isMobile) {
+      window.addEventListener('touchend', handleScroll, { passive: true });
+    }
+
+    // Run initial check immediately to handle cases where page loads with scroll position
+    handleScroll();
+
     return () => {
       console.log('[📜SCROLL] Removing scroll listener');
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
       window.removeEventListener('scroll', handleScroll);
+      if (isMobile) {
+        window.removeEventListener('touchend', handleScroll);
+      }
     };
   }, [isMobile, windowWidth]);
+
+  // Auto-show description/button on mobile after logo animation completes
+  useEffect(() => {
+    if (isMobile && animationStage === 'logo' && !hasScrolled) {
+      // Use logoFadeDuration + 1000ms buffer to ensure animation completes
+      const showDelay = logoFadeDuration + 1000;
+      console.log('[📱MOBILE] Logo animation active on mobile - auto-showing description/button in', showDelay, 'ms');
+      const timer = setTimeout(() => {
+        console.log('[📱MOBILE] Auto-setting hasScrolled = true for mobile');
+        setHasScrolled(true);
+      }, showDelay);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isMobile, animationStage, hasScrolled, logoFadeDuration]);
 
   // CRITICAL MOBILE FIX: Force body style cleanup after consent lightbox closes
   // The AudioConsentLightbox sets touchAction='none' which blocks scrolling on mobile

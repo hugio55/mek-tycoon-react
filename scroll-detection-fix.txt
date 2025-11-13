@@ -1,0 +1,81 @@
+  // Scroll detection for description text animation and scroll indicator
+  // Mobile-optimized: Handles touch events, iOS address bar, throttling for performance
+  useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout | null = null;
+    let lastKnownScrollY = 0;
+
+    const handleScroll = () => {
+      // Cancel any pending timeout
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      // Throttle for mobile performance (prevents excessive state updates during smooth scrolling)
+      scrollTimeout = setTimeout(() => {
+        // Use multiple methods to get scroll position (cross-browser compatibility)
+        const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
+        const innerHeight = window.innerHeight;
+        const scrollHeight = document.documentElement.scrollHeight;
+
+        console.log('[📜SCROLL] handleScroll fired:', {
+          scrollY,
+          innerHeight,
+          scrollHeight,
+          isMobile,
+          windowWidth,
+          hasScrolled: scrollY > 0,
+          changeFromLast: scrollY - lastKnownScrollY
+        });
+
+        // Trigger on ANY scroll > 1px (works reliably on both desktop and mobile)
+        if (scrollY > 1) {
+          if (!hasScrolled) {
+            console.log('[📜SCROLL] ✅ TRIGGERED - Setting hasScrolled = true');
+            setHasScrolled(true);
+          }
+        } else {
+          if (hasScrolled) {
+            console.log('[📜SCROLL] ⬆️ RESET - Back to top, setting hasScrolled = false');
+            setHasScrolled(false);
+          }
+        }
+
+        // Hide scroll indicator as soon as user starts scrolling
+        if (scrollY > 10) {
+          setShowScrollIndicator(false);
+        }
+
+        lastKnownScrollY = scrollY;
+      }, 50); // 50ms throttle - responsive but prevents excessive updates
+    };
+
+    console.log('[📜SCROLL] Adding scroll listener. Initial state:', {
+      isMobile,
+      windowWidth,
+      hasScrolled,
+      scrollY: window.scrollY
+    });
+
+    // Use passive listeners for better scroll performance on mobile
+    // Also listen to touchend for more immediate mobile response
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // On mobile, also check scroll position after touch events (iOS Safari quirk)
+    if (isMobile) {
+      window.addEventListener('touchend', handleScroll, { passive: true });
+    }
+
+    // Run initial check immediately to handle cases where page loads with scroll position
+    handleScroll();
+
+    return () => {
+      console.log('[📜SCROLL] Removing scroll listener');
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+      window.removeEventListener('scroll', handleScroll);
+      if (isMobile) {
+        window.removeEventListener('touchend', handleScroll);
+      }
+    };
+  }, [isMobile, windowWidth, hasScrolled]);

@@ -440,13 +440,13 @@ export default function HorizontalTimeline({
               <div
                 ref={(el) => (contentRefs.current[index] = el)}
                 className={`
-                  absolute inset-0
+                  ${isMobile ? 'relative' : 'absolute inset-0'}
                   ${isMobile ? 'p-6' : 'p-8 md:p-12'}
                   z-20
                   flex flex-col
                   ${isActive
                     ? 'translate-y-0 opacity-100'
-                    : isMobile ? 'translate-y-2 opacity-0' : 'translate-y-4 opacity-0'
+                    : isMobile ? 'translate-y-2 opacity-0 hidden' : 'translate-y-4 opacity-0'
                   }
                 `}
                 style={{
