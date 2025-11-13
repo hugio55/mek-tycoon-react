@@ -19,12 +19,40 @@ export default function PhaseAccordion({
 }: PhaseAccordionProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
 
   const handleToggle = (index: number, isLocked: boolean) => {
     if (isLocked) return;
-    setExpandedIndex(prev => prev === index ? null : index);
+
+    const newExpanded = expandedIndex === index ? null : index;
+    setExpandedIndex(newExpanded);
+
+    // Auto-scroll after expansion animation (mobile only)
+    if (newExpanded !== null && window.innerWidth <= 768) {
+      setTimeout(() => {
+        const button = buttonRefs.current[index];
+        const content = contentRefs.current[index];
+
+        if (button && content) {
+          const buttonRect = button.getBoundingClientRect();
+          const contentHeight = content.scrollHeight;
+          const viewportHeight = window.innerHeight;
+
+          // Calculate if content goes off-screen
+          const contentBottom = buttonRect.bottom + contentHeight;
+          const scrollNeeded = contentBottom - viewportHeight + 40; // 40px padding
+
+          if (scrollNeeded > 0) {
+            window.scrollBy({
+              top: scrollNeeded,
+              behavior: 'smooth'
+            });
+          }
+        }
+      }, 200); // Wait for expand animation (180ms + buffer)
+    }
   };
 
   const formatDescription = (text: string) => {
@@ -57,6 +85,7 @@ export default function PhaseAccordion({
         return (
           <div key={card._id} className="relative">
             <button
+              ref={(el) => (buttonRefs.current[index] = el)}
               onClick={() => handleToggle(index, isLocked)}
               disabled={isLocked}
               className={`
