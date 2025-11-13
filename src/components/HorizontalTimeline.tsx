@@ -355,11 +355,12 @@ export default function HorizontalTimeline({
                 ...dimensionStyle,
                 transition: isMobile
                   ? isActive
-                    ? 'max-height 0.7s cubic-bezier(0.4, 0.0, 0.2, 1), aspect-ratio 0.7s cubic-bezier(0.4, 0.0, 0.2, 1)'
-                    : 'max-height 0.5s cubic-bezier(0.4, 0.0, 0.2, 1), aspect-ratio 0.5s cubic-bezier(0.4, 0.0, 0.2, 1)'
+                    ? 'max-height 1.2s cubic-bezier(0.25, 0.1, 0.25, 1), aspect-ratio 1.2s cubic-bezier(0.25, 0.1, 0.25, 1)'
+                    : 'max-height 0.8s cubic-bezier(0.25, 0.1, 0.25, 1), aspect-ratio 0.8s cubic-bezier(0.25, 0.1, 0.25, 1)'
                   : 'width 0.5s ease-in-out',
                 zIndex: isActive ? 20 : 10,
                 touchAction: isMobile ? 'manipulation' : 'auto',
+                willChange: isMobile && isAnyActive ? 'max-height' : 'auto',
               }}
               onMouseEnter={() => handleHoverEnter(index)}
               onMouseLeave={handleHoverLeave}
