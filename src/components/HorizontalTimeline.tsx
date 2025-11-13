@@ -300,21 +300,23 @@ export default function HorizontalTimeline({
           let useAspectRatio = false;
 
           if (isMobile) {
-            // Mobile: vertical layout with 16:9 aspect ratio
+            // Mobile: vertical layout with CSS Grid for smooth animation
             if (isActive) {
-              // Expanded: large max-height to show full content (allows smooth animation)
+              // Expanded: grid row expands to fit content
               dimensionStyle = {
                 width: '100%',
-                maxHeight: '2000px', // Large enough for any content
+                display: 'grid',
+                gridTemplateRows: '1fr', // Expanded - content visible
               };
               useAspectRatio = false;
               console.log(`[🎯DIMENSION] Card ${index} EXPANDED (mobile):`, dimensionStyle);
             } else {
-              // Collapsed: 16:9 aspect ratio box using aspect-ratio CSS
+              // Collapsed: 16:9 aspect ratio box with grid row collapsed
               dimensionStyle = {
                 width: '100%',
                 aspectRatio: '16 / 9',
-                maxHeight: '250px', // Approximate collapsed height
+                display: 'grid',
+                gridTemplateRows: '0fr', // Collapsed - content hidden
               };
               useAspectRatio = true;
               console.log(`[🎯DIMENSION] Card ${index} COLLAPSED (mobile):`, dimensionStyle);
@@ -353,12 +355,13 @@ export default function HorizontalTimeline({
               `}
               style={{
                 ...dimensionStyle,
+                overflow: 'hidden', // Critical for grid animation
                 transition: isMobile
-                  ? 'max-height 4s cubic-bezier(0.25, 0.1, 0.25, 1), aspect-ratio 4s cubic-bezier(0.25, 0.1, 0.25, 1)'
+                  ? 'grid-template-rows 4s cubic-bezier(0.25, 0.1, 0.25, 1), aspect-ratio 4s cubic-bezier(0.25, 0.1, 0.25, 1)'
                   : 'width 0.5s ease-in-out',
                 zIndex: isActive ? 20 : 10,
                 touchAction: isMobile ? 'manipulation' : 'auto',
-                willChange: isMobile && isAnyActive ? 'max-height' : 'auto',
+                willChange: isMobile && isAnyActive ? 'grid-template-rows' : 'auto',
               }}
               onMouseEnter={() => handleHoverEnter(index)}
               onMouseLeave={handleHoverLeave}
@@ -438,19 +441,27 @@ export default function HorizontalTimeline({
                 </h2>
               </div>
 
-              {/* Content - slides up on entrance, slides down on exit */}
+              {/* Content - wraps in grid item for smooth collapse/expand */}
               <div
-                ref={(el) => (contentRefs.current[index] = el)}
                 className={`
-                  ${isMobile ? 'relative' : 'absolute inset-0'}
-                  ${isMobile ? 'p-6' : 'p-8 md:p-12'}
+                  ${isMobile ? 'min-h-0' : 'absolute inset-0'}
                   z-20
-                  flex flex-col
-                  ${isActive
-                    ? 'translate-y-0 opacity-100'
-                    : isMobile ? 'translate-y-2 opacity-0 hidden' : 'translate-y-4 opacity-0'
-                  }
                 `}
+                style={{
+                  overflow: isMobile ? 'hidden' : 'visible',
+                }}
+              >
+                <div
+                  ref={(el) => (contentRefs.current[index] = el)}
+                  className={`
+                    ${isMobile ? 'relative' : ''}
+                    ${isMobile ? 'p-6' : 'p-8 md:p-12'}
+                    flex flex-col
+                    ${isActive
+                      ? 'translate-y-0 opacity-100'
+                      : isMobile ? 'translate-y-2 opacity-0' : 'translate-y-4 opacity-0'
+                    }
+                  `}
                 style={{
                   transition: isActive
                     ? 'transform 0.4s ease-out 0.2s, opacity 0.3s ease-out 0.2s, width 0.5s ease-in-out'
