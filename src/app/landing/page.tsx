@@ -134,6 +134,7 @@ export default function LandingPage() {
 
   // Viewport detection for responsive settings
   const [isMobile, setIsMobile] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(0);
 
   useEffect(() => {
     const checkViewport = () => {
@@ -148,6 +149,7 @@ export default function LandingPage() {
       }
 
       setIsMobile(nowMobile);
+      setWindowWidth(width);
     };
 
     checkViewport();
@@ -1610,7 +1612,7 @@ export default function LandingPage() {
           {isMobile ? '📱 MOBILE CONFIG' : '🖥️ DESKTOP CONFIG'}
         </div>
         <div style={{ fontSize: '12px', opacity: 0.9 }}>
-          Width: {typeof window !== 'undefined' ? window.innerWidth : 0}px
+          Width: {windowWidth}px
         </div>
         <div style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>
           Breakpoint: 1024px
