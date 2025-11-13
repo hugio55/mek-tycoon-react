@@ -564,7 +564,7 @@ export default function LandingDebugPage() {
             'descriptionCardBlur', 'descriptionCardDarkness', 'descriptionCardBorder',
             'logoFadeDuration', 'lightboxBackdropDarkness', 'joinBetaFont', 'joinBetaColor',
             'audioLightboxDescriptionFont', 'audioLightboxDescriptionColor',
-            'audioDescriptionText', 'audioConsentFadeDuration'
+            'audioDescriptionText', 'audioConsentFadeDuration', 'forceShowAudioConsent'
           ];
 
           // Extract shared vs mode-specific fields
@@ -1045,6 +1045,20 @@ export default function LandingDebugPage() {
               }`}
             >
               {audioConsentVisible ? 'Hide Landing Audio Consent' : 'Show Landing Audio Consent'}
+            </button>
+            <button
+              onClick={() => {
+                const newValue = !config.forceShowAudioConsent;
+                updateConfig('forceShowAudioConsent', newValue);
+                console.log('[🔧FORCE] Force Show Audio Consent toggled:', newValue);
+              }}
+              className={`px-2 py-1 rounded text-xs font-semibold ${
+                config.forceShowAudioConsent
+                  ? 'bg-yellow-700 border border-yellow-500 text-yellow-100'
+                  : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              {config.forceShowAudioConsent ? '🔒 Force Show ON (All Devices)' : 'Force Show OFF'}
             </button>
           </div>
         </div>

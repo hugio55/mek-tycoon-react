@@ -607,6 +607,15 @@ export default function LandingPage() {
     console.log('[🎬ANIMATION] Initial animationStage:', animationStage);
 
     try {
+      // Check if forced to show consent via Convex config
+      if (config.forceShowAudioConsent) {
+        console.log('[🎬ANIMATION] Force show enabled - showing consent lightbox (overrides localStorage)');
+        setShowAudioConsent(true);
+        setLockScrollForConsent(true);
+        // Keep animationStage at 'initial' (everything hidden)
+        return;
+      }
+
       const consent = localStorage.getItem(AUDIO_CONSENT_KEY);
       if (!consent) {
         // First-time visitor - show consent lightbox
