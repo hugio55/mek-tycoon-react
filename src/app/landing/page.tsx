@@ -411,6 +411,13 @@ export default function LandingPage() {
   // Scroll indicator state
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
 
+  // Debug logging for hasScrolled state changes
+  useEffect(() => {
+    console.log('[📜SCROLL] hasScrolled state changed to:', hasScrolled);
+    console.log('[📜SCROLL] Current isMobile:', isMobile);
+    console.log('[📜SCROLL] Current windowWidth:', windowWidth);
+  }, [hasScrolled, isMobile, windowWidth]);
+
   // Beta signup lightbox state
   const [showBetaLightbox, setShowBetaLightbox] = useState(false);
 
@@ -781,21 +788,90 @@ export default function LandingPage() {
   // Scroll detection for description text animation and scroll indicator
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 0) {
+      const scrollY = window.scrollY;
+      const innerHeight = window.innerHeight;
+      const scrollHeight = document.documentElement.scrollHeight;
+
+      // Check body touchAction status for debugging mobile scroll issues
+      const bodyTouchAction = document.body.style.touchAction;
+      const bodyOverflow = document.body.style.overflow;
+      const bodyPosition = document.body.style.position;
+
+      console.log('[📜SCROLL] handleScroll fired:', {
+        scrollY,
+        innerHeight,
+        scrollHeight,
+        isMobile,
+        windowWidth,
+        bodyTouchAction,
+        bodyOverflow,
+        bodyPosition,
+        hasScrolled: scrollY > 0
+      });
+
+      if (scrollY > 0) {
+        console.log('[📜SCROLL] Setting hasScrolled = true');
         setHasScrolled(true);
       } else {
+        console.log('[📜SCROLL] Setting hasScrolled = false');
         setHasScrolled(false);
       }
 
       // Hide scroll indicator as soon as user starts scrolling
-      if (window.scrollY > 10) {
+      if (scrollY > 10) {
         setShowScrollIndicator(false);
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    console.log('[📜SCROLL] Adding scroll listener. Initial state:', {
+      isMobile,
+      windowWidth,
+      hasScrolled,
+      scrollY: window.scrollY,
+      bodyTouchAction: document.body.style.touchAction
+    });
+
+    // Run initial check immediately to handle cases where page loads with scroll position
+    handleScroll();
+
+    // CRITICAL FIX: Add { passive: true } for mobile browser performance
+    // Mobile browsers may throttle or ignore scroll listeners without this flag
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      console.log('[📜SCROLL] Removing scroll listener');
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [isMobile, windowWidth]);
+
+  // CRITICAL MOBILE FIX: Force body style cleanup after consent lightbox closes
+  // The AudioConsentLightbox sets touchAction='none' which blocks scrolling on mobile
+  // This safety mechanism ensures styles are restored even if timing issues occur
+  useEffect(() => {
+    if (!showAudioConsent && !lockScrollForConsent) {
+      // Double-check body styles are cleared
+      const bodyTouchAction = document.body.style.touchAction;
+      const bodyOverflow = document.body.style.overflow;
+      const bodyPosition = document.body.style.position;
+
+      if (bodyTouchAction !== '' || bodyOverflow !== '' || bodyPosition !== '') {
+        console.log('[🔓SCROLL] SAFETY: Forcing body style cleanup. Previous values:', {
+          touchAction: bodyTouchAction,
+          overflow: bodyOverflow,
+          position: bodyPosition
+        });
+
+        document.body.style.touchAction = '';
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+
+        console.log('[🔓SCROLL] SAFETY: Body styles forcibly cleared for mobile scrolling');
+      } else {
+        console.log('[🔓SCROLL] SAFETY: Body styles already clean');
+      }
+    }
+  }, [showAudioConsent, lockScrollForConsent]);
 
   // Initialize audio on component mount
   useEffect(() => {
@@ -1379,7 +1455,12 @@ export default function LandingPage() {
 
           {/* Description - Scroll-triggered fade-in animation */}
           <div className="w-full max-w-xs sm:max-w-md md:max-w-xl lg:max-w-2xl px-4 sm:px-6 text-center"
-               style={{ transform: `translate(${descriptionXOffset}px, ${descriptionYOffset}px)` }}>
+               style={{ transform: `translate(${descriptionXOffset}px, ${descriptionYOffset}px)` }}
+               ref={(el) => {
+                 if (el) {
+                   console.log('[📜RENDER] Description rendered with hasScrolled:', hasScrolled, 'opacity:', hasScrolled ? 1 : 0);
+                 }
+               }}>
             <p
               className={`${descriptionColor} tracking-wide leading-relaxed break-words transition-all duration-700 ease-out`}
               style={{
@@ -1405,6 +1486,11 @@ export default function LandingPage() {
             onClick={() => {
               console.log('[🎮BETA] Join Beta clicked - opening lightbox');
               setShowBetaLightbox(true);
+            }}
+            ref={(el) => {
+              if (el) {
+                console.log('[📜RENDER] Join Beta button rendered with hasScrolled:', hasScrolled, 'opacity:', hasScrolled ? 1 : 0);
+              }
             }}
           >
             <FillTextButton
