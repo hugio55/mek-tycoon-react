@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import HorizontalTimeline from '@/components/HorizontalTimeline';
+import PhaseAccordion from '@/components/PhaseAccordion';
 import { SPEAKER_ICON_STYLES, type SpeakerIconStyle } from '@/components/SpeakerIcons';
 import AudioConsentLightbox from '@/components/AudioConsentLightbox';
 import BetaSignupLightbox from '@/components/BetaSignupLightbox';
@@ -1647,21 +1648,31 @@ export default function LandingPage() {
           minHeight: isMobile ? 'auto' : undefined,
         }}
       >
-        <HorizontalTimeline
-          phaseHeaderFont={phaseHeaderFont}
-          phaseHeaderFontSize={phaseHeaderFontSize}
-          phaseHeaderColor={phaseHeaderColor}
-          phaseDescriptionFont={phaseDescriptionFont}
-          phaseDescriptionFontSize={phaseDescriptionFontSize}
-          imageDarkness={phaseImageDarkening}
-          imageBlur={phaseBlurAmount}
-          imageBlurSelected={phaseBlurAmountSelected}
-          columnHeight={phaseColumnHeight}
-          fadePosition={phaseFadePosition}
-          imageBlendMode={phaseImageBlendMode}
-          hoverDarkenIntensity={phaseHoverDarkeningIntensity}
-          idleBackdropBlur={phaseIdleBackdropBlur}
-        />
+        {/* Mobile: Glass Accordion (NEW) | Desktop: Image Carousel (UNCHANGED) */}
+        {isMobile ? (
+          <PhaseAccordion
+            phaseHeaderFont={phaseHeaderFont}
+            phaseHeaderFontSize={phaseHeaderFontSize}
+            phaseDescriptionFont={phaseDescriptionFont}
+            phaseDescriptionFontSize={phaseDescriptionFontSize}
+          />
+        ) : (
+          <HorizontalTimeline
+            phaseHeaderFont={phaseHeaderFont}
+            phaseHeaderFontSize={phaseHeaderFontSize}
+            phaseHeaderColor={phaseHeaderColor}
+            phaseDescriptionFont={phaseDescriptionFont}
+            phaseDescriptionFontSize={phaseDescriptionFontSize}
+            imageDarkness={phaseImageDarkening}
+            imageBlur={phaseBlurAmount}
+            imageBlurSelected={phaseBlurAmountSelected}
+            columnHeight={phaseColumnHeight}
+            fadePosition={phaseFadePosition}
+            imageBlendMode={phaseImageBlendMode}
+            hoverDarkenIntensity={phaseHoverDarkeningIntensity}
+            idleBackdropBlur={phaseIdleBackdropBlur}
+          />
+        )}
       </div>
 
       {/* Audio Consent Lightbox */}
