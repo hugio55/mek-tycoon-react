@@ -405,7 +405,7 @@ export default function LandingPage() {
   const [joinBetaHorizontalOffset, setJoinBetaHorizontalOffset] = useState(DEFAULT_CONFIG.joinBetaHorizontalOffset);
   const [joinBetaVerticalOffset, setJoinBetaVerticalOffset] = useState(DEFAULT_CONFIG.joinBetaVerticalOffset);
 
-  // Scroll-triggered animation state
+  // Scroll-triggered animation state (ONE-WAY FLAG - never resets once true)
   const [hasScrolled, setHasScrolled] = useState(false);
 
   // Scroll indicator state
@@ -822,14 +822,13 @@ export default function LandingPage() {
           changeFromLast: scrollY - lastKnownScrollY
         });
 
-        // Trigger on ANY scroll > 1px (works reliably on both desktop and mobile)
-        if (scrollY > 1) {
-          console.log('[📜SCROLL] ✅ TRIGGERED - Setting hasScrolled = true');
+        // ONE-WAY FLAG: Trigger on ANY scroll > 1px, but NEVER reset to false
+        // This ensures text remains visible permanently once user has scrolled
+        if (scrollY > 1 && !hasScrolled) {
+          console.log('[📜SCROLL] ✅ TRIGGERED - Setting hasScrolled = true (permanent)');
           setHasScrolled(true);
-        } else {
-          console.log('[📜SCROLL] ⬆️ RESET - Back to top, setting hasScrolled = false');
-          setHasScrolled(false);
         }
+        // INTENTIONALLY NO ELSE BLOCK - never reset hasScrolled to false
 
         // Hide scroll indicator as soon as user starts scrolling
         if (scrollY > 10) {
@@ -871,7 +870,7 @@ export default function LandingPage() {
         window.removeEventListener('touchend', handleScroll);
       }
     };
-  }, [isMobile, windowWidth]);
+  }, [isMobile, windowWidth, hasScrolled]);
 
   // Auto-show description/button on mobile after logo animation completes
   useEffect(() => {
