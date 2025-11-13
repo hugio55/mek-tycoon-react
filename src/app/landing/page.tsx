@@ -1315,28 +1315,13 @@ export default function LandingPage() {
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
 
-    // MOBILE PERFORMANCE: Reduce particle counts dramatically on mobile
-    const mobileBgStarCount = isMobile ? Math.floor(bgStarCount * 0.15) : bgStarCount; // 800 → 120 on mobile
-    const mobileStarFrequency = isMobile ? Math.floor(starFrequency * 0.25) : starFrequency; // 200 → 50 on mobile
-    const mobileStarFrequency2 = isMobile ? Math.floor(starFrequency2 * 0.2) : starFrequency2; // 100 → 20 on mobile
-    const mobileStarFrequency3 = isMobile ? 0 : starFrequency3; // Disable layer 3 entirely on mobile
-
-    console.log('[🚀PERF] Canvas particle counts:', {
-      isMobile,
-      bgStars: mobileBgStarCount,
-      layer1: mobileStarFrequency,
-      layer2: mobileStarFrequency2,
-      layer3: mobileStarFrequency3,
-      reduction: isMobile ? '75-85% fewer particles' : 'desktop (full particles)'
-    });
-
     // Create distant background star field (static/very slow)
     const backgroundStars: BackgroundStar[] = [];
     // Calculate fade boundaries (only spawn stars above fade end)
     const fadeStartY = (starFadePosition / 100) * canvas.height;
     const fadeEndY = fadeStartY + starFadeFeatherSize;
 
-    for (let i = 0; i < mobileBgStarCount; i++) {
+    for (let i = 0; i < bgStarCount; i++) {
       const baseSize = 0.5;
       const sizeVariation = (bgStarSizeRandomness / 100) * baseSize;
       // Only spawn stars in the visible region (above fade end)
