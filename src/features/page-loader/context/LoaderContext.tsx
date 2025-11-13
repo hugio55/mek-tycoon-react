@@ -22,9 +22,17 @@ const LoaderContext = createContext<LoaderContextValue | null>(null);
 export function LoaderProvider({ children }: { children: React.ReactNode }) {
   // Detect environment and check appropriate loader setting
   const isBypassed = typeof window !== 'undefined' && (() => {
-    const isLocalhost = window.location.hostname === 'localhost' ||
-                       window.location.hostname === '127.0.0.1' ||
-                       window.location.hostname.includes('localhost');
+    const hostname = window.location.hostname;
+
+    // Consider it localhost if it's:
+    // - localhost or 127.0.0.1
+    // - Any local IP address (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+    const isLocalhost = hostname === 'localhost' ||
+                       hostname === '127.0.0.1' ||
+                       hostname.includes('localhost') ||
+                       hostname.startsWith('192.168.') ||
+                       hostname.startsWith('10.') ||
+                       /^172\.(1[6-9]|2\d|3[01])\./.test(hostname);
 
     // Check environment-specific setting
     const settingKey = isLocalhost ? 'disablePageLoaderLocalhost' : 'disablePageLoaderProduction';
