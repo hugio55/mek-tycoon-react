@@ -294,7 +294,9 @@ export default function LandingPage() {
   const logoContainerRef = useRef<HTMLDivElement>(null);
 
   // Canvas compositing for Safari/iOS (dual-video alpha transparency)
+  // MOBILE PERFORMANCE: Skip expensive canvas compositing on mobile devices
   useEffect(() => {
+    if (isMobile) return; // Disable video compositing on mobile
     if (!useSafariVideo) return;
     if (!compositeCanvasRef.current || !colorVideoRef.current || !alphaVideoRef.current) return;
 
@@ -412,9 +414,16 @@ export default function LandingPage() {
   }, [useSafariVideo]);
 
   // Start video when logo animation begins
+  // MOBILE PERFORMANCE: Skip video playback on mobile devices
   useEffect(() => {
     if (animationStage === 'logo') {
-      // Handle Safari/iOS (dual video compositing)
+      // Skip video on mobile - use static image instead
+      if (isMobile) {
+        console.log('[🎬VIDEO] Skipping video on mobile (using static image)');
+        return;
+      }
+
+      // Handle Safari/iOS (dual video compositing) - desktop only
       if (useSafariVideo && colorVideoRef.current && alphaVideoRef.current) {
         console.log('[🎬VIDEO] Starting Safari dual-video playback');
         colorVideoRef.current.currentTime = 0;
@@ -422,7 +431,7 @@ export default function LandingPage() {
         colorVideoRef.current.play().catch(err => console.error('[🎬VIDEO] Color video play failed:', err));
         alphaVideoRef.current.play().catch(err => console.error('[🎬VIDEO] Alpha video play failed:', err));
       }
-      // Handle Chrome/Firefox (WebM)
+      // Handle Chrome/Firefox (WebM) - desktop only
       else if (!useSafariVideo && videoRef.current) {
         console.log('[🎬VIDEO] Starting WebM video playback');
         videoRef.current.currentTime = 0;
@@ -1414,9 +1423,22 @@ export default function LandingPage() {
     // Track last spawn time for Layer 3 stars (for spawn delay)
     const starLastSpawnTime3 = new Map<number, number>();
 
+    // MOBILE PERFORMANCE: Throttle to 30fps on mobile (vs 60fps desktop)
+    // Reduces CPU usage by ~50% with minimal visual impact
+    let lastFrameTime = 0;
+    const targetFPS = isMobile ? 30 : 60;
+    const frameDelay = 1000 / targetFPS;
 
     let animationId: number;
-    const animate = () => {
+    const animate = (currentTime: number = performance.now()) => {
+      // Frame rate throttling for mobile
+      const elapsed = currentTime - lastFrameTime;
+      if (elapsed < frameDelay) {
+        animationId = requestAnimationFrame(animate);
+        return;
+      }
+      lastFrameTime = currentTime - (elapsed % frameDelay);
+
       // Clear with transparency to show background image
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -1617,7 +1639,8 @@ export default function LandingPage() {
     starScale3, starSpeed3, starFrequency3, lineLength3, spawnDelay3, twinkleAmount3, twinkleSpeed3, twinkleSpeedRandomness3, sizeRandomness3,
     bgStarTwinkleAmount, bgStarTwinkleSpeed, bgStarTwinkleSpeedRandomness, bgStarSizeRandomness, bgStarCount, bgStarMinBrightness, bgStarMaxBrightness,
     starFadePosition, starFadeFeatherSize,
-    motionBlurEnabled, blurIntensity, motionBlurEnabled2, blurIntensity2
+    motionBlurEnabled, blurIntensity, motionBlurEnabled2, blurIntensity2,
+    isMobile // CRITICAL: Re-initialize stars when viewport changes to apply mobile optimizations
   ]);
 
   return (
@@ -1701,9 +1724,31 @@ export default function LandingPage() {
               contain: 'layout style paint',
             }}
           >
-            {useSafariVideo ? (
+            {/* MOBILE PERFORMANCE: Disable video on mobile, use static image fallback */}
+            {isMobile ? (
+              <img
+                src={getMediaUrl('/random-images/logo vid for apple/logo-static-fallback.webp')}
+                alt="Mek Tycoon Logo"
+                className="w-full h-full absolute inset-0"
+                style={{
+                  opacity: 'inherit',
+                  objectFit: 'contain',
+                  transform: 'translateZ(0) scale3d(1, 1, 1)',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  WebkitTransform: 'translateZ(0) scale3d(1, 1, 1)',
+                  imageRendering: 'auto',
+                  pointerEvents: 'none',
+                  willChange: animationStage === 'logo' ? 'transform' : showBetaLightbox ? 'filter' : 'auto',
+                  filter: showBetaLightbox ? 'blur(8px)' : 'blur(0px)',
+                  transition: showBetaLightbox
+                    ? 'filter 800ms cubic-bezier(0.4, 0, 0.2, 1)'
+                    : 'filter 400ms cubic-bezier(0.4, 0, 0.2, 1)',
+                }}
+              />
+            ) : useSafariVideo ? (
               <>
-                {/* Safari/iOS: Canvas compositing with dual H.265 videos */}
+                {/* Safari/iOS Desktop: Canvas compositing with dual H.265 videos */}
                 <canvas
                   ref={compositeCanvasRef}
                   className="w-full h-full absolute inset-0"
@@ -1801,6 +1846,9 @@ export default function LandingPage() {
                 opacity: hasScrolled ? 1 : 0,
                 transform: hasScrolled ? 'translateY(0)' : 'translateY(20px)',
                 whiteSpace: 'pre-line',
+                willChange: hasScrolled ? 'auto' : 'opacity, transform', // GPU acceleration hint
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
               }}
             >
               {descriptionText}
@@ -1814,6 +1862,9 @@ export default function LandingPage() {
               opacity: hasScrolled ? 1 : 0,
               transform: hasScrolled ? 'translateY(0)' : 'translateY(20px)',
               transitionDelay: '0.3s',
+              willChange: hasScrolled ? 'auto' : 'opacity, transform', // GPU acceleration hint
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
             }}
             onClick={() => {
               console.log('[🎮BETA] Join Beta clicked - opening lightbox after 500ms delay');
