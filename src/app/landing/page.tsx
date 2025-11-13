@@ -1561,7 +1561,7 @@ export default function LandingPage() {
             />
           </div>
 
-          {/* Speaker Button - Top Right Corner - Hidden during consent lightbox, 3s fade-in after */}
+          {/* Speaker Button - Top Right Corner - Hidden during consent lightbox, 2s delay + 4s fade-in */}
           {showSpeakerIcon && (
             <button
               onClick={() => handleAudioToggle(!audioPlaying)}
@@ -1581,7 +1581,7 @@ export default function LandingPage() {
                   ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8))'
                   : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0))',
                 opacity: 0,
-                animation: 'speakerFadeIn 3s ease-out forwards',
+                animation: 'speakerFadeIn 4s ease-out 2s forwards',
                 transition: 'filter 0.8s ease-in-out, transform 0.3s ease-out, color 0.8s ease-in-out',
               }}
               onMouseEnter={(e) => {

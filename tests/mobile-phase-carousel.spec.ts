@@ -10,11 +10,15 @@ test.describe('Mobile Phase Carousel Animations', () => {
 
     // Wait for page to load
     await page.waitForLoadState('networkidle');
+
+    // Wait for Convex data to load
+    await page.waitForTimeout(2000);
   });
 
   test('should display phase cards vertically in 16:9 aspect ratio when collapsed', async ({ page }) => {
-    // Wait for phase cards to be visible
-    await page.waitForSelector('[data-phase-card]', { state: 'visible', timeout: 10000 });
+    // Wait for phase cards container to be visible (flex-col for mobile)
+    const cardsContainer = page.locator('.flex.flex-col > .relative.overflow-hidden.cursor-pointer');
+    await cardsContainer.first().waitFor({ state: 'visible', timeout: 10000 });
 
     // Take screenshot of initial collapsed state
     await expect(page).toHaveScreenshot('01-collapsed-initial-state.png', {
@@ -23,7 +27,7 @@ test.describe('Mobile Phase Carousel Animations', () => {
     });
 
     // Verify cards are in collapsed state (16:9 aspect ratio)
-    const cards = await page.locator('[data-phase-card]').all();
+    const cards = await cardsContainer.all();
     console.log(`[📱MOBILE] Found ${cards.length} phase cards`);
 
     for (let i = 0; i < cards.length; i++) {
@@ -44,10 +48,11 @@ test.describe('Mobile Phase Carousel Animations', () => {
 
   test('should expand card smoothly with 4-second animation', async ({ page }) => {
     // Wait for cards to load
-    await page.waitForSelector('[data-phase-card]', { state: 'visible', timeout: 10000 });
+    const cardsContainer = page.locator('.flex.flex-col > .relative.overflow-hidden.cursor-pointer');
+    await cardsContainer.first().waitFor({ state: 'visible', timeout: 10000 });
 
     // Find the first phase card
-    const firstCard = page.locator('[data-phase-card]').first();
+    const firstCard = cardsContainer.first();
 
     // Click to expand
     console.log('[📱MOBILE] Clicking first card to expand...');
