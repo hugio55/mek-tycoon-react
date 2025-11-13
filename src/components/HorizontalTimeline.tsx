@@ -198,8 +198,9 @@ export default function HorizontalTimeline({
   }, [hoveredIndex, selectedIndex, timelineData]);
 
   const handlePhaseClick = (index: number) => {
-    // Only handle clicks on touch devices
-    if (!isTouchDevice) return;
+    // On mobile viewport, handle clicks to toggle selection
+    // On desktop viewport, ignore clicks (use hover instead)
+    if (!isMobile) return;
 
     // Toggle: if clicking the same phase, deselect it
     setSelectedIndex(selectedIndex === index ? null : index);
@@ -207,16 +208,16 @@ export default function HorizontalTimeline({
 
   // Debug log hover state changes
   const handleHoverEnter = (index: number) => {
-    // Only handle hover on non-touch devices (desktop)
-    if (isTouchDevice) return;
+    // Only handle hover on desktop viewport (not mobile)
+    if (isMobile) return;
 
     console.log('[🔍BLUR] Mouse entered column', index, '- idleBackdropBlur prop value:', idleBackdropBlur);
     setHoveredIndex(index);
   };
 
   const handleHoverLeave = () => {
-    // Only handle hover on non-touch devices (desktop)
-    if (isTouchDevice) return;
+    // Only handle hover on desktop viewport (not mobile)
+    if (isMobile) return;
 
     console.log('[🔍BLUR] Mouse left column');
     setHoveredIndex(null);
