@@ -772,6 +772,7 @@ export default function AdminMasterDataPage() {
 
     if (typeof window !== 'undefined') {
       localStorage.setItem('disablePageLoaderLocalhost', newValue.toString());
+      console.log('[🎯LOADER] Localhost Toggle Changed:', { newValue, valueInLocalStorage: localStorage.getItem('disablePageLoaderLocalhost'), hostname: window.location.hostname });
     }
 
     setLoaderStatusMessage({
@@ -793,6 +794,7 @@ export default function AdminMasterDataPage() {
 
     if (typeof window !== 'undefined') {
       localStorage.setItem('disablePageLoaderProduction', newValue.toString());
+      console.log('[🎯LOADER] Production Toggle Changed:', { newValue, valueInLocalStorage: localStorage.getItem('disablePageLoaderProduction'), hostname: window.location.hostname });
     }
 
     setLoaderStatusMessage({

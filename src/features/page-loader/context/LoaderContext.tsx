@@ -23,6 +23,8 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
   // Detect environment and check appropriate loader setting
   const isBypassed = typeof window !== 'undefined' && (() => {
     const hostname = window.location.hostname;
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlParam = searchParams.get('noloader');
 
     // Consider it localhost if it's:
     // - localhost or 127.0.0.1
@@ -36,6 +38,20 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
 
     // Check environment-specific setting
     const settingKey = isLocalhost ? 'disablePageLoaderLocalhost' : 'disablePageLoaderProduction';
+
+    // URL parameter takes priority and also saves to localStorage
+    if (urlParam !== null) {
+      const shouldDisable = urlParam === 'true' || urlParam === '';
+      localStorage.setItem(settingKey, shouldDisable.toString());
+      console.log('[🎯LOADER] URL Parameter Detected - Saved to localStorage:', {
+        urlParam,
+        shouldDisable,
+        settingKey
+      });
+      return shouldDisable;
+    }
+
+    // Otherwise check localStorage
     const settingValue = localStorage.getItem(settingKey);
     const bypassed = settingValue === 'true';
 
