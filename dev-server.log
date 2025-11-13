@@ -1158,3 +1158,6 @@
 [1] - Preparing Convex functions...
 [1] 
 [1] ✔ 23:11:12 Convex functions ready! (6.65s)
+[1] 11/12/2025, 11:15:00 PM [CONVEX M(snapshotCleanup:cleanupOldSnapshotLogs)] [LOG] 'Starting snapshot log cleanup: removing logs older than 11/6/2025, 4:15:00 AM'
+[1] 11/12/2025, 11:15:00 PM [CONVEX M(snapshotCleanup:cleanupOldSnapshotLogs)] [LOG] 'Found 2 old snapshot logs to delete'
+[1] 11/12/2025, 11:15:00 PM [CONVEX M(snapshotCleanup:cleanupOldSnapshotLogs)] [LOG] 'Snapshot log cleanup completed: 2 logs deleted'
