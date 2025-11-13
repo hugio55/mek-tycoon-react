@@ -354,9 +354,7 @@ export default function HorizontalTimeline({
               style={{
                 ...dimensionStyle,
                 transition: isMobile
-                  ? isActive
-                    ? 'max-height 1.2s cubic-bezier(0.25, 0.1, 0.25, 1), aspect-ratio 1.2s cubic-bezier(0.25, 0.1, 0.25, 1)'
-                    : 'max-height 0.8s cubic-bezier(0.25, 0.1, 0.25, 1), aspect-ratio 0.8s cubic-bezier(0.25, 0.1, 0.25, 1)'
+                  ? 'max-height 4s cubic-bezier(0.25, 0.1, 0.25, 1), aspect-ratio 4s cubic-bezier(0.25, 0.1, 0.25, 1)'
                   : 'width 0.5s ease-in-out',
                 zIndex: isActive ? 20 : 10,
                 touchAction: isMobile ? 'manipulation' : 'auto',
