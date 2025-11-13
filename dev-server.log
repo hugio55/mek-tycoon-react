@@ -822,3 +822,5 @@
 [1] 11/12/2025, 7:45:44 PM [CONVEX M(goldBackups:triggerManualDailyBackup)] [ERROR] 'Failed to backup wallet stake1uxlr27ntaw2ncxesx6f787x3u0kdvychz36wtks04u9hulqqaafcs:' [Error: Failed to insert or update a document in table "goldBackupUserData" because it does not match the schema: Found ID "rx7ad2t3wdpfac0t8v7e7sez597txy96" from table `goldMining`, which does not match the table name in validator `v.id("users")`.Path: .userId]
 [1] 11/12/2025, 7:45:44 PM [CONVEX M(goldBackups:triggerManualDailyBackup)] [LOG] 'Daily backup completed: 0 wallets backed up, 37 errors'
 [1] 11/12/2025, 7:45:45 PM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
+[1] 11/12/2025, 8:00:44 PM [CONVEX M(walletAuthentication:cleanupExpiredNonces)] [LOG] '[Cleanup] Nonce cleanup completed: 0 expired, 0 used (>24hr old), 0 total deleted'
+[1] 11/12/2025, 8:00:46 PM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
