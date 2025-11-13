@@ -870,7 +870,7 @@ export default function LandingPage() {
         window.removeEventListener('touchend', handleScroll);
       }
     };
-  }, [isMobile, windowWidth, hasScrolled]);
+  }, [isMobile, windowWidth]);
 
   // Auto-show description/button on mobile after logo animation completes
   useEffect(() => {
