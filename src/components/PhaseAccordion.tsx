@@ -9,6 +9,7 @@ interface PhaseAccordionProps {
   phaseHeaderFontSize?: number;
   phaseDescriptionFont?: string;
   phaseDescriptionFontSize?: number;
+  disableBlur?: boolean;
 }
 
 export default function PhaseAccordion({
@@ -16,6 +17,7 @@ export default function PhaseAccordion({
   phaseHeaderFontSize = 16,
   phaseDescriptionFont = 'Inter',
   phaseDescriptionFontSize = 14,
+  disableBlur = false,
 }: PhaseAccordionProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -102,8 +104,8 @@ export default function PhaseAccordion({
                   background: isExpanded
                     ? 'linear-gradient(135deg, rgba(250,182,23,0.12), rgba(250,182,23,0.06))'
                     : 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-                  backdropFilter: 'blur(4px)',
-                  WebkitBackdropFilter: 'blur(4px)',
+                  backdropFilter: disableBlur ? 'none' : 'blur(4px)',
+                  WebkitBackdropFilter: disableBlur ? 'none' : 'blur(4px)',
                   transition: 'background 150ms ease-out',
                 }}
               />
@@ -180,8 +182,8 @@ export default function PhaseAccordion({
                 <div
                   className="mt-1 overflow-hidden"
                   style={{
-                    backdropFilter: 'blur(6px)',
-                    WebkitBackdropFilter: 'blur(6px)',
+                    backdropFilter: disableBlur ? 'none' : 'blur(6px)',
+                    WebkitBackdropFilter: disableBlur ? 'none' : 'blur(6px)',
                     background: 'rgba(0, 0, 0, 0.35)',
                     borderRadius: '8px',
                   }}

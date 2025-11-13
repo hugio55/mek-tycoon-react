@@ -124,6 +124,12 @@ const DEFAULT_CONFIG = {
   // Footer settings
   footerHeight: 120,
   footerImageVerticalPosition: 50,
+  oeLogoScale: 1.0,
+  socialIconScale: 1.0,
+  socialIconGap: 24,
+  socialIconVerticalPosition: 70,
+  socialIconPaddingTop: 0,
+  socialIconPaddingBottom: 0,
 };
 
 type ConfigType = typeof DEFAULT_CONFIG;
@@ -3303,6 +3309,31 @@ export default function LandingDebugPage() {
                 {config.phaseColumnYOffset > 0 ? '+' : ''}{config.phaseColumnYOffset}px
               </div>
             </div>
+
+            {/* Mobile Performance: Disable PhaseAccordion Blur */}
+            {activeMode === 'mobile' && (
+              <div className="mb-2 mt-4 pt-4 border-t border-cyan-700">
+                <label className="flex items-center justify-between text-xs text-cyan-300 mb-1">
+                  <span>PhaseAccordion Blur (Mobile Performance Test)</span>
+                  <span className={config.disablePhaseAccordionBlur ? 'text-red-400' : 'text-green-400'}>
+                    {config.disablePhaseAccordionBlur ? 'DISABLED' : 'ENABLED'}
+                  </span>
+                </label>
+                <button
+                  onClick={() => updateConfig('disablePhaseAccordionBlur', !config.disablePhaseAccordionBlur)}
+                  className={`w-full px-3 py-2 text-xs rounded transition-colors ${
+                    config.disablePhaseAccordionBlur
+                      ? 'bg-red-900/30 border border-red-700 text-red-300 hover:bg-red-900/40'
+                      : 'bg-green-900/30 border border-green-700 text-green-300 hover:bg-green-900/40'
+                  }`}
+                >
+                  {config.disablePhaseAccordionBlur ? '🚫 Blur Disabled' : '✅ Blur Enabled'}
+                </button>
+                <div className="text-xs text-cyan-400/70 text-center mt-1">
+                  Test if backdrop-blur causes janky retraction animation
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Phase Image URLs Section */}
@@ -3496,6 +3527,144 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.footerImageVerticalPosition}% from top
+              </div>
+            </div>
+
+            {/* OE Logo Scale */}
+            <div className="mb-3">
+              <label className="block text-xs text-gray-300 mb-1">
+                OE Logo Scale
+              </label>
+              <input
+                type="range"
+                min="0.5"
+                max="2.0"
+                step="0.1"
+                value={config.oeLogoScale}
+                onChange={(e) => updateConfig('oeLogoScale', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.oeLogoScale.toFixed(1)}x
+              </div>
+            </div>
+
+            {/* Social Icon Scale */}
+            <div className="mb-3">
+              <label className="block text-xs text-gray-300 mb-1">
+                Social Icon Scale
+              </label>
+              <input
+                type="range"
+                min="0.5"
+                max="2.0"
+                step="0.1"
+                value={config.socialIconScale}
+                onChange={(e) => updateConfig('socialIconScale', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.socialIconScale.toFixed(1)}x
+              </div>
+            </div>
+
+            {/* Social Icon Gap */}
+            <div className="mb-3">
+              <label className="block text-xs text-gray-300 mb-1">
+                Social Icon Gap
+              </label>
+              <input
+                type="range"
+                min="8"
+                max="80"
+                step="4"
+                value={config.socialIconGap}
+                onChange={(e) => updateConfig('socialIconGap', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.socialIconGap}px
+              </div>
+            </div>
+
+            {/* Social Icon Vertical Position */}
+            <div className="mb-3">
+              <label className="block text-xs text-gray-300 mb-1">
+                Social Icon Vertical Position
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.socialIconVerticalPosition}
+                onChange={(e) => updateConfig('socialIconVerticalPosition', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.socialIconVerticalPosition}% from top
+              </div>
+            </div>
+
+            {/* Social Icon Padding Top */}
+            <div className="mb-3">
+              <label className="block text-xs text-gray-300 mb-1">
+                Social Icon Padding Top
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                step="5"
+                value={config.socialIconPaddingTop}
+                onChange={(e) => updateConfig('socialIconPaddingTop', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.socialIconPaddingTop}px
+              </div>
+            </div>
+
+            {/* Social Icon Padding Bottom */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Social Icon Padding Bottom
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                step="5"
+                value={config.socialIconPaddingBottom}
+                onChange={(e) => updateConfig('socialIconPaddingBottom', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.socialIconPaddingBottom}px
               </div>
             </div>
           </div>
