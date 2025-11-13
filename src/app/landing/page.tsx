@@ -715,7 +715,7 @@ export default function LandingPage() {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('message', handlePostMessage);
     };
-  }, []);
+  }, [config.forceShowAudioConsent]);
 
   // Load config from Convex database (primary source) with localStorage fallback
   useEffect(() => {
@@ -942,6 +942,15 @@ export default function LandingPage() {
     };
 
     loadFromLocalStorage();
+
+    // Listen for config updates from debug panel (for iframe communication)
+    const handleConfigUpdate = () => {
+      console.log('[🔄CONFIG] Received mek-config-update event, reloading from localStorage');
+      loadFromLocalStorage();
+    };
+
+    window.addEventListener('mek-config-update', handleConfigUpdate);
+    return () => window.removeEventListener('mek-config-update', handleConfigUpdate);
   }, [dbSettings]);
 
   // Track viewport height for dynamic logo centering

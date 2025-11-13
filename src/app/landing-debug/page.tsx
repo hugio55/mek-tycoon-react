@@ -117,6 +117,7 @@ const DEFAULT_CONFIG = {
   audioLightboxDescriptionColor: 'text-white/70',
   audioDescriptionText: 'For full immersion...',
   audioConsentFadeDuration: 500,
+  forceShowAudioConsent: false,
   // Active tab
   activeTab: 'layer1' as string,
 };
