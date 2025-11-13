@@ -124,12 +124,19 @@ const DEFAULT_CONFIG = {
   // Footer settings
   footerHeight: 120,
   footerImageVerticalPosition: 50,
+  footerBlurAmount: 20,
+  footerEdgeFeathering: 0,
   oeLogoScale: 1.0,
   socialIconScale: 1.0,
   socialIconGap: 24,
   socialIconVerticalPosition: 70,
   socialIconPaddingTop: 0,
   socialIconPaddingBottom: 0,
+  socialIconColor: '#9ca3af',
+  oeLogoUrl: '#',
+  discordUrl: 'https://discord.gg/your-discord',
+  twitterUrl: 'https://twitter.com/your-twitter',
+  websiteUrl: 'https://your-website.com',
 };
 
 type ConfigType = typeof DEFAULT_CONFIG;
@@ -3646,7 +3653,7 @@ export default function LandingDebugPage() {
             </div>
 
             {/* Social Icon Padding Bottom */}
-            <div className="mb-2">
+            <div className="mb-3">
               <label className="block text-xs text-gray-300 mb-1">
                 Social Icon Padding Bottom
               </label>
@@ -3666,6 +3673,153 @@ export default function LandingDebugPage() {
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.socialIconPaddingBottom}px
               </div>
+            </div>
+
+            {/* Footer Blur Amount */}
+            <div className="mb-3">
+              <label className="block text-xs text-gray-300 mb-1">
+                Footer Blur Amount
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="40"
+                step="1"
+                value={config.footerBlurAmount}
+                onChange={(e) => updateConfig('footerBlurAmount', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.footerBlurAmount}px
+              </div>
+            </div>
+
+            {/* Footer Edge Feathering */}
+            <div className="mb-3">
+              <label className="block text-xs text-gray-300 mb-1">
+                Edge Feathering (Gradient Fade)
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.footerEdgeFeathering}
+                onChange={(e) => updateConfig('footerEdgeFeathering', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.footerEdgeFeathering}px
+              </div>
+            </div>
+
+            {/* Social Icon Color */}
+            <div className="mb-3">
+              <label className="block text-xs text-gray-300 mb-1">
+                Social Icon Color
+              </label>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="color"
+                  value={config.socialIconColor}
+                  onChange={(e) => updateConfig('socialIconColor', e.target.value)}
+                  className="w-12 h-8 rounded cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={config.socialIconColor}
+                  onChange={(e) => updateConfig('socialIconColor', e.target.value)}
+                  className="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200"
+                  placeholder="#9ca3af"
+                />
+              </div>
+              <div className="flex gap-1 mt-2">
+                <button
+                  onClick={() => updateConfig('socialIconColor', '#9ca3af')}
+                  className="flex-1 bg-gray-600 hover:bg-gray-500 text-xs py-1 px-2 rounded"
+                  title="Gray"
+                >
+                  Gray
+                </button>
+                <button
+                  onClick={() => updateConfig('socialIconColor', '#ffffff')}
+                  className="flex-1 bg-gray-600 hover:bg-gray-500 text-xs py-1 px-2 rounded"
+                  title="White"
+                >
+                  White
+                </button>
+                <button
+                  onClick={() => updateConfig('socialIconColor', '#fbbf24')}
+                  className="flex-1 bg-gray-600 hover:bg-gray-500 text-xs py-1 px-2 rounded"
+                  title="Yellow"
+                >
+                  Yellow
+                </button>
+              </div>
+            </div>
+
+            {/* OE Logo URL */}
+            <div className="mb-3">
+              <label className="block text-xs text-gray-300 mb-1">
+                OE Logo URL
+              </label>
+              <input
+                type="text"
+                value={config.oeLogoUrl}
+                onChange={(e) => updateConfig('oeLogoUrl', e.target.value)}
+                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200"
+                placeholder="https://example.com"
+              />
+            </div>
+
+            {/* Discord URL */}
+            <div className="mb-3">
+              <label className="block text-xs text-gray-300 mb-1">
+                Discord URL
+              </label>
+              <input
+                type="text"
+                value={config.discordUrl}
+                onChange={(e) => updateConfig('discordUrl', e.target.value)}
+                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200"
+                placeholder="https://discord.gg/..."
+              />
+            </div>
+
+            {/* Twitter URL */}
+            <div className="mb-3">
+              <label className="block text-xs text-gray-300 mb-1">
+                X (Twitter) URL
+              </label>
+              <input
+                type="text"
+                value={config.twitterUrl}
+                onChange={(e) => updateConfig('twitterUrl', e.target.value)}
+                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200"
+                placeholder="https://twitter.com/..."
+              />
+            </div>
+
+            {/* Website URL */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Website URL
+              </label>
+              <input
+                type="text"
+                value={config.websiteUrl}
+                onChange={(e) => updateConfig('websiteUrl', e.target.value)}
+                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200"
+                placeholder="https://your-website.com"
+              />
             </div>
           </div>
 
