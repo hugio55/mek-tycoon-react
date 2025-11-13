@@ -36,7 +36,19 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
 
     // Check environment-specific setting
     const settingKey = isLocalhost ? 'disablePageLoaderLocalhost' : 'disablePageLoaderProduction';
-    return localStorage.getItem(settingKey) === 'true';
+    const settingValue = localStorage.getItem(settingKey);
+    const bypassed = settingValue === 'true';
+
+    // Debug logging
+    console.log('[🎯LOADER] LoaderContext Check:', {
+      hostname,
+      isLocalhost,
+      settingKey,
+      settingValue,
+      bypassed
+    });
+
+    return bypassed;
   })();
 
   const [queries, setQueries] = useState<Map<string, QueryState>>(new Map());
