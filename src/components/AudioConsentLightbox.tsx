@@ -22,6 +22,8 @@ interface AudioConsentLightboxProps {
   descriptionVerticalPosition?: number; // Vertical position offset for description text
   toggleGroupVerticalPosition?: number; // Vertical position offset for toggle + text
   proceedButtonVerticalPosition?: number; // Vertical position offset for proceed button
+  audioDescriptionText?: string; // Customizable description text (default: "For full immersion...")
+  audioConsentFadeDuration?: number; // Fade out duration in milliseconds (default: 500)
 }
 
 const STORAGE_KEY_AUDIO = 'mek-audio-consent';
@@ -43,10 +45,13 @@ export default function AudioConsentLightbox({
   proceedButtonSize = 1.0,
   descriptionVerticalPosition = 0,
   toggleGroupVerticalPosition = 0,
-  proceedButtonVerticalPosition = 0
+  proceedButtonVerticalPosition = 0,
+  audioDescriptionText = "For full immersion...",
+  audioConsentFadeDuration = 500
 }: AudioConsentLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
+  const [isFadingOut, setIsFadingOut] = useState(false);
 
   // Calculate responsive dimensions
   const toggleWidth = toggleSize;
@@ -110,18 +115,35 @@ export default function AudioConsentLightbox({
 
   const handleProceed = () => {
     console.log('[🎵LIGHTBOX] Proceed clicked with audioEnabled:', audioEnabled);
-    // Store audio preference with timestamp (matches landing page format)
-    localStorage.setItem(STORAGE_KEY_AUDIO, JSON.stringify({
-      audioEnabled,
-      timestamp: Date.now()
-    }));
-    onProceed(audioEnabled);
+    console.log('[🎵LIGHTBOX] Starting 1-second delay before fade...');
+
+    // Start fade animation after 1 second delay
+    setTimeout(() => {
+      console.log('[🎵LIGHTBOX] Delay complete, starting fade out...');
+      setIsFadingOut(true);
+
+      // After fade completes, store preference and call onProceed
+      setTimeout(() => {
+        console.log('[🎵LIGHTBOX] Fade complete, proceeding...');
+        localStorage.setItem(STORAGE_KEY_AUDIO, JSON.stringify({
+          audioEnabled,
+          timestamp: Date.now()
+        }));
+        onProceed(audioEnabled);
+      }, audioConsentFadeDuration);
+    }, 1000);
   };
 
   if (!mounted || !isVisible) return null;
 
   const lightboxContent = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+    <div
+      className={`fixed inset-0 z-[9999] flex items-center justify-center px-4 transition-opacity duration-${audioConsentFadeDuration}`}
+      style={{
+        opacity: isFadingOut ? 0 : 1,
+        transitionDuration: `${audioConsentFadeDuration}ms`
+      }}
+    >
       <div
         className="absolute inset-0"
         style={{ backgroundColor: `rgba(0, 0, 0, ${backdropDarkness / 100})` }}
@@ -137,7 +159,7 @@ export default function AudioConsentLightbox({
           className="text-white/70 text-base sm:text-lg font-light tracking-wide text-center"
           style={{ transform: `translateY(${descriptionVerticalPosition}px)` }}
         >
-          For full immersion...
+          {audioDescriptionText}
         </p>
 
         {/* Toggle Switch and Text Container - Horizontal Layout */}

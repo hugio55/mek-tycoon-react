@@ -115,6 +115,8 @@ const DEFAULT_CONFIG = {
   audioLightboxDescriptionFont: 'Arial',
   audioLightboxDescriptionFontSize: 18,
   audioLightboxDescriptionColor: 'text-white/70',
+  audioDescriptionText: 'For full immersion...',
+  audioConsentFadeDuration: 500,
   // Active tab
   activeTab: 'layer1' as string,
 };
@@ -2862,6 +2864,45 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.proceedButtonVerticalPosition}px
+              </div>
+            </div>
+
+            {/* Audio Description Text */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Audio Description Text
+              </label>
+              <input
+                type="text"
+                value={config.audioDescriptionText}
+                onChange={(e) => updateConfig('audioDescriptionText', e.target.value)}
+                onFocus={handleInputStart}
+                onBlur={handleInputEnd}
+                className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xs text-gray-200"
+                placeholder="For full immersion..."
+              />
+            </div>
+
+            {/* Audio Consent Fade Duration */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Fade Out Duration
+              </label>
+              <input
+                type="range"
+                min="100"
+                max="2000"
+                step="100"
+                value={config.audioConsentFadeDuration}
+                onChange={(e) => updateConfig('audioConsentFadeDuration', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.audioConsentFadeDuration}ms
               </div>
             </div>
           </div>
