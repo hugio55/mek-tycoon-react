@@ -6,6 +6,7 @@ on:
       - custom-minting-system
     paths:
       - 'public/**'
+  workflow_dispatch:
 
 jobs:
   sync:
