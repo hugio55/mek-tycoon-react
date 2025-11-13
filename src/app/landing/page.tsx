@@ -194,6 +194,8 @@ export default function LandingPage() {
       console.log('[⚙️CONFIG] logoSize:', dbSettings?.logoSize);
       console.log('[⚙️CONFIG] starFrequency:', dbSettings?.starFrequency);
       console.log('[⚙️CONFIG] bgStarCount:', dbSettings?.bgStarCount);
+      console.log('[🔒FORCE] forceShowAudioConsent from shared:', unifiedSettings.shared?.forceShowAudioConsent);
+      console.log('[🔒FORCE] forceShowAudioConsent in final dbSettings:', dbSettings?.forceShowAudioConsent);
     } else if (oldDbSettings) {
       console.log('[⚙️CONFIG] Using old settings (fallback)');
     }
@@ -618,15 +620,20 @@ export default function LandingPage() {
     console.log('[🎬ANIMATION] === Component Mounted ===');
     console.log('[🎬ANIMATION] Initial showAudioConsent:', showAudioConsent);
     console.log('[🎬ANIMATION] Initial animationStage:', animationStage);
+    console.log('[🔒FORCE] dbSettings available:', !!dbSettings);
+    console.log('[🔒FORCE] dbSettings.forceShowAudioConsent value:', dbSettings?.forceShowAudioConsent);
+    console.log('[🔒FORCE] Type of forceShowAudioConsent:', typeof dbSettings?.forceShowAudioConsent);
 
     try {
       // Check if forced to show consent via Convex config
       if (dbSettings?.forceShowAudioConsent) {
-        console.log('[🎬ANIMATION] Force show enabled - showing consent lightbox (overrides localStorage)');
+        console.log('[🔒FORCE] ✅ Force show enabled - showing consent lightbox (overrides localStorage)');
         setShowAudioConsent(true);
         setLockScrollForConsent(true);
         // Keep animationStage at 'initial' (everything hidden)
         return;
+      } else {
+        console.log('[🔒FORCE] ❌ Force show disabled or dbSettings not loaded yet');
       }
 
       const consent = localStorage.getItem(AUDIO_CONSENT_KEY);
@@ -2086,32 +2093,6 @@ export default function LandingPage() {
           </svg>
         </div>
       </>
-
-      {/* Viewport Debug Indicator - Top Left Corner */}
-      <div
-        className="fixed top-4 left-4 z-[9999] pointer-events-none"
-        style={{
-          backgroundColor: isMobile ? 'rgba(34, 197, 94, 0.9)' : 'rgba(59, 130, 246, 0.9)',
-          padding: '12px 16px',
-          borderRadius: '8px',
-          fontFamily: 'monospace',
-          fontSize: '14px',
-          color: 'white',
-          fontWeight: 'bold',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-          border: isMobile ? '2px solid rgb(34, 197, 94)' : '2px solid rgb(59, 130, 246)',
-        }}
-      >
-        <div style={{ marginBottom: '4px' }}>
-          {isMobile ? '📱 MOBILE CONFIG' : '🖥️ DESKTOP CONFIG'}
-        </div>
-        <div style={{ fontSize: '12px', opacity: 0.9 }}>
-          Width: {windowWidth}px
-        </div>
-        <div style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>
-          Breakpoint: 1024px
-        </div>
-      </div>
 
     </div>
   );
