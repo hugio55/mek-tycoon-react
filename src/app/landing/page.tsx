@@ -421,6 +421,9 @@ export default function LandingPage() {
   // Beta signup lightbox state
   const [showBetaLightbox, setShowBetaLightbox] = useState(false);
 
+  // Speaker icon visibility state (hidden during consent lightbox, fades in after)
+  const [showSpeakerIcon, setShowSpeakerIcon] = useState(false);
+
   // Note: phaseImage1-4 not needed here - PhaseCarousel reads directly from localStorage
 
   // Preload critical resources immediately on mount
@@ -468,6 +471,9 @@ export default function LandingPage() {
         // Skip consent lightbox and show video zoom animation directly
         setAnimationStage('logo');
 
+        // Show speaker icon immediately for return visitors (will fade in with 3s animation)
+        setShowSpeakerIcon(true);
+
         if (consentData.audioEnabled) {
           // Don't auto-play - just remember preference
           // Audio will only start when user clicks speaker button
@@ -490,12 +496,14 @@ export default function LandingPage() {
             setShowAudioConsent(true);
             setLockScrollForConsent(true);
             setAnimationStage('initial'); // Reset to initial dark state
+            setShowSpeakerIcon(false); // Hide speaker icon when showing consent
             // Clear the trigger so it doesn't fire again
             localStorage.removeItem('mek-debug-trigger');
           } else if (triggerData.action === 'hide-audio-consent') {
             setShowAudioConsent(false);
             setLockScrollForConsent(false);
             setAnimationStage('logo'); // Show everything
+            setShowSpeakerIcon(true); // Show speaker icon when hiding consent
             // Clear the trigger so it doesn't fire again
             localStorage.removeItem('mek-debug-trigger');
           }
@@ -522,10 +530,12 @@ export default function LandingPage() {
             setShowAudioConsent(true);
             setLockScrollForConsent(true);
             setAnimationStage('initial'); // Reset to initial dark state
+            setShowSpeakerIcon(false); // Hide speaker icon when showing consent
           } else if (event.data?.action === 'hide-audio-consent') {
             setShowAudioConsent(false);
             setLockScrollForConsent(false);
             setAnimationStage('logo'); // Show everything
+            setShowSpeakerIcon(true); // Show speaker icon when hiding consent
           }
         }
       } catch (error) {
@@ -1010,6 +1020,10 @@ export default function LandingPage() {
     setShowAudioConsent(false);
     console.log('[🎵ANIMATION] Lightbox hidden (showAudioConsent = false)');
     console.log('[🎵ANIMATION] Starting animation sequence in 500ms...');
+
+    // Show speaker icon immediately after consent (will fade in with 3s animation)
+    console.log('[🎵ANIMATION] Showing speaker icon after consent');
+    setShowSpeakerIcon(true);
 
     // Start animation sequence: stars fade in after lightbox fades
     setTimeout(() => {
@@ -1547,44 +1561,48 @@ export default function LandingPage() {
             />
           </div>
 
-          {/* Speaker Button - Top Right Corner */}
-          <button
-            onClick={() => handleAudioToggle(!audioPlaying)}
-            className={`
-              fixed top-4 right-4
-              transition-all duration-500 ease-out
-              active:scale-95
-              cursor-pointer
-              z-[100]
-              ${audioPlaying ? 'text-white/60' : 'text-gray-700'}
-            `}
-            aria-label={audioPlaying ? 'Mute audio' : 'Play audio'}
-            style={{
-              transform: `translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px) scale(${powerButtonScale})`,
-              transformOrigin: 'center center',
-              filter: powerButtonGlowEnabled && audioPlaying
-                ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8))'
-                : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0))',
-              transition: 'filter 0.8s ease-in-out, transform 0.3s ease-out, color 0.8s ease-in-out',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = `translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px) scale(${powerButtonScale * 1.1})`;
-              e.currentTarget.style.filter = powerButtonGlowEnabled && audioPlaying
-                ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8)) brightness(1.2)'
-                : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0)) brightness(1.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = `translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px) scale(${powerButtonScale})`;
-              e.currentTarget.style.filter = powerButtonGlowEnabled && audioPlaying
-                ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8))'
-                : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0))';
-            }}
-          >
-            {(() => {
-              const SelectedIcon = SPEAKER_ICON_STYLES.find(s => s.id === speakerIconStyle)?.component || SPEAKER_ICON_STYLES[0].component;
-              return <SelectedIcon size={58} isPlaying={audioPlaying} />;
-            })()}
-          </button>
+          {/* Speaker Button - Top Right Corner - Hidden during consent lightbox, 3s fade-in after */}
+          {showSpeakerIcon && (
+            <button
+              onClick={() => handleAudioToggle(!audioPlaying)}
+              className={`
+                fixed top-4 right-4
+                transition-all ease-out
+                active:scale-95
+                cursor-pointer
+                z-[100]
+                ${audioPlaying ? 'text-white/60' : 'text-gray-700'}
+              `}
+              aria-label={audioPlaying ? 'Mute audio' : 'Play audio'}
+              style={{
+                transform: `translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px) scale(${powerButtonScale})`,
+                transformOrigin: 'center center',
+                filter: powerButtonGlowEnabled && audioPlaying
+                  ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8))'
+                  : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0))',
+                opacity: 0,
+                animation: 'speakerFadeIn 3s ease-out forwards',
+                transition: 'filter 0.8s ease-in-out, transform 0.3s ease-out, color 0.8s ease-in-out',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = `translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px) scale(${powerButtonScale * 1.1})`;
+                e.currentTarget.style.filter = powerButtonGlowEnabled && audioPlaying
+                  ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8)) brightness(1.2)'
+                  : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0)) brightness(1.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = `translate(${powerButtonHorizontalOffset}px, ${powerButtonVerticalOffset}px) scale(${powerButtonScale})`;
+                e.currentTarget.style.filter = powerButtonGlowEnabled && audioPlaying
+                  ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.8))'
+                  : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0))';
+              }}
+            >
+              {(() => {
+                const SelectedIcon = SPEAKER_ICON_STYLES.find(s => s.id === speakerIconStyle)?.component || SPEAKER_ICON_STYLES[0].component;
+                return <SelectedIcon size={58} isPlaying={audioPlaying} />;
+              })()}
+            </button>
+          )}
         </div>
       </div>
 
@@ -1655,6 +1673,10 @@ export default function LandingPage() {
             @keyframes scroll-fade-in {
               from { opacity: 0; }
               to { opacity: 0.5; }
+            }
+            @keyframes speakerFadeIn {
+              0% { opacity: 0; }
+              100% { opacity: 1; }
             }
           `
         }} />
