@@ -78,6 +78,11 @@ export default function HorizontalTimeline({
 }: HorizontalTimelineProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
+  // Debug log whenever selectedIndex changes
+  useEffect(() => {
+    console.log('[🎯STATE] selectedIndex changed to:', selectedIndex);
+  }, [selectedIndex]);
   const [timelineData, setTimelineData] = useState<TimelineItem[]>(defaultTimelineData);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -198,12 +203,24 @@ export default function HorizontalTimeline({
   }, [hoveredIndex, selectedIndex, timelineData]);
 
   const handlePhaseClick = (index: number) => {
+    console.log('[🎯CLICK] Phase clicked:', {
+      index,
+      isMobile,
+      currentSelected: selectedIndex,
+      willToggleTo: selectedIndex === index ? null : index
+    });
+
     // On mobile viewport, handle clicks to toggle selection
     // On desktop viewport, ignore clicks (use hover instead)
-    if (!isMobile) return;
+    if (!isMobile) {
+      console.log('[🎯CLICK] Ignoring click - not mobile viewport');
+      return;
+    }
 
     // Toggle: if clicking the same phase, deselect it
-    setSelectedIndex(selectedIndex === index ? null : index);
+    const newIndex = selectedIndex === index ? null : index;
+    console.log('[🎯CLICK] Setting selectedIndex to:', newIndex);
+    setSelectedIndex(newIndex);
   };
 
   // Debug log hover state changes
@@ -267,6 +284,17 @@ export default function HorizontalTimeline({
           const isActive = isHovered || isSelected; // Active if hovered OR selected
           const isAnyActive = hoveredIndex !== null || selectedIndex !== null;
 
+          // Debug log active state for each card
+          if (isActive) {
+            console.log(`[🎯ACTIVE] Card ${index} is ACTIVE:`, {
+              isHovered,
+              isSelected,
+              hoveredIndex,
+              selectedIndex,
+              isMobile
+            });
+          }
+
           // Calculate width/height based on layout mode
           let dimensionStyle: React.CSSProperties;
           let useAspectRatio = false;
@@ -280,6 +308,7 @@ export default function HorizontalTimeline({
                 height: 'auto',
               };
               useAspectRatio = false;
+              console.log(`[🎯DIMENSION] Card ${index} EXPANDED (mobile):`, dimensionStyle);
             } else {
               // Collapsed: 16:9 aspect ratio box using aspect-ratio CSS
               dimensionStyle = {
@@ -287,6 +316,7 @@ export default function HorizontalTimeline({
                 aspectRatio: '16 / 9',
               };
               useAspectRatio = true;
+              console.log(`[🎯DIMENSION] Card ${index} COLLAPSED (mobile):`, dimensionStyle);
             }
           } else {
             // Desktop: horizontal layout
