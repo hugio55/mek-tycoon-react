@@ -29,24 +29,20 @@ export default function PhaseAccordion({
     const newExpanded = expandedIndex === index ? null : index;
     setExpandedIndex(newExpanded);
 
-    // Auto-scroll after expansion animation (mobile only)
+    // Auto-scroll to show all buttons (mobile only)
     if (newExpanded !== null && window.innerWidth <= 768) {
       setTimeout(() => {
-        const button = buttonRefs.current[index];
-        const content = contentRefs.current[index];
+        // Get the first button position
+        const firstButton = buttonRefs.current[0];
 
-        if (button && content) {
-          const buttonRect = button.getBoundingClientRect();
-          const contentHeight = content.scrollHeight;
-          const viewportHeight = window.innerHeight;
+        if (firstButton) {
+          const rect = firstButton.getBoundingClientRect();
 
-          // Calculate if content goes off-screen
-          const contentBottom = buttonRect.bottom + contentHeight;
-          const scrollNeeded = contentBottom - viewportHeight + 40; // 40px padding
-
-          if (scrollNeeded > 0) {
+          // Scroll so first button is near top of viewport
+          // This ensures all 4 buttons + content fit on screen
+          if (rect.top < 0 || rect.top > 100) { // If not already at top
             window.scrollBy({
-              top: scrollNeeded,
+              top: rect.top - 80, // 80px from top (below header)
               behavior: 'smooth'
             });
           }
