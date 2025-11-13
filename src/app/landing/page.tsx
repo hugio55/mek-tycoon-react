@@ -1564,14 +1564,14 @@ export default function LandingPage() {
       });
 
       // Draw Layer 3 stars as lines (ultra-fast-moving streaks)
-      const currentTime = Date.now();
+      const now = Date.now();
       stars3.forEach((star, index) => {
         star.z -= starSpeed3;
 
         if (star.z <= 0) {
           // Check spawn delay - only respawn if enough time has passed
           const lastSpawnTime = starLastSpawnTime3.get(index) || 0;
-          const timeSinceLastSpawn = currentTime - lastSpawnTime;
+          const timeSinceLastSpawn = now - lastSpawnTime;
 
           // Add randomization (±30%) to spread out spawns and prevent clustering
           const randomFactor = 0.7 + Math.random() * 0.6; // Range: 0.7 to 1.3
@@ -1584,7 +1584,7 @@ export default function LandingPage() {
             star.z = maxZ;
             star.twinkleOffset = Math.random() * Math.PI * 2;
             star.twinkleSpeedMultiplier = 1 + (Math.random() * 2 - 1) * (twinkleSpeedRandomness3 / 100);
-            starLastSpawnTime3.set(index, currentTime);
+            starLastSpawnTime3.set(index, now);
           } else {
             // Keep star out of view until delay passes
             star.z = -100;
