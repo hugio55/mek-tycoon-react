@@ -411,7 +411,7 @@ export default function LandingPage() {
       colorVideo.removeEventListener('ended', handleLoop);
       alphaVideo.removeEventListener('ended', handleLoop);
     };
-  }, [useSafariVideo]);
+  }, [useSafariVideo, isMobile]); // Re-run when isMobile changes to disable video on mobile
 
   // Start video when logo animation begins
   // MOBILE PERFORMANCE: Skip video playback on mobile devices
@@ -501,7 +501,7 @@ export default function LandingPage() {
         }
       };
     }
-  }, [animationStage, logoFadeDuration, showAudioConsent, useSafariVideo]);
+  }, [animationStage, logoFadeDuration, showAudioConsent, useSafariVideo, isMobile]);
 
   // Debug logging for animation stage changes
   useEffect(() => {
