@@ -292,6 +292,7 @@ export default function LandingPage() {
   // Audio controls
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [showAudioConsent, setShowAudioConsent] = useState(false);
+  const [showScrollIndicator, setShowScrollIndicator] = useState(true);
   const [lockScrollForConsent, setLockScrollForConsent] = useState(false);
 
   // Animation sequence states
@@ -482,14 +483,6 @@ export default function LandingPage() {
       // Start animation
       animationFrameId = requestAnimationFrame(animate);
 
-      // Show scroll indicator after animation completes
-      setTimeout(() => {
-        if (!showAudioConsent) {
-          console.log('[📍SCROLL] Showing scroll indicator');
-          setShowScrollIndicator(true);
-        }
-      }, logoFadeDuration + 1000);
-
       // Unlock scroll after animation completes
       setTimeout(() => {
         console.log('[🔓SCROLL] Unlocking scroll after animation');
@@ -582,9 +575,6 @@ export default function LandingPage() {
 
   // Scroll-triggered animation state (ONE-WAY FLAG - never resets once true)
   const [hasScrolled, setHasScrolled] = useState(false);
-
-  // Scroll indicator state
-  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
 
   // Debug logging for hasScrolled state changes
   useEffect(() => {
@@ -1059,11 +1049,6 @@ export default function LandingPage() {
           setHasScrolled(true);
         }
         // INTENTIONALLY NO ELSE BLOCK - never reset hasScrolled to false
-
-        // Hide scroll indicator as soon as user starts scrolling
-        if (scrollY > 10) {
-          setShowScrollIndicator(false);
-        }
 
         lastKnownScrollY = scrollY;
       }, 50); // 50ms throttle - responsive but prevents excessive updates
@@ -2098,88 +2083,15 @@ export default function LandingPage() {
         }}
       />
 
-      {/* Scroll Indicator - Bottom Center */}
-      <>
-        <style dangerouslySetInnerHTML={{
-          __html: `
-            @keyframes scroll-bounce {
-              0%, 100% { transform: translate(-50%, 0); }
-              50% { transform: translate(-50%, 16px); }
-            }
-            @keyframes scroll-fade-in {
-              from { opacity: 0; }
-              to { opacity: 0.5; }
-            }
-            @keyframes speakerFadeIn {
-              0% { opacity: 0; }
-              100% { opacity: 1; }
-            }
-          `
-        }} />
-        <div
-          className="fixed bottom-8 left-1/2 z-[100] cursor-pointer transition-all duration-200 hover:opacity-70 active:scale-95"
-          style={{
-            animation: showScrollIndicator && !showAudioConsent && !isMobile
-              ? 'scroll-bounce 3s ease-in-out infinite, scroll-fade-in 1s ease-out'
-              : 'none',
-            opacity: showScrollIndicator && !showAudioConsent && !isMobile ? 0.5 : 0,
-            transition: showScrollIndicator && !showAudioConsent && !isMobile ? 'none' : 'opacity 300ms ease-out',
-            pointerEvents: showScrollIndicator && !showAudioConsent && !isMobile ? 'auto' : 'none',
-          }}
-          onClick={() => {
-            // Smooth scroll with custom easing
-            const startY = window.scrollY;
-            const targetY = window.innerHeight * 0.85; // Scroll down 85% of viewport height
-            const duration = 1000; // 1 second
-            const startTime = performance.now();
-
-            const easeInOutCubic = (t: number): number => {
-              return t < 0.5
-                ? 4 * t * t * t
-                : 1 - Math.pow(-2 * t + 2, 3) / 2;
-            };
-
-            const animateScroll = (currentTime: number) => {
-              const elapsed = currentTime - startTime;
-              const progress = Math.min(elapsed / duration, 1);
-              const easedProgress = easeInOutCubic(progress);
-
-              window.scrollTo(0, startY + (targetY - startY) * easedProgress);
-
-              if (progress < 1) {
-                requestAnimationFrame(animateScroll);
-              }
-            };
-
-            requestAnimationFrame(animateScroll);
-            setShowScrollIndicator(false);
-          }}
-        >
-          <svg
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="text-gray-400"
-          >
-            <path
-              d="M6 6L12 12L18 6"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M6 12L12 18L18 12"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-      </>
+      {/* Speaker fade-in animation */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes speakerFadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+          }
+        `
+      }} />
 
     </div>
   );
