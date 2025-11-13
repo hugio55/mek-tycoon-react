@@ -608,7 +608,7 @@ export default function LandingPage() {
 
     try {
       // Check if forced to show consent via Convex config
-      if (config.forceShowAudioConsent) {
+      if (dbSettings?.forceShowAudioConsent) {
         console.log('[🎬ANIMATION] Force show enabled - showing consent lightbox (overrides localStorage)');
         setShowAudioConsent(true);
         setLockScrollForConsent(true);
@@ -715,7 +715,7 @@ export default function LandingPage() {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('message', handlePostMessage);
     };
-  }, [config.forceShowAudioConsent]);
+  }, [dbSettings?.forceShowAudioConsent]);
 
   // Load config from Convex database (primary source) with localStorage fallback
   useEffect(() => {
