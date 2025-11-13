@@ -106,14 +106,8 @@ export default function HorizontalTimeline({
             // Force reflow
             const _ = containerRef.current.offsetHeight;
 
-            // Trigger Safari layout engine
-            const currentScroll = window.scrollY;
-            if (currentScroll > 0) {
-              window.scrollTo(0, currentScroll + 1);
-              requestAnimationFrame(() => {
-                window.scrollTo(0, currentScroll);
-              });
-            }
+            // REMOVED: Scroll micro-adjustments - caused cumulative upward drift
+            // Safari layout engine will recalculate naturally from the reflow above
           }
         }, 100);
       }

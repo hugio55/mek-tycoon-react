@@ -555,16 +555,40 @@ export default function LandingDebugPage() {
 
         // STEP 2: Save the new settings to correct section based on active mode
         if (unifiedSettings) {
-          const updateData = activeMode === 'desktop'
-            ? { desktop: config }
-            : { mobile: config };
-          console.log(`[💾SAVE] Saving to UNIFIED ${activeMode} section:`, {
-            phaseDescriptionFontSize: config.phaseDescriptionFontSize,
-            descriptionFontSize: config.descriptionFontSize,
-            logoSize: config.logoSize
+          // Define text/shared fields that should sync across desktop and mobile
+          const sharedFields = [
+            'selectedFont', 'descriptionText', 'descriptionColor', 'designVariation',
+            'phaseHeaderFont', 'phaseHeaderColor', 'phaseDescriptionFont',
+            'soundLabelFont', 'soundLabelColor', 'powerButtonGlowEnabled', 'speakerIconStyle',
+            'phaseImage1', 'phaseImage2', 'phaseImage3', 'phaseImage4', 'phaseImageBlendMode',
+            'descriptionCardBlur', 'descriptionCardDarkness', 'descriptionCardBorder',
+            'logoFadeDuration', 'lightboxBackdropDarkness', 'joinBetaFont', 'joinBetaColor',
+            'audioLightboxDescriptionFont', 'audioLightboxDescriptionColor',
+            'audioDescriptionText', 'audioConsentFadeDuration'
+          ];
+
+          // Extract shared vs mode-specific fields
+          const shared: any = {};
+          const modeSpecific: any = {};
+          Object.keys(config).forEach(key => {
+            if (sharedFields.includes(key)) {
+              shared[key] = config[key as keyof ConfigType];
+            } else if (key !== 'activeTab') { // Don't save activeTab
+              modeSpecific[key] = config[key as keyof ConfigType];
+            }
+          });
+
+          const updateData: any = { shared };
+          updateData[activeMode] = modeSpecific;
+
+          console.log(`[💾SAVE] Saving to UNIFIED (shared + ${activeMode}):`, {
+            sharedFields: Object.keys(shared).length,
+            modeFields: Object.keys(modeSpecific).length,
+            audioDescriptionText: shared.audioDescriptionText,
+            audioConsentFadeDuration: shared.audioConsentFadeDuration
           });
           await updateSettings(updateData);
-          console.log(`[💾SAVE] Save successful to UNIFIED ${activeMode} section`);
+          console.log(`[💾SAVE] Save successful to UNIFIED (both sections)`);
         } else {
           await oldUpdateSettings({ config });
           console.log('[💾SAVE] Save successful to OLD table');
