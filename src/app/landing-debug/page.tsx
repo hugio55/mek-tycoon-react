@@ -1008,6 +1008,20 @@ export default function LandingDebugPage() {
               Open Landing Page
             </a>
             <button
+              onClick={() => {
+                const newValue = !config.starsEnabled;
+                updateConfig('starsEnabled', newValue);
+                console.log('[⭐STARS] Master star toggle:', newValue);
+              }}
+              className={`px-2 py-1 rounded text-xs font-bold ${
+                config.starsEnabled
+                  ? 'bg-blue-700 border border-blue-500 text-white'
+                  : 'bg-red-700 border border-red-500 text-white'
+              }`}
+            >
+              {config.starsEnabled ? '⭐ Stars ON' : '⭐ Stars OFF'}
+            </button>
+            <button
               onClick={() => setViewMode(viewMode === 'controls-only' ? 'split-view' : 'controls-only')}
               className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-gray-300 text-xs hover:bg-gray-600"
             >

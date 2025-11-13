@@ -1362,7 +1362,7 @@ export default function LandingPage() {
       return { x, y };
     };
 
-    for (let i = 0; i < starFrequency; i++) {
+    for (let i = 0; i < mobileStarFrequency; i++) {
       const { x, y } = initializeStar();
       const baseSize = Math.random() * 2 + 1;
       const sizeVariation = (sizeRandomness / 100) * baseSize;
@@ -1379,7 +1379,7 @@ export default function LandingPage() {
 
     // Initialize Layer 2 stars (second starfield)
     const stars2: Star[] = [];
-    for (let i = 0; i < starFrequency2; i++) {
+    for (let i = 0; i < mobileStarFrequency2; i++) {
       const { x, y } = initializeStar();
       const baseSize = Math.random() * 2 + 1;
       const sizeVariation = (sizeRandomness2 / 100) * baseSize;
@@ -1396,7 +1396,7 @@ export default function LandingPage() {
 
     // Initialize Layer 3 stars (third starfield)
     const stars3: Star[] = [];
-    for (let i = 0; i < starFrequency3; i++) {
+    for (let i = 0; i < mobileStarFrequency3; i++) {
       const { x, y } = initializeStar();
       const baseSize = Math.random() * 2 + 1;
       const sizeVariation = (sizeRandomness3 / 100) * baseSize;
@@ -1611,6 +1611,7 @@ export default function LandingPage() {
       cancelAnimationFrame(animationId);
     };
   }, [
+    starsEnabled,
     starScale, starSpeed, starFrequency, twinkleAmount, twinkleSpeed, twinkleSpeedRandomness, sizeRandomness,
     starScale2, starSpeed2, starFrequency2, lineLength2, twinkleAmount2, twinkleSpeed2, twinkleSpeedRandomness2, sizeRandomness2,
     starScale3, starSpeed3, starFrequency3, lineLength3, spawnDelay3, twinkleAmount3, twinkleSpeed3, twinkleSpeedRandomness3, sizeRandomness3,
@@ -1882,41 +1883,43 @@ export default function LandingPage() {
       </div>
 
       {/* Phase Timeline - Scrollable Page Content */}
-      <div
-        className={isMobile ? "relative left-0 z-[20]" : "absolute left-0 z-[20]"}
-        style={{
-          top: isMobile ? 0 : `calc(100vh + ${phaseColumnYOffset}px)`,
-          marginTop: isMobile ? `${96 + phaseColumnYOffset}px` : undefined, // CRITICAL FIX: Increased spacing (64→96px) to prevent upward creep after position change from absolute→relative
-          width: '100%', // Full container width - correctly fills space without extending under scrollbar
-          minHeight: isMobile ? 'auto' : undefined,
-        }}
-      >
-        {/* Mobile: Glass Accordion (NEW) | Desktop: Image Carousel (UNCHANGED) */}
-        {isMobile ? (
-          <PhaseAccordion
-            phaseHeaderFont={phaseHeaderFont}
-            phaseHeaderFontSize={phaseHeaderFontSize}
-            phaseDescriptionFont={phaseDescriptionFont}
-            phaseDescriptionFontSize={phaseDescriptionFontSize}
-          />
-        ) : (
-          <HorizontalTimeline
-            phaseHeaderFont={phaseHeaderFont}
-            phaseHeaderFontSize={phaseHeaderFontSize}
-            phaseHeaderColor={phaseHeaderColor}
-            phaseDescriptionFont={phaseDescriptionFont}
-            phaseDescriptionFontSize={phaseDescriptionFontSize}
-            imageDarkness={phaseImageDarkening}
-            imageBlur={phaseBlurAmount}
-            imageBlurSelected={phaseBlurAmountSelected}
-            columnHeight={phaseColumnHeight}
-            fadePosition={phaseFadePosition}
-            imageBlendMode={phaseImageBlendMode}
-            hoverDarkenIntensity={phaseHoverDarkeningIntensity}
-            idleBackdropBlur={phaseIdleBackdropBlur}
-          />
-        )}
-      </div>
+      {!showAudioConsent && (
+        <div
+          className={isMobile ? "relative left-0 z-[20]" : "absolute left-0 z-[20]"}
+          style={{
+            top: isMobile ? 0 : `calc(100vh + ${phaseColumnYOffset}px)`,
+            marginTop: isMobile ? `${96 + phaseColumnYOffset}px` : undefined, // CRITICAL FIX: Increased spacing (64→96px) to prevent upward creep after position change from absolute→relative
+            width: '100%', // Full container width - correctly fills space without extending under scrollbar
+            minHeight: isMobile ? 'auto' : undefined,
+          }}
+        >
+          {/* Mobile: Glass Accordion (NEW) | Desktop: Image Carousel (UNCHANGED) */}
+          {isMobile ? (
+            <PhaseAccordion
+              phaseHeaderFont={phaseHeaderFont}
+              phaseHeaderFontSize={phaseHeaderFontSize}
+              phaseDescriptionFont={phaseDescriptionFont}
+              phaseDescriptionFontSize={phaseDescriptionFontSize}
+            />
+          ) : (
+            <HorizontalTimeline
+              phaseHeaderFont={phaseHeaderFont}
+              phaseHeaderFontSize={phaseHeaderFontSize}
+              phaseHeaderColor={phaseHeaderColor}
+              phaseDescriptionFont={phaseDescriptionFont}
+              phaseDescriptionFontSize={phaseDescriptionFontSize}
+              imageDarkness={phaseImageDarkening}
+              imageBlur={phaseBlurAmount}
+              imageBlurSelected={phaseBlurAmountSelected}
+              columnHeight={phaseColumnHeight}
+              fadePosition={phaseFadePosition}
+              imageBlendMode={phaseImageBlendMode}
+              hoverDarkenIntensity={phaseHoverDarkeningIntensity}
+              idleBackdropBlur={phaseIdleBackdropBlur}
+            />
+          )}
+        </div>
+      )}
 
       {/* Audio Consent Lightbox */}
       <AudioConsentLightbox
