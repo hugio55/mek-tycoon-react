@@ -1174,3 +1174,5 @@
 [1] Validator: v.object({desktop: v.optional(v.any()), mobile: v.optional(v.any()), shared: v.optional(v.any())})
 [1] 
 [1] 
+[1] 11/12/2025, 11:30:44 PM [CONVEX M(walletAuthentication:cleanupExpiredNonces)] [LOG] '[Cleanup] Nonce cleanup completed: 0 expired, 0 used (>24hr old), 0 total deleted'
+[1] 11/12/2025, 11:30:45 PM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
