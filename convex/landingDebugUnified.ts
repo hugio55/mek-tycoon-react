@@ -142,6 +142,8 @@ const DEFAULT_CONFIG = {
     phaseIdleBackdropBlur: 0,
     phaseImageIdleOpacity: 100,
     phaseColumnYOffset: 0,
+    // Mobile performance testing
+    disablePhaseAccordionBlur: false,
     // Mobile audio controls
     soundLabelSize: 14,
     soundLabelVerticalOffset: 0,
