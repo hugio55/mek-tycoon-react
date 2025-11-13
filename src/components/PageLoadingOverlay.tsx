@@ -31,7 +31,20 @@ export function PageLoadingOverlay() {
                        /^172\.(1[6-9]|2\d|3[01])\./.test(hostname);
 
     const settingKey = isLocalhost ? 'disablePageLoaderLocalhost' : 'disablePageLoaderProduction';
-    return localStorage.getItem(settingKey) === 'true';
+    const settingValue = localStorage.getItem(settingKey);
+    const bypassed = settingValue === 'true';
+
+    // Debug logging
+    console.log('[🎯LOADER] PageLoadingOverlay Check:', {
+      hostname,
+      isLocalhost,
+      settingKey,
+      settingValue,
+      bypassed,
+      userAgent: navigator.userAgent.substring(0, 50)
+    });
+
+    return bypassed;
   })();
 
   useEffect(() => {
