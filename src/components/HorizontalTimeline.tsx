@@ -521,6 +521,7 @@ export default function HorizontalTimeline({
                 />
               </div>
             </div>
+          </div>
           );
         })}
       </div>
