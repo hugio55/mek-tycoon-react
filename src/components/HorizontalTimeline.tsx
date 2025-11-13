@@ -269,10 +269,10 @@ export default function HorizontalTimeline({
           if (isMobile) {
             // Mobile: vertical layout with 16:9 aspect ratio
             if (isActive) {
-              // Expanded: auto height to show content
+              // Expanded: auto height to show full content
               dimensionStyle = {
                 width: '100%',
-                minHeight: '300px',
+                height: 'auto',
               };
               useAspectRatio = false;
             } else {
@@ -318,7 +318,7 @@ export default function HorizontalTimeline({
               style={{
                 ...dimensionStyle,
                 transition: isMobile
-                  ? 'min-height 0.5s ease-in-out, aspect-ratio 0.5s ease-in-out'
+                  ? 'height 0.5s ease-in-out, aspect-ratio 0.5s ease-in-out'
                   : 'width 0.5s ease-in-out',
                 zIndex: isActive ? 20 : 10,
                 touchAction: isMobile ? 'manipulation' : 'auto',
@@ -464,7 +464,7 @@ export default function HorizontalTimeline({
                   `}
                   style={{
                     fontFamily: phaseDescriptionFont,
-                    fontSize: isMobile ? '15px' : `${phaseDescriptionFontSize}px`,
+                    fontSize: `${phaseDescriptionFontSize}px`,
                     transition: isActive
                       ? 'opacity 0.3s ease-out 0.5s, transform 0.3s ease-out 0.5s'
                       : 'opacity 0.2s ease-in, transform 0.2s ease-in',
