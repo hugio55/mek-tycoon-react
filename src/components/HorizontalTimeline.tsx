@@ -94,13 +94,48 @@ export default function HorizontalTimeline({
   // Detect viewport size for mobile layout
   useEffect(() => {
     const checkViewport = () => {
-      setIsMobile(window.innerWidth < 1024);
+      const wasMobile = isMobile;
+      const nowMobile = window.innerWidth < 1024;
+      setIsMobile(nowMobile);
+
+      // Force layout recalculation on mobile viewport changes (Safari URL bar, orientation)
+      if (nowMobile && containerRef.current) {
+        setTimeout(() => {
+          if (containerRef.current) {
+            console.log('[📱VIEWPORT] Forcing layout recalculation after viewport change');
+            // Force reflow
+            const _ = containerRef.current.offsetHeight;
+
+            // Trigger Safari layout engine
+            const currentScroll = window.scrollY;
+            if (currentScroll > 0) {
+              window.scrollTo(0, currentScroll + 1);
+              requestAnimationFrame(() => {
+                window.scrollTo(0, currentScroll);
+              });
+            }
+          }
+        }, 100);
+      }
     };
 
     checkViewport();
+
+    // Use visualViewport API for Safari iOS (handles URL bar show/hide)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', checkViewport);
+    }
     window.addEventListener('resize', checkViewport);
-    return () => window.removeEventListener('resize', checkViewport);
-  }, []);
+    window.addEventListener('orientationchange', checkViewport);
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', checkViewport);
+      }
+      window.removeEventListener('resize', checkViewport);
+      window.removeEventListener('orientationchange', checkViewport);
+    };
+  }, [isMobile]);
 
   // Detect if device supports touch (mobile/tablet)
   useEffect(() => {
@@ -186,6 +221,26 @@ export default function HorizontalTimeline({
     return () => clearTimeout(timer);
   }, [isMobile, timelineData]);
 
+  // Safari iOS: Force layout recalculation after animations complete
+  useEffect(() => {
+    if (!isMobile || selectedIndex === null) return;
+
+    // After animation completes (600ms), ensure layout is correct
+    const timer = setTimeout(() => {
+      if (containerRef.current) {
+        // Trigger reflow to fix any Safari layout bugs
+        containerRef.current.getBoundingClientRect();
+        // Force document height recalculation
+        document.body.style.minHeight = `${document.documentElement.scrollHeight}px`;
+        requestAnimationFrame(() => {
+          document.body.style.minHeight = '';
+        });
+      }
+    }, 650); // Slightly after animation completes
+
+    return () => clearTimeout(timer);
+  }, [selectedIndex, isMobile]);
+
   // Detect overflow and calculate needed width expansion for active card
   useEffect(() => {
     const activeIndex = hoveredIndex ?? selectedIndex;
@@ -252,6 +307,35 @@ export default function HorizontalTimeline({
     const newIndex = selectedIndex === index ? null : index;
     console.log('[🎯CLICK] Setting selectedIndex to:', newIndex);
     setSelectedIndex(newIndex);
+
+    // CRITICAL iOS Safari fix: Force layout recalculation after transition completes
+    // Safari doesn't properly update document height when cards expand/collapse
+    setTimeout(() => {
+      if (containerRef.current) {
+        console.log('[🎯SAFARI] Forcing layout recalculation after card animation');
+
+        // Force reflow by accessing offsetHeight
+        const containerHeight = containerRef.current.offsetHeight;
+
+        // Force document height recalculation
+        const documentHeight = Math.max(
+          document.body.scrollHeight,
+          document.body.offsetHeight,
+          document.documentElement.clientHeight,
+          document.documentElement.scrollHeight,
+          document.documentElement.offsetHeight
+        );
+
+        console.log('[🎯SAFARI] Container height:', containerHeight, 'Document height:', documentHeight);
+
+        // Trigger Safari's layout engine by briefly adjusting scroll
+        const currentScroll = window.scrollY;
+        window.scrollTo(0, currentScroll + 1);
+        requestAnimationFrame(() => {
+          window.scrollTo(0, currentScroll);
+        });
+      }
+    }, 650); // Wait for 0.6s transition + 50ms buffer
   };
 
   // Debug log hover state changes
@@ -290,16 +374,17 @@ export default function HorizontalTimeline({
   return (
     <div
       ref={containerRef}
-      className="relative overflow-hidden"
+      className="relative"
       style={{
         height: isMobile ? 'auto' : `${columnHeight}px`,
         minHeight: isMobile ? '100vh' : undefined, // Prevent Safari height collapse
         width: '100%',
         backgroundColor: 'transparent',
         isolation: 'isolate',
-        contain: isMobile ? 'layout' : 'layout style paint', // Reduce Safari paint containment issues
+        contain: isMobile ? 'layout' : 'layout style paint', // Reduce Safari containment issues
         margin: 0,
         padding: 0,
+        overflow: isMobile ? 'visible' : 'hidden',
         WebkitOverflowScrolling: 'touch', // Smooth iOS scrolling
       }}
     >

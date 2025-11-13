@@ -1411,8 +1411,10 @@ export default function LandingPage() {
       style={{
         margin: 0,
         padding: 0,
-        height: `calc(100vh + ${phaseColumnYOffset}px + ${phaseColumnHeight}px)`,
+        minHeight: isMobile ? 'auto' : `calc(100vh + ${phaseColumnYOffset}px + ${phaseColumnHeight}px)`,
+        height: isMobile ? 'auto' : `calc(100vh + ${phaseColumnYOffset}px + ${phaseColumnHeight}px)`,
         overflowX: 'hidden',
+        overflowY: isMobile ? 'visible' : 'auto',
         position: 'relative',
         touchAction: 'pan-y',
         WebkitOverflowScrolling: 'touch',
@@ -1610,10 +1612,11 @@ export default function LandingPage() {
 
       {/* Phase Timeline - Scrollable Page Content */}
       <div
-        className="absolute left-0 z-[20]"
+        className={isMobile ? "relative left-0 z-[20]" : "absolute left-0 z-[20]"}
         style={{
-          top: `calc(100vh + ${phaseColumnYOffset}px)`,
+          top: isMobile ? 0 : `calc(100vh + ${phaseColumnYOffset}px)`,
           width: '100%', // Full container width - correctly fills space without extending under scrollbar
+          minHeight: isMobile ? 'auto' : undefined,
         }}
       >
         <HorizontalTimeline
@@ -1630,7 +1633,6 @@ export default function LandingPage() {
           imageBlendMode={phaseImageBlendMode}
           hoverDarkenIntensity={phaseHoverDarkeningIntensity}
           idleBackdropBlur={phaseIdleBackdropBlur}
-          isMobile={isMobile}
         />
       </div>
 
