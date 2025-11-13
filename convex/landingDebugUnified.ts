@@ -192,6 +192,8 @@ const DEFAULT_CONFIG = {
     audioDescriptionText: 'For full immersion...',
     audioConsentFadeDuration: 500,
     forceShowAudioConsent: false,
+    // Star systems master toggle
+    starsEnabled: true,
   },
 };
 
