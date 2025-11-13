@@ -121,6 +121,9 @@ const DEFAULT_CONFIG = {
   forceShowAudioConsent: false,
   // Active tab
   activeTab: 'layer1' as string,
+  // Footer settings
+  footerHeight: 120,
+  footerImageVerticalPosition: 50,
 };
 
 type ConfigType = typeof DEFAULT_CONFIG;
@@ -3444,6 +3447,87 @@ export default function LandingDebugPage() {
             </div>
           </div>
 
+          {/* Footer Controls */}
+          <div className="bg-gray-800 border border-gray-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
+              Footer
+            </h2>
+
+            {/* Footer Height */}
+            <div className="mb-3">
+              <label className="block text-xs text-gray-300 mb-1">
+                Footer Height
+              </label>
+              <input
+                type="range"
+                min="60"
+                max="300"
+                step="10"
+                value={config.footerHeight}
+                onChange={(e) => updateConfig('footerHeight', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.footerHeight}px
+              </div>
+            </div>
+
+            {/* Image Vertical Position */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Image Vertical Position
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={config.footerImageVerticalPosition}
+                onChange={(e) => updateConfig('footerImageVerticalPosition', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.footerImageVerticalPosition}% from top
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div
+        className="bg-gray-900 border-t border-gray-700 flex items-center justify-center relative"
+        style={{
+          height: `${config.footerHeight}px`,
+          marginTop: 'auto'
+        }}
+      >
+        <div
+          className="absolute"
+          style={{
+            top: `${config.footerImageVerticalPosition}%`,
+            transform: 'translateY(-50%)',
+            left: '50%',
+            marginLeft: '-50px' // Half of the image width to center it
+          }}
+        >
+          <img
+            src="/oe-items/oe-icon.png"
+            alt="OE Icon"
+            className="w-[100px] h-auto"
+            onError={(e) => {
+              console.error('[🖼️FOOTER] Failed to load OE icon');
+            }}
+          />
         </div>
       </div>
 

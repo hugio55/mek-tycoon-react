@@ -296,9 +296,7 @@ export default function LandingPage() {
   const logoContainerRef = useRef<HTMLDivElement>(null);
 
   // Canvas compositing for Safari/iOS (dual-video alpha transparency)
-  // MOBILE PERFORMANCE: Skip expensive canvas compositing on mobile devices
   useEffect(() => {
-    if (isMobile) return; // Disable video compositing on mobile
     if (!useSafariVideo) return;
     if (!compositeCanvasRef.current || !colorVideoRef.current || !alphaVideoRef.current) return;
 
@@ -413,19 +411,12 @@ export default function LandingPage() {
       colorVideo.removeEventListener('ended', handleLoop);
       alphaVideo.removeEventListener('ended', handleLoop);
     };
-  }, [useSafariVideo, isMobile]); // Re-run when isMobile changes to disable video on mobile
+  }, [useSafariVideo]);
 
   // Start video when logo animation begins
-  // MOBILE PERFORMANCE: Skip video playback on mobile devices
   useEffect(() => {
     if (animationStage === 'logo') {
-      // Skip video on mobile - use static image instead
-      if (isMobile) {
-        console.log('[🎬VIDEO] Skipping video on mobile (using static image)');
-        return;
-      }
-
-      // Handle Safari/iOS (dual video compositing) - desktop only
+      // Handle Safari/iOS (dual video compositing)
       if (useSafariVideo && colorVideoRef.current && alphaVideoRef.current) {
         console.log('[🎬VIDEO] Starting Safari dual-video playback');
         colorVideoRef.current.currentTime = 0;
@@ -433,7 +424,7 @@ export default function LandingPage() {
         colorVideoRef.current.play().catch(err => console.error('[🎬VIDEO] Color video play failed:', err));
         alphaVideoRef.current.play().catch(err => console.error('[🎬VIDEO] Alpha video play failed:', err));
       }
-      // Handle Chrome/Firefox (WebM) - desktop only
+      // Handle Chrome/Firefox (WebM)
       else if (!useSafariVideo && videoRef.current) {
         console.log('[🎬VIDEO] Starting WebM video playback');
         videoRef.current.currentTime = 0;
@@ -1363,7 +1354,7 @@ export default function LandingPage() {
       return { x, y };
     };
 
-    for (let i = 0; i < mobileStarFrequency; i++) {
+    for (let i = 0; i < starFrequency; i++) {
       const { x, y } = initializeStar();
       const baseSize = Math.random() * 2 + 1;
       const sizeVariation = (sizeRandomness / 100) * baseSize;
@@ -1380,7 +1371,7 @@ export default function LandingPage() {
 
     // Initialize Layer 2 stars (second starfield)
     const stars2: Star[] = [];
-    for (let i = 0; i < mobileStarFrequency2; i++) {
+    for (let i = 0; i < starFrequency2; i++) {
       const { x, y } = initializeStar();
       const baseSize = Math.random() * 2 + 1;
       const sizeVariation = (sizeRandomness2 / 100) * baseSize;
@@ -1397,7 +1388,7 @@ export default function LandingPage() {
 
     // Initialize Layer 3 stars (third starfield)
     const stars3: Star[] = [];
-    for (let i = 0; i < mobileStarFrequency3; i++) {
+    for (let i = 0; i < starFrequency3; i++) {
       const { x, y } = initializeStar();
       const baseSize = Math.random() * 2 + 1;
       const sizeVariation = (sizeRandomness3 / 100) * baseSize;
@@ -1415,22 +1406,8 @@ export default function LandingPage() {
     // Track last spawn time for Layer 3 stars (for spawn delay)
     const starLastSpawnTime3 = new Map<number, number>();
 
-    // MOBILE PERFORMANCE: Throttle to 30fps on mobile (vs 60fps desktop)
-    // Reduces CPU usage by ~50% with minimal visual impact
-    let lastFrameTime = 0;
-    const targetFPS = isMobile ? 30 : 60;
-    const frameDelay = 1000 / targetFPS;
-
     let animationId: number;
-    const animate = (currentTime: number = performance.now()) => {
-      // Frame rate throttling for mobile
-      const elapsed = currentTime - lastFrameTime;
-      if (elapsed < frameDelay) {
-        animationId = requestAnimationFrame(animate);
-        return;
-      }
-      lastFrameTime = currentTime - (elapsed % frameDelay);
-
+    const animate = () => {
       // Clear with transparency to show background image
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -1716,31 +1693,9 @@ export default function LandingPage() {
               contain: 'layout style paint',
             }}
           >
-            {/* MOBILE PERFORMANCE: Disable video on mobile, use static image fallback */}
-            {isMobile ? (
-              <img
-                src={getMediaUrl('/random-images/logo vid for apple/logo-static-fallback.webp')}
-                alt="Mek Tycoon Logo"
-                className="w-full h-full absolute inset-0"
-                style={{
-                  opacity: 'inherit',
-                  objectFit: 'contain',
-                  transform: 'translateZ(0) scale3d(1, 1, 1)',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  WebkitTransform: 'translateZ(0) scale3d(1, 1, 1)',
-                  imageRendering: 'auto',
-                  pointerEvents: 'none',
-                  willChange: animationStage === 'logo' ? 'transform' : showBetaLightbox ? 'filter' : 'auto',
-                  filter: showBetaLightbox ? 'blur(8px)' : 'blur(0px)',
-                  transition: showBetaLightbox
-                    ? 'filter 800ms cubic-bezier(0.4, 0, 0.2, 1)'
-                    : 'filter 400ms cubic-bezier(0.4, 0, 0.2, 1)',
-                }}
-              />
-            ) : useSafariVideo ? (
+            {useSafariVideo ? (
               <>
-                {/* Safari/iOS Desktop: Canvas compositing with dual H.265 videos */}
+                {/* Safari/iOS: Canvas compositing with dual H.265 videos */}
                 <canvas
                   ref={compositeCanvasRef}
                   className="w-full h-full absolute inset-0"
