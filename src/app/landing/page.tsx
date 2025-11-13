@@ -129,6 +129,15 @@ const DEFAULT_CONFIG = {
   joinBetaColor: 'text-white',
   joinBetaHorizontalOffset: 0,
   joinBetaVerticalOffset: 0,
+  // Footer settings
+  footerHeight: 120,
+  footerImageVerticalPosition: 50,
+  oeLogoScale: 1.0,
+  socialIconScale: 1.0,
+  socialIconGap: 24,
+  socialIconVerticalPosition: 70,
+  socialIconPaddingTop: 0,
+  socialIconPaddingBottom: 0,
   // Note: phaseImage1-4 not in DEFAULT_CONFIG - PhaseCarousel manages these
 };
 
