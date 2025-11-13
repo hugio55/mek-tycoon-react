@@ -26,9 +26,11 @@ export function getMediaUrl(path: string): string {
 
   if (R2_BASE_URL) {
     const url = `${R2_BASE_URL}${path}`;
+    console.log(`[🌐MEDIA] Using R2: ${url}`);
     return url;
   }
 
+  console.log(`[🌐MEDIA] Using local: ${path}`);
   return path;
 }
 
