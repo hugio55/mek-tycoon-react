@@ -19,6 +19,8 @@ export function PageLoadingOverlay() {
   // Check if loader is bypassed based on environment
   const isBypassed = typeof window !== 'undefined' && (() => {
     const hostname = window.location.hostname;
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlParam = searchParams.get('noloader');
 
     // Consider it localhost if it's:
     // - localhost or 127.0.0.1
@@ -31,6 +33,20 @@ export function PageLoadingOverlay() {
                        /^172\.(1[6-9]|2\d|3[01])\./.test(hostname);
 
     const settingKey = isLocalhost ? 'disablePageLoaderLocalhost' : 'disablePageLoaderProduction';
+
+    // URL parameter takes priority and also saves to localStorage
+    if (urlParam !== null) {
+      const shouldDisable = urlParam === 'true' || urlParam === '';
+      localStorage.setItem(settingKey, shouldDisable.toString());
+      console.log('[🎯LOADER] PageLoadingOverlay URL Parameter:', {
+        urlParam,
+        shouldDisable,
+        settingKey
+      });
+      return shouldDisable;
+    }
+
+    // Otherwise check localStorage
     const settingValue = localStorage.getItem(settingKey);
     const bypassed = settingValue === 'true';
 
