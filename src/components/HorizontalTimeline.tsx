@@ -224,11 +224,9 @@ export default function HorizontalTimeline({
       if (containerRef.current) {
         // Trigger reflow to fix any Safari layout bugs
         containerRef.current.getBoundingClientRect();
-        // Force document height recalculation
-        document.body.style.minHeight = `${document.documentElement.scrollHeight}px`;
-        requestAnimationFrame(() => {
-          document.body.style.minHeight = '';
-        });
+        // REMOVED: document.body.style.minHeight manipulation
+        // This was causing cumulative upward drift after multiple expand/collapse cycles
+        // Safari's layout engine will recalculate naturally from getBoundingClientRect() above
       }
     }, 650); // Slightly after animation completes
 

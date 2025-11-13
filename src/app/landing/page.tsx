@@ -118,6 +118,8 @@ const DEFAULT_CONFIG = {
   audioToggleScale: 1.0,
   toggleTextGap: 16,
   proceedButtonSize: 1.0,
+  audioDescriptionText: 'For full immersion...',
+  audioConsentFadeDuration: 500,
   // Join Beta Button controls
   joinBetaFont: 'Orbitron',
   joinBetaFontSize: 32,
@@ -397,6 +399,8 @@ export default function LandingPage() {
   const [descriptionVerticalPosition, setDescriptionVerticalPosition] = useState(0);
   const [toggleGroupVerticalPosition, setToggleGroupVerticalPosition] = useState(0);
   const [proceedButtonVerticalPosition, setProceedButtonVerticalPosition] = useState(0);
+  const [audioDescriptionText, setAudioDescriptionText] = useState(DEFAULT_CONFIG.audioDescriptionText);
+  const [audioConsentFadeDuration, setAudioConsentFadeDuration] = useState(DEFAULT_CONFIG.audioConsentFadeDuration);
 
   // Join Beta Button controls
   const [joinBetaFont, setJoinBetaFont] = useState(DEFAULT_CONFIG.joinBetaFont);
@@ -660,6 +664,8 @@ export default function LandingPage() {
           setDescriptionVerticalPosition(config.descriptionVerticalPosition ?? 0);
           setToggleGroupVerticalPosition(config.toggleGroupVerticalPosition ?? 0);
           setProceedButtonVerticalPosition(config.proceedButtonVerticalPosition ?? 0);
+          setAudioDescriptionText(config.audioDescriptionText ?? DEFAULT_CONFIG.audioDescriptionText);
+          setAudioConsentFadeDuration(config.audioConsentFadeDuration ?? DEFAULT_CONFIG.audioConsentFadeDuration);
           // Note: phaseImage1-4 not loaded here - PhaseCarousel reads directly from localStorage
       } catch (e) {
         console.error('Failed to load debug config:', e);
@@ -772,6 +778,8 @@ export default function LandingPage() {
           setDescriptionVerticalPosition(config.descriptionVerticalPosition ?? 0);
           setToggleGroupVerticalPosition(config.toggleGroupVerticalPosition ?? 0);
           setProceedButtonVerticalPosition(config.proceedButtonVerticalPosition ?? 0);
+          setAudioDescriptionText(config.audioDescriptionText ?? DEFAULT_CONFIG.audioDescriptionText);
+          setAudioConsentFadeDuration(config.audioConsentFadeDuration ?? DEFAULT_CONFIG.audioConsentFadeDuration);
         } catch (e) {
           console.error('Failed to load debug config from localStorage:', e);
         }
@@ -1615,7 +1623,7 @@ export default function LandingPage() {
         className={isMobile ? "relative left-0 z-[20]" : "absolute left-0 z-[20]"}
         style={{
           top: isMobile ? 0 : `calc(100vh + ${phaseColumnYOffset}px)`,
-          marginTop: isMobile ? '64px' : undefined, // Proper spacing buffer from Join Beta button on mobile
+          marginTop: isMobile ? '96px' : undefined, // CRITICAL FIX: Increased spacing (64→96px) to prevent upward creep after position change from absolute→relative
           width: '100%', // Full container width - correctly fills space without extending under scrollbar
           minHeight: isMobile ? 'auto' : undefined,
         }}
@@ -1655,6 +1663,8 @@ export default function LandingPage() {
         descriptionVerticalPosition={descriptionVerticalPosition}
         toggleGroupVerticalPosition={toggleGroupVerticalPosition}
         proceedButtonVerticalPosition={proceedButtonVerticalPosition}
+        audioDescriptionText={audioDescriptionText}
+        audioConsentFadeDuration={audioConsentFadeDuration}
       />
 
       {/* Beta Signup Lightbox */}
