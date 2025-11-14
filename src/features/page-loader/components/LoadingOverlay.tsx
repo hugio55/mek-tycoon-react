@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { TriangleKaleidoscope } from './TriangleKaleidoscope';
-import { ProgressBar } from './ProgressBar';
+import { PercentageDisplay } from './PercentageDisplay';
 import { LoadingText } from './LoadingText';
 import { TIMING } from '../config/constants';
 import { useLoaderContext } from '../context/LoaderContext';
@@ -66,10 +66,8 @@ export function LoadingOverlay({
           <TriangleKaleidoscope />
         </div>
 
-        {/* Progress Bar */}
-        <div className="w-full">
-          <ProgressBar percentage={percentage} showPercentage={true} />
-        </div>
+        {/* Percentage Display */}
+        <PercentageDisplay percentage={percentage} />
 
         {/* Loading Text */}
         <LoadingText currentStage={stage} />

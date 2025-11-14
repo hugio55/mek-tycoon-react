@@ -58,11 +58,11 @@ export function TriangleKaleidoscope({ size = 1 }: TriangleKaleidoscopeProps) {
               const offsetAngle = offset * 5; // degrees
               const rotateEnd = offsetAngle + (direction * 360) / 3;
 
-              // RGB chromatic aberration effect: white base with RGB channel offsets
+              // RGB chromatic aberration effect: brighter white base with RGB channel offsets
               const chromaticColors = [
-                'rgba(255, 0, 0, 0.6)',     // Red channel
-                'rgba(0, 255, 0, 0.6)',     // Green channel
-                'rgba(0, 0, 255, 0.6)'      // Blue channel
+                'rgba(255, 100, 100, 0.9)',     // Red channel (brighter)
+                'rgba(100, 255, 100, 0.9)',     // Green channel (brighter)
+                'rgba(100, 100, 255, 0.9)'      // Blue channel (brighter)
               ];
               const color = chromaticColors[j % 3];
 
