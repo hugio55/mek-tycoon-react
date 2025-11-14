@@ -31,6 +31,19 @@ export default function PhaseAccordion({
 
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
 
+  // Load Phase I lightbox settings from unified database
+  const unifiedSettings = useQuery(api.landingDebugUnified.getUnifiedLandingDebugSettings);
+
+  // Extract Phase I lightbox settings from shared config (with defaults)
+  const phaseILightboxContent = unifiedSettings?.shared?.phaseILightboxContent || '';
+  const phaseITextFont = unifiedSettings?.shared?.phaseITextFont || 'Arial';
+  const phaseITextFontSize = unifiedSettings?.shared?.phaseITextFontSize || 16;
+  const phaseITextColor = unifiedSettings?.shared?.phaseITextColor || 'text-white/80';
+  const phaseIVideoScale = unifiedSettings?.shared?.phaseIVideoScale || 100;
+  const phaseIVideoPositionX = unifiedSettings?.shared?.phaseIVideoPositionX || 0;
+  const phaseIVideoPositionY = unifiedSettings?.shared?.phaseIVideoPositionY || 0;
+  const phaseIBackdropBlur = unifiedSettings?.shared?.phaseIBackdropBlur || 8;
+
   const handleToggle = (index: number, isLocked: boolean) => {
     if (isLocked) return;
 
@@ -260,6 +273,14 @@ export default function PhaseAccordion({
         onClose={() => setShowPhaseILightbox(false)}
         phaseDescriptionFont={phaseDescriptionFont}
         phaseDescriptionFontSize={phaseDescriptionFontSize}
+        lightboxContent={phaseILightboxContent}
+        textFont={phaseITextFont}
+        textFontSize={phaseITextFontSize}
+        textColor={phaseITextColor}
+        videoScale={phaseIVideoScale}
+        videoPositionX={phaseIVideoPositionX}
+        videoPositionY={phaseIVideoPositionY}
+        backdropBlur={phaseIBackdropBlur}
       />
     </div>
   );

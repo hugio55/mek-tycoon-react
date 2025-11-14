@@ -148,6 +148,15 @@ const DEFAULT_CONFIG = {
   mobileBreakpoint: 1024,
   mobilePhaseFooterSpacing: 32,
   mobilePhaseButtonMaxWidth: 600,
+  // Phase I Lightbox Settings
+  phaseILightboxContent: 'Project inception and initial concept development. The vision for Mek Tycoon begins to take shape.\n\nIn this foundational phase, we established the core vision and mechanics that would define the Mek Tycoon universe. Our team carefully crafted the initial designs, gameplay concepts, and technical architecture that would serve as the bedrock for all future development.\n\nKey achievements during Phase I included:\n\n• Conceptualization of the Mek NFT collection and variation system\n• Design of the core gameplay loop and resource management mechanics\n• Development of the initial art style and visual identity\n• Technical planning for blockchain integration on Cardano\n• Formation of the core development team and community foundation\n\nThis phase laid the groundwork for everything that followed, establishing the principles of strategic depth, artistic excellence, and community engagement that define Mek Tycoon today.',
+  phaseIVideoScale: 100,
+  phaseIVideoPositionX: 0,
+  phaseIVideoPositionY: 0,
+  phaseIBackdropBlur: 8,
+  phaseITextFont: 'Arial',
+  phaseITextFontSize: 16,
+  phaseITextColor: 'text-white/80',
 };
 
 type ConfigType = typeof DEFAULT_CONFIG;
@@ -4176,7 +4185,7 @@ export default function LandingDebugPage() {
 
       {/* Footer */}
       <div
-        className="bg-gray-900 border-t border-gray-700 flex items-center justify-center relative overflow-hidden"
+        className="bg-gray-900 flex items-center justify-center relative overflow-hidden"
         style={{
           height: `${config.footerHeight}px`,
           marginTop: 'auto',
