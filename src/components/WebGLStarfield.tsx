@@ -7,6 +7,12 @@ interface WebGLStarfieldProps {
   // Master toggle
   enabled: boolean;
 
+  // Layer enable/disable
+  bgStarEnabled: boolean;
+  layer1Enabled: boolean;
+  layer2Enabled: boolean;
+  layer3Enabled: boolean;
+
   // Layer 1: Moving dots
   starScale: number;
   starSpeed: number;
@@ -253,7 +259,14 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
 
   // Create/update background stars
   useEffect(() => {
-    if (!sceneRef.current || !props.enabled) return;
+    if (!sceneRef.current || !props.enabled || !props.bgStarEnabled) {
+      // Remove if disabled
+      if (bgStarsRef.current && sceneRef.current) {
+        sceneRef.current.remove(bgStarsRef.current);
+        bgStarsRef.current = null;
+      }
+      return;
+    }
 
     const scene = sceneRef.current;
     const particleCount = props.bgStarCount;
@@ -360,7 +373,16 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
 
   // Create/update Layer 1 moving stars
   useEffect(() => {
-    if (!sceneRef.current || !props.enabled) return;
+    if (!sceneRef.current || !props.enabled || !props.layer1Enabled) {
+      // Remove if disabled
+      if (layer1StarsRef.current && sceneRef.current) {
+        sceneRef.current.remove(layer1StarsRef.current);
+        layer1StarsRef.current.geometry.dispose();
+        (layer1StarsRef.current.material as THREE.Material).dispose();
+        layer1StarsRef.current = null;
+      }
+      return;
+    }
 
     const scene = sceneRef.current;
     const particleCount = props.starFrequency;

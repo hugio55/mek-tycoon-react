@@ -1385,6 +1385,20 @@ export default function LandingDebugPage() {
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
               Layer 1 Star Field
             </h2>
+
+            {/* Enable/Disable Checkbox */}
+            <div className="mb-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.layer1Enabled}
+                  onChange={(e) => updateConfig('layer1Enabled', e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <span className="text-xs text-gray-300 font-semibold">Enable Layer 1</span>
+              </label>
+            </div>
+
             {/* Star Scale */}
             <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">
@@ -1560,6 +1574,19 @@ export default function LandingDebugPage() {
               Layer 2 Star Field
             </h2>
 
+            {/* Enable/Disable Checkbox */}
+            <div className="mb-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.layer2Enabled}
+                  onChange={(e) => updateConfig('layer2Enabled', e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <span className="text-xs text-gray-300 font-semibold">Enable Layer 2</span>
+              </label>
+            </div>
+
             {/* Star Scale 2 */}
             <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">
@@ -1734,6 +1761,19 @@ export default function LandingDebugPage() {
             <h2 className="text-sm font-semibold text-purple-400 mb-2 pb-1 border-b border-purple-700">
               Layer 3 Star Field
             </h2>
+
+            {/* Enable/Disable Checkbox */}
+            <div className="mb-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.layer3Enabled}
+                  onChange={(e) => updateConfig('layer3Enabled', e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <span className="text-xs text-purple-300 font-semibold">Enable Layer 3</span>
+              </label>
+            </div>
 
             {/* Star Scale 3 */}
             <div className="mb-2">
@@ -1932,6 +1972,19 @@ export default function LandingDebugPage() {
             <h2 className="text-sm font-semibold text-orange-400 mb-2 pb-1 border-b border-orange-700">
               Background Stars (Static)
             </h2>
+
+            {/* Enable/Disable Checkbox */}
+            <div className="mb-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.bgStarEnabled}
+                  onChange={(e) => updateConfig('bgStarEnabled', e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <span className="text-xs text-orange-300 font-semibold">Enable Background Stars</span>
+              </label>
+            </div>
 
             {/* Star Count */}
             <div className="mb-2">
