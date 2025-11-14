@@ -185,9 +185,13 @@ export default function LandingDebugPage() {
   // Convex hooks - UNIFIED table (must be declared before useEffect that uses them)
   const unifiedSettings = useQuery(api.landingDebugUnified.getUnifiedLandingDebugSettings);
   const updateUnifiedSettings = useMutation(api.landingDebugUnified.updateUnifiedLandingDebugSettings);
+  const updateWithBackup = useMutation(api.landingDebugUnified.updateWithBackup);
   const resetUnifiedSettings = useMutation(api.landingDebugUnified.resetUnifiedLandingDebugSettings);
   const migrateFromOld = useMutation(api.landingDebugUnified.migrateFromOldTables);
   const copyDesktopToMobile = useMutation(api.landingDebugUnified.copyDesktopToMobile);
+  const backupHistory = useQuery(api.landingDebugUnified.getBackupHistory);
+  const restoreBackup = useMutation(api.landingDebugUnified.restoreFromBackup);
+  const createManualBackup = useMutation(api.landingDebugUnified.createBackup);
 
   // Load correct config when switching between desktop/mobile modes
   // ONLY on mode switch, NOT on every database update (prevents race conditions)
@@ -228,9 +232,9 @@ export default function LandingDebugPage() {
   const dbSettings = unifiedSettings
     ? { ...unifiedSettings.shared, ...(activeMode === 'desktop' ? unifiedSettings.desktop : unifiedSettings.mobile) }
     : oldDbSettings;
-  const updateSettings = updateUnifiedSettings;
+  const updateSettings = updateWithBackup; // Use auto-backup mutation for all saves
   const resetSettings = resetUnifiedSettings;
-  const createBackup = oldCreateBackup; // Keep using old backup system for now
+  const createBackup = createManualBackup;
 
   // Phase card management
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
