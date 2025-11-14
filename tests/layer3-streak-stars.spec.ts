@@ -79,16 +79,15 @@ test.describe('Layer 3 Streak Star Rendering Test', () => {
 
     console.log('\n=== STEP 4: Set Layer 3 Star Speed to 100+ ===');
 
-    // Find Star Speed slider (within Layer 3 Star Field section)
-    const speedSlider = layer3Section.locator('label:has-text("Star Speed")').locator('..').locator('input[type="range"]');
+    // Find Star Speed slider (Layer 3 has max=5000, others have max=500)
+    const speedSlider = layer3Section.locator('input[type="range"][min="0.5"][max="5000"]');
 
     const speedMax = await speedSlider.getAttribute('max');
     const speedCurrent = await speedSlider.getAttribute('value');
     console.log(`Current Speed: ${speedCurrent}, Max: ${speedMax}`);
 
-    // Set to high value (100 or max, whichever is smaller)
-    const targetSpeed = Math.min(100, parseInt(speedMax || '100'));
-    await speedSlider.fill(targetSpeed.toString());
+    // Set to high value (100)
+    await speedSlider.fill('100');
     await page.waitForTimeout(500);
 
     const newSpeed = await speedSlider.getAttribute('value');
@@ -96,8 +95,8 @@ test.describe('Layer 3 Streak Star Rendering Test', () => {
 
     console.log('\n=== STEP 5: Set Layer 3 Star Density to 50-100 ===');
 
-    // Find Star Density slider (within Layer 3 Star Field section)
-    const densitySlider = layer3Section.locator('label:has-text("Star Density")').locator('..').locator('input[type="range"]');
+    // Find Star Density slider (Layer 3 has max=500, use .first() since multiple exist)
+    const densitySlider = layer3Section.locator('input[type="range"][min="1"][max="500"]').first();
 
     const densityMax = await densitySlider.getAttribute('max');
     const densityCurrent = await densitySlider.getAttribute('value');
