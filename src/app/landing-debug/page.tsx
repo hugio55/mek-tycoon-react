@@ -2001,7 +2001,7 @@ export default function LandingDebugPage() {
               <input
                 type="range"
                 min="0.5"
-                max="500"
+                max="5000"
                 step="0.5"
                 value={config.starSpeed3}
                 onChange={(e) => updateConfig('starSpeed3', parseFloat(e.target.value))}
