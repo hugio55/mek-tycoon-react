@@ -24,21 +24,21 @@ test.describe('Layer 3 Streak Star Rendering Test', () => {
     console.log('\n=== STEP 1: Disable Background Stars, Layer 1, Layer 2 ===');
 
     // Disable Background Stars
-    const bgStarsCheckbox = page.locator('label:has-text("Background Stars") input[type="checkbox"]');
+    const bgStarsCheckbox = page.locator('label:has-text("Enable Background Stars") input[type="checkbox"]');
     if (await bgStarsCheckbox.isChecked()) {
       await bgStarsCheckbox.uncheck();
       console.log('✓ Disabled Background Stars');
     }
 
     // Disable Layer 1
-    const layer1Checkbox = page.locator('label:has-text("Layer 1 Star Field") input[type="checkbox"]');
+    const layer1Checkbox = page.locator('label:has-text("Enable Layer 1") input[type="checkbox"]');
     if (await layer1Checkbox.isChecked()) {
       await layer1Checkbox.uncheck();
       console.log('✓ Disabled Layer 1');
     }
 
     // Disable Layer 2
-    const layer2Checkbox = page.locator('label:has-text("Layer 2 Star Field") input[type="checkbox"]');
+    const layer2Checkbox = page.locator('label:has-text("Enable Layer 2") input[type="checkbox"]');
     if (await layer2Checkbox.isChecked()) {
       await layer2Checkbox.uncheck();
       console.log('✓ Disabled Layer 2');
@@ -47,7 +47,7 @@ test.describe('Layer 3 Streak Star Rendering Test', () => {
     console.log('\n=== STEP 2: Enable Layer 3 Star Field ===');
 
     // Enable Layer 3
-    const layer3Checkbox = page.locator('label:has-text("Layer 3 Star Field") input[type="checkbox"]');
+    const layer3Checkbox = page.locator('label:has-text("Enable Layer 3") input[type="checkbox"]');
     if (!await layer3Checkbox.isChecked()) {
       await layer3Checkbox.check();
       console.log('✓ Enabled Layer 3');
@@ -57,9 +57,9 @@ test.describe('Layer 3 Streak Star Rendering Test', () => {
 
     console.log('\n=== STEP 3: Set Layer 3 Line Length to Maximum ===');
 
-    // Find Layer 3 Line Length slider
-    const lineLengthLabel = page.locator('label:has-text("Layer 3 Line Length")');
-    const lineLengthSlider = lineLengthLabel.locator('..').locator('input[type="range"]');
+    // Find Line Length slider (within Layer 3 Star Field section)
+    const layer3Section = page.locator('div:has(h2:has-text("Layer 3 Star Field"))');
+    const lineLengthSlider = layer3Section.locator('label:has-text("Line Length")').locator('..').locator('input[type="range"]');
 
     // Get slider properties
     const minValue = await lineLengthSlider.getAttribute('min');
@@ -78,9 +78,8 @@ test.describe('Layer 3 Streak Star Rendering Test', () => {
 
     console.log('\n=== STEP 4: Set Layer 3 Star Speed to 100+ ===');
 
-    // Find Layer 3 Star Speed slider
-    const speedLabel = page.locator('label:has-text("Layer 3 Star Speed")');
-    const speedSlider = speedLabel.locator('..').locator('input[type="range"]');
+    // Find Star Speed slider (within Layer 3 Star Field section)
+    const speedSlider = layer3Section.locator('label:has-text("Star Speed")').locator('..').locator('input[type="range"]');
 
     const speedMax = await speedSlider.getAttribute('max');
     const speedCurrent = await speedSlider.getAttribute('value');
@@ -96,9 +95,8 @@ test.describe('Layer 3 Streak Star Rendering Test', () => {
 
     console.log('\n=== STEP 5: Set Layer 3 Star Density to 50-100 ===');
 
-    // Find Layer 3 Density slider
-    const densityLabel = page.locator('label:has-text("Layer 3 Star Density")');
-    const densitySlider = densityLabel.locator('..').locator('input[type="range"]');
+    // Find Star Density slider (within Layer 3 Star Field section)
+    const densitySlider = layer3Section.locator('label:has-text("Star Density")').locator('..').locator('input[type="range"]');
 
     const densityMax = await densitySlider.getAttribute('max');
     const densityCurrent = await densitySlider.getAttribute('value');

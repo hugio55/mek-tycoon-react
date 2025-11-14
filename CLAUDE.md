@@ -29,6 +29,33 @@ This starts both Next.js (port 3200) and Convex in one terminal.
 - If user says "the server is running" or "localhost is up" - believe them, don't verify or restart
 - Focus on code changes, not server management
 
+### 🚨 Fixing "Internal Server Error"
+
+**When user reports "Internal Server Error" in browser:**
+
+**Root Cause:** Dev server crashed/was killed, leaving a zombie process still bound to port 3200.
+
+**The Fix (follow these exact steps):**
+1. Find the zombie process: `netstat -ano | findstr :3200`
+2. Note the PID from the output (rightmost number)
+3. Kill that specific PID: `Stop-Process -Id <PID> -Force`
+4. Restart dev server: `npm run dev:all`
+
+**Example:**
+```bash
+# Step 1: Find process
+netstat -ano | findstr :3200
+# Output shows: TCP 0.0.0.0:3200 ... LISTENING 59060
+
+# Step 2: Kill that specific PID
+Stop-Process -Id 59060 -Force
+
+# Step 3: Restart
+npm run dev:all
+```
+
+**Key Point:** Always kill by PID (process ID), never by process name. This is the only reliable fix.
+
 ---
 
 ## 🚨 CRITICAL: PRODUCTION DEPLOYMENT PROTECTION 🚨
