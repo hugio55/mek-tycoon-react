@@ -635,8 +635,14 @@ export default function LandingPage() {
   // Debug logging for phaseIdleBackdropBlur changes
   useEffect(() => {
     console.log('[🔍BLUR] landing/page.tsx state updated:', phaseIdleBackdropBlur);
+    console.log('[🔍BLUR-SYNC] Step 3 - phaseIdleBackdropBlur React state changed to:', phaseIdleBackdropBlur);
     console.log('[🔍BLUR] Stack trace:', new Error().stack);
   }, [phaseIdleBackdropBlur]);
+
+  // Debug logging for footerBlurAmount changes
+  useEffect(() => {
+    console.log('[🔍BLUR-SYNC] Step 3 - footerBlurAmount React state changed to:', footerBlurAmount);
+  }, [footerBlurAmount]);
 
   // Description glass card controls
   const [descriptionCardBlur, setDescriptionCardBlur] = useState(DEFAULT_CONFIG.descriptionCardBlur);
@@ -2387,7 +2393,10 @@ export default function LandingPage() {
                 fadePosition={phaseFadePosition}
                 imageBlendMode={phaseImageBlendMode}
                 hoverDarkenIntensity={phaseHoverDarkeningIntensity}
-                idleBackdropBlur={phaseIdleBackdropBlur}
+                idleBackdropBlur={(() => {
+                  console.log('[🔍BLUR-SYNC] Step 4 - Passing idleBackdropBlur prop to HorizontalTimeline:', phaseIdleBackdropBlur);
+                  return phaseIdleBackdropBlur;
+                })()}
               />
             )}
           </div>
@@ -2403,14 +2412,18 @@ export default function LandingPage() {
             paddingTop: `${socialIconPaddingTop}px`,
             paddingBottom: `${socialIconPaddingBottom}px`,
             marginTop: isMobile ? `${mobilePhaseFooterSpacing}px` : undefined,
-            backdropFilter: `blur(${footerBlurAmount}px) saturate(180%)`,
+            backdropFilter: (() => {
+              const blurValue = `blur(${footerBlurAmount}px) saturate(180%)`;
+              console.log('[🔍BLUR-SYNC] Step 5 - Applying footerBlurAmount as CSS backdropFilter:', blurValue);
+              return blurValue;
+            })(),
             WebkitBackdropFilter: `blur(${footerBlurAmount}px) saturate(180%)`,
             backgroundColor: 'rgba(17, 24, 39, 0.3)',
             position: isMobile ? 'relative' : 'absolute',
             top: isMobile ? 0 : `calc(100vh + ${phaseColumnYOffset}px + ${phaseColumnHeight}px)`,
             left: 0,
             width: '100%',
-            zIndex: 5,
+            zIndex: 2, // Below phase wrapper (z-20) to allow backdrop-filter to access background layers
           }}
         >
           {/* OE Logo */}

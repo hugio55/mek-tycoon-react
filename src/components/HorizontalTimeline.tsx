@@ -178,6 +178,7 @@ export default function HorizontalTimeline({
   // Debug logging when prop changes
   useEffect(() => {
     console.log('[🔍BLUR] HorizontalTimeline received prop:', idleBackdropBlur);
+    console.log('[🔍BLUR-SYNC] Step 4.5 - HorizontalTimeline component received idleBackdropBlur prop:', idleBackdropBlur);
   }, [idleBackdropBlur]);
 
   useEffect(() => {
@@ -490,6 +491,15 @@ export default function HorizontalTimeline({
 
           // Calculate blur value
           const blurValue = isActive && idleBackdropBlur > 0 ? `blur(${idleBackdropBlur}px)` : 'none';
+          if (isActive) {
+            console.log('[🔍BLUR-SYNC] Step 5 - Calculating blurValue for active card:', {
+              index,
+              isActive,
+              idleBackdropBlur,
+              blurValue,
+              'will apply': blurValue !== 'none'
+            });
+          }
 
           return (
             <div
@@ -551,26 +561,40 @@ export default function HorizontalTimeline({
                 />
               )}
 
-              {/* Frosted Glass Backdrop Blur Overlay - DISABLED FOR MOBILE PERFORMANCE TESTING */}
-              {/* PERFORMANCE TEST 1: backdrop-blur causes 5fps jank on iPhone Safari */}
-              {/* This layer is extremely expensive on mobile devices */}
-              <div
-                className="absolute pointer-events-none"
-                style={{
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  // backdropFilter: blurValue,  // DISABLED - Primary suspect for mobile jank
-                  // WebkitBackdropFilter: blurValue,  // DISABLED
-                  opacity: isActive ? 1 : 0,
-                  transition: 'opacity 0.3s ease-out',
-                  // transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',  // ORIGINAL
-                  // willChange: isAnyActive && idleBackdropBlur > 0 ? 'opacity, backdrop-filter' : 'auto',  // ORIGINAL
-                  isolation: 'isolate',
-                  contain: 'layout style paint',
-                }}
-              />
+              {/* Frosted Glass Backdrop Blur Overlay - RE-ENABLED FOR DESKTOP */}
+              {/* Only apply on desktop to avoid mobile performance issues */}
+              {(() => {
+                const shouldRender = !isMobile && idleBackdropBlur > 0;
+                if (index === 0) { // Only log for first card to avoid spam
+                  console.log('[🔍BLUR-SYNC] Step 6 - Blur overlay conditional check:', {
+                    isMobile,
+                    idleBackdropBlur,
+                    shouldRender,
+                    blurValue
+                  });
+                }
+                return shouldRender;
+              })() && (
+                <div
+                  className="absolute pointer-events-none"
+                  style={{
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backdropFilter: (() => {
+                      if (isActive && index === 0) {
+                        console.log('[🔍BLUR-SYNC] Step 7 - FINAL: Applying backdropFilter to DOM:', blurValue);
+                      }
+                      return blurValue;
+                    })(),
+                    WebkitBackdropFilter: blurValue,
+                    opacity: isActive ? 1 : 0,
+                    transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',
+                    willChange: isAnyActive && idleBackdropBlur > 0 ? 'opacity, backdrop-filter' : 'auto',
+                  }}
+                />
+              )}
 
               {/* Phase Label - fades out on hover */}
               <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
