@@ -550,10 +550,8 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
       return;
     }
 
-    // Only animate during 'stars' or 'logo' stage
-    if (props.animationStage === 'initial') {
-      return;
-    }
+    // Animate during ALL stages (will be hidden by opacity during 'initial')
+    // Removed early return for 'initial' stage to ensure animation loop starts
 
     const scene = sceneRef.current;
     const camera = cameraRef.current;
