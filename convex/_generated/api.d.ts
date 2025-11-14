@@ -142,6 +142,7 @@ import type * as lib_queryCache from "../lib/queryCache.js";
 import type * as lib_sessionUtils from "../lib/sessionUtils.js";
 import type * as lib_tenureCalculations from "../lib/tenureCalculations.js";
 import type * as listAllGoldMiningAccounts from "../listAllGoldMiningAccounts.js";
+import type * as loaderSettings from "../loaderSettings.js";
 import type * as loans from "../loans.js";
 import type * as manualWalletMerge from "../manualWalletMerge.js";
 import type * as marketplace from "../marketplace.js";
@@ -381,6 +382,7 @@ declare const fullApi: ApiFromModules<{
   "lib/sessionUtils": typeof lib_sessionUtils;
   "lib/tenureCalculations": typeof lib_tenureCalculations;
   listAllGoldMiningAccounts: typeof listAllGoldMiningAccounts;
+  loaderSettings: typeof loaderSettings;
   loans: typeof loans;
   manualWalletMerge: typeof manualWalletMerge;
   marketplace: typeof marketplace;
