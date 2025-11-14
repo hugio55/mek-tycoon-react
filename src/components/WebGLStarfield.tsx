@@ -312,6 +312,12 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
     scene.add(points);
     bgStarsRef.current = points;
 
+    console.log('[⭐WEBGL] Background stars created:', {
+      count: particleCount,
+      zPosition: -1500,
+      pointsAdded: true
+    });
+
   }, [
     props.enabled,
     props.bgStarCount,
