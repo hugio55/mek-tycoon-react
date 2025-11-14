@@ -200,6 +200,17 @@ const DEFAULT_CONFIG = {
     forceShowAudioConsent: false,
     // Star systems master toggle
     starsEnabled: true,
+    // Footer settings (shared between desktop and mobile)
+    footerHeight: 120,
+    footerImageVerticalPosition: 50,
+    oeLogoScale: 1.0,
+    socialIconScale: 1.0,
+    socialIconGap: 24,
+    socialIconVerticalPosition: 70,
+    socialIconPaddingTop: 0,
+    socialIconPaddingBottom: 0,
+    footerBlurAmount: 20,
+    footerEdgeFeathering: 0,
     // Social icon URLs
     oeLogoUrl: '#',
     discordUrl: 'https://discord.gg/your-discord',
