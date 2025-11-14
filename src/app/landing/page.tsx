@@ -354,7 +354,19 @@ export default function LandingPage() {
     let animationFrameId: number;
     let isCompositing = false;
 
-    const composite = () => {
+    // FPS limiting for mobile performance
+    let lastFrameTime = 0;
+    const targetFPS = isMobile ? 30 : 60; // 30 FPS on mobile, 60 FPS on desktop
+    const frameInterval = 1000 / targetFPS;
+
+    const composite = (currentTime: number = 0) => {
+      animationFrameId = requestAnimationFrame(composite);
+
+      // FPS limiting: skip frames if we're rendering too fast
+      const deltaTime = currentTime - lastFrameTime;
+      if (deltaTime < frameInterval) return;
+      lastFrameTime = currentTime - (deltaTime % frameInterval);
+
       if (!colorVideo.paused && !colorVideo.ended && colorVideo.readyState >= colorVideo.HAVE_CURRENT_DATA) {
         // Ensure temp canvas matches size
         if (tempCanvas.width !== canvas.width || tempCanvas.height !== canvas.height) {
@@ -386,8 +398,6 @@ export default function LandingPage() {
           console.error('[🎨CANVAS] Compositing error:', err);
         }
       }
-
-      animationFrameId = requestAnimationFrame(composite);
     };
 
     // Handle video playback events
@@ -482,10 +492,23 @@ export default function LandingPage() {
       const startOpacity = 0;
       const endOpacity = 1;
 
+      // FPS limiting for mobile performance
+      let lastFrameTime = 0;
+      const targetFPS = isMobile ? 30 : 60; // 30 FPS on mobile, 60 FPS on desktop
+      const frameInterval = 1000 / targetFPS;
+
       let animationFrameId: number;
 
       const animate = (currentTime: number) => {
         if (!logoContainerRef.current) return;
+
+        // FPS limiting: skip frames if we're rendering too fast
+        const deltaTime = currentTime - lastFrameTime;
+        if (deltaTime < frameInterval) {
+          animationFrameId = requestAnimationFrame(animate);
+          return;
+        }
+        lastFrameTime = currentTime - (deltaTime % frameInterval);
 
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
@@ -1532,14 +1555,25 @@ export default function LandingPage() {
     // Track last spawn time for Layer 3 stars (for spawn delay)
     const starLastSpawnTime3 = new Map<number, number>();
 
+    // FPS limiting for mobile performance
+    let lastFrameTime = 0;
+    const targetFPS = isMobile ? 30 : 60; // 30 FPS on mobile, 60 FPS on desktop
+    const frameInterval = 1000 / targetFPS;
+
     let animationId: number;
-    const animate = () => {
+    const animate = (currentTime: number = 0) => {
+      animationId = requestAnimationFrame(animate);
+
+      // FPS limiting: skip frames if we're rendering too fast
+      const deltaTime = currentTime - lastFrameTime;
+      if (deltaTime < frameInterval) return;
+      lastFrameTime = currentTime - (deltaTime % frameInterval);
+
       // Clear with transparency to show background image
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // If stars are disabled, skip all star rendering (massive performance boost)
       if (!starsEnabled) {
-        animationId = requestAnimationFrame(animate);
         return;
       }
 

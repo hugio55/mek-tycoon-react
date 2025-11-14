@@ -196,6 +196,8 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
   useEffect(() => {
     if (!containerRef.current) return;
 
+    console.log('[⭐WEBGL] Initializing WebGL scene');
+
     // Create scene
     const scene = new THREE.Scene();
     sceneRef.current = scene;
@@ -547,8 +549,16 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
   // Animation loop
   useEffect(() => {
     if (!props.enabled || !sceneRef.current || !cameraRef.current || !rendererRef.current) {
+      console.log('[⭐WEBGL] Animation loop blocked:', {
+        enabled: props.enabled,
+        hasScene: !!sceneRef.current,
+        hasCamera: !!cameraRef.current,
+        hasRenderer: !!rendererRef.current
+      });
       return;
     }
+
+    console.log('[⭐WEBGL] Starting animation loop, stage:', props.animationStage);
 
     // Animate during ALL stages (will be hidden by opacity during 'initial')
     // Removed early return for 'initial' stage to ensure animation loop starts
