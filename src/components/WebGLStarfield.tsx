@@ -361,6 +361,7 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
 
   }, [
     props.enabled,
+    props.bgStarEnabled,
     props.bgStarCount,
     props.bgStarSize,
     props.bgStarTwinkleAmount,
@@ -447,6 +448,7 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
 
   }, [
     props.enabled,
+    props.layer1Enabled,
     props.starFrequency,
     props.starScale,
     props.twinkleAmount,
@@ -459,7 +461,16 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
 
   // Create/update Layer 2 moving stars
   useEffect(() => {
-    if (!sceneRef.current || !props.enabled) return;
+    if (!sceneRef.current || !props.enabled || !props.layer2Enabled) {
+      // Remove if disabled
+      if (layer2StarsRef.current && sceneRef.current) {
+        sceneRef.current.remove(layer2StarsRef.current);
+        layer2StarsRef.current.geometry.dispose();
+        (layer2StarsRef.current.material as THREE.Material).dispose();
+        layer2StarsRef.current = null;
+      }
+      return;
+    }
 
     const scene = sceneRef.current;
     const particleCount = props.starFrequency2;
@@ -524,6 +535,7 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
 
   }, [
     props.enabled,
+    props.layer2Enabled,
     props.starFrequency2,
     props.starScale2,
     props.twinkleAmount2,
@@ -536,7 +548,16 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
 
   // Create/update Layer 3 streak stars (lines)
   useEffect(() => {
-    if (!sceneRef.current || !props.enabled) return;
+    if (!sceneRef.current || !props.enabled || !props.layer3Enabled) {
+      // Remove if disabled
+      if (layer3StarsRef.current && sceneRef.current) {
+        sceneRef.current.remove(layer3StarsRef.current);
+        layer3StarsRef.current.geometry.dispose();
+        (layer3StarsRef.current.material as THREE.Material).dispose();
+        layer3StarsRef.current = null;
+      }
+      return;
+    }
 
     const scene = sceneRef.current;
     const particleCount = props.starFrequency3;
@@ -599,6 +620,7 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
 
   }, [
     props.enabled,
+    props.layer3Enabled,
     props.starFrequency3,
     props.lineLength3,
   ]);
