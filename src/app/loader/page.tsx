@@ -3,56 +3,38 @@
 import React, { useState, useEffect } from 'react';
 import { TriangleKaleidoscope } from '@/features/page-loader/components/TriangleKaleidoscope';
 import { PercentageDisplay } from '@/features/page-loader/components/PercentageDisplay';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 
 export default function LoaderDebugPage() {
   const [percentage, setPercentage] = useState(0);
   const [isAnimating, setIsAnimating] = useState(true);
 
-  // Load saved settings from localStorage on mount
-  const [fontSize, setFontSize] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('loaderSettings');
-      return saved ? JSON.parse(saved).fontSize : 48;
-    }
-    return 48;
-  });
-  const [spacing, setSpacing] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('loaderSettings');
-      return saved ? JSON.parse(saved).spacing : 16;
-    }
-    return 16;
-  });
-  const [horizontalOffset, setHorizontalOffset] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('loaderSettings');
-      return saved ? JSON.parse(saved).horizontalOffset : 0;
-    }
-    return 0;
-  });
-  const [fontFamily, setFontFamily] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('loaderSettings');
-      return saved ? JSON.parse(saved).fontFamily : 'Orbitron';
-    }
-    return 'Orbitron';
-  });
-  const [chromaticOffset, setChromaticOffset] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('loaderSettings');
-      return saved ? JSON.parse(saved).chromaticOffset : 0;
-    }
-    return 0;
-  });
-  const [triangleSize, setTriangleSize] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('loaderSettings');
-      return saved ? JSON.parse(saved).triangleSize : 1;
-    }
-    return 1;
-  });
+  // Load settings from database
+  const savedSettings = useQuery(api.loaderSettings.getLoaderSettings);
+  const saveSettingsMutation = useMutation(api.loaderSettings.saveLoaderSettings);
+
+  // State with defaults (will be updated when savedSettings loads)
+  const [fontSize, setFontSize] = useState(48);
+  const [spacing, setSpacing] = useState(16);
+  const [horizontalOffset, setHorizontalOffset] = useState(0);
+  const [fontFamily, setFontFamily] = useState('Orbitron');
+  const [chromaticOffset, setChromaticOffset] = useState(0);
+  const [triangleSize, setTriangleSize] = useState(1);
 
   const [saveMessage, setSaveMessage] = useState('');
+
+  // Update state when settings load from database
+  useEffect(() => {
+    if (savedSettings) {
+      setFontSize(savedSettings.fontSize);
+      setSpacing(savedSettings.spacing);
+      setHorizontalOffset(savedSettings.horizontalOffset);
+      setFontFamily(savedSettings.fontFamily);
+      setChromaticOffset(savedSettings.chromaticOffset);
+      setTriangleSize(savedSettings.triangleSize);
+    }
+  }, [savedSettings]);
 
   // Auto-loop animation (0-100% infinitely)
   useEffect(() => {
@@ -76,30 +58,49 @@ export default function LoaderDebugPage() {
     setIsAnimating(!isAnimating);
   };
 
-  const saveSettings = () => {
-    const settings = {
-      fontSize,
-      spacing,
-      horizontalOffset,
-      fontFamily,
-      chromaticOffset,
-      triangleSize
-    };
-    localStorage.setItem('loaderSettings', JSON.stringify(settings));
-    setSaveMessage('Settings saved! ✓');
-    setTimeout(() => setSaveMessage(''), 3000);
+  const saveSettings = async () => {
+    try {
+      await saveSettingsMutation({
+        fontSize,
+        spacing,
+        horizontalOffset,
+        fontFamily,
+        chromaticOffset,
+        triangleSize
+      });
+      setSaveMessage('Settings saved to database! ✓');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (error) {
+      setSaveMessage('Error saving settings');
+      setTimeout(() => setSaveMessage(''), 3000);
+    }
   };
 
-  const resetSettings = () => {
-    setFontSize(48);
-    setSpacing(16);
-    setHorizontalOffset(0);
-    setFontFamily('Orbitron');
-    setChromaticOffset(0);
-    setTriangleSize(1);
-    localStorage.removeItem('loaderSettings');
-    setSaveMessage('Settings reset to defaults');
-    setTimeout(() => setSaveMessage(''), 3000);
+  const resetSettings = async () => {
+    const defaults = {
+      fontSize: 48,
+      spacing: 16,
+      horizontalOffset: 0,
+      fontFamily: 'Orbitron',
+      chromaticOffset: 0,
+      triangleSize: 1
+    };
+
+    setFontSize(defaults.fontSize);
+    setSpacing(defaults.spacing);
+    setHorizontalOffset(defaults.horizontalOffset);
+    setFontFamily(defaults.fontFamily);
+    setChromaticOffset(defaults.chromaticOffset);
+    setTriangleSize(defaults.triangleSize);
+
+    try {
+      await saveSettingsMutation(defaults);
+      setSaveMessage('Settings reset to defaults');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (error) {
+      setSaveMessage('Error resetting settings');
+      setTimeout(() => setSaveMessage(''), 3000);
+    }
   };
 
   return (

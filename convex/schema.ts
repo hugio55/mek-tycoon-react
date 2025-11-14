@@ -3652,6 +3652,19 @@ export default defineSchema({
     updatedAt: v.number(),
   }),
 
+  // ===== PAGE LOADER SETTINGS =====
+  // Global settings for page loader animation (single record)
+  loaderSettings: defineTable({
+    fontSize: v.number(),
+    spacing: v.number(),
+    horizontalOffset: v.number(),
+    fontFamily: v.string(),
+    chromaticOffset: v.number(),
+    triangleSize: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }),
+
   // DESKTOP landing page debug settings HISTORY (automatic backups before each save)
   // Keeps last 50 versions with timestamps for recovery
   landingDebugSettingsHistory: defineTable({
