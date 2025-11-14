@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { TriangleKaleidoscope } from '@/features/page-loader/components/TriangleKaleidoscope';
-import { ProgressBar } from '@/features/page-loader/components/ProgressBar';
+import { PercentageDisplay } from '@/features/page-loader/components/PercentageDisplay';
 import { LoadingText } from '@/features/page-loader/components/LoadingText';
 
 type LoaderVariant = 'current' | 'sleek-pulse' | 'minimal-rings';
@@ -12,6 +12,11 @@ export default function LoaderDebugPage() {
   const [percentage, setPercentage] = useState(0);
   const [stage, setStage] = useState('Initializing...');
   const [isAnimating, setIsAnimating] = useState(false);
+
+  // Percentage Display Controls
+  const [fontSize, setFontSize] = useState(48);
+  const [spacing, setSpacing] = useState(16);
+  const [fontFamily, setFontFamily] = useState('Orbitron');
 
   const stages = [
     'Initializing...',
@@ -60,7 +65,7 @@ export default function LoaderDebugPage() {
         </div>
 
         {/* Controls */}
-        <div className="mb-8 flex gap-4 items-center">
+        <div className="mb-8 flex gap-4 items-center flex-wrap">
           <button
             onClick={startAnimation}
             disabled={isAnimating}
@@ -103,6 +108,69 @@ export default function LoaderDebugPage() {
           </div>
         </div>
 
+        {/* Percentage Display Controls */}
+        <div className="mb-8 border-2 border-yellow-500/30 rounded-lg p-6 bg-gray-900/50">
+          <h2 className="text-yellow-500 font-bold mb-4 text-lg">Percentage Display Controls</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Font Size Control */}
+            <div>
+              <label className="block text-gray-300 mb-2 text-sm font-semibold">
+                Font Size: {fontSize}px
+              </label>
+              <input
+                type="range"
+                min="24"
+                max="96"
+                value={fontSize}
+                onChange={(e) => setFontSize(Number(e.target.value))}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>24px</span>
+                <span>96px</span>
+              </div>
+            </div>
+
+            {/* Spacing Control */}
+            <div>
+              <label className="block text-gray-300 mb-2 text-sm font-semibold">
+                Spacing from Triangle: {spacing}px
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="64"
+                value={spacing}
+                onChange={(e) => setSpacing(Number(e.target.value))}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>0px</span>
+                <span>64px</span>
+              </div>
+            </div>
+
+            {/* Font Family Control */}
+            <div>
+              <label className="block text-gray-300 mb-2 text-sm font-semibold">
+                Font Family
+              </label>
+              <select
+                value={fontFamily}
+                onChange={(e) => setFontFamily(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:border-yellow-500 focus:outline-none"
+              >
+                <option value="Orbitron">Orbitron (Default)</option>
+                <option value="monospace">Monospace</option>
+                <option value="Arial">Arial</option>
+                <option value="sans-serif">Sans-serif</option>
+                <option value="serif">Serif</option>
+                <option value="'Courier New'">Courier New</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         {/* Preview Area */}
         <div className="grid grid-cols-1 gap-8">
           {/* Full Preview */}
@@ -123,10 +191,13 @@ export default function LoaderDebugPage() {
 
                 {activeLoader === 'minimal-rings' && <MinimalRingsLoader />}
 
-                {/* Progress Bar */}
-                <div className="w-full">
-                  <ProgressBar percentage={percentage} showPercentage={true} />
-                </div>
+                {/* Percentage Display */}
+                <PercentageDisplay
+                  percentage={percentage}
+                  fontSize={fontSize}
+                  spacing={spacing}
+                  fontFamily={fontFamily}
+                />
 
                 {/* Loading Text */}
                 <LoadingText currentStage={stage} />
