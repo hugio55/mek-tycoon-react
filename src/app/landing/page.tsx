@@ -116,7 +116,7 @@ const DEFAULT_CONFIG = {
   descriptionCardBorder: true,
   // Audio Consent Lightbox controls
   logoFadeDuration: 4000,
-  lightboxBackdropDarkness: 95,
+  lightboxBackdropDarkness: 70,
   audioToggleSize: 96,
   audioToggleScale: 1.0,
   toggleTextGap: 16,
@@ -1738,13 +1738,13 @@ export default function LandingPage() {
         style={{
           backgroundImage: `url(${getMediaUrl('/colored-bg-1.webp')})`,
           backgroundSize: 'cover',
-          backgroundPosition: viewportHeight > 0
+          backgroundPosition: fixedViewportHeight > 0
             ? `center calc(50% + ${bgYPosition}px)`
             : `center ${bgYPosition}%`,
           backgroundRepeat: 'no-repeat',
           touchAction: 'none',
           pointerEvents: 'none',
-          opacity: showAudioConsent ? 0 : (animationStage === 'initial' ? 0.3 : 1), // Hide when lightbox visible
+          opacity: showAudioConsent ? 1 : (animationStage === 'initial' ? 0.3 : 1), // Keep visible when lightbox shows (darkened by overlay)
         }}
       />
 

@@ -4949,3 +4949,28 @@
 [1] 11/13/2025, 9:41:03 PM [CONVEX A(blockfrostNftFetcher:fetchNFTsByStakeAddress)] [LOG] '[Blockfrost] Found 486 addresses for stake key stake1ux483fgs5evhe09dqrtga5k8fqwul89jf5k3vnapfxzj98cucgkdq'
 [1] - Preparing Convex functions...
 [1] 
+[1] ✖ Error: Unable to finish push to https://wry-trout-962.convex.cloud
+[1] ✖ Error fetching POST  https://wry-trout-962.convex.cloud/api/deploy2/finish_push 503 Service Unavailable: OptimisticConcurrencyControlFailure: Hit an error while pushing:
+[1] Data read or written in this mutation changed while it was being run. Consider reducing the amount of data read by using indexed queries with selective index range expressions (https://docs.convex.dev/database/indexes/).
+[1] Failed due to network error, retrying in 518.04ms...
+[1] - Preparing Convex functions...
+[1] 
+[1] ✔ 21:41:46 Convex functions ready! (7.24s)
+[1] 11/13/2025, 9:41:55 PM [CONVEX A(blockfrostNftFetcher:fetchNFTsByStakeAddress)] [LOG] '[Blockfrost] Found 23 Meks out of 546 total assets for stake1ux483fgs5evhe09dqrtga5k8fqwul89jf5k3vnapfxzj98cucgkdq'
+[1] 11/13/2025, 9:41:55 PM [CONVEX A(goldMiningSnapshot:processSingleBatch)] [LOG] '[Batch 4] ✓ Updated stake1ux483fgs5evhe09dqrtga5k8fqwul89jf5k3vnapfxzj98cucgkdq: 23 Meks, 178.56 g/hr'
+[1] 11/13/2025, 9:41:55 PM [CONVEX A(blockfrostNftFetcher:fetchNFTsByStakeAddress)] [LOG] '[Blockfrost] Address already in bech32 format'
+[1] 11/13/2025, 9:41:55 PM [CONVEX A(blockfrostNftFetcher:fetchNFTsByStakeAddress)] [LOG] '[Blockfrost] Converted stake address: stake1u9nzkwegktqjed... -> stake1u9nzkwegktqjed...'
+[1] 11/13/2025, 9:41:56 PM [CONVEX A(blockfrostNftFetcher:fetchNFTsByStakeAddress)] [LOG] '[Blockfrost] Found 620 addresses for stake key stake1u9nzkwegktqjedttxfcs58a8gvddkdhhdg2g9frctyvca3sjxymgm'
+[1] 11/13/2025, 9:42:59 PM [CONVEX A(blockfrostNftFetcher:fetchNFTsByStakeAddress)] [LOG] '[Blockfrost] Found 1 Meks out of 923 total assets for stake1u9nzkwegktqjedttxfcs58a8gvddkdhhdg2g9frctyvca3sjxymgm'
+[1] 11/13/2025, 9:42:59 PM [CONVEX A(goldMiningSnapshot:processSingleBatch)] [LOG] '[Batch 4] ✓ Updated stake1u9nzkwegktqjedttxfcs58a8gvddkdhhdg2g9frctyvca3sjxymgm: 1 Meks, 17.21 g/hr'
+[1] 11/13/2025, 9:42:59 PM [CONVEX A(blockfrostNftFetcher:fetchNFTsByStakeAddress)] [LOG] '[Blockfrost] Address already in bech32 format'
+[1] 11/13/2025, 9:42:59 PM [CONVEX A(blockfrostNftFetcher:fetchNFTsByStakeAddress)] [LOG] '[Blockfrost] Converted stake address: stake1uyj3an8q67ygg6... -> stake1uyj3an8q67ygg6...'
+[1] 11/13/2025, 9:43:00 PM [CONVEX A(blockfrostNftFetcher:fetchNFTsByStakeAddress)] [LOG] '[Blockfrost] Found 829 addresses for stake key stake1uyj3an8q67ygg6s37gaqap8cd4u43hnr9mswcjw0z8txyhs2ydn5a'
+[1] 11/13/2025, 9:44:25 PM [CONVEX A(blockfrostNftFetcher:fetchNFTsByStakeAddress)] [LOG] '[Blockfrost] Found 11 Meks out of 650 total assets for stake1uyj3an8q67ygg6s37gaqap8cd4u43hnr9mswcjw0z8txyhs2ydn5a'
+[1] 11/13/2025, 9:44:26 PM [CONVEX A(goldMiningSnapshot:processSingleBatch)] [LOG] '[Batch 4] ✓ Updated stake1uyj3an8q67ygg6s37gaqap8cd4u43hnr9mswcjw0z8txyhs2ydn5a: 11 Meks, 511.47 g/hr'
+[1] 11/13/2025, 9:44:26 PM [CONVEX A(goldMiningSnapshot:processSingleBatch)] [LOG] '[Batch 4] Complete: 5 updated, 0 errors, 0 skipped'
+[1] 11/13/2025, 9:44:26 PM [CONVEX A(goldMiningSnapshot:processSingleBatch)] [LOG] '[Batch 5] Starting...'
+[1] 11/13/2025, 9:44:26 PM [CONVEX A(goldMiningSnapshot:processSingleBatch)] [LOG] '[Batch 5] Processing 5 wallets (26-30 of 37)'
+[1] 11/13/2025, 9:44:26 PM [CONVEX A(blockfrostNftFetcher:fetchNFTsByStakeAddress)] [LOG] '[Blockfrost] Address already in bech32 format'
+[1] 11/13/2025, 9:44:26 PM [CONVEX A(blockfrostNftFetcher:fetchNFTsByStakeAddress)] [LOG] '[Blockfrost] Converted stake address: stake1uy5p672pvdz4pz... -> stake1uy5p672pvdz4pz...'
+[1] 11/13/2025, 9:44:26 PM [CONVEX A(blockfrostNftFetcher:fetchNFTsByStakeAddress)] [LOG] '[Blockfrost] Found 68 addresses for stake key stake1uy5p672pvdz4pz8h0qfxmzeaemp4txp84um0yqnpy03r4xgucuzqm'
