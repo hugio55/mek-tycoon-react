@@ -591,15 +591,10 @@ export default function LandingDebugPage() {
       setSaveState('saving');
 
       try {
-        // STEP 1: Create backup BEFORE saving (prevents data loss)
-        console.log('[💾BACKUP] Creating backup before save...');
-        await createBackup({
-          config,
-          description: 'Auto-backup before save'
-        });
-        console.log('[💾BACKUP] Backup created successfully');
+        // Save settings (updateSettings is mapped to updateWithBackup which auto-creates backup)
+        console.log('[💾SAVE] Saving settings with auto-backup...');
 
-        // STEP 2: Save the new settings to correct section based on active mode
+        // Save the new settings to correct section based on active mode
         if (unifiedSettings) {
           // Define text/shared fields that should sync across desktop and mobile
           const sharedFields = [
