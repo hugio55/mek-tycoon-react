@@ -70,17 +70,12 @@ export function PageLoadingOverlay() {
       setShowOverlay(false);
       return;
     }
+  }, [isBypassed, setIsLoading]);
 
-    // Normal loading flow with delays
-    if (isComplete) {
-      setTimeout(() => {
-        setIsLoading(false);
-        setTimeout(() => {
-          setShowOverlay(false);
-        }, 1000);
-      }, 750);
-    }
-  }, [isComplete, isBypassed, setIsLoading]);
+  // Handle completion callback from LoadingOverlay
+  const handleComplete = () => {
+    setShowOverlay(false);
+  };
 
   if (!showOverlay || !canShow) {
     return null;
@@ -91,6 +86,7 @@ export function PageLoadingOverlay() {
       percentage={percentage}
       stage={stage}
       isComplete={isComplete}
+      onComplete={handleComplete}
     />
   );
 }

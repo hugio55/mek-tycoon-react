@@ -157,6 +157,7 @@ export default function HorizontalTimeline({
   const phaseIVideoPositionX = unifiedSettings?.shared?.phaseIVideoPositionX || 0;
   const phaseIVideoPositionY = unifiedSettings?.shared?.phaseIVideoPositionY || 0;
   const phaseIBackdropBlur = unifiedSettings?.shared?.phaseIBackdropBlur || 8;
+  const phaseILightboxWidth = unifiedSettings?.shared?.phaseILightboxWidth || 1280;
 
   // Debug logging when Phase I settings change from database
   useEffect(() => {
@@ -723,6 +724,7 @@ export default function HorizontalTimeline({
         videoPositionX={phaseIVideoPositionX}
         videoPositionY={phaseIVideoPositionY}
         backdropBlur={phaseIBackdropBlur}
+        lightboxWidth={phaseILightboxWidth}
       />
     </div>
   );

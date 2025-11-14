@@ -619,7 +619,8 @@ export default function LandingDebugPage() {
             'audioLightboxDescriptionFont', 'audioLightboxDescriptionColor',
             'audioDescriptionText', 'audioConsentFadeDuration', 'forceShowAudioConsent',
             'phaseILightboxContent', 'phaseITextFont', 'phaseITextFontSize', 'phaseITextColor',
-            'phaseIVideoScale', 'phaseIVideoPositionX', 'phaseIVideoPositionY', 'phaseIBackdropBlur'
+            'phaseIVideoScale', 'phaseIVideoPositionX', 'phaseIVideoPositionY', 'phaseIBackdropBlur',
+            'phaseILightboxWidth'
           ];
 
           // Extract shared vs mode-specific fields
@@ -927,7 +928,8 @@ export default function LandingDebugPage() {
           'audioLightboxDescriptionFont', 'audioLightboxDescriptionColor',
           'audioDescriptionText', 'audioConsentFadeDuration', 'forceShowAudioConsent',
           'phaseILightboxContent', 'phaseITextFont', 'phaseITextFontSize', 'phaseITextColor',
-          'phaseIVideoScale', 'phaseIVideoPositionX', 'phaseIVideoPositionY', 'phaseIBackdropBlur'
+          'phaseIVideoScale', 'phaseIVideoPositionX', 'phaseIVideoPositionY', 'phaseIBackdropBlur',
+          'phaseILightboxWidth'
         ];
 
         const shared: any = {};
@@ -3738,6 +3740,29 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.phaseIBackdropBlur}px
+              </div>
+            </div>
+
+            {/* Lightbox Width */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Lightbox Width
+              </label>
+              <input
+                type="range"
+                min="600"
+                max="1600"
+                step="20"
+                value={config.phaseILightboxWidth}
+                onChange={(e) => updateConfig('phaseILightboxWidth', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.phaseILightboxWidth}px
               </div>
             </div>
           </div>

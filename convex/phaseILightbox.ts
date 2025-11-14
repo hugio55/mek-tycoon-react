@@ -114,6 +114,7 @@ export const updatePhaseILightboxSettings = mutation({
         phaseITextFont: 'Arial',
         phaseITextFontSize: 16,
         phaseITextColor: 'text-white/70',
+        phaseILightboxWidth: 1280,
       };
 
       const id = await ctx.db.insert("landingDebugUnified", {
@@ -153,6 +154,7 @@ export const resetPhaseILightboxSettings = mutation({
       phaseITextFont: 'Arial',
       phaseITextFontSize: 16,
       phaseITextColor: 'text-white/70',
+      phaseILightboxWidth: 1280,
     };
 
     if (!existing) {

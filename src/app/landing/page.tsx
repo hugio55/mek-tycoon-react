@@ -802,6 +802,53 @@ export default function LandingPage() {
             setLogoVideoLoaded(true); // Mark logo as loaded
             // Clear the trigger so it doesn't fire again
             localStorage.removeItem('mek-debug-trigger');
+          } else if (triggerData.action === 'set-state' && triggerData.state) {
+            console.log('[🐛DEBUG] Debug trigger: set-state →', triggerData.state);
+            const newState = triggerData.state as ProgressionState;
+            setProgressionState(newState);
+
+            // Sync all legacy states to match the new progression state
+            switch (newState) {
+              case 'WAITING_FOR_LOADER':
+                setShowAudioConsent(false);
+                setLockScrollForConsent(false);
+                setAnimationStage('initial');
+                setShowSpeakerIcon(false);
+                setLogoVideoLoaded(false);
+                break;
+              case 'WAITING_FOR_CONSENT':
+                setShowAudioConsent(true);
+                setLockScrollForConsent(true);
+                setAnimationStage('initial');
+                setShowSpeakerIcon(false);
+                setLogoVideoLoaded(false);
+                break;
+              case 'CONSENT_CLOSING':
+                setShowAudioConsent(false);
+                setLockScrollForConsent(true);
+                setAnimationStage('initial');
+                setShowSpeakerIcon(false);
+                setLogoVideoLoaded(false);
+                break;
+              case 'MAIN_CONTENT':
+                setShowAudioConsent(false);
+                setLockScrollForConsent(false);
+                setAnimationStage('stars');
+                setShowSpeakerIcon(true);
+                setLogoVideoLoaded(false);
+                setTimeout(() => setAnimationStage('logo'), 500);
+                break;
+              case 'CONTENT_COMPLETE':
+                setShowAudioConsent(false);
+                setLockScrollForConsent(false);
+                setAnimationStage('logo');
+                setShowSpeakerIcon(true);
+                setLogoVideoLoaded(true);
+                break;
+            }
+
+            // Clear the trigger so it doesn't fire again
+            localStorage.removeItem('mek-debug-trigger');
           }
         } catch (e) {
           console.error('Failed to parse debug trigger:', e);
@@ -837,6 +884,50 @@ export default function LandingPage() {
             setAnimationStage('logo'); // Show everything
             setShowSpeakerIcon(true); // Show speaker icon when hiding consent
             setLogoVideoLoaded(true); // Mark logo as loaded
+          } else if (event.data?.action === 'set-state' && event.data?.state) {
+            console.log('[🐛DEBUG] PostMessage trigger: set-state →', event.data.state);
+            const newState = event.data.state as ProgressionState;
+            setProgressionState(newState);
+
+            // Sync all legacy states to match the new progression state
+            switch (newState) {
+              case 'WAITING_FOR_LOADER':
+                setShowAudioConsent(false);
+                setLockScrollForConsent(false);
+                setAnimationStage('initial');
+                setShowSpeakerIcon(false);
+                setLogoVideoLoaded(false);
+                break;
+              case 'WAITING_FOR_CONSENT':
+                setShowAudioConsent(true);
+                setLockScrollForConsent(true);
+                setAnimationStage('initial');
+                setShowSpeakerIcon(false);
+                setLogoVideoLoaded(false);
+                break;
+              case 'CONSENT_CLOSING':
+                setShowAudioConsent(false);
+                setLockScrollForConsent(true);
+                setAnimationStage('initial');
+                setShowSpeakerIcon(false);
+                setLogoVideoLoaded(false);
+                break;
+              case 'MAIN_CONTENT':
+                setShowAudioConsent(false);
+                setLockScrollForConsent(false);
+                setAnimationStage('stars');
+                setShowSpeakerIcon(true);
+                setLogoVideoLoaded(false);
+                setTimeout(() => setAnimationStage('logo'), 500);
+                break;
+              case 'CONTENT_COMPLETE':
+                setShowAudioConsent(false);
+                setLockScrollForConsent(false);
+                setAnimationStage('logo');
+                setShowSpeakerIcon(true);
+                setLogoVideoLoaded(true);
+                break;
+            }
           }
         }
       } catch (error) {

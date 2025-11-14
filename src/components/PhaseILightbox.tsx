@@ -16,7 +16,7 @@ interface PhaseILightboxProps {
   videoPositionX?: number;
   videoPositionY?: number;
   backdropBlur?: number;
-  maxWidth?: string;
+  lightboxWidth?: number;
 }
 
 export default function PhaseILightbox({
@@ -32,7 +32,7 @@ export default function PhaseILightbox({
   videoPositionX = 0,
   videoPositionY = 0,
   backdropBlur = 8,
-  maxWidth = '6xl'
+  lightboxWidth = 1280
 }: PhaseILightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [savedScrollY, setSavedScrollY] = useState(0);
@@ -50,9 +50,9 @@ export default function PhaseILightbox({
       videoPositionX,
       videoPositionY,
       backdropBlur,
-      maxWidth
+      lightboxWidth
     });
-  }, [isVisible, lightboxContent, textFont, textFontSize, textColor, videoScale, videoPositionX, videoPositionY, backdropBlur, maxWidth]);
+  }, [isVisible, lightboxContent, textFont, textFontSize, textColor, videoScale, videoPositionX, videoPositionY, backdropBlur, lightboxWidth]);
 
   // Force video autoplay when lightbox opens
   useEffect(() => {
@@ -154,8 +154,9 @@ export default function PhaseILightbox({
 
       {/* Lightbox Card */}
       <div
-        className={`relative w-full max-${maxWidth}`}
+        className="relative w-full"
         style={{
+          maxWidth: `${lightboxWidth}px`,
           animation: 'slideUp 800ms cubic-bezier(0.16, 1, 0.3, 1)',
           willChange: 'transform, opacity',
         }}
