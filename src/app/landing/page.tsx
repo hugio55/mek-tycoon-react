@@ -182,10 +182,10 @@ export default function LandingPage() {
       const wasMobile = isMobile;
       const nowMobile = width < mobileBreakpoint;
 
-      console.log('[📱VIEWPORT] Width:', width, 'Breakpoint:', mobileBreakpoint, 'isMobile:', nowMobile);
+      // Removed viewport logging - updates too frequently
 
       if (wasMobile !== nowMobile) {
-        console.log('[📱VIEWPORT] 🔄 CHANGED from', wasMobile ? 'mobile' : 'desktop', 'to', nowMobile ? 'mobile' : 'desktop');
+        // Viewport changed between mobile and desktop
       }
 
       setIsMobile(nowMobile);
@@ -209,15 +209,9 @@ export default function LandingPage() {
   // Debug logging for config selection
   useEffect(() => {
     if (unifiedSettings) {
-      console.log('[⚙️CONFIG] Using unified settings. isMobile:', isMobile);
-      console.log('[⚙️CONFIG] Selected config:', isMobile ? 'MOBILE' : 'DESKTOP');
-      console.log('[⚙️CONFIG] logoSize:', dbSettings?.logoSize);
-      console.log('[⚙️CONFIG] starFrequency:', dbSettings?.starFrequency);
-      console.log('[⚙️CONFIG] bgStarCount:', dbSettings?.bgStarCount);
-      console.log('[🔒FORCE] forceShowAudioConsent from shared:', unifiedSettings.shared?.forceShowAudioConsent);
-      console.log('[🔒FORCE] forceShowAudioConsent in final dbSettings:', dbSettings?.forceShowAudioConsent);
+      // Config loaded from unified settings
     } else if (oldDbSettings) {
-      console.log('[⚙️CONFIG] Using old settings (fallback)');
+      // Using old settings (fallback)
     }
   }, [unifiedSettings, oldDbSettings, isMobile, dbSettings]);
 
@@ -515,8 +509,7 @@ export default function LandingPage() {
 
   // Debug logging for animation stage changes
   useEffect(() => {
-    console.log('[🎬ANIMATION] Animation stage changed to:', animationStage);
-    console.log('[🎬ANIMATION] Logo should be:', animationStage === 'logo' ? 'VISIBLE (opacity: 1)' : 'HIDDEN (opacity: 0)');
+    // Animation stage changed
   }, [animationStage]);
 
   const [soundLabelFont, setSoundLabelFont] = useState(DEFAULT_CONFIG.soundLabelFont);
@@ -646,17 +639,11 @@ export default function LandingPage() {
   // Check for audio consent on mount (GATED by universal loader completion)
   useEffect(() => {
     window.scrollTo(0, 0);
-    console.log('[🎬ANIMATION] === Component Mounted ===');
-    console.log('[🎬ANIMATION] Initial showAudioConsent:', showAudioConsent);
-    console.log('[🎬ANIMATION] Initial animationStage:', animationStage);
-    console.log('[🔒FORCE] dbSettings available:', !!dbSettings);
-    console.log('[🔒FORCE] dbSettings.forceShowAudioConsent value:', dbSettings?.forceShowAudioConsent);
-    console.log('[🔒FORCE] Type of forceShowAudioConsent:', typeof dbSettings?.forceShowAudioConsent);
-    console.log('[🚪GATE] allowAudioLightbox:', allowAudioLightbox);
+    // Component mounted
 
     // GATE: Wait for universal loader to complete before showing audio lightbox
     if (!allowAudioLightbox) {
-      console.log('[🚪GATE] Audio lightbox blocked - waiting for universal loader to complete');
+      // Audio lightbox blocked - waiting for universal loader to complete
       return;
     }
 
@@ -675,14 +662,14 @@ export default function LandingPage() {
       const consent = localStorage.getItem(AUDIO_CONSENT_KEY);
       if (!consent) {
         // First-time visitor - show consent lightbox
-        console.log('[🎬ANIMATION] First-time visitor - showing consent lightbox');
+        // First-time visitor - showing consent lightbox
         setShowAudioConsent(true);
         setLockScrollForConsent(true);
         // Keep animationStage at 'initial' (everything hidden)
       } else {
         // Return visitor - has already given consent
         const consentData = JSON.parse(consent);
-        console.log('[🎵ANIMATION] Return visitor - skipping lightbox, showing video zoom animation');
+        // Return visitor - skipping lightbox, showing video zoom animation
         // Skip consent lightbox and show video zoom animation directly
         setAnimationStage('logo');
 
@@ -1136,23 +1123,11 @@ export default function LandingPage() {
         const bodyOverflow = document.body.style.overflow;
         const bodyPosition = document.body.style.position;
 
-        console.log('[📜SCROLL] handleScroll fired:', {
-          scrollY,
-          innerHeight,
-          scrollHeight,
-          isMobile,
-          windowWidth,
-          bodyTouchAction,
-          bodyOverflow,
-          bodyPosition,
-          hasScrolled: scrollY > 0,
-          changeFromLast: scrollY - lastKnownScrollY
-        });
+        // Removed verbose scroll logging to reduce console spam
 
         // ONE-WAY FLAG: Trigger on ANY scroll > 1px, but NEVER reset to false
         // This ensures text remains visible permanently once user has scrolled
         if (scrollY > 1 && !hasScrolled) {
-          console.log('[📜SCROLL] ✅ TRIGGERED - Setting hasScrolled = true (permanent)');
           setHasScrolled(true);
         }
         // INTENTIONALLY NO ELSE BLOCK - never reset hasScrolled to false
@@ -1161,13 +1136,7 @@ export default function LandingPage() {
       }, 50); // 50ms throttle - responsive but prevents excessive updates
     };
 
-    console.log('[📜SCROLL] Adding scroll listener. Initial state:', {
-      isMobile,
-      windowWidth,
-      hasScrolled,
-      scrollY: window.scrollY,
-      bodyTouchAction: document.body.style.touchAction
-    });
+    // Removed scroll listener initialization logging
 
     // CRITICAL FIX: Add { passive: true } for mobile browser performance
     // Mobile browsers may throttle or ignore scroll listeners without this flag
@@ -1330,16 +1299,14 @@ export default function LandingPage() {
 
   // Handle audio consent proceeding
   const handleConsentProceed = (audioEnabled: boolean) => {
-    console.log('[🎵ANIMATION] ==========================================');
-    console.log('[🎵ANIMATION] Consent proceed clicked, audioEnabled:', audioEnabled);
-    console.log('[🎵ANIMATION] Current animationStage:', animationStage);
+    // Consent proceed clicked
 
     // Store consent in localStorage
     localStorage.setItem(AUDIO_CONSENT_KEY, JSON.stringify({ audioEnabled, timestamp: Date.now() }));
 
     // If audio enabled, start playing immediately
     if (audioEnabled) {
-      console.log('[🎵ANIMATION] Starting audio playback');
+      // Starting audio playback
       setAudioPlaying(true);
     }
 
