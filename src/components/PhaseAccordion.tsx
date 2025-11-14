@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import PhaseILightbox from './PhaseILightbox';
 
 interface PhaseAccordionProps {
   phaseHeaderFont?: string;
@@ -22,6 +23,7 @@ export default function PhaseAccordion({
   disableBlur = false,
 }: PhaseAccordionProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [showPhaseILightbox, setShowPhaseILightbox] = useState(false);
   const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -217,6 +219,24 @@ export default function PhaseAccordion({
                         dangerouslySetInnerHTML={{ __html: formatDescription(card.description) }}
                       />
                     )}
+
+                    {/* Read More button - only show for Phase I (index 0) */}
+                    {index === 0 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowPhaseILightbox(true);
+                        }}
+                        className="mt-3 px-4 py-2 text-sm font-semibold tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-lg hover:from-yellow-300 hover:to-yellow-400 transition-all duration-300 shadow-lg shadow-yellow-500/20 active:scale-[0.98]"
+                        style={{
+                          minHeight: '44px',
+                          WebkitTapHighlightColor: 'transparent',
+                          touchAction: 'manipulation',
+                        }}
+                      >
+                        Read More
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -224,6 +244,14 @@ export default function PhaseAccordion({
           </div>
         );
       })}
+
+      {/* Phase I Lightbox */}
+      <PhaseILightbox
+        isVisible={showPhaseILightbox}
+        onClose={() => setShowPhaseILightbox(false)}
+        phaseDescriptionFont={phaseDescriptionFont}
+        phaseDescriptionFontSize={phaseDescriptionFontSize}
+      />
     </div>
   );
 }
