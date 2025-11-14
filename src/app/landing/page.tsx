@@ -2267,16 +2267,21 @@ export default function LandingPage() {
           {/* Footer - Sits directly below phase carousel, blurs background planet/space image */}
           {!showAudioConsent && (
             <div
-              className="flex items-center justify-center relative"
+              className="flex items-center justify-center"
               style={{
                 height: `${footerHeight}px`,
                 paddingTop: `${socialIconPaddingTop}px`,
                 paddingBottom: `${socialIconPaddingBottom}px`,
                 marginTop: isMobile ? `${mobilePhaseFooterSpacing}px` : undefined,
-                backdropFilter: `blur(${footerBlurAmount}px)`,
-                WebkitBackdropFilter: `blur(${footerBlurAmount}px)`,
+                backdropFilter: `blur(${footerBlurAmount}px) saturate(180%)`,
+                WebkitBackdropFilter: `blur(${footerBlurAmount}px) saturate(180%)`,
                 backgroundColor: 'rgba(17, 24, 39, 0.3)',
-                zIndex: 10, // Above background (z-0) but below phase carousel content (z-20)
+                position: 'relative',
+                zIndex: 10,
+                isolation: 'isolate',
+                // Force backdrop-filter by ensuring element creates its own layer
+                transform: 'translateZ(0)',
+                willChange: 'backdrop-filter',
               }}
             >
             {/* OE Logo */}
