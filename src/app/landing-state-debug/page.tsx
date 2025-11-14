@@ -242,9 +242,10 @@ export default function LandingStateDebugPage() {
             <button
               onClick={() => {
                 setEventLog([])
-                logEvent('Simulating return visitor flow', 'WAITING_FOR_LOADER')
-                setTimeout(() => logEvent('Loader complete', 'WAITING_FOR_CONSENT'), 1000)
-                setTimeout(() => logEvent('Has consent - skipping to MAIN_CONTENT', 'MAIN_CONTENT'), 1500)
+                logEvent('🟡 Simulating return visitor flow', 'WAITING_FOR_LOADER')
+                setTimeout(() => logEvent('✅ Loader reached 100% (500ms delay)', 'WAITING_FOR_CONSENT'), 1500)
+                setTimeout(() => logEvent('🔙 Found audio consent in localStorage - SKIPPING lightbox', 'MAIN_CONTENT'), 2000)
+                setTimeout(() => logEvent('🎬 Logo video started playing', 'CONTENT_COMPLETE'), 3500)
               }}
               className="px-3 py-1 text-xs bg-blue-500/20 border border-blue-500/50 hover:bg-blue-500/30"
             >
@@ -259,8 +260,10 @@ export default function LandingStateDebugPage() {
             </div>
             <button
               onClick={() => {
-                logEvent('Simulating invalid state: consent over content', 'CONTENT_COMPLETE')
-                // State validation should detect this and correct it
+                setEventLog([])
+                logEvent('🚨 INVALID STATE: Audio consent showing but in CONTENT_COMPLETE state', 'CONTENT_COMPLETE')
+                setTimeout(() => logEvent('🛡️ State validation detected invalid combination', 'CONTENT_COMPLETE'), 500)
+                setTimeout(() => logEvent('🔧 Correcting state: CONTENT_COMPLETE → WAITING_FOR_CONSENT', 'WAITING_FOR_CONSENT'), 1000)
               }}
               className="px-3 py-1 text-xs bg-red-500/20 border border-red-500/50 hover:bg-red-500/30"
             >
