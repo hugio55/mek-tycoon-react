@@ -138,6 +138,10 @@ const DEFAULT_CONFIG = {
   socialIconVerticalPosition: 70,
   socialIconPaddingTop: 0,
   socialIconPaddingBottom: 0,
+  // Mobile-specific controls
+  mobileBreakpoint: 1024, // Pixel width where mobile view activates
+  mobilePhaseFooterSpacing: 32, // Pixels of space between Phase IV and footer on mobile
+  mobilePhaseButtonMaxWidth: 600, // Max width for phase buttons on mobile (pixels)
   // Note: phaseImage1-4 not in DEFAULT_CONFIG - PhaseCarousel manages these
 };
 
@@ -169,9 +173,9 @@ export default function LandingPage() {
     const checkViewport = () => {
       const width = window.innerWidth;
       const wasMobile = isMobile;
-      const nowMobile = width < 1024;
+      const nowMobile = width < mobileBreakpoint;
 
-      console.log('[📱VIEWPORT] Width:', width, 'isMobile:', nowMobile);
+      console.log('[📱VIEWPORT] Width:', width, 'Breakpoint:', mobileBreakpoint, 'isMobile:', nowMobile);
 
       if (wasMobile !== nowMobile) {
         console.log('[📱VIEWPORT] 🔄 CHANGED from', wasMobile ? 'mobile' : 'desktop', 'to', nowMobile ? 'mobile' : 'desktop');
@@ -184,7 +188,7 @@ export default function LandingPage() {
     checkViewport();
     window.addEventListener('resize', checkViewport);
     return () => window.removeEventListener('resize', checkViewport);
-  }, [isMobile]);
+  }, [isMobile, mobileBreakpoint]);
 
   // Load settings from UNIFIED Convex table (with old table fallback)
   const unifiedSettings = useQuery(api.landingDebugUnified.getUnifiedLandingDebugSettings);
@@ -553,6 +557,14 @@ export default function LandingPage() {
   const [audioDescriptionText, setAudioDescriptionText] = useState(DEFAULT_CONFIG.audioDescriptionText);
   const [audioConsentFadeDuration, setAudioConsentFadeDuration] = useState(DEFAULT_CONFIG.audioConsentFadeDuration);
 
+  // New two-toggle design controls
+  const [toggleSize, setToggleSize] = useState(DEFAULT_CONFIG.toggleSize);
+  const [toggleGap, setToggleGap] = useState(DEFAULT_CONFIG.toggleGap);
+  const [toggleVerticalPosition, setToggleVerticalPosition] = useState(DEFAULT_CONFIG.toggleVerticalPosition);
+  const [toggleLabelFont, setToggleLabelFont] = useState(DEFAULT_CONFIG.toggleLabelFont);
+  const [toggleLabelSize, setToggleLabelSize] = useState(DEFAULT_CONFIG.toggleLabelSize);
+  const [toggleLabelColor, setToggleLabelColor] = useState(DEFAULT_CONFIG.toggleLabelColor);
+
   // Join Beta Button controls
   const [joinBetaFont, setJoinBetaFont] = useState(DEFAULT_CONFIG.joinBetaFont);
   const [joinBetaFontSize, setJoinBetaFontSize] = useState(DEFAULT_CONFIG.joinBetaFontSize);
@@ -569,6 +581,11 @@ export default function LandingPage() {
   const [socialIconVerticalPosition, setSocialIconVerticalPosition] = useState(DEFAULT_CONFIG.socialIconVerticalPosition);
   const [socialIconPaddingTop, setSocialIconPaddingTop] = useState(DEFAULT_CONFIG.socialIconPaddingTop);
   const [socialIconPaddingBottom, setSocialIconPaddingBottom] = useState(DEFAULT_CONFIG.socialIconPaddingBottom);
+
+  // Mobile-specific controls
+  const [mobileBreakpoint, setMobileBreakpoint] = useState(DEFAULT_CONFIG.mobileBreakpoint);
+  const [mobilePhaseFooterSpacing, setMobilePhaseFooterSpacing] = useState(DEFAULT_CONFIG.mobilePhaseFooterSpacing);
+  const [mobilePhaseButtonMaxWidth, setMobilePhaseButtonMaxWidth] = useState(DEFAULT_CONFIG.mobilePhaseButtonMaxWidth);
 
   // Star systems master toggle
   const [starsEnabled, setStarsEnabled] = useState(DEFAULT_CONFIG.starsEnabled);
@@ -849,7 +866,17 @@ export default function LandingPage() {
           setProceedButtonVerticalPosition(config.proceedButtonVerticalPosition ?? 0);
           setAudioDescriptionText(config.audioDescriptionText ?? DEFAULT_CONFIG.audioDescriptionText);
           setAudioConsentFadeDuration(config.audioConsentFadeDuration ?? DEFAULT_CONFIG.audioConsentFadeDuration);
+          setToggleSize(config.toggleSize ?? DEFAULT_CONFIG.toggleSize);
+          setToggleGap(config.toggleGap ?? DEFAULT_CONFIG.toggleGap);
+          setToggleVerticalPosition(config.toggleVerticalPosition ?? DEFAULT_CONFIG.toggleVerticalPosition);
+          setToggleLabelFont(config.toggleLabelFont ?? DEFAULT_CONFIG.toggleLabelFont);
+          setToggleLabelSize(config.toggleLabelSize ?? DEFAULT_CONFIG.toggleLabelSize);
+          setToggleLabelColor(config.toggleLabelColor ?? DEFAULT_CONFIG.toggleLabelColor);
           setStarsEnabled(config.starsEnabled ?? DEFAULT_CONFIG.starsEnabled);
+          // Mobile-specific controls
+          setMobileBreakpoint(config.mobileBreakpoint ?? DEFAULT_CONFIG.mobileBreakpoint);
+          setMobilePhaseFooterSpacing(config.mobilePhaseFooterSpacing ?? DEFAULT_CONFIG.mobilePhaseFooterSpacing);
+          setMobilePhaseButtonMaxWidth(config.mobilePhaseButtonMaxWidth ?? DEFAULT_CONFIG.mobilePhaseButtonMaxWidth);
           // Note: phaseImage1-4 not loaded here - PhaseCarousel reads directly from localStorage
       } catch (e) {
         console.error('Failed to load debug config:', e);
@@ -972,6 +999,12 @@ export default function LandingPage() {
           setProceedButtonVerticalPosition(config.proceedButtonVerticalPosition ?? 0);
           setAudioDescriptionText(config.audioDescriptionText ?? DEFAULT_CONFIG.audioDescriptionText);
           setAudioConsentFadeDuration(config.audioConsentFadeDuration ?? DEFAULT_CONFIG.audioConsentFadeDuration);
+          setToggleSize(config.toggleSize ?? DEFAULT_CONFIG.toggleSize);
+          setToggleGap(config.toggleGap ?? DEFAULT_CONFIG.toggleGap);
+          setToggleVerticalPosition(config.toggleVerticalPosition ?? DEFAULT_CONFIG.toggleVerticalPosition);
+          setToggleLabelFont(config.toggleLabelFont ?? DEFAULT_CONFIG.toggleLabelFont);
+          setToggleLabelSize(config.toggleLabelSize ?? DEFAULT_CONFIG.toggleLabelSize);
+          setToggleLabelColor(config.toggleLabelColor ?? DEFAULT_CONFIG.toggleLabelColor);
           setStarsEnabled(config.starsEnabled ?? DEFAULT_CONFIG.starsEnabled);
         } catch (e) {
           console.error('Failed to load debug config from localStorage:', e);
@@ -2083,21 +2116,14 @@ export default function LandingPage() {
         onProceed={handleConsentProceed}
         isVisible={showAudioConsent}
         backdropDarkness={lightboxBackdropDarkness}
-        toggleSize={audioToggleSize}
-        toggleScale={audioToggleScale}
         lockScroll={lockScrollForConsent}
-        toggleTextGap={toggleTextGap}
-        soundLabelFont={soundLabelFont}
-        soundLabelSize={soundLabelSize}
-        soundLabelColor={soundLabelColor}
-        soundLabelVerticalOffset={soundLabelVerticalOffset}
-        soundLabelHorizontalOffset={soundLabelHorizontalOffset}
-        proceedButtonSize={proceedButtonSize}
-        descriptionVerticalPosition={descriptionVerticalPosition}
-        toggleGroupVerticalPosition={toggleGroupVerticalPosition}
-        proceedButtonVerticalPosition={proceedButtonVerticalPosition}
-        audioDescriptionText={audioDescriptionText}
         audioConsentFadeDuration={audioConsentFadeDuration}
+        toggleSize={toggleSize}
+        toggleGap={toggleGap}
+        toggleVerticalPosition={toggleVerticalPosition}
+        toggleLabelFont={toggleLabelFont}
+        toggleLabelSize={toggleLabelSize}
+        toggleLabelColor={toggleLabelColor}
       />
 
       {/* Beta Signup Lightbox */}
