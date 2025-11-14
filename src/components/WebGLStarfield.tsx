@@ -36,6 +36,7 @@ interface WebGLStarfieldProps {
   starSpeed3: number;
   starFrequency3: number;
   lineLength3: number;
+  brightness3: number;
   twinkleAmount3: number;
   twinkleSpeed3: number;
   twinkleSpeedRandomness3: number;
@@ -606,7 +607,7 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
     const material = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.8,
+      opacity: props.brightness3,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
       depthWrite: false,
@@ -659,6 +660,7 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
     props.layer3Enabled,
     props.starFrequency3,
     props.lineLength3,
+    props.brightness3,
   ]);
 
   // Animation loop
@@ -795,6 +797,10 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
         const quaternion = new THREE.Quaternion();
         // Fixed rotation: 90° around X-axis to face camera
         quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+
+        // Update material opacity (brightness)
+        const material = instancedMesh.material as THREE.MeshBasicMaterial;
+        material.opacity = props.brightness3;
 
         for (let i = 0; i < particleCount; i++) {
           const pos = positions[i];

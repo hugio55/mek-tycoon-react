@@ -38,6 +38,7 @@ const DEFAULT_CONFIG = {
   starSpeed3: 10,
   starFrequency3: 100,
   lineLength3: 80,
+  brightness3: 0.8,
   spawnDelay3: 50,
   // Layer 3 Twinkling
   twinkleAmount3: 0,
@@ -1977,9 +1978,9 @@ export default function LandingDebugPage() {
               </label>
               <input
                 type="range"
-                min="0.3"
+                min="0.01"
                 max="3"
-                step="0.1"
+                step="0.01"
                 value={config.starScale3}
                 onChange={(e) => updateConfig('starScale3', parseFloat(e.target.value))}
                 onMouseDown={handleInputStart}
@@ -1989,7 +1990,7 @@ export default function LandingDebugPage() {
                 className="w-full"
               />
               <div className="text-xs text-purple-400 text-center mt-0.5">
-                {config.starScale3.toFixed(1)}x
+                {config.starScale3.toFixed(2)}x
               </div>
             </div>
 
@@ -2001,7 +2002,7 @@ export default function LandingDebugPage() {
               <input
                 type="range"
                 min="0.5"
-                max="10000"
+                max="20000"
                 step="0.5"
                 value={config.starSpeed3}
                 onChange={(e) => updateConfig('starSpeed3', parseFloat(e.target.value))}
@@ -2046,9 +2047,9 @@ export default function LandingDebugPage() {
               </label>
               <input
                 type="range"
-                min="10"
+                min="1"
                 max="200"
-                step="5"
+                step="1"
                 value={config.lineLength3}
                 onChange={(e) => updateConfig('lineLength3', parseFloat(e.target.value))}
                 onMouseDown={handleInputStart}
@@ -2059,6 +2060,29 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-purple-400 text-center mt-0.5">
                 {config.lineLength3.toFixed(0)}
+              </div>
+            </div>
+
+            {/* Brightness 3 */}
+            <div className="mb-2">
+              <label className="block text-xs text-purple-300 mb-1">
+                Brightness
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={config.brightness3}
+                onChange={(e) => updateConfig('brightness3', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-purple-400 text-center mt-0.5">
+                {(config.brightness3 * 100).toFixed(0)}%
               </div>
             </div>
 
