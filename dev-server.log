@@ -5070,3 +5070,5 @@
 [1] 11/13/2025, 10:30:45 PM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'
 [1] 11/13/2025, 10:35:44 PM [CONVEX M(leaderboardUpdater:updateGoldLeaderboard)] [LOG] 'Leaderboard update: 16 active wallets (21 inactive skipped)'
 [1] 11/13/2025, 10:35:44 PM [CONVEX M(leaderboardUpdater:updateGoldLeaderboard)] [LOG] 'Leaderboard updated: 13 entries updated, 3 skipped (no significant change) at 2025-11-14T03:35:44.067Z'
+[1] 11/13/2025, 10:45:44 PM [CONVEX M(walletAuthentication:cleanupExpiredNonces)] [LOG] '[Cleanup] Nonce cleanup completed: 0 expired, 0 used (>24hr old), 0 total deleted'
+[1] 11/13/2025, 10:45:45 PM [CONVEX M(monitoringSummaryGenerator:generateSummary)] [LOG] '[Monitoring] Generated summary: 0 events, health: healthy'

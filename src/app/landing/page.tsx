@@ -1738,19 +1738,15 @@ export default function LandingPage() {
 
       {/* Fixed background layer - faded initially */}
       <div
-        className="fixed bg-black z-0 transition-opacity duration-1000"
+        className="fixed inset-0 w-full bg-black z-0 transition-opacity duration-1000"
         style={{
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: isMobile ? '100svh' : '100vh',
+          height: isMobile ? '100svh' : '100%',
           backgroundImage: `url(${getMediaUrl('/colored-bg-1.webp')})`,
           backgroundSize: 'cover',
           backgroundPosition: isMobile
-            ? `center center`
+            ? `center bottom`
             : `center calc(50% + ${bgYPosition}px)`,
           backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed',
           touchAction: 'none',
           pointerEvents: 'none',
           opacity: showAudioConsent ? 0.6 : (animationStage === 'initial' ? 0 : 1), // Darkened when lightbox shows, hidden during initial
