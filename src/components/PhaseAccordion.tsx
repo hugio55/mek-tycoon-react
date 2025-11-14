@@ -55,7 +55,7 @@ export default function PhaseAccordion({
             });
           }
         }
-      }, 400); // Wait for expand animation (360ms + buffer)
+      }, 320); // Wait for expand animation (280ms + buffer)
     }
   };
 
@@ -179,21 +179,24 @@ export default function PhaseAccordion({
             <div
               ref={(el) => (contentRefs.current[index] = el)}
               style={{
-                maxHeight: isExpanded ? '500px' : '0px',
-                opacity: isExpanded ? 1 : 0,
-                overflow: 'hidden',
-                transition: 'max-height 360ms ease-out, opacity 360ms ease-out',
-                willChange: isExpanded ? 'auto' : 'max-height, opacity',
+                display: isExpanded ? 'block' : 'none',
               }}
             >
-              <div>
+              <div
+                style={{
+                  transformOrigin: 'top',
+                  transform: isExpanded ? 'scaleY(1)' : 'scaleY(0)',
+                  opacity: isExpanded ? 1 : 0,
+                  transition: 'transform 220ms cubic-bezier(0.4, 0, 0.2, 1), opacity 220ms cubic-bezier(0.4, 0, 0.2, 1)',
+                  willChange: 'transform, opacity',
+                }}
+              >
                 <div
                   className="mt-1 overflow-hidden"
                   style={{
-                    backdropFilter: disableBlur ? 'none' : 'blur(6px)',
-                    WebkitBackdropFilter: disableBlur ? 'none' : 'blur(6px)',
-                    background: 'rgba(0, 0, 0, 0.35)',
+                    background: 'rgba(0, 0, 0, 0.5)',
                     borderRadius: '8px',
+                    transform: 'translate3d(0, 0, 0)',
                   }}
                 >
                   <div className="px-4 py-3">

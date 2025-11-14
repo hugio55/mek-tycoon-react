@@ -144,6 +144,10 @@ const DEFAULT_CONFIG = {
   discordUrl: 'https://discord.gg/your-discord',
   twitterUrl: 'https://twitter.com/your-twitter',
   websiteUrl: 'https://your-website.com',
+  // Mobile-specific controls
+  mobileBreakpoint: 1024,
+  mobilePhaseFooterSpacing: 32,
+  mobilePhaseButtonMaxWidth: 600,
 };
 
 type ConfigType = typeof DEFAULT_CONFIG;
@@ -3100,6 +3104,189 @@ export default function LandingDebugPage() {
           </div>
           )}
 
+          {/* Phase I Lightbox Controls Section */}
+          <div className="bg-gray-800 border border-gray-700 rounded p-3">
+            <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
+              Phase I Lightbox Controls
+            </h2>
+
+            {/* Lightbox Text Content */}
+            <div className="mb-3">
+              <label className="block text-xs text-gray-300 mb-1">
+                Lightbox Text Content
+              </label>
+              <textarea
+                value={config.phaseILightboxContent}
+                onChange={(e) => updateConfig('phaseILightboxContent', e.target.value)}
+                className="w-full h-32 bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white resize-vertical"
+                placeholder="Enter lightbox text content..."
+              />
+            </div>
+
+            {/* Text Typography Controls */}
+            <div className="mb-3 p-2 bg-gray-900/50 rounded border border-gray-600">
+              <h3 className="text-xs font-semibold text-gray-200 mb-2">Text Typography</h3>
+
+              {/* Font Family */}
+              <div className="mb-2">
+                <label className="block text-xs text-gray-300 mb-1">
+                  Font Family
+                </label>
+                <select
+                  value={config.phaseITextFont}
+                  onChange={(e) => updateConfig('phaseITextFont', e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white"
+                >
+                  <option value="Arial">Arial</option>
+                  <option value="Inter">Inter</option>
+                  <option value="Orbitron">Orbitron</option>
+                  <option value="Georgia">Georgia</option>
+                  <option value="Times New Roman">Times New Roman</option>
+                  <option value="Courier New">Courier New</option>
+                </select>
+              </div>
+
+              {/* Font Size */}
+              <div className="mb-2">
+                <label className="block text-xs text-gray-300 mb-1">
+                  Font Size
+                </label>
+                <input
+                  type="range"
+                  min="10"
+                  max="24"
+                  step="1"
+                  value={config.phaseITextFontSize}
+                  onChange={(e) => updateConfig('phaseITextFontSize', parseInt(e.target.value))}
+                  onMouseDown={handleInputStart}
+                  onMouseUp={handleInputEnd}
+                  onTouchStart={handleInputStart}
+                  onTouchEnd={handleInputEnd}
+                  className="w-full"
+                />
+                <div className="text-xs text-gray-400 text-center mt-0.5">
+                  {config.phaseITextFontSize}px
+                </div>
+              </div>
+
+              {/* Text Color */}
+              <div className="mb-2">
+                <label className="block text-xs text-gray-300 mb-1">
+                  Text Color
+                </label>
+                <select
+                  value={config.phaseITextColor}
+                  onChange={(e) => updateConfig('phaseITextColor', e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white"
+                >
+                  <option value="text-white/70">White 70%</option>
+                  <option value="text-white/80">White 80%</option>
+                  <option value="text-white/90">White 90%</option>
+                  <option value="text-yellow-400/70">Yellow 70%</option>
+                  <option value="text-yellow-400/80">Yellow 80%</option>
+                  <option value="text-yellow-400/90">Yellow 90%</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Video Controls */}
+            <div className="mb-3 p-2 bg-gray-900/50 rounded border border-gray-600">
+              <h3 className="text-xs font-semibold text-gray-200 mb-2">Video Controls</h3>
+
+              {/* Video Scale */}
+              <div className="mb-2">
+                <label className="block text-xs text-gray-300 mb-1">
+                  Video Scale
+                </label>
+                <input
+                  type="range"
+                  min="50"
+                  max="200"
+                  step="5"
+                  value={config.phaseIVideoScale}
+                  onChange={(e) => updateConfig('phaseIVideoScale', parseInt(e.target.value))}
+                  onMouseDown={handleInputStart}
+                  onMouseUp={handleInputEnd}
+                  onTouchStart={handleInputStart}
+                  onTouchEnd={handleInputEnd}
+                  className="w-full"
+                />
+                <div className="text-xs text-gray-400 text-center mt-0.5">
+                  {config.phaseIVideoScale}%
+                </div>
+              </div>
+
+              {/* Video X Position */}
+              <div className="mb-2">
+                <label className="block text-xs text-gray-300 mb-1">
+                  Video X Position
+                </label>
+                <input
+                  type="range"
+                  min="-200"
+                  max="200"
+                  step="10"
+                  value={config.phaseIVideoPositionX}
+                  onChange={(e) => updateConfig('phaseIVideoPositionX', parseInt(e.target.value))}
+                  onMouseDown={handleInputStart}
+                  onMouseUp={handleInputEnd}
+                  onTouchStart={handleInputStart}
+                  onTouchEnd={handleInputEnd}
+                  className="w-full"
+                />
+                <div className="text-xs text-gray-400 text-center mt-0.5">
+                  {config.phaseIVideoPositionX}px
+                </div>
+              </div>
+
+              {/* Video Y Position */}
+              <div className="mb-2">
+                <label className="block text-xs text-gray-300 mb-1">
+                  Video Y Position
+                </label>
+                <input
+                  type="range"
+                  min="-200"
+                  max="200"
+                  step="10"
+                  value={config.phaseIVideoPositionY}
+                  onChange={(e) => updateConfig('phaseIVideoPositionY', parseInt(e.target.value))}
+                  onMouseDown={handleInputStart}
+                  onMouseUp={handleInputEnd}
+                  onTouchStart={handleInputStart}
+                  onTouchEnd={handleInputEnd}
+                  className="w-full"
+                />
+                <div className="text-xs text-gray-400 text-center mt-0.5">
+                  {config.phaseIVideoPositionY}px
+                </div>
+              </div>
+            </div>
+
+            {/* Backdrop Blur */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Backdrop Blur Amount
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="40"
+                step="1"
+                value={config.phaseIBackdropBlur}
+                onChange={(e) => updateConfig('phaseIBackdropBlur', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.phaseIBackdropBlur}px
+              </div>
+            </div>
+          </div>
+
           {/* Speaker Icon Style Section */}
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">
@@ -3907,6 +4094,80 @@ export default function LandingDebugPage() {
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200"
                 placeholder="https://your-website.com"
               />
+            </div>
+
+            {/* Mobile Controls Section */}
+            <h3 className="text-lg font-bold text-yellow-400 mt-6 mb-3 border-t border-gray-700 pt-4">
+              Mobile View Controls
+            </h3>
+
+            {/* Mobile Breakpoint */}
+            <div className="mb-3">
+              <label className="block text-xs text-gray-300 mb-1">
+                Mobile Breakpoint (px)
+              </label>
+              <input
+                type="range"
+                min="320"
+                max="1440"
+                step="8"
+                value={config.mobileBreakpoint}
+                onChange={(e) => updateConfig('mobileBreakpoint', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.mobileBreakpoint}px (desktop ≥ {config.mobileBreakpoint}px, mobile < {config.mobileBreakpoint}px)
+              </div>
+            </div>
+
+            {/* Mobile Phase/Footer Spacing */}
+            <div className="mb-3">
+              <label className="block text-xs text-gray-300 mb-1">
+                Phase IV → Footer Spacing (Mobile)
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="200"
+                step="4"
+                value={config.mobilePhaseFooterSpacing}
+                onChange={(e) => updateConfig('mobilePhaseFooterSpacing', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.mobilePhaseFooterSpacing}px
+              </div>
+            </div>
+
+            {/* Mobile Phase Button Max Width */}
+            <div className="mb-3">
+              <label className="block text-xs text-gray-300 mb-1">
+                Phase Button Max Width (Mobile)
+              </label>
+              <input
+                type="range"
+                min="280"
+                max="800"
+                step="20"
+                value={config.mobilePhaseButtonMaxWidth}
+                onChange={(e) => updateConfig('mobilePhaseButtonMaxWidth', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.mobilePhaseButtonMaxWidth}px
+              </div>
             </div>
           </div>
 
