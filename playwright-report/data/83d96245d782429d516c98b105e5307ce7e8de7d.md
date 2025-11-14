@@ -1,0 +1,613 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e8]:
+    - button "0 MEKS ▼" [ref=e11] [cursor=pointer]:
+      - generic [ref=e12]: 0 MEKS
+      - generic [ref=e13]: ▼
+    - link "OE Logo" [ref=e15] [cursor=pointer]:
+      - /url: https://overexposed.io
+      - img "OE Logo" [ref=e16]
+    - generic [ref=e17]:
+      - generic [ref=e19]:
+        - img "Navigation" [ref=e20]
+        - button "ESSENCE" [ref=e21] [cursor=pointer]:
+          - generic [ref=e22]: ESSENCE
+        - button "Market" [ref=e23] [cursor=pointer]:
+          - generic [ref=e24]: MARKET
+        - button "MEKS" [ref=e25] [cursor=pointer]:
+          - generic [ref=e26]: MEKS
+        - button "Story" [ref=e27] [cursor=pointer]:
+          - generic [ref=e28]: CORP
+        - button "GOLD" [ref=e29] [cursor=pointer]
+        - generic:
+          - generic: "0"
+          - generic: .
+          - generic: "000"
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - heading "🖥️ DESKTOP MODE" [level=1] [ref=e33]
+            - generic [ref=e34]:
+              - button "🖥️ Desktop (≥1024px)" [ref=e35] [cursor=pointer]
+              - button "📱 Mobile (<1024px)" [ref=e36] [cursor=pointer]
+            - paragraph [ref=e37]: All settings below will save to desktop configuration
+            - generic [ref=e38]:
+              - button "📋 Copy Desktop Settings to Mobile" [ref=e39] [cursor=pointer]
+              - paragraph [ref=e40]: Use this to sync mobile with desktop. Mobile will start identical to desktop, then you can adjust specific values.
+          - generic [ref=e41]:
+            - generic [ref=e42]:
+              - heading "Landing Page Debug Controls" [level=1] [ref=e43]
+              - generic [ref=e44]: Auto-save enabled
+            - paragraph [ref=e45]: Settings now saved to database (survives code refactors). Auto-saves after 500ms of inactivity.
+            - generic [ref=e46]:
+              - link "Open Landing Page" [ref=e47] [cursor=pointer]:
+                - /url: /landing
+              - button "⭐ Stars ON" [ref=e48] [cursor=pointer]
+              - button "Show Preview" [ref=e49] [cursor=pointer]
+              - button "Save Settings" [ref=e50] [cursor=pointer]
+              - button "Reset to Defaults" [ref=e51] [cursor=pointer]
+              - button "🔧 Recover from Backup" [ref=e52] [cursor=pointer]
+              - button "Show Landing Audio Consent" [ref=e53] [cursor=pointer]
+              - button "Force Show OFF" [ref=e54] [cursor=pointer]
+          - generic [ref=e55]:
+            - heading "🚨 DEBUG TEST SLIDER" [level=3] [ref=e56]
+            - paragraph [ref=e57]: If this slider doesn't work, the issue is NOT in the effects. Check browser console for [🎚️] logs.
+            - generic [ref=e58]:
+              - generic [ref=e59]: "Test Value:"
+              - slider [ref=e60]: "100"
+              - generic [ref=e61]: "600"
+          - generic [ref=e62]:
+            - button "Layer 1" [ref=e63] [cursor=pointer]
+            - button "Layer 2" [ref=e64] [cursor=pointer]
+            - button "Layer 3" [ref=e65] [cursor=pointer]
+            - button "BG Stars" [ref=e66] [cursor=pointer]
+            - button "Logo" [ref=e67] [cursor=pointer]
+            - button "Description" [ref=e68] [cursor=pointer]
+            - button "Phases" [ref=e69] [cursor=pointer]
+            - button "Audio" [ref=e70] [cursor=pointer]
+            - button "Motion Blur" [ref=e71] [cursor=pointer]
+            - button "Power Button" [ref=e72] [cursor=pointer]
+            - button "Speaker" [ref=e73] [cursor=pointer]
+            - button "Other" [ref=e74] [cursor=pointer]
+          - generic [ref=e75]:
+            - generic [ref=e76]:
+              - heading "Layer 1 Star Field" [level=2] [ref=e77]
+              - generic [ref=e78]:
+                - generic [ref=e79]: Star Scale
+                - slider [ref=e80]: "1"
+                - generic [ref=e81]: 1.0x
+              - generic [ref=e82]:
+                - generic [ref=e83]: Size Randomness
+                - slider [ref=e84]: "50"
+                - generic [ref=e85]: 50%
+              - generic [ref=e86]:
+                - generic [ref=e87]: Star Speed
+                - slider [ref=e88]: "3"
+                - generic [ref=e89]: 3.0x
+              - generic [ref=e90]:
+                - generic [ref=e91]: Star Density
+                - slider [ref=e92]: "200"
+                - generic [ref=e93]: 200 stars
+            - generic [ref=e94]:
+              - heading "Layer 1 Twinkling" [level=2] [ref=e95]
+              - generic [ref=e96]:
+                - generic [ref=e97]: Twinkle Speed
+                - slider [ref=e98]: "1"
+                - generic [ref=e99]: 1.0x
+              - generic [ref=e100]:
+                - generic [ref=e101]: Twinkle Speed Randomness
+                - slider [ref=e102]: "50"
+                - generic [ref=e103]: 50%
+              - generic [ref=e104]:
+                - generic [ref=e105]: Twinkle Amount (0 = off)
+                - slider [ref=e106]: "0"
+                - generic [ref=e107]: 0%
+            - generic [ref=e108]:
+              - heading "Layer 2 Star Field" [level=2] [ref=e109]
+              - generic [ref=e110]:
+                - generic [ref=e111]: Star Scale
+                - slider [ref=e112]: "1"
+                - generic [ref=e113]: 1.0x
+              - generic [ref=e114]:
+                - generic [ref=e115]: Star Speed
+                - slider [ref=e116]: "10"
+                - generic [ref=e117]: 10.0x
+              - generic [ref=e118]:
+                - generic [ref=e119]: Star Density
+                - slider [ref=e120]: "100"
+                - generic [ref=e121]: 100 stars
+              - generic [ref=e122]:
+                - generic [ref=e123]: Line Length
+                - slider [ref=e124]: "2"
+                - generic [ref=e125]: 2.0x
+            - generic [ref=e126]:
+              - heading "Layer 2 Twinkling" [level=2] [ref=e127]
+              - generic [ref=e128]:
+                - generic [ref=e129]: Twinkle Speed
+                - slider [ref=e130]: "1"
+                - generic [ref=e131]: 1.0x
+              - generic [ref=e132]:
+                - generic [ref=e133]: Twinkle Speed Randomness
+                - slider [ref=e134]: "50"
+                - generic [ref=e135]: 50%
+              - generic [ref=e136]:
+                - generic [ref=e137]: Twinkle Amount (0 = off)
+                - slider [ref=e138]: "0"
+                - generic [ref=e139]: 0%
+            - generic [ref=e140]:
+              - heading "Layer 3 Star Field" [level=2] [ref=e141]
+              - generic [ref=e142]:
+                - generic [ref=e143]: Star Scale
+                - slider [ref=e144]: "1"
+                - generic [ref=e145]: 1.0x
+              - generic [ref=e146]:
+                - generic [ref=e147]: Star Speed
+                - slider [ref=e148]: "10"
+                - generic [ref=e149]: 10.0x
+              - generic [ref=e150]:
+                - generic [ref=e151]: Star Density
+                - slider [ref=e152]: "100"
+                - generic [ref=e153]: 100 stars
+              - generic [ref=e154]:
+                - generic [ref=e155]: Line Length
+                - slider [ref=e156]: "2"
+                - generic [ref=e157]: 2.0x
+              - generic [ref=e158]:
+                - generic [ref=e159]: Spawn Delay (time between stars)
+                - slider [ref=e160]: "50"
+                - generic [ref=e161]: 50ms
+            - generic [ref=e162]:
+              - heading "Layer 3 Twinkling" [level=2] [ref=e163]
+              - generic [ref=e164]:
+                - generic [ref=e165]: Twinkle Speed
+                - slider [ref=e166]: "1"
+                - generic [ref=e167]: 1.0x
+              - generic [ref=e168]:
+                - generic [ref=e169]: Twinkle Speed Randomness
+                - slider [ref=e170]: "50"
+                - generic [ref=e171]: 50%
+              - generic [ref=e172]:
+                - generic [ref=e173]: Twinkle Amount (0 = off)
+                - slider [ref=e174]: "0"
+                - generic [ref=e175]: 0%
+            - generic [ref=e176]:
+              - heading "Background Stars (Static)" [level=2] [ref=e177]
+              - generic [ref=e178]:
+                - generic [ref=e179]: Number of Stars
+                - slider [ref=e180]: "800"
+                - generic [ref=e181]: 800 stars
+              - generic [ref=e182]:
+                - generic [ref=e183]: Size
+                - slider [ref=e184]: "2"
+                - generic [ref=e185]: 2.0x
+              - generic [ref=e186]:
+                - generic [ref=e187]: Min Brightness
+                - slider [ref=e188]: "0.1"
+                - generic [ref=e189]: "0.10"
+              - generic [ref=e190]:
+                - generic [ref=e191]: Max Brightness
+                - slider [ref=e192]: "0.4"
+                - generic [ref=e193]: "0.40"
+              - generic [ref=e194]:
+                - generic [ref=e195]: Twinkle Speed
+                - slider [ref=e196]: "0.5"
+                - generic [ref=e197]: 0.5x
+              - generic [ref=e198]:
+                - generic [ref=e199]: Twinkle Speed Randomness
+                - slider [ref=e200]: "50"
+                - generic [ref=e201]: 50%
+              - generic [ref=e202]:
+                - generic [ref=e203]: Twinkle Amount (% of stars)
+                - slider [ref=e204]: "30"
+                - generic [ref=e205]: 30%
+              - generic [ref=e206]:
+                - generic [ref=e207]: Size Randomness
+                - slider [ref=e208]: "50"
+                - generic [ref=e209]: 50%
+              - generic [ref=e210]:
+                - generic [ref=e211]: Star Fade Position
+                - slider [ref=e212]: "60"
+                - generic [ref=e213]: 60%
+              - generic [ref=e214]:
+                - generic [ref=e215]: Star Fade Feather Size
+                - slider [ref=e216]: "200"
+                - generic [ref=e217]: 200px
+            - generic [ref=e218]:
+              - heading "Layout & Positioning" [level=2] [ref=e219]
+              - generic [ref=e220]:
+                - generic [ref=e221]: Logo Size
+                - slider [ref=e222]: "600"
+                - generic [ref=e223]: 600px
+              - generic [ref=e224]:
+                - generic [ref=e225]: Logo Vertical Position (% from center)
+                - slider [ref=e226]: "0"
+                - generic [ref=e227]: 0% from center (centered)
+              - generic [ref=e228]:
+                - generic [ref=e229]: Background Vertical Position
+                - slider [ref=e230]: "0"
+                - generic [ref=e231]: 0%
+            - generic [ref=e232]:
+              - heading "Typography" [level=2] [ref=e233]
+              - generic [ref=e234]:
+                - generic [ref=e235]: Edit Element
+                - combobox [ref=e236]:
+                  - option "Description Text" [selected]
+                  - option "Phase Header"
+                  - option "Phase Description"
+                  - option "Sound Label"
+                  - option "Join Beta"
+                  - option "Audio Lightbox Description"
+                  - option "Toggle Labels (SOUND/NO SOUND)"
+              - generic [ref=e237]:
+                - generic [ref=e238]: Font Family
+                - combobox [ref=e239]:
+                  - option "Orbitron" [selected]
+                  - option "Rajdhani"
+                  - option "Exo 2"
+                  - option "Electrolize"
+                  - option "Audiowide"
+                  - option "Michroma"
+                  - option "Saira"
+                  - option "Play"
+                  - option "Quantico"
+                  - option "Arial"
+                  - option "Helvetica"
+                  - option "Courier New"
+                  - option "Georgia"
+                  - option "Times New Roman"
+              - generic [ref=e240]:
+                - generic [ref=e241]: Description Text
+                - textbox "Enter landing page description..." [ref=e242]: A futuristic idle tycoon game featuring collectible Mek NFTs. Build your empire through resource management, strategic crafting, and automated gold generation.
+                - generic [ref=e243]: 159 characters
+              - generic [ref=e244]:
+                - generic [ref=e245]: Font Size
+                - slider [ref=e246]: "18"
+                - generic [ref=e247]: 18px
+              - generic [ref=e248]:
+                - generic [ref=e249]: Color
+                - combobox [ref=e250]:
+                  - option "White"
+                  - option "Light Gray"
+                  - option "Medium Gray"
+                  - option "Dark Gray"
+                  - option "Yellow" [selected]
+              - generic [ref=e251]:
+                - generic [ref=e252]: Horizontal Offset (X)
+                - slider [ref=e253]: "0"
+                - generic [ref=e254]: 0px
+              - generic [ref=e255]:
+                - generic [ref=e256]: Vertical Offset (Y)
+                - slider [ref=e257]: "0"
+                - generic [ref=e258]: 0px
+              - generic [ref=e259]:
+                - paragraph [ref=e260]: "Preview:"
+                - paragraph [ref=e261]: A futuristic idle tycoon game featuring collectible Mek NFTs. Build your empire through resource management, strategic crafting, and automated gold generation.
+            - generic [ref=e262]:
+              - heading "Phase Cards Management" [level=2] [ref=e263]
+              - button "Initialize Default Phase Cards" [ref=e265] [cursor=pointer]
+              - generic [ref=e266]:
+                - heading "Edit Phase Text" [level=3] [ref=e267]
+                - generic [ref=e269]:
+                  - generic [ref=e270]: Select Phase
+                  - combobox [ref=e271]:
+                    - option "Choose a phase..." [selected]
+                    - option "Foundation"
+                    - option "Ecosystem"
+                    - option "Story Mode"
+                    - option "Federations"
+              - generic [ref=e272]:
+                - heading "Add New Phase Card" [level=3] [ref=e273]
+                - generic [ref=e274]:
+                  - generic [ref=e275]:
+                    - generic [ref=e276]: Header (optional italic text)
+                    - textbox "e.g., The Beginning" [ref=e277]
+                  - generic [ref=e278]:
+                    - generic [ref=e279]: Title
+                    - textbox "e.g., Foundation" [ref=e280]
+                  - generic [ref=e281]:
+                    - generic [ref=e282]: Description (optional)
+                    - textbox "Phase description..." [ref=e283]
+                  - generic [ref=e284]:
+                    - generic [ref=e285]: Image URL (optional)
+                    - textbox "e.g., /mek-images/50px/bi1-cb1-nm1.webp" [ref=e286]
+                  - generic [ref=e287]:
+                    - checkbox "Locked (coming soon)" [ref=e288]
+                    - generic [ref=e289]: Locked (coming soon)
+                  - button "Add Phase Card" [disabled] [ref=e290]
+              - generic [ref=e291]:
+                - heading "Existing Phase Cards" [level=3] [ref=e292]
+                - generic [ref=e294]:
+                  - generic [ref=e296]:
+                    - heading "Foundation" [level=4] [ref=e297]
+                    - paragraph [ref=e298]: "This phase introduced several of the essential systems of Mek Tycoon: - Connecting a Cardano wallet - Generating passive gold - Upgrading Meks We had roughly 40 beta testers who put these systems through their paces, pointing out any and all issues along the way. The modest feature set in this phase is by design; it's imperative that these core mechanics are absolutely rock solid moving forward, since so much is built upon them. Think of this phase as \"the foundation\" for the intricate world that is Mek Tycoon."
+                  - generic [ref=e299]:
+                    - button "Edit" [ref=e300] [cursor=pointer]
+                    - button "↑ Up" [disabled] [ref=e301]
+                    - button "↓ Down" [ref=e302] [cursor=pointer]
+                    - button "Delete" [ref=e303] [cursor=pointer]
+                - generic [ref=e305]:
+                  - generic [ref=e307]:
+                    - heading "Ecosystem" [level=4] [ref=e308]
+                    - paragraph [ref=e309]: "This phase introduces management and player-to-player mechanics: - NFT Minting integration via NMKR - The \"Market\" - Mek Profiles - Slots system - Corporation hub - Skins - And more Phase II tackles ~40% of all the feature sets in Mek Tycoon. This is a substantial amount of work and could likely be the lengthiest phase to develop. Once completed, the beta will be a fun mini game in its own right. These beta sessions will last 1 week and be spaced out to allow for fixing of bugs between sessions. Be sure to click \"Join Beta\" above to learn more about how to participate in this ground floor era."
+                  - generic [ref=e310]:
+                    - button "Edit" [ref=e311] [cursor=pointer]
+                    - button "↑ Up" [ref=e312] [cursor=pointer]
+                    - button "↓ Down" [ref=e313] [cursor=pointer]
+                    - button "Delete" [ref=e314] [cursor=pointer]
+                - generic [ref=e316]:
+                  - generic [ref=e318]:
+                    - heading "Story Mode" [level=4] [ref=e319]
+                    - paragraph [ref=e320]: "The bread and butter of Mek Tycoon: Story Mode. It's a sizeable choose-your-fate adventure which rewards real NFTs if played strategically. Due to the procedural element to the forking stepping stone-like progression, no two players will have the same experience. - Creation of the procedural pathing - Contracts (Missions) system - Revised NFT minting - Achievements system There are 10 chapters of the story. Only chapter 1 will be released in this phase. It will provide 3-6 months of gameplay for even the fastest of players, meaning chapter 2 will be in development while chapter 1 is churning along. This phase is truly where the game can be played in a meaningful capacity."
+                  - generic [ref=e321]:
+                    - button "Edit" [ref=e322] [cursor=pointer]
+                    - button "↑ Up" [ref=e323] [cursor=pointer]
+                    - button "↓ Down" [ref=e324] [cursor=pointer]
+                    - button "Delete" [ref=e325] [cursor=pointer]
+                - generic [ref=e327]:
+                  - generic [ref=e329]:
+                    - heading "Federations" [level=4] [ref=e330]
+                    - paragraph [ref=e331]: Strength in numbers! With the release of this phase, players (Corporations) can band together to create Federations. Being part of one of these entities comes with a slew of perks, challenges, and gameplay. Federations can be formed by players who qualify, but can be joined by all. With up to 10 Corporations per Federation, there will be plenty of competition on the global leaderboards. This phase will also include the community-requested features that have made it through the ranks over the course of P1-3. That said, it doesn't stop here at Phase 4... there are plenty of additions to come, but we consider this version of Mek Tycoon to be the first production release.
+                  - generic [ref=e332]:
+                    - button "Edit" [ref=e333] [cursor=pointer]
+                    - button "↑ Up" [ref=e334] [cursor=pointer]
+                    - button "↓ Down" [disabled] [ref=e335]
+                    - button "Delete" [ref=e336] [cursor=pointer]
+            - generic [ref=e337]:
+              - heading "Sound Button Controls" [level=2] [ref=e338]
+              - paragraph [ref=e339]: Fixed top-right corner • Horizontal layout
+              - generic [ref=e340]:
+                - generic [ref=e341]: Button Scale
+                - slider [ref=e342]: "1"
+                - generic [ref=e343]: 1.00x
+              - generic [ref=e344]:
+                - generic [ref=e345]: Button Vertical Offset
+                - slider [ref=e346]: "0"
+                - generic [ref=e347]: 0px
+              - generic [ref=e348]:
+                - generic [ref=e349]: Button Horizontal Offset
+                - slider [ref=e350]: "0"
+                - generic [ref=e351]: 0px
+              - generic [ref=e352]:
+                - generic [ref=e353]: Flashing Glow Effect
+                - button "Enabled" [ref=e354] [cursor=pointer]
+            - generic [ref=e355]:
+              - heading "Audio Consent Lightbox Controls" [level=2] [ref=e356]
+              - paragraph [ref=e357]: Controls for initial audio consent lightbox appearance
+              - generic [ref=e358]:
+                - generic [ref=e359]: Logo Fade Duration
+                - slider [ref=e360]: "1000"
+                - generic [ref=e361]: 1000ms
+              - generic [ref=e362]:
+                - generic [ref=e363]: Lightbox Backdrop Darkness
+                - slider [ref=e364]: "95"
+                - generic [ref=e365]: 95%
+              - generic [ref=e366]:
+                - generic [ref=e367]: Toggle Size
+                - slider [ref=e368]: "1"
+                - generic [ref=e369]: 1.0x
+              - generic [ref=e370]:
+                - generic [ref=e371]: Gap Between Toggles
+                - slider [ref=e372]: "48"
+                - generic [ref=e373]: 48px
+              - generic [ref=e374]:
+                - generic [ref=e375]: Vertical Position
+                - slider [ref=e376]: "0"
+                - generic [ref=e377]: 0px
+              - generic [ref=e378]:
+                - generic [ref=e379]: Fade Out Duration
+                - slider [ref=e380]: "500"
+                - generic [ref=e381]: 500ms
+            - generic [ref=e382]:
+              - heading "Phase I Lightbox Controls" [level=2] [ref=e383]
+              - generic [ref=e384]:
+                - generic [ref=e385]: Lightbox Text Content
+                - textbox "Enter lightbox text content..." [ref=e386]: "Project inception and initial concept development. The vision for Mek Tycoon begins to take shape. In this foundational phase, we established the core vision and mechanics that would define the Mek Tycoon universe. Our team carefully crafted the initial designs, gameplay concepts, and technical architecture that would serve as the bedrock for all future development. Key achievements during Phase I included: • Conceptualization of the Mek NFT collection and variation system • Design of the core gameplay loop and resource management mechanics • Development of the initial art style and visual identity • Technical planning for blockchain integration on Cardano • Formation of the core development team and community foundation This phase laid the groundwork for everything that followed, establishing the principles of strategic depth, artistic excellence, and community engagement that define Mek Tycoon today."
+              - generic [ref=e387]:
+                - heading "Text Typography" [level=3] [ref=e388]
+                - generic [ref=e389]:
+                  - generic [ref=e390]: Font Family
+                  - combobox [ref=e391]:
+                    - option "Arial" [selected]
+                    - option "Inter"
+                    - option "Orbitron"
+                    - option "Georgia"
+                    - option "Times New Roman"
+                    - option "Courier New"
+                - generic [ref=e392]:
+                  - generic [ref=e393]: Font Size
+                  - slider [ref=e394]: "16"
+                  - generic [ref=e395]: 16px
+                - generic [ref=e396]:
+                  - generic [ref=e397]: Text Color
+                  - combobox [ref=e398]:
+                    - option "White 70%"
+                    - option "White 80%" [selected]
+                    - option "White 90%"
+                    - option "Yellow 70%"
+                    - option "Yellow 80%"
+                    - option "Yellow 90%"
+              - generic [ref=e399]:
+                - heading "Video Controls" [level=3] [ref=e400]
+                - generic [ref=e401]:
+                  - generic [ref=e402]: Video Scale
+                  - slider [ref=e403]: "100"
+                  - generic [ref=e404]: 100%
+                - generic [ref=e405]:
+                  - generic [ref=e406]: Video X Position
+                  - slider [ref=e407]: "0"
+                  - generic [ref=e408]: 0px
+                - generic [ref=e409]:
+                  - generic [ref=e410]: Video Y Position
+                  - slider [ref=e411]: "0"
+                  - generic [ref=e412]: 0px
+              - generic [ref=e413]:
+                - generic [ref=e414]: Backdrop Blur Amount
+                - slider [ref=e415]: "8"
+                - generic [ref=e416]: 8px
+            - generic [ref=e417]:
+              - heading "Speaker Icon Style" [level=2] [ref=e418]
+              - paragraph [ref=e419]: Select the speaker/sound icon design
+              - generic [ref=e420]:
+                - button "Minimal Wave" [ref=e421] [cursor=pointer]
+                - button "Geometric (Triple Chevron)" [ref=e422] [cursor=pointer]
+                - button "Sound Bars" [ref=e423] [cursor=pointer]
+                - button "Futuristic" [ref=e424] [cursor=pointer]
+                - button "Pulse Ring" [ref=e425] [cursor=pointer]
+              - generic [ref=e426]: "Current: minimal"
+            - generic [ref=e427]:
+              - heading "Phase Carousel Visual Controls" [level=2] [ref=e428]
+              - generic [ref=e429]:
+                - generic [ref=e430]: Image Darkening (overlay)
+                - slider [ref=e431]: "30"
+                - generic [ref=e432]: 30% darkness
+              - generic [ref=e433]:
+                - generic [ref=e434]: Blur Amount (non-selected cards)
+                - slider [ref=e435]: "20"
+                - generic [ref=e436]: 20px blur
+              - generic [ref=e437]:
+                - generic [ref=e438]: Blur Amount (selected/center card)
+                - slider [ref=e439]: "5"
+                - generic [ref=e440]: 5px blur
+              - generic [ref=e441]:
+                - generic [ref=e442]: Card Height
+                - slider [ref=e443]: "288"
+                - generic [ref=e444]: 288px
+              - generic [ref=e445]:
+                - generic [ref=e446]: Fade Start Position (vertical)
+                - slider [ref=e447]: "50"
+                - generic [ref=e448]: 50% from top
+              - generic [ref=e449]:
+                - generic [ref=e450]: Image Blend Mode
+                - generic [ref=e451]:
+                  - button "Normal" [ref=e452] [cursor=pointer]
+                  - button "Screen" [ref=e453] [cursor=pointer]
+                  - button "Lighten" [ref=e454] [cursor=pointer]
+                  - button "Add" [ref=e455] [cursor=pointer]
+                - generic [ref=e456]: "Current: normal"
+              - generic [ref=e457]:
+                - generic [ref=e458]: Hover Darkening (gradient intensity)
+                - slider [ref=e459]: "90"
+                - generic [ref=e460]: 90% opacity
+              - generic [ref=e461]:
+                - generic [ref=e462]: Idle Backdrop Blur (background behind column)
+                - slider [ref=e463]: "0"
+                - generic [ref=e464]: 0px blur
+              - generic [ref=e465]:
+                - generic [ref=e466]: Phase Image Idle Opacity
+                - slider [ref=e467]: "100"
+                - generic [ref=e468]: 100% opacity
+              - generic [ref=e469]:
+                - generic [ref=e470]: Column Vertical Position
+                - slider [ref=e471]: "0"
+                - generic [ref=e472]: 0px
+            - generic [ref=e473]:
+              - heading "Phase Background Images" [level=2] [ref=e474]
+              - paragraph [ref=e475]: Paste Windows paths or URLs - auto-converts to web paths
+              - generic [ref=e476]:
+                - generic [ref=e477]: Phase I Image URL
+                - textbox "C:\\Users\\...\\public\\mek-images\\1000px\\image.webp" [ref=e478]
+              - generic [ref=e479]:
+                - generic [ref=e480]: Phase II Image URL
+                - textbox "C:\\Users\\...\\public\\mek-images\\1000px\\image.webp" [ref=e481]
+              - generic [ref=e482]:
+                - generic [ref=e483]: Phase III Image URL
+                - textbox "C:\\Users\\...\\public\\mek-images\\1000px\\image.webp" [ref=e484]
+              - generic [ref=e485]:
+                - generic [ref=e486]: Phase IV Image URL
+                - textbox "C:\\Users\\...\\public\\mek-images\\1000px\\image.webp" [ref=e487]
+            - generic [ref=e488]:
+              - heading "Footer" [level=2] [ref=e489]
+              - generic [ref=e490]:
+                - generic [ref=e491]: Footer Height
+                - slider [ref=e492]: "120"
+                - generic [ref=e493]: 120px
+              - generic [ref=e494]:
+                - generic [ref=e495]: Image Vertical Position
+                - slider [ref=e496]: "50"
+                - generic [ref=e497]: 50% from top
+              - generic [ref=e498]:
+                - generic [ref=e499]: OE Logo Scale
+                - slider [ref=e500]: "1"
+                - generic [ref=e501]: 1.0x
+              - generic [ref=e502]:
+                - generic [ref=e503]: Social Icon Scale
+                - slider [ref=e504]: "1"
+                - generic [ref=e505]: 1.0x
+              - generic [ref=e506]:
+                - generic [ref=e507]: Social Icon Gap
+                - slider [ref=e508]: "24"
+                - generic [ref=e509]: 24px
+              - generic [ref=e510]:
+                - generic [ref=e511]: Social Icon Vertical Position
+                - slider [ref=e512]: "70"
+                - generic [ref=e513]: 70% from top
+              - generic [ref=e514]:
+                - generic [ref=e515]: Social Icon Padding Top
+                - slider [ref=e516]: "0"
+                - generic [ref=e517]: 0px
+              - generic [ref=e518]:
+                - generic [ref=e519]: Social Icon Padding Bottom
+                - slider [ref=e520]: "0"
+                - generic [ref=e521]: 0px
+              - generic [ref=e522]:
+                - generic [ref=e523]: Footer Blur Amount
+                - slider [ref=e524]: "20"
+                - generic [ref=e525]: 20px
+              - generic [ref=e526]:
+                - generic [ref=e527]: Edge Feathering (Gradient Fade)
+                - slider [ref=e528]: "0"
+                - generic [ref=e529]: 0px
+              - generic [ref=e530]:
+                - generic [ref=e531]: Social Icon Color
+                - generic [ref=e532]:
+                  - textbox [ref=e533] [cursor=pointer]: "#9ca3af"
+                  - textbox "#9ca3af" [ref=e534]
+                - generic [ref=e535]:
+                  - button "Gray" [ref=e536] [cursor=pointer]
+                  - button "White" [ref=e537] [cursor=pointer]
+                  - button "Yellow" [ref=e538] [cursor=pointer]
+              - generic [ref=e539]:
+                - generic [ref=e540]: OE Logo URL
+                - textbox "https://example.com" [ref=e541]: "#"
+              - generic [ref=e542]:
+                - generic [ref=e543]: Discord URL
+                - textbox "https://discord.gg/..." [ref=e544]: https://discord.gg/your-discord
+              - generic [ref=e545]:
+                - generic [ref=e546]: X (Twitter) URL
+                - textbox "https://twitter.com/..." [ref=e547]: https://twitter.com/your-twitter
+              - generic [ref=e548]:
+                - generic [ref=e549]: Website URL
+                - textbox "https://your-website.com" [ref=e550]
+              - heading "Mobile View Controls" [level=3] [ref=e551]
+              - generic [ref=e552]:
+                - generic [ref=e553]: Mobile Breakpoint (px)
+                - slider [ref=e554]: "1024"
+                - generic [ref=e555]: 1024px (desktop ≥ 1024px, mobile < 1024px)
+              - generic [ref=e556]:
+                - generic [ref=e557]: Phase IV → Footer Spacing (Mobile)
+                - slider [ref=e558]: "32"
+                - generic [ref=e559]: 32px
+              - generic [ref=e560]:
+                - generic [ref=e561]: Phase Button Max Width (Mobile)
+                - slider [ref=e562]: "600"
+                - generic [ref=e563]: 600px
+        - generic [ref=e564]:
+          - link "OE Icon" [ref=e566] [cursor=pointer]:
+            - /url: "#"
+            - img "OE Icon" [ref=e567]
+          - generic [ref=e568]:
+            - link [ref=e569] [cursor=pointer]:
+              - /url: https://discord.gg/your-discord
+              - img [ref=e570]
+            - link [ref=e572] [cursor=pointer]:
+              - /url: https://twitter.com/your-twitter
+              - img [ref=e573]
+            - link [ref=e575] [cursor=pointer]:
+              - /url: https://your-website.com
+              - img [ref=e576]
+  - button "Open Next.js Dev Tools" [ref=e584] [cursor=pointer]:
+    - img [ref=e585]
+  - alert [ref=e588]
+```
