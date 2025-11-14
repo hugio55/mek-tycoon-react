@@ -3,10 +3,10 @@ import { test, expect } from '@playwright/test';
 test.describe('WebGL Background Stars', () => {
   test('should render background stars at maximum settings', async ({ page }) => {
     // Navigate to the landing debug page
-    await page.goto('http://localhost:3200/landing-debug');
+    await page.goto('http://localhost:3200/landing-debug', { waitUntil: 'domcontentloaded' });
 
-    // Wait for the page to load
-    await page.waitForLoadState('networkidle');
+    // Wait for the page to be interactive
+    await page.waitForTimeout(2000);
 
     // Scroll to the Background Stars section
     await page.locator('text=Background Stars (Static)').scrollIntoViewIfNeeded();
