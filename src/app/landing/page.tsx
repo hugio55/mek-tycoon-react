@@ -159,6 +159,7 @@ export default function LandingPage() {
   // Viewport detection for responsive settings
   const [isMobile, setIsMobile] = useState(false);
   const [windowWidth, setWindowWidth] = useState(0);
+  const [mobileBreakpoint, setMobileBreakpoint] = useState(DEFAULT_CONFIG.mobileBreakpoint);
 
   // Browser detection for video format selection
   const [useSafariVideo, setUseSafariVideo] = useState(false);
@@ -583,7 +584,6 @@ export default function LandingPage() {
   const [socialIconPaddingBottom, setSocialIconPaddingBottom] = useState(DEFAULT_CONFIG.socialIconPaddingBottom);
 
   // Mobile-specific controls
-  const [mobileBreakpoint, setMobileBreakpoint] = useState(DEFAULT_CONFIG.mobileBreakpoint);
   const [mobilePhaseFooterSpacing, setMobilePhaseFooterSpacing] = useState(DEFAULT_CONFIG.mobilePhaseFooterSpacing);
   const [mobilePhaseButtonMaxWidth, setMobilePhaseButtonMaxWidth] = useState(DEFAULT_CONFIG.mobilePhaseButtonMaxWidth);
 
@@ -1006,6 +1006,10 @@ export default function LandingPage() {
           setToggleLabelSize(config.toggleLabelSize ?? DEFAULT_CONFIG.toggleLabelSize);
           setToggleLabelColor(config.toggleLabelColor ?? DEFAULT_CONFIG.toggleLabelColor);
           setStarsEnabled(config.starsEnabled ?? DEFAULT_CONFIG.starsEnabled);
+          // Mobile-specific controls
+          setMobileBreakpoint(config.mobileBreakpoint ?? DEFAULT_CONFIG.mobileBreakpoint);
+          setMobilePhaseFooterSpacing(config.mobilePhaseFooterSpacing ?? DEFAULT_CONFIG.mobilePhaseFooterSpacing);
+          setMobilePhaseButtonMaxWidth(config.mobilePhaseButtonMaxWidth ?? DEFAULT_CONFIG.mobilePhaseButtonMaxWidth);
         } catch (e) {
           console.error('Failed to load debug config from localStorage:', e);
         }
@@ -1949,7 +1953,9 @@ export default function LandingPage() {
           }}
         >
           {/* Phase Carousel */}
-          <div>
+          <div style={{
+            marginBottom: isMobile ? `${mobilePhaseFooterSpacing}px` : undefined,
+          }}>
             {/* Mobile: Glass Accordion (NEW) | Desktop: Image Carousel (UNCHANGED) */}
             {isMobile ? (
               <PhaseAccordion
@@ -1959,6 +1965,7 @@ export default function LandingPage() {
                 phaseDescriptionFont={phaseDescriptionFont}
                 phaseDescriptionFontSize={phaseDescriptionFontSize}
                 disableBlur={dbSettings?.disablePhaseAccordionBlur ?? false}
+                mobilePhaseButtonMaxWidth={mobilePhaseButtonMaxWidth}
               />
             ) : (
               <HorizontalTimeline

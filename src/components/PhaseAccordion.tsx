@@ -13,7 +13,6 @@ interface PhaseAccordionProps {
   phaseDescriptionFontSize?: number;
   disableBlur?: boolean;
   mobilePhaseButtonMaxWidth?: number;
-  mobilePhaseFooterSpacing?: number;
 }
 
 export default function PhaseAccordion({
@@ -24,7 +23,6 @@ export default function PhaseAccordion({
   phaseDescriptionFontSize = 14,
   disableBlur = false,
   mobilePhaseButtonMaxWidth = 600,
-  mobilePhaseFooterSpacing = 32,
 }: PhaseAccordionProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [showPhaseILightbox, setShowPhaseILightbox] = useState(false);
@@ -83,13 +81,13 @@ export default function PhaseAccordion({
   }
 
   return (
-    <div className="flex flex-col gap-2 px-4 py-3" style={{ paddingBottom: `${phaseToFooterSpacing}px` }}>
+    <div className="flex flex-col gap-2 px-4 py-3">
       {phaseCards.map((card, index) => {
         const isExpanded = expandedIndex === index;
         const isLocked = card.locked;
 
         return (
-          <div key={card._id} className="relative mx-auto" style={{ maxWidth: `${phaseButtonMaxWidth}px`, width: '100%' }}>
+          <div key={card._id} className="relative mx-auto" style={{ maxWidth: `${mobilePhaseButtonMaxWidth}px`, width: '100%' }}>
             <button
               ref={(el) => (buttonRefs.current[index] = el)}
               onClick={() => handleToggle(index, isLocked)}
@@ -256,3 +254,6 @@ export default function PhaseAccordion({
         phaseDescriptionFont={phaseDescriptionFont}
         phaseDescriptionFontSize={phaseDescriptionFontSize}
       />
+    </div>
+  );
+}
