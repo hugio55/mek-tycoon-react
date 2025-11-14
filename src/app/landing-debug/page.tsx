@@ -789,7 +789,9 @@ export default function LandingDebugPage() {
           'descriptionCardBlur', 'descriptionCardDarkness', 'descriptionCardBorder',
           'logoFadeDuration', 'lightboxBackdropDarkness', 'joinBetaFont', 'joinBetaColor',
           'audioLightboxDescriptionFont', 'audioLightboxDescriptionColor',
-          'audioDescriptionText', 'audioConsentFadeDuration', 'forceShowAudioConsent'
+          'audioDescriptionText', 'audioConsentFadeDuration', 'forceShowAudioConsent',
+          'phaseILightboxContent', 'phaseITextFont', 'phaseITextFontSize', 'phaseITextColor',
+          'phaseIVideoScale', 'phaseIVideoPositionX', 'phaseIVideoPositionY', 'phaseIBackdropBlur'
         ];
 
         const shared: any = {};

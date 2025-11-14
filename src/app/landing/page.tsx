@@ -2262,13 +2262,13 @@ export default function LandingPage() {
           {/* Footer - Now properly positioned below phase carousel */}
           {!showAudioConsent && (
             <div
-              className="border-t border-gray-700 flex items-center justify-center relative"
+              className="flex items-center justify-center relative"
               style={{
                 height: `${footerHeight}px`,
                 paddingTop: `${socialIconPaddingTop}px`,
                 paddingBottom: `${socialIconPaddingBottom}px`,
-                backdropFilter: footerBlurAmount > 0 ? `blur(${footerBlurAmount}px)` : 'none',
-                WebkitBackdropFilter: footerBlurAmount > 0 ? `blur(${footerBlurAmount}px)` : 'none',
+                backdropFilter: `blur(${footerBlurAmount}px)`,
+                WebkitBackdropFilter: `blur(${footerBlurAmount}px)`,
                 backgroundColor: 'rgba(17, 24, 39, 0.3)',
               }}
             >

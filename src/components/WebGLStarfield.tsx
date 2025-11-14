@@ -70,16 +70,21 @@ const bgStarVertexShader = `
     float twinkle = sin(time * twinkleSpeedGlobal * twinkleSpeed + twinkleOffset);
     float twinkleEffect = twinkle * twinkleAmount;
 
-    // Apply twinkle to size
-    float finalSize = size * (1.0 + twinkleEffect);
+    // Standard projection
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
+
+    // Calculate depth-based scaling (same as moving stars)
+    float depth = abs(mvPosition.z);
+    float depthScale = 1000.0 / max(depth, 100.0);
+
+    // Apply depth scale and twinkle to size
+    float finalSize = size * depthScale * (1.0 + twinkleEffect);
 
     // Apply twinkle to opacity
     vOpacity = brightness * (1.0 + twinkleEffect * 0.5);
 
-    // Standard projection
-    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-    gl_Position = projectionMatrix * mvPosition;
-    gl_PointSize = finalSize;
+    gl_PointSize = max(finalSize, 1.0);
   }
 `;
 
