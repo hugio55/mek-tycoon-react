@@ -201,7 +201,7 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
   const bgStarsRef = useRef<THREE.Points | null>(null);
   const layer1StarsRef = useRef<THREE.Points | null>(null);
   const layer2StarsRef = useRef<THREE.Points | null>(null);
-  const layer3StarsRef = useRef<THREE.LineSegments | null>(null);
+  const layer3StarsRef = useRef<THREE.InstancedMesh | null>(null);
 
   // Initialize THREE.js scene
   useEffect(() => {
@@ -546,7 +546,7 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
     props.starFadeFeatherSize,
   ]);
 
-  // Create/update Layer 3 streak stars (lines)
+  // Create/update Layer 3 streak stars (using quads instead of lines for proper width control)
   useEffect(() => {
     if (!sceneRef.current || !props.enabled || !props.layer3Enabled) {
       // Remove if disabled
@@ -571,52 +571,67 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
 
     if (particleCount === 0) return;
 
-    // Each streak needs 2 vertices (start and end of line)
-    const positions = new Float32Array(particleCount * 2 * 3);
-    const colors = new Float32Array(particleCount * 2 * 3);
-    const lineLength = props.lineLength3;
+    // Use instanced mesh for efficient rendering of many identical quads
+    // Each streak is a quad (2 triangles = 6 vertices)
+    const lineLength = props.lineLength3 * 50; // Scale up to make visible (2 * 50 = 100 units)
+    const lineWidth = 2; // Width of streak in units
     const maxZ = 2000;
 
-    for (let i = 0; i < particleCount; i++) {
-      const idx = i * 6; // 2 vertices × 3 coords
+    // Create a single quad geometry (will be instanced)
+    const quadGeometry = new THREE.PlaneGeometry(lineWidth, lineLength);
 
-      // Random starting position
+    // Store position and rotation data for each instance
+    const positions = [];
+    const rotations = [];
+
+    for (let i = 0; i < particleCount; i++) {
       const x = (Math.random() - 0.5) * 2000;
       const y = (Math.random() - 0.5) * 2000;
       const z = -Math.random() * maxZ;
 
-      // Start of line (tail)
-      positions[idx] = x;
-      positions[idx + 1] = y;
-      positions[idx + 2] = z;
-
-      // End of line (head) - offset in z to create streak
-      positions[idx + 3] = x;
-      positions[idx + 4] = y;
-      positions[idx + 5] = z + lineLength;
-
-      // White color for both vertices
-      colors[idx] = colors[idx + 3] = 1.0;     // R
-      colors[idx + 1] = colors[idx + 4] = 1.0; // G
-      colors[idx + 2] = colors[idx + 5] = 1.0; // B
+      positions.push({ x, y, z });
+      rotations.push(0); // Will rotate to face camera
     }
 
-    // Create geometry
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-    // Create material
-    const material = new THREE.LineBasicMaterial({
-      vertexColors: true,
+    // Create material with additive blending
+    const material = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
       transparent: true,
       opacity: 0.8,
       blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      depthWrite: false,
     });
 
-    const streaks = new THREE.LineSegments(geometry, material);
-    scene.add(streaks);
-    layer3StarsRef.current = streaks;
+    // Create instanced mesh
+    const instancedMesh = new THREE.InstancedMesh(quadGeometry, material, particleCount);
+
+    // Set initial transforms for each instance
+    const matrix = new THREE.Matrix4();
+    for (let i = 0; i < particleCount; i++) {
+      const pos = positions[i];
+      // Position the quad at the streak location
+      // Offset by half lineLength so it extends forward from position
+      matrix.makeTranslation(pos.x, pos.y, pos.z + lineLength / 2);
+      instancedMesh.setMatrixAt(i, matrix);
+    }
+
+    instancedMesh.instanceMatrix.needsUpdate = true;
+
+    // Store positions array on the mesh for animation updates
+    (instancedMesh as any).streakPositions = positions;
+    (instancedMesh as any).lineLength = lineLength;
+
+    scene.add(instancedMesh);
+    layer3StarsRef.current = instancedMesh as any;
+
+    console.log('[⭐LAYER3] Streak stars created:', {
+      count: particleCount,
+      lineLength,
+      lineWidth,
+      usingQuads: true,
+      note: 'Using instanced quads for proper width control'
+    });
 
   }, [
     props.enabled,
@@ -745,34 +760,47 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
         material.uniforms.fadeFeather.value = props.starFadeFeatherSize;
       }
 
-      // Update Layer 3 streak stars
+      // Update Layer 3 streak stars (quad-based)
       if (layer3StarsRef.current) {
-        const geometry = layer3StarsRef.current.geometry;
-        const positions = geometry.attributes.position.array as Float32Array;
+        const instancedMesh = layer3StarsRef.current as THREE.InstancedMesh;
+        const positions = (instancedMesh as any).streakPositions;
+        const lineLength = (instancedMesh as any).lineLength;
         const particleCount = props.starFrequency3;
-        const lineLength = props.lineLength3;
+        const matrix = new THREE.Matrix4();
+        const quaternion = new THREE.Quaternion();
+
+        // Calculate camera forward direction for billboarding
+        const cameraDirection = new THREE.Vector3(0, 0, -1);
+        cameraDirection.applyQuaternion(camera.quaternion);
 
         for (let i = 0; i < particleCount; i++) {
-          const idx = i * 6;
+          const pos = positions[i];
 
-          // Move both vertices forward
-          positions[idx + 2] += props.starSpeed3 * deltaTime;
-          positions[idx + 5] += props.starSpeed3 * deltaTime;
+          // Move streak toward camera
+          pos.z += props.starSpeed3 * deltaTime;
 
           // Reset if past camera
-          if (positions[idx + 5] > 100) {
-            const x = (Math.random() - 0.5) * 2000;
-            const y = (Math.random() - 0.5) * 2000;
-            const z = -2000;
-
-            positions[idx] = positions[idx + 3] = x;
-            positions[idx + 1] = positions[idx + 4] = y;
-            positions[idx + 2] = z;
-            positions[idx + 5] = z + lineLength;
+          if (pos.z > 100) {
+            pos.x = (Math.random() - 0.5) * 2000;
+            pos.y = (Math.random() - 0.5) * 2000;
+            pos.z = -2000;
           }
+
+          // Create billboard rotation to face camera
+          // Quads are oriented along Z axis, need to rotate to face camera
+          quaternion.setFromRotationMatrix(camera.matrixWorld);
+
+          // Build transformation matrix: rotation + position
+          matrix.compose(
+            new THREE.Vector3(pos.x, pos.y, pos.z + lineLength / 2),
+            quaternion,
+            new THREE.Vector3(1, 1, 1)
+          );
+
+          instancedMesh.setMatrixAt(i, matrix);
         }
 
-        geometry.attributes.position.needsUpdate = true;
+        instancedMesh.instanceMatrix.needsUpdate = true;
       }
 
       // Render scene
