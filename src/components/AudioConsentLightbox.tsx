@@ -293,7 +293,7 @@ export default function AudioConsentLightbox({
             <GeometricSpeakerIcon
               size={toggleLabelSize * 2.5}
               isPlaying={true}
-              className={toggleLabelColor}
+              className="text-white/70"
             />
             <ProModeToggle
               enabled={false}
@@ -309,11 +309,34 @@ export default function AudioConsentLightbox({
 
           {/* No Sound Toggle - Silent (no sounds) */}
           <div className="flex flex-col items-center gap-3">
-            <GeometricSpeakerIcon
-              size={toggleLabelSize * 2.5}
-              isPlaying={false}
-              className="text-white/70"
-            />
+            <div className="relative">
+              <GeometricSpeakerIcon
+                size={toggleLabelSize * 2.5}
+                isPlaying={false}
+                className="text-white/70"
+              />
+              {/* Large Red X Overlay */}
+              <svg
+                width={toggleLabelSize * 2.5}
+                height={toggleLabelSize * 2.5}
+                viewBox="0 0 48 48"
+                className="absolute inset-0"
+                style={{ pointerEvents: 'none' }}
+              >
+                <line
+                  x1="8" y1="8" x2="40" y2="40"
+                  stroke="#ef4444"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="40" y1="8" x2="8" y2="40"
+                  stroke="#ef4444"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
             <ProModeToggle
               enabled={false}
               onChange={(enabled) => {

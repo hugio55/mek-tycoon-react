@@ -503,31 +503,43 @@ export default function PhaseCarousel({
 
       {/* Read More Lightbox - Use Phase I specific lightbox for order 1, generic for others */}
       {selectedPhase && selectedPhase.order === 1 && phaseISettings ? (
-        <PhaseILightbox
-          isVisible={showReadMore}
-          onClose={() => {
-            setShowReadMore(false);
-            setSelectedPhase(null);
-          }}
-          lightboxContent={phaseISettings.phaseILightboxContent}
-          textFont={phaseISettings.phaseITextFont}
-          textFontSize={phaseISettings.phaseITextFontSize}
-          textColor={phaseISettings.phaseITextColor}
-          videoScale={phaseISettings.phaseIVideoScale * 100}
-          videoPositionX={phaseISettings.phaseIVideoPositionX}
-          videoPositionY={phaseISettings.phaseIVideoPositionY}
-          backdropBlur={phaseISettings.phaseIBackdropBlur}
-        />
+        <>
+          {showReadMore && console.log('[🎯CAROUSEL] Showing Phase I Lightbox with settings:', {
+            content: phaseISettings.phaseILightboxContent?.substring(0, 50) + '...',
+            font: phaseISettings.phaseITextFont,
+            fontSize: phaseISettings.phaseITextFontSize,
+            videoScale: phaseISettings.phaseIVideoScale,
+            backdropBlur: phaseISettings.phaseIBackdropBlur
+          })}
+          <PhaseILightbox
+            isVisible={showReadMore}
+            onClose={() => {
+              setShowReadMore(false);
+              setSelectedPhase(null);
+            }}
+            lightboxContent={phaseISettings.phaseILightboxContent}
+            textFont={phaseISettings.phaseITextFont}
+            textFontSize={phaseISettings.phaseITextFontSize}
+            textColor={phaseISettings.phaseITextColor}
+            videoScale={phaseISettings.phaseIVideoScale * 100}
+            videoPositionX={phaseISettings.phaseIVideoPositionX}
+            videoPositionY={phaseISettings.phaseIVideoPositionY}
+            backdropBlur={phaseISettings.phaseIBackdropBlur}
+          />
+        </>
       ) : selectedPhase ? (
-        <PhaseReadMoreLightbox
-          isVisible={showReadMore}
-          onClose={() => {
-            setShowReadMore(false);
-            setSelectedPhase(null);
-          }}
-          phaseTitle={selectedPhase.title}
-          fullDescription={selectedPhase.fullDescription || ''}
-        />
+        <>
+          {showReadMore && console.log('[🎯CAROUSEL] Showing generic Read More Lightbox for:', selectedPhase.title)}
+          <PhaseReadMoreLightbox
+            isVisible={showReadMore}
+            onClose={() => {
+              setShowReadMore(false);
+              setSelectedPhase(null);
+            }}
+            phaseTitle={selectedPhase.title}
+            fullDescription={selectedPhase.fullDescription || ''}
+          />
+        </>
       ) : null}
     </div>
   );

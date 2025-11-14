@@ -35,6 +35,21 @@ export default function PhaseILightbox({
   const [mounted, setMounted] = useState(false);
   const [savedScrollY, setSavedScrollY] = useState(0);
 
+  // Debug log props when component renders
+  useEffect(() => {
+    console.log('[🎯PHASE-I-LIGHTBOX] Props received:', {
+      isVisible,
+      lightboxContent: lightboxContent.substring(0, 50) + '...',
+      textFont,
+      textFontSize,
+      textColor,
+      videoScale,
+      videoPositionX,
+      videoPositionY,
+      backdropBlur
+    });
+  }, [isVisible, lightboxContent, textFont, textFontSize, textColor, videoScale, videoPositionX, videoPositionY, backdropBlur]);
+
   useEffect(() => {
     setMounted(true);
     return () => setMounted(false);
