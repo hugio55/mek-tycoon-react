@@ -1943,17 +1943,18 @@ export default function LandingPage() {
           </div>
 
           {/* Footer - Now properly positioned below phase carousel */}
-          <div
-            className="border-t border-gray-700 flex items-center justify-center relative"
-            style={{
-              height: `${footerHeight}px`,
-              paddingTop: `${socialIconPaddingTop}px`,
-              paddingBottom: `${socialIconPaddingBottom}px`,
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              backgroundColor: 'rgba(17, 24, 39, 0.3)',
-            }}
-          >
+          {!showAudioConsent && (
+            <div
+              className="border-t border-gray-700 flex items-center justify-center relative"
+              style={{
+                height: `${footerHeight}px`,
+                paddingTop: `${socialIconPaddingTop}px`,
+                paddingBottom: `${socialIconPaddingBottom}px`,
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                backgroundColor: 'rgba(17, 24, 39, 0.3)',
+              }}
+            >
             {/* OE Logo */}
             <div
               className="absolute"
