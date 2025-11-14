@@ -201,28 +201,27 @@ export default function PhaseAccordion({
             <div
               ref={(el) => (contentRefs.current[index] = el)}
               style={{
-                transformOrigin: 'top',
-                transform: isSafari
-                  ? (isExpanded ? 'translateY(0) translateZ(0)' : 'translateY(-100%) translateZ(0)')
-                  : (isExpanded ? 'scaleY(1)' : 'scaleY(0)'),
-                WebkitTransform: isSafari
-                  ? (isExpanded ? 'translateY(0) translateZ(0)' : 'translateY(-100%) translateZ(0)')
-                  : (isExpanded ? 'scaleY(1)' : 'scaleY(0)'),
-                opacity: isExpanded ? 1 : 0,
-                maxHeight: isExpanded ? '500px' : '0',
                 overflow: 'hidden',
+                maxHeight: isExpanded ? '500px' : '0',
+                opacity: isExpanded ? 1 : 0,
+                clipPath: isSafari
+                  ? (isExpanded ? 'inset(0 0 0 0)' : 'inset(0 0 100% 0)')
+                  : undefined,
+                WebkitClipPath: isSafari
+                  ? (isExpanded ? 'inset(0 0 0 0)' : 'inset(0 0 100% 0)')
+                  : undefined,
                 transition: isSafari
-                  ? 'transform 500ms cubic-bezier(0.4, 0, 0.2, 1), opacity 400ms cubic-bezier(0.4, 0, 0.2, 1), max-height 500ms cubic-bezier(0.4, 0, 0.2, 1)'
+                  ? 'clip-path 500ms cubic-bezier(0.4, 0, 0.2, 1), opacity 400ms cubic-bezier(0.4, 0, 0.2, 1), max-height 500ms cubic-bezier(0.4, 0, 0.2, 1)'
                   : 'transform 500ms cubic-bezier(0.4, 0, 0.2, 1), opacity 400ms cubic-bezier(0.4, 0, 0.2, 1), max-height 500ms cubic-bezier(0.4, 0, 0.2, 1)',
                 WebkitTransition: isSafari
-                  ? 'transform 500ms cubic-bezier(0.4, 0, 0.2, 1), opacity 400ms cubic-bezier(0.4, 0, 0.2, 1), max-height 500ms cubic-bezier(0.4, 0, 0.2, 1)'
+                  ? '-webkit-clip-path 500ms cubic-bezier(0.4, 0, 0.2, 1), opacity 400ms cubic-bezier(0.4, 0, 0.2, 1), max-height 500ms cubic-bezier(0.4, 0, 0.2, 1)'
                   : undefined,
-                willChange: 'transform, opacity',
-                WebkitWillChange: 'transform, opacity',
-                backfaceVisibility: 'hidden',
-                WebkitBackfaceVisibility: 'hidden',
-                perspective: 1000,
-                WebkitPerspective: 1000,
+                transform: isSafari ? 'translateZ(0)' : (isExpanded ? 'scaleY(1)' : 'scaleY(0)'),
+                WebkitTransform: isSafari ? 'translateZ(0)' : undefined,
+                transformOrigin: 'top center',
+                WebkitTransformOrigin: 'top center',
+                willChange: isSafari ? 'clip-path, opacity' : 'transform, opacity',
+                WebkitWillChange: isSafari ? 'clip-path, opacity' : 'transform, opacity',
               }}
             >
               <div

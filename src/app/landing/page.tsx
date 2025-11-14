@@ -11,6 +11,7 @@ import BetaSignupLightbox from '@/components/BetaSignupLightbox';
 import FillTextButton from '@/components/controls/FillTextButton';
 import { getMediaUrl } from '@/lib/media-url';
 import { isSafariOrIOS } from '@/lib/browser-detection';
+import { useLoaderContext } from '@/features/page-loader';
 
 interface Star {
   x: number;
@@ -158,6 +159,9 @@ export default function LandingPage() {
   const compositeCanvasRef = useRef<HTMLCanvasElement>(null);
   const tempCanvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Universal page loader context
+  const { isLoading } = useLoaderContext();
+
   // Viewport detection for responsive settings
   const [isMobile, setIsMobile] = useState(false);
   const [windowWidth, setWindowWidth] = useState(0);
@@ -302,6 +306,7 @@ export default function LandingPage() {
   // Audio controls
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [showAudioConsent, setShowAudioConsent] = useState(false);
+  const [allowAudioLightbox, setAllowAudioLightbox] = useState(false); // Gates lightbox after universal loader completes
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
   const [lockScrollForConsent, setLockScrollForConsent] = useState(false);
 
@@ -638,7 +643,7 @@ export default function LandingPage() {
     }
   }, []);
 
-  // Check for audio consent on mount
+  // Check for audio consent on mount (GATED by universal loader completion)
   useEffect(() => {
     window.scrollTo(0, 0);
     console.log('[🎬ANIMATION] === Component Mounted ===');
@@ -647,6 +652,13 @@ export default function LandingPage() {
     console.log('[🔒FORCE] dbSettings available:', !!dbSettings);
     console.log('[🔒FORCE] dbSettings.forceShowAudioConsent value:', dbSettings?.forceShowAudioConsent);
     console.log('[🔒FORCE] Type of forceShowAudioConsent:', typeof dbSettings?.forceShowAudioConsent);
+    console.log('[🚪GATE] allowAudioLightbox:', allowAudioLightbox);
+
+    // GATE: Wait for universal loader to complete before showing audio lightbox
+    if (!allowAudioLightbox) {
+      console.log('[🚪GATE] Audio lightbox blocked - waiting for universal loader to complete');
+      return;
+    }
 
     try {
       // Check if forced to show consent via Convex config
@@ -759,7 +771,25 @@ export default function LandingPage() {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('message', handlePostMessage);
     };
-  }, [dbSettings?.forceShowAudioConsent]);
+  }, [dbSettings?.forceShowAudioConsent, allowAudioLightbox]);
+
+  // PROGRESSION GATE: Only allow audio lightbox after universal loader completes
+  useEffect(() => {
+    if (isLoading) {
+      console.log('[⏳LOADER] Universal loader still running - audio lightbox blocked');
+      return; // Wait for loader to finish
+    }
+
+    console.log('[✅LOADER] Universal loader complete - scheduling audio lightbox delay');
+
+    // Add 500ms buffer after loader completes for smooth transition
+    const timer = setTimeout(() => {
+      console.log('[🎭LIGHTBOX] Allowing audio consent lightbox to appear');
+      setAllowAudioLightbox(true);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [isLoading]);
 
   // STATE VALIDATION: Ensure showAudioConsent and animationStage are mutually exclusive
   // Prevents browser navigation from causing invalid state combinations
@@ -1739,7 +1769,7 @@ export default function LandingPage() {
           backgroundImage: `url(${getMediaUrl('/colored-bg-1.webp')})`,
           backgroundSize: 'cover',
           backgroundPosition: isMobile && fixedViewportHeight > 0
-            ? `center ${(fixedViewportHeight / 2) + bgYPosition}px`
+            ? `center ${fixedViewportHeight + bgYPosition}px`
             : `center calc(50% + ${bgYPosition}px)`,
           backgroundRepeat: 'no-repeat',
           touchAction: 'none',
