@@ -3693,7 +3693,7 @@ export default defineSchema({
   }),
 
   // UNIFIED landing page debug settings HISTORY (automatic backups before each save)
-  // Keeps last 50 versions with timestamps for recovery
+  // Keeps last 200 versions with timestamps for recovery (rolling window)
   landingDebugUnifiedHistory: defineTable({
     desktop: v.any(), // Desktop config snapshot
     mobile: v.any(), // Mobile config snapshot
@@ -3702,6 +3702,19 @@ export default defineSchema({
     description: v.optional(v.string()), // Optional description (e.g., "Auto-backup before save")
   })
     .index("by_timestamp", ["timestamp"]),
+
+  // PERMANENT landing page debug settings snapshots (never deleted)
+  // Every 20th backup + manual snapshots saved here forever
+  landingDebugUnifiedPermanentSnapshots: defineTable({
+    desktop: v.any(), // Desktop config snapshot
+    mobile: v.any(), // Mobile config snapshot
+    shared: v.any(), // Shared config snapshot
+    timestamp: v.number(), // When this snapshot was created
+    description: v.string(), // Description (e.g., "Auto-snapshot #20", "Manual backup")
+    snapshotType: v.union(v.literal("auto"), v.literal("manual")), // auto = every 20th, manual = user-created
+  })
+    .index("by_timestamp", ["timestamp"])
+    .index("by_type", ["snapshotType"]),
 
   // ===== BETA SIGNUPS =====
   // Beta signup stake addresses for rewarding early participants
