@@ -30,6 +30,11 @@ export default function PhaseAccordion({
   const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
+  // Debug logging for disableBlur prop
+  useEffect(() => {
+    console.log('[🔍BLUR-SYNC] PhaseAccordion received disableBlur prop:', disableBlur);
+  }, [disableBlur]);
+
   // Detect Safari browser on mount
   useEffect(() => {
     const checkSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
@@ -131,8 +136,19 @@ export default function PhaseAccordion({
                   background: isExpanded
                     ? 'linear-gradient(135deg, rgba(250,182,23,0.12), rgba(250,182,23,0.06))'
                     : 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-                  backdropFilter: (disableBlur || isSafari) ? 'none' : 'blur(2px)',
-                  WebkitBackdropFilter: (disableBlur || isSafari) ? 'none' : 'blur(2px)',
+                  backdropFilter: (() => {
+                    const blurValue = disableBlur ? 'none' : 'blur(2px)';
+                    if (index === 0) { // Only log for first button to avoid spam
+                      console.log('[🔍BLUR-SYNC] PhaseAccordion button backdropFilter:', {
+                        index,
+                        disableBlur,
+                        isSafari,
+                        blurValue
+                      });
+                    }
+                    return blurValue;
+                  })(),
+                  WebkitBackdropFilter: disableBlur ? 'none' : 'blur(2px)',
                   transition: 'background 150ms cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               />

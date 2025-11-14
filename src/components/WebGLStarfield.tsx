@@ -574,7 +574,7 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
     // Use instanced mesh for efficient rendering of many identical quads
     // Each streak is a quad (2 triangles = 6 vertices)
     const lineLength = props.lineLength3 * 50; // Scale up to make visible (2 * 50 = 100 units)
-    const lineWidth = 2; // Width of streak in units
+    const lineWidth = 4; // Width of streak in units (increased from 2 for better visibility)
     const maxZ = 2000;
 
     // Create a single quad geometry (will be instanced)
@@ -608,11 +608,19 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
 
     // Set initial transforms for each instance
     const matrix = new THREE.Matrix4();
+    const quaternion = new THREE.Quaternion();
+    // Rotate 90° around X-axis so plane faces camera (perpendicular to Z-axis)
+    quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+
     for (let i = 0; i < particleCount; i++) {
       const pos = positions[i];
       // Position the quad at the streak location
       // Offset by half lineLength so it extends forward from position
-      matrix.makeTranslation(pos.x, pos.y, pos.z + lineLength / 2);
+      matrix.compose(
+        new THREE.Vector3(pos.x, pos.y, pos.z + lineLength / 2),
+        quaternion,
+        new THREE.Vector3(1, 1, 1)
+      );
       instancedMesh.setMatrixAt(i, matrix);
     }
 
@@ -629,8 +637,12 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
       count: particleCount,
       lineLength,
       lineWidth,
+      sliderValue: props.lineLength3,
+      multiplier: 50,
+      actualLength: lineLength,
       usingQuads: true,
-      note: 'Using instanced quads for proper width control'
+      rotation: '90° around X-axis to face camera',
+      note: 'Quads now perpendicular to Z-axis for visibility'
     });
 
   }, [
@@ -768,10 +780,8 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
         const particleCount = props.starFrequency3;
         const matrix = new THREE.Matrix4();
         const quaternion = new THREE.Quaternion();
-
-        // Calculate camera forward direction for billboarding
-        const cameraDirection = new THREE.Vector3(0, 0, -1);
-        cameraDirection.applyQuaternion(camera.quaternion);
+        // Fixed rotation: 90° around X-axis to face camera
+        quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
 
         for (let i = 0; i < particleCount; i++) {
           const pos = positions[i];
@@ -786,11 +796,8 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
             pos.z = -2000;
           }
 
-          // Create billboard rotation to face camera
-          // Quads are oriented along Z axis, need to rotate to face camera
-          quaternion.setFromRotationMatrix(camera.matrixWorld);
-
           // Build transformation matrix: rotation + position
+          // (quaternion already set above loop for efficiency)
           matrix.compose(
             new THREE.Vector3(pos.x, pos.y, pos.z + lineLength / 2),
             quaternion,
