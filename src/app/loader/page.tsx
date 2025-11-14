@@ -11,6 +11,7 @@ export default function LoaderDebugPage() {
   // Percentage Display Controls
   const [fontSize, setFontSize] = useState(48);
   const [spacing, setSpacing] = useState(16);
+  const [horizontalOffset, setHorizontalOffset] = useState(0);
   const [fontFamily, setFontFamily] = useState('Orbitron');
   const [chromaticOffset, setChromaticOffset] = useState(0);
   const [triangleSize, setTriangleSize] = useState(1);
@@ -83,10 +84,10 @@ export default function LoaderDebugPage() {
               </div>
             </div>
 
-            {/* Spacing Control */}
+            {/* Spacing Control (Vertical) */}
             <div>
               <label className="block text-gray-300 mb-2 text-sm font-semibold">
-                Spacing from Triangle: {spacing}px
+                Vertical Spacing: {spacing}px
               </label>
               <input
                 type="range"
@@ -99,6 +100,25 @@ export default function LoaderDebugPage() {
               <div className="flex justify-between text-xs text-gray-500 mt-1">
                 <span>-150px</span>
                 <span>64px</span>
+              </div>
+            </div>
+
+            {/* Horizontal Offset Control */}
+            <div>
+              <label className="block text-gray-300 mb-2 text-sm font-semibold">
+                Horizontal Offset: {horizontalOffset}px
+              </label>
+              <input
+                type="range"
+                min="-200"
+                max="200"
+                value={horizontalOffset}
+                onChange={(e) => setHorizontalOffset(Number(e.target.value))}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>-200px</span>
+                <span>200px</span>
               </div>
             </div>
 
@@ -188,6 +208,7 @@ export default function LoaderDebugPage() {
                   percentage={percentage}
                   fontSize={fontSize}
                   spacing={spacing}
+                  horizontalOffset={horizontalOffset}
                   fontFamily={fontFamily}
                 />
               </div>

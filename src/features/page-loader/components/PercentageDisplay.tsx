@@ -7,13 +7,15 @@ interface PercentageDisplayProps {
   fontSize?: number;
   fontFamily?: string;
   spacing?: number;
+  horizontalOffset?: number;
 }
 
 export function PercentageDisplay({
   percentage,
   fontSize = 48,
   fontFamily = 'Orbitron',
-  spacing = 16
+  spacing = 16,
+  horizontalOffset = 0
 }: PercentageDisplayProps) {
   const isComplete = percentage >= 100;
   const roundedPercentage = Math.round(percentage);
@@ -21,7 +23,10 @@ export function PercentageDisplay({
   return (
     <div
       className="flex items-center justify-center"
-      style={{ marginTop: `${spacing}px` }}
+      style={{
+        marginTop: `${spacing}px`,
+        marginLeft: `${horizontalOffset}px`
+      }}
     >
       <span
         className={`font-bold transition-all duration-500 ${
