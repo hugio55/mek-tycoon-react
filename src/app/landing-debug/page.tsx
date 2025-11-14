@@ -791,7 +791,7 @@ export default function LandingDebugPage() {
   const handleRestoreBackup = async (backupId: string) => {
     if (!backupHistory) return;
 
-    const backup = backupHistory.find(b => b._id === backupId);
+    const backup = backupHistory.find((b: any) => b._id === backupId);
     if (!backup) return;
 
     const confirmMsg = `Restore settings from ${formatBackupTime(backup._creationTime)}?\n\nSample values from this backup:\n` +
@@ -1162,7 +1162,7 @@ export default function LandingDebugPage() {
                 </div>
               ) : (
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {backupHistory.map((backup, index) => (
+                  {backupHistory.map((backup: any, index: number) => (
                     <div
                       key={backup._id}
                       className="bg-gray-900 border border-gray-700 rounded-lg p-3 hover:border-yellow-500/50 transition-colors"
