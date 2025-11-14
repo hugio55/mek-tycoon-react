@@ -163,6 +163,10 @@ const DEFAULT_CONFIG = {
     joinBetaHorizontalOffset: 0,
     joinBetaVerticalOffset: 0,
     audioLightboxDescriptionFontSize: 16,
+    // Mobile layout controls (NEW)
+    mobilePhaseFooterSpacing: 32,
+    mobilePhaseButtonMaxWidth: 600,
+    mobileBreakpoint: 1024,
   },
   shared: {
     // Settings that apply to both desktop and mobile

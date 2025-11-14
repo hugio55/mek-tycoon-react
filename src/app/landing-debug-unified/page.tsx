@@ -261,8 +261,53 @@ export default function UnifiedLandingDebugPage() {
                 <span className="text-yellow-400 text-sm">{mobileConfig.bgStarCount} stars</span>
               </div>
 
+              {/* Mobile Breakpoint */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-2">Mobile Breakpoint (Desktop/Mobile Threshold)</label>
+                <input
+                  type="range"
+                  min="768"
+                  max="1280"
+                  step="1"
+                  value={mobileConfig.mobileBreakpoint || 1024}
+                  onChange={(e) => setMobileConfig({ ...mobileConfig, mobileBreakpoint: Number(e.target.value) })}
+                  className="w-full h-11"
+                />
+                <span className="text-yellow-400 text-sm">{mobileConfig.mobileBreakpoint}px (Desktop when ≥ this value)</span>
+              </div>
+
+              {/* Phase Button Max Width */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-2">Phase Button Max Width</label>
+                <input
+                  type="range"
+                  min="200"
+                  max="800"
+                  step="10"
+                  value={mobileConfig.mobilePhaseButtonMaxWidth || 600}
+                  onChange={(e) => setMobileConfig({ ...mobileConfig, mobilePhaseButtonMaxWidth: Number(e.target.value) })}
+                  className="w-full h-11"
+                />
+                <span className="text-yellow-400 text-sm">{mobileConfig.mobilePhaseButtonMaxWidth}px</span>
+              </div>
+
+              {/* Phase to Footer Spacing */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-2">Phase IV to Footer Spacing</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="200"
+                  step="5"
+                  value={mobileConfig.mobilePhaseFooterSpacing || 32}
+                  onChange={(e) => setMobileConfig({ ...mobileConfig, mobilePhaseFooterSpacing: Number(e.target.value) })}
+                  className="w-full h-11"
+                />
+                <span className="text-yellow-400 text-sm">{mobileConfig.mobilePhaseFooterSpacing}px</span>
+              </div>
+
               <p className="text-sm text-gray-500 mt-4">
-                These settings apply when viewport width &lt; 1024px
+                These settings apply when viewport width &lt; {mobileConfig.mobileBreakpoint || 1024}px
               </p>
             </div>
           </div>
