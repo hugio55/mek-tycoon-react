@@ -12,6 +12,7 @@ import FillTextButton from '@/components/controls/FillTextButton';
 import { getMediaUrl } from '@/lib/media-url';
 import { isSafariOrIOS } from '@/lib/browser-detection';
 import { useLoaderContext } from '@/features/page-loader';
+import WebGLStarfield from '@/components/WebGLStarfield';
 
 interface Star {
   x: number;
@@ -1753,17 +1754,55 @@ export default function LandingPage() {
         }}
       />
 
-      {/* Fixed canvas layer - hidden initially, only shows during logo stage */}
+      {/* WebGL Starfield - GPU-accelerated star rendering (replaces Canvas 2D) */}
+      <WebGLStarfield
+        enabled={starsEnabled}
+        animationStage={animationStage}
+        starScale={starScale}
+        starSpeed={starSpeed}
+        starFrequency={starFrequency}
+        twinkleAmount={twinkleAmount}
+        twinkleSpeed={twinkleSpeed}
+        twinkleSpeedRandomness={twinkleSpeedRandomness}
+        sizeRandomness={sizeRandomness}
+        starScale2={starScale2}
+        starSpeed2={starSpeed2}
+        starFrequency2={starFrequency2}
+        twinkleAmount2={twinkleAmount2}
+        twinkleSpeed2={twinkleSpeed2}
+        twinkleSpeedRandomness2={twinkleSpeedRandomness2}
+        sizeRandomness2={sizeRandomness2}
+        starScale3={starScale3}
+        starSpeed3={starSpeed3}
+        starFrequency3={starFrequency3}
+        lineLength3={lineLength3}
+        twinkleAmount3={twinkleAmount3}
+        twinkleSpeed3={twinkleSpeed3}
+        twinkleSpeedRandomness3={twinkleSpeedRandomness3}
+        sizeRandomness3={sizeRandomness3}
+        bgStarCount={bgStarCount}
+        bgStarTwinkleAmount={bgStarTwinkleAmount}
+        bgStarTwinkleSpeed={bgStarTwinkleSpeed}
+        bgStarTwinkleSpeedRandomness={bgStarTwinkleSpeedRandomness}
+        bgStarSizeRandomness={bgStarSizeRandomness}
+        bgStarMinBrightness={bgStarMinBrightness}
+        bgStarMaxBrightness={bgStarMaxBrightness}
+        starFadePosition={starFadePosition}
+        starFadeFeatherSize={starFadeFeatherSize}
+      />
+
+      {/* CANVAS FALLBACK (COMMENTED OUT - KEPT FOR REFERENCE)
       <canvas
         ref={canvasRef}
         className="fixed inset-0 w-full h-full z-[1] pointer-events-none"
         style={{
           display: 'block',
           touchAction: 'none',
-          opacity: animationStage === 'logo' ? 1 : 0, // Only visible during logo stage
+          opacity: animationStage === 'logo' ? 1 : 0,
           transition: animationStage === 'logo' ? 'opacity 1500ms ease-out' : 'none',
         }}
       />
+      */}
 
       {/* Scrollable content layer */}
       <div
@@ -2018,7 +2057,7 @@ export default function LandingPage() {
       </div>
 
       {/* Phase Timeline & Footer Wrapper - Ensures footer stays below carousel */}
-      {!showAudioConsent && logoVideoLoaded && (
+      {!showAudioConsent && logoVideoLoaded && animationStage === 'logo' && (
         <div
           className={isMobile ? "relative left-0 z-[20]" : "absolute left-0 z-[20]"}
           style={{

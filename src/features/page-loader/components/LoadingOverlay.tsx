@@ -60,7 +60,8 @@ export function LoadingOverlay({
     }
   }, [isComplete, isFadingOut, onComplete, setIsLoading]);
 
-  if (!mounted) return null;
+  // Don't render until both mounted AND settings have loaded
+  if (!mounted || savedSettings === undefined) return null;
 
   const overlayContent = (
     <div
