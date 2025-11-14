@@ -186,17 +186,76 @@ export default function LandingStateDebugPage() {
         </div>
       </div>
 
-      {/* Manual State Controls */}
-      <div className="mb-8 p-6 bg-gray-900/50 border border-gray-700">
-        <h2 className="text-xl font-bold mb-4">Manual State Controls</h2>
+      {/* Real-Time Landing Page Controls */}
+      <div className="mb-8 p-6 bg-blue-900/20 border-2 border-blue-500">
+        <h2 className="text-xl font-bold mb-4">🎮 Real-Time Landing Page Control</h2>
         <div className="text-sm text-gray-400 mb-4">
-          Click buttons to manually trigger state transitions (for testing)
+          Open /landing in another tab and control its state from here in real-time
+        </div>
+
+        {/* Open Landing Page Button */}
+        <div className="mb-4">
+          <button
+            onClick={() => window.open('/landing', '_blank')}
+            className="px-4 py-2 bg-green-500/20 border-2 border-green-500/50 hover:bg-green-500/30 transition-colors font-bold"
+          >
+            🚀 Open Landing Page in New Tab
+          </button>
+          <div className="text-xs text-gray-500 mt-2">
+            Tip: Arrange windows side-by-side to see changes instantly
+          </div>
+        </div>
+
+        {/* State Control Buttons */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {states.map(state => (
+            <button
+              key={state.id}
+              onClick={() => {
+                // Send command to landing page via localStorage
+                localStorage.setItem(
+                  'mek-debug-trigger',
+                  JSON.stringify({ action: 'set-state', state: state.id })
+                );
+                logEvent(`Sent command to landing page: ${state.name}`, state.id);
+
+                // Also trigger storage event manually for same-tab testing
+                window.dispatchEvent(
+                  new StorageEvent('storage', {
+                    key: 'mek-debug-trigger',
+                    newValue: JSON.stringify({ action: 'set-state', state: state.id }),
+                  })
+                );
+              }}
+              className="px-3 py-2 text-sm border transition-colors bg-blue-500/20 border-blue-500/50 hover:bg-blue-500/30 hover:border-blue-500"
+            >
+              {state.name.replace('State ', '')}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 text-xs text-yellow-200">
+          <div className="font-bold mb-1">💡 How it works:</div>
+          <ul className="list-disc list-inside space-y-1">
+            <li>Click a state button above</li>
+            <li>Landing page receives command via localStorage event</li>
+            <li>Landing page instantly jumps to that state</li>
+            <li>Watch the visual changes in real-time!</li>
+          </ul>
+        </div>
+      </div>
+
+      {/* Manual State Controls (Local to Debug Page) */}
+      <div className="mb-8 p-6 bg-gray-900/50 border border-gray-700">
+        <h2 className="text-xl font-bold mb-4">📊 Local State Tracker</h2>
+        <div className="text-sm text-gray-400 mb-4">
+          Track state transitions locally (for reference only, does not affect landing page)
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {states.map(state => (
             <button
               key={state.id}
-              onClick={() => logEvent(`Manual transition to ${state.name}`, state.id)}
+              onClick={() => logEvent(`Local tracking: ${state.name}`, state.id)}
               className={`px-3 py-2 text-sm border transition-colors ${
                 currentState === state.id
                   ? 'bg-yellow-500/30 border-yellow-500 cursor-not-allowed'
