@@ -1982,7 +1982,7 @@ export default function LandingPage() {
       </div>
 
       {/* Phase Timeline & Footer Wrapper - Ensures footer stays below carousel */}
-      {!showAudioConsent && (
+      {!showAudioConsent && logoVideoLoaded && (
         <div
           className={isMobile ? "relative left-0 z-[20]" : "absolute left-0 z-[20]"}
           style={{
@@ -1990,6 +1990,9 @@ export default function LandingPage() {
             marginTop: isMobile ? `${96 + phaseColumnYOffset}px` : undefined,
             width: '100%',
             minHeight: isMobile ? 'auto' : undefined,
+            opacity: 0,
+            animation: 'fadeIn 1000ms ease-out forwards',
+            animationDelay: '500ms',
           }}
         >
           {/* Phase Carousel */}
@@ -2195,10 +2198,14 @@ export default function LandingPage() {
         }}
       />
 
-      {/* Speaker fade-in animation */}
+      {/* Animations */}
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes speakerFadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+          }
+          @keyframes fadeIn {
             0% { opacity: 0; }
             100% { opacity: 1; }
           }
