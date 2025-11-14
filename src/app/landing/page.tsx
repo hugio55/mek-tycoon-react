@@ -928,12 +928,10 @@ export default function LandingPage() {
   // Debug logging for progression gates
   useEffect(() => {
     console.log('[🎬PROGRESSION] Phase cards visibility check:', {
-      showAudioConsent,
-      logoVideoLoaded,
-      animationStage,
-      shouldShow: !showAudioConsent && logoVideoLoaded && animationStage === 'logo'
+      progressionState,
+      shouldShow: progressionState === 'CONTENT_COMPLETE'
     });
-  }, [showAudioConsent, logoVideoLoaded, animationStage]);
+  }, [progressionState]);
 
   // Load config from Convex database (primary source) with localStorage fallback
   useEffect(() => {
@@ -1630,6 +1628,11 @@ export default function LandingPage() {
 
     let animationId: number;
     const animate = (currentTime: number = 0) => {
+      // If stars are disabled, stop the animation loop entirely
+      if (!starsEnabled) {
+        return; // Don't schedule next frame
+      }
+
       animationId = requestAnimationFrame(animate);
 
       // FPS limiting: skip frames if we're rendering too fast
@@ -1639,11 +1642,6 @@ export default function LandingPage() {
 
       // Clear with transparency to show background image
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // If stars are disabled, skip all star rendering (massive performance boost)
-      if (!starsEnabled) {
-        return;
-      }
 
       // Draw distant background stars (very slow drift) with gradient fade
       const time = Date.now() * 0.001; // Convert to seconds
@@ -1876,7 +1874,10 @@ export default function LandingPage() {
           backgroundRepeat: 'no-repeat',
           touchAction: 'none',
           pointerEvents: 'none',
-          opacity: showAudioConsent ? 0.6 : (animationStage === 'initial' ? 0 : 1), // Darkened when lightbox shows, hidden during initial
+          opacity:
+            progressionState === 'WAITING_FOR_LOADER' ? 0 : // Hidden during loader
+            progressionState === 'WAITING_FOR_CONSENT' || progressionState === 'CONSENT_CLOSING' ? 0.6 : // Darkened during consent
+            1, // Full brightness in MAIN_CONTENT and CONTENT_COMPLETE
         }}
       />
 
@@ -1937,7 +1938,9 @@ export default function LandingPage() {
           paddingTop: viewportHeight > 0
             ? `calc(50vh - ${logoSize / 2}px - ${logoYPosition}vh)`
             : '50vh',
-          opacity: showAudioConsent ? 0 : 1, // Hide when lightbox visible
+          opacity:
+            progressionState === 'WAITING_FOR_LOADER' || progressionState === 'WAITING_FOR_CONSENT' || progressionState === 'CONSENT_CLOSING' ? 0 : // Hidden during loader and consent
+            1, // Visible in MAIN_CONTENT and CONTENT_COMPLETE
           transition: 'opacity 300ms ease-out',
         }}
       >
@@ -2183,7 +2186,7 @@ export default function LandingPage() {
       </div>
 
       {/* Phase Timeline & Footer Wrapper - Ensures footer stays below carousel */}
-      {!showAudioConsent && logoVideoLoaded && animationStage === 'logo' && (
+      {progressionState === 'CONTENT_COMPLETE' && (
         <div
           className={isMobile ? "relative left-0 z-[20]" : "absolute left-0 z-[20]"}
           style={{
