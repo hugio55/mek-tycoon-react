@@ -182,6 +182,9 @@ export default function LandingDebugPage() {
   // NEW: Desktop/Mobile mode toggle
   const [activeMode, setActiveMode] = useState<'desktop' | 'mobile'>('desktop');
 
+  // NEW: Backup history panel state
+  const [showBackupHistory, setShowBackupHistory] = useState(false);
+
   // Convex hooks - UNIFIED table (must be declared before useEffect that uses them)
   const unifiedSettings = useQuery(api.landingDebugUnified.getUnifiedLandingDebugSettings);
   const updateUnifiedSettings = useMutation(api.landingDebugUnified.updateUnifiedLandingDebugSettings);
@@ -766,6 +769,62 @@ export default function LandingDebugPage() {
     setConfig(prev => ({ ...prev, activeTab: tabId }));
   };
 
+  // Format timestamp for backup history display
+  const formatBackupTime = (timestamp: number) => {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (seconds < 60) return `${seconds} seconds ago`;
+    if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+    if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    if (days < 7) return `${days} day${days !== 1 ? 's' : ''} ago`;
+
+    const date = new Date(timestamp);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+  };
+
+  // Restore from backup
+  const handleRestoreBackup = async (backupId: string) => {
+    if (!backupHistory) return;
+
+    const backup = backupHistory.find(b => b._id === backupId);
+    if (!backup) return;
+
+    const confirmMsg = `Restore settings from ${formatBackupTime(backup._creationTime)}?\n\nSample values from this backup:\n` +
+      `- Logo Size: ${backup.desktop?.logoSize ?? 'N/A'}\n` +
+      `- Star Scale: ${backup.desktop?.starScale ?? 'N/A'}\n` +
+      `- BG Star Count: ${backup.desktop?.bgStarCount ?? 'N/A'}\n\n` +
+      `Current settings will be backed up before restoring.`;
+
+    if (!confirm(confirmMsg)) return;
+
+    setSaveState('saving');
+    try {
+      await restoreBackup({ backupId });
+
+      // Reload settings from database
+      if (unifiedSettings) {
+        const modeConfig = activeMode === 'desktop' ? unifiedSettings.desktop : unifiedSettings.mobile;
+        const mergedConfig: ConfigType = { ...DEFAULT_CONFIG, ...unifiedSettings.shared, ...modeConfig };
+        setConfig(mergedConfig);
+      }
+
+      setSaveState('saved');
+      setTimeout(() => {
+        setSaveState('idle');
+        alert('✅ Settings restored successfully!');
+      }, 1000);
+    } catch (err) {
+      console.error('[RESTORE] Failed to restore backup:', err);
+      setSaveState('idle');
+      alert('❌ Failed to restore backup. See console for details.');
+    }
+  };
+
   const resetToDefaults = async () => {
     if (!confirm('Reset all settings to defaults? This cannot be undone.')) return;
 
@@ -1029,9 +1088,27 @@ export default function LandingDebugPage() {
           <div className="mt-3 pt-3 border-t border-gray-700">
             <button
               onClick={async () => {
-                if (!confirm('Copy all desktop settings to mobile? This will overwrite current mobile settings.')) {
+                // Show what will be overwritten
+                const currentMobile = unifiedSettings?.mobile;
+                const desktopValues = unifiedSettings?.desktop;
+
+                const confirmMsg = `Copy all desktop settings to mobile?\n\n` +
+                  `This will overwrite current mobile values:\n` +
+                  `• Logo Size: ${currentMobile?.logoSize ?? 'N/A'} → ${desktopValues?.logoSize ?? 'N/A'}\n` +
+                  `• Star Scale: ${currentMobile?.starScale ?? 'N/A'} → ${desktopValues?.starScale ?? 'N/A'}\n` +
+                  `• BG Star Count: ${currentMobile?.bgStarCount ?? 'N/A'} → ${desktopValues?.bgStarCount ?? 'N/A'}\n` +
+                  `...and ${Object.keys(desktopValues || {}).length - 3} more settings\n\n` +
+                  `Current mobile settings will be backed up first.`;
+
+                if (!confirm(confirmMsg)) {
                   return;
                 }
+
+                // Second confirmation for destructive operation
+                if (!confirm('Are you SURE? This cannot be undone except by restoring from backup.')) {
+                  return;
+                }
+
                 try {
                   const result = await copyDesktopToMobile();
                   if (result.success) {
@@ -1056,6 +1133,97 @@ export default function LandingDebugPage() {
               Use this to sync mobile with desktop. Mobile will start identical to desktop, then you can adjust specific values.
             </p>
           </div>
+        </div>
+
+        {/* Backup History Panel */}
+        <div className="mb-4 bg-gray-800 border-2 border-yellow-500/50 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setShowBackupHistory(!showBackupHistory)}
+            className="w-full px-4 py-3 bg-gray-750 hover:bg-gray-700 transition-colors flex items-center justify-between"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-lg">💾</span>
+              <span className="font-bold text-yellow-400">Backup History</span>
+              <span className="text-xs text-gray-400">
+                ({backupHistory?.length || 0} backups)
+              </span>
+            </div>
+            <span className="text-yellow-400 text-xl">
+              {showBackupHistory ? '▼' : '▶'}
+            </span>
+          </button>
+
+          {showBackupHistory && (
+            <div className="p-4 border-t border-gray-700">
+              {!backupHistory || backupHistory.length === 0 ? (
+                <div className="text-center text-gray-400 py-6">
+                  <p className="text-lg mb-2">📭 No backup history yet</p>
+                  <p className="text-sm">Backups are created automatically when you change settings</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {backupHistory.map((backup, index) => (
+                    <div
+                      key={backup._id}
+                      className="bg-gray-900 border border-gray-700 rounded-lg p-3 hover:border-yellow-500/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-mono text-gray-500">
+                              #{backupHistory.length - index}
+                            </span>
+                            <span className="text-sm font-semibold text-yellow-400">
+                              {formatBackupTime(backup._creationTime)}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-400 space-y-0.5">
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                              <div>
+                                <span className="text-gray-500">Logo Size:</span>{' '}
+                                <span className="text-white">{backup.desktop?.logoSize ?? 'N/A'}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Star Scale:</span>{' '}
+                                <span className="text-white">{backup.desktop?.starScale ?? 'N/A'}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">BG Stars:</span>{' '}
+                                <span className="text-white">{backup.desktop?.bgStarCount ?? 'N/A'}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Desc Size:</span>{' '}
+                                <span className="text-white">{backup.desktop?.descriptionFontSize ?? 'N/A'}</span>
+                              </div>
+                            </div>
+                            {backup.description && (
+                              <div className="mt-1 text-gray-500 italic">
+                                {backup.description}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleRestoreBackup(backup._id)}
+                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition-colors whitespace-nowrap"
+                        >
+                          Restore
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {backupHistory && backupHistory.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-700 text-center">
+                  <p className="text-xs text-gray-400">
+                    Click "Restore" to revert to that backup. Current settings will be backed up first.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Header */}
