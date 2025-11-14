@@ -138,6 +138,8 @@ const DEFAULT_CONFIG = {
   socialIconVerticalPosition: 70,
   socialIconPaddingTop: 0,
   socialIconPaddingBottom: 0,
+  footerBlurAmount: 20,
+  footerEdgeFeathering: 0,
   // Mobile-specific controls
   mobileBreakpoint: 1024, // Pixel width where mobile view activates
   mobilePhaseFooterSpacing: 32, // Pixels of space between Phase IV and footer on mobile
@@ -266,6 +268,9 @@ export default function LandingPage() {
 
   // Dynamic viewport height tracking
   const [viewportHeight, setViewportHeight] = useState(0);
+
+  // Fixed initial viewport height for background (prevents mobile chrome jumping)
+  const [fixedViewportHeight, setFixedViewportHeight] = useState(0);
 
   // Motion blur controls - Layer 1
   const [motionBlurEnabled, setMotionBlurEnabled] = useState(DEFAULT_CONFIG.motionBlurEnabled);
@@ -582,6 +587,8 @@ export default function LandingPage() {
   const [socialIconVerticalPosition, setSocialIconVerticalPosition] = useState(DEFAULT_CONFIG.socialIconVerticalPosition);
   const [socialIconPaddingTop, setSocialIconPaddingTop] = useState(DEFAULT_CONFIG.socialIconPaddingTop);
   const [socialIconPaddingBottom, setSocialIconPaddingBottom] = useState(DEFAULT_CONFIG.socialIconPaddingBottom);
+  const [footerBlurAmount, setFooterBlurAmount] = useState(DEFAULT_CONFIG.footerBlurAmount);
+  const [footerEdgeFeathering, setFooterEdgeFeathering] = useState(DEFAULT_CONFIG.footerEdgeFeathering);
 
   // Mobile-specific controls
   const [mobilePhaseFooterSpacing, setMobilePhaseFooterSpacing] = useState(DEFAULT_CONFIG.mobilePhaseFooterSpacing);
@@ -887,6 +894,8 @@ export default function LandingPage() {
           setSocialIconVerticalPosition(config.socialIconVerticalPosition ?? DEFAULT_CONFIG.socialIconVerticalPosition);
           setSocialIconPaddingTop(config.socialIconPaddingTop ?? DEFAULT_CONFIG.socialIconPaddingTop);
           setSocialIconPaddingBottom(config.socialIconPaddingBottom ?? DEFAULT_CONFIG.socialIconPaddingBottom);
+          setFooterBlurAmount(config.footerBlurAmount ?? DEFAULT_CONFIG.footerBlurAmount);
+          setFooterEdgeFeathering(config.footerEdgeFeathering ?? DEFAULT_CONFIG.footerEdgeFeathering);
           setDescriptionVerticalPosition(config.descriptionVerticalPosition ?? 0);
           setToggleGroupVerticalPosition(config.toggleGroupVerticalPosition ?? 0);
           setProceedButtonVerticalPosition(config.proceedButtonVerticalPosition ?? 0);
@@ -1020,6 +1029,8 @@ export default function LandingPage() {
           setSocialIconVerticalPosition(config.socialIconVerticalPosition ?? DEFAULT_CONFIG.socialIconVerticalPosition);
           setSocialIconPaddingTop(config.socialIconPaddingTop ?? DEFAULT_CONFIG.socialIconPaddingTop);
           setSocialIconPaddingBottom(config.socialIconPaddingBottom ?? DEFAULT_CONFIG.socialIconPaddingBottom);
+          setFooterBlurAmount(config.footerBlurAmount ?? DEFAULT_CONFIG.footerBlurAmount);
+          setFooterEdgeFeathering(config.footerEdgeFeathering ?? DEFAULT_CONFIG.footerEdgeFeathering);
           setDescriptionVerticalPosition(config.descriptionVerticalPosition ?? 0);
           setToggleGroupVerticalPosition(config.toggleGroupVerticalPosition ?? 0);
           setProceedButtonVerticalPosition(config.proceedButtonVerticalPosition ?? 0);
@@ -1062,6 +1073,9 @@ export default function LandingPage() {
 
     // Set initial height
     updateViewportHeight();
+
+    // Set fixed height ONCE on mount (for background stability on mobile)
+    setFixedViewportHeight(window.innerHeight);
 
     // Update on resize
     window.addEventListener('resize', updateViewportHeight);
@@ -2022,8 +2036,8 @@ export default function LandingPage() {
                 height: `${footerHeight}px`,
                 paddingTop: `${socialIconPaddingTop}px`,
                 paddingBottom: `${socialIconPaddingBottom}px`,
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
+                backdropFilter: footerBlurAmount > 0 ? `blur(${footerBlurAmount}px)` : 'none',
+                WebkitBackdropFilter: footerBlurAmount > 0 ? `blur(${footerBlurAmount}px)` : 'none',
                 backgroundColor: 'rgba(17, 24, 39, 0.3)',
               }}
             >
@@ -2141,6 +2155,18 @@ export default function LandingPage() {
                 </svg>
               </div>
             </div>
+
+            {/* Edge Feathering - Gradient fade at top of footer */}
+            {footerEdgeFeathering > 0 && (
+              <div
+                className="absolute left-0 right-0 pointer-events-none"
+                style={{
+                  top: `-${footerEdgeFeathering}px`,
+                  height: `${footerEdgeFeathering}px`,
+                  background: 'linear-gradient(to bottom, transparent, rgba(17, 24, 39, 0.3))',
+                }}
+              />
+            )}
           </div>
           )}
         </div>
