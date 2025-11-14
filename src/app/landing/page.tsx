@@ -72,6 +72,7 @@ const DEFAULT_CONFIG = {
   starSpeed3: 10,
   starFrequency3: 100,
   lineLength3: 2,
+  brightness3: 0.8,
   spawnDelay3: 50,
   twinkleAmount3: 0,
   twinkleSpeed3: 1,
