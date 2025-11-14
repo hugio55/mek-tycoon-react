@@ -7,23 +7,17 @@ import ProModeToggle from './controls/ProModeToggle';
 interface AudioConsentLightboxProps {
   onProceed: (audioEnabled: boolean) => void;
   isVisible: boolean;
-  toggleSize?: number; // Width in pixels, height will be half (default: 96)
   backdropDarkness?: number; // 0-100 percentage (default: 95)
   logoFadeDuration?: number; // milliseconds (default: 1000)
   lockScroll?: boolean; // Control scroll lock independently from visibility
-  toggleScale?: number; // Scale multiplier for toggle button (default: 1.0)
-  toggleTextGap?: number; // Gap between toggle and text in pixels (default: 24)
-  soundLabelFont?: string; // Font family for Sound On/Off text
-  soundLabelSize?: number; // Font size for Sound On/Off text
-  soundLabelColor?: string; // Color class for Sound On/Off text
-  soundLabelVerticalOffset?: number; // Vertical offset for Sound On/Off text
-  soundLabelHorizontalOffset?: number; // Horizontal offset for Sound On/Off text
-  proceedButtonSize?: number; // Scale multiplier for proceed button (default: 1.0)
-  descriptionVerticalPosition?: number; // Vertical position offset for description text
-  toggleGroupVerticalPosition?: number; // Vertical position offset for toggle + text
-  proceedButtonVerticalPosition?: number; // Vertical position offset for proceed button
-  audioDescriptionText?: string; // Customizable description text (default: "For full immersion...")
   audioConsentFadeDuration?: number; // Fade out duration in milliseconds (default: 500)
+  // New controls for two-toggle design
+  toggleSize?: number; // Scale multiplier for both toggle buttons (default: 1.0)
+  toggleGap?: number; // Gap between two toggles in pixels (default: 48)
+  toggleVerticalPosition?: number; // Vertical offset for entire toggle group (default: 0)
+  toggleLabelFont?: string; // Font family for SOUND/NO SOUND labels
+  toggleLabelSize?: number; // Font size for SOUND/NO SOUND labels
+  toggleLabelColor?: string; // Color class for SOUND/NO SOUND labels
 }
 
 const STORAGE_KEY_AUDIO = 'mek-audio-consent';
@@ -31,45 +25,20 @@ const STORAGE_KEY_AUDIO = 'mek-audio-consent';
 export default function AudioConsentLightbox({
   onProceed,
   isVisible,
-  toggleSize = 96,
   backdropDarkness = 95,
   logoFadeDuration = 1000,
   lockScroll = true,
-  toggleScale = 1.0,
-  toggleTextGap = 24,
-  soundLabelFont = 'Orbitron',
-  soundLabelSize = 16,
-  soundLabelColor = 'text-yellow-400/90',
-  soundLabelVerticalOffset = 0,
-  soundLabelHorizontalOffset = 0,
-  proceedButtonSize = 1.0,
-  descriptionVerticalPosition = 0,
-  toggleGroupVerticalPosition = 0,
-  proceedButtonVerticalPosition = 0,
-  audioDescriptionText = "For full immersion...",
-  audioConsentFadeDuration = 500
+  audioConsentFadeDuration = 500,
+  toggleSize = 1.0,
+  toggleGap = 48,
+  toggleVerticalPosition = 0,
+  toggleLabelFont = 'Orbitron',
+  toggleLabelSize = 18,
+  toggleLabelColor = 'text-yellow-400'
 }: AudioConsentLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [isFadingOut, setIsFadingOut] = useState(false);
-
-  // Calculate responsive dimensions
-  const toggleWidth = toggleSize;
-  const toggleHeight = toggleSize / 2;
-  const thumbSize = toggleHeight * 0.8; // 80% of height for proper padding
-  const thumbOffset = toggleHeight * 0.1; // 10% padding from edge
-  const thumbTranslate = toggleWidth - thumbSize - (thumbOffset * 2); // Distance to travel
-
-  // Ensure minimum touch target (44x44px WCAG requirement)
-  const minTouchSize = 44;
-  const effectiveWidth = Math.max(toggleWidth, minTouchSize);
-  const effectiveHeight = Math.max(toggleHeight, minTouchSize);
-
-  // Calculate text sizing based on toggle size (scale from base size of 96px)
-  const textScale = toggleSize / 96;
-  const labelTextSize = Math.max(24 * textScale, 16); // Min 16px, scales from 24px
-  const buttonTextSize = Math.max(16 * textScale, 14); // Min 14px, scales from 16px
-
   const [savedScrollY, setSavedScrollY] = useState(0);
 
   useEffect(() => {
@@ -85,18 +54,29 @@ export default function AudioConsentLightbox({
       e.preventDefault();
     };
 
+    const preventScroll = (e: Event) => {
+      e.preventDefault();
+    };
+
     if (isVisible && mounted) {
       const scrollY = window.scrollY;
       setSavedScrollY(scrollY);
+
+      // Lock both html and body to prevent scroll
+      const htmlElement = document.documentElement;
+      htmlElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
       document.body.style.top = `-${scrollY}px`;
       document.body.style.width = '100%';
       document.body.style.touchAction = 'none';
 
-      // Prevent touchmove on the backdrop
+      // Prevent touchmove and wheel events
       document.addEventListener('touchmove', preventTouchMove, { passive: false });
+      document.addEventListener('wheel', preventScroll, { passive: false });
     } else {
+      const htmlElement = document.documentElement;
+      htmlElement.style.overflow = '';
       document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.top = '';
@@ -104,17 +84,21 @@ export default function AudioConsentLightbox({
       document.body.style.touchAction = '';
       window.scrollTo(0, savedScrollY);
 
-      // Remove touchmove prevention
+      // Remove event listeners
       document.removeEventListener('touchmove', preventTouchMove);
+      document.removeEventListener('wheel', preventScroll);
     }
 
     return () => {
+      const htmlElement = document.documentElement;
+      htmlElement.style.overflow = '';
       document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.width = '';
       document.body.style.touchAction = '';
       document.removeEventListener('touchmove', preventTouchMove);
+      document.removeEventListener('wheel', preventScroll);
     };
   }, [isVisible, mounted, savedScrollY]);
 
@@ -295,10 +279,23 @@ export default function AudioConsentLightbox({
         {/* END OLD DESIGN */}
 
         {/* NEW DESIGN - TWO SIDE-BY-SIDE PROMO TOGGLES */}
-        <div className="flex items-center justify-center gap-12">
+        <div
+          className="flex items-center justify-center"
+          style={{
+            gap: `${toggleGap}px`,
+            transform: `translateY(${toggleVerticalPosition}px)`,
+            scale: `${toggleSize}`
+          }}
+        >
           {/* Sound Toggle - Plays sounds */}
           <div className="flex flex-col items-center gap-3">
-            <span className="text-yellow-400 text-lg font-light tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+            <span
+              className={`font-light tracking-wider ${toggleLabelColor}`}
+              style={{
+                fontFamily: `${toggleLabelFont}, sans-serif`,
+                fontSize: `${toggleLabelSize}px`
+              }}
+            >
               SOUND
             </span>
             <ProModeToggle
@@ -315,7 +312,13 @@ export default function AudioConsentLightbox({
 
           {/* No Sound Toggle - Silent (no sounds) */}
           <div className="flex flex-col items-center gap-3">
-            <span className="text-white/70 text-lg font-light tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+            <span
+              className="text-white/70 font-light tracking-wider"
+              style={{
+                fontFamily: `${toggleLabelFont}, sans-serif`,
+                fontSize: `${toggleLabelSize}px`
+              }}
+            >
               NO SOUND
             </span>
             <ProModeToggle
