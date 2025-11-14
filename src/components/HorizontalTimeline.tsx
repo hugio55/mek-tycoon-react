@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import PhaseILightbox from './PhaseILightbox';
 
 interface TimelineItem {
   phase: string;
@@ -78,6 +79,7 @@ export default function HorizontalTimeline({
 }: HorizontalTimelineProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [showPhaseILightbox, setShowPhaseILightbox] = useState(false);
 
   // Debug log whenever selectedIndex changes
   useEffect(() => {

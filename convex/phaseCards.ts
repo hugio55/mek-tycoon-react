@@ -60,6 +60,7 @@ export const createPhaseCard = mutation({
     subtitle: v.optional(v.string()),
     title: v.string(),
     description: v.optional(v.string()),
+    fullDescription: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
     locked: v.boolean(),
     order: v.optional(v.number()),
@@ -79,6 +80,7 @@ export const createPhaseCard = mutation({
       subtitle: args.subtitle,
       title: args.title,
       description: args.description,
+      fullDescription: args.fullDescription,
       imageUrl: args.imageUrl,
       locked: args.locked,
       order,
@@ -100,6 +102,7 @@ export const updatePhaseCard = mutation({
     subtitle: v.optional(v.string()),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
+    fullDescription: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
     locked: v.optional(v.boolean()),
     order: v.optional(v.number()),
@@ -122,6 +125,7 @@ export const updatePhaseCard = mutation({
     if (updates.subtitle !== undefined) updateData.subtitle = updates.subtitle;
     if (updates.title !== undefined) updateData.title = updates.title;
     if (updates.description !== undefined) updateData.description = updates.description;
+    if (updates.fullDescription !== undefined) updateData.fullDescription = updates.fullDescription;
     if (updates.imageUrl !== undefined) updateData.imageUrl = updates.imageUrl;
     if (updates.locked !== undefined) updateData.locked = updates.locked;
     if (updates.order !== undefined) updateData.order = updates.order;
@@ -311,6 +315,7 @@ export const bulkUpdatePhaseCards = mutation({
         subtitle: v.optional(v.string()),
         title: v.optional(v.string()),
         description: v.optional(v.string()),
+        fullDescription: v.optional(v.string()),
         imageUrl: v.optional(v.string()),
         locked: v.optional(v.boolean()),
         order: v.optional(v.number()),
@@ -335,6 +340,7 @@ export const bulkUpdatePhaseCards = mutation({
       if (fields.subtitle !== undefined) updateData.subtitle = fields.subtitle;
       if (fields.title !== undefined) updateData.title = fields.title;
       if (fields.description !== undefined) updateData.description = fields.description;
+      if (fields.fullDescription !== undefined) updateData.fullDescription = fields.fullDescription;
       if (fields.imageUrl !== undefined) updateData.imageUrl = fields.imageUrl;
       if (fields.locked !== undefined) updateData.locked = fields.locked;
       if (fields.order !== undefined) updateData.order = fields.order;

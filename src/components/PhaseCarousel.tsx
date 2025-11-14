@@ -4,12 +4,14 @@ import { Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import PhaseReadMoreLightbox from './PhaseReadMoreLightbox';
 
 interface Phase {
   _id: string;
   header?: string;
   title: string;
   description?: string;
+  fullDescription?: string;
   locked: boolean;
   order: number;
 }
@@ -95,6 +97,8 @@ export default function PhaseCarousel({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
+  const [showReadMore, setShowReadMore] = useState(false);
+  const [selectedPhase, setSelectedPhase] = useState<Phase | null>(null);
 
   const touchStartXRef = useRef<number>(0);
   const touchStartYRef = useRef<number>(0);
@@ -340,6 +344,22 @@ export default function PhaseCarousel({
                     <p className={`${styles.description} pt-4 px-3`}>
                       {phase.description}
                     </p>
+                    {phase.fullDescription && isCenter && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedPhase(phase);
+                          setShowReadMore(true);
+                        }}
+                        className="mt-4 px-4 py-2 text-sm font-light tracking-wide text-white/70 hover:text-white border border-white/20 hover:border-white/40 rounded-lg transition-all duration-300 touch-manipulation bg-white/5 hover:bg-white/10 invisible group-hover:visible opacity-0 group-hover:opacity-100 group-hover:delay-[450ms]"
+                        style={{
+                          minHeight: '44px',
+                          WebkitTapHighlightColor: 'transparent',
+                        }}
+                      >
+                        Read More
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
