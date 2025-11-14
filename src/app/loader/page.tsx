@@ -8,13 +8,51 @@ export default function LoaderDebugPage() {
   const [percentage, setPercentage] = useState(0);
   const [isAnimating, setIsAnimating] = useState(true);
 
-  // Percentage Display Controls
-  const [fontSize, setFontSize] = useState(48);
-  const [spacing, setSpacing] = useState(16);
-  const [horizontalOffset, setHorizontalOffset] = useState(0);
-  const [fontFamily, setFontFamily] = useState('Orbitron');
-  const [chromaticOffset, setChromaticOffset] = useState(0);
-  const [triangleSize, setTriangleSize] = useState(1);
+  // Load saved settings from localStorage on mount
+  const [fontSize, setFontSize] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('loaderSettings');
+      return saved ? JSON.parse(saved).fontSize : 48;
+    }
+    return 48;
+  });
+  const [spacing, setSpacing] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('loaderSettings');
+      return saved ? JSON.parse(saved).spacing : 16;
+    }
+    return 16;
+  });
+  const [horizontalOffset, setHorizontalOffset] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('loaderSettings');
+      return saved ? JSON.parse(saved).horizontalOffset : 0;
+    }
+    return 0;
+  });
+  const [fontFamily, setFontFamily] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('loaderSettings');
+      return saved ? JSON.parse(saved).fontFamily : 'Orbitron';
+    }
+    return 'Orbitron';
+  });
+  const [chromaticOffset, setChromaticOffset] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('loaderSettings');
+      return saved ? JSON.parse(saved).chromaticOffset : 0;
+    }
+    return 0;
+  });
+  const [triangleSize, setTriangleSize] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('loaderSettings');
+      return saved ? JSON.parse(saved).triangleSize : 1;
+    }
+    return 1;
+  });
+
+  const [saveMessage, setSaveMessage] = useState('');
 
   // Auto-loop animation (0-100% infinitely)
   useEffect(() => {
@@ -36,6 +74,32 @@ export default function LoaderDebugPage() {
 
   const toggleAnimation = () => {
     setIsAnimating(!isAnimating);
+  };
+
+  const saveSettings = () => {
+    const settings = {
+      fontSize,
+      spacing,
+      horizontalOffset,
+      fontFamily,
+      chromaticOffset,
+      triangleSize
+    };
+    localStorage.setItem('loaderSettings', JSON.stringify(settings));
+    setSaveMessage('Settings saved! ✓');
+    setTimeout(() => setSaveMessage(''), 3000);
+  };
+
+  const resetSettings = () => {
+    setFontSize(48);
+    setSpacing(16);
+    setHorizontalOffset(0);
+    setFontFamily('Orbitron');
+    setChromaticOffset(0);
+    setTriangleSize(1);
+    localStorage.removeItem('loaderSettings');
+    setSaveMessage('Settings reset to defaults');
+    setTimeout(() => setSaveMessage(''), 3000);
   };
 
   return (
@@ -63,7 +127,26 @@ export default function LoaderDebugPage() {
 
         {/* Percentage Display Controls */}
         <div className="mb-8 border-2 border-yellow-500/30 rounded-lg p-6 bg-gray-900/50">
-          <h2 className="text-yellow-500 font-bold mb-4 text-lg">Percentage Display Controls</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-yellow-500 font-bold text-lg">Percentage Display Controls</h2>
+            <div className="flex gap-3 items-center">
+              {saveMessage && (
+                <span className="text-green-400 text-sm font-semibold">{saveMessage}</span>
+              )}
+              <button
+                onClick={resetSettings}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-all text-sm font-semibold"
+              >
+                Reset
+              </button>
+              <button
+                onClick={saveSettings}
+                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black rounded transition-all text-sm font-bold"
+              >
+                Save Settings
+              </button>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Font Size Control */}
             <div>
