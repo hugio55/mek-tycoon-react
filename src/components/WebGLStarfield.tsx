@@ -37,6 +37,7 @@ interface WebGLStarfieldProps {
 
   // Background stars
   bgStarCount: number;
+  bgStarSize: number;
   bgStarTwinkleAmount: number;
   bgStarTwinkleSpeed: number;
   bgStarTwinkleSpeedRandomness: number;
@@ -62,6 +63,7 @@ const bgStarVertexShader = `
   uniform float time;
   uniform float twinkleAmount;
   uniform float twinkleSpeedGlobal;
+  uniform float bgStarSize;
 
   varying float vOpacity;
 
@@ -78,8 +80,8 @@ const bgStarVertexShader = `
     float depth = abs(mvPosition.z);
     float depthScale = 1000.0 / max(depth, 100.0);
 
-    // Apply depth scale and twinkle to size
-    float finalSize = size * depthScale * (1.0 + twinkleEffect);
+    // Apply base size, depth scale, and twinkle to size
+    float finalSize = size * bgStarSize * depthScale * (1.0 + twinkleEffect);
 
     // Apply twinkle to opacity
     vOpacity = brightness * (1.0 + twinkleEffect * 0.5);
@@ -291,6 +293,16 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
       brightnesses[i] = minBright + Math.random() * (maxBright - minBright);
     }
 
+    // Debug logging for first 3 stars
+    console.log('[⭐BG-STARS] Sample star data:', {
+      star0: { size: sizes[0], brightness: brightnesses[0], z: positions[2] },
+      star1: { size: sizes[1], brightness: brightnesses[1], z: positions[5] },
+      star2: { size: sizes[2], brightness: brightnesses[2], z: positions[8] },
+      sizeRange: `${1.0}-${1.0 + sizeRandomness}`,
+      depthScale: `1000 / 1500 = ${1000/1500}`,
+      estimatedFinalSize: `${(1.0 * 1000/1500).toFixed(2)}-${((1.0 + sizeRandomness) * 1000/1500 * 2).toFixed(2)} px`
+    });
+
     // Create geometry
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -305,6 +317,7 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
         time: { value: 0 },
         twinkleAmount: { value: props.bgStarTwinkleAmount / 100 },
         twinkleSpeedGlobal: { value: props.bgStarTwinkleSpeed },
+        bgStarSize: { value: props.bgStarSize },
       },
       vertexShader: bgStarVertexShader,
       fragmentShader: bgStarFragmentShader,
@@ -320,12 +333,18 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
     console.log('[⭐WEBGL] Background stars created:', {
       count: particleCount,
       zPosition: -1500,
-      pointsAdded: true
+      pointsAdded: true,
+      sceneChildren: scene.children.length,
+      materialUniforms: {
+        twinkleAmount: material.uniforms.twinkleAmount.value,
+        twinkleSpeedGlobal: material.uniforms.twinkleSpeedGlobal.value
+      }
     });
 
   }, [
     props.enabled,
     props.bgStarCount,
+    props.bgStarSize,
     props.bgStarTwinkleAmount,
     props.bgStarTwinkleSpeed,
     props.bgStarTwinkleSpeedRandomness,
@@ -570,6 +589,12 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
     }
 
     console.log('[⭐WEBGL] Starting animation loop, stage:', props.animationStage);
+    console.log('[⭐BG-STARS] Animation loop refs:', {
+      hasBgStars: !!bgStarsRef.current,
+      hasLayer1: !!layer1StarsRef.current,
+      hasLayer2: !!layer2StarsRef.current,
+      hasLayer3: !!layer3StarsRef.current
+    });
 
     // Animate during ALL stages (will be hidden by opacity during 'initial')
     // Removed early return for 'initial' stage to ensure animation loop starts
@@ -579,6 +604,7 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
     const renderer = rendererRef.current;
 
     let lastTime = performance.now();
+    let frameCount = 0;
 
     const animate = (currentTime: number) => {
       const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
@@ -590,6 +616,19 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
         material.uniforms.time.value = currentTime * 0.001;
         material.uniforms.twinkleAmount.value = props.bgStarTwinkleAmount / 100;
         material.uniforms.twinkleSpeedGlobal.value = props.bgStarTwinkleSpeed;
+        material.uniforms.bgStarSize.value = props.bgStarSize;
+
+        // Log every 60 frames (~1 second)
+        frameCount++;
+        if (frameCount % 60 === 0) {
+          console.log('[⭐BG-STARS] Animation frame:', {
+            time: material.uniforms.time.value.toFixed(2),
+            twinkleAmount: material.uniforms.twinkleAmount.value,
+            twinkleSpeed: material.uniforms.twinkleSpeedGlobal.value,
+            visible: bgStarsRef.current.visible,
+            particleCount: bgStarsRef.current.geometry.attributes.position.count
+          });
+        }
       }
 
       // Update Layer 1 moving stars
@@ -716,6 +755,7 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
     props.twinkleAmount2,
     props.twinkleSpeed,
     props.twinkleSpeed2,
+    props.bgStarSize,
     props.bgStarTwinkleAmount,
     props.bgStarTwinkleSpeed,
     props.starFadePosition,
