@@ -29,7 +29,7 @@ export default function AudioConsentLightbox({
   backdropDarkness = 95,
   logoFadeDuration = 1000,
   lockScroll = true,
-  audioConsentFadeDuration = 500,
+  audioConsentFadeDuration = 1500,
   toggleSize = 1.0,
   toggleGap = 48,
   toggleVerticalPosition = 0,
@@ -113,7 +113,7 @@ export default function AudioConsentLightbox({
     console.log('[🎵LIGHTBOX] Proceed clicked with audio:', withAudio);
     console.log('[🎵LIGHTBOX] Starting delay before fade...');
 
-    // Start fade animation after brief delay (300ms to show green light)
+    // Start fade animation after brief delay (600ms to show green light)
     setTimeout(() => {
       console.log('[🎵LIGHTBOX] Delay complete, starting fade out...');
       setIsFadingOut(true);
@@ -127,7 +127,7 @@ export default function AudioConsentLightbox({
         }));
         onProceed(withAudio);
       }, audioConsentFadeDuration);
-    }, 300);
+    }, 600);
   };
 
   if (!mounted || !isVisible) return null;
