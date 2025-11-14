@@ -164,29 +164,6 @@ export default function BetaSignupLightbox({
             10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
             20%, 40%, 60%, 80% { transform: translateX(4px); }
           }
-          @keyframes blurIn {
-            0% { backdrop-filter: blur(0px); }
-            5% { backdrop-filter: blur(0.1px); }
-            10% { backdrop-filter: blur(0.2px); }
-            15% { backdrop-filter: blur(0.4px); }
-            20% { backdrop-filter: blur(0.6px); }
-            25% { backdrop-filter: blur(0.8px); }
-            30% { backdrop-filter: blur(1px); }
-            35% { backdrop-filter: blur(1.2px); }
-            40% { backdrop-filter: blur(1.5px); }
-            45% { backdrop-filter: blur(1.8px); }
-            50% { backdrop-filter: blur(2.2px); }
-            55% { backdrop-filter: blur(2.6px); }
-            60% { backdrop-filter: blur(3px); }
-            65% { backdrop-filter: blur(3.5px); }
-            70% { backdrop-filter: blur(4px); }
-            75% { backdrop-filter: blur(4.5px); }
-            80% { backdrop-filter: blur(5px); }
-            85% { backdrop-filter: blur(6px); }
-            90% { backdrop-filter: blur(7px); }
-            95% { backdrop-filter: blur(7.5px); }
-            100% { backdrop-filter: blur(8px); }
-          }
         `
       }} />
 
@@ -194,8 +171,8 @@ export default function BetaSignupLightbox({
       <div
         className="absolute inset-0 bg-black/45"
         style={{
-          animation: 'blurIn 800ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
-          willChange: 'backdrop-filter',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
         }}
         onClick={handleBackdropClick}
       />
@@ -215,9 +192,8 @@ export default function BetaSignupLightbox({
           style={{
             background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
             boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset',
-            backdropFilter: 'blur(0px)',
-            animation: 'blurIn 600ms cubic-bezier(0.4, 0, 0.2, 1) 200ms forwards',
-            willChange: 'backdrop-filter',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
           }}
         >
           {/* Close Button - Top Right */}

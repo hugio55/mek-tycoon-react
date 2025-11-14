@@ -175,12 +175,14 @@ export default function PhaseAccordion({
             <div
               ref={(el) => (contentRefs.current[index] = el)}
               style={{
-                display: 'grid',
-                gridTemplateRows: isExpanded ? '1fr' : '0fr',
-                transition: 'grid-template-rows 180ms ease-out',
+                maxHeight: isExpanded ? '500px' : '0px',
+                opacity: isExpanded ? 1 : 0,
+                overflow: 'hidden',
+                transition: 'max-height 180ms ease-out, opacity 180ms ease-out',
+                willChange: isExpanded ? 'auto' : 'max-height, opacity',
               }}
             >
-              <div style={{ overflow: 'hidden' }}>
+              <div>
                 <div
                   className="mt-1 overflow-hidden"
                   style={{
