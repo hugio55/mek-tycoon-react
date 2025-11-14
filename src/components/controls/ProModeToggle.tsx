@@ -242,8 +242,8 @@ export default function ProModeToggle({
             className="absolute -bottom-10 block w-[50px] h-5 left-1/2 -translate-x-1/2 p-[2px] bg-gray-500 rounded-[7px] z-0 transition-all duration-[400ms]"
             style={{
               border: '2px ridge black',
-              background: switchOn ? '#ed4741' : 'grey',
-              boxShadow: switchOn ? '0px 0px 10px rgba(255,0,0,1)' : 'none'
+              background: switchOn ? '#22c55e' : 'grey',
+              boxShadow: switchOn ? '0px 0px 10px rgba(34,197,94,1)' : 'none'
             }}
           >
             {/* Color overlay when lit */}
@@ -252,7 +252,7 @@ export default function ProModeToggle({
                 className="absolute w-full h-full left-0 top-0 opacity-30 transition-all duration-1000"
                 style={{
                   mixBlendMode: 'overlay',
-                  background: 'radial-gradient(at center, #F6D656, #EC3D3D)'
+                  background: 'radial-gradient(at center, #86efac, #22c55e)'
                 }}
               />
             )}
@@ -265,7 +265,7 @@ export default function ProModeToggle({
                 backgroundImage: 'radial-gradient(#ffffff50 2px, transparent 0)',
                 backgroundSize: '5px 5px',
                 backgroundPosition: '-18px -15px',
-                boxShadow: switchOn ? '0px 0px 20px rgba(255,0,0,1)' : 'none'
+                boxShadow: switchOn ? '0px 0px 20px rgba(34,197,94,1)' : 'none'
               }}
             />
           </div>
