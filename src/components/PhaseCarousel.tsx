@@ -5,6 +5,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import PhaseReadMoreLightbox from './PhaseReadMoreLightbox';
+import PhaseILightbox from './PhaseILightbox';
 
 interface Phase {
   _id: string;
@@ -30,6 +31,16 @@ export default function PhaseCarousel({
   // Load phase cards from Convex database
   const phasesData = useQuery(api.phaseCards.getAllPhaseCards);
   const phases = phasesData || [];
+
+  // Load Phase I lightbox settings from database
+  const phaseISettings = useQuery(api.phaseILightbox.getPhaseILightboxSettings);
+
+  // Debug log Phase I settings when they change
+  useEffect(() => {
+    if (phaseISettings) {
+      console.log('[🎯CAROUSEL] Phase I settings loaded:', phaseISettings);
+    }
+  }, [phaseISettings]);
 
   // Load debug config from localStorage with defaults
   const [config, setConfig] = useState({
@@ -348,6 +359,7 @@ export default function PhaseCarousel({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          console.log('[🎯CAROUSEL] Read More clicked for phase:', phase.title, 'order:', phase.order);
                           setSelectedPhase(phase);
                           setShowReadMore(true);
                         }}
@@ -489,8 +501,24 @@ export default function PhaseCarousel({
         ))}
       </div>
 
-      {/* Read More Lightbox */}
-      {selectedPhase && (
+      {/* Read More Lightbox - Use Phase I specific lightbox for order 1, generic for others */}
+      {selectedPhase && selectedPhase.order === 1 && phaseISettings ? (
+        <PhaseILightbox
+          isVisible={showReadMore}
+          onClose={() => {
+            setShowReadMore(false);
+            setSelectedPhase(null);
+          }}
+          lightboxContent={phaseISettings.phaseILightboxContent}
+          textFont={phaseISettings.phaseITextFont}
+          textFontSize={phaseISettings.phaseITextFontSize}
+          textColor={phaseISettings.phaseITextColor}
+          videoScale={phaseISettings.phaseIVideoScale * 100}
+          videoPositionX={phaseISettings.phaseIVideoPositionX}
+          videoPositionY={phaseISettings.phaseIVideoPositionY}
+          backdropBlur={phaseISettings.phaseIBackdropBlur}
+        />
+      ) : selectedPhase ? (
         <PhaseReadMoreLightbox
           isVisible={showReadMore}
           onClose={() => {
@@ -500,7 +528,7 @@ export default function PhaseCarousel({
           phaseTitle={selectedPhase.title}
           fullDescription={selectedPhase.fullDescription || ''}
         />
-      )}
+      ) : null}
     </div>
   );
 }

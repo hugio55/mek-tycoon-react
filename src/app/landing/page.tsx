@@ -754,6 +754,32 @@ export default function LandingPage() {
     };
   }, [dbSettings?.forceShowAudioConsent]);
 
+  // STATE VALIDATION: Ensure showAudioConsent and animationStage are mutually exclusive
+  // Prevents browser navigation from causing invalid state combinations
+  useEffect(() => {
+    // CRITICAL: Detect invalid state where lightbox is visible but content is showing
+    if (showAudioConsent && animationStage !== 'initial') {
+      console.error('[🚨STATE-DESYNC] INVALID STATE DETECTED!', {
+        showAudioConsent,
+        animationStage,
+        expected: 'animationStage should be "initial" when showAudioConsent is true',
+        action: 'Force-resetting animationStage to "initial"'
+      });
+
+      // Force correction to valid state
+      setAnimationStage('initial');
+      setLockScrollForConsent(true);
+    }
+
+    // Log state transitions for debugging
+    console.log('[🔍STATE-CHECK] State validation:', {
+      showAudioConsent,
+      animationStage,
+      lockScrollForConsent,
+      isValid: !showAudioConsent || animationStage === 'initial'
+    });
+  }, [showAudioConsent, animationStage, lockScrollForConsent]);
+
   // Load config from Convex database (primary source) with localStorage fallback
   useEffect(() => {
     if (!dbSettings) return; // Wait for Convex data to load
@@ -1704,7 +1730,7 @@ export default function LandingPage() {
           backgroundRepeat: 'no-repeat',
           touchAction: 'none',
           pointerEvents: 'none',
-          opacity: animationStage === 'initial' ? 0.3 : 1, // Very faded initially
+          opacity: showAudioConsent ? 0 : (animationStage === 'initial' ? 0.3 : 1), // Hide when lightbox visible
         }}
       />
 
@@ -1715,7 +1741,7 @@ export default function LandingPage() {
         style={{
           display: 'block',
           touchAction: 'none',
-          opacity: animationStage === 'initial' ? 0 : 1,
+          opacity: showAudioConsent ? 0 : (animationStage === 'initial' ? 0 : 1), // Hide when lightbox visible
           transition: animationStage === 'initial' ? 'none' : 'opacity 1500ms ease-out',
         }}
       />
@@ -1727,6 +1753,8 @@ export default function LandingPage() {
           paddingTop: viewportHeight > 0
             ? `calc(50vh - ${logoSize / 2}px - ${logoYPosition}vh)`
             : '50vh',
+          opacity: showAudioConsent ? 0 : 1, // Hide when lightbox visible
+          transition: 'opacity 300ms ease-out',
         }}
       >
         <div className="flex flex-col items-center gap-8 sm:gap-12 md:gap-16 w-full">
