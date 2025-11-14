@@ -36,11 +36,11 @@
             - generic [ref=e38]:
               - button "📋 Copy Desktop Settings to Mobile" [ref=e39] [cursor=pointer]
               - paragraph [ref=e40]: Use this to sync mobile with desktop. Mobile will start identical to desktop, then you can adjust specific values.
-          - button "💾 Two-Tier Backup System (92 rolling + 2 permanent) ▶" [ref=e42] [cursor=pointer]:
+          - button "💾 Two-Tier Backup System (97 rolling + 2 permanent) ▶" [ref=e42] [cursor=pointer]:
             - generic [ref=e43]:
               - generic [ref=e44]: 💾
               - generic [ref=e45]: Two-Tier Backup System
-              - generic [ref=e46]: (92 rolling + 2 permanent)
+              - generic [ref=e46]: (97 rolling + 2 permanent)
             - generic [ref=e47]: ▶
           - generic [ref=e48]:
             - heading "Landing Page Debug Controls" [level=1] [ref=e50]
@@ -50,7 +50,7 @@
                 - /url: /landing
               - button "⭐ Stars ON" [ref=e54] [cursor=pointer]
               - button "Show Preview" [ref=e55] [cursor=pointer]
-              - button "Settings Saved" [ref=e56] [cursor=pointer]
+              - button "Saving..." [disabled] [ref=e56]
               - button "Reset to Defaults" [ref=e57] [cursor=pointer]
               - button "🔧 Recover from Backup" [ref=e58] [cursor=pointer]
               - button "Show Landing Audio Consent" [ref=e59] [cursor=pointer]
@@ -114,7 +114,7 @@
             - generic [ref=e118]:
               - heading "Layer 2 Star Field" [level=2] [ref=e119]
               - generic [ref=e121] [cursor=pointer]:
-                - checkbox "Enable Layer 2" [active] [ref=e122]
+                - checkbox "Enable Layer 2" [ref=e122]
                 - generic [ref=e123]: Enable Layer 2
               - generic [ref=e124]:
                 - generic [ref=e125]: Star Scale
@@ -165,8 +165,8 @@
                 - generic [ref=e171]: 100 stars
               - generic [ref=e172]:
                 - generic [ref=e173]: Line Length
-                - slider [ref=e174]: "80"
-                - generic [ref=e175]: "80"
+                - slider [active] [ref=e174]: "200"
+                - generic [ref=e175]: "200"
               - generic [ref=e176]:
                 - generic [ref=e177]: Spawn Delay (time between stars)
                 - slider [ref=e178]: "50"
