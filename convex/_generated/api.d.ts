@@ -182,6 +182,7 @@ import type * as offlineAccumulation from "../offlineAccumulation.js";
 import type * as optimizedQueries from "../optimizedQueries.js";
 import type * as overlays from "../overlays.js";
 import type * as phaseCards from "../phaseCards.js";
+import type * as phaseILightbox from "../phaseILightbox.js";
 import type * as publicCorporation from "../publicCorporation.js";
 import type * as runStoryClimbMigration from "../runStoryClimbMigration.js";
 import type * as saves from "../saves.js";
@@ -420,6 +421,7 @@ declare const fullApi: ApiFromModules<{
   optimizedQueries: typeof optimizedQueries;
   overlays: typeof overlays;
   phaseCards: typeof phaseCards;
+  phaseILightbox: typeof phaseILightbox;
   publicCorporation: typeof publicCorporation;
   runStoryClimbMigration: typeof runStoryClimbMigration;
   saves: typeof saves;

@@ -8,13 +8,29 @@ interface PhaseILightboxProps {
   onClose: () => void;
   phaseDescriptionFont?: string;
   phaseDescriptionFontSize?: number;
+  lightboxContent?: string;
+  textFont?: string;
+  textFontSize?: number;
+  textColor?: string;
+  videoScale?: number;
+  videoPositionX?: number;
+  videoPositionY?: number;
+  backdropBlur?: number;
 }
 
 export default function PhaseILightbox({
   isVisible,
   onClose,
   phaseDescriptionFont = 'Arial',
-  phaseDescriptionFontSize = 16
+  phaseDescriptionFontSize = 16,
+  lightboxContent = '',
+  textFont = 'Arial',
+  textFontSize = 16,
+  textColor = 'text-white/80',
+  videoScale = 100,
+  videoPositionX = 0,
+  videoPositionY = 0,
+  backdropBlur = 8
 }: PhaseILightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [savedScrollY, setSavedScrollY] = useState(0);
@@ -94,15 +110,15 @@ export default function PhaseILightbox({
       <div
         className="absolute inset-0 bg-black/45"
         style={{
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
+          backdropFilter: `blur(${backdropBlur}px)`,
+          WebkitBackdropFilter: `blur(${backdropBlur}px)`,
         }}
         onClick={handleBackdropClick}
       />
 
       {/* Lightbox Card */}
       <div
-        className="relative w-full max-w-2xl"
+        className="relative w-full max-w-6xl"
         style={{
           animation: 'slideUp 800ms cubic-bezier(0.16, 1, 0.3, 1)',
           willChange: 'transform, opacity',
@@ -139,6 +155,23 @@ export default function PhaseILightbox({
             </svg>
           </button>
 
+          {/* Debug Toggle Button */}
+          <button
+            onClick={() => setShowDebugControls(!showDebugControls)}
+            className="absolute top-4 left-4 text-white/50 hover:text-white/80 transition-colors z-10 touch-manipulation text-xs"
+            style={{
+              minWidth: '44px',
+              minHeight: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+            aria-label="Toggle Debug Controls"
+          >
+            {showDebugControls ? '⚙️' : '🔧'}
+          </button>
+
           {/* Content */}
           <div className="p-6 sm:p-8 md:p-10">
             {/* Header */}
@@ -151,38 +184,178 @@ export default function PhaseILightbox({
               </p>
             </div>
 
-            {/* Description Content */}
-            <div
-              className="text-white/80 leading-relaxed space-y-4"
-              style={{
-                fontFamily: phaseDescriptionFont,
-                fontSize: `${phaseDescriptionFontSize}px`,
-              }}
-            >
-              <p>
-                Project inception and initial concept development. The vision for Mek Tycoon begins to take shape.
-              </p>
+            {/* Two-column layout (text left, video right) on desktop, stacked on mobile */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+              {/* Left Column - Text Content */}
+              <div
+                className={`leading-relaxed space-y-4 ${textColor}`}
+                style={{
+                  fontFamily: textFont,
+                  fontSize: `${textFontSize}px`,
+                }}
+              >
+                {lightboxContent.split('\n').map((paragraph, index) => {
+                  // Handle bullet points
+                  if (paragraph.trim().startsWith('•')) {
+                    return (
+                      <div key={index} className="pl-4">
+                        <div className="flex gap-2">
+                          <span>•</span>
+                          <span>{paragraph.trim().substring(1).trim()}</span>
+                        </div>
+                      </div>
+                    );
+                  }
+                  // Handle empty lines
+                  if (paragraph.trim() === '') {
+                    return <div key={index} className="h-2" />;
+                  }
+                  // Handle regular paragraphs
+                  return <p key={index}>{paragraph}</p>;
+                })}
+              </div>
 
-              <p>
-                In this foundational phase, we established the core vision and mechanics that would define the Mek Tycoon universe. Our team carefully crafted the initial designs, gameplay concepts, and technical architecture that would serve as the bedrock for all future development.
-              </p>
-
-              <p>
-                Key achievements during Phase I included:
-              </p>
-
-              <ul className="list-disc list-inside space-y-2 pl-4">
-                <li>Conceptualization of the Mek NFT collection and variation system</li>
-                <li>Design of the core gameplay loop and resource management mechanics</li>
-                <li>Development of the initial art style and visual identity</li>
-                <li>Technical planning for blockchain integration on Cardano</li>
-                <li>Formation of the core development team and community foundation</li>
-              </ul>
-
-              <p>
-                This phase laid the groundwork for everything that followed, establishing the principles of strategic depth, artistic excellence, and community engagement that define Mek Tycoon today.
-              </p>
+              {/* Right Column - Video */}
+              <div className="flex items-center justify-center">
+                <div className="w-full overflow-hidden rounded-lg">
+                  <video
+                    src="/Phase 1 video/p1 vid webm 15q.webm"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-auto"
+                    style={{
+                      transform: `scale(${videoScale / 100}) translate(${videoPositionX}px, ${videoPositionY}px)`,
+                      transition: 'transform 0.2s ease-out',
+                    }}
+                  />
+                </div>
+              </div>
             </div>
+
+            {/* Debug Controls Card */}
+            {showDebugControls && (
+              <div className="mt-8 p-6 rounded-lg border border-yellow-500/30 bg-black/40">
+                <h3 className="text-yellow-400 text-lg font-semibold mb-4">Debug Controls</h3>
+
+                <div className="space-y-4">
+                  {/* Video Scale */}
+                  <div>
+                    <label className="text-white/70 text-sm block mb-2">
+                      Video Scale: {videoScale.toFixed(2)}
+                    </label>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="2"
+                      step="0.05"
+                      value={videoScale}
+                      onChange={(e) => setVideoScale(parseFloat(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Video Translate X */}
+                  <div>
+                    <label className="text-white/70 text-sm block mb-2">
+                      Video X Position: {videoTranslateX}px
+                    </label>
+                    <input
+                      type="range"
+                      min="-200"
+                      max="200"
+                      step="5"
+                      value={videoTranslateX}
+                      onChange={(e) => setVideoTranslateX(parseInt(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Video Translate Y */}
+                  <div>
+                    <label className="text-white/70 text-sm block mb-2">
+                      Video Y Position: {videoTranslateY}px
+                    </label>
+                    <input
+                      type="range"
+                      min="-200"
+                      max="200"
+                      step="5"
+                      value={videoTranslateY}
+                      onChange={(e) => setVideoTranslateY(parseInt(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Backdrop Blur */}
+                  <div>
+                    <label className="text-white/70 text-sm block mb-2">
+                      Backdrop Blur: {backdropBlur}px
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="20"
+                      step="1"
+                      value={backdropBlur}
+                      onChange={(e) => setBackdropBlur(parseInt(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Typography Font */}
+                  <div>
+                    <label className="text-white/70 text-sm block mb-2">
+                      Font Family
+                    </label>
+                    <select
+                      value={debugFont}
+                      onChange={(e) => setDebugFont(e.target.value)}
+                      className="w-full bg-black/60 text-white border border-white/20 rounded px-3 py-2"
+                    >
+                      <option value="Arial">Arial</option>
+                      <option value="Inter">Inter</option>
+                      <option value="Orbitron">Orbitron</option>
+                      <option value="Georgia">Georgia</option>
+                      <option value="Times New Roman">Times New Roman</option>
+                      <option value="Courier New">Courier New</option>
+                    </select>
+                  </div>
+
+                  {/* Typography Size */}
+                  <div>
+                    <label className="text-white/70 text-sm block mb-2">
+                      Font Size: {debugFontSize}px
+                    </label>
+                    <input
+                      type="range"
+                      min="10"
+                      max="24"
+                      step="1"
+                      value={debugFontSize}
+                      onChange={(e) => setDebugFontSize(parseInt(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Reset Button */}
+                  <button
+                    onClick={() => {
+                      setVideoScale(1);
+                      setVideoTranslateX(0);
+                      setVideoTranslateY(0);
+                      setBackdropBlur(8);
+                      setDebugFont(phaseDescriptionFont);
+                      setDebugFontSize(phaseDescriptionFontSize);
+                    }}
+                    className="w-full mt-4 px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 rounded transition-colors"
+                  >
+                    Reset All
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
