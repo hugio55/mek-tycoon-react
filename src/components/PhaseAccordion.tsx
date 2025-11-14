@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import PhaseILightbox from './PhaseILightbox';
@@ -26,8 +26,15 @@ export default function PhaseAccordion({
 }: PhaseAccordionProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [showPhaseILightbox, setShowPhaseILightbox] = useState(false);
+  const [isSafari, setIsSafari] = useState(false);
   const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Detect Safari browser on mount
+  useEffect(() => {
+    const checkSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    setIsSafari(checkSafari);
+  }, []);
 
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
 
@@ -123,9 +130,9 @@ export default function PhaseAccordion({
                   background: isExpanded
                     ? 'linear-gradient(135deg, rgba(250,182,23,0.12), rgba(250,182,23,0.06))'
                     : 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-                  backdropFilter: disableBlur ? 'none' : 'blur(2px)',
-                  WebkitBackdropFilter: disableBlur ? 'none' : 'blur(2px)',
-                  transition: 'background 150ms ease-out',
+                  backdropFilter: (disableBlur || isSafari) ? 'none' : 'blur(2px)',
+                  WebkitBackdropFilter: (disableBlur || isSafari) ? 'none' : 'blur(2px)',
+                  transition: 'background 150ms cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               />
 
@@ -139,7 +146,7 @@ export default function PhaseAccordion({
                     letterSpacing: '0.8px',
                     textTransform: 'uppercase',
                     textShadow: isExpanded ? '0 0 8px rgba(250, 182, 23, 0.25)' : 'none',
-                    transition: 'text-shadow 150ms ease-out',
+                    transition: 'text-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1)',
                   }}
                 >
                   {card.header || card.title}
@@ -150,7 +157,9 @@ export default function PhaseAccordion({
                     position: 'absolute',
                     right: '16px',
                     transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 150ms ease-out',
+                    WebkitTransform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    WebkitTransition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1)',
                     display: 'flex',
                     alignItems: 'center',
                   }}
@@ -193,14 +202,27 @@ export default function PhaseAccordion({
               ref={(el) => (contentRefs.current[index] = el)}
               style={{
                 transformOrigin: 'top',
-                transform: isExpanded ? 'scaleY(1)' : 'scaleY(0)',
+                transform: isSafari
+                  ? (isExpanded ? 'translateY(0) translateZ(0)' : 'translateY(-100%) translateZ(0)')
+                  : (isExpanded ? 'scaleY(1)' : 'scaleY(0)'),
+                WebkitTransform: isSafari
+                  ? (isExpanded ? 'translateY(0) translateZ(0)' : 'translateY(-100%) translateZ(0)')
+                  : (isExpanded ? 'scaleY(1)' : 'scaleY(0)'),
                 opacity: isExpanded ? 1 : 0,
                 maxHeight: isExpanded ? '500px' : '0',
                 overflow: 'hidden',
-                transition: 'transform 600ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 480ms cubic-bezier(0.25, 0.46, 0.45, 0.94), max-height 600ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+                transition: isSafari
+                  ? 'transform 500ms cubic-bezier(0.4, 0, 0.2, 1), opacity 400ms cubic-bezier(0.4, 0, 0.2, 1), max-height 500ms cubic-bezier(0.4, 0, 0.2, 1)'
+                  : 'transform 500ms cubic-bezier(0.4, 0, 0.2, 1), opacity 400ms cubic-bezier(0.4, 0, 0.2, 1), max-height 500ms cubic-bezier(0.4, 0, 0.2, 1)',
+                WebkitTransition: isSafari
+                  ? 'transform 500ms cubic-bezier(0.4, 0, 0.2, 1), opacity 400ms cubic-bezier(0.4, 0, 0.2, 1), max-height 500ms cubic-bezier(0.4, 0, 0.2, 1)'
+                  : undefined,
                 willChange: 'transform, opacity',
+                WebkitWillChange: 'transform, opacity',
                 backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
                 perspective: 1000,
+                WebkitPerspective: 1000,
               }}
             >
               <div

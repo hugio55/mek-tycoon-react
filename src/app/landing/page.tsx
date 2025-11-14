@@ -1738,9 +1738,9 @@ export default function LandingPage() {
         style={{
           backgroundImage: `url(${getMediaUrl('/colored-bg-1.webp')})`,
           backgroundSize: 'cover',
-          backgroundPosition: fixedViewportHeight > 0
-            ? `center calc(50% + ${bgYPosition}px)`
-            : `center ${bgYPosition}%`,
+          backgroundPosition: isMobile && fixedViewportHeight > 0
+            ? `center ${(fixedViewportHeight / 2) + bgYPosition}px`
+            : `center calc(50% + ${bgYPosition}px)`,
           backgroundRepeat: 'no-repeat',
           touchAction: 'none',
           pointerEvents: 'none',
