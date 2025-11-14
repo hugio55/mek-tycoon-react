@@ -271,6 +271,7 @@ export default function LandingPage() {
   const [starSpeed3, setStarSpeed3] = useState(DEFAULT_CONFIG.starSpeed3);
   const [starFrequency3, setStarFrequency3] = useState(DEFAULT_CONFIG.starFrequency3);
   const [lineLength3, setLineLength3] = useState(DEFAULT_CONFIG.lineLength3);
+  const [brightness3, setBrightness3] = useState(DEFAULT_CONFIG.brightness3);
   const [spawnDelay3, setSpawnDelay3] = useState(DEFAULT_CONFIG.spawnDelay3);
   const [twinkleAmount3, setTwinkleAmount3] = useState(DEFAULT_CONFIG.twinkleAmount3);
   const [twinkleSpeed3, setTwinkleSpeed3] = useState(DEFAULT_CONFIG.twinkleSpeed3);
@@ -1116,6 +1117,7 @@ export default function LandingPage() {
           setStarSpeed3(config.starSpeed3 ?? DEFAULT_CONFIG.starSpeed3);
           setStarFrequency3(config.starFrequency3 ?? DEFAULT_CONFIG.starFrequency3);
           setLineLength3(config.lineLength3 ?? DEFAULT_CONFIG.lineLength3);
+          setBrightness3(config.brightness3 ?? DEFAULT_CONFIG.brightness3);
           setSpawnDelay3(config.spawnDelay3 ?? DEFAULT_CONFIG.spawnDelay3);
           setTwinkleAmount3(config.twinkleAmount3 ?? DEFAULT_CONFIG.twinkleAmount3);
           setTwinkleSpeed3(config.twinkleSpeed3 ?? DEFAULT_CONFIG.twinkleSpeed3);
@@ -1259,6 +1261,7 @@ export default function LandingPage() {
           setStarSpeed3(config.starSpeed3 ?? DEFAULT_CONFIG.starSpeed3);
           setStarFrequency3(config.starFrequency3 ?? DEFAULT_CONFIG.starFrequency3);
           setLineLength3(config.lineLength3 ?? DEFAULT_CONFIG.lineLength3);
+          setBrightness3(config.brightness3 ?? DEFAULT_CONFIG.brightness3);
           setSpawnDelay3(config.spawnDelay3 ?? DEFAULT_CONFIG.spawnDelay3);
           setTwinkleAmount3(config.twinkleAmount3 ?? DEFAULT_CONFIG.twinkleAmount3);
           setTwinkleSpeed3(config.twinkleSpeed3 ?? DEFAULT_CONFIG.twinkleSpeed3);
@@ -1994,7 +1997,7 @@ export default function LandingPage() {
     starsEnabled,
     starScale, starSpeed, starFrequency, twinkleAmount, twinkleSpeed, twinkleSpeedRandomness, sizeRandomness,
     starScale2, starSpeed2, starFrequency2, lineLength2, twinkleAmount2, twinkleSpeed2, twinkleSpeedRandomness2, sizeRandomness2,
-    starScale3, starSpeed3, starFrequency3, lineLength3, spawnDelay3, twinkleAmount3, twinkleSpeed3, twinkleSpeedRandomness3, sizeRandomness3,
+    starScale3, starSpeed3, starFrequency3, lineLength3, brightness3, spawnDelay3, twinkleAmount3, twinkleSpeed3, twinkleSpeedRandomness3, sizeRandomness3,
     bgStarTwinkleAmount, bgStarTwinkleSpeed, bgStarTwinkleSpeedRandomness, bgStarSizeRandomness, bgStarCount, bgStarMinBrightness, bgStarMaxBrightness,
     starFadePosition, starFadeFeatherSize,
     motionBlurEnabled, blurIntensity, motionBlurEnabled2, blurIntensity2,
@@ -2070,6 +2073,7 @@ export default function LandingPage() {
         starSpeed3={starSpeed3}
         starFrequency3={starFrequency3}
         lineLength3={lineLength3}
+        brightness3={brightness3}
         twinkleAmount3={twinkleAmount3}
         twinkleSpeed3={twinkleSpeed3}
         twinkleSpeedRandomness3={twinkleSpeedRandomness3}
