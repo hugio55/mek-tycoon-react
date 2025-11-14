@@ -3692,6 +3692,17 @@ export default defineSchema({
     updatedAt: v.number(),
   }),
 
+  // UNIFIED landing page debug settings HISTORY (automatic backups before each save)
+  // Keeps last 50 versions with timestamps for recovery
+  landingDebugUnifiedHistory: defineTable({
+    desktop: v.any(), // Desktop config snapshot
+    mobile: v.any(), // Mobile config snapshot
+    shared: v.any(), // Shared config snapshot
+    timestamp: v.number(), // When this backup was created
+    description: v.optional(v.string()), // Optional description (e.g., "Auto-backup before save")
+  })
+    .index("by_timestamp", ["timestamp"]),
+
   // ===== BETA SIGNUPS =====
   // Beta signup stake addresses for rewarding early participants
   betaSignups: defineTable({
