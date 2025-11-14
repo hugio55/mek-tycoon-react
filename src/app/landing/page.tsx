@@ -33,6 +33,13 @@ interface BackgroundStar {
   twinkleSpeedMultiplier: number; // Individual speed variation
 }
 
+// Landing page progression state machine
+type ProgressionState =
+  | 'WAITING_FOR_LOADER'      // Universal loader running (triangles + percentage)
+  | 'WAITING_FOR_CONSENT'     // Audio consent lightbox visible (over dimmed background)
+  | 'CONSENT_CLOSING'         // User made choice, lightbox fading out (500ms)
+  | 'MAIN_CONTENT'            // Logo + stars fading in, background full brightness
+  | 'CONTENT_COMPLETE';       // Logo video loaded, phase cards can appear
 
 // Storage key must match the debug page
 const STORAGE_KEY = 'mek-landing-debug-config';
@@ -298,17 +305,20 @@ export default function LandingPage() {
   const [phaseDescriptionFont, setPhaseDescriptionFont] = useState(DEFAULT_CONFIG.phaseDescriptionFont);
   const [phaseDescriptionFontSize, setPhaseDescriptionFontSize] = useState(DEFAULT_CONFIG.phaseDescriptionFontSize);
 
+  // ===== STATE MACHINE: Landing Page Progression =====
+  const [progressionState, setProgressionState] = useState<ProgressionState>('WAITING_FOR_LOADER');
+
   // Audio controls
   const [audioPlaying, setAudioPlaying] = useState(false);
-  const [showAudioConsent, setShowAudioConsent] = useState(false);
-  const [allowAudioLightbox, setAllowAudioLightbox] = useState(false); // Gates lightbox after universal loader completes
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
   const [lockScrollForConsent, setLockScrollForConsent] = useState(false);
 
-  // Animation sequence states
+  // Legacy states (keeping for compatibility during transition)
+  const [showAudioConsent, setShowAudioConsent] = useState(false);
+  const [allowAudioLightbox, setAllowAudioLightbox] = useState(false);
   const [animationStage, setAnimationStage] = useState<'initial' | 'stars' | 'logo'>('initial');
   const [useVideoLogo, setUseVideoLogo] = useState(false);
-  const [logoVideoLoaded, setLogoVideoLoaded] = useState(false); // Tracks when logo video has loaded and started
+  const [logoVideoLoaded, setLogoVideoLoaded] = useState(false);
 
   // Logo animation timing (must be declared before first use in useEffect below)
   const [logoFadeDuration, setLogoFadeDuration] = useState(DEFAULT_CONFIG.logoFadeDuration);
@@ -807,23 +817,73 @@ export default function LandingPage() {
     };
   }, [dbSettings?.forceShowAudioConsent, allowAudioLightbox]);
 
-  // PROGRESSION GATE: Only allow audio lightbox after universal loader completes
+  // STATE MACHINE: Transition from WAITING_FOR_LOADER when universal loader completes
   useEffect(() => {
     if (isLoading) {
-      console.log('[⏳LOADER] Universal loader still running - audio lightbox blocked');
+      console.log('[⏳STATE] Universal loader still running - staying in WAITING_FOR_LOADER');
       return; // Wait for loader to finish
     }
 
-    console.log('[✅LOADER] Universal loader complete - scheduling audio lightbox delay');
+    if (progressionState !== 'WAITING_FOR_LOADER') {
+      console.log('[⏳STATE] Not in WAITING_FOR_LOADER state, skipping transition');
+      return; // Already progressed past loader
+    }
+
+    console.log('[✅STATE] Universal loader complete - transitioning after 500ms delay');
 
     // Add 500ms buffer after loader completes for smooth transition
     const timer = setTimeout(() => {
-      console.log('[🎭LIGHTBOX] Allowing audio consent lightbox to appear');
-      setAllowAudioLightbox(true);
+      console.log('[🎭STATE] Transitioning: WAITING_FOR_LOADER → WAITING_FOR_CONSENT');
+      setProgressionState('WAITING_FOR_CONSENT');
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [isLoading]);
+  }, [isLoading, progressionState]);
+
+  // STATE MACHINE: Handle WAITING_FOR_CONSENT state - check if we need to show lightbox or skip
+  useEffect(() => {
+    if (progressionState !== 'WAITING_FOR_CONSENT') return;
+
+    console.log('[🎭STATE] Entered WAITING_FOR_CONSENT - checking audio consent status');
+
+    try {
+      // Check if forced to show consent via Convex config
+      if (dbSettings?.forceShowAudioConsent) {
+        console.log('[🔒FORCE] Force show enabled - keeping in WAITING_FOR_CONSENT state');
+        setShowAudioConsent(true);
+        setLockScrollForConsent(true);
+        return; // Stay in WAITING_FOR_CONSENT until user makes choice
+      }
+
+      const consent = localStorage.getItem(AUDIO_CONSENT_KEY);
+      if (!consent) {
+        // First-time visitor - show consent lightbox
+        console.log('[🆕STATE] First-time visitor - showing audio consent lightbox');
+        setShowAudioConsent(true);
+        setLockScrollForConsent(true);
+        // Stay in WAITING_FOR_CONSENT until user makes choice
+      } else {
+        // Return visitor - skip consent, go straight to main content
+        const consentData = JSON.parse(consent);
+        console.log('[🔙STATE] Return visitor - skipping consent, transitioning to MAIN_CONTENT');
+
+        // Show speaker icon for return visitors
+        setShowSpeakerIcon(true);
+
+        if (consentData.audioEnabled) {
+          console.log('[🎵AUDIO] User previously enabled audio (will wait for interaction)');
+        }
+
+        // Skip to MAIN_CONTENT
+        setProgressionState('MAIN_CONTENT');
+      }
+    } catch (e) {
+      console.error('[❌STATE] Error checking audio consent:', e);
+      // On error, show consent lightbox (safe fallback)
+      setShowAudioConsent(true);
+      setLockScrollForConsent(true);
+    }
+  }, [progressionState, dbSettings?.forceShowAudioConsent]);
 
   // STATE VALIDATION: Ensure showAudioConsent and animationStage are mutually exclusive
   // Prevents browser navigation from causing invalid state combinations
