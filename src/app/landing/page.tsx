@@ -818,9 +818,20 @@ export default function LandingPage() {
       showAudioConsent,
       animationStage,
       lockScrollForConsent,
+      logoVideoLoaded,
       isValid: !showAudioConsent || animationStage === 'initial'
     });
   }, [showAudioConsent, animationStage, lockScrollForConsent]);
+
+  // Debug logging for progression gates
+  useEffect(() => {
+    console.log('[🎬PROGRESSION] Phase cards visibility check:', {
+      showAudioConsent,
+      logoVideoLoaded,
+      animationStage,
+      shouldShow: !showAudioConsent && logoVideoLoaded && animationStage === 'logo'
+    });
+  }, [showAudioConsent, logoVideoLoaded, animationStage]);
 
   // Load config from Convex database (primary source) with localStorage fallback
   useEffect(() => {

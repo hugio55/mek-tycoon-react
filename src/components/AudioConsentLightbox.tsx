@@ -111,9 +111,9 @@ export default function AudioConsentLightbox({
 
   const handleProceed = (withAudio: boolean) => {
     console.log('[🎵LIGHTBOX] Proceed clicked with audio:', withAudio);
-    console.log('[🎵LIGHTBOX] Starting 1-second delay before fade...');
+    console.log('[🎵LIGHTBOX] Starting delay before fade...');
 
-    // Start fade animation after 1 second delay
+    // Start fade animation after brief delay (300ms to show green light)
     setTimeout(() => {
       console.log('[🎵LIGHTBOX] Delay complete, starting fade out...');
       setIsFadingOut(true);
@@ -127,7 +127,7 @@ export default function AudioConsentLightbox({
         }));
         onProceed(withAudio);
       }, audioConsentFadeDuration);
-    }, 1000);
+    }, 300);
   };
 
   if (!mounted || !isVisible) return null;
