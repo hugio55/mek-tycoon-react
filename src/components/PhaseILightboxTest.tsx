@@ -80,6 +80,22 @@ export default function PhaseILightboxTest() {
         </div>
 
         <div className="border border-yellow-500/30 p-4 rounded">
+          <h3 className="text-lg font-semibold mb-2">Lightbox Width</h3>
+          <div className="flex items-center gap-4">
+            <input
+              type="range"
+              min="600"
+              max="1600"
+              step="50"
+              value={settings.phaseILightboxWidth}
+              onChange={(e) => updateSettings({ phaseILightboxWidth: parseInt(e.target.value) })}
+              className="flex-1"
+            />
+            <span className="text-yellow-400 w-20">{settings.phaseILightboxWidth}px</span>
+          </div>
+        </div>
+
+        <div className="border border-yellow-500/30 p-4 rounded">
           <h3 className="text-lg font-semibold mb-2">Typography</h3>
           <div className="grid grid-cols-3 gap-4 text-sm">
             <div>

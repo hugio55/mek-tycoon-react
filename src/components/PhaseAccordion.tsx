@@ -50,6 +50,7 @@ export default function PhaseAccordion({
   const phaseIVideoPositionX = unifiedSettings?.shared?.phaseIVideoPositionX || 0;
   const phaseIVideoPositionY = unifiedSettings?.shared?.phaseIVideoPositionY || 0;
   const phaseIBackdropBlur = unifiedSettings?.shared?.phaseIBackdropBlur || 8;
+  const phaseILightboxWidth = unifiedSettings?.shared?.phaseILightboxWidth || 1280;
 
   const handleToggle = (index: number, isLocked: boolean) => {
     if (isLocked) return;
@@ -302,6 +303,7 @@ export default function PhaseAccordion({
         videoPositionX={phaseIVideoPositionX}
         videoPositionY={phaseIVideoPositionY}
         backdropBlur={phaseIBackdropBlur}
+        lightboxWidth={phaseILightboxWidth}
       />
     </div>
   );
