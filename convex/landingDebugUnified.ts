@@ -498,11 +498,13 @@ export const getBackupHistory = query({
         logoSize: backup.desktop?.logoSize,
         starScale: backup.desktop?.starScale,
         bgStarCount: backup.desktop?.bgStarCount,
+        descriptionFontSize: backup.desktop?.descriptionFontSize,
       },
       mobileSample: {
         logoSize: backup.mobile?.logoSize,
         starScale: backup.mobile?.starScale,
         bgStarCount: backup.mobile?.bgStarCount,
+        descriptionFontSize: backup.mobile?.descriptionFontSize,
       },
     }));
   },
