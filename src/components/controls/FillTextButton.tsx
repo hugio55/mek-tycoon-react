@@ -47,43 +47,23 @@ const FillTextButton = ({
         {`
           @keyframes line-glow {
             0%, 100% {
-              filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.5))
-                      drop-shadow(0 0 2.25px rgba(255, 255, 255, 0.5))
-                      drop-shadow(0 0 3.75px rgba(255, 255, 255, 0.45))
-                      drop-shadow(0 0 2.25px rgba(61, 209, 255, 0.5))
-                      drop-shadow(0 0 3.75px rgba(61, 209, 255, 0.5))
-                      drop-shadow(0 0 6.75px rgba(61, 209, 255, 0.5))
-                      drop-shadow(0 0 6.75px rgba(61, 209, 255, 0.45))
-                      drop-shadow(0 0 11.25px rgba(61, 209, 255, 0.35))
-                      drop-shadow(0 0 15.75px rgba(61, 209, 255, 0.25));
+              opacity: 0.8;
+              box-shadow: 0 0 8px rgba(61, 209, 255, 0.6);
             }
             50% {
-              filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.5))
-                      drop-shadow(0 0 3.75px rgba(255, 255, 255, 0.5))
-                      drop-shadow(0 0 6px rgba(255, 255, 255, 0.45))
-                      drop-shadow(0 0 3.75px rgba(61, 209, 255, 0.5))
-                      drop-shadow(0 0 6px rgba(61, 209, 255, 0.5))
-                      drop-shadow(0 0 10.5px rgba(61, 209, 255, 0.5))
-                      drop-shadow(0 0 10.5px rgba(61, 209, 255, 0.5))
-                      drop-shadow(0 0 15.75px rgba(61, 209, 255, 0.45))
-                      drop-shadow(0 0 20.25px rgba(61, 209, 255, 0.35));
+              opacity: 1;
+              box-shadow: 0 0 12px rgba(61, 209, 255, 0.8);
             }
           }
 
           @keyframes soft-pulse {
             0%, 100% {
-              text-shadow: 0 0 10px rgba(61, 209, 255, 0.7),
-                          0 0 20px rgba(61, 209, 255, 0.6),
-                          0 0 32px rgba(61, 209, 255, 0.5),
-                          0 0 44px rgba(61, 209, 255, 0.4),
-                          0 0 56px rgba(61, 209, 255, 0.3);
+              text-shadow: 0 0 12px rgba(61, 209, 255, 0.7),
+                          0 0 24px rgba(61, 209, 255, 0.5);
             }
             50% {
-              text-shadow: 0 0 16px rgba(61, 209, 255, 0.9),
-                          0 0 32px rgba(61, 209, 255, 0.7),
-                          0 0 48px rgba(61, 209, 255, 0.6),
-                          0 0 64px rgba(61, 209, 255, 0.5),
-                          0 0 80px rgba(61, 209, 255, 0.4);
+              text-shadow: 0 0 18px rgba(61, 209, 255, 0.9),
+                          0 0 36px rgba(61, 209, 255, 0.6);
             }
           }
         `}
@@ -107,6 +87,8 @@ const FillTextButton = ({
           width: '3px',
           transition: 'left 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
           animation: isHovered ? 'line-glow 2s ease-in-out infinite' : 'none',
+          willChange: isHovered ? 'left, opacity, box-shadow' : 'auto',
+          transform: 'translateZ(0)',
         }}
       >
         {/* Inner line element */}
@@ -126,6 +108,8 @@ const FillTextButton = ({
           width: isHovered ? 'calc(100% - 3px)' : '0%',
           height: '100%',
           transition: 'width 500ms cubic-bezier(0.4, 0.0, 0.2, 1)',
+          willChange: isHovered ? 'width' : 'auto',
+          transform: 'translateZ(0)',
         }}
       >
         <span
@@ -135,9 +119,10 @@ const FillTextButton = ({
             color: '#3DD1FF',
             WebkitTextStroke: '0.5px #3DD1FF',
             animation: 'soft-pulse 3s ease-in-out infinite',
-            // Add padding to allow glow to render, but it will be clipped by parent
             padding: '0 20px',
             margin: '0 -20px',
+            willChange: 'text-shadow',
+            transform: 'translateZ(0)',
           }}
           aria-hidden="true"
         >
