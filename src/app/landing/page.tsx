@@ -472,6 +472,8 @@ export default function LandingPage() {
           .then(() => {
             console.log('[🎬VIDEO] Safari color video started - marking logo loaded');
             setLogoVideoLoaded(true);
+            console.log('[🎭STATE] Transitioning: MAIN_CONTENT → CONTENT_COMPLETE');
+            setProgressionState('CONTENT_COMPLETE');
           })
           .catch(err => console.error('[🎬VIDEO] Color video play failed:', err));
         alphaVideoRef.current.play().catch(err => console.error('[🎬VIDEO] Alpha video play failed:', err));
@@ -484,6 +486,8 @@ export default function LandingPage() {
           .then(() => {
             console.log('[🎬VIDEO] WebM video started - marking logo loaded');
             setLogoVideoLoaded(true);
+            console.log('[🎭STATE] Transitioning: MAIN_CONTENT → CONTENT_COMPLETE');
+            setProgressionState('CONTENT_COMPLETE');
           })
           .catch(err => console.error('[🎬VIDEO] Video play failed:', err));
       }
@@ -884,6 +888,15 @@ export default function LandingPage() {
       setLockScrollForConsent(true);
     }
   }, [progressionState, dbSettings?.forceShowAudioConsent]);
+
+  // STATE MACHINE: Handle MAIN_CONTENT state - start logo and stars animation
+  useEffect(() => {
+    if (progressionState !== 'MAIN_CONTENT') return;
+
+    console.log('[🎭STATE] Entered MAIN_CONTENT - starting logo + stars animation');
+    setAnimationStage('logo'); // Triggers video playback and star fade-in
+    setLockScrollForConsent(false); // Unlock scrolling
+  }, [progressionState]);
 
   // STATE VALIDATION: Ensure showAudioConsent and animationStage are mutually exclusive
   // Prevents browser navigation from causing invalid state combinations
@@ -1417,36 +1430,31 @@ export default function LandingPage() {
 
   // Handle audio consent proceeding
   const handleConsentProceed = (audioEnabled: boolean) => {
-    // Consent proceed clicked
+    console.log('[🎭STATE] User made audio choice:', audioEnabled ? 'enabled' : 'disabled');
 
     // Store consent in localStorage
     localStorage.setItem(AUDIO_CONSENT_KEY, JSON.stringify({ audioEnabled, timestamp: Date.now() }));
 
     // If audio enabled, start playing immediately
     if (audioEnabled) {
-      // Starting audio playback
       setAudioPlaying(true);
     }
-
-    // Hide the consent lightbox with fade-out
-    setShowAudioConsent(false);
-    // Lightbox hidden, starting animation sequence
 
     // Show speaker icon immediately after consent (will fade in with 3s animation)
     setShowSpeakerIcon(true);
 
-    // Start animation sequence: stars first, then logo
-    setTimeout(() => {
-      // Show stars first
-      console.log('[⭐STARS] Consent given - setting animationStage to stars');
-      setAnimationStage('stars');
+    // STATE MACHINE: Transition to CONSENT_CLOSING
+    console.log('[🎭STATE] Transitioning: WAITING_FOR_CONSENT → CONSENT_CLOSING');
+    setProgressionState('CONSENT_CLOSING');
 
-      // Then show logo after stars are visible
-      setTimeout(() => {
-        console.log('[⭐STARS] Stars visible - transitioning to logo');
-        setAnimationStage('logo');
-      }, 1500); // Stars visible for 1.5s before logo appears
-    }, 500); // 500ms for lightbox fade-out
+    // Hide the consent lightbox
+    setShowAudioConsent(false);
+
+    // After 500ms fade-out, transition to MAIN_CONTENT
+    setTimeout(() => {
+      console.log('[🎭STATE] Transitioning: CONSENT_CLOSING → MAIN_CONTENT');
+      setProgressionState('MAIN_CONTENT');
+    }, 500);
   };
 
   // Handle audio toggle with fade-in and fade-out effects

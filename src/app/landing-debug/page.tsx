@@ -1262,7 +1262,7 @@ export default function LandingDebugPage() {
               <input
                 type="range"
                 min="0.5"
-                max="30"
+                max="500"
                 step="0.5"
                 value={config.starSpeed}
                 onChange={(e) => updateConfig('starSpeed', parseFloat(e.target.value))}
@@ -1414,7 +1414,7 @@ export default function LandingDebugPage() {
               <input
                 type="range"
                 min="0.5"
-                max="75"
+                max="500"
                 step="0.5"
                 value={config.starSpeed2}
                 onChange={(e) => updateConfig('starSpeed2', parseFloat(e.target.value))}
@@ -1589,7 +1589,7 @@ export default function LandingDebugPage() {
               <input
                 type="range"
                 min="0.5"
-                max="125"
+                max="500"
                 step="0.5"
                 value={config.starSpeed3}
                 onChange={(e) => updateConfig('starSpeed3', parseFloat(e.target.value))}
