@@ -124,8 +124,8 @@ export default function AudioConsentLightbox({
     setAudioEnabled(newState);
   };
 
-  const handleProceed = () => {
-    console.log('[🎵LIGHTBOX] Proceed clicked with audioEnabled:', audioEnabled);
+  const handleProceed = (withAudio: boolean) => {
+    console.log('[🎵LIGHTBOX] Proceed clicked with audio:', withAudio);
     console.log('[🎵LIGHTBOX] Starting 1-second delay before fade...');
 
     // Start fade animation after 1 second delay
@@ -137,10 +137,10 @@ export default function AudioConsentLightbox({
       setTimeout(() => {
         console.log('[🎵LIGHTBOX] Fade complete, proceeding...');
         localStorage.setItem(STORAGE_KEY_AUDIO, JSON.stringify({
-          audioEnabled,
+          audioEnabled: withAudio,
           timestamp: Date.now()
         }));
-        onProceed(audioEnabled);
+        onProceed(withAudio);
       }, audioConsentFadeDuration);
     }, 1000);
   };
@@ -165,24 +165,25 @@ export default function AudioConsentLightbox({
         className="relative flex flex-col items-center gap-6 sm:gap-8"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* OLD DESIGN - COMMENTED OUT FOR ROLLBACK */}
         {/* Header Text */}
-        <p
+        {/* <p
           className="text-white/70 text-base sm:text-lg font-light tracking-wide text-center"
           style={{ transform: `translateY(${descriptionVerticalPosition}px)` }}
         >
           {audioDescriptionText}
-        </p>
+        </p> */}
 
         {/* Toggle Switch and Text Container - Horizontal Layout */}
-        <div
+        {/* <div
           className="flex items-center"
           style={{
             gap: `${toggleTextGap}px`,
             transform: `translateY(${toggleGroupVerticalPosition}px)`
           }}
-        >
+        > */}
           {/* Toggle Switch - Responsive sizing with minimum touch target */}
-          <button
+          {/* <button
             onClick={handleToggle}
             className={`relative rounded-full transition-all duration-[400ms] ease-out cursor-pointer touch-manipulation ${
               audioEnabled
@@ -210,10 +211,10 @@ export default function AudioConsentLightbox({
                 transform: audioEnabled ? `translateX(${thumbTranslate}px)` : 'translateX(0)'
               }}
             />
-          </button>
+          </button> */}
 
           {/* Animated Text - Responsive sizing based on toggle size */}
-          <div
+          {/* <div
             className="relative overflow-hidden"
             style={{
               height: `${soundLabelSize * 2}px`,
@@ -254,7 +255,7 @@ export default function AudioConsentLightbox({
               </span>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Proceed Button - ORIGINAL (Commented out, replaced with ProModeToggle) */}
         {/* <button
@@ -275,7 +276,7 @@ export default function AudioConsentLightbox({
         </button> */}
 
         {/* ProModeToggle replacing PROCEED button */}
-        <div
+        {/* <div
           className="mt-6 sm:mt-8"
           style={{
             transform: `scale(${proceedButtonSize}) translateY(${proceedButtonVerticalPosition}px)`
@@ -290,6 +291,42 @@ export default function AudioConsentLightbox({
             }}
             label="PROCEED"
           />
+        </div> */}
+        {/* END OLD DESIGN */}
+
+        {/* NEW DESIGN - TWO SIDE-BY-SIDE PROMO TOGGLES */}
+        <div className="flex items-center justify-center gap-12">
+          {/* Sound Toggle */}
+          <div className="flex flex-col items-center gap-3">
+            <span className="text-yellow-400 text-lg font-light tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+              SOUND
+            </span>
+            <ProModeToggle
+              enabled={false}
+              onChange={(enabled) => {
+                if (enabled) {
+                  handleProceed(true);
+                }
+              }}
+              label=""
+            />
+          </div>
+
+          {/* No Sound Toggle */}
+          <div className="flex flex-col items-center gap-3">
+            <span className="text-white/70 text-lg font-light tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+              NO SOUND
+            </span>
+            <ProModeToggle
+              enabled={false}
+              onChange={(enabled) => {
+                if (enabled) {
+                  handleProceed(false);
+                }
+              }}
+              label=""
+            />
+          </div>
         </div>
       </div>
     </div>

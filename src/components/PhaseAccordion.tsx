@@ -53,7 +53,7 @@ export default function PhaseAccordion({
             });
           }
         }
-      }, 200); // Wait for expand animation (180ms + buffer)
+      }, 400); // Wait for expand animation (360ms + buffer)
     }
   };
 
@@ -180,7 +180,7 @@ export default function PhaseAccordion({
                 maxHeight: isExpanded ? '500px' : '0px',
                 opacity: isExpanded ? 1 : 0,
                 overflow: 'hidden',
-                transition: 'max-height 180ms ease-out, opacity 180ms ease-out',
+                transition: 'max-height 360ms ease-out, opacity 360ms ease-out',
                 willChange: isExpanded ? 'auto' : 'max-height, opacity',
               }}
             >
