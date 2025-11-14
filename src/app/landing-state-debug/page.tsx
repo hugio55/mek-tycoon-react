@@ -222,8 +222,11 @@ export default function LandingStateDebugPage() {
             <button
               onClick={() => {
                 setEventLog([])
-                logEvent('Simulating first-time visitor flow', 'WAITING_FOR_LOADER')
-                setTimeout(() => logEvent('Loader complete', 'WAITING_FOR_CONSENT'), 1000)
+                logEvent('🟡 Simulating first-time visitor flow', 'WAITING_FOR_LOADER')
+                setTimeout(() => logEvent('✅ Loader reached 100% (500ms delay)', 'WAITING_FOR_CONSENT'), 1500)
+                setTimeout(() => logEvent('👆 User clicked YES on audio consent', 'CONSENT_CLOSING'), 3000)
+                setTimeout(() => logEvent('⏱️ 500ms fade completed', 'MAIN_CONTENT'), 3500)
+                setTimeout(() => logEvent('🎬 Logo video started playing', 'CONTENT_COMPLETE'), 5000)
               }}
               className="px-3 py-1 text-xs bg-blue-500/20 border border-blue-500/50 hover:bg-blue-500/30"
             >
