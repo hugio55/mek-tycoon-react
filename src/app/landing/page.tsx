@@ -639,6 +639,9 @@ export default function LandingPage() {
     console.log('[🔍BLUR] Stack trace:', new Error().stack);
   }, [phaseIdleBackdropBlur]);
 
+  // Footer controls (moved here before first use in useEffect)
+  const [footerBlurAmount, setFooterBlurAmount] = useState(DEFAULT_CONFIG.footerBlurAmount);
+
   // Debug logging for footerBlurAmount changes
   useEffect(() => {
     console.log('[🔍BLUR-SYNC] Step 3 - footerBlurAmount React state changed to:', footerBlurAmount);
@@ -685,7 +688,6 @@ export default function LandingPage() {
   const [socialIconVerticalPosition, setSocialIconVerticalPosition] = useState(DEFAULT_CONFIG.socialIconVerticalPosition);
   const [socialIconPaddingTop, setSocialIconPaddingTop] = useState(DEFAULT_CONFIG.socialIconPaddingTop);
   const [socialIconPaddingBottom, setSocialIconPaddingBottom] = useState(DEFAULT_CONFIG.socialIconPaddingBottom);
-  const [footerBlurAmount, setFooterBlurAmount] = useState(DEFAULT_CONFIG.footerBlurAmount);
   const [footerEdgeFeathering, setFooterEdgeFeathering] = useState(DEFAULT_CONFIG.footerEdgeFeathering);
 
   // Mobile-specific controls
