@@ -2264,7 +2264,7 @@ export default function LandingPage() {
             )}
           </div>
 
-          {/* Footer - Overlaps bottom of phase carousel to enable backdrop-filter blur */}
+          {/* Footer - Sits directly below phase carousel, blurs background planet/space image */}
           {!showAudioConsent && (
             <div
               className="flex items-center justify-center relative"
@@ -2272,11 +2272,11 @@ export default function LandingPage() {
                 height: `${footerHeight}px`,
                 paddingTop: `${socialIconPaddingTop}px`,
                 paddingBottom: `${socialIconPaddingBottom}px`,
-                marginTop: isMobile ? undefined : `-${footerHeight * 0.5}px`, // Overlap phase carousel by 50% of footer height
+                marginTop: isMobile ? `${mobilePhaseFooterSpacing}px` : undefined,
                 backdropFilter: `blur(${footerBlurAmount}px)`,
                 WebkitBackdropFilter: `blur(${footerBlurAmount}px)`,
                 backgroundColor: 'rgba(17, 24, 39, 0.3)',
-                zIndex: 25, // Above phase carousel (z-20) to enable backdrop blur
+                zIndex: 10, // Above background (z-0) but below phase carousel content (z-20)
               }}
             >
             {/* OE Logo */}
