@@ -401,6 +401,29 @@ export const copyDesktopToMobile = mutation({
       return { success: false, message: "No settings found to copy. Create desktop settings first." };
     }
 
+    // Create backup BEFORE copying
+    await ctx.db.insert("landingDebugUnifiedHistory", {
+      desktop: existing.desktop,
+      mobile: existing.mobile,
+      shared: existing.shared,
+      timestamp: Date.now(),
+      description: "Auto-backup before copying desktop to mobile",
+    });
+
+    // Keep only last 50 backups
+    const allBackups = await ctx.db
+      .query("landingDebugUnifiedHistory")
+      .withIndex("by_timestamp")
+      .order("desc")
+      .collect();
+
+    if (allBackups.length > 50) {
+      const backupsToDelete = allBackups.slice(50);
+      for (const backup of backupsToDelete) {
+        await ctx.db.delete(backup._id);
+      }
+    }
+
     // Copy desktop config to mobile
     await ctx.db.patch(existing._id, {
       mobile: existing.desktop,
@@ -412,5 +435,185 @@ export const copyDesktopToMobile = mutation({
       message: "Desktop settings copied to mobile successfully. Mobile now starts identical to desktop.",
       copiedSettings: Object.keys(existing.desktop).length
     };
+  },
+});
+
+// BACKUP SYSTEM: Create manual backup
+export const createBackup = mutation({
+  args: {
+    description: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const current = await ctx.db
+      .query("landingDebugUnified")
+      .first();
+
+    if (!current) {
+      throw new Error("No settings to backup");
+    }
+
+    // Insert backup
+    const backupId = await ctx.db.insert("landingDebugUnifiedHistory", {
+      desktop: current.desktop,
+      mobile: current.mobile,
+      shared: current.shared,
+      timestamp: Date.now(),
+      description: args.description || "Manual backup",
+    });
+
+    // Keep only last 50 backups
+    const allBackups = await ctx.db
+      .query("landingDebugUnifiedHistory")
+      .withIndex("by_timestamp")
+      .order("desc")
+      .collect();
+
+    if (allBackups.length > 50) {
+      const backupsToDelete = allBackups.slice(50);
+      for (const backup of backupsToDelete) {
+        await ctx.db.delete(backup._id);
+      }
+    }
+
+    return backupId;
+  },
+});
+
+// BACKUP SYSTEM: Get backup history
+export const getBackupHistory = query({
+  args: {},
+  handler: async (ctx) => {
+    const backups = await ctx.db
+      .query("landingDebugUnifiedHistory")
+      .withIndex("by_timestamp")
+      .order("desc")
+      .take(50);
+
+    return backups.map(backup => ({
+      _id: backup._id,
+      timestamp: backup.timestamp,
+      description: backup.description,
+      // Sample values for preview
+      desktopSample: {
+        logoSize: backup.desktop?.logoSize,
+        starScale: backup.desktop?.starScale,
+        bgStarCount: backup.desktop?.bgStarCount,
+      },
+      mobileSample: {
+        logoSize: backup.mobile?.logoSize,
+        starScale: backup.mobile?.starScale,
+        bgStarCount: backup.mobile?.bgStarCount,
+      },
+    }));
+  },
+});
+
+// BACKUP SYSTEM: Restore from backup
+export const restoreFromBackup = mutation({
+  args: {
+    backupId: v.id("landingDebugUnifiedHistory"),
+  },
+  handler: async (ctx, args) => {
+    // Get the backup
+    const backup = await ctx.db.get(args.backupId);
+    if (!backup) {
+      throw new Error("Backup not found");
+    }
+
+    // Create a safety backup before restoring
+    const current = await ctx.db
+      .query("landingDebugUnified")
+      .first();
+
+    if (current) {
+      await ctx.db.insert("landingDebugUnifiedHistory", {
+        desktop: current.desktop,
+        mobile: current.mobile,
+        shared: current.shared,
+        timestamp: Date.now(),
+        description: "Auto-backup before restore",
+      });
+    }
+
+    // Restore from backup
+    if (current) {
+      await ctx.db.patch(current._id, {
+        desktop: backup.desktop,
+        mobile: backup.mobile,
+        shared: backup.shared,
+        updatedAt: Date.now(),
+      });
+    } else {
+      await ctx.db.insert("landingDebugUnified", {
+        desktop: backup.desktop,
+        mobile: backup.mobile,
+        shared: backup.shared,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
+
+    return { success: true, restoredFrom: backup.timestamp };
+  },
+});
+
+// BACKUP SYSTEM: Auto-backup before any update (use this for all saves)
+export const updateWithBackup = mutation({
+  args: {
+    desktop: v.optional(v.any()),
+    mobile: v.optional(v.any()),
+    shared: v.optional(v.any()),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("landingDebugUnified")
+      .first();
+
+    // Create backup before updating
+    if (existing) {
+      await ctx.db.insert("landingDebugUnifiedHistory", {
+        desktop: existing.desktop,
+        mobile: existing.mobile,
+        shared: existing.shared,
+        timestamp: Date.now(),
+        description: "Auto-backup before save",
+      });
+
+      // Keep only last 50 backups
+      const allBackups = await ctx.db
+        .query("landingDebugUnifiedHistory")
+        .withIndex("by_timestamp")
+        .order("desc")
+        .collect();
+
+      if (allBackups.length > 50) {
+        const backupsToDelete = allBackups.slice(50);
+        for (const backup of backupsToDelete) {
+          await ctx.db.delete(backup._id);
+        }
+      }
+    }
+
+    // Update settings
+    const updatedSettings = {
+      desktop: args.desktop || (existing?.desktop || DEFAULT_CONFIG.desktop),
+      mobile: args.mobile || (existing?.mobile || DEFAULT_CONFIG.mobile),
+      shared: args.shared || (existing?.shared || DEFAULT_CONFIG.shared),
+    };
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        ...updatedSettings,
+        updatedAt: Date.now(),
+      });
+      return existing._id;
+    } else {
+      const id = await ctx.db.insert("landingDebugUnified", {
+        ...updatedSettings,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      return id;
+    }
   },
 });
