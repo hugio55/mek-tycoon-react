@@ -189,6 +189,7 @@ export default function LandingDebugPage() {
 
   // NEW: Backup history panel state
   const [showBackupHistory, setShowBackupHistory] = useState(false);
+  const [activeBackupTab, setActiveBackupTab] = useState<'recent' | 'permanent'>('recent');
 
   // Convex hooks - UNIFIED table (must be declared before useEffect that uses them)
   const unifiedSettings = useQuery(api.landingDebugUnified.getUnifiedLandingDebugSettings);
@@ -200,6 +201,11 @@ export default function LandingDebugPage() {
   const backupHistory = useQuery(api.landingDebugUnified.getBackupHistory);
   const restoreBackup = useMutation(api.landingDebugUnified.restoreFromBackup);
   const createManualBackup = useMutation(api.landingDebugUnified.createBackup);
+
+  // Permanent snapshots (two-tier backup system)
+  const permanentSnapshots = useQuery(api.landingDebugUnified.getPermanentSnapshots);
+  const createManualSnapshot = useMutation(api.landingDebugUnified.createManualPermanentSnapshot);
+  const restorePermanentSnapshot = useMutation(api.landingDebugUnified.restoreFromPermanentSnapshot);
 
   // Load correct config when switching between desktop/mobile modes
   // ONLY on mode switch, NOT on every database update (prevents race conditions)
@@ -825,6 +831,69 @@ export default function LandingDebugPage() {
     }
   };
 
+  // Create manual permanent snapshot
+  const handleCreateManualSnapshot = async () => {
+    const description = prompt('Enter a description for this snapshot (optional):\n\nExample: "Before major redesign" or "Working state - Nov 14"');
+
+    if (description === null) return; // User cancelled
+
+    setSaveState('saving');
+    try {
+      await createManualSnapshot({ description: description || undefined });
+
+      setSaveState('saved');
+      setTimeout(() => {
+        setSaveState('idle');
+        alert('✅ Permanent snapshot created!\n\nThis snapshot will never be automatically deleted.');
+      }, 1000);
+    } catch (err) {
+      console.error('[SNAPSHOT] Failed to create manual snapshot:', err);
+      setSaveState('idle');
+      alert('❌ Failed to create snapshot. See console for details.');
+    }
+  };
+
+  // Restore from permanent snapshot
+  const handleRestorePermanentSnapshot = async (snapshotId: string) => {
+    if (!permanentSnapshots) return;
+
+    const snapshot = permanentSnapshots.find((s: any) => s._id === snapshotId);
+    if (!snapshot) return;
+
+    const typeLabel = snapshot.snapshotType === 'auto' ? '🤖 Auto-Snapshot' : '👤 Manual Snapshot';
+    const confirmMsg = `Restore settings from ${typeLabel}\n${formatBackupTime(snapshot.timestamp)}?\n\n` +
+      `Description: ${snapshot.description}\n\n` +
+      `Sample values from this snapshot:\n` +
+      `- Logo Size: ${snapshot.desktopSample?.logoSize ?? 'N/A'}\n` +
+      `- Star Scale: ${snapshot.desktopSample?.starScale ?? 'N/A'}\n` +
+      `- BG Star Count: ${snapshot.desktopSample?.bgStarCount ?? 'N/A'}\n\n` +
+      `Current settings will be backed up before restoring.`;
+
+    if (!confirm(confirmMsg)) return;
+
+    setSaveState('saving');
+    try {
+      await restorePermanentSnapshot({ snapshotId });
+
+      // Reload settings from database
+      if (unifiedSettings) {
+        const modeConfig = activeMode === 'desktop' ? unifiedSettings.desktop : unifiedSettings.mobile;
+        const mergedConfig: ConfigType = { ...DEFAULT_CONFIG, ...unifiedSettings.shared, ...modeConfig };
+        setConfig(mergedConfig);
+      }
+
+      setSaveState('saved');
+      setTimeout(() => {
+        setSaveState('idle');
+        alert('✅ Settings restored from permanent snapshot!');
+      }, 1000);
+    } catch (err) {
+      console.error('[RESTORE] Failed to restore permanent snapshot:', err);
+      setSaveState('idle');
+      alert('❌ Failed to restore snapshot. See console for details.');
+    }
+  };
+
   const resetToDefaults = async () => {
     if (!confirm('Reset all settings to defaults? This cannot be undone.')) return;
 
@@ -1135,7 +1204,7 @@ export default function LandingDebugPage() {
           </div>
         </div>
 
-        {/* Backup History Panel */}
+        {/* Backup History Panel - TWO-TIER SYSTEM */}
         <div className="mb-4 bg-gray-800 border-2 border-yellow-500/50 rounded-lg overflow-hidden">
           <button
             onClick={() => setShowBackupHistory(!showBackupHistory)}
@@ -1143,9 +1212,9 @@ export default function LandingDebugPage() {
           >
             <div className="flex items-center gap-2">
               <span className="text-lg">💾</span>
-              <span className="font-bold text-yellow-400">Backup History</span>
+              <span className="font-bold text-yellow-400">Two-Tier Backup System</span>
               <span className="text-xs text-gray-400">
-                ({backupHistory?.length || 0} backups)
+                ({backupHistory?.length || 0} rolling + {permanentSnapshots?.length || 0} permanent)
               </span>
             </div>
             <span className="text-yellow-400 text-xl">
@@ -1155,72 +1224,195 @@ export default function LandingDebugPage() {
 
           {showBackupHistory && (
             <div className="p-4 border-t border-gray-700">
-              {!backupHistory || backupHistory.length === 0 ? (
-                <div className="text-center text-gray-400 py-6">
-                  <p className="text-lg mb-2">📭 No backup history yet</p>
-                  <p className="text-sm">Backups are created automatically when you change settings</p>
-                </div>
-              ) : (
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {backupHistory.map((backup: any, index: number) => (
-                    <div
-                      key={backup._id}
-                      className="bg-gray-900 border border-gray-700 rounded-lg p-3 hover:border-yellow-500/50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-mono text-gray-500">
-                              #{backupHistory.length - index}
-                            </span>
-                            <span className="text-sm font-semibold text-yellow-400">
-                              {formatBackupTime(backup.timestamp)}
-                            </span>
-                          </div>
-                          <div className="text-xs text-gray-400 space-y-0.5">
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                              <div>
-                                <span className="text-gray-500">Logo Size:</span>{' '}
-                                <span className="text-white">{backup.desktopSample?.logoSize ?? 'N/A'}</span>
-                              </div>
-                              <div>
-                                <span className="text-gray-500">Star Scale:</span>{' '}
-                                <span className="text-white">{backup.desktopSample?.starScale ?? 'N/A'}</span>
-                              </div>
-                              <div>
-                                <span className="text-gray-500">BG Stars:</span>{' '}
-                                <span className="text-white">{backup.desktopSample?.bgStarCount ?? 'N/A'}</span>
-                              </div>
-                              <div>
-                                <span className="text-gray-500">Desc Size:</span>{' '}
-                                <span className="text-white">{backup.desktopSample?.descriptionFontSize ?? 'N/A'}</span>
-                              </div>
-                            </div>
-                            {backup.description && (
-                              <div className="mt-1 text-gray-500 italic">
-                                {backup.description}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleRestoreBackup(backup._id)}
-                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition-colors whitespace-nowrap"
-                        >
-                          Restore
-                        </button>
-                      </div>
+              {/* Manual Snapshot Button */}
+              <div className="mb-4 p-3 bg-gradient-to-r from-yellow-900/20 to-yellow-800/20 border-2 border-yellow-500/60 rounded-lg">
+                <button
+                  onClick={handleCreateManualSnapshot}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black font-bold rounded transition-all flex items-center justify-center gap-2"
+                >
+                  <span className="text-xl">📸</span>
+                  <span>Create Permanent Snapshot</span>
+                </button>
+                <p className="text-xs text-yellow-200/70 mt-2 text-center">
+                  Create a snapshot that will NEVER be automatically deleted. Perfect for saving working states.
+                </p>
+              </div>
+
+              {/* Tab Navigation */}
+              <div className="flex gap-2 mb-3 border-b border-gray-700">
+                <button
+                  onClick={() => setActiveBackupTab('recent')}
+                  className={`px-4 py-2 font-semibold transition-colors ${
+                    activeBackupTab === 'recent'
+                      ? 'text-yellow-400 border-b-2 border-yellow-400'
+                      : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  Recent (200)
+                </button>
+                <button
+                  onClick={() => setActiveBackupTab('permanent')}
+                  className={`px-4 py-2 font-semibold transition-colors ${
+                    activeBackupTab === 'permanent'
+                      ? 'text-yellow-400 border-b-2 border-yellow-400'
+                      : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  Permanent ({permanentSnapshots?.length || 0})
+                </button>
+              </div>
+
+              {/* Recent Backups Tab */}
+              {activeBackupTab === 'recent' && (
+                <>
+                  {!backupHistory || backupHistory.length === 0 ? (
+                    <div className="text-center text-gray-400 py-6">
+                      <p className="text-lg mb-2">📭 No backup history yet</p>
+                      <p className="text-sm">Backups are created automatically when you change settings</p>
+                      <p className="text-xs text-gray-500 mt-2">Rolling window: Last 200 backups kept</p>
                     </div>
-                  ))}
-                </div>
+                  ) : (
+                    <>
+                      <div className="space-y-2 max-h-96 overflow-y-auto">
+                        {backupHistory.map((backup: any, index: number) => (
+                          <div
+                            key={backup._id}
+                            className="bg-gray-900 border border-gray-700 rounded-lg p-3 hover:border-yellow-500/50 transition-colors"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-xs font-mono text-gray-500">
+                                    #{backupHistory.length - index}
+                                  </span>
+                                  <span className="text-sm font-semibold text-yellow-400">
+                                    {formatBackupTime(backup.timestamp)}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-gray-400 space-y-0.5">
+                                  <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                                    <div>
+                                      <span className="text-gray-500">Logo Size:</span>{' '}
+                                      <span className="text-white">{backup.desktopSample?.logoSize ?? 'N/A'}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500">Star Scale:</span>{' '}
+                                      <span className="text-white">{backup.desktopSample?.starScale ?? 'N/A'}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500">BG Stars:</span>{' '}
+                                      <span className="text-white">{backup.desktopSample?.bgStarCount ?? 'N/A'}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500">Desc Size:</span>{' '}
+                                      <span className="text-white">{backup.desktopSample?.descriptionFontSize ?? 'N/A'}</span>
+                                    </div>
+                                  </div>
+                                  {backup.description && (
+                                    <div className="mt-1 text-gray-500 italic">
+                                      {backup.description}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleRestoreBackup(backup._id)}
+                                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition-colors whitespace-nowrap"
+                              >
+                                Restore
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-gray-700 text-center">
+                        <p className="text-xs text-gray-400">
+                          Rolling backups: Last 200 saves kept. Oldest deleted automatically.
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </>
               )}
 
-              {backupHistory && backupHistory.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-gray-700 text-center">
-                  <p className="text-xs text-gray-400">
-                    Click "Restore" to revert to that backup. Current settings will be backed up first.
-                  </p>
-                </div>
+              {/* Permanent Snapshots Tab */}
+              {activeBackupTab === 'permanent' && (
+                <>
+                  {!permanentSnapshots || permanentSnapshots.length === 0 ? (
+                    <div className="text-center text-gray-400 py-6">
+                      <p className="text-lg mb-2">📸 No permanent snapshots yet</p>
+                      <p className="text-sm">Create manual snapshots or wait for auto-snapshots (every 20th backup)</p>
+                      <p className="text-xs text-gray-500 mt-2">Permanent snapshots are NEVER automatically deleted</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-2 max-h-96 overflow-y-auto">
+                        {permanentSnapshots.map((snapshot: any, index: number) => (
+                          <div
+                            key={snapshot._id}
+                            className="bg-gray-900 border border-yellow-700/50 rounded-lg p-3 hover:border-yellow-500/80 transition-colors"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                  {snapshot.snapshotType === 'auto' ? (
+                                    <span className="px-2 py-0.5 bg-blue-900/50 border border-blue-700 text-blue-300 text-xs font-bold rounded">
+                                      🤖 AUTO
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-0.5 bg-yellow-900/50 border border-yellow-700 text-yellow-300 text-xs font-bold rounded">
+                                      👤 MANUAL
+                                    </span>
+                                  )}
+                                  <span className="text-sm font-semibold text-yellow-400">
+                                    {formatBackupTime(snapshot.timestamp)}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-gray-300 mb-1 font-medium">
+                                  {snapshot.description}
+                                </div>
+                                <div className="text-xs text-gray-400 space-y-0.5">
+                                  <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                                    <div>
+                                      <span className="text-gray-500">Logo Size:</span>{' '}
+                                      <span className="text-white">{snapshot.desktopSample?.logoSize ?? 'N/A'}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500">Star Scale:</span>{' '}
+                                      <span className="text-white">{snapshot.desktopSample?.starScale ?? 'N/A'}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500">BG Stars:</span>{' '}
+                                      <span className="text-white">{snapshot.desktopSample?.bgStarCount ?? 'N/A'}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500">Desc Size:</span>{' '}
+                                      <span className="text-white">{snapshot.desktopSample?.descriptionFontSize ?? 'N/A'}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleRestorePermanentSnapshot(snapshot._id)}
+                                className="px-3 py-1.5 bg-yellow-600 hover:bg-yellow-500 text-black text-xs font-semibold rounded transition-colors whitespace-nowrap"
+                              >
+                                Restore
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-gray-700 text-center space-y-1">
+                        <p className="text-xs text-yellow-400 font-semibold">
+                          Permanent snapshots are NEVER deleted automatically
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Auto-snapshots created every 20th backup. Manual snapshots created when you click the button above.
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </>
               )}
             </div>
           )}
