@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { TriangleKaleidoscope } from './TriangleKaleidoscope';
 import { PercentageDisplay } from './PercentageDisplay';
-import { LoadingText } from './LoadingText';
 import { TIMING } from '../config/constants';
 import { useLoaderContext } from '../context/LoaderContext';
 
@@ -68,9 +67,6 @@ export function LoadingOverlay({
 
         {/* Percentage Display */}
         <PercentageDisplay percentage={percentage} />
-
-        {/* Loading Text */}
-        <LoadingText currentStage={stage} />
       </div>
     </div>
   );
