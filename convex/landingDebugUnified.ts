@@ -559,6 +559,118 @@ export const restoreFromBackup = mutation({
   },
 });
 
+// ========== PERMANENT SNAPSHOTS SYSTEM ==========
+// Permanent snapshots are NEVER automatically deleted
+// Sources: Every 20th auto-backup + manual user snapshots
+
+// Create manual permanent snapshot
+export const createManualPermanentSnapshot = mutation({
+  args: {
+    description: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const current = await ctx.db
+      .query("landingDebugUnified")
+      .first();
+
+    if (!current) {
+      throw new Error("No settings to snapshot");
+    }
+
+    const snapshotId = await ctx.db.insert("landingDebugUnifiedPermanentSnapshots", {
+      desktop: current.desktop,
+      mobile: current.mobile,
+      shared: current.shared,
+      timestamp: Date.now(),
+      description: args.description || "Manual snapshot",
+      snapshotType: "manual" as const,
+    });
+
+    return snapshotId;
+  },
+});
+
+// Get all permanent snapshots (never limited)
+export const getPermanentSnapshots = query({
+  args: {},
+  handler: async (ctx) => {
+    const snapshots = await ctx.db
+      .query("landingDebugUnifiedPermanentSnapshots")
+      .withIndex("by_timestamp")
+      .order("desc")
+      .collect();
+
+    return snapshots.map(snapshot => ({
+      _id: snapshot._id,
+      timestamp: snapshot.timestamp,
+      description: snapshot.description,
+      snapshotType: snapshot.snapshotType,
+      // Sample values for preview
+      desktopSample: {
+        logoSize: snapshot.desktop?.logoSize,
+        starScale: snapshot.desktop?.starScale,
+        bgStarCount: snapshot.desktop?.bgStarCount,
+        descriptionFontSize: snapshot.desktop?.descriptionFontSize,
+      },
+      mobileSample: {
+        logoSize: snapshot.mobile?.logoSize,
+        starScale: snapshot.mobile?.starScale,
+        bgStarCount: snapshot.mobile?.bgStarCount,
+        descriptionFontSize: snapshot.mobile?.descriptionFontSize,
+      },
+    }));
+  },
+});
+
+// Restore from permanent snapshot
+export const restoreFromPermanentSnapshot = mutation({
+  args: {
+    snapshotId: v.id("landingDebugUnifiedPermanentSnapshots"),
+  },
+  handler: async (ctx, args) => {
+    // Get the snapshot
+    const snapshot = await ctx.db.get(args.snapshotId);
+    if (!snapshot) {
+      throw new Error("Snapshot not found");
+    }
+
+    // Create a safety backup before restoring
+    const current = await ctx.db
+      .query("landingDebugUnified")
+      .first();
+
+    if (current) {
+      await ctx.db.insert("landingDebugUnifiedHistory", {
+        desktop: current.desktop,
+        mobile: current.mobile,
+        shared: current.shared,
+        timestamp: Date.now(),
+        description: "Auto-backup before permanent snapshot restore",
+      });
+    }
+
+    // Restore from snapshot
+    if (current) {
+      await ctx.db.patch(current._id, {
+        desktop: snapshot.desktop,
+        mobile: snapshot.mobile,
+        shared: snapshot.shared,
+        updatedAt: Date.now(),
+      });
+    } else {
+      await ctx.db.insert("landingDebugUnified", {
+        desktop: snapshot.desktop,
+        mobile: snapshot.mobile,
+        shared: snapshot.shared,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
+
+    return { success: true, restoredFrom: snapshot.timestamp, snapshotType: snapshot.snapshotType };
+  },
+});
+
 // BACKUP SYSTEM: Auto-backup before any update (use this for all saves)
 // Two-tier system: Rolling 200 recent backups + permanent snapshots every 20th backup
 export const updateWithBackup = mutation({
