@@ -1753,15 +1753,15 @@ export default function LandingPage() {
         }}
       />
 
-      {/* Fixed canvas layer - hidden initially, fades in during stars stage with smooth 1.5s transition */}
+      {/* Fixed canvas layer - hidden initially, only shows during logo stage */}
       <canvas
         ref={canvasRef}
         className="fixed inset-0 w-full h-full z-[1] pointer-events-none"
         style={{
           display: 'block',
           touchAction: 'none',
-          opacity: showAudioConsent ? 0 : (animationStage === 'initial' ? 0 : 1), // Hide when lightbox visible
-          transition: animationStage === 'initial' ? 'none' : 'opacity 1500ms ease-out',
+          opacity: animationStage === 'logo' ? 1 : 0, // Only visible during logo stage
+          transition: animationStage === 'logo' ? 'opacity 1500ms ease-out' : 'none',
         }}
       />
 
