@@ -405,12 +405,15 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
 
     const sizeRandomness = props.sizeRandomness / 100;
     const speedRandomness = props.twinkleSpeedRandomness / 100;
-    const maxZ = 2000;
+    // Stars spawn between -500 and -2500 (far behind camera at z=1000)
+    const minZ = -500;
+    const maxZ = -2500;
 
     for (let i = 0; i < particleCount; i++) {
       positions[i * 3] = (Math.random() - 0.5) * 2000;
       positions[i * 3 + 1] = (Math.random() - 0.5) * 2000;
-      positions[i * 3 + 2] = -Math.random() * maxZ;
+      // Spawn far away: between -2500 and -500
+      positions[i * 3 + 2] = minZ + Math.random() * (maxZ - minZ);
 
       sizes[i] = 1.0 + Math.random() * sizeRandomness;
       twinkleOffsets[i] = Math.random() * Math.PI * 2;
@@ -492,12 +495,15 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
 
     const sizeRandomness = props.sizeRandomness2 / 100;
     const speedRandomness = props.twinkleSpeedRandomness2 / 100;
-    const maxZ = 2000;
+    // Stars spawn between -500 and -2500 (far behind camera at z=1000)
+    const minZ = -500;
+    const maxZ = -2500;
 
     for (let i = 0; i < particleCount; i++) {
       positions[i * 3] = (Math.random() - 0.5) * 2000;
       positions[i * 3 + 1] = (Math.random() - 0.5) * 2000;
-      positions[i * 3 + 2] = -Math.random() * maxZ;
+      // Spawn far away: between -2500 and -500
+      positions[i * 3 + 2] = minZ + Math.random() * (maxZ - minZ);
 
       sizes[i] = 1.0 + Math.random() * sizeRandomness;
       twinkleOffsets[i] = Math.random() * Math.PI * 2;
@@ -575,7 +581,9 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
     // Each streak is a quad (2 triangles = 6 vertices)
     const lineLength = props.lineLength3 * 50; // Scale up to make visible (2 * 50 = 100 units)
     const lineWidth = 4; // Width of streak in units (increased from 2 for better visibility)
-    const maxZ = 2000;
+    // Stars spawn between -500 and -2500 (far behind camera at z=1000)
+    const minZ = -500;
+    const maxZ = -2500;
 
     // Create a single quad geometry (will be instanced)
     const quadGeometry = new THREE.PlaneGeometry(lineWidth, lineLength);
@@ -587,7 +595,8 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
     for (let i = 0; i < particleCount; i++) {
       const x = (Math.random() - 0.5) * 2000;
       const y = (Math.random() - 0.5) * 2000;
-      const z = -Math.random() * maxZ;
+      // Spawn far away: between -2500 and -500
+      const z = minZ + Math.random() * (maxZ - minZ);
 
       positions.push({ x, y, z });
       rotations.push(0); // Will rotate to face camera
@@ -720,11 +729,13 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
           // Move star toward viewer
           positions[idx + 2] += props.starSpeed * deltaTime;
 
-          // Reset if too close
-          if (positions[idx + 2] > 100) {
+          // Reset if star passed camera or went too far forward
+          // Camera is at z=1000, so reset when star reaches z=1100 (past viewer)
+          if (positions[idx + 2] > 1100) {
             positions[idx] = (Math.random() - 0.5) * 2000;
             positions[idx + 1] = (Math.random() - 0.5) * 2000;
-            positions[idx + 2] = -2000;
+            // Respawn far away: between -2500 and -500
+            positions[idx + 2] = -500 + Math.random() * -2000;
           }
         }
 
@@ -752,11 +763,13 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
           // Move star toward viewer
           positions[idx + 2] += props.starSpeed2 * deltaTime;
 
-          // Reset if too close
-          if (positions[idx + 2] > 100) {
+          // Reset if star passed camera or went too far forward
+          // Camera is at z=1000, so reset when star reaches z=1100 (past viewer)
+          if (positions[idx + 2] > 1100) {
             positions[idx] = (Math.random() - 0.5) * 2000;
             positions[idx + 1] = (Math.random() - 0.5) * 2000;
-            positions[idx + 2] = -2000;
+            // Respawn far away: between -2500 and -500
+            positions[idx + 2] = -500 + Math.random() * -2000;
           }
         }
 
@@ -789,11 +802,13 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
           // Move streak toward camera
           pos.z += props.starSpeed3 * deltaTime;
 
-          // Reset if past camera
-          if (pos.z > 100) {
+          // Reset if star passed camera or went too far forward
+          // Camera is at z=1000, so reset when star reaches z=1100 (past viewer)
+          if (pos.z > 1100) {
             pos.x = (Math.random() - 0.5) * 2000;
             pos.y = (Math.random() - 0.5) * 2000;
-            pos.z = -2000;
+            // Respawn far away: between -2500 and -500
+            pos.z = -500 + Math.random() * -2000;
           }
 
           // Build transformation matrix: rotation + position

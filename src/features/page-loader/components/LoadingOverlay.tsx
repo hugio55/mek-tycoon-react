@@ -65,7 +65,8 @@ export function LoadingOverlay({
 
   const overlayContent = (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-md"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-transparent backdrop-blur-md"
+      // bg-black/40 can be restored if needed
       style={{
         opacity: isFadingOut ? 0 : 1,
         transition: `opacity ${TIMING.FADE_DURATION}ms ease-out`,
