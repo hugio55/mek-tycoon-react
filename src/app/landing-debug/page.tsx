@@ -37,7 +37,7 @@ const DEFAULT_CONFIG = {
   starScale3: 1,
   starSpeed3: 10,
   starFrequency3: 100,
-  lineLength3: 2,
+  lineLength3: 80,
   spawnDelay3: 50,
   // Layer 3 Twinkling
   twinkleAmount3: 0,
@@ -2046,9 +2046,9 @@ export default function LandingDebugPage() {
               </label>
               <input
                 type="range"
-                min="0.5"
-                max="5"
-                step="0.1"
+                min="10"
+                max="200"
+                step="5"
                 value={config.lineLength3}
                 onChange={(e) => updateConfig('lineLength3', parseFloat(e.target.value))}
                 onMouseDown={handleInputStart}
@@ -2058,7 +2058,7 @@ export default function LandingDebugPage() {
                 className="w-full"
               />
               <div className="text-xs text-purple-400 text-center mt-0.5">
-                {config.lineLength3.toFixed(1)}x
+                {config.lineLength3.toFixed(0)}
               </div>
             </div>
 

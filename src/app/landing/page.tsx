@@ -223,9 +223,20 @@ export default function LandingPage() {
   // Debug logging for config selection
   useEffect(() => {
     if (unifiedSettings) {
-      // Config loaded from unified settings
+      console.log('[🔍BLUR-SYNC] Step 1 - Database query returned:', {
+        source: 'unified',
+        mode: isMobile ? 'mobile' : 'desktop',
+        footerBlurAmount: dbSettings?.footerBlurAmount,
+        phaseIdleBackdropBlur: dbSettings?.phaseIdleBackdropBlur,
+        disablePhaseAccordionBlur: dbSettings?.disablePhaseAccordionBlur
+      });
     } else if (oldDbSettings) {
-      // Using old settings (fallback)
+      console.log('[🔍BLUR-SYNC] Step 1 - Database query returned:', {
+        source: 'old fallback',
+        footerBlurAmount: dbSettings?.footerBlurAmount,
+        phaseIdleBackdropBlur: dbSettings?.phaseIdleBackdropBlur,
+        disablePhaseAccordionBlur: dbSettings?.disablePhaseAccordionBlur
+      });
     }
   }, [unifiedSettings, oldDbSettings, isMobile, dbSettings]);
 
@@ -1153,6 +1164,7 @@ export default function LandingPage() {
           console.log('[🔍BLUR] Raw value from config:', config.phaseIdleBackdropBlur);
           console.log('[🔍BLUR] After nullish coalescing:', backdropBlurValue);
           console.log('[🔍BLUR] Setting state to:', backdropBlurValue);
+          console.log('[🔍BLUR-SYNC] Step 2 - Setting phaseIdleBackdropBlur state:', backdropBlurValue);
           setPhaseIdleBackdropBlur(backdropBlurValue);
           setPhaseColumnYOffset(config.phaseColumnYOffset ?? DEFAULT_CONFIG.phaseColumnYOffset);
           setDescriptionCardBlur(config.descriptionCardBlur ?? DEFAULT_CONFIG.descriptionCardBlur);
@@ -1177,7 +1189,9 @@ export default function LandingPage() {
           setSocialIconVerticalPosition(config.socialIconVerticalPosition ?? DEFAULT_CONFIG.socialIconVerticalPosition);
           setSocialIconPaddingTop(config.socialIconPaddingTop ?? DEFAULT_CONFIG.socialIconPaddingTop);
           setSocialIconPaddingBottom(config.socialIconPaddingBottom ?? DEFAULT_CONFIG.socialIconPaddingBottom);
-          setFooterBlurAmount(config.footerBlurAmount ?? DEFAULT_CONFIG.footerBlurAmount);
+          const footerBlurValue1 = config.footerBlurAmount ?? DEFAULT_CONFIG.footerBlurAmount;
+          console.log('[🔍BLUR-SYNC] Step 2 - Setting footerBlurAmount state (unified load):', footerBlurValue1);
+          setFooterBlurAmount(footerBlurValue1);
           setFooterEdgeFeathering(config.footerEdgeFeathering ?? DEFAULT_CONFIG.footerEdgeFeathering);
           setDescriptionVerticalPosition(config.descriptionVerticalPosition ?? 0);
           setToggleGroupVerticalPosition(config.toggleGroupVerticalPosition ?? 0);
@@ -1313,7 +1327,9 @@ export default function LandingPage() {
           setSocialIconVerticalPosition(config.socialIconVerticalPosition ?? DEFAULT_CONFIG.socialIconVerticalPosition);
           setSocialIconPaddingTop(config.socialIconPaddingTop ?? DEFAULT_CONFIG.socialIconPaddingTop);
           setSocialIconPaddingBottom(config.socialIconPaddingBottom ?? DEFAULT_CONFIG.socialIconPaddingBottom);
-          setFooterBlurAmount(config.footerBlurAmount ?? DEFAULT_CONFIG.footerBlurAmount);
+          const footerBlurValue1 = config.footerBlurAmount ?? DEFAULT_CONFIG.footerBlurAmount;
+          console.log('[🔍BLUR-SYNC] Step 2 - Setting footerBlurAmount state (unified load):', footerBlurValue1);
+          setFooterBlurAmount(footerBlurValue1);
           setFooterEdgeFeathering(config.footerEdgeFeathering ?? DEFAULT_CONFIG.footerEdgeFeathering);
           setDescriptionVerticalPosition(config.descriptionVerticalPosition ?? 0);
           setToggleGroupVerticalPosition(config.toggleGroupVerticalPosition ?? 0);
