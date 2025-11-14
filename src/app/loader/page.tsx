@@ -90,14 +90,14 @@ export default function LoaderDebugPage() {
               </label>
               <input
                 type="range"
-                min="-40"
+                min="-150"
                 max="64"
                 value={spacing}
                 onChange={(e) => setSpacing(Number(e.target.value))}
                 className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500"
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>-40px</span>
+                <span>-150px</span>
                 <span>64px</span>
               </div>
             </div>
