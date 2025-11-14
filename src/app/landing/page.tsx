@@ -316,8 +316,9 @@ export default function LandingPage() {
   const logoContainerRef = useRef<HTMLDivElement>(null);
 
   // Canvas compositing for Safari/iOS (dual-video alpha transparency)
+  // Skip on mobile - using GIF instead
   useEffect(() => {
-    if (!useSafariVideo) return;
+    if (!useSafariVideo || isMobile) return;
     if (!compositeCanvasRef.current || !colorVideoRef.current || !alphaVideoRef.current) return;
 
     const canvas = compositeCanvasRef.current;
@@ -436,8 +437,13 @@ export default function LandingPage() {
   // Start video when logo animation begins
   useEffect(() => {
     if (animationStage === 'logo') {
-      // Handle Safari/iOS (dual video compositing)
-      if (useSafariVideo && colorVideoRef.current && alphaVideoRef.current) {
+      // Handle Safari/iOS mobile (GIF - no action needed, onLoad handles setLogoVideoLoaded)
+      if (useSafariVideo && isMobile) {
+        // Mobile Safari uses GIF - logo loaded state handled by img onLoad
+        console.log('[🖼️GIF] Mobile Safari using GIF for logo');
+      }
+      // Handle Safari/iOS desktop (dual video compositing)
+      else if (useSafariVideo && !isMobile && colorVideoRef.current && alphaVideoRef.current) {
         // Starting Safari dual-video playback
         colorVideoRef.current.currentTime = 0;
         alphaVideoRef.current.currentTime = 0;
@@ -1791,10 +1797,11 @@ export default function LandingPage() {
             }}
           >
             {useSafariVideo ? (
-              <>
-                {/* Safari/iOS: Canvas compositing with dual H.265 videos */}
-                <canvas
-                  ref={compositeCanvasRef}
+              isMobile ? (
+                /* Mobile Safari: Use GIF instead of dual-video compositing */
+                <img
+                  src={getMediaUrl('/random-images/logo GIF.gif')}
+                  alt="Logo Animation"
                   className="w-full h-full absolute inset-0"
                   style={{
                     opacity: 'inherit',
@@ -1812,34 +1819,62 @@ export default function LandingPage() {
                       ? 'filter 800ms cubic-bezier(0.4, 0, 0.2, 1)'
                       : 'filter 400ms cubic-bezier(0.4, 0, 0.2, 1)',
                   }}
+                  onLoad={() => {
+                    console.log('[🖼️GIF] Logo GIF loaded successfully');
+                    setLogoVideoLoaded(true);
+                  }}
                 />
-                {/* Hidden color video */}
-                <video
-                  ref={colorVideoRef}
-                  src={getMediaUrl('/random-images/logo vid for apple/logo h265 1 point 5q winner.mp4')}
-                  loop
-                  muted
-                  playsInline
-                  preload="auto"
-                  style={{ display: 'none' }}
-                  onError={(e) => console.error('[🎬VIDEO] Color video error:', e)}
-                  onLoadStart={() => console.log('[🎬VIDEO] Color video load started')}
-                  onLoadedData={() => console.log('[🎬VIDEO] Color video loaded successfully')}
-                />
-                {/* Hidden alpha mask video */}
-                <video
-                  ref={alphaVideoRef}
-                  src={getMediaUrl('/random-images/logo vid for apple/logo h265 1 point 5q ALPHA 2.mp4')}
-                  loop
-                  muted
-                  playsInline
-                  preload="auto"
-                  style={{ display: 'none' }}
-                  onError={(e) => console.error('[🎬VIDEO] Alpha video error:', e)}
-                  onLoadStart={() => console.log('[🎬VIDEO] Alpha video load started')}
-                  onLoadedData={() => console.log('[🎬VIDEO] Alpha video loaded successfully')}
-                />
-              </>
+              ) : (
+                <>
+                  {/* Desktop Safari: Canvas compositing with dual H.265 videos */}
+                  <canvas
+                    ref={compositeCanvasRef}
+                    className="w-full h-full absolute inset-0"
+                    style={{
+                      opacity: 'inherit',
+                      objectFit: 'contain',
+                      transform: 'translateZ(0) scale3d(1, 1, 1)',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                      WebkitTransform: 'translateZ(0) scale3d(1, 1, 1)',
+                      imageRendering: 'auto',
+                      pointerEvents: 'none',
+                      willChange: animationStage === 'logo' ? 'transform' : showBetaLightbox ? 'filter' : 'auto',
+                      isolation: 'isolate',
+                      filter: showBetaLightbox ? 'blur(8px)' : 'blur(0px)',
+                      transition: showBetaLightbox
+                        ? 'filter 800ms cubic-bezier(0.4, 0, 0.2, 1)'
+                        : 'filter 400ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
+                  />
+                  {/* Hidden color video */}
+                  <video
+                    ref={colorVideoRef}
+                    src={getMediaUrl('/random-images/logo vid for apple/logo h265 1 point 5q winner.mp4')}
+                    loop
+                    muted
+                    playsInline
+                    preload="auto"
+                    style={{ display: 'none' }}
+                    onError={(e) => console.error('[🎬VIDEO] Color video error:', e)}
+                    onLoadStart={() => console.log('[🎬VIDEO] Color video load started')}
+                    onLoadedData={() => console.log('[🎬VIDEO] Color video loaded successfully')}
+                  />
+                  {/* Hidden alpha mask video */}
+                  <video
+                    ref={alphaVideoRef}
+                    src={getMediaUrl('/random-images/logo vid for apple/logo h265 1 point 5q ALPHA 2.mp4')}
+                    loop
+                    muted
+                    playsInline
+                    preload="auto"
+                    style={{ display: 'none' }}
+                    onError={(e) => console.error('[🎬VIDEO] Alpha video error:', e)}
+                    onLoadStart={() => console.log('[🎬VIDEO] Alpha video load started')}
+                    onLoadedData={() => console.log('[🎬VIDEO] Alpha video loaded successfully')}
+                  />
+                </>
+              )
             ) : (
               /* Chrome/Firefox: WebM video */
               <video
