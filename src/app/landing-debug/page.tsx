@@ -41,6 +41,7 @@ const DEFAULT_CONFIG = {
   sizeRandomness3: 50,
   // Background Stars
   bgStarCount: 800,
+  bgStarSize: 2.0,
   bgStarMinBrightness: 0.1,
   bgStarMaxBrightness: 0.4,
   bgStarTwinkleSpeed: 0.5,
@@ -602,7 +603,9 @@ export default function LandingDebugPage() {
             'descriptionCardBlur', 'descriptionCardDarkness', 'descriptionCardBorder',
             'logoFadeDuration', 'lightboxBackdropDarkness', 'joinBetaFont', 'joinBetaColor',
             'audioLightboxDescriptionFont', 'audioLightboxDescriptionColor',
-            'audioDescriptionText', 'audioConsentFadeDuration', 'forceShowAudioConsent'
+            'audioDescriptionText', 'audioConsentFadeDuration', 'forceShowAudioConsent',
+            'phaseILightboxContent', 'phaseITextFont', 'phaseITextFontSize', 'phaseITextColor',
+            'phaseIVideoScale', 'phaseIVideoPositionX', 'phaseIVideoPositionY', 'phaseIBackdropBlur'
           ];
 
           // Extract shared vs mode-specific fields
@@ -1778,6 +1781,29 @@ export default function LandingDebugPage() {
               />
               <div className="text-xs text-orange-400 text-center mt-0.5">
                 {config.bgStarCount} stars
+              </div>
+            </div>
+
+            {/* Base Size */}
+            <div className="mb-2">
+              <label className="block text-xs text-orange-300 mb-1">
+                Size
+              </label>
+              <input
+                type="range"
+                min="0.1"
+                max="10"
+                step="0.1"
+                value={config.bgStarSize}
+                onChange={(e) => updateConfig('bgStarSize', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-orange-400 text-center mt-0.5">
+                {config.bgStarSize.toFixed(1)}x
               </div>
             </div>
 
