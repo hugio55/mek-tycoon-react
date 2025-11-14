@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import ProModeToggle from './controls/ProModeToggle';
+import { GeometricSpeakerIcon } from './SpeakerIcons';
 
 interface AudioConsentLightboxProps {
   onProceed: (audioEnabled: boolean) => void;
@@ -289,15 +290,11 @@ export default function AudioConsentLightbox({
         >
           {/* Sound Toggle - Plays sounds */}
           <div className="flex flex-col items-center gap-3">
-            <span
-              className={`font-light tracking-wider ${toggleLabelColor}`}
-              style={{
-                fontFamily: `${toggleLabelFont}, sans-serif`,
-                fontSize: `${toggleLabelSize}px`
-              }}
-            >
-              SOUND
-            </span>
+            <GeometricSpeakerIcon
+              size={toggleLabelSize * 2.5}
+              isPlaying={true}
+              className={toggleLabelColor}
+            />
             <ProModeToggle
               enabled={false}
               onChange={(enabled) => {
@@ -312,15 +309,11 @@ export default function AudioConsentLightbox({
 
           {/* No Sound Toggle - Silent (no sounds) */}
           <div className="flex flex-col items-center gap-3">
-            <span
-              className="text-white/70 font-light tracking-wider"
-              style={{
-                fontFamily: `${toggleLabelFont}, sans-serif`,
-                fontSize: `${toggleLabelSize}px`
-              }}
-            >
-              NO SOUND
-            </span>
+            <GeometricSpeakerIcon
+              size={toggleLabelSize * 2.5}
+              isPlaying={false}
+              className="text-white/70"
+            />
             <ProModeToggle
               enabled={false}
               onChange={(enabled) => {
