@@ -527,7 +527,7 @@ export default function LandingPage() {
 
   // Debug logging for animation stage changes
   useEffect(() => {
-    // Animation stage changed
+    console.log('[⭐STARS] animationStage changed to:', animationStage);
   }, [animationStage]);
 
   const [soundLabelFont, setSoundLabelFont] = useState(DEFAULT_CONFIG.soundLabelFont);
@@ -687,9 +687,15 @@ export default function LandingPage() {
       } else {
         // Return visitor - has already given consent
         const consentData = JSON.parse(consent);
-        // Return visitor - skipping lightbox, showing video zoom animation
-        // Skip consent lightbox and show video zoom animation directly
-        setAnimationStage('logo');
+        // Return visitor - skipping lightbox, showing stars + logo animation
+        // Show stars first, then logo
+        console.log('[⭐STARS] Return visitor - setting animationStage to stars');
+        setAnimationStage('stars');
+
+        setTimeout(() => {
+          console.log('[⭐STARS] Stars visible - transitioning to logo');
+          setAnimationStage('logo');
+        }, 1500); // Stars visible for 1.5s before logo appears
 
         // Show speaker icon immediately for return visitors (will fade in with 3s animation)
         setShowSpeakerIcon(true);
@@ -1346,10 +1352,17 @@ export default function LandingPage() {
     // Show speaker icon immediately after consent (will fade in with 3s animation)
     setShowSpeakerIcon(true);
 
-    // Start animation sequence: stars + logo fade in together after lightbox fades
+    // Start animation sequence: stars first, then logo
     setTimeout(() => {
-      // Stars + Logo fade in together
-      setAnimationStage('logo');
+      // Show stars first
+      console.log('[⭐STARS] Consent given - setting animationStage to stars');
+      setAnimationStage('stars');
+
+      // Then show logo after stars are visible
+      setTimeout(() => {
+        console.log('[⭐STARS] Stars visible - transitioning to logo');
+        setAnimationStage('logo');
+      }, 1500); // Stars visible for 1.5s before logo appears
     }, 500); // 500ms for lightbox fade-out
   };
 

@@ -29,7 +29,7 @@ export default function AudioConsentLightbox({
   backdropDarkness = 95,
   logoFadeDuration = 1000,
   lockScroll = true,
-  audioConsentFadeDuration = 1500,
+  audioConsentFadeDuration = 2500,
   toggleSize = 1.0,
   toggleGap = 48,
   toggleVerticalPosition = 0,
