@@ -22,12 +22,14 @@ interface ProModeToggleProps {
   enabled?: boolean;
   onChange?: (enabled: boolean) => void;
   label?: string;
+  enableSounds?: boolean; // Control whether sounds play on interaction
 }
 
 export default function ProModeToggle({
   enabled = false,
   onChange,
-  label = "Pro Mode"
+  label = "Pro Mode",
+  enableSounds = true
 }: ProModeToggleProps) {
   const [guardOpen, setGuardOpen] = useState(false);
   const [switchOn, setSwitchOn] = useState(enabled);
@@ -36,9 +38,11 @@ export default function ProModeToggle({
     const newGuardState = !guardOpen;
     setGuardOpen(newGuardState);
 
-    // Play main click sound
-    const audio = new Audio('/sounds/main_click.mp3');
-    audio.play().catch(err => console.log('Audio play failed:', err));
+    // Play main click sound (only if sounds enabled)
+    if (enableSounds) {
+      const audio = new Audio('/sounds/main_click.mp3');
+      audio.play().catch(err => console.log('Audio play failed:', err));
+    }
 
     // Close guard -> turn off switch
     if (!newGuardState && switchOn) {
@@ -53,9 +57,11 @@ export default function ProModeToggle({
     const newSwitchState = !switchOn;
     setSwitchOn(newSwitchState);
 
-    // Play click reverb sound
-    const audio = new Audio('/sounds/click reverb 2.mp3');
-    audio.play().catch(err => console.log('Audio play failed:', err));
+    // Play click reverb sound (only if sounds enabled)
+    if (enableSounds) {
+      const audio = new Audio('/sounds/click reverb 2.mp3');
+      audio.play().catch(err => console.log('Audio play failed:', err));
+    }
 
     onChange?.(newSwitchState);
   };

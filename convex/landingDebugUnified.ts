@@ -196,6 +196,11 @@ const DEFAULT_CONFIG = {
     forceShowAudioConsent: false,
     // Star systems master toggle
     starsEnabled: true,
+    // Social icon URLs
+    oeLogoUrl: '#',
+    discordUrl: 'https://discord.gg/your-discord',
+    twitterUrl: 'https://twitter.com/your-twitter',
+    websiteUrl: 'https://your-website.com',
   },
 };
 

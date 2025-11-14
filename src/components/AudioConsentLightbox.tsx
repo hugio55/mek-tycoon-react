@@ -296,7 +296,7 @@ export default function AudioConsentLightbox({
 
         {/* NEW DESIGN - TWO SIDE-BY-SIDE PROMO TOGGLES */}
         <div className="flex items-center justify-center gap-12">
-          {/* Sound Toggle */}
+          {/* Sound Toggle - Plays sounds */}
           <div className="flex flex-col items-center gap-3">
             <span className="text-yellow-400 text-lg font-light tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
               SOUND
@@ -309,10 +309,11 @@ export default function AudioConsentLightbox({
                 }
               }}
               label=""
+              enableSounds={true}
             />
           </div>
 
-          {/* No Sound Toggle */}
+          {/* No Sound Toggle - Silent (no sounds) */}
           <div className="flex flex-col items-center gap-3">
             <span className="text-white/70 text-lg font-light tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
               NO SOUND
@@ -325,6 +326,7 @@ export default function AudioConsentLightbox({
                 }
               }}
               label=""
+              enableSounds={false}
             />
           </div>
         </div>
