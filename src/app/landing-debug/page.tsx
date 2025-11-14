@@ -163,6 +163,7 @@ const DEFAULT_CONFIG = {
   phaseITextFont: 'Arial',
   phaseITextFontSize: 16,
   phaseITextColor: 'text-white/80',
+  phaseILightboxWidth: 1280,
 };
 
 type ConfigType = typeof DEFAULT_CONFIG;
