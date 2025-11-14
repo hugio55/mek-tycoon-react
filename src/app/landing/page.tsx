@@ -308,6 +308,21 @@ export default function LandingPage() {
   // ===== STATE MACHINE: Landing Page Progression =====
   const [progressionState, setProgressionState] = useState<ProgressionState>('WAITING_FOR_LOADER');
 
+  // Comprehensive state transition logging
+  useEffect(() => {
+    console.log('[🎭STATE-TRANSITION]', {
+      state: progressionState,
+      timestamp: new Date().toISOString(),
+      description:
+        progressionState === 'WAITING_FOR_LOADER' ? 'Universal loader running (triangles + percentage)' :
+        progressionState === 'WAITING_FOR_CONSENT' ? 'Audio consent lightbox visible over dimmed background' :
+        progressionState === 'CONSENT_CLOSING' ? 'User made choice, lightbox fading out (500ms)' :
+        progressionState === 'MAIN_CONTENT' ? 'Logo + stars fading in, background full brightness' :
+        progressionState === 'CONTENT_COMPLETE' ? 'Logo video loaded, phase cards visible' :
+        'Unknown state'
+    });
+  }, [progressionState]);
+
   // Audio controls
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
@@ -756,6 +771,8 @@ export default function LandingPage() {
         try {
           const triggerData = JSON.parse(trigger);
           if (triggerData.action === 'show-audio-consent') {
+            console.log('[🐛DEBUG] Debug trigger: show-audio-consent → WAITING_FOR_CONSENT');
+            setProgressionState('WAITING_FOR_CONSENT'); // Go back to consent state
             setShowAudioConsent(true);
             setLockScrollForConsent(true);
             setAnimationStage('initial'); // Reset to initial dark state
@@ -763,10 +780,13 @@ export default function LandingPage() {
             // Clear the trigger so it doesn't fire again
             localStorage.removeItem('mek-debug-trigger');
           } else if (triggerData.action === 'hide-audio-consent') {
+            console.log('[🐛DEBUG] Debug trigger: hide-audio-consent → CONTENT_COMPLETE');
+            setProgressionState('CONTENT_COMPLETE'); // Skip to final state
             setShowAudioConsent(false);
             setLockScrollForConsent(false);
             setAnimationStage('logo'); // Show everything
             setShowSpeakerIcon(true); // Show speaker icon when hiding consent
+            setLogoVideoLoaded(true); // Mark logo as loaded
             // Clear the trigger so it doesn't fire again
             localStorage.removeItem('mek-debug-trigger');
           }
@@ -790,15 +810,20 @@ export default function LandingPage() {
       try {
         if (event.data?.type === 'mek-debug-trigger') {
           if (event.data?.action === 'show-audio-consent') {
+            console.log('[🐛DEBUG] PostMessage trigger: show-audio-consent → WAITING_FOR_CONSENT');
+            setProgressionState('WAITING_FOR_CONSENT'); // Go back to consent state
             setShowAudioConsent(true);
             setLockScrollForConsent(true);
             setAnimationStage('initial'); // Reset to initial dark state
             setShowSpeakerIcon(false); // Hide speaker icon when showing consent
           } else if (event.data?.action === 'hide-audio-consent') {
+            console.log('[🐛DEBUG] PostMessage trigger: hide-audio-consent → CONTENT_COMPLETE');
+            setProgressionState('CONTENT_COMPLETE'); // Skip to final state
             setShowAudioConsent(false);
             setLockScrollForConsent(false);
             setAnimationStage('logo'); // Show everything
             setShowSpeakerIcon(true); // Show speaker icon when hiding consent
+            setLogoVideoLoaded(true); // Mark logo as loaded
           }
         }
       } catch (error) {
@@ -898,32 +923,33 @@ export default function LandingPage() {
     setLockScrollForConsent(false); // Unlock scrolling
   }, [progressionState]);
 
-  // STATE VALIDATION: Ensure showAudioConsent and animationStage are mutually exclusive
+  // STATE VALIDATION: Detect browser back/forward navigation and correct progressionState
   // Prevents browser navigation from causing invalid state combinations
   useEffect(() => {
-    // CRITICAL: Detect invalid state where lightbox is visible but content is showing
-    if (showAudioConsent && animationStage !== 'initial') {
-      console.error('[🚨STATE-DESYNC] INVALID STATE DETECTED!', {
+    // CRITICAL: Detect invalid state combinations due to browser navigation
+    // If audio consent is showing but we're in MAIN_CONTENT or CONTENT_COMPLETE, something went wrong
+    if (showAudioConsent && (progressionState === 'MAIN_CONTENT' || progressionState === 'CONTENT_COMPLETE')) {
+      console.error('[🚨STATE-DESYNC] INVALID STATE DETECTED! Audio consent showing but in advanced state', {
         showAudioConsent,
-        animationStage,
-        expected: 'animationStage should be "initial" when showAudioConsent is true',
-        action: 'Force-resetting animationStage to "initial"'
+        progressionState,
+        expected: 'progressionState should be WAITING_FOR_CONSENT when showAudioConsent is true',
+        action: 'Force-resetting to WAITING_FOR_CONSENT'
       });
 
       // Force correction to valid state
-      setAnimationStage('initial');
+      setProgressionState('WAITING_FOR_CONSENT');
       setLockScrollForConsent(true);
     }
 
-    // Log state transitions for debugging
+    // Log state for debugging
     console.log('[🔍STATE-CHECK] State validation:', {
+      progressionState,
       showAudioConsent,
-      animationStage,
       lockScrollForConsent,
       logoVideoLoaded,
-      isValid: !showAudioConsent || animationStage === 'initial'
+      isValid: !showAudioConsent || progressionState === 'WAITING_FOR_CONSENT' || progressionState === 'CONSENT_CLOSING'
     });
-  }, [showAudioConsent, animationStage, lockScrollForConsent]);
+  }, [showAudioConsent, progressionState, lockScrollForConsent, logoVideoLoaded]);
 
   // Debug logging for progression gates
   useEffect(() => {
