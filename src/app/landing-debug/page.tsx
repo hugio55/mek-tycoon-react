@@ -789,10 +789,10 @@ export default function LandingDebugPage() {
     const backup = backupHistory.find((b: any) => b._id === backupId);
     if (!backup) return;
 
-    const confirmMsg = `Restore settings from ${formatBackupTime(backup._creationTime)}?\n\nSample values from this backup:\n` +
-      `- Logo Size: ${backup.desktop?.logoSize ?? 'N/A'}\n` +
-      `- Star Scale: ${backup.desktop?.starScale ?? 'N/A'}\n` +
-      `- BG Star Count: ${backup.desktop?.bgStarCount ?? 'N/A'}\n\n` +
+    const confirmMsg = `Restore settings from ${formatBackupTime(backup.timestamp)}?\n\nSample values from this backup:\n` +
+      `- Logo Size: ${backup.desktopSample?.logoSize ?? 'N/A'}\n` +
+      `- Star Scale: ${backup.desktopSample?.starScale ?? 'N/A'}\n` +
+      `- BG Star Count: ${backup.desktopSample?.bgStarCount ?? 'N/A'}\n\n` +
       `Current settings will be backed up before restoring.`;
 
     if (!confirm(confirmMsg)) return;
@@ -1169,26 +1169,26 @@ export default function LandingDebugPage() {
                               #{backupHistory.length - index}
                             </span>
                             <span className="text-sm font-semibold text-yellow-400">
-                              {formatBackupTime(backup._creationTime)}
+                              {formatBackupTime(backup.timestamp)}
                             </span>
                           </div>
                           <div className="text-xs text-gray-400 space-y-0.5">
                             <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
                               <div>
                                 <span className="text-gray-500">Logo Size:</span>{' '}
-                                <span className="text-white">{backup.desktop?.logoSize ?? 'N/A'}</span>
+                                <span className="text-white">{backup.desktopSample?.logoSize ?? 'N/A'}</span>
                               </div>
                               <div>
                                 <span className="text-gray-500">Star Scale:</span>{' '}
-                                <span className="text-white">{backup.desktop?.starScale ?? 'N/A'}</span>
+                                <span className="text-white">{backup.desktopSample?.starScale ?? 'N/A'}</span>
                               </div>
                               <div>
                                 <span className="text-gray-500">BG Stars:</span>{' '}
-                                <span className="text-white">{backup.desktop?.bgStarCount ?? 'N/A'}</span>
+                                <span className="text-white">{backup.desktopSample?.bgStarCount ?? 'N/A'}</span>
                               </div>
                               <div>
                                 <span className="text-gray-500">Desc Size:</span>{' '}
-                                <span className="text-white">{backup.desktop?.descriptionFontSize ?? 'N/A'}</span>
+                                <span className="text-white">{backup.desktopSample?.descriptionFontSize ?? 'N/A'}</span>
                               </div>
                             </div>
                             {backup.description && (
