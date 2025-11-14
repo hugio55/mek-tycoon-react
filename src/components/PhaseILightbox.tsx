@@ -16,6 +16,7 @@ interface PhaseILightboxProps {
   videoPositionX?: number;
   videoPositionY?: number;
   backdropBlur?: number;
+  maxWidth?: string;
 }
 
 export default function PhaseILightbox({
@@ -30,10 +31,12 @@ export default function PhaseILightbox({
   videoScale = 100,
   videoPositionX = 0,
   videoPositionY = 0,
-  backdropBlur = 8
+  backdropBlur = 8,
+  maxWidth = '6xl'
 }: PhaseILightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [savedScrollY, setSavedScrollY] = useState(0);
+  const [videoError, setVideoError] = useState(false);
 
   // Debug log props when component renders
   useEffect(() => {
@@ -46,9 +49,27 @@ export default function PhaseILightbox({
       videoScale,
       videoPositionX,
       videoPositionY,
-      backdropBlur
+      backdropBlur,
+      maxWidth
     });
-  }, [isVisible, lightboxContent, textFont, textFontSize, textColor, videoScale, videoPositionX, videoPositionY, backdropBlur]);
+  }, [isVisible, lightboxContent, textFont, textFontSize, textColor, videoScale, videoPositionX, videoPositionY, backdropBlur, maxWidth]);
+
+  // Force video autoplay when lightbox opens
+  useEffect(() => {
+    if (isVisible && mounted) {
+      const video = document.querySelector('#phase-i-video') as HTMLVideoElement;
+      if (video) {
+        console.log('[🎯PHASE-I-LIGHTBOX] Attempting to play video...');
+        video.play().then(() => {
+          console.log('[🎯PHASE-I-LIGHTBOX] Video playing successfully');
+          setVideoError(false);
+        }).catch((error) => {
+          console.error('[🎯PHASE-I-LIGHTBOX] Video autoplay failed:', error);
+          setVideoError(true);
+        });
+      }
+    }
+  }, [isVisible, mounted]);
 
   useEffect(() => {
     setMounted(true);
@@ -133,21 +154,19 @@ export default function PhaseILightbox({
 
       {/* Lightbox Card */}
       <div
-        className="relative w-full max-w-6xl"
+        className={`relative w-full max-${maxWidth}`}
         style={{
           animation: 'slideUp 800ms cubic-bezier(0.16, 1, 0.3, 1)',
           willChange: 'transform, opacity',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Glass Card - matching BetaSignupLightbox style */}
+        {/* Glass Card */}
         <div
-          className="relative overflow-hidden rounded-2xl border border-white/10"
+          className="relative overflow-hidden rounded-lg border border-white/10"
           style={{
             background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
             boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
           }}
         >
           {/* Close Button - Top Right */}
@@ -216,18 +235,32 @@ export default function PhaseILightbox({
               {/* Right Column - Video */}
               <div className="flex items-center justify-center">
                 <div className="w-full overflow-hidden rounded-lg">
-                  <video
-                    src="/Phase 1 video/p1 vid webm 15q.webm"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-auto"
-                    style={{
-                      transform: `scale(${videoScale / 100}) translate(${videoPositionX}px, ${videoPositionY}px)`,
-                      transition: 'transform 0.2s ease-out',
-                    }}
-                  />
+                  {videoError ? (
+                    <div className="w-full aspect-video bg-white/5 rounded-lg flex items-center justify-center">
+                      <p className="text-white/50 text-sm">Video failed to load</p>
+                    </div>
+                  ) : (
+                    <video
+                      id="phase-i-video"
+                      src="/Phase 1 video/p1 vid webm 15q.webm"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-auto"
+                      onError={(e) => {
+                        console.error('[🎯PHASE-I-LIGHTBOX] Video load error:', e);
+                        setVideoError(true);
+                      }}
+                      onLoadedData={() => {
+                        console.log('[🎯PHASE-I-LIGHTBOX] Video loaded successfully');
+                      }}
+                      style={{
+                        transform: `scale(${videoScale / 100}) translate(${videoPositionX}px, ${videoPositionY}px)`,
+                        transition: 'transform 0.2s ease-out',
+                      }}
+                    />
+                  )}
                 </div>
               </div>
             </div>

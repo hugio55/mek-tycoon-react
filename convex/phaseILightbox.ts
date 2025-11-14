@@ -20,6 +20,7 @@ export const getPhaseILightboxSettings = query({
         phaseITextFont: 'Arial',
         phaseITextFontSize: 16,
         phaseITextColor: 'text-white/70',
+        phaseILightboxWidth: 1280,
       };
     }
 
@@ -33,6 +34,7 @@ export const getPhaseILightboxSettings = query({
       phaseITextFont: settings.shared.phaseITextFont || 'Arial',
       phaseITextFontSize: settings.shared.phaseITextFontSize || 16,
       phaseITextColor: settings.shared.phaseITextColor || 'text-white/70',
+      phaseILightboxWidth: settings.shared.phaseILightboxWidth || 1280,
     };
   },
 });
@@ -48,6 +50,7 @@ export const updatePhaseILightboxSettings = mutation({
     phaseITextFont: v.optional(v.string()),
     phaseITextFontSize: v.optional(v.number()),
     phaseITextColor: v.optional(v.string()),
+    phaseILightboxWidth: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -64,6 +67,7 @@ export const updatePhaseILightboxSettings = mutation({
     if (args.phaseITextFont !== undefined) updates.phaseITextFont = args.phaseITextFont;
     if (args.phaseITextFontSize !== undefined) updates.phaseITextFontSize = args.phaseITextFontSize;
     if (args.phaseITextColor !== undefined) updates.phaseITextColor = args.phaseITextColor;
+    if (args.phaseILightboxWidth !== undefined) updates.phaseILightboxWidth = args.phaseILightboxWidth;
 
     if (!existing) {
       // Create new settings with defaults + updates
