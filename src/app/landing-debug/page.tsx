@@ -3614,7 +3614,7 @@ export default function LandingDebugPage() {
                 type="range"
                 min="-5000"
                 max="5000"
-                step="50"
+                step="10"
                 value={config.phaseColumnYOffset}
                 onChange={(e) => updateConfig('phaseColumnYOffset', parseInt(e.target.value))}
                 onMouseDown={handleInputStart}

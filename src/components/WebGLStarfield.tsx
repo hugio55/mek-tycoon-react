@@ -294,13 +294,19 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
     }
 
     // Debug logging for first 3 stars
+    const depthScale = 1000 / 1500;
+    const minFinalSize = 1.0 * props.bgStarSize * depthScale;
+    const maxFinalSize = (1.0 + sizeRandomness) * props.bgStarSize * depthScale;
+
     console.log('[⭐BG-STARS] Sample star data:', {
       star0: { size: sizes[0], brightness: brightnesses[0], z: positions[2] },
       star1: { size: sizes[1], brightness: brightnesses[1], z: positions[5] },
       star2: { size: sizes[2], brightness: brightnesses[2], z: positions[8] },
       sizeRange: `${1.0}-${1.0 + sizeRandomness}`,
-      depthScale: `1000 / 1500 = ${1000/1500}`,
-      estimatedFinalSize: `${(1.0 * 1000/1500).toFixed(2)}-${((1.0 + sizeRandomness) * 1000/1500 * 2).toFixed(2)} px`
+      depthScale: `1000 / 1500 = ${depthScale.toFixed(3)}`,
+      bgStarSizeUniform: props.bgStarSize,
+      estimatedFinalSize: `${minFinalSize.toFixed(2)}-${maxFinalSize.toFixed(2)} px (before twinkle)`,
+      withMaxTwinkle: `${(maxFinalSize * 1.3).toFixed(2)} px`
     });
 
     // Create geometry
@@ -625,6 +631,7 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
             time: material.uniforms.time.value.toFixed(2),
             twinkleAmount: material.uniforms.twinkleAmount.value,
             twinkleSpeed: material.uniforms.twinkleSpeedGlobal.value,
+            bgStarSize: material.uniforms.bgStarSize.value,
             visible: bgStarsRef.current.visible,
             particleCount: bgStarsRef.current.geometry.attributes.position.count
           });

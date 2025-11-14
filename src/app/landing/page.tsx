@@ -76,6 +76,7 @@ const DEFAULT_CONFIG = {
   bgStarTwinkleSpeed: 0.5,
   bgStarTwinkleSpeedRandomness: 50,
   bgStarSizeRandomness: 50,
+  bgStarSize: 2.0,
   bgStarCount: 800,
   bgStarMinBrightness: 0.1,
   bgStarMaxBrightness: 0.4,
@@ -258,6 +259,7 @@ export default function LandingPage() {
   const [bgStarTwinkleSpeed, setBgStarTwinkleSpeed] = useState(DEFAULT_CONFIG.bgStarTwinkleSpeed);
   const [bgStarTwinkleSpeedRandomness, setBgStarTwinkleSpeedRandomness] = useState(DEFAULT_CONFIG.bgStarTwinkleSpeedRandomness);
   const [bgStarSizeRandomness, setBgStarSizeRandomness] = useState(DEFAULT_CONFIG.bgStarSizeRandomness);
+  const [bgStarSize, setBgStarSize] = useState(DEFAULT_CONFIG.bgStarSize);
   const [bgStarCount, setBgStarCount] = useState(DEFAULT_CONFIG.bgStarCount);
   const [bgStarMinBrightness, setBgStarMinBrightness] = useState(DEFAULT_CONFIG.bgStarMinBrightness);
   const [bgStarMaxBrightness, setBgStarMaxBrightness] = useState(DEFAULT_CONFIG.bgStarMaxBrightness);
@@ -995,6 +997,7 @@ export default function LandingPage() {
           setBgStarTwinkleSpeed(config.bgStarTwinkleSpeed ?? DEFAULT_CONFIG.bgStarTwinkleSpeed);
           setBgStarTwinkleSpeedRandomness(config.bgStarTwinkleSpeedRandomness ?? DEFAULT_CONFIG.bgStarTwinkleSpeedRandomness);
           setBgStarSizeRandomness(config.bgStarSizeRandomness ?? DEFAULT_CONFIG.bgStarSizeRandomness);
+          setBgStarSize(config.bgStarSize ?? DEFAULT_CONFIG.bgStarSize);
           setBgStarCount(config.bgStarCount ?? DEFAULT_CONFIG.bgStarCount);
           setBgStarMinBrightness(config.bgStarMinBrightness ?? DEFAULT_CONFIG.bgStarMinBrightness);
           setBgStarMaxBrightness(config.bgStarMaxBrightness ?? DEFAULT_CONFIG.bgStarMaxBrightness);
@@ -1134,6 +1137,7 @@ export default function LandingPage() {
           setBgStarTwinkleSpeed(config.bgStarTwinkleSpeed ?? DEFAULT_CONFIG.bgStarTwinkleSpeed);
           setBgStarTwinkleSpeedRandomness(config.bgStarTwinkleSpeedRandomness ?? DEFAULT_CONFIG.bgStarTwinkleSpeedRandomness);
           setBgStarSizeRandomness(config.bgStarSizeRandomness ?? DEFAULT_CONFIG.bgStarSizeRandomness);
+          setBgStarSize(config.bgStarSize ?? DEFAULT_CONFIG.bgStarSize);
           setBgStarCount(config.bgStarCount ?? DEFAULT_CONFIG.bgStarCount);
           setBgStarMinBrightness(config.bgStarMinBrightness ?? DEFAULT_CONFIG.bgStarMinBrightness);
           setBgStarMaxBrightness(config.bgStarMaxBrightness ?? DEFAULT_CONFIG.bgStarMaxBrightness);
@@ -1934,6 +1938,7 @@ export default function LandingPage() {
         twinkleSpeedRandomness3={twinkleSpeedRandomness3}
         sizeRandomness3={sizeRandomness3}
         bgStarCount={bgStarCount}
+        bgStarSize={bgStarSize}
         bgStarTwinkleAmount={bgStarTwinkleAmount}
         bgStarTwinkleSpeed={bgStarTwinkleSpeed}
         bgStarTwinkleSpeedRandomness={bgStarTwinkleSpeedRandomness}
@@ -2259,7 +2264,7 @@ export default function LandingPage() {
             )}
           </div>
 
-          {/* Footer - Now properly positioned below phase carousel */}
+          {/* Footer - Overlaps bottom of phase carousel to enable backdrop-filter blur */}
           {!showAudioConsent && (
             <div
               className="flex items-center justify-center relative"
@@ -2267,9 +2272,11 @@ export default function LandingPage() {
                 height: `${footerHeight}px`,
                 paddingTop: `${socialIconPaddingTop}px`,
                 paddingBottom: `${socialIconPaddingBottom}px`,
+                marginTop: isMobile ? undefined : `-${footerHeight * 0.5}px`, // Overlap phase carousel by 50% of footer height
                 backdropFilter: `blur(${footerBlurAmount}px)`,
                 WebkitBackdropFilter: `blur(${footerBlurAmount}px)`,
                 backgroundColor: 'rgba(17, 24, 39, 0.3)',
+                zIndex: 25, // Above phase carousel (z-20) to enable backdrop blur
               }}
             >
             {/* OE Logo */}
