@@ -1738,8 +1738,9 @@ export default function LandingPage() {
 
       {/* Fixed background layer - faded initially */}
       <div
-        className="fixed inset-0 w-full h-full bg-black z-0 transition-opacity duration-1000"
+        className="fixed inset-0 w-full bg-black z-0 transition-opacity duration-1000"
         style={{
+          height: isMobile ? '100svh' : '100%',
           backgroundImage: `url(${getMediaUrl('/colored-bg-1.webp')})`,
           backgroundSize: 'cover',
           backgroundPosition: isMobile
