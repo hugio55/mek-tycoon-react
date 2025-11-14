@@ -173,7 +173,7 @@ export default function LandingPage() {
   // Detect Safari/iOS for video format selection
   useEffect(() => {
     setUseSafariVideo(isSafariOrIOS());
-    console.log('[🎬VIDEO] Browser detected:', isSafariOrIOS() ? 'Safari/iOS (using H.265 canvas compositing)' : 'Chrome/Firefox (using WebM)');
+    // Browser detected for video selection
   }, []);
 
   useEffect(() => {
@@ -328,7 +328,7 @@ export default function LandingPage() {
       if (colorVideo.videoWidth > 0 && colorVideo.videoHeight > 0) {
         canvas.width = colorVideo.videoWidth;
         canvas.height = colorVideo.videoHeight;
-        console.log('[🎨CANVAS] Canvas initialized:', canvas.width, 'x', canvas.height);
+        // Canvas initialized
       }
     };
 
@@ -390,14 +390,14 @@ export default function LandingPage() {
     // Handle video playback events
     const handlePlay = () => {
       if (!isCompositing) {
-        console.log('[🎨CANVAS] Starting canvas compositing');
+        // Starting canvas compositing
         isCompositing = true;
         composite();
       }
     };
 
     const handlePause = () => {
-      console.log('[🎨CANVAS] Pausing canvas compositing');
+      // Pausing canvas compositing
       isCompositing = false;
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
@@ -407,7 +407,7 @@ export default function LandingPage() {
     // Sync both videos and handle looping
     const handleLoop = () => {
       if (colorVideo.ended && alphaVideo.ended) {
-        console.log('[🎨CANVAS] Videos ended, looping...');
+        // Videos ended, looping
         colorVideo.currentTime = 0;
         alphaVideo.currentTime = 0;
         colorVideo.play().catch(err => console.error('[🎬VIDEO] Color video loop play failed:', err));
@@ -437,7 +437,7 @@ export default function LandingPage() {
     if (animationStage === 'logo') {
       // Handle Safari/iOS (dual video compositing)
       if (useSafariVideo && colorVideoRef.current && alphaVideoRef.current) {
-        console.log('[🎬VIDEO] Starting Safari dual-video playback');
+        // Starting Safari dual-video playback
         colorVideoRef.current.currentTime = 0;
         alphaVideoRef.current.currentTime = 0;
         colorVideoRef.current.play().catch(err => console.error('[🎬VIDEO] Color video play failed:', err));
@@ -445,7 +445,7 @@ export default function LandingPage() {
       }
       // Handle Chrome/Firefox (WebM)
       else if (!useSafariVideo && videoRef.current) {
-        console.log('[🎬VIDEO] Starting WebM video playback');
+        // Starting WebM video playback
         videoRef.current.currentTime = 0;
         videoRef.current.play().catch(err => console.error('[🎬VIDEO] Video play failed:', err));
       }
@@ -485,7 +485,7 @@ export default function LandingPage() {
         if (progress < 1) {
           animationFrameId = requestAnimationFrame(animate);
         } else {
-          console.log('[🎬LOGO] JavaScript animation complete - final scale:', currentScale, 'opacity:', currentOpacity);
+          // JavaScript animation complete
         }
       };
 
@@ -494,7 +494,7 @@ export default function LandingPage() {
 
       // Unlock scroll after animation completes
       setTimeout(() => {
-        console.log('[🔓SCROLL] Unlocking scroll after animation');
+        // Unlocking scroll after animation
         setLockScrollForConsent(false);
       }, logoFadeDuration + 500);
 
@@ -1074,7 +1074,7 @@ export default function LandingPage() {
 
     // Listen for config updates from debug panel (for iframe communication)
     const handleConfigUpdate = () => {
-      console.log('[🔄CONFIG] Received mek-config-update event, reloading from localStorage');
+      // Received mek-config-update event, reloading from localStorage
       loadFromLocalStorage();
     };
 
@@ -1312,23 +1312,19 @@ export default function LandingPage() {
 
     // Hide the consent lightbox with fade-out
     setShowAudioConsent(false);
-    console.log('[🎵ANIMATION] Lightbox hidden (showAudioConsent = false)');
-    console.log('[🎵ANIMATION] Starting animation sequence in 500ms...');
+    // Lightbox hidden, starting animation sequence
 
     // Show speaker icon immediately after consent (will fade in with 3s animation)
-    console.log('[🎵ANIMATION] Showing speaker icon after consent');
     setShowSpeakerIcon(true);
 
     // Start animation sequence: stars fade in after lightbox fades
     setTimeout(() => {
-      console.log('[🎵ANIMATION] ==========================================');
-      console.log('[🎵ANIMATION] Stage 2: Setting to "stars" - Stars fade in and start moving');
+      // Stage 2: Stars fade in and start moving
       setAnimationStage('stars');
 
       // Then logo fades in after stars are visible
       setTimeout(() => {
-        console.log('[🎵ANIMATION] ==========================================');
-        console.log('[🎵ANIMATION] Stage 3: Setting to "logo" - Video zoom in');
+        // Stage 3: Video zoom in
         setAnimationStage('logo');
       }, 1000); // 1 second after stars start fading in
     }, 500); // 500ms for lightbox fade-out
