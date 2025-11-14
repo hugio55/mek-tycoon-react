@@ -12,6 +12,11 @@ const MIGRATION_FLAG = 'mek-landing-debug-migrated';
 // Default values matching landing page
 const DEFAULT_CONFIG = {
   starsEnabled: true,
+  // Layer enable/disable
+  bgStarEnabled: true,
+  layer1Enabled: true,
+  layer2Enabled: true,
+  layer3Enabled: true,
   starScale: 1,
   starSpeed: 3,
   starFrequency: 200,
