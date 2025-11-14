@@ -307,6 +307,7 @@ export default function LandingPage() {
   // Animation sequence states
   const [animationStage, setAnimationStage] = useState<'initial' | 'stars' | 'logo'>('initial');
   const [useVideoLogo, setUseVideoLogo] = useState(false);
+  const [logoVideoLoaded, setLogoVideoLoaded] = useState(false); // Tracks when logo video has loaded and started
 
   // Logo animation timing (must be declared before first use in useEffect below)
   const [logoFadeDuration, setLogoFadeDuration] = useState(DEFAULT_CONFIG.logoFadeDuration);
@@ -440,14 +441,24 @@ export default function LandingPage() {
         // Starting Safari dual-video playback
         colorVideoRef.current.currentTime = 0;
         alphaVideoRef.current.currentTime = 0;
-        colorVideoRef.current.play().catch(err => console.error('[🎬VIDEO] Color video play failed:', err));
+        colorVideoRef.current.play()
+          .then(() => {
+            console.log('[🎬VIDEO] Safari color video started - marking logo loaded');
+            setLogoVideoLoaded(true);
+          })
+          .catch(err => console.error('[🎬VIDEO] Color video play failed:', err));
         alphaVideoRef.current.play().catch(err => console.error('[🎬VIDEO] Alpha video play failed:', err));
       }
       // Handle Chrome/Firefox (WebM)
       else if (!useSafariVideo && videoRef.current) {
         // Starting WebM video playback
         videoRef.current.currentTime = 0;
-        videoRef.current.play().catch(err => console.error('[🎬VIDEO] Video play failed:', err));
+        videoRef.current.play()
+          .then(() => {
+            console.log('[🎬VIDEO] WebM video started - marking logo loaded');
+            setLogoVideoLoaded(true);
+          })
+          .catch(err => console.error('[🎬VIDEO] Video play failed:', err));
       }
 
       // Custom easing function (cubic-bezier(0, 0, 0.2, 1) approximation)
@@ -1317,16 +1328,10 @@ export default function LandingPage() {
     // Show speaker icon immediately after consent (will fade in with 3s animation)
     setShowSpeakerIcon(true);
 
-    // Start animation sequence: stars fade in after lightbox fades
+    // Start animation sequence: stars + logo fade in together after lightbox fades
     setTimeout(() => {
-      // Stage 2: Stars fade in and start moving
-      setAnimationStage('stars');
-
-      // Then logo fades in after stars are visible
-      setTimeout(() => {
-        // Stage 3: Video zoom in
-        setAnimationStage('logo');
-      }, 1000); // 1 second after stars start fading in
+      // Stars + Logo fade in together
+      setAnimationStage('logo');
     }, 500); // 500ms for lightbox fade-out
   };
 
@@ -1737,7 +1742,7 @@ export default function LandingPage() {
           backgroundRepeat: 'no-repeat',
           touchAction: 'none',
           pointerEvents: 'none',
-          opacity: showAudioConsent ? 1 : (animationStage === 'initial' ? 0.3 : 1), // Keep visible when lightbox shows (darkened by overlay)
+          opacity: showAudioConsent ? 0.6 : (animationStage === 'initial' ? 0 : 1), // Darkened when lightbox shows, hidden during initial
         }}
       />
 
@@ -1774,7 +1779,7 @@ export default function LandingPage() {
               height: `${logoSize}px`,
               opacity: 0,
               transform: 'translate3d(0, 0, 0) scale3d(0.92, 0.92, 1)',
-              visibility: animationStage === 'initial' || animationStage === 'stars' ? 'hidden' : 'visible',
+              visibility: animationStage === 'logo' ? 'visible' : 'hidden',
               willChange: animationStage === 'logo' ? 'transform, opacity' : 'auto',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
