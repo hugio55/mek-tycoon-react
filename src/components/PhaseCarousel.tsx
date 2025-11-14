@@ -467,7 +467,7 @@ export default function PhaseCarousel({
 
       {/* Phase Indicators */}
       <div className="flex justify-center gap-2 mt-8">
-        {phases.map((phase, index) => (
+        {phases.map((phase: Phase, index: number) => (
           <button
             key={phase._id}
             onClick={() => setCurrentIndex(index)}
@@ -488,6 +488,19 @@ export default function PhaseCarousel({
           </button>
         ))}
       </div>
+
+      {/* Read More Lightbox */}
+      {selectedPhase && (
+        <PhaseReadMoreLightbox
+          isVisible={showReadMore}
+          onClose={() => {
+            setShowReadMore(false);
+            setSelectedPhase(null);
+          }}
+          phaseTitle={selectedPhase.title}
+          fullDescription={selectedPhase.fullDescription || ''}
+        />
+      )}
     </div>
   );
 }

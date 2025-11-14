@@ -650,12 +650,43 @@ export default function HorizontalTimeline({
                   }}
                   dangerouslySetInnerHTML={{ __html: formatDescription(item.description) }}
                 />
+                {/* Read More button - only show for Phase I (index 0) */}
+                {index === 0 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowPhaseILightbox(true);
+                    }}
+                    className="mt-4 px-4 py-2 text-sm font-semibold tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-lg hover:from-yellow-300 hover:to-yellow-400 transition-all duration-300 shadow-lg shadow-yellow-500/20 active:scale-[0.98]"
+                    style={{
+                      pointerEvents: 'auto',
+                      transform: isActive ? 'translate3d(0, 0, 0)' : 'translate3d(0, 4px, 0)',
+                      opacity: isActive ? 1 : 0,
+                      transition: isActive
+                        ? 'transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1) 0.45s, opacity 0.4s ease-out 0.45s'
+                        : 'transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.2s ease-in',
+                      backfaceVisibility: 'hidden',
+                      minHeight: '44px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    Read More
+                  </button>
+                )}
               </div>
             </div>
           </div>
           );
         })}
       </div>
+
+      {/* Phase I Lightbox */}
+      <PhaseILightbox
+        isVisible={showPhaseILightbox}
+        onClose={() => setShowPhaseILightbox(false)}
+        phaseDescriptionFont={phaseDescriptionFont}
+        phaseDescriptionFontSize={phaseDescriptionFontSize}
+      />
     </div>
   );
 }
