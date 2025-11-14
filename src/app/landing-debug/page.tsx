@@ -119,6 +119,13 @@ const DEFAULT_CONFIG = {
   audioDescriptionText: 'For full immersion...',
   audioConsentFadeDuration: 500,
   forceShowAudioConsent: false,
+  // Toggle Labels (SOUND/NO SOUND) controls
+  toggleLabelFont: 'Orbitron',
+  toggleLabelSize: 18,
+  toggleLabelColor: 'text-yellow-400',
+  toggleSize: 1.0,
+  toggleGap: 48,
+  toggleVerticalPosition: 0,
   // Active tab
   activeTab: 'layer1' as string,
   // Footer settings
@@ -153,7 +160,7 @@ export default function LandingDebugPage() {
   });
   const [viewMode, setViewMode] = useState<'controls-only' | 'split-view'>('controls-only');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
-  const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel' | 'joinBeta' | 'audioLightboxDescription'>('description');
+  const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel' | 'joinBeta' | 'audioLightboxDescription' | 'toggleLabels'>('description');
   const [migrationStatus, setMigrationStatus] = useState<'pending' | 'migrating' | 'complete' | 'none'>('pending');
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isUserEditingRef = useRef(false); // Track if user is actively editing to prevent race conditions
@@ -2038,7 +2045,7 @@ export default function LandingDebugPage() {
               </label>
               <select
                 value={selectedTypographyElement}
-                onChange={(e) => setSelectedTypographyElement(e.target.value as 'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel' | 'joinBeta' | 'audioLightboxDescription')}
+                onChange={(e) => setSelectedTypographyElement(e.target.value as 'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel' | 'joinBeta' | 'audioLightboxDescription' | 'toggleLabels')}
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-gray-500"
               >
                 <option value="description">Description Text</option>
@@ -2047,6 +2054,7 @@ export default function LandingDebugPage() {
                 <option value="soundLabel">Sound Label</option>
                 <option value="joinBeta">Join Beta</option>
                 <option value="audioLightboxDescription">Audio Lightbox Description</option>
+                <option value="toggleLabels">Toggle Labels (SOUND/NO SOUND)</option>
               </select>
             </div>
 
