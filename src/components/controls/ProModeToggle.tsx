@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 /**
  * Pro Mode Toggle - Transformed from external CSS component
@@ -34,14 +34,36 @@ export default function ProModeToggle({
   const [guardOpen, setGuardOpen] = useState(false);
   const [switchOn, setSwitchOn] = useState(enabled);
 
+  // Preload audio files for instant playback
+  const guardClickAudioRef = useRef<HTMLAudioElement | null>(null);
+  const switchClickAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (enableSounds) {
+      // Create and preload audio objects
+      guardClickAudioRef.current = new Audio('/sounds/main_click.mp3');
+      switchClickAudioRef.current = new Audio('/sounds/click reverb 2.mp3');
+
+      // Set preload to auto for instant playback
+      guardClickAudioRef.current.preload = 'auto';
+      switchClickAudioRef.current.preload = 'auto';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      guardClickAudioRef.current = null;
+      switchClickAudioRef.current = null;
+    };
+  }, [enableSounds]);
+
   const handleGuardToggle = () => {
     const newGuardState = !guardOpen;
     setGuardOpen(newGuardState);
 
-    // Play main click sound (only if sounds enabled)
-    if (enableSounds) {
-      const audio = new Audio('/sounds/main_click.mp3');
-      audio.play().catch(err => console.log('Audio play failed:', err));
+    // Play preloaded sound instantly
+    if (enableSounds && guardClickAudioRef.current) {
+      guardClickAudioRef.current.currentTime = 0; // Reset to start for rapid re-triggering
+      guardClickAudioRef.current.play().catch(err => console.log('Audio play failed:', err));
     }
 
     // Close guard -> turn off switch
@@ -57,10 +79,10 @@ export default function ProModeToggle({
     const newSwitchState = !switchOn;
     setSwitchOn(newSwitchState);
 
-    // Play click reverb sound (only if sounds enabled)
-    if (enableSounds) {
-      const audio = new Audio('/sounds/click reverb 2.mp3');
-      audio.play().catch(err => console.log('Audio play failed:', err));
+    // Play preloaded sound instantly
+    if (enableSounds && switchClickAudioRef.current) {
+      switchClickAudioRef.current.currentTime = 0; // Reset to start for rapid re-triggering
+      switchClickAudioRef.current.play().catch(err => console.log('Audio play failed:', err));
     }
 
     onChange?.(newSwitchState);
