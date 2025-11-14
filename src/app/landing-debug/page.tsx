@@ -2070,6 +2070,7 @@ export default function LandingDebugPage() {
                   selectedTypographyElement === 'phaseDescription' ? config.phaseDescriptionFont :
                   selectedTypographyElement === 'joinBeta' ? config.joinBetaFont :
                   selectedTypographyElement === 'audioLightboxDescription' ? config.audioLightboxDescriptionFont :
+                  selectedTypographyElement === 'toggleLabels' ? config.toggleLabelFont :
                   config.soundLabelFont
                 }
                 onChange={(e) => updateConfig(
@@ -2078,6 +2079,7 @@ export default function LandingDebugPage() {
                   selectedTypographyElement === 'phaseDescription' ? 'phaseDescriptionFont' :
                   selectedTypographyElement === 'audioLightboxDescription' ? 'audioLightboxDescriptionFont' :
                   selectedTypographyElement === 'joinBeta' ? 'joinBetaFont' :
+                  selectedTypographyElement === 'toggleLabels' ? 'toggleLabelFont' :
                   'soundLabelFont',
                   e.target.value
                 )}
@@ -2087,6 +2089,7 @@ export default function LandingDebugPage() {
                              selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderFont :
                              selectedTypographyElement === 'phaseDescription' ? config.phaseDescriptionFont :
                              selectedTypographyElement === 'joinBeta' ? config.joinBetaFont :
+                             selectedTypographyElement === 'toggleLabels' ? config.toggleLabelFont :
                              config.soundLabelFont
                 }}
               >
@@ -2133,6 +2136,7 @@ export default function LandingDebugPage() {
                   selectedTypographyElement === 'phaseDescription' ? config.phaseDescriptionFontSize :
                   selectedTypographyElement === 'joinBeta' ? config.joinBetaFontSize :
                   selectedTypographyElement === 'audioLightboxDescription' ? config.audioLightboxDescriptionFontSize :
+                  selectedTypographyElement === 'toggleLabels' ? config.toggleLabelSize :
                   config.soundLabelSize
                 }
                 onChange={(e) => {
@@ -2141,6 +2145,7 @@ export default function LandingDebugPage() {
                               selectedTypographyElement === 'phaseDescription' ? 'phaseDescriptionFontSize' :
                               selectedTypographyElement === 'joinBeta' ? 'joinBetaFontSize' :
                               selectedTypographyElement === 'audioLightboxDescription' ? 'audioLightboxDescriptionFontSize' :
+                              selectedTypographyElement === 'toggleLabels' ? 'toggleLabelSize' :
                               'soundLabelSize';
                   const value = parseInt(e.target.value);
                   console.log('[📝TYPO] Font size slider changed:', { element: selectedTypographyElement, key, value, mode: activeMode });
@@ -2158,6 +2163,7 @@ export default function LandingDebugPage() {
                  selectedTypographyElement === 'phaseDescription' ? config.phaseDescriptionFontSize :
                  selectedTypographyElement === 'joinBeta' ? config.joinBetaFontSize :
                  selectedTypographyElement === 'audioLightboxDescription' ? config.audioLightboxDescriptionFontSize :
+                 selectedTypographyElement === 'toggleLabels' ? config.toggleLabelSize :
                  config.soundLabelSize}px
               </div>
             </div>
@@ -2173,6 +2179,7 @@ export default function LandingDebugPage() {
                   selectedTypographyElement === 'phaseHeader' ? config.phaseHeaderColor :
                   selectedTypographyElement === 'joinBeta' ? config.joinBetaColor :
                   selectedTypographyElement === 'audioLightboxDescription' ? config.audioLightboxDescriptionColor :
+                  selectedTypographyElement === 'toggleLabels' ? config.toggleLabelColor :
                   config.soundLabelColor
                 }
                 onChange={(e) => updateConfig(
@@ -2180,6 +2187,7 @@ export default function LandingDebugPage() {
                   selectedTypographyElement === 'phaseHeader' ? 'phaseHeaderColor' :
                   selectedTypographyElement === 'joinBeta' ? 'joinBetaColor' :
                   selectedTypographyElement === 'audioLightboxDescription' ? 'audioLightboxDescriptionColor' :
+                  selectedTypographyElement === 'toggleLabels' ? 'toggleLabelColor' :
                   'soundLabelColor',
                   e.target.value
                 )}
@@ -2819,8 +2827,9 @@ export default function LandingDebugPage() {
               </div>
             </div>
 
+            {/* OLD CONTROLS (commented out - no longer used with new two-toggle design) */}
             {/* Audio Toggle Size */}
-            <div className="mb-2">
+            {/* <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">
                 Audio Toggle Size
               </label>
@@ -2840,10 +2849,10 @@ export default function LandingDebugPage() {
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.audioToggleSize}px
               </div>
-            </div>
+            </div> */}
 
             {/* Audio Toggle Scale */}
-            <div className="mb-2">
+            {/* <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">
                 Audio Toggle Scale
               </label>
@@ -2863,10 +2872,10 @@ export default function LandingDebugPage() {
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.audioToggleScale.toFixed(1)}x
               </div>
-            </div>
+            </div> */}
 
             {/* Toggle Text Gap */}
-            <div className="mb-2">
+            {/* <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">
                 Toggle Text Gap
               </label>
@@ -2886,10 +2895,10 @@ export default function LandingDebugPage() {
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.toggleTextGap}px
               </div>
-            </div>
+            </div> */}
 
             {/* Proceed Button Size */}
-            <div className="mb-2">
+            {/* <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">
                 Proceed Button Size
               </label>
@@ -2909,10 +2918,10 @@ export default function LandingDebugPage() {
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.proceedButtonSize.toFixed(1)}x
               </div>
-            </div>
+            </div> */}
 
             {/* Description Vertical Position */}
-            <div className="mb-2">
+            {/* <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">
                 Description Vertical Position
               </label>
@@ -2932,10 +2941,10 @@ export default function LandingDebugPage() {
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.descriptionVerticalPosition}px
               </div>
-            </div>
+            </div> */}
 
             {/* Toggle Group Vertical Position */}
-            <div className="mb-2">
+            {/* <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">
                 Toggle Group Vertical Position
               </label>
@@ -2955,10 +2964,10 @@ export default function LandingDebugPage() {
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.toggleGroupVerticalPosition}px
               </div>
-            </div>
+            </div> */}
 
             {/* Proceed Button Vertical Position */}
-            <div className="mb-2">
+            {/* <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">
                 Proceed Button Vertical Position
               </label>
@@ -2978,10 +2987,10 @@ export default function LandingDebugPage() {
               <div className="text-xs text-gray-400 text-center mt-0.5">
                 {config.proceedButtonVerticalPosition}px
               </div>
-            </div>
+            </div> */}
 
             {/* Audio Description Text */}
-            <div className="mb-2">
+            {/* <div className="mb-2">
               <label className="block text-xs text-gray-300 mb-1">
                 Audio Description Text
               </label>
@@ -2994,6 +3003,76 @@ export default function LandingDebugPage() {
                 className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xs text-gray-200"
                 placeholder="For full immersion..."
               />
+            </div> */}
+
+            {/* NEW CONTROLS - Two-Toggle Design */}
+            {/* Toggle Size (scales both ProModeToggle components) */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Toggle Size
+              </label>
+              <input
+                type="range"
+                min="0.5"
+                max="2.0"
+                step="0.1"
+                value={config.toggleSize}
+                onChange={(e) => updateConfig('toggleSize', parseFloat(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.toggleSize.toFixed(1)}x
+              </div>
+            </div>
+
+            {/* Gap Between Toggles */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Gap Between Toggles
+              </label>
+              <input
+                type="range"
+                min="12"
+                max="120"
+                step="6"
+                value={config.toggleGap}
+                onChange={(e) => updateConfig('toggleGap', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.toggleGap}px
+              </div>
+            </div>
+
+            {/* Vertical Position */}
+            <div className="mb-2">
+              <label className="block text-xs text-gray-300 mb-1">
+                Vertical Position
+              </label>
+              <input
+                type="range"
+                min="-200"
+                max="200"
+                step="10"
+                value={config.toggleVerticalPosition}
+                onChange={(e) => updateConfig('toggleVerticalPosition', parseInt(e.target.value))}
+                onMouseDown={handleInputStart}
+                onMouseUp={handleInputEnd}
+                onTouchStart={handleInputStart}
+                onTouchEnd={handleInputEnd}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-400 text-center mt-0.5">
+                {config.toggleVerticalPosition}px
+              </div>
             </div>
 
             {/* Audio Consent Fade Duration */}
