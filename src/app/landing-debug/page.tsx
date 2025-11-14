@@ -4120,7 +4120,7 @@ export default function LandingDebugPage() {
                 className="w-full"
               />
               <div className="text-xs text-gray-400 text-center mt-0.5">
-                {config.mobileBreakpoint}px (desktop ≥ {config.mobileBreakpoint}px, mobile < {config.mobileBreakpoint}px)
+                {config.mobileBreakpoint}px (desktop ≥ {config.mobileBreakpoint}px, mobile &lt; {config.mobileBreakpoint}px)
               </div>
             </div>
 
