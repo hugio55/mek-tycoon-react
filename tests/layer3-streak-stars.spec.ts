@@ -58,8 +58,9 @@ test.describe('Layer 3 Streak Star Rendering Test', () => {
     console.log('\n=== STEP 3: Set Layer 3 Line Length to Maximum ===');
 
     // Find Line Length slider (within Layer 3 Star Field section)
+    // Use the specific slider with min=10, max=200 (not the 0.5-5 one)
     const layer3Section = page.locator('div:has(h2:has-text("Layer 3 Star Field"))');
-    const lineLengthSlider = layer3Section.locator('label:has-text("Line Length")').locator('..').locator('input[type="range"]');
+    const lineLengthSlider = layer3Section.locator('input[type="range"][min="10"][max="200"]');
 
     // Get slider properties
     const minValue = await lineLengthSlider.getAttribute('min');
