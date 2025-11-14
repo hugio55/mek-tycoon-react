@@ -4,6 +4,7 @@ import React from 'react';
 
 interface TriangleKaleidoscopeProps {
   size?: number;
+  chromaticOffset?: number;
 }
 
 /**
@@ -13,8 +14,9 @@ interface TriangleKaleidoscopeProps {
  * Featuring white triangles with RGB chromatic aberration on black background
  *
  * @param size - Optional size multiplier (default: 1)
+ * @param chromaticOffset - Optional chromatic aberration offset in pixels (default: 0)
  */
-export function TriangleKaleidoscope({ size = 1 }: TriangleKaleidoscopeProps) {
+export function TriangleKaleidoscope({ size = 1, chromaticOffset = 0 }: TriangleKaleidoscopeProps) {
   const n = 6; // Number of triangle groups
   const m = 3; // Number of layers per group
   const radius = 3 * size; // Scalable radius
@@ -66,6 +68,14 @@ export function TriangleKaleidoscope({ size = 1 }: TriangleKaleidoscopeProps) {
               ];
               const color = chromaticColors[j % 3];
 
+              // Calculate chromatic aberration offset for each channel
+              const chromaticOffsets = [
+                { x: -chromaticOffset, y: 0 },      // Red: left
+                { x: 0, y: 0 },                      // Green: center (no offset)
+                { x: chromaticOffset, y: 0 }         // Blue: right
+              ];
+              const channelOffset = chromaticOffsets[j % 3];
+
               return (
                 <div
                   key={j}
@@ -78,6 +88,7 @@ export function TriangleKaleidoscope({ size = 1 }: TriangleKaleidoscopeProps) {
                     background: `conic-gradient(from 150deg at 50% 0, ${color} 0% 60deg, transparent 0)`,
                     animationDelay: `${k * -2}s`,
                     gridArea: '1 / 1',
+                    transform: `translate(${channelOffset.x}px, ${channelOffset.y}px)`,
                     // CSS variables for animations
                     ['--rotate-end' as string]: `${rotateEnd}deg`,
                     ['--easing-start' as string]: 0.75 + offset * 0.1,
