@@ -55,7 +55,7 @@ export default function PhaseAccordion({
             });
           }
         }
-      }, 320); // Wait for expand animation (280ms + buffer)
+      }, 320); // Wait for expand animation (300ms + buffer)
     }
   };
 
@@ -110,8 +110,8 @@ export default function PhaseAccordion({
                   background: isExpanded
                     ? 'linear-gradient(135deg, rgba(250,182,23,0.12), rgba(250,182,23,0.06))'
                     : 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-                  backdropFilter: disableBlur ? 'none' : 'blur(4px)',
-                  WebkitBackdropFilter: disableBlur ? 'none' : 'blur(4px)',
+                  backdropFilter: disableBlur ? 'none' : 'blur(2px)',
+                  WebkitBackdropFilter: disableBlur ? 'none' : 'blur(2px)',
                   transition: 'background 150ms ease-out',
                 }}
               />
@@ -179,16 +179,21 @@ export default function PhaseAccordion({
             <div
               ref={(el) => (contentRefs.current[index] = el)}
               style={{
-                display: isExpanded ? 'block' : 'none',
+                transformOrigin: 'top',
+                transform: isExpanded ? 'scaleY(1)' : 'scaleY(0)',
+                opacity: isExpanded ? 1 : 0,
+                height: isExpanded ? 'auto' : '0',
+                overflow: 'hidden',
+                transition: 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 240ms cubic-bezier(0.4, 0, 0.2, 1)',
+                willChange: 'transform, opacity',
+                backfaceVisibility: 'hidden',
+                perspective: 1000,
               }}
             >
               <div
                 style={{
-                  transformOrigin: 'top',
-                  transform: isExpanded ? 'scaleY(1)' : 'scaleY(0)',
-                  opacity: isExpanded ? 1 : 0,
-                  transition: 'transform 220ms cubic-bezier(0.4, 0, 0.2, 1), opacity 220ms cubic-bezier(0.4, 0, 0.2, 1)',
-                  willChange: 'transform, opacity',
+                  contentVisibility: isExpanded ? 'visible' : 'hidden',
+                  contain: 'layout style paint',
                 }}
               >
                 <div

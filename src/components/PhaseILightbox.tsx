@@ -79,7 +79,7 @@ export default function PhaseILightbox({
 
   if (!mounted || !isVisible) return null;
 
-  const lightboxContent = (
+  const lightboxElement = (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center px-4 sm:px-6 md:px-8"
       onClick={handleBackdropClick}
@@ -222,5 +222,5 @@ export default function PhaseILightbox({
     </div>
   );
 
-  return createPortal(lightboxContent, document.body);
+  return createPortal(lightboxElement, document.body);
 }
