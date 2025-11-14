@@ -76,12 +76,10 @@ const bgStarVertexShader = `
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
     gl_Position = projectionMatrix * mvPosition;
 
-    // Calculate depth-based scaling (same as moving stars)
-    float depth = abs(mvPosition.z);
-    float depthScale = 1000.0 / max(depth, 100.0);
-
-    // Apply base size, depth scale, and twinkle to size
-    float finalSize = size * bgStarSize * depthScale * (1.0 + twinkleEffect);
+    // Background stars are at fixed depth - don't apply depth scaling
+    // This keeps star sizes consistent regardless of Z position
+    // Apply base size and twinkle to size
+    float finalSize = size * bgStarSize * (1.0 + twinkleEffect);
 
     // Apply twinkle to opacity
     vOpacity = brightness * (1.0 + twinkleEffect * 0.5);
@@ -294,19 +292,20 @@ export default function WebGLStarfield(props: WebGLStarfieldProps) {
     }
 
     // Debug logging for first 3 stars
-    const depthScale = 1000 / 1500;
-    const minFinalSize = 1.0 * props.bgStarSize * depthScale;
-    const maxFinalSize = (1.0 + sizeRandomness) * props.bgStarSize * depthScale;
+    const minFinalSize = 1.0 * props.bgStarSize;
+    const maxFinalSize = (1.0 + sizeRandomness) * props.bgStarSize;
+    const twinkleMultiplier = 1.0 + (props.bgStarTwinkleAmount / 100);
 
     console.log('[⭐BG-STARS] Sample star data:', {
       star0: { size: sizes[0], brightness: brightnesses[0], z: positions[2] },
       star1: { size: sizes[1], brightness: brightnesses[1], z: positions[5] },
       star2: { size: sizes[2], brightness: brightnesses[2], z: positions[8] },
       sizeRange: `${1.0}-${1.0 + sizeRandomness}`,
-      depthScale: `1000 / 1500 = ${depthScale.toFixed(3)}`,
       bgStarSizeUniform: props.bgStarSize,
+      brightnessRange: `${(props.bgStarMinBrightness/100).toFixed(2)}-${(props.bgStarMaxBrightness/100).toFixed(2)}`,
       estimatedFinalSize: `${minFinalSize.toFixed(2)}-${maxFinalSize.toFixed(2)} px (before twinkle)`,
-      withMaxTwinkle: `${(maxFinalSize * 1.3).toFixed(2)} px`
+      withMaxTwinkle: `${(maxFinalSize * twinkleMultiplier).toFixed(2)} px`,
+      note: 'No depth scaling applied to background stars (fixed depth)'
     });
 
     // Create geometry

@@ -20,9 +20,9 @@ test.describe('WebGL Starfield - Basic Verification', () => {
       console.error('❌ Page error:', exception.message);
     });
 
-    // Navigate to landing debug page
-    console.log('Navigating to landing-debug...');
-    await page.goto('http://localhost:3200/landing-debug', {
+    // Navigate to actual landing page (NOT landing-debug, which is just controls)
+    console.log('Navigating to /landing...');
+    await page.goto('http://localhost:3200/landing', {
       waitUntil: 'domcontentloaded',
       timeout: 10000
     });
