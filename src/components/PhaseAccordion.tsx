@@ -55,7 +55,7 @@ export default function PhaseAccordion({
             });
           }
         }
-      }, 320); // Wait for expand animation (300ms + buffer)
+      }, 640); // Wait for expand animation (600ms + buffer)
     }
   };
 
@@ -182,9 +182,9 @@ export default function PhaseAccordion({
                 transformOrigin: 'top',
                 transform: isExpanded ? 'scaleY(1)' : 'scaleY(0)',
                 opacity: isExpanded ? 1 : 0,
-                height: isExpanded ? 'auto' : '0',
+                maxHeight: isExpanded ? '500px' : '0',
                 overflow: 'hidden',
-                transition: 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 240ms cubic-bezier(0.4, 0, 0.2, 1)',
+                transition: 'transform 600ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 480ms cubic-bezier(0.25, 0.46, 0.45, 0.94), max-height 600ms cubic-bezier(0.34, 1.56, 0.64, 1)',
                 willChange: 'transform, opacity',
                 backfaceVisibility: 'hidden',
                 perspective: 1000,
@@ -192,7 +192,6 @@ export default function PhaseAccordion({
             >
               <div
                 style={{
-                  contentVisibility: isExpanded ? 'visible' : 'hidden',
                   contain: 'layout style paint',
                 }}
               >
