@@ -410,15 +410,15 @@ export const copyDesktopToMobile = mutation({
       description: "Auto-backup before copying desktop to mobile",
     });
 
-    // Keep only last 50 backups
+    // Keep only last 200 backups
     const allBackups = await ctx.db
       .query("landingDebugUnifiedHistory")
       .withIndex("by_timestamp")
       .order("desc")
       .collect();
 
-    if (allBackups.length > 50) {
-      const backupsToDelete = allBackups.slice(50);
+    if (allBackups.length > 200) {
+      const backupsToDelete = allBackups.slice(200);
       for (const backup of backupsToDelete) {
         await ctx.db.delete(backup._id);
       }
@@ -461,15 +461,15 @@ export const createBackup = mutation({
       description: args.description || "Manual backup",
     });
 
-    // Keep only last 50 backups
+    // Keep only last 200 backups
     const allBackups = await ctx.db
       .query("landingDebugUnifiedHistory")
       .withIndex("by_timestamp")
       .order("desc")
       .collect();
 
-    if (allBackups.length > 50) {
-      const backupsToDelete = allBackups.slice(50);
+    if (allBackups.length > 200) {
+      const backupsToDelete = allBackups.slice(200);
       for (const backup of backupsToDelete) {
         await ctx.db.delete(backup._id);
       }
@@ -479,7 +479,7 @@ export const createBackup = mutation({
   },
 });
 
-// BACKUP SYSTEM: Get backup history
+// BACKUP SYSTEM: Get backup history (rolling 200)
 export const getBackupHistory = query({
   args: {},
   handler: async (ctx) => {
@@ -487,7 +487,7 @@ export const getBackupHistory = query({
       .query("landingDebugUnifiedHistory")
       .withIndex("by_timestamp")
       .order("desc")
-      .take(50);
+      .take(200);
 
     return backups.map(backup => ({
       _id: backup._id,
@@ -560,6 +560,7 @@ export const restoreFromBackup = mutation({
 });
 
 // BACKUP SYSTEM: Auto-backup before any update (use this for all saves)
+// Two-tier system: Rolling 200 recent backups + permanent snapshots every 20th backup
 export const updateWithBackup = mutation({
   args: {
     desktop: v.optional(v.any()),
@@ -573,23 +574,41 @@ export const updateWithBackup = mutation({
 
     // Create backup before updating
     if (existing) {
-      await ctx.db.insert("landingDebugUnifiedHistory", {
+      const timestamp = Date.now();
+      const backupData = {
         desktop: existing.desktop,
         mobile: existing.mobile,
         shared: existing.shared,
-        timestamp: Date.now(),
-        description: "Auto-backup before save",
-      });
+        timestamp,
+      };
 
-      // Keep only last 50 backups
+      // Count total backups to determine if this is every 20th
       const allBackups = await ctx.db
         .query("landingDebugUnifiedHistory")
         .withIndex("by_timestamp")
         .order("desc")
         .collect();
 
-      if (allBackups.length > 50) {
-        const backupsToDelete = allBackups.slice(50);
+      const backupCount = allBackups.length + 1; // +1 because we're about to create one
+
+      // Always create rolling backup
+      await ctx.db.insert("landingDebugUnifiedHistory", {
+        ...backupData,
+        description: "Auto-backup before save",
+      });
+
+      // Every 20th backup: ALSO save as permanent snapshot
+      if (backupCount % 20 === 0) {
+        await ctx.db.insert("landingDebugUnifiedPermanentSnapshots", {
+          ...backupData,
+          description: `Auto-snapshot #${backupCount}`,
+          snapshotType: "auto" as const,
+        });
+      }
+
+      // Keep only last 200 rolling backups
+      if (allBackups.length >= 200) {
+        const backupsToDelete = allBackups.slice(199); // Keep 199, delete the rest
         for (const backup of backupsToDelete) {
           await ctx.db.delete(backup._id);
         }
