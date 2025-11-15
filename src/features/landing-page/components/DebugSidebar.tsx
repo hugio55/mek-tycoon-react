@@ -305,7 +305,7 @@ export default function DebugSidebar({ onClose }: DebugSidebarProps) {
               </div>
 
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Density: {config.starFrequency}</label>
+                <label className="block text-xs text-gray-400 mb-1">Density: {config.starFrequency} stars</label>
                 <input
                   type="range"
                   min="10"
@@ -329,62 +329,10 @@ export default function DebugSidebar({ onClose }: DebugSidebarProps) {
                   className="w-full"
                 />
               </div>
-
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Twinkle Amount: {config.twinkleAmount}%</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={config.twinkleAmount}
-                  onChange={(e) => updateConfig('twinkleAmount', parseInt(e.target.value))}
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Twinkle Speed: {config.twinkleSpeed.toFixed(1)}x</label>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="5"
-                  step="0.1"
-                  value={config.twinkleSpeed}
-                  onChange={(e) => updateConfig('twinkleSpeed', parseFloat(e.target.value))}
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Speed Randomness: {config.twinkleSpeedRandomness}%</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={config.twinkleSpeedRandomness}
-                  onChange={(e) => updateConfig('twinkleSpeedRandomness', parseInt(e.target.value))}
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Size Randomness: {config.sizeRandomness}%</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={config.sizeRandomness}
-                  onChange={(e) => updateConfig('sizeRandomness', parseInt(e.target.value))}
-                  className="w-full"
-                />
-              </div>
             </div>
           </div>
 
-          {/* Layer 2 */}
+          {/* Layer 2 (Fast Streaks) */}
           <div className="mb-4 border-t border-gray-700 pt-3">
             <label className="flex items-center gap-2 cursor-pointer mb-2">
               <input
@@ -393,7 +341,7 @@ export default function DebugSidebar({ onClose }: DebugSidebarProps) {
                 onChange={(e) => updateConfig('layer2Enabled', e.target.checked)}
                 className="w-4 h-4"
               />
-              <span className="text-xs text-gray-300 font-semibold">Layer 2 (Fast Stars)</span>
+              <span className="text-xs text-gray-300 font-semibold">Layer 2 (Fast Streaks)</span>
             </label>
 
             <div className="space-y-2 ml-6">
@@ -401,9 +349,9 @@ export default function DebugSidebar({ onClose }: DebugSidebarProps) {
                 <label className="block text-xs text-gray-400 mb-1">Speed: {config.starSpeed2.toFixed(1)}x</label>
                 <input
                   type="range"
-                  min="0.1"
-                  max="20"
-                  step="0.1"
+                  min="0.5"
+                  max="200"
+                  step="1"
                   value={config.starSpeed2}
                   onChange={(e) => updateConfig('starSpeed2', parseFloat(e.target.value))}
                   className="w-full"
@@ -411,11 +359,11 @@ export default function DebugSidebar({ onClose }: DebugSidebarProps) {
               </div>
 
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Density: {config.starFrequency2}</label>
+                <label className="block text-xs text-gray-400 mb-1">Density: {config.starFrequency2} stars</label>
                 <input
                   type="range"
                   min="10"
-                  max="500"
+                  max="300"
                   step="10"
                   value={config.starFrequency2}
                   onChange={(e) => updateConfig('starFrequency2', parseInt(e.target.value))}
@@ -437,66 +385,14 @@ export default function DebugSidebar({ onClose }: DebugSidebarProps) {
               </div>
 
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Line Length: {config.lineLength2}</label>
+                <label className="block text-xs text-gray-400 mb-1">Line Length: {config.lineLength2.toFixed(1)}x</label>
                 <input
                   type="range"
-                  min="0"
-                  max="100"
-                  step="1"
+                  min="0.5"
+                  max="10"
+                  step="0.5"
                   value={config.lineLength2}
-                  onChange={(e) => updateConfig('lineLength2', parseInt(e.target.value))}
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Twinkle Amount: {config.twinkleAmount2}%</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={config.twinkleAmount2}
-                  onChange={(e) => updateConfig('twinkleAmount2', parseInt(e.target.value))}
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Twinkle Speed: {config.twinkleSpeed2.toFixed(1)}x</label>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="5"
-                  step="0.1"
-                  value={config.twinkleSpeed2}
-                  onChange={(e) => updateConfig('twinkleSpeed2', parseFloat(e.target.value))}
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Speed Randomness: {config.twinkleSpeedRandomness2}%</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={config.twinkleSpeedRandomness2}
-                  onChange={(e) => updateConfig('twinkleSpeedRandomness2', parseInt(e.target.value))}
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Size Randomness: {config.sizeRandomness2}%</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={config.sizeRandomness2}
-                  onChange={(e) => updateConfig('sizeRandomness2', parseInt(e.target.value))}
+                  onChange={(e) => updateConfig('lineLength2', parseFloat(e.target.value))}
                   className="w-full"
                 />
               </div>
