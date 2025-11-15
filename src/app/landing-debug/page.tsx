@@ -1602,8 +1602,159 @@ export default function LandingDebugPage() {
           ))}
         </div>
 
+        {/* NEW: 2-Layer Starfield Controls */}
+        <div className="bg-green-900/20 border-2 border-green-500 rounded p-4 mb-4">
+          <h2 className="text-lg font-bold text-green-400 mb-3">
+            ✨ NEW 2-Layer Starfield System
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            {/* Layer 1: Regular Stars */}
+            <div className="bg-gray-800 border border-gray-700 rounded p-3">
+              <h3 className="text-sm font-semibold text-blue-400 mb-2 pb-1 border-b border-gray-700">
+                Layer 1: Regular Stars
+              </h3>
+
+              <div className="mb-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.layer1Enabled}
+                    onChange={(e) => updateConfig('layer1Enabled', e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-xs text-gray-300 font-semibold">Enable Layer 1</span>
+                </label>
+              </div>
+
+              <div className="mb-2">
+                <label className="block text-xs text-gray-300 mb-1">Star Speed</label>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="10"
+                  step="0.1"
+                  value={config.starSpeed}
+                  onChange={(e) => updateConfig('starSpeed', parseFloat(e.target.value))}
+                  className="w-full"
+                />
+                <div className="text-xs text-gray-400 text-center">{config.starSpeed.toFixed(1)}x</div>
+              </div>
+
+              <div className="mb-2">
+                <label className="block text-xs text-gray-300 mb-1">Star Density</label>
+                <input
+                  type="range"
+                  min="10"
+                  max="500"
+                  step="10"
+                  value={config.starFrequency}
+                  onChange={(e) => updateConfig('starFrequency', parseInt(e.target.value))}
+                  className="w-full"
+                />
+                <div className="text-xs text-gray-400 text-center">{config.starFrequency} stars</div>
+              </div>
+
+              <div className="mb-2">
+                <label className="block text-xs text-gray-300 mb-1">Star Size</label>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="3"
+                  step="0.1"
+                  value={config.starScale}
+                  onChange={(e) => updateConfig('starScale', parseFloat(e.target.value))}
+                  className="w-full"
+                />
+                <div className="text-xs text-gray-400 text-center">{config.starScale.toFixed(1)}x</div>
+              </div>
+            </div>
+
+            {/* Layer 2: Fast Streaks */}
+            <div className="bg-gray-800 border border-gray-700 rounded p-3">
+              <h3 className="text-sm font-semibold text-purple-400 mb-2 pb-1 border-b border-gray-700">
+                Layer 2: Fast Streaks (Lines)
+              </h3>
+
+              <div className="mb-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.layer2Enabled}
+                    onChange={(e) => updateConfig('layer2Enabled', e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-xs text-gray-300 font-semibold">Enable Layer 2</span>
+                </label>
+              </div>
+
+              <div className="mb-2">
+                <label className="block text-xs text-gray-300 mb-1">Star Speed</label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="20"
+                  step="0.5"
+                  value={config.starSpeed2}
+                  onChange={(e) => updateConfig('starSpeed2', parseFloat(e.target.value))}
+                  className="w-full"
+                />
+                <div className="text-xs text-gray-400 text-center">{config.starSpeed2.toFixed(1)}x</div>
+              </div>
+
+              <div className="mb-2">
+                <label className="block text-xs text-gray-300 mb-1">Star Density</label>
+                <input
+                  type="range"
+                  min="10"
+                  max="300"
+                  step="10"
+                  value={config.starFrequency2}
+                  onChange={(e) => updateConfig('starFrequency2', parseInt(e.target.value))}
+                  className="w-full"
+                />
+                <div className="text-xs text-gray-400 text-center">{config.starFrequency2} stars</div>
+              </div>
+
+              <div className="mb-2">
+                <label className="block text-xs text-gray-300 mb-1">Star Size</label>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="3"
+                  step="0.1"
+                  value={config.starScale2}
+                  onChange={(e) => updateConfig('starScale2', parseFloat(e.target.value))}
+                  className="w-full"
+                />
+                <div className="text-xs text-gray-400 text-center">{config.starScale2.toFixed(1)}x</div>
+              </div>
+
+              <div className="mb-2">
+                <label className="block text-xs text-gray-300 mb-1">Line Length</label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="10"
+                  step="0.5"
+                  value={config.lineLength2}
+                  onChange={(e) => updateConfig('lineLength2', parseFloat(e.target.value))}
+                  className="w-full"
+                />
+                <div className="text-xs text-gray-400 text-center">{config.lineLength2.toFixed(1)}x</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* OLD SYSTEM: Collapsible Section */}
+        <details className="bg-gray-900/50 border border-gray-700 rounded p-4 mb-4">
+          <summary className="cursor-pointer text-sm font-semibold text-gray-400 hover:text-gray-300">
+            🗂️ Old 3-Layer System (Legacy Controls - Click to Expand)
+          </summary>
+
         {/* Debug Controls Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4">
 
           {/* Star Controls Section - Layer 1 */}
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
@@ -2546,6 +2697,9 @@ export default function LandingDebugPage() {
 
 
           {/* Typography Controls Section */}
+        </div>
+        </details>
+
           {true && (
           <div className="bg-gray-800 border border-gray-700 rounded p-3">
             <h2 className="text-sm font-semibold text-gray-100 mb-2 pb-1 border-b border-gray-700">

@@ -13,136 +13,12 @@ import { getMediaUrl } from '@/lib/media-url';
 import { isSafariOrIOS } from '@/lib/browser-detection';
 import { useLoaderContext } from '@/features/page-loader';
 import Starfield2Layer from '@/components/Starfield2Layer';
+import { type ProgressionState } from '@/features/landing-page/types/progression-state';
+import { DEFAULT_CONFIG, STORAGE_KEY, AUDIO_CONSENT_KEY } from '@/features/landing-page/config/default-config';
+import { useResponsiveLayout } from '@/features/landing-page/hooks/useResponsiveLayout';
+import LandingFooter from '@/features/landing-page/components/LandingFooter';
 
-// Landing page progression state machine
-type ProgressionState =
-  | 'WAITING_FOR_LOADER'      // Universal loader running (triangles + percentage)
-  | 'WAITING_FOR_CONSENT'     // Audio consent lightbox visible (over dimmed background)
-  | 'CONSENT_CLOSING'         // User made choice, lightbox fading out (500ms)
-  | 'MAIN_CONTENT'            // Logo + stars fading in, background full brightness
-  | 'CONTENT_COMPLETE';       // Logo video loaded, phase cards can appear
-
-// Storage key must match the debug page
-const STORAGE_KEY = 'mek-landing-debug-config';
-const AUDIO_CONSENT_KEY = 'mek-audio-consent';
-
-// Default configuration
-const DEFAULT_CONFIG = {
-  starsEnabled: true,
-  // Layer enable/disable
-  bgStarEnabled: true,
-  layer1Enabled: true,
-  layer2Enabled: true,
-  layer3Enabled: true,
-  starScale: 1,
-  starSpeed: 3,
-  starFrequency: 200,
-  twinkleAmount: 0,
-  twinkleSpeed: 1,
-  twinkleSpeedRandomness: 50,
-  sizeRandomness: 50,
-  starScale2: 1,
-  starSpeed2: 10,
-  starFrequency2: 100,
-  lineLength2: 2,
-  twinkleAmount2: 0,
-  twinkleSpeed2: 1,
-  twinkleSpeedRandomness2: 50,
-  sizeRandomness2: 50,
-  starScale3: 1,
-  starSpeed3: 10,
-  starFrequency3: 100,
-  lineLength3: 2,
-  brightness3: 0.8,
-  spawnDelay3: 50,
-  twinkleAmount3: 0,
-  twinkleSpeed3: 1,
-  twinkleSpeedRandomness3: 50,
-  sizeRandomness3: 50,
-  bgStarTwinkleAmount: 30,
-  bgStarTwinkleSpeed: 0.5,
-  bgStarTwinkleSpeedRandomness: 50,
-  bgStarSizeRandomness: 50,
-  bgStarSize: 2.0,
-  bgStarCount: 800,
-  bgStarMinBrightness: 0.1,
-  bgStarMaxBrightness: 0.4,
-  starFadePosition: 60, // Percentage from top where fade begins (0-100)
-  starFadeFeatherSize: 200, // Pixels of fade transition zone
-  logoSize: 600,
-  logoYPosition: 0, // Percentage offset from center (-50 to +50)
-  selectedFont: 'Orbitron',
-  descriptionFontSize: 18,
-  descriptionText: 'A futuristic idle tycoon game featuring collectible Mek NFTs. Build your empire through resource management, strategic crafting, and automated gold generation.',
-  descriptionXOffset: 0,
-  descriptionYOffset: 0,
-  bgYPosition: 0,
-  motionBlurEnabled: true,
-  blurIntensity: 50,
-  motionBlurEnabled2: true,
-  blurIntensity2: 50,
-  descriptionColor: 'text-yellow-400/90',
-  designVariation: 'modern' as 'modern' | 'industrial' | 'neon',
-  phaseHeaderFont: 'Orbitron',
-  phaseHeaderFontSize: 48,
-  phaseHeaderColor: 'text-white/70',
-  phaseDescriptionFont: 'Arial',
-  phaseDescriptionFontSize: 16,
-  soundLabelFont: 'Orbitron',
-  soundLabelSize: 16,
-  soundLabelColor: 'text-yellow-400/90',
-  soundLabelVerticalOffset: 0,
-  soundLabelHorizontalOffset: 0,
-  powerButtonScale: 1,
-  powerButtonVerticalOffset: 0,
-  powerButtonHorizontalOffset: 0,
-  powerButtonGlowEnabled: true,
-  speakerIconStyle: 'geometric' as SpeakerIconStyle,
-  phaseImageDarkening: 30,
-  phaseBlurAmount: 20,
-  phaseBlurAmountSelected: 5,
-  phaseColumnHeight: 288,
-  phaseFadePosition: 50,
-  phaseImageBlendMode: 'normal' as 'normal' | 'screen' | 'lighten' | 'lighter',
-  phaseHoverDarkeningIntensity: 90,
-  phaseIdleBackdropBlur: 15,
-  phaseColumnYOffset: 0,
-  // Description glass card controls
-  descriptionCardBlur: 40,
-  descriptionCardDarkness: 40,
-  descriptionCardBorder: true,
-  // Audio Consent Lightbox controls
-  logoFadeDuration: 4000,
-  lightboxBackdropDarkness: 70,
-  audioToggleSize: 96,
-  audioToggleScale: 1.0,
-  toggleTextGap: 16,
-  proceedButtonSize: 1.0,
-  audioDescriptionText: 'For full immersion...',
-  audioConsentFadeDuration: 500,
-  // Join Beta Button controls
-  joinBetaFont: 'Orbitron',
-  joinBetaFontSize: 32,
-  joinBetaColor: 'text-white',
-  joinBetaHorizontalOffset: 0,
-  joinBetaVerticalOffset: 0,
-  // Footer settings
-  footerHeight: 120,
-  footerImageVerticalPosition: 50,
-  oeLogoScale: 1.0,
-  socialIconScale: 1.0,
-  socialIconGap: 24,
-  socialIconVerticalPosition: 70,
-  socialIconPaddingTop: 0,
-  socialIconPaddingBottom: 0,
-  footerBlurAmount: 20,
-  footerEdgeFeathering: 0,
-  // Mobile-specific controls
-  mobileBreakpoint: 1024, // Pixel width where mobile view activates
-  mobilePhaseFooterSpacing: 32, // Pixels of space between Phase IV and footer on mobile
-  mobilePhaseButtonMaxWidth: 600, // Max width for phase buttons on mobile (pixels)
-  // Note: phaseImage1-4 not in DEFAULT_CONFIG - PhaseCarousel manages these
-};
+// Configuration imported from /features/landing-page/config/default-config.ts
 
 export default function LandingPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -157,10 +33,9 @@ export default function LandingPage() {
   // Universal page loader context
   const { isLoading } = useLoaderContext();
 
-  // Viewport detection for responsive settings
-  const [isMobile, setIsMobile] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(0);
+  // Viewport detection for responsive settings (using hook)
   const [mobileBreakpoint, setMobileBreakpoint] = useState(DEFAULT_CONFIG.mobileBreakpoint);
+  const { isMobile, windowWidth, viewportHeight, fixedViewportHeight } = useResponsiveLayout(mobileBreakpoint);
 
   // Browser detection for video format selection
   const [useSafariVideo, setUseSafariVideo] = useState(false);
@@ -170,27 +45,6 @@ export default function LandingPage() {
     setUseSafariVideo(isSafariOrIOS());
     // Browser detected for video selection
   }, []);
-
-  useEffect(() => {
-    const checkViewport = () => {
-      const width = window.innerWidth;
-      const wasMobile = isMobile;
-      const nowMobile = width < mobileBreakpoint;
-
-      // Removed viewport logging - updates too frequently
-
-      if (wasMobile !== nowMobile) {
-        // Viewport changed between mobile and desktop
-      }
-
-      setIsMobile(nowMobile);
-      setWindowWidth(width);
-    };
-
-    checkViewport();
-    window.addEventListener('resize', checkViewport);
-    return () => window.removeEventListener('resize', checkViewport);
-  }, [isMobile, mobileBreakpoint]);
 
   // Load settings from UNIFIED Convex table (with old table fallback)
   const unifiedSettings = useQuery(api.landingDebugUnified.getUnifiedLandingDebugSettings);
@@ -278,11 +132,7 @@ export default function LandingPage() {
   const [descriptionText, setDescriptionText] = useState(DEFAULT_CONFIG.descriptionText);
   const [bgYPosition, setBgYPosition] = useState(DEFAULT_CONFIG.bgYPosition);
 
-  // Dynamic viewport height tracking
-  const [viewportHeight, setViewportHeight] = useState(0);
-
-  // Fixed initial viewport height for background (prevents mobile chrome jumping)
-  const [fixedViewportHeight, setFixedViewportHeight] = useState(0);
+  // Viewport height tracking now handled by useResponsiveLayout hook
 
   // Motion blur controls - Layer 1
   const [motionBlurEnabled, setMotionBlurEnabled] = useState(DEFAULT_CONFIG.motionBlurEnabled);
@@ -348,9 +198,10 @@ export default function LandingPage() {
   const logoContainerRef = useRef<HTMLDivElement>(null);
 
   // Canvas compositing for Safari/iOS (dual-video alpha transparency)
-  // Skip on mobile - using GIF instead
+  // DISABLED - Using GIF for all Safari/iOS (too performance-intensive)
   useEffect(() => {
-    if (!useSafariVideo || isMobile) return;
+    // Always skip compositing - use GIF for all Safari/iOS instead
+    return;
     if (!compositeCanvasRef.current || !colorVideoRef.current || !alphaVideoRef.current) return;
 
     const canvas = compositeCanvasRef.current;
@@ -479,25 +330,10 @@ export default function LandingPage() {
   // Start video when logo animation begins
   useEffect(() => {
     if (animationStage === 'logo') {
-      // Handle Safari/iOS mobile (GIF - no action needed, onLoad handles setLogoVideoLoaded)
-      if (useSafariVideo && isMobile) {
-        // Mobile Safari uses GIF - logo loaded state handled by img onLoad
-        console.log('[🖼️GIF] Mobile Safari using GIF for logo');
-      }
-      // Handle Safari/iOS desktop (dual video compositing)
-      else if (useSafariVideo && !isMobile && colorVideoRef.current && alphaVideoRef.current) {
-        // Starting Safari dual-video playback
-        colorVideoRef.current.currentTime = 0;
-        alphaVideoRef.current.currentTime = 0;
-        colorVideoRef.current.play()
-          .then(() => {
-            console.log('[🎬VIDEO] Safari color video started - marking logo loaded');
-            setLogoVideoLoaded(true);
-            console.log('[🎭STATE] Transitioning: MAIN_CONTENT → CONTENT_COMPLETE');
-            setProgressionState('CONTENT_COMPLETE');
-          })
-          .catch(err => console.error('[🎬VIDEO] Color video play failed:', err));
-        alphaVideoRef.current.play().catch(err => console.error('[🎬VIDEO] Alpha video play failed:', err));
+      // Handle Safari/iOS (all devices use GIF - no action needed, onLoad handles setLogoVideoLoaded)
+      if (useSafariVideo) {
+        // Safari/iOS uses GIF - logo loaded state handled by img onLoad
+        console.log('[🖼️GIF] Safari/iOS using GIF for logo (no video compositing)');
       }
       // Handle Chrome/Firefox (WebM)
       else if (!useSafariVideo && videoRef.current) {
