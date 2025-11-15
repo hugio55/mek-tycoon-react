@@ -550,6 +550,16 @@ const scaledY = zone.y * displayScale;
 - Requires review of 102 head variations to create thematic groupings
 - Will be designed after military rank system is complete
 
+**Buff Type Weighting System (2025-11-15):**
+- Different job types have different buff priorities (configurable per job)
+- Examples:
+  - Military jobs: 60% gold buffs, 30% essence buffs, 10% cosmetic buffs
+  - Artist jobs: 30% gold buffs, 40% essence buffs, 30% cosmetic/skin buffs
+  - Scientist jobs: Equal distribution or special research buffs
+- Admin configures buff type weights in Slots tab testing ground
+- RNG respects weights when generating 3 pit stop options
+- Allows thematic differentiation (soldiers earn gold, artists earn cosmetics)
+
 ### Technical Architecture Notes
 
 **Database Schema Requirements:**
