@@ -124,7 +124,7 @@ const DEFAULT_CONFIG = {
   phaseFadePosition: 50,
   phaseImageBlendMode: 'normal' as 'normal' | 'screen' | 'lighten' | 'lighter',
   phaseHoverDarkeningIntensity: 90,
-  phaseIdleBackdropBlur: 0,
+  phaseIdleBackdropBlur: 15,
   phaseColumnYOffset: 0,
   // Description glass card controls
   descriptionCardBlur: 40,
