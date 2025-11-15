@@ -13,6 +13,7 @@ import { getMediaUrl } from '@/lib/media-url';
 import { isSafariOrIOS } from '@/lib/browser-detection';
 import { useLoaderContext } from '@/features/page-loader';
 import Starfield2Layer from '@/components/Starfield2Layer';
+import StarfieldCanvas from '@/components/StarfieldCanvas';
 
 // Landing page progression state machine
 type ProgressionState =
