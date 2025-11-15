@@ -65,10 +65,11 @@ export function LoadingOverlay({
 
   const overlayContent = (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center"
+      className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none"
       style={{
         opacity: isFadingOut ? 0 : 1,
         transition: `opacity ${TIMING.FADE_DURATION}ms ease-out`,
+        background: 'transparent',
       }}
     >
 
