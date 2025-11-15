@@ -1193,22 +1193,7 @@ export default function LandingPage() {
     return () => window.removeEventListener('mek-config-update', handleConfigUpdate);
   }, [dbSettings]);
 
-  // Track viewport height for dynamic logo centering
-  useEffect(() => {
-    const updateViewportHeight = () => {
-      setViewportHeight(window.innerHeight);
-    };
-
-    // Set initial height
-    updateViewportHeight();
-
-    // Set fixed height ONCE on mount (for background stability on mobile)
-    setFixedViewportHeight(window.innerHeight);
-
-    // Update on resize
-    window.addEventListener('resize', updateViewportHeight);
-    return () => window.removeEventListener('resize', updateViewportHeight);
-  }, []);
+  // Viewport height tracking handled by useResponsiveLayout hook
 
   // Scroll detection for description text animation and scroll indicator
   // Mobile-optimized: Handles touch events, iOS address bar, throttling for performance
