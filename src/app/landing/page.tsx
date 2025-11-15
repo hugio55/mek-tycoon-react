@@ -94,6 +94,98 @@ export default function LandingPage() {
     }
   }, [unifiedSettings, oldDbSettings, isMobile, dbSettings]);
 
+  // 🔥 CRITICAL: Sync database settings to local state
+  // Without this, sidebar changes don't affect the page!
+  useEffect(() => {
+    if (!dbSettings) return;
+
+    console.log('[🔄SYNC] Applying database settings to local state:', dbSettings);
+
+    // Star system master toggle
+    if (dbSettings.starsEnabled !== undefined) setStarsEnabled(dbSettings.starsEnabled);
+
+    // Layer enable/disable
+    if (dbSettings.bgStarEnabled !== undefined) setBgStarEnabled(dbSettings.bgStarEnabled);
+    if (dbSettings.layer1Enabled !== undefined) setLayer1Enabled(dbSettings.layer1Enabled);
+    if (dbSettings.layer2Enabled !== undefined) setLayer2Enabled(dbSettings.layer2Enabled);
+    if (dbSettings.layer3Enabled !== undefined) setLayer3Enabled(dbSettings.layer3Enabled);
+
+    // Layer 1 controls
+    if (dbSettings.starScale !== undefined) setStarScale(dbSettings.starScale);
+    if (dbSettings.starSpeed !== undefined) setStarSpeed(dbSettings.starSpeed);
+    if (dbSettings.starFrequency !== undefined) setStarFrequency(dbSettings.starFrequency);
+    if (dbSettings.twinkleAmount !== undefined) setTwinkleAmount(dbSettings.twinkleAmount);
+    if (dbSettings.twinkleSpeed !== undefined) setTwinkleSpeed(dbSettings.twinkleSpeed);
+    if (dbSettings.twinkleSpeedRandomness !== undefined) setTwinkleSpeedRandomness(dbSettings.twinkleSpeedRandomness);
+    if (dbSettings.sizeRandomness !== undefined) setSizeRandomness(dbSettings.sizeRandomness);
+
+    // Layer 2 controls
+    if (dbSettings.starScale2 !== undefined) setStarScale2(dbSettings.starScale2);
+    if (dbSettings.starSpeed2 !== undefined) setStarSpeed2(dbSettings.starSpeed2);
+    if (dbSettings.starFrequency2 !== undefined) setStarFrequency2(dbSettings.starFrequency2);
+    if (dbSettings.lineLength2 !== undefined) setLineLength2(dbSettings.lineLength2);
+    if (dbSettings.twinkleAmount2 !== undefined) setTwinkleAmount2(dbSettings.twinkleAmount2);
+    if (dbSettings.twinkleSpeed2 !== undefined) setTwinkleSpeed2(dbSettings.twinkleSpeed2);
+    if (dbSettings.twinkleSpeedRandomness2 !== undefined) setTwinkleSpeedRandomness2(dbSettings.twinkleSpeedRandomness2);
+    if (dbSettings.sizeRandomness2 !== undefined) setSizeRandomness2(dbSettings.sizeRandomness2);
+
+    // Layer 3 controls
+    if (dbSettings.starScale3 !== undefined) setStarScale3(dbSettings.starScale3);
+    if (dbSettings.starSpeed3 !== undefined) setStarSpeed3(dbSettings.starSpeed3);
+    if (dbSettings.starFrequency3 !== undefined) setStarFrequency3(dbSettings.starFrequency3);
+    if (dbSettings.lineLength3 !== undefined) setLineLength3(dbSettings.lineLength3);
+    if (dbSettings.brightness3 !== undefined) setBrightness3(dbSettings.brightness3);
+    if (dbSettings.spawnDelay3 !== undefined) setSpawnDelay3(dbSettings.spawnDelay3);
+    if (dbSettings.twinkleAmount3 !== undefined) setTwinkleAmount3(dbSettings.twinkleAmount3);
+    if (dbSettings.twinkleSpeed3 !== undefined) setTwinkleSpeed3(dbSettings.twinkleSpeed3);
+    if (dbSettings.twinkleSpeedRandomness3 !== undefined) setTwinkleSpeedRandomness3(dbSettings.twinkleSpeedRandomness3);
+    if (dbSettings.sizeRandomness3 !== undefined) setSizeRandomness3(dbSettings.sizeRandomness3);
+
+    // Background static stars
+    if (dbSettings.bgStarTwinkleAmount !== undefined) setBgStarTwinkleAmount(dbSettings.bgStarTwinkleAmount);
+    if (dbSettings.bgStarTwinkleSpeed !== undefined) setBgStarTwinkleSpeed(dbSettings.bgStarTwinkleSpeed);
+    if (dbSettings.bgStarTwinkleSpeedRandomness !== undefined) setBgStarTwinkleSpeedRandomness(dbSettings.bgStarTwinkleSpeedRandomness);
+    if (dbSettings.bgStarSizeRandomness !== undefined) setBgStarSizeRandomness(dbSettings.bgStarSizeRandomness);
+    if (dbSettings.bgStarSize !== undefined) setBgStarSize(dbSettings.bgStarSize);
+    if (dbSettings.bgStarCount !== undefined) setBgStarCount(dbSettings.bgStarCount);
+    if (dbSettings.bgStarMinBrightness !== undefined) setBgStarMinBrightness(dbSettings.bgStarMinBrightness);
+    if (dbSettings.bgStarMaxBrightness !== undefined) setBgStarMaxBrightness(dbSettings.bgStarMaxBrightness);
+    if (dbSettings.starFadePosition !== undefined) setStarFadePosition(dbSettings.starFadePosition);
+    if (dbSettings.starFadeFeatherSize !== undefined) setStarFadeFeatherSize(dbSettings.starFadeFeatherSize);
+
+    // Layout controls
+    if (dbSettings.logoSize !== undefined) setLogoSize(dbSettings.logoSize);
+    if (dbSettings.logoYPosition !== undefined) setLogoYPosition(dbSettings.logoYPosition);
+    if (dbSettings.selectedFont !== undefined) setSelectedFont(dbSettings.selectedFont);
+    if (dbSettings.descriptionFontSize !== undefined) setDescriptionFontSize(dbSettings.descriptionFontSize);
+    if (dbSettings.descriptionText !== undefined) setDescriptionText(dbSettings.descriptionText);
+    if (dbSettings.bgYPosition !== undefined) setBgYPosition(dbSettings.bgYPosition);
+
+    // Motion blur controls
+    if (dbSettings.motionBlurEnabled !== undefined) setMotionBlurEnabled(dbSettings.motionBlurEnabled);
+    if (dbSettings.blurIntensity !== undefined) setBlurIntensity(dbSettings.blurIntensity);
+    if (dbSettings.motionBlurEnabled2 !== undefined) setMotionBlurEnabled2(dbSettings.motionBlurEnabled2);
+    if (dbSettings.blurIntensity2 !== undefined) setBlurIntensity2(dbSettings.blurIntensity2);
+
+    // Description styling
+    if (dbSettings.descriptionColor !== undefined) setDescriptionColor(dbSettings.descriptionColor);
+    if (dbSettings.descriptionXOffset !== undefined) setDescriptionXOffset(dbSettings.descriptionXOffset);
+    if (dbSettings.descriptionYOffset !== undefined) setDescriptionYOffset(dbSettings.descriptionYOffset);
+
+    // Phase carousel
+    if (dbSettings.designVariation !== undefined) setDesignVariation(dbSettings.designVariation);
+    if (dbSettings.phaseHeaderFont !== undefined) setPhaseHeaderFont(dbSettings.phaseHeaderFont);
+    if (dbSettings.phaseHeaderFontSize !== undefined) setPhaseHeaderFontSize(dbSettings.phaseHeaderFontSize);
+    if (dbSettings.phaseHeaderColor !== undefined) setPhaseHeaderColor(dbSettings.phaseHeaderColor);
+    if (dbSettings.phaseDescriptionFont !== undefined) setPhaseDescriptionFont(dbSettings.phaseDescriptionFont);
+    if (dbSettings.phaseDescriptionFontSize !== undefined) setPhaseDescriptionFontSize(dbSettings.phaseDescriptionFontSize);
+
+    // Logo animation
+    if (dbSettings.logoFadeDuration !== undefined) setLogoFadeDuration(dbSettings.logoFadeDuration);
+
+    console.log('[✅SYNC] All settings applied to local state');
+  }, [dbSettings]);
+
   // Layer enable/disable states
   const [bgStarEnabled, setBgStarEnabled] = useState(DEFAULT_CONFIG.bgStarEnabled);
   const [layer1Enabled, setLayer1Enabled] = useState(DEFAULT_CONFIG.layer1Enabled);
