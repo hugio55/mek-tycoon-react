@@ -257,6 +257,7 @@ export const getUnifiedLandingDebugSettings = query({
     };
 
     console.log('[🔍QUERY] Merged shared config keys:', Object.keys(merged.shared).length);
+    console.log('[🔨SYNC] Step 3.9 - Query returning starsEnabled:', merged.shared.starsEnabled);
 
     return merged;
   },
@@ -271,6 +272,7 @@ export const updateUnifiedLandingDebugSettings = mutation({
   },
   handler: async (ctx, args) => {
     console.log('[🔧UPDATE] Mutation called with args:', JSON.stringify(args, null, 2));
+    console.log('[🔨SYNC] Step 3 - Mutation received starsEnabled:', args.shared?.starsEnabled);
 
     const existing = await ctx.db
       .query("landingDebugUnified")
@@ -279,6 +281,7 @@ export const updateUnifiedLandingDebugSettings = mutation({
     console.log('[🔧UPDATE] Existing record found:', !!existing);
     if (existing) {
       console.log('[🔧UPDATE] Existing shared config keys:', Object.keys(existing.shared || {}).length);
+      console.log('[🔨SYNC] Step 3.5 - Existing starsEnabled:', existing.shared?.starsEnabled);
     }
 
     const updatedSettings = {
@@ -286,6 +289,8 @@ export const updateUnifiedLandingDebugSettings = mutation({
       mobile: { ...(existing?.mobile || DEFAULT_CONFIG.mobile), ...(args.mobile || {}) },
       shared: { ...(existing?.shared || DEFAULT_CONFIG.shared), ...(args.shared || {}) },
     };
+
+    console.log('[🔨SYNC] Step 3.75 - After merge, starsEnabled:', updatedSettings.shared.starsEnabled);
 
     console.log('[🔧UPDATE] Updated shared config keys:', Object.keys(updatedSettings.shared).length);
     console.log('[🔧UPDATE] Sample values:', {

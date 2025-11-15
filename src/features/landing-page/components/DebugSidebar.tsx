@@ -30,6 +30,7 @@ export default function DebugSidebar({ onClose }: DebugSidebarProps) {
 
   // Auto-save with debounce
   const updateConfig = (key: keyof ConfigType, value: any) => {
+    console.log('[📝SIDEBAR] Config change:', key, '=', value);
     setConfig(prev => ({ ...prev, [key]: value }));
 
     // Clear existing timeout
@@ -42,7 +43,9 @@ export default function DebugSidebar({ onClose }: DebugSidebarProps) {
     // Save after 500ms of inactivity
     saveTimeoutRef.current = setTimeout(async () => {
       try {
-        await updateSettings({ shared: { [key]: value } });
+        console.log('[💾SIDEBAR] Saving to database:', { shared: { [key]: value } });
+        const result = await updateSettings({ shared: { [key]: value } });
+        console.log('[✅SIDEBAR] Save successful:', result);
         setSaveState('saved');
         setTimeout(() => setSaveState('idle'), 2000);
       } catch (error) {
