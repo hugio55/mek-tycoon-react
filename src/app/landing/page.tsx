@@ -1566,6 +1566,7 @@ export default function LandingPage() {
           layer2Density={starFrequency2}
           layer2Size={starScale2}
           layer2LineLength={lineLength2}
+          rightOffset={showDebugSidebar ? 384 : 0}
         />
       )}
 
