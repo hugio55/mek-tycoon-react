@@ -12,7 +12,7 @@ import FillTextButton from '@/components/controls/FillTextButton';
 import { getMediaUrl } from '@/lib/media-url';
 import { isSafariOrIOS } from '@/lib/browser-detection';
 import { useLoaderContext } from '@/features/page-loader';
-import StarfieldCanvas from '@/components/StarfieldCanvas';
+import Starfield2Layer from '@/components/Starfield2Layer';
 
 // Landing page progression state machine
 type ProgressionState =
