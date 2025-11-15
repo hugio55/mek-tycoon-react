@@ -1693,8 +1693,8 @@ export default function LandingDebugPage() {
                 <input
                   type="range"
                   min="0.5"
-                  max="20"
-                  step="0.5"
+                  max="200"
+                  step="1"
                   value={config.starSpeed2}
                   onChange={(e) => updateConfig('starSpeed2', parseFloat(e.target.value))}
                   className="w-full"

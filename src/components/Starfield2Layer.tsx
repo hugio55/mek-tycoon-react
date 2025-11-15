@@ -99,9 +99,8 @@ export default function Starfield2Layer({
     const maxZ = 1500;
 
     const animate = () => {
-      // Clear canvas completely (no trails)
-      ctx.fillStyle = "rgba(0, 0, 0, 1)";
-      ctx.fillRect(0, 0, width, height);
+      // Clear canvas completely (transparent, no trails)
+      ctx.clearRect(0, 0, width, height);
 
       // Draw Layer 1 (regular stars)
       if (layer1Enabled) {
