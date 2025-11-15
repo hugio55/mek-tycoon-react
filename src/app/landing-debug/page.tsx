@@ -1472,34 +1472,6 @@ export default function LandingDebugPage() {
             Settings now saved to database (survives code refactors). Auto-saves after 500ms of inactivity.
           </p>
           <div className="mt-2 flex gap-2 flex-wrap">
-            <a
-              href="/landing"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-gray-300 text-xs hover:bg-gray-600"
-            >
-              Open Landing Page
-            </a>
-            <button
-              onClick={() => {
-                const newValue = !config.starsEnabled;
-                updateConfig('starsEnabled', newValue);
-                console.log('[⭐STARS] Master star toggle:', newValue);
-              }}
-              className={`px-2 py-1 rounded text-xs font-bold ${
-                config.starsEnabled
-                  ? 'bg-blue-700 border border-blue-500 text-white'
-                  : 'bg-red-700 border border-red-500 text-white'
-              }`}
-            >
-              {config.starsEnabled ? '⭐ Stars ON' : '⭐ Stars OFF'}
-            </button>
-            <button
-              onClick={() => setViewMode(viewMode === 'controls-only' ? 'split-view' : 'controls-only')}
-              className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-gray-300 text-xs hover:bg-gray-600"
-            >
-              {viewMode === 'controls-only' ? 'Show Preview' : 'Hide Preview'}
-            </button>
             <button
               onClick={handleSave}
               disabled={saveState === 'saving'}
