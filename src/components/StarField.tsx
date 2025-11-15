@@ -28,7 +28,7 @@ const StarField = () => {
     setCanvasSize();
 
     const STAR_COUNT = 180;
-    const SPEED = 0.5;
+    const SPEED = 3;
     const MAX_DEPTH = 1000;
     const MIN_DEPTH = 1;
     const HALF_WIDTH = canvas.width / 2;
@@ -78,8 +78,7 @@ const StarField = () => {
             continue;
           }
 
-          const size = Math.floor((1 - star.z / MAX_DEPTH) * 3);
-          if (size < 1) continue;
+          const size = Math.max(1, Math.floor((1 - star.z / MAX_DEPTH) * 4));
 
           ctx.beginPath();
           ctx.arc(screenX, screenY, size, 0, PI2);
