@@ -80,7 +80,7 @@ const StarField = () => {
             continue;
           }
 
-          const fadeInDuration = 800;
+          const fadeInDuration = 2000;
           const fadeInProgress = Math.min(star.age / fadeInDuration, 1);
           const opacity = fadeInProgress * 0.8;
 
