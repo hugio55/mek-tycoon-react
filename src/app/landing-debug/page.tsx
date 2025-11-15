@@ -133,8 +133,6 @@ const DEFAULT_CONFIG = {
   toggleSize: 1.0,
   toggleGap: 48,
   toggleVerticalPosition: 0,
-  // Active tab
-  activeTab: 'layer1' as string,
   // Footer settings
   footerHeight: 120,
   footerImageVerticalPosition: 50,
@@ -179,7 +177,6 @@ export default function LandingDebugPage() {
     });
     return DEFAULT_CONFIG;
   });
-  const [viewMode, setViewMode] = useState<'controls-only' | 'split-view'>('controls-only');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [selectedTypographyElement, setSelectedTypographyElement] = useState<'description' | 'phaseHeader' | 'phaseDescription' | 'soundLabel' | 'joinBeta' | 'audioLightboxDescription' | 'toggleLabels'>('description');
   const [migrationStatus, setMigrationStatus] = useState<'pending' | 'migrating' | 'complete' | 'none'>('pending');
@@ -659,7 +656,7 @@ export default function LandingDebugPage() {
           Object.keys(config).forEach(key => {
             if (sharedFields.includes(key)) {
               shared[key] = config[key as keyof ConfigType];
-            } else if (key !== 'activeTab') { // Don't save activeTab
+            } else {
               modeSpecific[key] = config[key as keyof ConfigType];
             }
           });
@@ -801,10 +798,6 @@ export default function LandingDebugPage() {
     });
     // DON'T reset flag here - let auto-save timeout handle it after DB propagation completes
     // This prevents race condition where DB query updates arrive after flag reset
-  };
-
-  const setActiveTab = (tabId: string) => {
-    setConfig(prev => ({ ...prev, activeTab: tabId }));
   };
 
   // Format timestamp for backup history display
@@ -967,7 +960,7 @@ export default function LandingDebugPage() {
         Object.keys(config).forEach(key => {
           if (sharedFields.includes(key)) {
             shared[key] = config[key as keyof ConfigType];
-          } else if (key !== 'activeTab') {
+          } else {
             modeSpecific[key] = config[key as keyof ConfigType];
           }
         });
@@ -1124,22 +1117,6 @@ export default function LandingDebugPage() {
     }
   };
 
-  // Tab categories
-  const tabs = [
-    { id: 'layer1', label: 'Layer 1' },
-    { id: 'layer2', label: 'Layer 2' },
-    { id: 'layer3', label: 'Layer 3' },
-    { id: 'bgstars', label: 'BG Stars' },
-    { id: 'logo', label: 'Logo' },
-    { id: 'description', label: 'Description' },
-    { id: 'phases', label: 'Phases' },
-    { id: 'audio', label: 'Audio' },
-    { id: 'motion', label: 'Motion Blur' },
-    { id: 'power', label: 'Power Button' },
-    { id: 'speaker', label: 'Speaker' },
-    { id: 'other', label: 'Other' },
-  ];
-
   // Loading state - wait for database to load before rendering
   if (!dbSettings || migrationStatus === 'pending') {
     return (
@@ -1150,9 +1127,9 @@ export default function LandingDebugPage() {
   }
 
   return (
-    <div className={`min-h-screen ${viewMode === 'split-view' ? 'flex' : 'bg-gray-900 p-3'}`}>
+    <div className="min-h-screen bg-gray-900 p-3">
       <div
-        className={viewMode === 'split-view' ? 'w-1/2 bg-gray-800 p-3 overflow-y-auto border-r border-gray-700' : 'max-w-5xl mx-auto'}
+        className="max-w-5xl mx-auto"
         style={{ zoom: 0.75 }}
       >
         {/* Desktop/Mobile Mode Toggle */}
@@ -1522,56 +1499,6 @@ export default function LandingDebugPage() {
               {config.forceShowAudioConsent ? '🔒 Force Show ON (All Devices)' : 'Force Show OFF'}
             </button>
           </div>
-        </div>
-
-        {/* TEST SLIDER - Debug slider responsiveness */}
-        <div className="mb-4 p-4 bg-red-900/20 border-2 border-red-500 rounded">
-          <h3 className="text-sm font-bold text-red-300 mb-2">🚨 DEBUG TEST SLIDER</h3>
-          <p className="text-xs text-gray-300 mb-2">
-            If this slider doesn't work, the issue is NOT in the effects. Check browser console for [🎚️] logs.
-          </p>
-          <div className="flex items-center gap-3">
-            <label className="text-xs text-gray-300 whitespace-nowrap">Test Value:</label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="1"
-              value={config.logoSize}
-              onChange={(e) => {
-                const val = parseInt(e.target.value);
-                console.log('[🚨TEST] Slider onChange fired! Value:', val);
-                updateConfig('logoSize', val);
-              }}
-              onMouseDown={(e) => {
-                console.log('[🚨TEST] Mouse DOWN on slider');
-                handleInputStart();
-              }}
-              onMouseUp={(e) => {
-                console.log('[🚨TEST] Mouse UP on slider');
-                handleInputEnd();
-              }}
-              className="flex-1"
-            />
-            <span className="text-sm text-white font-mono w-12 text-center">{config.logoSize}</span>
-          </div>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="flex flex-wrap gap-2 mb-4 border-b border-gray-700 pb-2">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 rounded-t text-sm font-medium transition-colors ${
-                config.activeTab === tab.id
-                  ? 'bg-blue-600 text-white border-b-2 border-blue-400'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
         </div>
 
         {/* NEW: 2-Layer Starfield Controls */}
@@ -4966,28 +4893,6 @@ export default function LandingDebugPage() {
           </a>
         </div>
       </div>
-
-      {/* Live Preview Section (Split View Only) */}
-      {viewMode === 'split-view' && (
-        <div className="w-1/2 bg-gray-950 relative flex flex-col">
-          <div className="bg-gray-800 border-b border-gray-700 p-2">
-            <h2 className="text-gray-100 text-sm font-semibold">
-              Live Preview
-            </h2>
-            <p className="text-gray-400 text-[10px] mt-0.5">
-              Changes update in real-time via localStorage sync
-            </p>
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <iframe
-              src="/landing"
-              className="w-full h-full border-0"
-              title="Landing Page Preview"
-            />
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
