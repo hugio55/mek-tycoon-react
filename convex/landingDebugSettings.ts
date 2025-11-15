@@ -290,7 +290,7 @@ export const getBackupHistory = query({
   },
 });
 
-// Restore from a specific backup
+// Restore from a specific backup (with merge strategy for schema evolution)
 export const restoreFromBackup = mutation({
   args: {
     backupId: v.id("landingDebugSettingsHistory"),
@@ -315,15 +315,21 @@ export const restoreFromBackup = mutation({
       });
     }
 
-    // Update current settings with backup data
+    // MERGE STRATEGY: Apply backup values to current schema
+    // 1. Start with current defaults (includes any new sliders)
+    // 2. Overlay backup values (preserves tuned settings)
+    // 3. Orphaned values in backup are ignored (removed sliders)
+    const mergedConfig = { ...DEFAULT_CONFIG, ...backup.config };
+
+    // Update current settings with merged backup data
     if (currentSettings) {
       await ctx.db.patch(currentSettings._id, {
-        config: backup.config,
+        config: mergedConfig,
         updatedAt: Date.now(),
       });
     } else {
       await ctx.db.insert("landingDebugSettings", {
-        config: backup.config,
+        config: mergedConfig,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });

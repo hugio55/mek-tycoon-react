@@ -219,7 +219,7 @@ export const getBackupHistoryMobile = query({
   },
 });
 
-// Restore from a specific mobile backup
+// Restore from a specific mobile backup (with merge strategy for schema evolution)
 export const restoreFromBackupMobile = mutation({
   args: {
     backupId: v.id("landingDebugSettingsMobileHistory"),
@@ -244,15 +244,21 @@ export const restoreFromBackupMobile = mutation({
       });
     }
 
-    // Update current settings with backup data
+    // MERGE STRATEGY: Apply backup values to current schema
+    // 1. Start with current defaults (includes any new sliders)
+    // 2. Overlay backup values (preserves tuned settings)
+    // 3. Orphaned values in backup are ignored (removed sliders)
+    const mergedConfig = { ...DEFAULT_CONFIG, ...backup.config };
+
+    // Update current settings with merged backup data
     if (currentSettings) {
       await ctx.db.patch(currentSettings._id, {
-        config: backup.config,
+        config: mergedConfig,
         updatedAt: Date.now(),
       });
     } else {
       await ctx.db.insert("landingDebugSettingsMobile", {
-        config: backup.config,
+        config: mergedConfig,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
