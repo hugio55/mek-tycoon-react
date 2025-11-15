@@ -236,16 +236,29 @@ export const getUnifiedLandingDebugSettings = query({
       .query("landingDebugUnified")
       .first();
 
+    console.log('[🔍QUERY] Settings found in DB:', !!settings);
+
     if (!settings) {
+      console.log('[🔍QUERY] No settings found, returning DEFAULT_CONFIG');
       return DEFAULT_CONFIG;
     }
 
+    console.log('[🔍QUERY] DB shared config keys:', Object.keys(settings.shared || {}).length);
+    console.log('[🔍QUERY] DB sample values:', {
+      logoSize: settings.shared?.logoSize,
+      descriptionText: settings.shared?.descriptionText?.substring(0, 50),
+    });
+
     // Merge with defaults to ensure all fields exist
-    return {
+    const merged = {
       desktop: { ...DEFAULT_CONFIG.desktop, ...(settings.desktop || {}) },
       mobile: { ...DEFAULT_CONFIG.mobile, ...(settings.mobile || {}) },
       shared: { ...DEFAULT_CONFIG.shared, ...(settings.shared || {}) },
     };
+
+    console.log('[🔍QUERY] Merged shared config keys:', Object.keys(merged.shared).length);
+
+    return merged;
   },
 });
 
@@ -257,9 +270,16 @@ export const updateUnifiedLandingDebugSettings = mutation({
     shared: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
+    console.log('[🔧UPDATE] Mutation called with args:', JSON.stringify(args, null, 2));
+
     const existing = await ctx.db
       .query("landingDebugUnified")
       .first();
+
+    console.log('[🔧UPDATE] Existing record found:', !!existing);
+    if (existing) {
+      console.log('[🔧UPDATE] Existing shared config keys:', Object.keys(existing.shared || {}).length);
+    }
 
     const updatedSettings = {
       desktop: { ...(existing?.desktop || DEFAULT_CONFIG.desktop), ...(args.desktop || {}) },
@@ -267,11 +287,18 @@ export const updateUnifiedLandingDebugSettings = mutation({
       shared: { ...(existing?.shared || DEFAULT_CONFIG.shared), ...(args.shared || {}) },
     };
 
+    console.log('[🔧UPDATE] Updated shared config keys:', Object.keys(updatedSettings.shared).length);
+    console.log('[🔧UPDATE] Sample values:', {
+      logoSize: updatedSettings.shared.logoSize,
+      descriptionText: updatedSettings.shared.descriptionText?.substring(0, 50),
+    });
+
     if (existing) {
       await ctx.db.patch(existing._id, {
         ...updatedSettings,
         updatedAt: Date.now(),
       });
+      console.log('[🔧UPDATE] Patched existing record');
       return existing._id;
     } else {
       const id = await ctx.db.insert("landingDebugUnified", {
@@ -279,6 +306,7 @@ export const updateUnifiedLandingDebugSettings = mutation({
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
+      console.log('[🔧UPDATE] Created new record');
       return id;
     }
   },
