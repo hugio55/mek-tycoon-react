@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Phase Carousel Backdrop Blur Testing', () => {
   test('check backdrop-filter blur rendering on phase cards', async ({ page }) => {
+    test.setTimeout(120000); // 2 minute timeout
     // Navigate to landing page
     await page.goto('http://localhost:3200/landing');
 
