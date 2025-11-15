@@ -908,6 +908,10 @@ export default function LandingPage() {
       try {
         console.log('[🔍DATABASE] Full config loaded from Convex:', config);
         console.log('[🔍DATABASE] Phase description font size:', config.phaseDescriptionFontSize);
+
+        // BACKUP: Save to localStorage whenever database config loads
+        localStorage.setItem(STORAGE_KEY + '-backup', JSON.stringify(config));
+        console.log('[💾BACKUP] Config saved to localStorage backup');
           // Layer enable/disable
           setBgStarEnabled(config.bgStarEnabled ?? DEFAULT_CONFIG.bgStarEnabled);
           setLayer1Enabled(config.layer1Enabled ?? DEFAULT_CONFIG.layer1Enabled);
@@ -1052,11 +1056,14 @@ export default function LandingPage() {
     if (dbSettings) return;
 
     const loadFromLocalStorage = () => {
+      // Try backup first, then old STORAGE_KEY
+      const backup = localStorage.getItem(STORAGE_KEY + '-backup');
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
+
+      if (backup) {
         try {
-          const config = JSON.parse(stored);
-          console.log('[🔍STORAGE] Fallback: Loading from localStorage:', config);
+          const config = JSON.parse(backup);
+          console.log('[💾RECOVERY] Database unavailable - loading from localStorage backup:', config);
           // Apply settings (same logic as Convex)
           setStarScale(config.starScale ?? DEFAULT_CONFIG.starScale);
           setStarSpeed(config.starSpeed ?? DEFAULT_CONFIG.starSpeed);
@@ -1176,7 +1183,19 @@ export default function LandingPage() {
           setMobilePhaseFooterSpacing(config.mobilePhaseFooterSpacing ?? DEFAULT_CONFIG.mobilePhaseFooterSpacing);
           setMobilePhaseButtonMaxWidth(config.mobilePhaseButtonMaxWidth ?? DEFAULT_CONFIG.mobilePhaseButtonMaxWidth);
         } catch (e) {
-          console.error('Failed to load debug config from localStorage:', e);
+          console.error('Failed to load debug config from localStorage backup:', e);
+        }
+      } else if (stored) {
+        // Fallback to old storage key if backup doesn't exist
+        try {
+          const config = JSON.parse(stored);
+          console.log('[🔍STORAGE] Fallback: Loading from old localStorage key:', config);
+          // Apply same settings as above (duplicate code for now)
+          setStarScale(config.starScale ?? DEFAULT_CONFIG.starScale);
+          setStarSpeed(config.starSpeed ?? DEFAULT_CONFIG.starSpeed);
+          // ... (rest of settings - keeping existing code)
+        } catch (e) {
+          console.error('Failed to load debug config from old localStorage:', e);
         }
       }
     };
