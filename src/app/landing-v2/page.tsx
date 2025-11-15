@@ -23,7 +23,7 @@ export default function LandingV2() {
           backgroundSize: 'cover',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
-          zIndex: 2,
+          zIndex: 0,
         }}
       />
     </div>

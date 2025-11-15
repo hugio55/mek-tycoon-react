@@ -64,7 +64,7 @@ const StarField = () => {
           star.z -= SPEED;
 
           if (star.z <= MIN_DEPTH) {
-            star.z = MAX_DEPTH;
+            star.z = MAX_DEPTH * 0.9 + Math.random() * MAX_DEPTH * 0.1;
             star.x = (Math.random() - 0.5) * 2000;
             star.y = (Math.random() - 0.5) * 2000;
           }
@@ -78,7 +78,7 @@ const StarField = () => {
             continue;
           }
 
-          const size = Math.max(1, Math.floor((1 - star.z / MAX_DEPTH) * 4));
+          const size = Math.max(1, Math.floor((1 - star.z / MAX_DEPTH) * 2));
 
           ctx.beginPath();
           ctx.arc(screenX, screenY, size, 0, PI2);
