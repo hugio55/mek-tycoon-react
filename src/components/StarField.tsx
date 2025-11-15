@@ -6,6 +6,7 @@ interface Star {
   x: number;
   y: number;
   z: number;
+  age: number;
 }
 
 const StarField = () => {
@@ -40,7 +41,8 @@ const StarField = () => {
       stars.push({
         x: (Math.random() - 0.5) * 2000,
         y: (Math.random() - 0.5) * 2000,
-        z: Math.random() * MAX_DEPTH
+        z: Math.random() * MAX_DEPTH,
+        age: 1000
       });
     }
 
@@ -56,17 +58,17 @@ const StarField = () => {
         ctx.fillStyle = 'rgba(0, 0, 0, 0)';
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-
         for (let i = 0; i < STAR_COUNT; i++) {
           const star = stars[i];
 
           star.z -= SPEED;
+          star.age += deltaTime;
 
           if (star.z <= MIN_DEPTH) {
             star.z = MAX_DEPTH * 0.9 + Math.random() * MAX_DEPTH * 0.1;
             star.x = (Math.random() - 0.5) * 2000;
             star.y = (Math.random() - 0.5) * 2000;
+            star.age = 0;
           }
 
           const scale = MAX_DEPTH / star.z;
@@ -78,8 +80,13 @@ const StarField = () => {
             continue;
           }
 
+          const fadeInDuration = 800;
+          const fadeInProgress = Math.min(star.age / fadeInDuration, 1);
+          const opacity = fadeInProgress * 0.8;
+
           const size = Math.max(1, Math.floor((1 - star.z / MAX_DEPTH) * 2));
 
+          ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
           ctx.beginPath();
           ctx.arc(screenX, screenY, size, 0, PI2);
           ctx.fill();
