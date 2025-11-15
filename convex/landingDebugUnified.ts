@@ -510,7 +510,7 @@ export const getBackupHistory = query({
   },
 });
 
-// BACKUP SYSTEM: Restore from backup
+// BACKUP SYSTEM: Restore from backup (with merge strategy for schema evolution)
 export const restoreFromBackup = mutation({
   args: {
     backupId: v.id("landingDebugUnifiedHistory"),
@@ -537,19 +537,27 @@ export const restoreFromBackup = mutation({
       });
     }
 
-    // Restore from backup
+    // MERGE STRATEGY: Apply backup values to current schema
+    // 1. Start with current defaults (includes any new sliders)
+    // 2. Overlay backup values (preserves tuned settings)
+    // 3. Orphaned values in backup are ignored (removed sliders)
+    const mergedDesktop = { ...DEFAULT_CONFIG.desktop, ...backup.desktop };
+    const mergedMobile = { ...DEFAULT_CONFIG.mobile, ...backup.mobile };
+    const mergedShared = { ...DEFAULT_CONFIG.shared, ...backup.shared };
+
+    // Restore with merged config
     if (current) {
       await ctx.db.patch(current._id, {
-        desktop: backup.desktop,
-        mobile: backup.mobile,
-        shared: backup.shared,
+        desktop: mergedDesktop,
+        mobile: mergedMobile,
+        shared: mergedShared,
         updatedAt: Date.now(),
       });
     } else {
       await ctx.db.insert("landingDebugUnified", {
-        desktop: backup.desktop,
-        mobile: backup.mobile,
-        shared: backup.shared,
+        desktop: mergedDesktop,
+        mobile: mergedMobile,
+        shared: mergedShared,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -622,7 +630,7 @@ export const getPermanentSnapshots = query({
   },
 });
 
-// Restore from permanent snapshot
+// Restore from permanent snapshot (with merge strategy for schema evolution)
 export const restoreFromPermanentSnapshot = mutation({
   args: {
     snapshotId: v.id("landingDebugUnifiedPermanentSnapshots"),
@@ -649,19 +657,27 @@ export const restoreFromPermanentSnapshot = mutation({
       });
     }
 
-    // Restore from snapshot
+    // MERGE STRATEGY: Apply snapshot values to current schema
+    // 1. Start with current defaults (includes any new sliders)
+    // 2. Overlay snapshot values (preserves tuned settings)
+    // 3. Orphaned values in snapshot are ignored (removed sliders)
+    const mergedDesktop = { ...DEFAULT_CONFIG.desktop, ...snapshot.desktop };
+    const mergedMobile = { ...DEFAULT_CONFIG.mobile, ...snapshot.mobile };
+    const mergedShared = { ...DEFAULT_CONFIG.shared, ...snapshot.shared };
+
+    // Restore with merged config
     if (current) {
       await ctx.db.patch(current._id, {
-        desktop: snapshot.desktop,
-        mobile: snapshot.mobile,
-        shared: snapshot.shared,
+        desktop: mergedDesktop,
+        mobile: mergedMobile,
+        shared: mergedShared,
         updatedAt: Date.now(),
       });
     } else {
       await ctx.db.insert("landingDebugUnified", {
-        desktop: snapshot.desktop,
-        mobile: snapshot.mobile,
-        shared: snapshot.shared,
+        desktop: mergedDesktop,
+        mobile: mergedMobile,
+        shared: mergedShared,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
