@@ -32,9 +32,14 @@ export default function StarfieldCanvas({
 
   // Initialize stars based on mode and density
   useEffect(() => {
+    console.log('[⭐CANVAS] StarfieldCanvas mounted with props:', { mode, speed, scale, density });
     const starCount = Math.floor(800 * density);
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      console.log('[⭐CANVAS] Canvas ref not ready during star initialization');
+      return;
+    }
+    console.log('[⭐CANVAS] Initializing', starCount, 'stars');
 
     const width = canvas.width;
     const height = canvas.height;
@@ -62,16 +67,25 @@ export default function StarfieldCanvas({
 
   // Animation loop
   useEffect(() => {
+    console.log('[⭐CANVAS] Animation loop starting');
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      console.log('[⭐CANVAS] Canvas ref not ready during animation setup');
+      return;
+    }
 
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      console.log('[⭐CANVAS] Could not get 2D context');
+      return;
+    }
+    console.log('[⭐CANVAS] Got 2D context, starting animation');
 
     // Set canvas size to match window
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      console.log('[⭐CANVAS] Canvas resized to:', canvas.width, 'x', canvas.height);
     };
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
@@ -177,8 +191,7 @@ export default function StarfieldCanvas({
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none"
-      style={{ zIndex: -1 }}
+      className="fixed inset-0 pointer-events-none z-[1]"
     />
   );
 }
