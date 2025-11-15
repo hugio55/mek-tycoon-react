@@ -262,9 +262,9 @@ export const updateUnifiedLandingDebugSettings = mutation({
       .first();
 
     const updatedSettings = {
-      desktop: args.desktop || (existing?.desktop || DEFAULT_CONFIG.desktop),
-      mobile: args.mobile || (existing?.mobile || DEFAULT_CONFIG.mobile),
-      shared: args.shared || (existing?.shared || DEFAULT_CONFIG.shared),
+      desktop: { ...(existing?.desktop || DEFAULT_CONFIG.desktop), ...(args.desktop || {}) },
+      mobile: { ...(existing?.mobile || DEFAULT_CONFIG.mobile), ...(args.mobile || {}) },
+      shared: { ...(existing?.shared || DEFAULT_CONFIG.shared), ...(args.shared || {}) },
     };
 
     if (existing) {
