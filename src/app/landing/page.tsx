@@ -13,7 +13,6 @@ import { getMediaUrl } from '@/lib/media-url';
 import { isSafariOrIOS } from '@/lib/browser-detection';
 import { useLoaderContext } from '@/features/page-loader';
 import Starfield2Layer from '@/components/Starfield2Layer';
-import StarfieldCanvas from '@/components/StarfieldCanvas';
 
 // Landing page progression state machine
 type ProgressionState =
@@ -1699,13 +1698,18 @@ export default function LandingPage() {
         }}
       />
 
-      {/* Canvas2D Starfield - Simple canvas-based star rendering */}
+      {/* 2-Layer Starfield - Canvas2D with regular stars + fast streaks */}
       {starsEnabled && (
-        <StarfieldCanvas
-          mode="forward"
-          speed={starSpeed / 3}
-          scale={starScale}
-          density={1.0}
+        <Starfield2Layer
+          layer1Enabled={layer1Enabled}
+          layer1Speed={starSpeed}
+          layer1Density={starFrequency}
+          layer1Size={starScale}
+          layer2Enabled={layer2Enabled}
+          layer2Speed={starSpeed2}
+          layer2Density={starFrequency2}
+          layer2Size={starScale2}
+          layer2LineLength={lineLength2}
         />
       )}
 
