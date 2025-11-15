@@ -99,6 +99,12 @@ export default function Starfield2Layer({
     const maxZ = 1500;
 
     const animate = () => {
+      // Stop animation entirely if both layers are disabled
+      if (!layer1Enabled && !layer2Enabled) {
+        ctx.clearRect(0, 0, width, height); // Clear once and stop
+        return; // Don't schedule next frame
+      }
+
       // Clear canvas completely (transparent, no trails)
       ctx.clearRect(0, 0, width, height);
 
