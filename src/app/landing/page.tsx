@@ -1588,84 +1588,32 @@ export default function LandingPage() {
             }}
           >
             {useSafariVideo ? (
-              isMobile ? (
-                /* Mobile Safari: Use GIF instead of dual-video compositing */
-                <img
-                  src={getMediaUrl('/random-images/logo GIF.gif')}
-                  alt="Logo Animation"
-                  className="w-full h-full absolute inset-0"
-                  style={{
-                    opacity: 'inherit',
-                    objectFit: 'contain',
-                    transform: 'translateZ(0) scale3d(1, 1, 1)',
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    WebkitTransform: 'translateZ(0) scale3d(1, 1, 1)',
-                    imageRendering: 'auto',
-                    pointerEvents: 'none',
-                    willChange: animationStage === 'logo' ? 'transform' : showBetaLightbox ? 'filter' : 'auto',
-                    isolation: 'isolate',
-                    filter: showBetaLightbox ? 'blur(8px)' : 'blur(0px)',
-                    transition: showBetaLightbox
-                      ? 'filter 800ms cubic-bezier(0.4, 0, 0.2, 1)'
-                      : 'filter 400ms cubic-bezier(0.4, 0, 0.2, 1)',
-                  }}
-                  onLoad={() => {
-                    console.log('[🖼️GIF] Logo GIF loaded successfully');
-                    setLogoVideoLoaded(true);
-                  }}
-                />
-              ) : (
-                <>
-                  {/* Desktop Safari: Canvas compositing with dual H.265 videos */}
-                  <canvas
-                    ref={compositeCanvasRef}
-                    className="w-full h-full absolute inset-0"
-                    style={{
-                      opacity: 'inherit',
-                      objectFit: 'contain',
-                      transform: 'translateZ(0) scale3d(1, 1, 1)',
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
-                      WebkitTransform: 'translateZ(0) scale3d(1, 1, 1)',
-                      imageRendering: 'auto',
-                      pointerEvents: 'none',
-                      willChange: animationStage === 'logo' ? 'transform' : showBetaLightbox ? 'filter' : 'auto',
-                      isolation: 'isolate',
-                      filter: showBetaLightbox ? 'blur(8px)' : 'blur(0px)',
-                      transition: showBetaLightbox
-                        ? 'filter 800ms cubic-bezier(0.4, 0, 0.2, 1)'
-                        : 'filter 400ms cubic-bezier(0.4, 0, 0.2, 1)',
-                    }}
-                  />
-                  {/* Hidden color video */}
-                  <video
-                    ref={colorVideoRef}
-                    src={getMediaUrl('/random-images/logo vid for apple/logo h265 1 point 5q winner.mp4')}
-                    loop
-                    muted
-                    playsInline
-                    preload="auto"
-                    style={{ display: 'none' }}
-                    onError={(e) => console.error('[🎬VIDEO] Color video error:', e)}
-                    onLoadStart={() => console.log('[🎬VIDEO] Color video load started')}
-                    onLoadedData={() => console.log('[🎬VIDEO] Color video loaded successfully')}
-                  />
-                  {/* Hidden alpha mask video */}
-                  <video
-                    ref={alphaVideoRef}
-                    src={getMediaUrl('/random-images/logo vid for apple/logo h265 1 point 5q ALPHA 2.mp4')}
-                    loop
-                    muted
-                    playsInline
-                    preload="auto"
-                    style={{ display: 'none' }}
-                    onError={(e) => console.error('[🎬VIDEO] Alpha video error:', e)}
-                    onLoadStart={() => console.log('[🎬VIDEO] Alpha video load started')}
-                    onLoadedData={() => console.log('[🎬VIDEO] Alpha video loaded successfully')}
-                  />
-                </>
-              )
+              /* Safari/iOS (all devices): Use GIF - no dual-video compositing */
+              <img
+                src={getMediaUrl('/random-images/logo GIF.gif')}
+                alt="Logo Animation"
+                className="w-full h-full absolute inset-0"
+                style={{
+                  opacity: 'inherit',
+                  objectFit: 'contain',
+                  transform: 'translateZ(0) scale3d(1, 1, 1)',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  WebkitTransform: 'translateZ(0) scale3d(1, 1, 1)',
+                  imageRendering: 'auto',
+                  pointerEvents: 'none',
+                  willChange: animationStage === 'logo' ? 'transform' : showBetaLightbox ? 'filter' : 'auto',
+                  isolation: 'isolate',
+                  filter: showBetaLightbox ? 'blur(8px)' : 'blur(0px)',
+                  transition: showBetaLightbox
+                    ? 'filter 800ms cubic-bezier(0.4, 0, 0.2, 1)'
+                    : 'filter 400ms cubic-bezier(0.4, 0, 0.2, 1)',
+                }}
+                onLoad={() => {
+                  console.log('[🖼️GIF] Logo GIF loaded successfully');
+                  setLogoVideoLoaded(true);
+                }}
+              />
             ) : (
               /* Chrome/Firefox: WebM video */
               <video
