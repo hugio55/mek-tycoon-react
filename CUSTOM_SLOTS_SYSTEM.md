@@ -510,7 +510,45 @@ const scaledY = zone.y * displayScale;
 - Tertiary: Body or trait (adds situational bonuses)
 - Most complex but most customizable
 
-**Decision Pending:** User to select preferred approach or hybrid formula
+**DECISION MADE (2025-11-15): Hybrid System - Variation + Rank**
+
+**Final Job Availability Formula:**
+- **2 thematic jobs** based on head variation category + variation rarity (Beginner/Intermediate/Advanced tiers)
+- **1 universal military job** based on mek's overall rank (1-4000, divided into 10 tiers)
+
+**Example:**
+- Mek with rare "Polaroid Gold" head (rank 45 overall) gets:
+  1. Advanced Journalist (thematic - from rare Polaroid variation)
+  2. Top-tier military rank (universal - from rank 45/4000)
+
+**Military Rank System:**
+- ALL 4000 meks divided into 10 military tiers
+- Admin-configurable rank ranges (e.g., Tier 1: 4000-3500, Tier 2: 3499-3000, etc.)
+- Each tier has unique name, slot art, pit stop count, pay multiplier
+- Lower rank numbers = higher military tier (rank 1 = highest, rank 4000 = lowest)
+
+**Thematic Job Tier System:**
+- Within each job category (Journalist, Mechanic, etc.), variations divided into difficulty tiers
+- Beginner tier: Common variations, fewer pit stops (e.g., 3-4 per level)
+- Intermediate tier: Uncommon variations, medium pit stops (e.g., 5-6 per level)
+- Advanced tier: Rare variations, most pit stops (e.g., 8-10 per level)
+- Manual admin assignment per variation (handles uneven splits like 2 variations or 6 variations)
+
+**Pit Stop Count Scaling:**
+- Beginner jobs: Fewer pit stops per level
+- Intermediate jobs: Medium pit stops per level
+- Advanced jobs: Most pit stops per level
+- Applies to BOTH thematic jobs AND military ranks
+
+**Pay Rate Scaling:**
+- Advanced tier jobs provide higher gold/essence multipliers
+- Rare variations earn more resources per hour
+- Economic advantage to owning rare meks
+
+**Job Category Mapping:**
+- PENDING: Head variation categorization into job types
+- Requires review of 102 head variations to create thematic groupings
+- Will be designed after military rank system is complete
 
 ### Technical Architecture Notes
 
