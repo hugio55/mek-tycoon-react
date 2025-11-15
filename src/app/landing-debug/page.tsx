@@ -237,6 +237,35 @@ export default function LandingDebugPage() {
     }
   }, [activeMode, migrationStatus]); // Removed unifiedSettings from deps to prevent reload on every DB update
 
+  // Sync state when database updates (for restores and external changes)
+  // This ensures UI updates when backup restore completes
+  useEffect(() => {
+    console.log('[🔄DB-SYNC] Database changed:', {
+      hasUnifiedSettings: !!unifiedSettings,
+      migrationStatus,
+      isUserEditing: isUserEditingRef.current,
+      timestamp: new Date().toISOString()
+    });
+
+    // Don't reload if user is actively editing (prevents slider jump bug)
+    if (isUserEditingRef.current) {
+      console.log('[🔄DB-SYNC] Skipping reload - user is editing');
+      return;
+    }
+
+    if (unifiedSettings && migrationStatus === 'complete') {
+      const modeConfig = activeMode === 'desktop' ? unifiedSettings.desktop : unifiedSettings.mobile;
+      const mergedConfig: ConfigType = { ...DEFAULT_CONFIG, ...unifiedSettings.shared, ...modeConfig };
+      console.log(`[🔄DB-SYNC] Synced ${activeMode} config from database:`, {
+        logoSize: mergedConfig.logoSize,
+        descriptionFontSize: mergedConfig.descriptionFontSize,
+        bgStarCount: mergedConfig.bgStarCount,
+        totalKeys: Object.keys(mergedConfig).length
+      });
+      setConfig(mergedConfig);
+    }
+  }, [unifiedSettings, activeMode, migrationStatus]); // Watch database changes
+
   // OLD: Keep old hooks for fallback during migration
   const oldDbSettings = useQuery(api.landingDebugSettings.getLandingDebugSettings);
   const rawDbData = useQuery(api.landingDebugSettings.getRawLandingDebugSettings);
