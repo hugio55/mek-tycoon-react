@@ -55,6 +55,7 @@ export default function PhaseCarousel({
     phaseImage4: '',
     phaseImageBlendMode: 'normal' as 'normal' | 'screen' | 'lighten' | 'lighter',
     phaseIdleBackdropBlur: 0,
+    phaseHoverBackdropBlur: 15, // Backdrop blur on hover (planet behind card)
     phaseImageIdleOpacity: 100,
     phaseCardOpacity: 40, // Background opacity percentage (0-100)
   });
@@ -77,6 +78,7 @@ export default function PhaseCarousel({
             phaseImage4: parsed.phaseImage4 ?? '',
             phaseImageBlendMode: parsed.phaseImageBlendMode ?? 'normal',
             phaseIdleBackdropBlur: parsed.phaseIdleBackdropBlur ?? 0,
+            phaseHoverBackdropBlur: parsed.phaseHoverBackdropBlur ?? 15,
             phaseImageIdleOpacity: parsed.phaseImageIdleOpacity ?? 100,
             phaseCardOpacity: parsed.phaseCardOpacity ?? 40,
           });
@@ -110,6 +112,7 @@ export default function PhaseCarousel({
   const [dragOffset, setDragOffset] = useState(0);
   const [showReadMore, setShowReadMore] = useState(false);
   const [selectedPhase, setSelectedPhase] = useState<Phase | null>(null);
+  const [hoveredCard, setHoveredCard] = useState<'left' | 'center' | 'right' | null>(null);
 
   const touchStartXRef = useRef<number>(0);
   const touchStartYRef = useRef<number>(0);
@@ -208,6 +211,7 @@ export default function PhaseCarousel({
 
   const renderCard = (phase: Phase, position: 'left' | 'center' | 'right', offset: number = 0) => {
     const isCenter = position === 'center';
+    const isHovered = hoveredCard === position && isCenter;
 
     // CRITICAL FIX: Aggressive overlap strategy to eliminate gaps
     // - Increase card width from 60% to 65% (more coverage)
@@ -307,9 +311,12 @@ export default function PhaseCarousel({
           style={{
             height: `${config.phaseColumnHeight}px`,
             backgroundColor: `rgba(0, 0, 0, ${config.phaseCardOpacity / 100})`,
-            backdropFilter: isCenter ? `blur(${config.phaseIdleBackdropBlur}px)` : 'none',
-            WebkitBackdropFilter: isCenter ? `blur(${config.phaseIdleBackdropBlur}px)` : 'none',
+            backdropFilter: isCenter ? `blur(${isHovered ? config.phaseHoverBackdropBlur : config.phaseIdleBackdropBlur}px)` : 'none',
+            WebkitBackdropFilter: isCenter ? `blur(${isHovered ? config.phaseHoverBackdropBlur : config.phaseIdleBackdropBlur}px)` : 'none',
+            transition: 'backdrop-filter 0.3s ease-out',
           }}
+          onMouseEnter={() => isCenter && setHoveredCard(position)}
+          onMouseLeave={() => isCenter && setHoveredCard(null)}
         >
           {/* Background Image with Effects */}
           {phaseImage && (
