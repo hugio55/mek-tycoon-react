@@ -1,5 +1,7 @@
 'use client';
 
+import StarField from '@/components/StarField';
+
 export default function LandingV2() {
   return (
     <div
@@ -11,6 +13,8 @@ export default function LandingV2() {
         height: '100vh',
       }}
     >
+      <StarField />
+
       {/* Background Image - Planet */}
       <div
         className="absolute inset-0"
@@ -19,6 +23,7 @@ export default function LandingV2() {
           backgroundSize: 'cover',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
+          zIndex: 2,
         }}
       />
     </div>
