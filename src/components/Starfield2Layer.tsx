@@ -23,6 +23,9 @@ interface Starfield2LayerProps {
   layer2Density?: number;
   layer2Size?: number;
   layer2LineLength?: number;
+
+  // Positioning (for debug sidebar)
+  rightOffset?: number;
 }
 
 export default function Starfield2Layer({
@@ -36,6 +39,8 @@ export default function Starfield2Layer({
   layer2Density = 100,
   layer2Size = 1.0,
   layer2LineLength = 2.0,
+
+  rightOffset = 0,
 }: Starfield2LayerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const starsLayer1Ref = useRef<Star[]>([]);
@@ -83,11 +88,11 @@ export default function Starfield2Layer({
 
     console.log('[⭐2LAYER] Starting animation loop');
 
-    // Set canvas size to match window
+    // Set canvas size to match window (minus debug sidebar if present)
     const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
+      canvas.width = window.innerWidth - rightOffset;
       canvas.height = window.innerHeight;
-      console.log('[⭐2LAYER] Canvas resized to:', canvas.width, 'x', canvas.height);
+      console.log('[⭐2LAYER] Canvas resized to:', canvas.width, 'x', canvas.height, '(rightOffset:', rightOffset, ')');
     };
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
@@ -183,13 +188,19 @@ export default function Starfield2Layer({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [layer1Enabled, layer1Speed, layer1Size, layer2Enabled, layer2Speed, layer2Size, layer2LineLength]);
+  }, [layer1Enabled, layer1Speed, layer1Size, layer2Enabled, layer2Speed, layer2Size, layer2LineLength, rightOffset]);
 
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none"
-      style={{ zIndex: 1 }}
+      className="fixed pointer-events-none"
+      style={{
+        zIndex: 1,
+        top: 0,
+        left: 0,
+        right: rightOffset,
+        bottom: 0,
+      }}
     />
   );
 }
