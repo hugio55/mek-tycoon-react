@@ -64,6 +64,16 @@ export default function LandingPage() {
     ? { ...unifiedSettings.shared, ...(isMobile ? unifiedSettings.mobile : unifiedSettings.desktop) }
     : oldDbSettings; // Fallback to old system if unified doesn't exist yet
 
+  // Log when query data changes
+  useEffect(() => {
+    console.log('[🔨SYNC] Step 4 - Query data updated:', {
+      hasUnified: !!unifiedSettings,
+      hasOld: !!oldDbSettings,
+      starsEnabled: dbSettings?.starsEnabled,
+      timestamp: Date.now()
+    });
+  }, [unifiedSettings, oldDbSettings, dbSettings]);
+
   // Debug logging for config selection
   useEffect(() => {
     if (unifiedSettings) {
@@ -911,12 +921,14 @@ export default function LandingPage() {
 
   // Load config from Convex database (primary source) with localStorage fallback
   useEffect(() => {
+    console.log('[🔨SYNC] Step 4.5 - useEffect triggered, dbSettings:', dbSettings);
     if (!dbSettings) return; // Wait for Convex data to load
 
     const loadConfig = (config: any) => {
       try {
         console.log('[🔍DATABASE] Full config loaded from Convex:', config);
         console.log('[🔍DATABASE] Phase description font size:', config.phaseDescriptionFontSize);
+        console.log('[🔨SYNC] Step 5 prep - Config has starsEnabled:', config.starsEnabled);
 
         // BACKUP: Save to localStorage whenever database config loads
         localStorage.setItem(STORAGE_KEY + '-backup', JSON.stringify(config));
@@ -1044,7 +1056,9 @@ export default function LandingPage() {
           setToggleLabelFont(config.toggleLabelFont ?? DEFAULT_CONFIG.toggleLabelFont);
           setToggleLabelSize(config.toggleLabelSize ?? DEFAULT_CONFIG.toggleLabelSize);
           setToggleLabelColor(config.toggleLabelColor ?? DEFAULT_CONFIG.toggleLabelColor);
-          setStarsEnabled(config.starsEnabled ?? DEFAULT_CONFIG.starsEnabled);
+          const starsEnabledValue = config.starsEnabled ?? DEFAULT_CONFIG.starsEnabled;
+          console.log('[🔨SYNC] Step 5 - Setting starsEnabled state:', starsEnabledValue, 'from config:', config.starsEnabled);
+          setStarsEnabled(starsEnabledValue);
           // Mobile-specific controls
           setMobileBreakpoint(config.mobileBreakpoint ?? DEFAULT_CONFIG.mobileBreakpoint);
           setMobilePhaseFooterSpacing(config.mobilePhaseFooterSpacing ?? DEFAULT_CONFIG.mobilePhaseFooterSpacing);
@@ -1555,7 +1569,10 @@ export default function LandingPage() {
       />
 
       {/* 2-Layer Starfield - Canvas2D with regular stars + fast streaks */}
-      {starsEnabled && (
+      {(() => {
+        console.log('[🔨SYNC] Step 6 - Rendering with starsEnabled:', starsEnabled, 'layer1:', layer1Enabled, 'layer2:', layer2Enabled);
+        return starsEnabled;
+      })() && (
         <Starfield2Layer
           layer1Enabled={layer1Enabled}
           layer1Speed={starSpeed}
