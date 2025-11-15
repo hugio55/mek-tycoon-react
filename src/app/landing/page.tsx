@@ -12,7 +12,7 @@ import FillTextButton from '@/components/controls/FillTextButton';
 import { getMediaUrl } from '@/lib/media-url';
 import { isSafariOrIOS } from '@/lib/browser-detection';
 import { useLoaderContext } from '@/features/page-loader';
-import WebGLStarfield from '@/components/WebGLStarfield';
+import StarfieldCanvas from '@/components/StarfieldCanvas';
 
 interface Star {
   x: number;
@@ -2047,48 +2047,15 @@ export default function LandingPage() {
         }}
       />
 
-      {/* WebGL Starfield - GPU-accelerated star rendering (replaces Canvas 2D) */}
-      <WebGLStarfield
-        enabled={starsEnabled}
-        animationStage={animationStage}
-        bgStarEnabled={bgStarEnabled}
-        layer1Enabled={layer1Enabled}
-        layer2Enabled={layer2Enabled}
-        layer3Enabled={layer3Enabled}
-        starScale={starScale}
-        starSpeed={starSpeed}
-        starFrequency={starFrequency}
-        twinkleAmount={twinkleAmount}
-        twinkleSpeed={twinkleSpeed}
-        twinkleSpeedRandomness={twinkleSpeedRandomness}
-        sizeRandomness={sizeRandomness}
-        starScale2={starScale2}
-        starSpeed2={starSpeed2}
-        starFrequency2={starFrequency2}
-        twinkleAmount2={twinkleAmount2}
-        twinkleSpeed2={twinkleSpeed2}
-        twinkleSpeedRandomness2={twinkleSpeedRandomness2}
-        sizeRandomness2={sizeRandomness2}
-        starScale3={starScale3}
-        starSpeed3={starSpeed3}
-        starFrequency3={starFrequency3}
-        lineLength3={lineLength3}
-        brightness3={brightness3}
-        twinkleAmount3={twinkleAmount3}
-        twinkleSpeed3={twinkleSpeed3}
-        twinkleSpeedRandomness3={twinkleSpeedRandomness3}
-        sizeRandomness3={sizeRandomness3}
-        bgStarCount={bgStarCount}
-        bgStarSize={bgStarSize}
-        bgStarTwinkleAmount={bgStarTwinkleAmount}
-        bgStarTwinkleSpeed={bgStarTwinkleSpeed}
-        bgStarTwinkleSpeedRandomness={bgStarTwinkleSpeedRandomness}
-        bgStarSizeRandomness={bgStarSizeRandomness}
-        bgStarMinBrightness={bgStarMinBrightness}
-        bgStarMaxBrightness={bgStarMaxBrightness}
-        starFadePosition={starFadePosition}
-        starFadeFeatherSize={starFadeFeatherSize}
-      />
+      {/* Canvas2D Starfield - Simple canvas-based star rendering */}
+      {starsEnabled && (
+        <StarfieldCanvas
+          mode="forward"
+          speed={starSpeed / 3}
+          scale={starScale}
+          density={1.0}
+        />
+      )}
 
       {/* CANVAS FALLBACK (COMMENTED OUT - KEPT FOR REFERENCE)
       <canvas
