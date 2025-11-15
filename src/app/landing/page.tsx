@@ -1505,20 +1505,23 @@ export default function LandingPage() {
   // OLD CANVAS ANIMATION CODE REMOVED - Now using StarfieldCanvas component instead
 
   return (
-    <div
-      className="w-screen bg-black"
-      style={{
-        margin: 0,
-        padding: 0,
-        minHeight: isMobile ? 'auto' : `calc(100vh + ${phaseColumnYOffset}px + ${phaseColumnHeight}px)`,
-        height: isMobile ? 'auto' : `calc(100vh + ${phaseColumnYOffset}px + ${phaseColumnHeight}px)`,
-        overflowX: 'hidden',
-        overflowY: isMobile ? 'visible' : 'auto',
-        position: 'relative',
-        touchAction: 'pan-y',
-        WebkitOverflowScrolling: 'touch',
-      }}
-    >
+    <div className="flex h-screen overflow-hidden bg-black">
+      {/* Main content area */}
+      <div
+        className="bg-black"
+        style={{
+          margin: 0,
+          padding: 0,
+          minHeight: isMobile ? 'auto' : `calc(100vh + ${phaseColumnYOffset}px + ${phaseColumnHeight}px)`,
+          height: isMobile ? 'auto' : `calc(100vh + ${phaseColumnYOffset}px + ${phaseColumnHeight}px)`,
+          overflowX: 'hidden',
+          overflowY: isMobile ? 'visible' : 'auto',
+          position: 'relative',
+          touchAction: 'pan-y',
+          WebkitOverflowScrolling: 'touch',
+          width: showDebugSidebar ? 'calc(100vw - 384px)' : '100vw',
+        }}
+      >
       {/* Dark overlay when lightbox is visible */}
       {showAudioConsent && lightboxBackdropDarkness > 0 && (
         <div
@@ -1879,6 +1882,9 @@ export default function LandingPage() {
           }
         `
       }} />
+
+      </div>
+      {/* End main content area */}
 
       {/* Debug Sidebar (shown when ?debug=true in URL) */}
       {showDebugSidebar && (

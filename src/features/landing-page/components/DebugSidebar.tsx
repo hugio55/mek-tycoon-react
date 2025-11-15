@@ -58,7 +58,7 @@ export default function DebugSidebar({ onClose }: DebugSidebarProps) {
   };
 
   return (
-    <div className="fixed top-0 right-0 w-96 h-screen bg-gray-900 border-l border-gray-700 overflow-y-auto z-[10000] shadow-2xl">
+    <div className="w-96 h-screen bg-gray-900 border-l border-gray-700 overflow-y-auto flex-shrink-0">
       {/* Header */}
       <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-4 z-10">
         <div className="flex items-center justify-between mb-2">
