@@ -34,14 +34,20 @@ export function useBackgroundAudio() {
   // Check localStorage for user's audio preference
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY_AUDIO);
+    console.log('[🎵AUDIO-V2] Raw localStorage value:', stored);
     if (stored) {
       try {
-        const { audioEnabled: enabled } = JSON.parse(stored);
-        console.log('[🎵AUDIO-V2] Found stored audio preference:', enabled);
+        const parsed = JSON.parse(stored);
+        console.log('[🎵AUDIO-V2] Parsed localStorage:', parsed);
+        const { audioEnabled: enabled } = parsed;
+        console.log('[🎵AUDIO-V2] Extracted audioEnabled value:', enabled);
+        console.log('[🎵AUDIO-V2] About to setAudioEnabled to:', enabled);
         setAudioEnabled(enabled);
       } catch (e) {
-        console.log('[🎵AUDIO-V2] Error parsing stored preference');
+        console.log('[🎵AUDIO-V2] Error parsing stored preference:', e);
       }
+    } else {
+      console.log('[🎵AUDIO-V2] No stored preference found');
     }
   }, []);
 

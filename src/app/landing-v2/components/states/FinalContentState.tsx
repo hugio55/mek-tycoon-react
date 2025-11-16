@@ -98,7 +98,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
         pointerEvents: 'none',
       }}
     >
-      <div className="flex flex-col items-center" style={{ marginTop: isMobile ? 'calc(50vh - 135px)' : 'calc(60vh - 50px)', paddingBottom: '4rem', marginBottom: 0, pointerEvents: 'auto' }}>
+      <div className="flex flex-col items-center" style={{ marginTop: isMobile ? 'calc(50vh + 165px)' : 'calc(60vh + 250px)', paddingBottom: '4rem', marginBottom: 0, pointerEvents: 'auto' }}>
         {/* Description with fade + slide up */}
         <div
           className="transition-all duration-500 ease-out"
