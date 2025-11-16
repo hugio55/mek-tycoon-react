@@ -31,7 +31,7 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
         }}
       />
 
-      <div className="relative w-full flex flex-col min-h-0" style={{ zIndex: 10, flex: '1 1 0%' }}>
+      <div className="relative w-full flex flex-col min-h-0" style={{ zIndex: 10, flex: '0 0 auto' }}>
         {children}
 
         {showFooter && (
