@@ -5,9 +5,10 @@ interface LandingContainerProps {
   backgroundOpacity: number;
   showFooter?: boolean;
   transitionDuration?: number;
+  allowScroll?: boolean;
 }
 
-export default function LandingContainer({ children, backgroundOpacity, showFooter = true, transitionDuration = 2000 }: LandingContainerProps) {
+export default function LandingContainer({ children, backgroundOpacity, showFooter = true, transitionDuration = 2000, allowScroll = true }: LandingContainerProps) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -17,7 +18,7 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black overflow-y-auto scrollbar-hide">
+    <div className={`fixed inset-0 bg-black scrollbar-hide ${allowScroll ? 'overflow-y-auto' : 'overflow-hidden'}`}>
       <div
         className="fixed inset-0 transition-opacity ease-out"
         style={{
