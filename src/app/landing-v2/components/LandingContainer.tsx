@@ -8,6 +8,7 @@ interface LandingContainerProps {
   allowScroll?: boolean;
   minHeight?: string;
   height?: string;
+  isLoading?: boolean;
 }
 
 export default function LandingContainer({
@@ -17,7 +18,8 @@ export default function LandingContainer({
   transitionDuration = 2000,
   allowScroll = true,
   minHeight = 'auto',
-  height = 'auto'
+  height = 'auto',
+  isLoading = false
 }: LandingContainerProps) {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -29,7 +31,7 @@ export default function LandingContainer({
 
   return (
     <div
-      className="bg-black landing-scrollbar"
+      className={`${isLoading ? '' : 'bg-black'} landing-scrollbar`}
       style={{
         overflowY: allowScroll ? 'auto' : 'hidden',
         minHeight,

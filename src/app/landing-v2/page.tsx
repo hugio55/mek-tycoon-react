@@ -104,6 +104,7 @@ export default function LandingV2() {
       showFooter={showFooter}
       transitionDuration={isState('SOUND_SELECTION') ? 1000 : 2000}
       allowScroll={true}
+      isLoading={isLoading}
     >
       <SoundSelectionState
         isActive={isState('SOUND_SELECTION')}
