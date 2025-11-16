@@ -18,7 +18,7 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
   }, []);
 
   return (
-    <div className={`h-screen bg-black flex flex-col landing-scrollbar ${allowScroll ? 'overflow-y-auto' : 'overflow-hidden'}`}>
+    <div className={`min-h-screen bg-black flex flex-col landing-scrollbar ${allowScroll ? 'overflow-y-auto' : 'overflow-hidden'}`}>
       <div
         className="fixed inset-0 transition-opacity ease-out pointer-events-none"
         style={{
