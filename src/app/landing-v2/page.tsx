@@ -4,27 +4,28 @@ import { useState, useEffect } from 'react';
 import StarField from '@/components/StarField';
 
 export default function LandingV2() {
-  const [isAppleDevice, setIsAppleDevice] = useState(false);
+  const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'other'>('other');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    // Detect Apple devices (macOS, iOS, iPadOS)
+    // Detect device type
     const userAgent = navigator.userAgent.toLowerCase();
-    const isApple = /macintosh|mac os x|iphone|ipad|ipod/.test(userAgent);
-    setIsAppleDevice(isApple);
+
+    if (/iphone|ipod/.test(userAgent)) {
+      // iPhone/iPod
+      setDeviceType('iphone');
+    } else if (/macintosh|mac os x|ipad/.test(userAgent)) {
+      // macOS desktop/laptop or iPad
+      setDeviceType('macos');
+    } else {
+      // Windows/Android/everything else
+      setDeviceType('other');
+    }
   }, []);
 
   return (
-    <div
-      className="fixed inset-0 bg-black"
-      style={{
-        margin: 0,
-        padding: 0,
-        width: '100vw',
-        height: '100vh',
-      }}
-    >
+    <div className="fixed inset-0 bg-black">
       <StarField />
 
       {/* Background Image - Planet */}
@@ -33,9 +34,7 @@ export default function LandingV2() {
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: 'cover',
-          backgroundPosition: 'center center',
-          backgroundRepeat: 'no-repeat',
-          zIndex: 0,
+          backgroundPosition: 'center calc(50% + 200px)',
         }}
       />
 
@@ -45,19 +44,28 @@ export default function LandingV2() {
           className="absolute inset-0 flex items-center justify-center"
           style={{ zIndex: 10 }}
         >
-          {isAppleDevice ? (
+          {deviceType === 'macos' ? (
+            // macOS Desktop/Laptop + iPad
+            <img
+              src="/random-images/Everydays_4.gif"
+              alt="Mek Tycoon Logo"
+              className="max-w-[40vw] max-h-[40vh] object-contain"
+            />
+          ) : deviceType === 'iphone' ? (
+            // iPhone
             <img
               src="/random-images/logo GIF.gif"
               alt="Mek Tycoon Logo"
               className="max-w-[80vw] max-h-[80vh] object-contain"
             />
           ) : (
+            // Windows/Android
             <video
               autoPlay
               loop
               muted
               playsInline
-              className="max-w-[80vw] max-h-[80vh] object-contain"
+              className="max-w-[40vw] max-h-[40vh] object-contain"
             >
               <source src="/random-images/Everydays_00000.webm" type="video/webm" />
             </video>
