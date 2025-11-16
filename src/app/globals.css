@@ -18,6 +18,28 @@
     display: none;  /* Chrome, Safari, Opera */
   }
 
+  /* Landing page scrollbar */
+  .landing-scrollbar::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  .landing-scrollbar::-webkit-scrollbar-track {
+    background: #000000;
+  }
+
+  .landing-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 6px;
+  }
+
+  .landing-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.8);
+  }
+
+  .landing-scrollbar {
+    scrollbar-color: rgba(255, 255, 255, 0.5) #000000;
+  }
+
   /* Overlay scrollbar - floats over content (no layout space) */
   .scrollbar-overlay {
     scrollbar-gutter: stable;
