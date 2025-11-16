@@ -56,8 +56,12 @@ export default function LandingContainer({
           <footer className="w-full relative mt-auto" style={{ marginTop: '50px', paddingTop: '32px', paddingBottom: '12px' }}>
             {/* Backdrop blur effect */}
             <div
-              className="absolute inset-0"
+              className="absolute"
               style={{
+                top: 0,
+                left: 0,
+                right: '17px',
+                bottom: 0,
                 backdropFilter: 'blur(12px)',
                 backgroundColor: 'rgba(255, 255, 255, 0.005)'
               }}
