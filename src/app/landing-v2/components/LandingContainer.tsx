@@ -29,7 +29,7 @@ export default function LandingContainer({
 
   return (
     <div
-      className="bg-black flex flex-col landing-scrollbar"
+      className="bg-black landing-scrollbar"
       style={{
         overflowY: allowScroll ? 'auto' : 'hidden',
         minHeight,
