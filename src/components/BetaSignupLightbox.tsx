@@ -330,7 +330,16 @@ export default function BetaSignupLightbox({
                   Welcome Aboard!
                 </h3>
                 <p className="text-sm sm:text-base text-white/60 font-light">
-                  You're on the list. We'll be in touch soon.
+                  Keep an eye on the Announcements channel in our{' '}
+                  <a
+                    href="https://discord.gg/KnqMF6Ayyc"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-yellow-400 hover:text-yellow-300 transition-colors underline"
+                  >
+                    Discord
+                  </a>
+                  .
                 </p>
               </div>
             )}
