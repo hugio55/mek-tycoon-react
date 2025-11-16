@@ -206,40 +206,8 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
           console.error('[WalletConnect] Blockfrost initialization failed:', blockfrostError);
         }
 
-        // Fallback to client-side parsing
-        console.log('[WalletConnect] Falling back to client-side NFT parsing...');
-        try {
-          const { parseMeksFromUtxos } = await import('@/lib/nftExtractor');
-          const utxos = await api.getUtxos();
-          meks = await parseMeksFromUtxos(utxos, stakeAddress, []);
-
-          // Initialize with client-parsed meks
-          if (meks.length > 0) {
-            const { initializeGoldMining } = await import('@/lib/goldMining');
-            await initializeGoldMining({
-              walletAddress: stakeAddress,
-              walletType: wallet.name.toLowerCase(),
-              paymentAddresses: usedAddresses,
-              ownedMeks: meks.map(mek => ({
-                assetId: mek.assetId,
-                policyId: mek.policyId,
-                assetName: mek.assetName,
-                imageUrl: mek.imageUrl,
-                goldPerHour: mek.goldPerHour,
-                rarityRank: mek.rarityRank,
-                headVariation: mek.headGroup,
-                bodyVariation: mek.bodyGroup,
-                itemVariation: mek.itemGroup
-              }))
-            });
-          }
-        } catch (fallbackError: any) {
-          // Only log if it's not a stub response
-          if (fallbackError.message !== 'Client-side NFT parsing disabled') {
-            console.error('[WalletConnect] Client-side parsing also failed:', fallbackError);
-          }
-          // Continue anyway - user can still connect without meks
-        }
+        // Client-side parsing fallback removed - not available in staging
+        console.log('[WalletConnect] No fallback available - continuing without Meks');
       }
 
       // Save session
