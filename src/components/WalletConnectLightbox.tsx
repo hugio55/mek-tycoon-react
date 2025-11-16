@@ -316,10 +316,10 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
   };
 
   // Debug logging BEFORE render check
-  console.log('[🚨RENDER] Component render called - mounted:', mounted, 'isOpen:', isOpen);
+  console.log('[🚨RENDER] Component render called - mounted:', mounted, 'isOpen:', isOpen, 'connectionSuccessful:', connectionSuccessful);
 
-  if (!mounted || !isOpen) {
-    console.log('[🚨RENDER] Returning null - not rendering lightbox');
+  if (!mounted || !isOpen || connectionSuccessful) {
+    console.log('[🚨RENDER] Returning null - not rendering lightbox (connectionSuccessful:', connectionSuccessful, ')');
     return null;
   }
 
