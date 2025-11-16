@@ -23,15 +23,6 @@ export interface SessionData {
  * @returns Promise that resolves when encryption is complete
  */
 export async function saveWalletSession(data: SessionData): Promise<void> {
-  console.log('[TRACE-SAVE-1] saveWalletSession called with data:', {
-    walletName: data.walletName,
-    stakeAddress: data.stakeAddress?.slice(0, 12) + '...',
-    paymentAddress: data.paymentAddress?.slice(0, 12) + '...',
-    hasNonce: !!data.nonce,
-    hasSessionId: !!data.sessionId,
-    timestamp: new Date().toISOString()
-  });
-
   const platform = detectPlatform();
   const deviceId = generateDeviceId();
 
@@ -53,20 +44,8 @@ export async function saveWalletSession(data: SessionData): Promise<void> {
     deviceId,
   };
 
-  console.log('[TRACE-SAVE-2] Session object constructed:', {
-    walletAddress: session.walletAddress?.slice(0, 12) + '...',
-    stakeAddress: session.stakeAddress?.slice(0, 12) + '...',
-    walletAddressIsUndefined: session.walletAddress === undefined,
-    stakeAddressIsUndefined: session.stakeAddress === undefined,
-    timestamp: new Date().toISOString()
-  });
-
   // Save encrypted session (this is now async due to encryption)
   await saveSession(session);
-
-  // DO NOT clear disconnect nonce here - it gets cleared when user successfully passes signature check
-  // If we clear it here, user can bypass the signature requirement by just having wallet auto-approve enable()
-  console.log('[Session Manager] Session saved (disconnect nonce still in place if exists)');
 
   // Save Meks cache separately (using different key to avoid overwriting encrypted session)
   if (data.cachedMeks && data.cachedMeks.length > 0) {
@@ -117,28 +96,23 @@ export async function restoreWalletSession(): Promise<WalletSession | null> {
 }
 
 /**
- * Clear all wallet session data and invalidate current session
- * Forces user to reconnect even if wallet extension has cached permission
+ * Clear all wallet session data
+ * Removes session and all cached data to force full reconnection
  */
 export function clearWalletSession(): void {
   clearSession();
 
-  // Generate a new disconnect nonce to invalidate old sessions
-  // When user reconnects, we'll validate this matches or force new connection
-  const disconnectNonce = crypto.randomUUID();
-  localStorage.setItem('mek_disconnect_nonce', disconnectNonce);
-
-  // Also clear cache and additional wallet keys
+  // Clear all wallet-related data
   try {
-    localStorage.removeItem('mek_cached_meks'); // New cache key
-    localStorage.removeItem('mek_wallet_session'); // Legacy key (may still exist)
+    localStorage.removeItem('mek_cached_meks');
+    localStorage.removeItem('mek_wallet_session');
     localStorage.removeItem('goldMiningWallet');
     localStorage.removeItem('goldMiningWalletType');
-    localStorage.removeItem('walletAddress'); // Clear payment address
-    localStorage.removeItem('stakeAddress'); // Clear stake address
-    localStorage.removeItem('paymentAddress'); // Clear payment address (alt key)
-    localStorage.removeItem('mek_migration_status'); // CRITICAL: Clear failed migration tracker
-    console.log('[Session Manager] Cleared all session data and set disconnect nonce:', disconnectNonce);
+    localStorage.removeItem('walletAddress');
+    localStorage.removeItem('stakeAddress');
+    localStorage.removeItem('paymentAddress');
+    localStorage.removeItem('mek_migration_status');
+    console.log('[Session Manager] Cleared all session data - user must reconnect wallet');
   } catch (error) {
     console.error('[Session Manager] Error clearing session data:', error);
   }
