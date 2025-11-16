@@ -74,6 +74,16 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             transform: translateX(100%);
           }
         }
+
+        /* TEMPORARY: Animated border tracer for Phase II */
+        @keyframes traceBorder {
+          0% {
+            stroke-dashoffset: 0;
+          }
+          100% {
+            stroke-dashoffset: -400;
+          }
+        }
       `;
       document.head.appendChild(style);
       return () => {
@@ -127,7 +137,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             style={{
               background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)',
               animation: 'slideParticles 3s linear infinite',
-              opacity: 0.6,
+              opacity: 1.0,
             }}
           />
         )}
