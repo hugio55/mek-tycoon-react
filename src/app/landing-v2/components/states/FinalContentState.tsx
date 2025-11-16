@@ -37,13 +37,13 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
 
   return (
     <div
-      className="flex-1 flex flex-col transition-opacity duration-1000"
+      className="flex-1 flex flex-col w-full transition-opacity duration-1000"
       style={{
         opacity: mounted ? 1 : 0,
       }}
     >
-      <div className="flex-1 flex flex-col items-center justify-center pb-8 pt-[20vh]" style={{ marginTop: '-70px' }}>
-        <p className="text-white/80 text-sm tracking-wide" style={{ fontFamily: 'Saira, sans-serif', marginTop: '-11px' }}>
+      <div className="flex-1 flex flex-col items-center pb-8" style={{ marginTop: 'calc(40% + 250px)' }}>
+        <p className="text-white/80 text-sm tracking-wide" style={{ fontFamily: 'Saira, sans-serif' }}>
           An epic idle strategy game where Mekanism NFTs build empires.
         </p>
 
@@ -55,7 +55,7 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
           />
         </div>
 
-        <div className="w-full max-w-[680px] mx-auto mt-12 mb-[200px] flex flex-col gap-3">
+        <div className="w-full max-w-[680px] mx-auto mb-[200px] flex flex-col gap-3" style={{ marginTop: '83px' }}>
           {displayPhases.map((card: PhaseCard, index: number) => {
             const isExpanded = expandedIndex === index;
             const isLocked = card.locked;
@@ -165,13 +165,9 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
       </div>
 
       <footer
-        className="backdrop-blur-md md:backdrop-blur-lg bg-white/10 mt-auto overflow-hidden"
+        className="backdrop-blur-md md:backdrop-blur-lg bg-white/10 mt-auto overflow-hidden w-full"
         style={{
           zIndex: 20,
-          position: 'relative',
-          width: '100%',
-          marginLeft: 0,
-          marginRight: 0,
         }}
       >
         <svg className="absolute inset-0 w-full h-full pointer-events-none">
