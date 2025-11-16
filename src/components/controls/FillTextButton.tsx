@@ -58,14 +58,14 @@ const FillTextButton = ({
 
           @keyframes soft-pulse {
             0%, 100% {
-              text-shadow: 0 0 2px rgba(255, 255, 255, 0.9),
-                          0 0 4px rgba(61, 209, 255, 0.7),
-                          0 0 8px rgba(61, 209, 255, 0.5);
+              text-shadow: 0 0 2px rgba(255, 255, 255, 0.45),
+                          0 0 4px rgba(61, 209, 255, 0.35),
+                          0 0 8px rgba(61, 209, 255, 0.25);
             }
             50% {
-              text-shadow: 0 0 3px rgba(255, 255, 255, 1),
-                          0 0 8px rgba(61, 209, 255, 0.9),
-                          0 0 16px rgba(61, 209, 255, 0.6);
+              text-shadow: 0 0 3px rgba(255, 255, 255, 0.5),
+                          0 0 8px rgba(61, 209, 255, 0.45),
+                          0 0 16px rgba(61, 209, 255, 0.3);
             }
           }
         `}
