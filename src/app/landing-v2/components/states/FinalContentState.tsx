@@ -137,9 +137,9 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
                   <div
                     className="mt-2 px-6 py-4"
                     style={{
-                      background: 'rgba(0, 0, 0, 0.6)',
+                      background: 'rgba(0, 0, 0, 0.48)',
                       borderRadius: '8px',
-                      backdropFilter: isExpanded ? 'blur(8px)' : 'blur(0px)',
+                      backdropFilter: isExpanded ? 'blur(16px)' : 'blur(0px)',
                       opacity: isExpanded ? 1 : 0,
                       transition: 'backdrop-filter 400ms ease, opacity 400ms ease',
                     }}
@@ -249,6 +249,11 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
           </div>
         </div>
       </footer>
+
+      <BetaSignupLightbox
+        isVisible={showBetaLightbox}
+        onClose={() => setShowBetaLightbox(false)}
+      />
     </div>
   );
 }

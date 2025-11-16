@@ -169,7 +169,7 @@ export default function BetaSignupLightbox({
 
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/45"
+        className="absolute inset-0 bg-black/60"
         style={{
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',

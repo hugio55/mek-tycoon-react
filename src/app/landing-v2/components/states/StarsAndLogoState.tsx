@@ -24,7 +24,7 @@ export default function StarsAndLogoState({ isActive, deviceType }: StarsAndLogo
       <div
         className="flex-1 flex flex-col items-center justify-center pb-8 pt-[20vh] transition-opacity duration-1000"
         style={{
-          marginTop: '-70px',
+          marginTop: '130px',
           opacity: mounted ? 1 : 0,
         }}
       >
