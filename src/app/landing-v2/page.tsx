@@ -70,9 +70,9 @@ export default function LandingV2() {
 
       <div className="relative min-h-screen flex flex-col" style={{ zIndex: 10 }}>
         {mounted && (
-          <div className="flex-1 flex flex-col items-center pb-8" style={{ paddingTop: '50vh' }}>
-            {/* Logo */}
-            <div className="flex items-center justify-center" style={{ transform: 'translateY(-50%)' }}>
+          <div className="flex-1 flex flex-col items-center justify-center pb-8 pt-[20vh]">
+            {/* Logo - centered slightly above middle */}
+            <div className="flex items-center justify-center">
               {deviceType === 'macos' || deviceType === 'iphone' ? (
                 <img
                   src="/random-images/Everydays_4.gif"
@@ -92,14 +92,17 @@ export default function LandingV2() {
               )}
             </div>
 
-            <p className="text-white/80 text-xs tracking-wide" style={{ fontFamily: 'Saira, sans-serif', marginTop: '-400px' }}>
+            {/* Description - 96px below logo */}
+            <p className="text-white/80 text-xs tracking-wide mt-24" style={{ fontFamily: 'Saira, sans-serif' }}>
               An epic idle strategy game where Mekanism NFTs build empires.
             </p>
 
-            <div style={{ marginTop: '100px' }}>
+            {/* Join Beta button - 96px below description */}
+            <div className="mt-24">
               <FillTextButton text="join beta" fontFamily="Play" />
             </div>
 
+            {/* Phase cards - small gap below button */}
             <div className="w-full max-w-[680px] mx-auto mt-12 flex flex-col gap-3">
               {displayPhases.map((card: PhaseCard, index: number) => {
                 const isExpanded = expandedIndex === index;
@@ -248,7 +251,7 @@ export default function LandingV2() {
                 href="https://www.overexposed.io/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="transition-opacity hover:opacity-70"
+                className="transition-all hover:scale-110"
               >
                 <img
                   src="/random-images/OE logo.png"
