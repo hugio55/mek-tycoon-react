@@ -83,7 +83,7 @@ export default function LandingV2() {
       ? (backgroundFadedIn ? 0.23 : 0)
       : 0.77
   );
-  const showFooter = true; // Always show footer for testing
+  const showFooter = isRevealing; // Only show footer in REVEAL state
   const showSpeaker = isRevealing;
 
   // Logo fades simultaneously with stars (no delay)
@@ -163,7 +163,7 @@ export default function LandingV2() {
             display: 'flex',
             justifyContent: 'center',
             paddingTop: (deviceType === 'iphone' || (deviceType === 'other' && navigator.userAgent.toLowerCase().includes('android')))
-              ? 'calc(8vh + 180px)'
+              ? '160px'
               : 'calc(8vh + 220px)',
             opacity: revealStarted ? 1 : 0,
             zIndex: 20,
