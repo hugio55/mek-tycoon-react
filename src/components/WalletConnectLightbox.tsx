@@ -164,10 +164,20 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
           console.log(`[WalletConnect] Successfully fetched ${initResult.mekCount} Meks from blockchain`);
           meks = initResult.meks || [];
         } else {
-          throw new Error(initResult.error || 'Failed to fetch NFTs from blockchain');
+          // Check if this is the expected stub response
+          const isStubResponse = initResult.error === 'Blockfrost integration not implemented';
+
+          if (isStubResponse) {
+            console.log('[WalletConnect] NFT fetching disabled - continuing without Meks');
+          } else {
+            throw new Error(initResult.error || 'Failed to fetch NFTs from blockchain');
+          }
         }
       } catch (blockfrostError: any) {
-        console.error('[WalletConnect] Blockfrost initialization failed:', blockfrostError);
+        // Only log actual errors, not expected stub responses
+        if (blockfrostError.message !== 'Blockfrost integration not implemented') {
+          console.error('[WalletConnect] Blockfrost initialization failed:', blockfrostError);
+        }
 
         // Fallback to client-side parsing
         console.log('[WalletConnect] Falling back to client-side NFT parsing...');
@@ -197,7 +207,10 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
             });
           }
         } catch (fallbackError: any) {
-          console.error('[WalletConnect] Client-side parsing also failed:', fallbackError);
+          // Only log if it's not a stub response
+          if (fallbackError.message !== 'Client-side NFT parsing disabled') {
+            console.error('[WalletConnect] Client-side parsing also failed:', fallbackError);
+          }
           // Continue anyway - user can still connect without meks
         }
       }
