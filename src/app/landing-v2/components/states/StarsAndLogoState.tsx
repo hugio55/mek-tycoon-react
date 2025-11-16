@@ -22,31 +22,31 @@ export default function StarsAndLogoState({ isActive, deviceType }: StarsAndLogo
       <StarField />
 
       <div
-        className="flex-1 flex flex-col items-center justify-center pb-8 pt-[20vh] transition-opacity duration-2000"
+        className="absolute transition-opacity duration-2000"
         style={{
-          marginTop: '-70px',
+          top: 'calc(50% - 100px)',
+          left: '50%',
+          transform: 'translateX(-50%)',
           opacity: mounted ? 1 : 0,
         }}
       >
-        <div className="flex items-center justify-center">
-          {deviceType === 'macos' || deviceType === 'iphone' ? (
-            <img
-              src="/random-images/Everydays_4.gif"
-              alt="Mek Tycoon Logo"
-              className={deviceType === 'iphone' ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'max-w-[40vw] max-h-[40vh] object-contain'}
-            />
-          ) : (
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="max-w-[40vw] max-h-[40vh] object-contain"
-            >
-              <source src="/random-images/Everydays_00000.webm" type="video/webm" />
-            </video>
-          )}
-        </div>
+        {deviceType === 'macos' || deviceType === 'iphone' ? (
+          <img
+            src="/random-images/Everydays_4.gif"
+            alt="Mek Tycoon Logo"
+            className={deviceType === 'iphone' ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'max-w-[40vw] max-h-[40vh] object-contain'}
+          />
+        ) : (
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="max-w-[40vw] max-h-[40vh] object-contain"
+          >
+            <source src="/random-images/Everydays_00000.webm" type="video/webm" />
+          </video>
+        )}
       </div>
     </>
   );
