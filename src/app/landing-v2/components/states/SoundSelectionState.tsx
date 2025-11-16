@@ -85,7 +85,7 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
               enabled={false}
               onChange={(enabled) => {
                 if (enabled) {
-                  handleProceed(true);
+                  handleProceed(false);
                 }
               }}
               label=""
@@ -129,7 +129,7 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
               enabled={false}
               onChange={(enabled) => {
                 if (enabled) {
-                  handleProceed(false);
+                  handleProceed(true);
                 }
               }}
               label=""
