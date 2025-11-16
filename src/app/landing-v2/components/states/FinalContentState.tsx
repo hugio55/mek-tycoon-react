@@ -134,7 +134,7 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
                     style={{
                       background: 'rgba(0, 0, 0, 0.6)',
                       borderRadius: '8px',
-                      backdropFilter: 'blur(8px)',
+                      backdropFilter: isExpanded ? 'blur(8px)' : 'blur(0px)',
                       transition: 'backdrop-filter 500ms ease-in-out',
                     }}
                   >

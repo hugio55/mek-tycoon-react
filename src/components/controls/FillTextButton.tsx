@@ -7,6 +7,7 @@ interface FillTextButtonProps {
   color?: string;
   horizontalOffset?: number;
   verticalOffset?: number;
+  onClick?: () => void;
 }
 
 const FillTextButton = ({
@@ -15,7 +16,8 @@ const FillTextButton = ({
   fontSize = 32,
   color = 'text-white',
   horizontalOffset = 0,
-  verticalOffset = 0
+  verticalOffset = 0,
+  onClick
 }: FillTextButtonProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
@@ -42,6 +44,7 @@ const FillTextButton = ({
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
     >
       <style>
         {`
