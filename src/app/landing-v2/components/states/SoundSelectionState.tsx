@@ -17,20 +17,7 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
 
   useEffect(() => {
     setMounted(true);
-
-    // Check if user has already made a choice
-    const stored = localStorage.getItem(STORAGE_KEY_AUDIO);
-    if (stored && isActive) {
-      try {
-        const { audioEnabled } = JSON.parse(stored);
-        console.log('[🎵SOUND] Found stored audio preference:', audioEnabled);
-        // Skip directly to next state if preference exists
-        onComplete();
-      } catch (e) {
-        console.log('[🎵SOUND] Error parsing stored preference, showing selection');
-      }
-    }
-  }, [isActive, onComplete]);
+  }, []);
 
   // Keep component mounted during fade-out even if isActive becomes false
   if (!mounted || (!isActive && !isFadingOut)) return null;
