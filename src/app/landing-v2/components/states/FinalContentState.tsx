@@ -68,12 +68,13 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
 
   return (
     <div
-      className="flex flex-col w-full flex-grow"
+      className="flex flex-col w-full"
       style={{
         position: 'relative',
+        minHeight: 'fit-content',
       }}
     >
-      <div className="flex flex-col items-center" style={{ marginTop: isMobile ? 'calc(50vh - 135px)' : 'calc(50% + 25vh - 50px)', paddingBottom: '2rem' }}>
+      <div className="flex flex-col items-center" style={{ marginTop: isMobile ? 'calc(50vh - 135px)' : 'calc(60vh - 50px)', paddingBottom: '4rem', marginBottom: 0 }}>
         {/* Description with fade + slide up */}
         <div
           className="transition-all duration-500 ease-out"

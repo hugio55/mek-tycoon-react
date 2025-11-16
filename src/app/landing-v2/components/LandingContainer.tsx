@@ -30,7 +30,7 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
         }}
       />
 
-      <div className="relative w-full" style={{ zIndex: 10 }}>
+      <div className="relative w-full" style={{ zIndex: 10, minHeight: '100vh' }}>
         {children}
 
         {showFooter && (
