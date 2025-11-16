@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PhaseOneIndicator, { LoadingSpinner } from './PhaseOneIndicator';
 
 interface PhaseCardData {
@@ -56,6 +56,7 @@ function getPhaseStyles(index: number) {
 
 export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggle }: PhaseCardProps) {
   const [currentBackground, setCurrentBackground] = useState('');
+  const cardRef = useRef<HTMLDivElement>(null);
   const phaseLabel = `Phase ${PHASE_LABELS[index]}`;
   const styles = getPhaseStyles(index);
   const isPhaseTwo = index === 1;
@@ -74,16 +75,6 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             transform: translateX(100%);
           }
         }
-
-        /* TEMPORARY: Animated border tracer for Phase II */
-        @keyframes traceBorder {
-          0% {
-            stroke-dashoffset: 0;
-          }
-          100% {
-            stroke-dashoffset: -400;
-          }
-        }
       `;
       document.head.appendChild(style);
       return () => {
@@ -91,6 +82,22 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
       };
     }
   }, [isPhaseTwo]);
+
+  useEffect(() => {
+    if (isExpanded && cardRef.current) {
+      setTimeout(() => {
+        if (!cardRef.current) return;
+        const cardRect = cardRef.current.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        const cardBottom = cardRect.bottom;
+
+        if (cardBottom > windowHeight) {
+          const scrollAmount = cardBottom - windowHeight + 40;
+          window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+        }
+      }, 450);
+    }
+  }, [isExpanded]);
 
   const handleMouseEnter = () => {
     if (!isLocked) {
@@ -106,6 +113,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
 
   return (
     <div
+      ref={cardRef}
       className="w-full transition-all duration-500 ease-out"
       style={{
         opacity: shouldShow ? 1 : 0,
@@ -137,43 +145,58 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             className="absolute inset-0 pointer-events-none"
             width="100%"
             height="100%"
+            viewBox="0 0 100 44"
+            preserveAspectRatio="none"
             style={{
               borderRadius: '8px',
-              filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.6))',
+              overflow: 'visible',
             }}
           >
             <defs>
-              <linearGradient id="tracerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="rgba(255, 255, 255, 0)" />
-                <stop offset="40%" stopColor="rgba(255, 255, 255, 0.1)" />
-                <stop offset="60%" stopColor="rgba(255, 255, 255, 0.3)" />
-                <stop offset="75%" stopColor="rgba(255, 255, 255, 0.6)" />
-                <stop offset="85%" stopColor="rgba(255, 255, 255, 0.85)" />
-                <stop offset="92%" stopColor="rgba(255, 255, 255, 0.95)" />
-                <stop offset="100%" stopColor="rgba(255, 255, 255, 1)" />
-              </linearGradient>
-              <radialGradient id="flareGradient">
+              <linearGradient id="cometTailGradient" x1="100%" y1="0%" x2="0%" y2="0%">
                 <stop offset="0%" stopColor="rgba(255, 255, 255, 1)" />
-                <stop offset="50%" stopColor="rgba(255, 255, 255, 0.8)" />
+                <stop offset="15%" stopColor="rgba(255, 255, 255, 0.8)" />
+                <stop offset="40%" stopColor="rgba(255, 255, 255, 0.5)" />
+                <stop offset="70%" stopColor="rgba(255, 255, 255, 0.2)" />
                 <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
-              </radialGradient>
+              </linearGradient>
+              <filter id="cometGlow">
+                <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
             </defs>
-            <rect
-              x="1"
-              y="1"
-              width="calc(100% - 2px)"
-              height="calc(100% - 2px)"
-              rx="7"
-              ry="7"
-              fill="none"
-              stroke="url(#tracerGradient)"
-              strokeWidth="2.5"
-              strokeDasharray="80 320"
-              strokeLinecap="round"
-              style={{
-                animation: 'traceBorder 2s linear infinite',
-              }}
-            />
+
+            <g filter="url(#cometGlow)">
+              <polygon
+                points="0,0 -12,-0.8 -12,0.8"
+                fill="url(#cometTailGradient)"
+                opacity="0.9"
+              >
+                <animateMotion
+                  dur="3s"
+                  repeatCount="indefinite"
+                  path="M 1,1 L 99,1 L 99,43 L 1,43 Z"
+                  rotate="auto"
+                />
+              </polygon>
+
+              <circle
+                cx="0"
+                cy="0"
+                r="1.2"
+                fill="white"
+                opacity="1"
+              >
+                <animateMotion
+                  dur="3s"
+                  repeatCount="indefinite"
+                  path="M 1,1 L 99,1 L 99,43 L 1,43 Z"
+                />
+              </circle>
+            </g>
           </svg>
         )}
 
