@@ -9,15 +9,26 @@ export default function GlobalBackground() {
   const pathname = usePathname();
   const { isLoading } = useLoaderContext();
 
+  // Debug logging
+  console.log('[🌌BG] GlobalBackground render check:', {
+    pathname,
+    isLoading,
+    timestamp: new Date().toISOString(),
+    willRender: !(pathname === '/landing-v2' && !isLoading) && pathname !== '/landing'
+  });
+
   // On landing-v2: only show during loader, then hide
   if (pathname === '/landing-v2') {
     if (!isLoading) {
+      console.log('[🌌BG] Landing-v2 path, isLoading=false → RETURNING NULL');
       return null;
     }
+    console.log('[🌌BG] Landing-v2 path, isLoading=true → WILL RENDER');
   }
 
   // Don't render background on original landing page (has its own custom background)
   if (pathname === '/landing') {
+    console.log('[🌌BG] Landing path → RETURNING NULL');
     return null;
   }
   const backgroundStars = useMemo(() => {
@@ -93,7 +104,10 @@ export default function GlobalBackground() {
 
   useEffect(() => {
     setMounted(true);
+    console.log('[🌌BG] Component mounted, will show animations');
   }, []);
+
+  console.log('[🌌BG] RENDERING BACKGROUND (stars, particles, satellites)');
 
   return (
     <div className="fixed inset-0 overflow-hidden" style={{ zIndex: -1 }}>
