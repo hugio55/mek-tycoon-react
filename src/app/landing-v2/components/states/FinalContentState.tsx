@@ -94,7 +94,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
         pointerEvents: 'none',
       }}
     >
-      <div className="flex flex-col items-center" style={{ marginTop: isMobile ? 'calc(50vh + 65px)' : 'calc(60vh + 150px)', paddingBottom: '200px', pointerEvents: 'auto' }}>
+      <div className="flex flex-col items-center" style={{ marginTop: isMobile ? 'calc(50vh + 85px)' : 'calc(60vh + 20px)', paddingBottom: '200px', pointerEvents: 'auto' }}>
         {/* Description with fade + slide up */}
         <div
           className="transition-all duration-500 ease-out"
@@ -194,13 +194,12 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
                       {/* TEMPORARY PHASE I INDICATOR - HAMMER ICONS */}
                       {index === 0 && (
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                          {/* Left hammer - diagonal upward-left */}
                           <g transform="rotate(-45 12 12)">
-                            <rect x="10" y="4" width="4" height="10" fill="rgba(250, 182, 23, 0.9)" />
-                            <rect x="8" y="14" width="8" height="6" rx="1" fill="rgba(250, 182, 23, 0.9)" />
-                          </g>
-                          <g transform="rotate(45 12 12)">
-                            <rect x="10" y="4" width="4" height="10" fill="rgba(250, 182, 23, 0.7)" />
-                            <rect x="8" y="14" width="8" height="6" rx="1" fill="rgba(250, 182, 23, 0.7)" />
+                            {/* Claw head */}
+                            <path d="M 8 4 Q 8 3 9 3 L 15 3 Q 16 3 16 4 L 16 7 Q 16 8 15 8 L 14 8 L 14 6 L 10 6 L 10 8 L 9 8 Q 8 8 8 7 Z" fill="rgba(250, 182, 23, 0.9)" />
+                            {/* Handle */}
+                            <rect x="10.5" y="8" width="3" height="12" rx="1" fill="rgba(250, 182, 23, 0.9)" />
                           </g>
                         </svg>
                       )}
@@ -218,13 +217,12 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
                       {/* TEMPORARY PHASE I INDICATOR - HAMMER ICONS */}
                       {index === 0 && (
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                          <g transform="rotate(-45 12 12)">
-                            <rect x="10" y="4" width="4" height="10" fill="rgba(250, 182, 23, 0.9)" />
-                            <rect x="8" y="14" width="8" height="6" rx="1" fill="rgba(250, 182, 23, 0.9)" />
-                          </g>
+                          {/* Right hammer - diagonal upward-right (mirrored) */}
                           <g transform="rotate(45 12 12)">
-                            <rect x="10" y="4" width="4" height="10" fill="rgba(250, 182, 23, 0.7)" />
-                            <rect x="8" y="14" width="8" height="6" rx="1" fill="rgba(250, 182, 23, 0.7)" />
+                            {/* Claw head */}
+                            <path d="M 8 4 Q 8 3 9 3 L 15 3 Q 16 3 16 4 L 16 7 Q 16 8 15 8 L 14 8 L 14 6 L 10 6 L 10 8 L 9 8 Q 8 8 8 7 Z" fill="rgba(250, 182, 23, 0.9)" />
+                            {/* Handle */}
+                            <rect x="10.5" y="8" width="3" height="12" rx="1" fill="rgba(250, 182, 23, 0.9)" />
                           </g>
                         </svg>
                       )}
