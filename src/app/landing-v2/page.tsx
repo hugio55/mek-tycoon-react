@@ -64,7 +64,7 @@ export default function LandingV2() {
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: 'cover',
-          backgroundPosition: 'center calc(50% + 200px)',
+          backgroundPosition: 'center calc(50% + 300px)',
         }}
       />
 
