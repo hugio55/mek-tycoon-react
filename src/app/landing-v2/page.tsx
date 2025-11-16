@@ -18,12 +18,10 @@ export default function LandingV2() {
   const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'other'>('other');
   const [mounted, setMounted] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
-
-  // TEMPORARY DEBUG - REMOVE AFTER FONT SELECTION
+  const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const [titleFont, setTitleFont] = useState('Play');
   const [descFont, setDescFont] = useState('Saira');
-  const fonts = ['Play', 'Saira', 'Orbitron', 'Inter', 'Roboto', 'Montserrat', 'Poppins', 'Raleway'];
-  // END TEMPORARY DEBUG
 
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
 
@@ -38,6 +36,11 @@ export default function LandingV2() {
     } else {
       setDeviceType('other');
     }
+
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   const handleToggle = (index: number, isLocked: boolean) => {
@@ -179,8 +182,8 @@ export default function LandingV2() {
                         <h4
                           className="text-yellow-400 uppercase tracking-wider font-medium mb-3"
                           style={{
-                            fontFamily: `${titleFont}, sans-serif`,
-                            fontSize: '14px',
+                            fontFamily: 'Saira, sans-serif',
+                            fontSize: '16px',
                           }}
                         >
                           {card.title}
@@ -190,7 +193,7 @@ export default function LandingV2() {
                           <p
                             className="text-white/75 leading-relaxed"
                             style={{
-                              fontFamily: `${descFont}, sans-serif`,
+                              fontFamily: 'Play, sans-serif',
                               fontSize: '14px',
                             }}
                           >
@@ -287,51 +290,6 @@ export default function LandingV2() {
           </div>
         </footer>
       </div>
-
-      {/* TEMPORARY DEBUG PANEL - REMOVE AFTER FONT SELECTION */}
-      {mounted && (
-        <div
-          className="fixed top-4 right-4 bg-black/90 border border-yellow-400/50 rounded-lg p-4 backdrop-blur-md"
-          style={{ zIndex: 9999, width: '250px' }}
-        >
-          <h3 className="text-yellow-400 text-sm font-bold mb-3" style={{ fontFamily: 'Play, sans-serif' }}>
-            Font Debug Panel
-          </h3>
-
-          <div className="mb-4">
-            <label className="text-white/80 text-xs block mb-2" style={{ fontFamily: 'Play, sans-serif' }}>
-              Title Font (Foundation):
-            </label>
-            <select
-              value={titleFont}
-              onChange={(e) => setTitleFont(e.target.value)}
-              className="w-full bg-black/50 text-white border border-yellow-400/30 rounded px-2 py-1 text-sm"
-              style={{ fontFamily: 'Play, sans-serif' }}
-            >
-              {fonts.map(font => (
-                <option key={font} value={font}>{font}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-white/80 text-xs block mb-2" style={{ fontFamily: 'Play, sans-serif' }}>
-              Description Font:
-            </label>
-            <select
-              value={descFont}
-              onChange={(e) => setDescFont(e.target.value)}
-              className="w-full bg-black/50 text-white border border-yellow-400/30 rounded px-2 py-1 text-sm"
-              style={{ fontFamily: 'Play, sans-serif' }}
-            >
-              {fonts.map(font => (
-                <option key={font} value={font}>{font}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )}
-      {/* END TEMPORARY DEBUG PANEL */}
     </div>
   );
 }
