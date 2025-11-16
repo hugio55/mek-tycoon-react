@@ -147,7 +147,7 @@ export default function LandingV2() {
       )}
 
       {/* Stars - fade in simultaneously with background */}
-      {isRevealing && (
+      {false && isRevealing && (
         <div
           className="transition-opacity ease-out"
           style={{
