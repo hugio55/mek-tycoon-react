@@ -56,15 +56,23 @@ export default function LandingV2() {
 
   const isRevealing = isState('REVEAL');
   // Background opacity: 0 → 0.3 (initial fade) → 1.0 (reveal)
-  const backgroundOpacity = isState('SOUND_SELECTION')
-    ? (backgroundFadedIn ? 0.3 : 0)
-    : 1.0;
+  // Ensure we start at 0 until fully mounted and ready
+  const backgroundOpacity = !mounted ? 0 : (
+    isState('SOUND_SELECTION')
+      ? (backgroundFadedIn ? 0.3 : 0)
+      : 1.0
+  );
   const showFooter = !isState('SOUND_SELECTION');
   const showSpeaker = isRevealing;
 
   // Calculate when logo should appear (after stars fade completes)
   const logoDelay = TIMINGS.starsFade;
   const contentDelay = logoDelay + TIMINGS.logoFade + TIMINGS.pauseAfterLogo;
+
+  // Show pure black until mounted
+  if (!mounted) {
+    return <div className="fixed inset-0 bg-black" />;
+  }
 
   return (
     <LandingContainer
