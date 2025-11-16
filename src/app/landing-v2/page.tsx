@@ -147,6 +147,7 @@ export default function LandingV2() {
               src="/random-images/Everydays_4.gif"
               alt="Mek Tycoon Logo"
               className={deviceType === 'iphone' ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'max-w-[40vw] max-h-[40vh] object-contain'}
+              style={deviceType === 'iphone' ? { transform: 'scale(1.35)' } : {}}
             />
           ) : (
             <video
@@ -155,6 +156,7 @@ export default function LandingV2() {
               muted
               playsInline
               className="max-w-[40vw] max-h-[40vh] object-contain"
+              style={navigator.userAgent.toLowerCase().includes('android') ? { transform: 'scale(1.35)' } : {}}
             >
               <source src="/random-images/Everydays_00000.webm" type="video/webm" />
             </video>
