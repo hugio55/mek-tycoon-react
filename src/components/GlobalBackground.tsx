@@ -3,12 +3,21 @@
 import { useState, useEffect, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { SeededRandom } from "@/lib/seeded-random";
+import { useLoaderContext } from "@/features/page-loader";
 
 export default function GlobalBackground() {
   const pathname = usePathname();
+  const { isLoading } = useLoaderContext();
 
-  // Don't render background on landing pages (they have their own custom backgrounds)
-  if (pathname === '/landing' || pathname === '/landing-v2') {
+  // On landing-v2: only show during loader, then hide
+  if (pathname === '/landing-v2') {
+    if (!isLoading) {
+      return null;
+    }
+  }
+
+  // Don't render background on original landing page (has its own custom background)
+  if (pathname === '/landing') {
     return null;
   }
   const backgroundStars = useMemo(() => {
