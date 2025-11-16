@@ -165,9 +165,6 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             >
               {phaseLabel}
             </h3>
-
-            {isPhaseOne && <Checkmark />}
-            {isPhaseTwo && <LoadingSpinner />}
           </div>
 
           {isLocked && (
@@ -192,7 +189,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
         style={{
           maxHeight: isExpanded ? '500px' : '0',
           overflow: 'hidden',
-          transition: 'max-height 400ms ease',
+          transition: 'max-height 300ms ease-out',
         }}
       >
         <div
@@ -200,9 +197,9 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           style={{
             background: 'rgba(0, 0, 0, 0.384)',
             borderRadius: '8px',
-            backdropFilter: isExpanded ? 'blur(16px)' : 'blur(0px)',
+            backdropFilter: 'blur(16px)',
             opacity: isExpanded ? 1 : 0,
-            transition: 'backdrop-filter 400ms ease, opacity 400ms ease',
+            transition: 'opacity 300ms ease-out',
           }}
         >
           <div>
