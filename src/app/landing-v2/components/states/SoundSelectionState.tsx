@@ -55,10 +55,10 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
 
   const overlay = (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center px-4 transition-opacity duration-[1500ms]"
+      className="fixed inset-0 z-[9999] flex items-center justify-center px-4 transition-opacity duration-[1000ms]"
       style={{
         backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        opacity: isFadingOut ? 0 : 1
+        opacity: isFadingOut ? 0 : (shouldShow ? 1 : 0)
       }}
     >
       <div
