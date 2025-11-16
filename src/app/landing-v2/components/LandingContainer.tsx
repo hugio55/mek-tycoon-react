@@ -30,10 +30,8 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
         }}
       />
 
-      <div className="relative flex flex-col w-full" style={{ zIndex: 10 }}>
-        <div className="flex-1 flex flex-col items-stretch">
-          {children}
-        </div>
+      <div className="relative w-full" style={{ zIndex: 10 }}>
+        {children}
 
         {showFooter && (
           <footer
@@ -114,8 +112,8 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
             </div>
           </div>
         </div>
-        </footer>
-        )}
+      </footer>
+      )}
       </div>
     </div>
   );
