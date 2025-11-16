@@ -18,7 +18,7 @@ export default function LandingContainer({ children, backgroundOpacity }: Landin
         }}
       />
 
-      <div className="relative min-h-screen flex flex-col w-full" style={{ zIndex: 10 }}>
+      <div className="relative min-h-screen flex flex-col items-stretch w-full" style={{ zIndex: 10 }}>
         {children}
       </div>
     </div>
