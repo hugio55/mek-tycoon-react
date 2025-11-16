@@ -18,17 +18,6 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
 
   useEffect(() => {
     setMounted(true);
-
-    // Preload toggle click sounds immediately for instant playback
-    const guardSound = new Audio('/sounds/main_click.mp3');
-    const switchSound = new Audio('/sounds/click reverb 2.mp3');
-    guardSound.preload = 'auto';
-    switchSound.preload = 'auto';
-    // Force load by playing silently
-    guardSound.volume = 0;
-    switchSound.volume = 0;
-    guardSound.play().then(() => guardSound.pause()).catch(() => {});
-    switchSound.play().then(() => switchSound.pause()).catch(() => {});
   }, []);
 
   // Keep component mounted during fade-out even if isActive becomes false
