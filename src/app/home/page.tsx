@@ -10,7 +10,6 @@ import { getVariationInfoFromFullKey } from '@/lib/variationNameLookup';
 import MekNamingLightbox from '@/components/MekNamingLightbox';
 import MekManagementLightbox from '@/components/MekManagementLightbox';
 import AirdropClaimBanner from '@/components/AirdropClaimBanner';
-import WalletConnectLightbox from '@/components/WalletConnectLightbox';
 import * as Tooltip from '@radix-ui/react-tooltip';
 
 export default function HomePage() {
