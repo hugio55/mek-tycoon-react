@@ -18,9 +18,9 @@ export const TIMINGS = {
   logoFade: 4500,           // Logo fade (slower, more gradual)
   pauseAfterLogo: 0,        // No pause - description starts immediately
   descriptionFade: 1800,    // Description animation (extra second added)
-  buttonDelay: 0,           // No pause - button starts immediately
+  buttonDelay: 150,         // Equal gap between description and button
   buttonFade: 1800,         // Button animation (extra second added)
-  phaseDelay: 0,            // No pause - phases start immediately
+  phaseDelay: 150,          // Equal gap between button and phases
   phaseStagger: 200,        // Delay between each phase
 };
 

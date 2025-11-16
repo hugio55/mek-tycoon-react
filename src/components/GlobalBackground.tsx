@@ -87,13 +87,13 @@ export default function GlobalBackground() {
   }, []);
 
   return (
-    <>
+    <div className="fixed inset-0 overflow-hidden" style={{ zIndex: -1 }}>
       {/* Deep space background gradient from root page */}
-      <div className="fixed inset-0 bg-gradient-to-b from-black via-gray-950 to-black" style={{ transform: 'translateZ(0)', willChange: 'auto' }} />
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-950 to-black" style={{ transform: 'translateZ(0)', willChange: 'auto' }} />
 
       {/* Industrial grid overlay */}
       <div
-        className="fixed inset-0 pointer-events-none opacity-10"
+        className="absolute inset-0 pointer-events-none opacity-10"
         style={{
           backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(250, 182, 23, 0.1) 49px, rgba(250, 182, 23, 0.1) 50px), repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(250, 182, 23, 0.1) 49px, rgba(250, 182, 23, 0.1) 50px)',
         }}
@@ -170,6 +170,6 @@ export default function GlobalBackground() {
           />
         );
       })}
-    </>
+    </div>
   );
 }
