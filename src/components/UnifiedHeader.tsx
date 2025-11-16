@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { restoreWalletSession, clearWalletSession } from "@/lib/walletSessionManager";
 import { CompanyNameModal } from "@/components/CompanyNameModal";
+import WalletConnectLightbox from "@/components/WalletConnectLightbox";
 import { getMediaUrl } from "@/lib/media-url";
 
 // Session Timer Component - Shows countdown to session expiration
@@ -71,6 +72,7 @@ export default function UnifiedHeader() {
   const [sessionExpiresAt, setSessionExpiresAt] = useState<number | null>(null);
   const [showCompanyNameModal, setShowCompanyNameModal] = useState(false);
   const [companyNameModalMode, setCompanyNameModalMode] = useState<'initial' | 'edit'>('initial');
+  const [showWalletConnect, setShowWalletConnect] = useState(false);
 
   // Get wallet address from encrypted session storage
   useEffect(() => {
@@ -185,6 +187,16 @@ export default function UnifiedHeader() {
         changeRate: pollCount > 0 ? `${(actualStateChanges / pollCount * 100).toFixed(2)}%` : 'N/A'
       });
     };
+  }, []);
+
+  // Listen for wallet connect event
+  useEffect(() => {
+    const handleOpenWalletConnect = () => {
+      setShowWalletConnect(true);
+    };
+
+    window.addEventListener('openWalletConnect', handleOpenWalletConnect);
+    return () => window.removeEventListener('openWalletConnect', handleOpenWalletConnect);
   }, []);
 
   // Get company name for current wallet
@@ -308,19 +320,34 @@ export default function UnifiedHeader() {
                 </div>
               )}
 
-              {/* 5. Disconnect button */}
+              {/* 5. Connect Wallet button (if not connected) */}
+              {!walletAddress && (
+                <div className="px-4 py-4 border-b border-yellow-500/20">
+                  <button
+                    onClick={() => {
+                      setWalletDropdownOpen(false);
+                      window.dispatchEvent(new Event('openWalletConnect'));
+                    }}
+                    className="w-full px-4 py-3 bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 border-2 border-yellow-500 rounded transition-colors font-['Orbitron'] uppercase tracking-wider text-sm font-bold min-h-[48px] touch-manipulation"
+                  >
+                    Connect Wallet
+                  </button>
+                </div>
+              )}
+
+              {/* 6. Disconnect button */}
               {walletAddress && !isDemoMode && (
                 <div className="px-4 py-4">
                   <button
                     onClick={handleDisconnect}
-                    className="w-full px-4 py-2 bg-red-600/20 border border-red-500/50 rounded text-red-400 hover:bg-red-600/30 transition-colors text-sm font-bold"
+                    className="w-full px-4 py-2 bg-red-600/20 border border-red-500/50 rounded text-red-400 hover:bg-red-600/30 transition-colors text-sm font-bold min-h-[48px] touch-manipulation"
                   >
                     Disconnect Wallet
                   </button>
                 </div>
               )}
 
-              {/* 6. Demo Mode Indicator (if applicable) */}
+              {/* 7. Demo Mode Indicator (if applicable) */}
               {isDemoMode && (
                 <div className="px-4 py-4">
                   <div className="text-gray-500 text-sm italic">
@@ -382,6 +409,21 @@ export default function UnifiedHeader() {
           currentName={companyNameData?.companyName}
         />
       )}
+
+      {/* Wallet Connect Lightbox */}
+      <WalletConnectLightbox
+        isOpen={showWalletConnect}
+        onClose={() => setShowWalletConnect(false)}
+        onConnected={async (address) => {
+          setWalletAddress(address);
+          setShowWalletConnect(false);
+          // Refresh session data
+          const session = await restoreWalletSession();
+          if (session) {
+            setSessionExpiresAt(session.expiresAt || null);
+          }
+        }}
+      />
     </>
   );
 }
