@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import StarField from '@/components/StarField';
+import FillTextButton from '@/components/controls/FillTextButton';
 
 export default function LandingV2() {
   const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'other'>('other');
@@ -75,6 +76,11 @@ export default function LandingV2() {
           <p className="text-white/80 text-xs tracking-wide" style={{ fontFamily: 'Saira, sans-serif' }}>
             An epic idle strategy game where Mekanism NFTs build empires.
           </p>
+
+          {/* Join Beta Button */}
+          <div className="mt-6">
+            <FillTextButton text="join beta" />
+          </div>
         </div>
       )}
 
