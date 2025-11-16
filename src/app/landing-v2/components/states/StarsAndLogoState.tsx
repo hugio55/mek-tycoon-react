@@ -11,44 +11,44 @@ export default function StarsAndLogoState({ isActive, deviceType }: StarsAndLogo
 
   useEffect(() => {
     if (isActive) {
-      setMounted(true);
+      // Delay logo fade-in by 1500ms (after stars complete their fade)
+      const timer = setTimeout(() => {
+        setMounted(true);
+      }, 1500);
+      return () => clearTimeout(timer);
     }
   }, [isActive]);
 
   if (!isActive) return null;
 
   return (
-    <>
-      <StarField />
-
-      <div
-        className="absolute transition-opacity duration-2000"
-        style={{
-          top: '50vh',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          opacity: mounted ? 1 : 0,
-          zIndex: 20,
-        }}
-      >
-        {deviceType === 'macos' || deviceType === 'iphone' ? (
-          <img
-            src="/random-images/Everydays_4.gif"
-            alt="Mek Tycoon Logo"
-            className={deviceType === 'iphone' ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'max-w-[40vw] max-h-[40vh] object-contain'}
-          />
-        ) : (
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="max-w-[40vw] max-h-[40vh] object-contain"
-          >
-            <source src="/random-images/Everydays_00000.webm" type="video/webm" />
-          </video>
-        )}
-      </div>
-    </>
+    <div
+      className="absolute transition-opacity duration-2000"
+      style={{
+        top: '50vh',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        opacity: mounted ? 1 : 0,
+        zIndex: 20,
+      }}
+    >
+      {deviceType === 'macos' || deviceType === 'iphone' ? (
+        <img
+          src="/random-images/Everydays_4.gif"
+          alt="Mek Tycoon Logo"
+          className={deviceType === 'iphone' ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'max-w-[40vw] max-h-[40vh] object-contain'}
+        />
+      ) : (
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="max-w-[40vw] max-h-[40vh] object-contain"
+        >
+          <source src="/random-images/Everydays_00000.webm" type="video/webm" />
+        </video>
+      )}
+    </div>
   );
 }
