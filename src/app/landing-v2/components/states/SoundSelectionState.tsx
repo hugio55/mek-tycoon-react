@@ -1,85 +1,140 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import ProModeToggle from '@/components/controls/ProModeToggle';
+import { GeometricSpeakerIcon } from '@/components/SpeakerIcons';
 
 interface SoundSelectionStateProps {
   isActive: boolean;
   onComplete: () => void;
 }
 
+const STORAGE_KEY_AUDIO = 'mek-audio-consent';
+
 export default function SoundSelectionState({ isActive, onComplete }: SoundSelectionStateProps) {
   const [mounted, setMounted] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState<boolean | null>(null);
+  const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+
+    // Check if user has already made a choice
+    const stored = localStorage.getItem(STORAGE_KEY_AUDIO);
+    if (stored && isActive) {
+      try {
+        const { audioEnabled } = JSON.parse(stored);
+        console.log('[🎵SOUND] Found stored audio preference:', audioEnabled);
+        // Skip directly to next state if preference exists
+        onComplete();
+      } catch (e) {
+        console.log('[🎵SOUND] Error parsing stored preference, showing selection');
+      }
+    }
+  }, [isActive, onComplete]);
 
   if (!isActive || !mounted) return null;
 
-  const handleSoundChoice = (enabled: boolean) => {
-    setSoundEnabled(enabled);
-  };
+  const handleProceed = (withAudio: boolean) => {
+    console.log('[🎵SOUND] User selected audio:', withAudio);
 
-  const handleProceed = () => {
-    if (soundEnabled !== null) {
-      onComplete();
-    }
+    // Start fade animation after brief delay (600ms to show green light)
+    setTimeout(() => {
+      console.log('[🎵SOUND] Starting fade out...');
+      setIsFadingOut(true);
+
+      // After fade completes, store preference and proceed
+      setTimeout(() => {
+        console.log('[🎵SOUND] Fade complete, storing preference and proceeding...');
+        localStorage.setItem(STORAGE_KEY_AUDIO, JSON.stringify({
+          audioEnabled: withAudio,
+          timestamp: Date.now()
+        }));
+        onComplete();
+      }, 2500);
+    }, 600);
   };
 
   const overlay = (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center">
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center px-4 transition-opacity duration-[2500ms]"
+      style={{
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+        opacity: isFadingOut ? 0 : 1
+      }}
+    >
       <div
-        className="mek-card-industrial p-8 max-w-md w-full mx-4"
+        className="relative flex flex-col items-center gap-6 sm:gap-8"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="mek-text-industrial text-2xl mb-6 text-center">
-          Audio Settings
-        </h2>
-
-        <p className="text-white/70 text-center mb-8" style={{ fontFamily: 'Play, sans-serif' }}>
-          Would you like to enable sound for this experience?
-        </p>
-
-        <div className="flex gap-4 mb-6">
-          <button
-            onClick={() => handleSoundChoice(true)}
-            className={`
-              flex-1 py-3 px-6 rounded-lg transition-all
-              ${soundEnabled === true
-                ? 'mek-button-primary'
-                : 'bg-white/10 hover:bg-white/20 text-white border border-yellow-500/30'
-              }
-            `}
-          >
-            Sound On
-          </button>
-          <button
-            onClick={() => handleSoundChoice(false)}
-            className={`
-              flex-1 py-3 px-6 rounded-lg transition-all
-              ${soundEnabled === false
-                ? 'mek-button-primary'
-                : 'bg-white/10 hover:bg-white/20 text-white border border-yellow-500/30'
-              }
-            `}
-          >
-            Sound Off
-          </button>
-        </div>
-
-        <button
-          onClick={handleProceed}
-          disabled={soundEnabled === null}
-          className={`
-            w-full py-3 px-6 rounded-lg transition-all
-            ${soundEnabled !== null
-              ? 'mek-button-secondary hover:scale-105'
-              : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
-            }
-          `}
+        {/* Two side-by-side ProModeToggles */}
+        <div
+          className="flex items-center justify-center"
+          style={{
+            gap: '48px',
+            transform: 'translateY(0px)',
+            scale: '1.0'
+          }}
         >
-          Proceed
-        </button>
+          {/* Sound Toggle - Plays sounds */}
+          <div className="flex flex-col items-center gap-3">
+            <GeometricSpeakerIcon
+              size={45}
+              isPlaying={true}
+              className="text-white/70"
+            />
+            <ProModeToggle
+              enabled={false}
+              onChange={(enabled) => {
+                if (enabled) {
+                  handleProceed(true);
+                }
+              }}
+              label=""
+              enableSounds={true}
+            />
+          </div>
+
+          {/* No Sound Toggle - Silent (no sounds) */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="relative">
+              <GeometricSpeakerIcon
+                size={45}
+                isPlaying={false}
+                className="text-white/70"
+              />
+              {/* Large Red X Overlay */}
+              <svg
+                width={45}
+                height={45}
+                viewBox="0 0 48 48"
+                className="absolute inset-0"
+                style={{ pointerEvents: 'none' }}
+              >
+                <line
+                  x1="8" y1="8" x2="40" y2="40"
+                  stroke="#ef4444"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="40" y1="8" x2="8" y2="40"
+                  stroke="#ef4444"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+            <ProModeToggle
+              enabled={false}
+              onChange={(enabled) => {
+                if (enabled) {
+                  handleProceed(false);
+                }
+              }}
+              label=""
+              enableSounds={false}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
