@@ -23,11 +23,11 @@ export default function StarsAndLogoState({ isActive, deviceType }: StarsAndLogo
 
   return (
     <div
-      className="absolute transition-opacity duration-2000"
+      className="absolute transition-all duration-3000 ease-out"
       style={{
         top: '50vh',
         left: '50%',
-        transform: 'translate(-50%, -50%)',
+        transform: `translate(-50%, -50%) scale(${mounted ? 1.0 : 0.95})`,
         opacity: mounted ? 1 : 0,
         zIndex: 20,
       }}
