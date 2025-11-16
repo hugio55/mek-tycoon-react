@@ -20,9 +20,9 @@ interface FinalContentStateProps {
 }
 
 export default function FinalContentState({ isActive, phaseCards, startDelay = 0 }: FinalContentStateProps) {
-  const [showDescription, setShowDescription] = useState(true);
-  const [showButton, setShowButton] = useState(true);
-  const [showPhases, setShowPhases] = useState<number>(4);
+  const [showDescription, setShowDescription] = useState(false);
+  const [showButton, setShowButton] = useState(false);
+  const [showPhases, setShowPhases] = useState<number>(0);
   const [showBetaLightbox, setShowBetaLightbox] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -34,24 +34,25 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
 
   useEffect(() => {
     if (isActive) {
+      // Description starts first
       const descTimer = setTimeout(() => setShowDescription(true), startDelay);
-      const buttonTimer = setTimeout(() => setShowButton(true), startDelay + TIMINGS.descriptionFade + TIMINGS.buttonDelay);
-      const phasesStartTimer = setTimeout(() => {
-        setShowPhases(1);
-        const phase2Timer = setTimeout(() => setShowPhases(2), TIMINGS.phaseStagger);
-        const phase3Timer = setTimeout(() => setShowPhases(3), TIMINGS.phaseStagger * 2);
-        const phase4Timer = setTimeout(() => setShowPhases(4), TIMINGS.phaseStagger * 3);
-        return () => {
-          clearTimeout(phase2Timer);
-          clearTimeout(phase3Timer);
-          clearTimeout(phase4Timer);
-        };
-      }, startDelay + TIMINGS.descriptionFade + TIMINGS.buttonDelay + TIMINGS.buttonFade + TIMINGS.phaseDelay);
+
+      // Button starts shortly after description (200ms gap)
+      const buttonTimer = setTimeout(() => setShowButton(true), startDelay + 200);
+
+      // Phases cascade in quick succession (200ms apart each)
+      const phase1Timer = setTimeout(() => setShowPhases(1), startDelay + 400);
+      const phase2Timer = setTimeout(() => setShowPhases(2), startDelay + 600);
+      const phase3Timer = setTimeout(() => setShowPhases(3), startDelay + 800);
+      const phase4Timer = setTimeout(() => setShowPhases(4), startDelay + 1000);
 
       return () => {
         clearTimeout(descTimer);
         clearTimeout(buttonTimer);
-        clearTimeout(phasesStartTimer);
+        clearTimeout(phase1Timer);
+        clearTimeout(phase2Timer);
+        clearTimeout(phase3Timer);
+        clearTimeout(phase4Timer);
       };
     }
   }, [isActive, startDelay]);

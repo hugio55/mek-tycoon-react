@@ -88,8 +88,8 @@ export default function LandingV2() {
 
   // Logo fades simultaneously with stars (no delay)
   const logoDelay = 0;
-  // Content starts after logo starts fading
-  const contentDelay = 1600;
+  // Content wave starts ~500ms after logo begins
+  const contentDelay = 500;
 
   // Show pure black until mounted
   if (!mounted) {
@@ -175,7 +175,7 @@ export default function LandingV2() {
               src="/random-images/Everydays_4.gif"
               alt="Mek Tycoon Logo"
               className={deviceType === 'iphone' ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'max-w-[40vw] max-h-[40vh] object-contain'}
-              style={deviceType === 'iphone' ? { transform: 'scale(1.35)' } : {}}
+              style={deviceType === 'iphone' ? { transform: 'scale(1.0125)' } : {}}
             />
           ) : (
             <video
@@ -184,7 +184,7 @@ export default function LandingV2() {
               muted
               playsInline
               className="max-w-[40vw] max-h-[40vh] object-contain"
-              style={navigator.userAgent.toLowerCase().includes('android') ? { transform: 'scale(1.35)' } : {}}
+              style={navigator.userAgent.toLowerCase().includes('android') ? { transform: 'scale(1.0125)' } : {}}
             >
               <source src="/random-images/Everydays_00000.webm" type="video/webm" />
             </video>
