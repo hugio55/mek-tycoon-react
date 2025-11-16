@@ -23,7 +23,7 @@ export function calculateMilestoneProgress(
   if (walletLoaded) progress += 20;
   if (criticalDataLoaded) progress += 20;
   if (pageDataLoaded) progress += 30;
-  if (windowLoaded) progress += 30; // Images, videos, all assets loaded
+  if (windowLoaded) progress += 30; // Critical assets: logo video, hero images, etc.
 
   return progress;
 }

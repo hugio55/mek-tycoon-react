@@ -48,10 +48,10 @@ export default function LandingV2() {
       setEntranceStarted(true);
 
       // Initial entrance sequence
-      // 1. Background fades in (0 → 0.3 opacity) over 1s
-      setTimeout(() => setBackgroundFadedIn(true), 100);
-      // 2. Lightbox fades in simultaneously with background
+      // 1. Lightbox (darkening layer) fades in first
       setTimeout(() => setShowLightbox(true), 100);
+      // 2. Background fades in 500ms later (after darkening layer is established)
+      setTimeout(() => setBackgroundFadedIn(true), 600);
     }
   }, [mounted, isLoading, entranceStarted]);
 
@@ -80,7 +80,7 @@ export default function LandingV2() {
   // Ensure we start at 0 until loader finishes and entrance begins
   const backgroundOpacity = !mounted || !entranceStarted ? 0 : (
     isState('SOUND_SELECTION')
-      ? (backgroundFadedIn ? 0.23 : 0)
+      ? (backgroundFadedIn ? 0.10 : 0)
       : 0.77
   );
   const showFooter = isRevealing; // Only show footer in REVEAL state
