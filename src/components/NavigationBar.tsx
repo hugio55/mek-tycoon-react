@@ -7,7 +7,6 @@ import { restoreWalletSession } from "@/lib/walletSessionManager";
 import { useState, useEffect, useRef } from "react";
 import { useLoaderContext } from "@/features/page-loader";
 import { TIMING } from "@/features/page-loader/config/constants";
-import WalletConnectLightbox from "@/components/WalletConnectLightbox";
 
 export default function NavigationBar() {
   const router = useRouter();
@@ -39,15 +38,6 @@ export default function NavigationBar() {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const imageKeyRef = useRef<string | null>(null);
-  const [showWalletConnect, setShowWalletConnect] = useState(false);
-
-  // Track showWalletConnect state changes
-  useEffect(() => {
-    console.log('[🔍PARENT-STATE] NavigationBar showWalletConnect changed:', {
-      showWalletConnect,
-      timestamp: Date.now()
-    });
-  }, [showWalletConnect]);
 
   // Check if we're in a loading state (may not be in LoaderProvider)
   let isPageLoading = false;
@@ -72,20 +62,6 @@ export default function NavigationBar() {
       setWalletAddress(address);
     };
     loadWallet();
-  }, []);
-
-  // Listen for wallet connect lightbox open event
-  useEffect(() => {
-    const handleOpenWalletConnect = () => {
-      console.log('[🎯NAV] Opening wallet connect lightbox');
-      setShowWalletConnect(true);
-    };
-
-    window.addEventListener('openWalletConnect', handleOpenWalletConnect);
-
-    return () => {
-      window.removeEventListener('openWalletConnect', handleOpenWalletConnect);
-    };
   }, []);
 
   // Get active navigation configuration
@@ -549,25 +525,6 @@ export default function NavigationBar() {
             </div>
           );
         })}
-
-        {/* Wallet Connect Lightbox */}
-        <WalletConnectLightbox
-          isOpen={showWalletConnect}
-          onClose={() => {
-            console.log('[🔍PARENT-CLOSE] NavigationBar onClose() called - setting showWalletConnect to FALSE');
-            console.log('[🔍PARENT-CLOSE] Current showWalletConnect value BEFORE:', showWalletConnect);
-            setShowWalletConnect(false);
-            console.log('[🔍PARENT-CLOSE] setShowWalletConnect(false) called - state update scheduled');
-          }}
-          onConnected={(address) => {
-            console.log('[🔍PARENT-CONNECTED] onConnected callback triggered');
-            console.log('[🎯NAV] Wallet connected:', address.slice(0, 20) + '...');
-            setWalletAddress(address);
-            console.log('[🔍PARENT-CONNECTED] Setting showWalletConnect to FALSE');
-            setShowWalletConnect(false);
-            console.log('[🔍PARENT-CONNECTED] Callback complete');
-          }}
-        />
       </div>
     </div>
   );

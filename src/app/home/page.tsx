@@ -41,13 +41,6 @@ export default function HomePage() {
     slotNumber: number;
   } | null>(null);
 
-  // Wallet connection lightbox state
-  const [showWalletConnect, setShowWalletConnect] = useState(false);
-
-  // Track showWalletConnect state changes
-  useEffect(() => {
-    console.log('[🔌HOME-STATE] showWalletConnect changed to:', showWalletConnect);
-  }, [showWalletConnect]);
 
   // Get user's gold mining data (includes correct Mek list)
   const goldMiningData = useQuery(
@@ -981,21 +974,6 @@ export default function HomePage() {
             }}
           />
         )}
-
-        {/* Wallet Connect Lightbox */}
-        <WalletConnectLightbox
-          isOpen={showWalletConnect}
-          onClose={() => {
-            console.log('[🚨PARENT-HOME] onClose callback called in HomePage');
-            setShowWalletConnect(false);
-            console.log('[🚨PARENT-HOME] setShowWalletConnect(false) executed');
-          }}
-          onConnected={(walletAddress) => {
-            console.log('[🚨PARENT-HOME] onConnected callback called');
-            setUserId(walletAddress);
-            setShowWalletConnect(false);
-          }}
-        />
         </div>
 
         {/* Footer - Sticky at bottom */}
