@@ -21,7 +21,7 @@ export const TIMINGS = {
 };
 
 export function useLandingStateMachine() {
-  const [currentState, setCurrentState] = useState<LandingState>('REVEAL');
+  const [currentState, setCurrentState] = useState<LandingState>('SOUND_SELECTION');
 
   useEffect(() => {
     console.log('[🎭LANDING-STATE]', {

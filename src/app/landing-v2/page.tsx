@@ -42,9 +42,9 @@ export default function LandingV2() {
     }
   }, []);
 
-  // Wait for loader to finish, THEN start entrance sequence
+  // Start entrance sequence when mounted
   useEffect(() => {
-    if (mounted && !isLoading && !entranceStarted) {
+    if (mounted && !entranceStarted) {
       setEntranceStarted(true);
 
       // Initial entrance sequence
@@ -53,7 +53,7 @@ export default function LandingV2() {
       // 2. Lightbox fades in simultaneously with background
       setTimeout(() => setShowLightbox(true), 100);
     }
-  }, [mounted, isLoading, entranceStarted, transitionTo]);
+  }, [mounted, entranceStarted]);
 
   // Trigger reveal animations when entering REVEAL state
   useEffect(() => {
