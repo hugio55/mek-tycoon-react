@@ -57,6 +57,7 @@ export function PageLoadingOverlay() {
 
   // Handle completion callback from LoadingOverlay
   const handleComplete = () => {
+    setIsLoading(false);
     setShowOverlay(false);
   };
 
