@@ -123,6 +123,40 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
         )
       ]) as any;
 
+      // Check if user manually disconnected (security feature for shared computers)
+      const disconnectNonce = localStorage.getItem('mek_disconnect_nonce');
+      if (disconnectNonce) {
+        console.log('[WalletConnect] Disconnect nonce detected - requiring signature verification');
+        setConnectionStatus('Verifying wallet ownership...');
+
+        // Generate challenge message
+        const challengeMessage = `Mek Tycoon Login Verification\n\nNonce: ${disconnectNonce}\nTimestamp: ${Date.now()}\n\nSign this message to verify you own this wallet.`;
+
+        try {
+          // Convert message to hex for signing (browser-compatible)
+          const encoder = new TextEncoder();
+          const messageBytes = encoder.encode(challengeMessage);
+          const messageHex = Array.from(messageBytes)
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
+
+          // Request signature from wallet
+          const signResult = await api.signData(
+            await api.getUsedAddresses().then((addrs: string[]) => addrs[0]), // Use first payment address
+            messageHex
+          );
+
+          console.log('[WalletConnect] Signature verification successful');
+          setConnectionStatus('Signature verified!');
+
+          // Signature succeeded - user proved they own the wallet
+          // The disconnect nonce will be cleared after successful session save
+        } catch (signError: any) {
+          console.error('[WalletConnect] Signature verification failed:', signError);
+          throw new Error('Signature verification failed. You must sign the message to reconnect after disconnecting.');
+        }
+      }
+
       // Get wallet addresses
       setConnectionStatus('Retrieving wallet addresses...');
       const stakeAddresses = await api.getRewardAddresses();
