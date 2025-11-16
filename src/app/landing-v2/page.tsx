@@ -147,6 +147,7 @@ export default function LandingV2() {
             opacity: revealStarted ? 1 : 0,
             transitionDuration: `${TIMINGS.starsFade}ms`,
             zIndex: 1,
+            pointerEvents: 'none',
           }}
         >
           <StarField />
