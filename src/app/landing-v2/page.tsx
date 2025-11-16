@@ -15,7 +15,7 @@ import StateDebugPanel from './debug/StateDebugPanel';
 import { useLoaderContext } from '@/features/page-loader';
 
 export default function LandingV2() {
-  const { isLoading } = useLoaderContext();
+  const { isLoading, registerCriticalAsset, markCriticalAssetLoaded } = useLoaderContext();
   const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'other'>('other');
   const [mounted, setMounted] = useState(false);
   const [revealStarted, setRevealStarted] = useState(false);
@@ -40,7 +40,10 @@ export default function LandingV2() {
     } else {
       setDeviceType('other');
     }
-  }, []);
+
+    // Register logo as a critical asset that loader should wait for
+    registerCriticalAsset('landing-logo');
+  }, [registerCriticalAsset]);
 
   // Wait for Universal Loader to finish, THEN start entrance sequence
   useEffect(() => {
@@ -80,7 +83,7 @@ export default function LandingV2() {
   // Ensure we start at 0 until loader finishes and entrance begins
   const backgroundOpacity = !mounted || !entranceStarted ? 0 : (
     isState('SOUND_SELECTION')
-      ? (backgroundFadedIn ? 0.10 : 0)
+      ? (backgroundFadedIn ? 0.18 : 0)
       : 0.77
   );
   const showFooter = isRevealing; // Only show footer in REVEAL state
@@ -178,6 +181,7 @@ export default function LandingV2() {
               alt="Mek Tycoon Logo"
               className={deviceType === 'iphone' ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'max-w-[40vw] max-h-[40vh] object-contain'}
               style={deviceType === 'iphone' ? { transform: 'scale(1.0125)' } : {}}
+              onLoad={() => markCriticalAssetLoaded('landing-logo')}
             />
           ) : (
             <video
@@ -187,6 +191,7 @@ export default function LandingV2() {
               playsInline
               className="max-w-[40vw] max-h-[40vh] object-contain"
               style={navigator.userAgent.toLowerCase().includes('android') ? { transform: 'scale(1.0125)' } : {}}
+              onLoadedData={() => markCriticalAssetLoaded('landing-logo')}
             >
               <source src="/random-images/Everydays_00000.webm" type="video/webm" />
             </video>
