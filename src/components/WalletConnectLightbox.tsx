@@ -254,7 +254,8 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('walletConnected', { detail: { address: stakeAddress } }));
 
-      // Close lightbox and redirect to home
+      // Reset connecting state and close lightbox
+      setIsConnecting(false);
       setTimeout(() => {
         onClose();
         router.push('/home');
