@@ -73,7 +73,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
         position: 'relative',
       }}
     >
-      <div className="flex-1 flex flex-col items-center pb-8" style={{ marginTop: isMobile ? 'calc(50vh - 200px)' : 'calc(50% + 25vh - 50px)' }}>
+      <div className="flex-1 flex flex-col items-center pb-8" style={{ marginTop: isMobile ? 'calc(50vh - 135px)' : 'calc(50% + 25vh - 50px)' }}>
         {/* Description with fade + slide up */}
         <div
           className="transition-all duration-500 ease-out"
@@ -82,7 +82,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
             transform: `translateY(${showDescription ? 0 : 20}px)`,
           }}
         >
-          <p className="text-white/80 text-sm tracking-wide" style={{ fontFamily: 'Saira, sans-serif' }}>
+          <p className="text-white/80 tracking-wide" style={{ fontFamily: 'Saira, sans-serif', fontSize: isMobile ? '11.9px' : '14px' }}>
             An epic idle strategy game where Mekanism NFTs build empires.
           </p>
         </div>
