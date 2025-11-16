@@ -64,7 +64,9 @@ export default function LandingV2() {
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: 'cover',
-          backgroundPosition: 'center calc(50% + 300px)',
+          backgroundPosition: 'center calc(50% + 0px)',
+          filter: expandedIndex !== null ? 'blur(4px)' : 'blur(0px)',
+          transition: 'filter 500ms ease-in-out',
         }}
       />
 
