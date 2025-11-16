@@ -70,7 +70,7 @@ export default function LandingV2() {
 
       <div className="relative min-h-screen flex flex-col" style={{ zIndex: 10 }}>
         {mounted && (
-          <div className="flex-1 flex flex-col items-center px-4 pb-8" style={{ paddingTop: '50vh' }}>
+          <div className="flex-1 flex flex-col items-center pb-8" style={{ paddingTop: '50vh' }}>
             {/* Logo */}
             <div className="flex items-center justify-center" style={{ transform: 'translateY(-50%)' }}>
               {deviceType === 'macos' || deviceType === 'iphone' ? (
@@ -92,7 +92,7 @@ export default function LandingV2() {
               )}
             </div>
 
-            <p className="text-white/80 text-xs tracking-wide" style={{ fontFamily: 'Saira, sans-serif', marginTop: '100px' }}>
+            <p className="text-white/80 text-xs tracking-wide" style={{ fontFamily: 'Saira, sans-serif', marginTop: '-400px' }}>
               An epic idle strategy game where Mekanism NFTs build empires.
             </p>
 
@@ -100,7 +100,7 @@ export default function LandingV2() {
               <FillTextButton text="join beta" fontFamily="Play" />
             </div>
 
-            <div className="w-full max-w-[680px] mt-12 flex flex-col gap-3">
+            <div className="w-full max-w-[680px] mx-auto mt-12 flex flex-col gap-3">
               {displayPhases.map((card: PhaseCard, index: number) => {
                 const isExpanded = expandedIndex === index;
                 const isLocked = card.locked;
@@ -220,8 +220,8 @@ export default function LandingV2() {
         )}
 
         <footer
-          className="backdrop-blur-md md:backdrop-blur-lg bg-white/10 mt-auto relative overflow-hidden"
-          style={{ zIndex: 20 }}
+          className="backdrop-blur-md md:backdrop-blur-lg bg-white/10 mt-auto relative overflow-hidden w-full"
+          style={{ zIndex: 20, margin: 0 }}
         >
           {/* Honeycomb Pattern */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none">
