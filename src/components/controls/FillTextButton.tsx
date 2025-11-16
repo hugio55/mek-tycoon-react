@@ -120,10 +120,8 @@ const FillTextButton = ({
           style={{
             color: '#3DD1FF',
             WebkitTextStroke: '0.5px #3DD1FF',
-            animation: 'soft-pulse 3s ease-in-out infinite',
             padding: '0 20px',
             margin: '0 -20px',
-            willChange: 'text-shadow',
             transform: 'translateZ(0)',
             mixBlendMode: 'screen',
           }}
