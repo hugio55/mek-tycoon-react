@@ -42,7 +42,7 @@ export default function SpeakerButton({ isPlaying, onClick, isVisible }: Speaker
           : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0))';
       }}
     >
-      <GeometricSpeakerIcon size={44} isPlaying={isPlaying} />
+      <GeometricSpeakerIcon size={37} isPlaying={isPlaying} />
     </button>
   );
 }

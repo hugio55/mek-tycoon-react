@@ -56,7 +56,7 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
           />
         </div>
 
-        <div className="w-full max-w-[680px] mx-auto mb-[200px] flex flex-col gap-3" style={{ marginTop: '83px' }}>
+        <div className="w-full max-w-[680px] mx-auto mb-[170px] flex flex-col gap-3" style={{ marginTop: '83px' }}>
           {displayPhases.map((card: PhaseCard, index: number) => {
             const isExpanded = expandedIndex === index;
             const isLocked = card.locked;
@@ -128,7 +128,7 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
                   <div
                     className="mt-2 px-6 py-4"
                     style={{
-                      background: 'rgba(0, 0, 0, 0.48)',
+                      background: 'rgba(0, 0, 0, 0.384)',
                       borderRadius: '8px',
                       backdropFilter: isExpanded ? 'blur(16px)' : 'blur(0px)',
                       opacity: isExpanded ? 1 : 0,
