@@ -43,7 +43,7 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
         position: 'relative',
       }}
     >
-      <div className="flex-1 flex flex-col items-center pb-8" style={{ marginTop: 'calc(50% + 25vh - 20px)' }}>
+      <div className="flex-1 flex flex-col items-center pb-8" style={{ marginTop: 'calc(50% + 25vh - 50px)' }}>
         <p className="text-white/80 text-sm tracking-wide" style={{ fontFamily: 'Saira, sans-serif' }}>
           An epic idle strategy game where Mekanism NFTs build empires.
         </p>

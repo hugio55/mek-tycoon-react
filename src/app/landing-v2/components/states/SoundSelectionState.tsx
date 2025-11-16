@@ -57,6 +57,11 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
 
       // Trigger background fade immediately (simultaneous with lightbox fade)
       onComplete();
+
+      // Reset isFadingOut after fade completes to allow component to unmount
+      setTimeout(() => {
+        setIsFadingOut(false);
+      }, 1500); // Match the fade duration
     }, 400);
   };
 
