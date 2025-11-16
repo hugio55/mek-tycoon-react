@@ -22,12 +22,13 @@ export default function StarsAndLogoState({ isActive, deviceType }: StarsAndLogo
       <StarField />
 
       <div
-        className="absolute transition-opacity duration-2000"
+        className="fixed transition-opacity duration-2000"
         style={{
-          top: 'calc(40% - 100px)',
+          top: '50%',
           left: '50%',
-          transform: 'translateX(-50%)',
+          transform: 'translate(-50%, -50%)',
           opacity: mounted ? 1 : 0,
+          zIndex: 20,
         }}
       >
         {deviceType === 'macos' || deviceType === 'iphone' ? (

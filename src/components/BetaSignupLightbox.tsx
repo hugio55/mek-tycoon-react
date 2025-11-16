@@ -149,6 +149,18 @@ export default function BetaSignupLightbox({
             from { opacity: 0; }
             to { opacity: 1; }
           }
+          @keyframes fadeInBlur {
+            from {
+              opacity: 0;
+              backdrop-filter: blur(0px);
+              -webkit-backdrop-filter: blur(0px);
+            }
+            to {
+              opacity: 1;
+              backdrop-filter: blur(8px);
+              -webkit-backdrop-filter: blur(8px);
+            }
+          }
           @keyframes slideUp {
             from {
               opacity: 0;
@@ -173,6 +185,7 @@ export default function BetaSignupLightbox({
         style={{
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
+          animation: 'fadeInBlur 600ms ease-out',
         }}
         onClick={handleBackdropClick}
       />
