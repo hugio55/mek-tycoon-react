@@ -17,6 +17,8 @@ export default function LandingV2() {
   const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'other'>('other');
   const [mounted, setMounted] = useState(false);
   const [revealStarted, setRevealStarted] = useState(false);
+  const [backgroundFadedIn, setBackgroundFadedIn] = useState(false);
+  const [showLightbox, setShowLightbox] = useState(false);
 
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
   const { currentState, next, transitionTo, isState } = useLandingStateMachine();
@@ -33,6 +35,12 @@ export default function LandingV2() {
     } else {
       setDeviceType('other');
     }
+
+    // Initial entrance sequence
+    // 1. Background fades in (0 → 0.3 opacity) over 1s
+    setTimeout(() => setBackgroundFadedIn(true), 100);
+    // 2. Lightbox fades in 800ms after background starts
+    setTimeout(() => setShowLightbox(true), 900);
   }, []);
 
   // Trigger reveal animations when entering REVEAL state
@@ -47,7 +55,10 @@ export default function LandingV2() {
   }, [currentState, revealStarted, startAudio, isState]);
 
   const isRevealing = isState('REVEAL');
-  const backgroundOpacity = isState('SOUND_SELECTION') ? 0.3 : 1.0;
+  // Background opacity: 0 → 0.3 (initial fade) → 1.0 (reveal)
+  const backgroundOpacity = isState('SOUND_SELECTION')
+    ? (backgroundFadedIn ? 0.3 : 0)
+    : 1.0;
   const showFooter = !isState('SOUND_SELECTION');
   const showSpeaker = isRevealing;
 
@@ -61,30 +72,34 @@ export default function LandingV2() {
         isActive={isState('SOUND_SELECTION')}
         onComplete={next}
         onAudioStart={startAudio}
+        shouldShow={showLightbox}
       />
 
-      {/* Preload assets during sound selection */}
-      {isState('SOUND_SELECTION') && (
-        <>
-          {/* Preload StarField (hidden) */}
-          <div style={{ opacity: 0, position: 'absolute', pointerEvents: 'none' }}>
-            <StarField />
-          </div>
+      {/* Preload assets */}
+      {mounted && (
+        <div style={{ opacity: 0, position: 'absolute', pointerEvents: 'none' }}>
+          {/* Preload background image immediately */}
+          <img src="/colored-bg-1.webp" alt="Preload background" />
 
-          {/* Preload logo video/gif (hidden) */}
-          <div style={{ opacity: 0, position: 'absolute', pointerEvents: 'none' }}>
-            {deviceType === 'macos' || deviceType === 'iphone' ? (
-              <img
-                src="/random-images/Everydays_4.gif"
-                alt="Preload"
-              />
-            ) : (
-              <video autoPlay loop muted playsInline>
-                <source src="/random-images/Everydays_00000.webm" type="video/webm" />
-              </video>
-            )}
-          </div>
-        </>
+          {isState('SOUND_SELECTION') && (
+            <>
+              {/* Preload StarField */}
+              <StarField />
+
+              {/* Preload logo video/gif */}
+              {deviceType === 'macos' || deviceType === 'iphone' ? (
+                <img
+                  src="/random-images/Everydays_4.gif"
+                  alt="Preload logo"
+                />
+              ) : (
+                <video autoPlay loop muted playsInline>
+                  <source src="/random-images/Everydays_00000.webm" type="video/webm" />
+                </video>
+              )}
+            </>
+          )}
+        </div>
       )}
 
       {/* Stars - fade in simultaneously with background */}

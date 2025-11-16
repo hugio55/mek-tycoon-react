@@ -23,6 +23,13 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
   const [showPhases, setShowPhases] = useState<number>(0); // Number of phases to show
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [showBetaLightbox, setShowBetaLightbox] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const mobile = /iphone|ipod|android/.test(userAgent);
+    setIsMobile(mobile);
+  }, []);
 
   useEffect(() => {
     if (isActive) {
@@ -66,7 +73,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
         position: 'relative',
       }}
     >
-      <div className="flex-1 flex flex-col items-center pb-8" style={{ marginTop: 'calc(50% + 25vh - 50px)' }}>
+      <div className="flex-1 flex flex-col items-center pb-8" style={{ marginTop: isMobile ? 'calc(50vh - 200px)' : 'calc(50% + 25vh - 50px)' }}>
         {/* Description with fade + slide up */}
         <div
           className="transition-all duration-500 ease-out"
