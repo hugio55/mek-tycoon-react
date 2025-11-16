@@ -516,6 +516,7 @@ export const getAllWallets = query({
     });
   }
 });
+*/
 
 // Admin function to fix corrupted cumulative gold values
 // Ensures the invariant: totalCumulativeGold >= accumulatedGold + totalGoldSpentOnUpgrades
