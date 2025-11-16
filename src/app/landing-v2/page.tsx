@@ -70,9 +70,9 @@ export default function LandingV2() {
 
       <div className="relative min-h-screen flex flex-col" style={{ zIndex: 10 }}>
         {mounted && (
-          <div className="flex-1 flex flex-col items-center gap-4 px-4 py-8">
-            {/* Logo - Positioned 15% higher than center */}
-            <div className="flex items-center justify-center" style={{ marginTop: '-15vh' }}>
+          <div className="flex-1 flex flex-col items-center gap-4 px-4 pb-8" style={{ paddingTop: '50vh' }}>
+            {/* Logo */}
+            <div className="flex items-center justify-center" style={{ transform: 'translateY(-50%)' }}>
               {deviceType === 'macos' || deviceType === 'iphone' ? (
                 <img
                   src="/random-images/Everydays_4.gif"
@@ -216,9 +216,9 @@ export default function LandingV2() {
           <svg className="absolute inset-0 w-full h-full pointer-events-none">
             <defs>
               <pattern id="honeycomb" width="28" height="49" patternUnits="userSpaceOnUse">
-                <path d="M14 0 L21 4 L21 12 L14 16 L7 12 L7 4 Z" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5"/>
-                <path d="M0 24.5 L7 28.5 L7 36.5 L0 40.5 L-7 36.5 L-7 28.5 Z" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5"/>
-                <path d="M28 24.5 L35 28.5 L35 36.5 L28 40.5 L21 36.5 L21 28.5 Z" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5"/>
+                <path d="M14 0 L21 4 L21 12 L14 16 L7 12 L7 4 Z" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>
+                <path d="M0 24.5 L7 28.5 L7 36.5 L0 40.5 L-7 36.5 L-7 28.5 Z" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>
+                <path d="M28 24.5 L35 28.5 L35 36.5 L28 40.5 L21 36.5 L21 28.5 Z" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>
               </pattern>
               <linearGradient id="fadeGradient" x1="0%" y1="100%" x2="0%" y2="0%">
                 <stop offset="0%" stopColor="white" stopOpacity="1" />
