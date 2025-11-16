@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 interface SoundSelectionStateProps {
@@ -10,9 +10,9 @@ export default function SoundSelectionState({ isActive, onComplete }: SoundSelec
   const [mounted, setMounted] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean | null>(null);
 
-  useState(() => {
+  useEffect(() => {
     setMounted(true);
-  });
+  }, []);
 
   if (!isActive || !mounted) return null;
 
@@ -84,5 +84,6 @@ export default function SoundSelectionState({ isActive, onComplete }: SoundSelec
     </div>
   );
 
+  if (typeof document === 'undefined') return null;
   return createPortal(overlay, document.body);
 }
