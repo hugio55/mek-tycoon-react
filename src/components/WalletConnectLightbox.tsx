@@ -44,8 +44,14 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       detectAvailableWallets();
+      // Reset success state when opening
+      setConnectionSuccessful(false);
     } else {
       document.body.style.overflow = '';
+      // Reset states when closing
+      setIsConnecting(false);
+      setConnectionSuccessful(false);
+      setWalletError(null);
     }
 
     return () => {
@@ -255,13 +261,19 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('walletConnected', { detail: { address: stakeAddress } }));
 
-      // Mark as successful and close lightbox
+      // Mark as successful and close lightbox immediately
+      console.log('[WalletConnect] Connection successful, closing lightbox...');
       setConnectionSuccessful(true);
       setIsConnecting(false);
+
+      // Close immediately - no delay needed
+      onClose();
+
+      // Small delay before navigation to ensure state updates propagate
       setTimeout(() => {
-        onClose();
+        console.log('[WalletConnect] Navigating to /home');
         router.push('/home');
-      }, 500);
+      }, 100);
 
     } catch (error: any) {
       console.error('[WalletConnect] Connection error:', error);
@@ -277,10 +289,19 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
   // Cancel connection
   const cancelConnection = () => {
     setIsConnecting(false);
+    setConnectionSuccessful(false);
     setConnectionStatus('');
   };
 
   if (!mounted || !isOpen) return null;
+
+  // Debug logging for render state
+  console.log('[WalletConnect] Render state:', {
+    isConnecting,
+    connectionSuccessful,
+    showSpinner: isConnecting && !connectionSuccessful,
+    showWalletSelection: !isConnecting && !connectionSuccessful
+  });
 
   const lightboxContent = (
     <div
@@ -288,7 +309,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       onClick={onClose}
     >
       {/* Connecting Modal */}
-      {isConnecting && (
+      {isConnecting && !connectionSuccessful && (
         <div
           className="relative max-w-md w-full"
           onClick={(e) => e.stopPropagation()}
@@ -338,7 +359,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       )}
 
       {/* Main Wallet Selection */}
-      {!isConnecting && (
+      {!isConnecting && !connectionSuccessful && (
         <div
           className="relative max-w-[600px] w-full px-2 sm:px-4 md:px-0"
           onClick={(e) => e.stopPropagation()}

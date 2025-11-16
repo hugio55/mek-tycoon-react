@@ -88,8 +88,8 @@ export default function LandingV2() {
 
   // Logo fades simultaneously with stars (no delay)
   const logoDelay = 0;
-  // Content starts 1100ms after logo starts fading (800ms + 300ms extra delay)
-  const contentDelay = 1100;
+  // Content starts 1600ms after logo starts fading (1100ms + 500ms extra delay)
+  const contentDelay = 1600;
 
   // Show pure black until mounted
   if (!mounted) {
