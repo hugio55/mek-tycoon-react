@@ -18,8 +18,6 @@ export default function LandingV2() {
   const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'other'>('other');
   const [mounted, setMounted] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
-  const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
 
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
 
@@ -34,21 +32,11 @@ export default function LandingV2() {
     } else {
       setDeviceType('other');
     }
-
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   const handleToggle = (index: number, isLocked: boolean) => {
     if (isLocked) return;
     setExpandedIndex(expandedIndex === index ? null : index);
-  };
-
-  const handleCardClick = (index: number, isLocked: boolean) => {
-    if (isLocked) return;
-    setSelectedCardIndex(selectedCardIndex === index ? null : index);
   };
 
   const displayPhases = phaseCards?.slice(0, 4) || [];
@@ -63,8 +51,6 @@ export default function LandingV2() {
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: 'cover',
           backgroundPosition: 'center calc(50% + 200px)',
-          filter: selectedCardIndex !== null ? 'blur(8px)' : 'none',
-          transition: 'filter 300ms ease',
         }}
       />
 
@@ -103,191 +89,111 @@ export default function LandingV2() {
               <FillTextButton text="join beta" fontFamily="Play" />
             </div>
 
-            {isMobile ? (
-              <div className="w-full max-w-2xl mt-12 flex flex-col gap-3">
-                {displayPhases.map((card: PhaseCard, index: number) => {
-                  const isExpanded = expandedIndex === index;
-                  const isLocked = card.locked;
+            <div className="w-full max-w-2xl mt-12 flex flex-col gap-3">
+              {displayPhases.map((card: PhaseCard, index: number) => {
+                const isExpanded = expandedIndex === index;
+                const isLocked = card.locked;
+                const phaseLabel = `Phase ${['I', 'II', 'III', 'IV'][index]}`;
 
-                  return (
-                    <div key={card._id} className="w-full">
-                      <button
-                        onClick={() => handleToggle(index, isLocked)}
-                        disabled={isLocked}
-                        className={`
-                          w-full text-left relative overflow-hidden
-                          ${isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
-                        `}
-                        style={{
-                          height: '48px',
-                          borderRadius: '8px',
-                          background: isExpanded
-                            ? 'linear-gradient(135deg, rgba(250,182,23,0.15), rgba(250,182,23,0.08))'
-                            : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
-                          backdropFilter: 'blur(4px)',
-                          transition: 'all 200ms ease',
-                        }}
-                      >
-                        <div className="h-full flex items-center justify-between px-6">
-                          <h3
-                            className="text-yellow-400 uppercase tracking-wider font-medium"
-                            style={{
-                              fontFamily: 'Orbitron, sans-serif',
-                              fontSize: '16px',
-                            }}
-                          >
-                            {card.title}
-                          </h3>
-
-                          <div
-                            style={{
-                              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                              transition: 'transform 200ms ease',
-                            }}
-                          >
-                            {isLocked ? (
-                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                <path
-                                  d="M10 2C7.79 2 6 3.79 6 6V8H5C3.9 8 3 8.9 3 10V16C3 17.1 3.9 18 5 18H15C16.1 18 17 17.1 17 16V10C17 8.9 16.1 8 15 8H14V6C14 3.79 12.21 2 10 2ZM10 4C11.13 4 12 4.87 12 6V8H8V6C8 4.87 8.87 4 10 4ZM10 12C10.55 12 11 12.45 11 13C11 13.55 10.55 14 10 14C9.45 14 9 13.55 9 13C9 12.45 9.45 12 10 12Z"
-                                  fill="rgba(250, 182, 23, 0.5)"
-                                />
-                              </svg>
-                            ) : (
-                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                <path
-                                  d="M5 8L10 13L15 8"
-                                  stroke="rgba(250, 182, 23, 0.7)"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            )}
-                          </div>
-                        </div>
-                      </button>
-
-                      <div
-                        style={{
-                          maxHeight: isExpanded ? '300px' : '0',
-                          opacity: isExpanded ? 1 : 0,
-                          overflow: 'hidden',
-                          transition: 'all 400ms ease',
-                        }}
-                      >
-                        <div
-                          className="mt-2 px-6 py-4"
+                return (
+                  <div key={card._id} className="w-full">
+                    <button
+                      onClick={() => handleToggle(index, isLocked)}
+                      disabled={isLocked}
+                      className={`
+                        w-full text-left relative overflow-hidden
+                        ${isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+                      `}
+                      style={{
+                        height: '48px',
+                        borderRadius: '8px',
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
+                        backdropFilter: 'blur(4px)',
+                        transition: 'all 200ms ease',
+                      }}
+                    >
+                      <div className="h-full flex items-center justify-between px-6">
+                        <h3
+                          className="text-white uppercase tracking-wider font-medium"
                           style={{
-                            background: 'rgba(0, 0, 0, 0.6)',
-                            borderRadius: '8px',
-                            backdropFilter: 'blur(8px)',
+                            fontFamily: 'Saira, sans-serif',
+                            fontSize: '16px',
                           }}
                         >
-                          <h4
-                            className="text-yellow-400 uppercase tracking-wider font-medium mb-3"
-                            style={{
-                              fontFamily: 'Orbitron, sans-serif',
-                              fontSize: '14px',
-                            }}
-                          >
-                            {card.title}
-                          </h4>
+                          {phaseLabel}
+                        </h3>
 
-                          {card.description && (
-                            <p
-                              className="text-white/75 leading-relaxed"
-                              style={{
-                                fontFamily: 'Inter, sans-serif',
-                                fontSize: '14px',
-                              }}
-                            >
-                              {card.description}
-                            </p>
+                        <div
+                          style={{
+                            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                            transition: 'transform 200ms ease',
+                          }}
+                        >
+                          {isLocked ? (
+                            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                              <path
+                                d="M10 2C7.79 2 6 3.79 6 6V8H5C3.9 8 3 8.9 3 10V16C3 17.1 3.9 18 5 18H15C16.1 18 17 17.1 17 16V10C17 8.9 16.1 8 15 8H14V6C14 3.79 12.21 2 10 2ZM10 4C11.13 4 12 4.87 12 6V8H8V6C8 4.87 8.87 4 10 4ZM10 12C10.55 12 11 12.45 11 13C11 13.55 10.55 14 10 14C9.45 14 9 13.55 9 13C9 12.45 9.45 12 10 12Z"
+                                fill="rgba(250, 182, 23, 0.5)"
+                              />
+                            </svg>
+                          ) : (
+                            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                              <path
+                                d="M5 8L10 13L15 8"
+                                stroke="rgba(250, 182, 23, 0.7)"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
                           )}
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex gap-6 justify-center px-4 mt-auto mb-32">
-                {displayPhases.map((card: PhaseCard, index: number) => {
-                  const isSelected = selectedCardIndex === index;
+                    </button>
 
-                  return (
-                    <button
-                      key={card._id}
-                      onClick={() => handleCardClick(index, card.locked)}
-                      disabled={card.locked}
-                      className={`
-                        relative overflow-hidden
-                        ${card.locked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-105'}
-                      `}
+                    <div
                       style={{
-                        width: '220px',
-                        height: '320px',
-                        borderRadius: '16px',
-                        background: isSelected
-                          ? 'rgba(0, 0, 0, 0.95)'
-                          : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
-                        border: `2px solid ${isSelected ? 'rgba(250,182,23,0.8)' : 'rgba(250,182,23,0.3)'}`,
-                        transition: 'all 300ms ease',
-                        zIndex: isSelected ? 50 : 1,
+                        maxHeight: isExpanded ? '300px' : '0',
+                        opacity: isExpanded ? 1 : 0,
+                        overflow: 'hidden',
+                        transition: 'all 400ms ease',
                       }}
                     >
-                      {!isSelected ? (
-                        <div className="h-full flex items-center justify-center p-4">
-                          <h3
-                            className="text-yellow-400 uppercase tracking-wider font-medium text-center"
+                      <div
+                        className="mt-2 px-6 py-4"
+                        style={{
+                          background: 'rgba(0, 0, 0, 0.6)',
+                          borderRadius: '8px',
+                          backdropFilter: 'blur(8px)',
+                        }}
+                      >
+                        <h4
+                          className="text-yellow-400 uppercase tracking-wider font-medium mb-3"
+                          style={{
+                            fontFamily: 'Orbitron, sans-serif',
+                            fontSize: '14px',
+                          }}
+                        >
+                          {card.title}
+                        </h4>
+
+                        {card.description && (
+                          <p
+                            className="text-white/75 leading-relaxed"
                             style={{
-                              fontFamily: 'Orbitron, sans-serif',
-                              fontSize: '20px',
+                              fontFamily: 'Inter, sans-serif',
+                              fontSize: '14px',
                             }}
                           >
-                            {card.title}
-                          </h3>
-                        </div>
-                      ) : (
-                        <div className="h-full flex flex-col items-center justify-center p-6">
-                          <h3
-                            className="text-yellow-400 uppercase tracking-wider font-medium text-center mb-4"
-                            style={{
-                              fontFamily: 'Orbitron, sans-serif',
-                              fontSize: '18px',
-                            }}
-                          >
-                            {card.title}
-                          </h3>
-
-                          {card.description && (
-                            <p
-                              className="text-white/80 text-center leading-relaxed text-sm"
-                              style={{
-                                fontFamily: 'Inter, sans-serif',
-                              }}
-                            >
-                              {card.description}
-                            </p>
-                          )}
-                        </div>
-                      )}
-
-                      {card.locked && !isSelected && (
-                        <div className="absolute top-4 right-4">
-                          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                            <path
-                              d="M10 2C7.79 2 6 3.79 6 6V8H5C3.9 8 3 8.9 3 10V16C3 17.1 3.9 18 5 18H15C16.1 18 17 17.1 17 16V10C17 8.9 16.1 8 15 8H14V6C14 3.79 12.21 2 10 2ZM10 4C11.13 4 12 4.87 12 6V8H8V6C8 4.87 8.87 4 10 4ZM10 12C10.55 12 11 12.45 11 13C11 13.55 10.55 14 10 14C9.45 14 9 13.55 9 13C9 12.45 9.45 12 10 12Z"
-                              fill="rgba(250, 182, 23, 0.5)"
-                            />
-                          </svg>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+                            {card.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -299,19 +205,24 @@ export default function LandingV2() {
             transform: 'translateZ(0)'
           }}
         >
-          {/* Hexagonal Pattern */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              backgroundImage: `
-                repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255,255,255,0.03) 30px, rgba(255,255,255,0.03) 31px),
-                repeating-linear-gradient(60deg, transparent, transparent 30px, rgba(255,255,255,0.03) 30px, rgba(255,255,255,0.03) 31px),
-                repeating-linear-gradient(120deg, transparent, transparent 30px, rgba(255,255,255,0.03) 30px, rgba(255,255,255,0.03) 31px)
-              `,
-              maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 60%)',
-              WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 60%)',
-            }}
-          />
+          {/* Honeycomb Pattern */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 1 }}>
+            <defs>
+              <pattern id="honeycomb" x="0" y="0" width="56" height="100" patternUnits="userSpaceOnUse">
+                <polygon points="28,6 42,15 42,33 28,42 14,33 14,15" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
+                <polygon points="0,56 14,65 14,83 0,92 -14,83 -14,65" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
+                <polygon points="56,56 70,65 70,83 56,92 42,83 42,65" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
+              </pattern>
+              <linearGradient id="fadeGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="white" stopOpacity="1" />
+                <stop offset="60%" stopColor="white" stopOpacity="0" />
+              </linearGradient>
+              <mask id="fadeMask">
+                <rect x="0" y="0" width="100%" height="100%" fill="url(#fadeGradient)" />
+              </mask>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#honeycomb)" mask="url(#fadeMask)" />
+          </svg>
 
           <div className="container mx-auto px-6 py-8 relative">
             <div className="flex flex-col items-center gap-4">
