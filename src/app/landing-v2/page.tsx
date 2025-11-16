@@ -105,7 +105,7 @@ export default function LandingV2() {
         <div
           className="absolute transition-opacity ease-out"
           style={{
-            top: '50vh',
+            top: (deviceType === 'iphone' || deviceType === 'other' && navigator.userAgent.toLowerCase().includes('android')) ? 'calc(50vh - 400px)' : '50vh',
             left: '50%',
             transform: 'translate(-50%, -50%)',
             opacity: revealStarted ? 1 : 0,

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 
 interface LandingContainerProps {
   children: ReactNode;
@@ -7,6 +7,14 @@ interface LandingContainerProps {
 }
 
 export default function LandingContainer({ children, backgroundOpacity, showFooter = true }: LandingContainerProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const mobile = /iphone|ipod|android/.test(userAgent);
+    setIsMobile(mobile);
+  }, []);
+
   return (
     <div className="fixed inset-0 bg-black overflow-y-auto scrollbar-hide">
       <div
@@ -14,7 +22,7 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: 'cover',
-          backgroundPosition: 'center calc(50% + 25px)',
+          backgroundPosition: isMobile ? 'center calc(50% - 75px)' : 'center calc(50% + 25px)',
           opacity: backgroundOpacity,
         }}
       />
