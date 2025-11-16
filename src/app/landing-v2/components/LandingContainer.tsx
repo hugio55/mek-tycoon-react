@@ -37,7 +37,7 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
           <footer
           style={{
             position: 'relative',
-            marginTop: '400px',
+            marginTop: '150px',
             width: '100%',
             overflow: 'hidden',
             backdropFilter: 'blur(12px)',

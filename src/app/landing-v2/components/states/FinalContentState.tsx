@@ -286,15 +286,34 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
                       transition: 'backdrop-filter 400ms ease, opacity 400ms ease',
                     }}
                   >
-                    <h4
-                      className="text-yellow-400 uppercase tracking-wider font-medium mb-3"
-                      style={{
-                        fontFamily: 'Saira, sans-serif',
-                        fontSize: '16px',
-                      }}
-                    >
-                      {card.title}
-                    </h4>
+                    <div>
+                      <h4
+                        className="text-yellow-400 uppercase tracking-wider font-medium"
+                        style={{
+                          fontFamily: 'Saira, sans-serif',
+                          fontSize: '16px',
+                        }}
+                      >
+                        {card.title}
+                      </h4>
+
+                      {/* TEMPORARY PHASE I COMPLETE BADGE - START */}
+                      {index === 0 && (
+                        <div
+                          className="uppercase font-bold mt-1 mb-3"
+                          style={{
+                            fontFamily: 'Play, sans-serif',
+                            fontSize: '12px',
+                            color: '#00d4ff',
+                            textShadow: '0 0 10px rgba(0, 212, 255, 0.8)',
+                            letterSpacing: '2px',
+                          }}
+                        >
+                          COMPLETE
+                        </div>
+                      )}
+                      {/* TEMPORARY PHASE I COMPLETE BADGE - END */}
+                    </div>
 
                     {card.description && (
                       <p
