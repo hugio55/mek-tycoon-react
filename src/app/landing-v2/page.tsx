@@ -94,17 +94,17 @@ export default function LandingV2() {
             </div>
 
             {/* Description - closer to logo */}
-            <p className="text-white/80 text-xs tracking-wide mt-8" style={{ fontFamily: 'Saira, sans-serif' }}>
+            <p className="text-white/80 text-sm tracking-wide mt-6" style={{ fontFamily: 'Saira, sans-serif' }}>
               An epic idle strategy game where Mekanism NFTs build empires.
             </p>
 
-            {/* Join Beta button - closer to description */}
-            <div className="mt-8">
+            {/* Join Beta button - 20% smaller, closer to description */}
+            <div className="mt-8" style={{ transform: 'scale(0.8)' }}>
               <FillTextButton text="join beta" fontFamily="Play" />
             </div>
 
             {/* Phase cards - small gap below button */}
-            <div className="w-full max-w-[680px] mx-auto mt-12 flex flex-col gap-3">
+            <div className="w-full max-w-[680px] mx-auto mt-12 mb-[200px] flex flex-col gap-3">
               {displayPhases.map((card: PhaseCard, index: number) => {
                 const isExpanded = expandedIndex === index;
                 const isLocked = card.locked;
