@@ -41,8 +41,8 @@ export default function LandingContainer({
         className="fixed inset-0 pointer-events-none"
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundSize: isMobile ? '150%' : 'cover',
+          backgroundPosition: isMobile ? 'center calc(50% + 60px)' : 'center',
           zIndex: 0,
         }}
       />
