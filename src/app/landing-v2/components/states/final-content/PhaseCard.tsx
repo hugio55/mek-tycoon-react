@@ -131,6 +131,42 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
+        {/* TEMPORARY: Animated border tracer for Phase II */}
+        {isPhaseTwo && (
+          <svg
+            className="absolute inset-0 pointer-events-none"
+            width="100%"
+            height="100%"
+            style={{
+              borderRadius: '8px',
+            }}
+          >
+            <defs>
+              <linearGradient id="tracerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="rgba(255, 255, 255, 0)" />
+                <stop offset="30%" stopColor="rgba(255, 255, 255, 0.3)" />
+                <stop offset="70%" stopColor="rgba(255, 255, 255, 0.8)" />
+                <stop offset="100%" stopColor="rgba(255, 255, 255, 1)" />
+              </linearGradient>
+            </defs>
+            <rect
+              x="1"
+              y="1"
+              width="calc(100% - 2px)"
+              height="calc(100% - 2px)"
+              rx="7"
+              ry="7"
+              fill="none"
+              stroke="url(#tracerGradient)"
+              strokeWidth="2"
+              strokeDasharray="60 340"
+              style={{
+                animation: 'traceBorder 3.5s linear infinite',
+              }}
+            />
+          </svg>
+        )}
+
         {isPhaseTwo && (
           <div
             className="absolute inset-0 pointer-events-none"

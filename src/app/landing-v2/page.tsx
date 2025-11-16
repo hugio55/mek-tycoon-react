@@ -52,8 +52,6 @@ export default function LandingV2() {
       setTimeout(() => setBackgroundFadedIn(true), 100);
       // 2. Lightbox fades in simultaneously with background
       setTimeout(() => setShowLightbox(true), 100);
-      // 3. Since SoundSelectionState is disabled, immediately transition to REVEAL
-      setTimeout(() => transitionTo('REVEAL'), 200);
     }
   }, [mounted, isLoading, entranceStarted, transitionTo]);
 
@@ -82,8 +80,8 @@ export default function LandingV2() {
   // Ensure we start at 0 until loader finishes and entrance begins
   const backgroundOpacity = !mounted || !entranceStarted ? 0 : (
     isState('SOUND_SELECTION')
-      ? (backgroundFadedIn ? 0.3 : 0)
-      : 1.0
+      ? (backgroundFadedIn ? 0.255 : 0)
+      : 0.85
   );
   const showFooter = true; // Always show footer for testing
   const showSpeaker = isRevealing;
@@ -105,14 +103,12 @@ export default function LandingV2() {
       transitionDuration={isState('SOUND_SELECTION') ? 1000 : 2000}
       allowScroll={true}
     >
-      {false && (
-        <SoundSelectionState
-          isActive={isState('SOUND_SELECTION')}
-          onComplete={next}
-          onAudioStart={startAudio}
-          shouldShow={entranceStarted && showLightbox}
-        />
-      )}
+      <SoundSelectionState
+        isActive={isState('SOUND_SELECTION')}
+        onComplete={next}
+        onAudioStart={startAudio}
+        shouldShow={entranceStarted && showLightbox}
+      />
 
       {/* Preload assets */}
       {false && mounted && (
@@ -201,13 +197,11 @@ export default function LandingV2() {
         startDelay={contentDelay}
       />
 
-      {false && (
-        <SpeakerButton
-          isPlaying={audioPlaying}
-          onClick={toggleAudio}
-          isVisible={showSpeaker}
-        />
-      )}
+      <SpeakerButton
+        isPlaying={audioPlaying}
+        onClick={toggleAudio}
+        isVisible={showSpeaker}
+      />
 
       {false && process.env.NODE_ENV === 'development' && mounted && (
         <StateDebugPanel
