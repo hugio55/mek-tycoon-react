@@ -261,25 +261,31 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       setConnectionStatus('Connection successful!');
 
       // Notify parent component
+      console.log('[🔌WALLET] About to call onConnected callback...');
       if (onConnected) {
-        onConnected(stakeAddress);
+        console.log('[🔌WALLET] Calling onConnected with address:', stakeAddress);
+        await onConnected(stakeAddress);
+        console.log('[🔌WALLET] onConnected callback completed');
+      } else {
+        console.log('[🔌WALLET] No onConnected callback provided');
       }
 
       // Dispatch custom event to notify other components
+      console.log('[🔌WALLET] Dispatching walletConnected event...');
       window.dispatchEvent(new CustomEvent('walletConnected', { detail: { address: stakeAddress } }));
 
       // Mark as successful and close lightbox immediately
-      console.log('[WalletConnect] Connection successful, closing lightbox...');
+      console.log('[🔌WALLET] Connection successful, closing lightbox...');
       setConnectionSuccessful(true);
       setIsConnecting(false);
 
       // Close immediately - no delay needed
-      console.log('[🚨CLOSE] About to call onClose() - line 270');
+      console.log('[🔌WALLET] About to call onClose() - line 277');
       try {
         onClose();
-        console.log('[🚨CLOSE] onClose() called successfully - line 272');
+        console.log('[🔌WALLET] onClose() called successfully - line 279');
       } catch (closeError) {
-        console.error('[🚨CLOSE] ERROR calling onClose():', closeError);
+        console.error('[🔌WALLET] ERROR calling onClose():', closeError);
         throw closeError; // Re-throw to see if this is the issue
       }
 

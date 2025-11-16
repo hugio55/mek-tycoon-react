@@ -65,7 +65,7 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
           <rect width="100%" height="100%" fill="url(#honeycomb)" mask="url(#fadeMask)" />
         </svg>
 
-        <div className="container mx-auto px-6 py-8 relative">
+        <div className="container mx-auto px-6 relative" style={{ paddingTop: '32px', paddingBottom: '32px', marginBottom: 0 }}>
           <div className="flex flex-col items-center gap-4">
             <a
               href="https://www.overexposed.io/"

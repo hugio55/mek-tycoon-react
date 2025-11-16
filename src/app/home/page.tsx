@@ -44,6 +44,11 @@ export default function HomePage() {
   // Wallet connection lightbox state
   const [showWalletConnect, setShowWalletConnect] = useState(false);
 
+  // Track showWalletConnect state changes
+  useEffect(() => {
+    console.log('[🔌HOME-STATE] showWalletConnect changed to:', showWalletConnect);
+  }, [showWalletConnect]);
+
   // Get user's gold mining data (includes correct Mek list)
   const goldMiningData = useQuery(
     api.goldMining.getGoldMiningData,

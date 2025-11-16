@@ -134,7 +134,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
           />
         </div>
 
-        <div className="w-full max-w-[680px] mx-auto mb-8 flex flex-col gap-3" style={{ marginTop: '83px' }}>
+        <div className="w-full max-w-[680px] mx-auto flex flex-col gap-3" style={{ marginTop: '83px', marginBottom: 0, paddingBottom: 0 }}>
           {displayPhases.map((card: PhaseCard, index: number) => {
             const isExpanded = expandedIndex === index;
             const isLocked = card.locked;
