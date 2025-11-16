@@ -89,15 +89,16 @@ export default function LandingV2() {
                 </video>
               )}
             </div>
-              <p className="text-white/80 text-xs tracking-wide" style={{ fontFamily: 'Saira, sans-serif' }}>
-                An epic idle strategy game where Mekanism NFTs build empires.
-              </p>
 
-              <div className="mt-6">
-                <FillTextButton text="join beta" fontFamily="Play" />
-              </div>
+            <p className="text-white/80 text-xs tracking-wide" style={{ fontFamily: 'Saira, sans-serif' }}>
+              An epic idle strategy game where Mekanism NFTs build empires.
+            </p>
 
-              <div className="w-full max-w-2xl mt-12 flex flex-col gap-3">
+            <div className="mt-6">
+              <FillTextButton text="join beta" fontFamily="Play" />
+            </div>
+
+            <div className="w-full max-w-2xl mt-12 flex flex-col gap-3">
               {displayPhases.map((card: PhaseCard, index: number) => {
                 const isExpanded = expandedIndex === index;
                 const isLocked = card.locked;
@@ -201,7 +202,6 @@ export default function LandingV2() {
                   </div>
                 );
               })}
-              </div>
             </div>
           </div>
         )}
