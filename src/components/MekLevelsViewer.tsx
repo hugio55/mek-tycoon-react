@@ -204,12 +204,23 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
           <h2 className="text-2xl font-bold text-yellow-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
             Mek Levels - {walletAddress.substring(0, 12)}...
           </h2>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-700 rounded transition-colors"
-          >
-            Close
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                onClose();
+                window.dispatchEvent(new Event('openWalletConnect'));
+              }}
+              className="px-4 py-2 bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 border border-yellow-700 rounded transition-colors font-['Orbitron'] uppercase tracking-wider text-sm"
+            >
+              Connect Wallet
+            </button>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-700 rounded transition-colors"
+            >
+              Close
+            </button>
+          </div>
         </div>
 
         {sortedMeks.length === 0 ? (
