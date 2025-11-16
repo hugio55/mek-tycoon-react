@@ -18,7 +18,7 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
   }, []);
 
   return (
-    <div className={`min-h-screen bg-black scrollbar-hide flex flex-col ${allowScroll ? '' : 'overflow-hidden'}`}>
+    <div className={`h-screen bg-black scrollbar-hide flex flex-col ${allowScroll ? 'overflow-y-auto' : 'overflow-hidden'}`}>
       <div
         className="fixed inset-0 transition-opacity ease-out pointer-events-none"
         style={{
@@ -31,16 +31,14 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
         }}
       />
 
-      <div className="relative w-full flex flex-col flex-1" style={{ zIndex: 10 }}>
-        <div className="flex-1">
-          {children}
-        </div>
+      <div className="relative w-full flex flex-col" style={{ zIndex: 10 }}>
+        {children}
 
         {showFooter && (
           <footer
+          className="mt-auto"
           style={{
             position: 'relative',
-            marginTop: 'auto',
             width: '100%',
             overflow: 'hidden',
             backdropFilter: 'blur(12px)',
