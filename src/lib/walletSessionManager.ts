@@ -98,9 +98,16 @@ export async function restoreWalletSession(): Promise<WalletSession | null> {
 /**
  * Clear all wallet session data
  * Removes session and all cached data to force full reconnection
+ * Creates disconnect nonce to require signature verification on next login
  */
 export function clearWalletSession(): void {
   clearSession();
+
+  // Generate and store disconnect nonce for signature verification
+  // This prevents someone from reconnecting without proving wallet ownership
+  const disconnectNonce = crypto.randomUUID();
+  localStorage.setItem('mek_disconnect_nonce', disconnectNonce);
+  console.log('[Session Manager] Created disconnect nonce for signature verification:', disconnectNonce.slice(0, 8) + '...');
 
   // Clear all wallet-related data
   try {
@@ -112,7 +119,7 @@ export function clearWalletSession(): void {
     localStorage.removeItem('stakeAddress');
     localStorage.removeItem('paymentAddress');
     localStorage.removeItem('mek_migration_status');
-    console.log('[Session Manager] Cleared all session data - user must reconnect wallet');
+    console.log('[Session Manager] Cleared all session data - user must reconnect wallet and sign verification message');
   } catch (error) {
     console.error('[Session Manager] Error clearing session data:', error);
   }

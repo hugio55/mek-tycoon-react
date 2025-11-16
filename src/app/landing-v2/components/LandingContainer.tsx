@@ -18,7 +18,14 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
   }, []);
 
   return (
-    <div className="bg-black flex flex-col landing-scrollbar overflow-y-auto min-h-screen">
+    <div
+      className="bg-black flex flex-col landing-scrollbar"
+      style={{
+        overflowY: allowScroll ? 'auto' : 'hidden',
+        minHeight: '100vh',
+        height: 'fit-content'
+      }}
+    >
       <div
         className="fixed inset-0 transition-opacity ease-out pointer-events-none"
         style={{
@@ -31,7 +38,7 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
         }}
       />
 
-      <div className="relative w-full flex flex-col min-h-0" style={{ zIndex: 10, flex: '0 0 auto' }}>
+      <div className="relative w-full flex flex-col pb-8" style={{ zIndex: 10 }}>
         {children}
       </div>
     </div>

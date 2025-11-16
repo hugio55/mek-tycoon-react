@@ -8,7 +8,7 @@ interface JoinBetaSectionProps {
 export default function JoinBetaSection({ show, onJoinBeta }: JoinBetaSectionProps) {
   return (
     <div
-      className="mt-8 transition-all duration-500 ease-out"
+      className="mt-4 transition-all duration-500 ease-out"
       style={{
         transform: `scale(0.8) translateY(${show ? 0 : 20}px)`,
         opacity: show ? 1 : 0,

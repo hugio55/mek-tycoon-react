@@ -126,34 +126,90 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       // Check if user manually disconnected (security feature for shared computers)
       const disconnectNonce = localStorage.getItem('mek_disconnect_nonce');
       if (disconnectNonce) {
-        console.log('[WalletConnect] Disconnect nonce detected - requiring signature verification');
+        console.log('[🔐SIGNATURE] Disconnect nonce detected - requiring signature verification');
+        console.log('[🔐SIGNATURE] Wallet:', wallet.name);
         setConnectionStatus('Verifying wallet ownership...');
 
         // Generate challenge message
         const challengeMessage = `Mek Tycoon Login Verification\n\nNonce: ${disconnectNonce}\nTimestamp: ${Date.now()}\n\nSign this message to verify you own this wallet.`;
+        console.log('[🔐SIGNATURE] Challenge message:', challengeMessage);
 
         try {
-          // Convert message to hex for signing (browser-compatible)
-          const encoder = new TextEncoder();
-          const messageBytes = encoder.encode(challengeMessage);
-          const messageHex = Array.from(messageBytes)
-            .map(b => b.toString(16).padStart(2, '0'))
-            .join('');
+          // Check if wallet supports signData
+          if (!api.signData) {
+            console.error('[🔐SIGNATURE] Wallet does not support signData() method');
+            throw new Error(`${wallet.name} does not support message signing. Please use a different wallet or contact support.`);
+          }
+
+          // Get payment addresses for signing
+          const usedAddressesHex = await api.getUsedAddresses();
+          console.log('[🔐SIGNATURE] Payment addresses (hex):', usedAddressesHex);
+
+          if (!usedAddressesHex || usedAddressesHex.length === 0) {
+            throw new Error('No payment addresses found in wallet');
+          }
+
+          const paymentAddressHex = usedAddressesHex[0];
+
+          // Convert hex address to bech32 format for CIP-8 signing
+          // Most wallets expect bech32 format (addr1...) not hex
+          let addressForSigning = paymentAddressHex;
+
+          // If address is hex (doesn't start with addr), convert it
+          if (!paymentAddressHex.startsWith('addr')) {
+            try {
+              // Import cardano-serialization-lib for address conversion
+              const CSL = await import('@emurgo/cardano-serialization-lib-browser');
+              const address = CSL.Address.from_bytes(
+                Buffer.from(paymentAddressHex, 'hex')
+              );
+              addressForSigning = address.to_bech32();
+              console.log('[🔐SIGNATURE] Converted hex to bech32:', addressForSigning.substring(0, 20) + '...');
+            } catch (conversionError) {
+              console.error('[🔐SIGNATURE] Address conversion failed:', conversionError);
+              // Fall back to hex if conversion fails
+              console.log('[🔐SIGNATURE] Using hex address as fallback');
+            }
+          }
+
+          console.log('[🔐SIGNATURE] Address for signing:', addressForSigning.substring(0, 20) + '...');
+
+          // Wallet-specific message encoding
+          let messagePayload: string;
+
+          if (wallet.name.toLowerCase() === 'eternl') {
+            // Eternl uses plain text message (not hex-encoded)
+            messagePayload = challengeMessage;
+            console.log('[🔐SIGNATURE] Using plain text message for Eternl');
+          } else {
+            // Other wallets typically use hex-encoded message
+            const encoder = new TextEncoder();
+            const messageBytes = encoder.encode(challengeMessage);
+            messagePayload = Array.from(messageBytes)
+              .map(b => b.toString(16).padStart(2, '0'))
+              .join('');
+            console.log('[🔐SIGNATURE] Using hex-encoded message:', messagePayload.substring(0, 40) + '...');
+          }
 
           // Request signature from wallet
-          const signResult = await api.signData(
-            await api.getUsedAddresses().then((addrs: string[]) => addrs[0]), // Use first payment address
-            messageHex
-          );
+          console.log('[🔐SIGNATURE] Calling api.signData()...');
+          const signResult = await api.signData(addressForSigning, messagePayload);
+          console.log('[🔐SIGNATURE] Signature result:', signResult);
 
-          console.log('[WalletConnect] Signature verification successful');
+          console.log('[🔐SIGNATURE] Signature verification successful!');
           setConnectionStatus('Signature verified!');
 
           // Signature succeeded - user proved they own the wallet
           // The disconnect nonce will be cleared after successful session save
         } catch (signError: any) {
-          console.error('[WalletConnect] Signature verification failed:', signError);
-          throw new Error('Signature verification failed. You must sign the message to reconnect after disconnecting.');
+          console.error('[🔐SIGNATURE] Signature verification failed:', signError);
+          console.error('[🔐SIGNATURE] Error details:', {
+            name: signError?.name,
+            message: signError?.message,
+            code: signError?.code,
+            info: signError?.info
+          });
+          throw new Error(`Signature verification failed: ${signError?.message || 'Unknown error'}. You must sign the message to reconnect after disconnecting.`);
         }
       }
 
