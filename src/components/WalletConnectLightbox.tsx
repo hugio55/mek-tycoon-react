@@ -9,6 +9,7 @@ import {
   clearWalletSession,
   generateSessionId,
 } from '@/lib/walletSessionManager';
+import { ensureBech32StakeAddress } from '@/lib/cardanoAddressConverter';
 
 interface WalletInfo {
   name: string;
@@ -128,7 +129,24 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
         throw new Error('No stake addresses found in wallet');
       }
 
-      const stakeAddress = stakeAddresses[0];
+      const stakeAddressRaw = stakeAddresses[0];
+
+      // Validate stake address format
+      const isBech32 = stakeAddressRaw.startsWith('stake1');
+      const isHex = /^[0-9a-fA-F]{56,60}$/.test(stakeAddressRaw);
+
+      if (!isBech32 && !isHex) {
+        console.error('Invalid stake address format:', stakeAddressRaw);
+        throw new Error(`Invalid stake address format. Expected bech32 (stake1...) or hex (56-60 chars), got: ${stakeAddressRaw.substring(0, 20)}...`);
+      }
+
+      // Convert to bech32 format if it's in hex
+      const stakeAddress = ensureBech32StakeAddress(stakeAddressRaw);
+      console.log('[WalletConnect] Stake address:', {
+        wallet: wallet.name,
+        raw: stakeAddressRaw.substring(0, 20) + '...',
+        converted: stakeAddress.substring(0, 20) + '...',
+      });
 
       // Get payment addresses
       const usedAddresses = await api.getUsedAddresses();
@@ -137,11 +155,6 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       if (!stakeAddress) {
         throw new Error('Could not retrieve stake address from wallet');
       }
-
-      console.log('[WalletConnect] Connected:', {
-        wallet: wallet.name,
-        stakeAddress: stakeAddress.slice(0, 20) + '...',
-      });
 
       // Fetch NFTs from blockchain via Blockfrost
       console.log('[WalletConnect] Fetching NFTs from blockchain...');
