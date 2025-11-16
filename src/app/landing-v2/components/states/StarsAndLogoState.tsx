@@ -22,7 +22,7 @@ export default function StarsAndLogoState({ isActive, deviceType }: StarsAndLogo
       <StarField />
 
       <div
-        className="fixed transition-opacity duration-2000"
+        className="absolute transition-opacity duration-2000"
         style={{
           top: '50%',
           left: '50%',
