@@ -66,6 +66,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
         pointerEvents: 'none',
         minHeight: 0,
         flex: '0 1 auto',
+        zIndex: 10,
       }}
     >
       <div className="flex flex-col items-center" style={{ paddingTop: '1vh', paddingBottom: '0', pointerEvents: 'auto' }}>

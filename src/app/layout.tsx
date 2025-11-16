@@ -181,7 +181,7 @@ export default function RootLayout({
       >
         {/* Global background with animated stars and particles */}
         <GlobalBackground />
-        
+
         {/* Content layer */}
         <div className="relative z-10">
           <DemoModeWrapper>
