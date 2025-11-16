@@ -62,6 +62,34 @@ export default function ProModeToggle({
       // Set preload to auto for instant playback
       guardClickAudioRef.current.preload = 'auto';
       switchClickAudioRef.current.preload = 'auto';
+
+      // Force load by calling .load() explicitly
+      guardClickAudioRef.current.load();
+      switchClickAudioRef.current.load();
+
+      // Additional force-load: play silently then pause to ensure it's in memory
+      guardClickAudioRef.current.volume = 0;
+      switchClickAudioRef.current.volume = 0;
+      guardClickAudioRef.current.play()
+        .then(() => {
+          guardClickAudioRef.current!.pause();
+          guardClickAudioRef.current!.currentTime = 0;
+          guardClickAudioRef.current!.volume = 1;
+        })
+        .catch(() => {
+          // User hasn't interacted yet, will load on first click
+          guardClickAudioRef.current!.volume = 1;
+        });
+      switchClickAudioRef.current.play()
+        .then(() => {
+          switchClickAudioRef.current!.pause();
+          switchClickAudioRef.current!.currentTime = 0;
+          switchClickAudioRef.current!.volume = 1;
+        })
+        .catch(() => {
+          // User hasn't interacted yet, will load on first click
+          switchClickAudioRef.current!.volume = 1;
+        });
     }
 
     // Cleanup on unmount
