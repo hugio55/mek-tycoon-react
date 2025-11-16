@@ -41,7 +41,7 @@ export default function LandingV2() {
       {/* Logo Video/GIF - Centered */}
       {mounted && (
         <div
-          className="absolute inset-0 flex items-center justify-center"
+          className="absolute inset-0 flex flex-col items-center justify-center gap-4"
           style={{ zIndex: 10 }}
         >
           {deviceType === 'macos' ? (
@@ -70,6 +70,11 @@ export default function LandingV2() {
               <source src="/random-images/Everydays_00000.webm" type="video/webm" />
             </video>
           )}
+
+          {/* Subtitle */}
+          <p className="text-white/80 text-xs tracking-wide" style={{ fontFamily: 'Saira, sans-serif' }}>
+            An epic idle strategy game where Mekanism NFTs build empires.
+          </p>
         </div>
       )}
 
@@ -82,7 +87,9 @@ export default function LandingV2() {
           <div className="flex flex-col items-center gap-4">
             {/* Logo */}
             <a
-              href="#"
+              href="https://www.overexposed.io/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="transition-opacity hover:opacity-70"
             >
               <img
@@ -96,7 +103,9 @@ export default function LandingV2() {
             <div className="flex items-center gap-6">
               {/* Discord */}
               <a
-                href="#"
+                href="https://discord.gg/KnqMF6Ayyc"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-white/70 hover:text-white transition-all hover:scale-110"
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -106,7 +115,9 @@ export default function LandingV2() {
 
               {/* Twitter/X */}
               <a
-                href="#"
+                href="https://x.com/Over___Exposed"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-white/70 hover:text-white transition-all hover:scale-110"
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -116,11 +127,14 @@ export default function LandingV2() {
 
               {/* Website Globe */}
               <a
-                href="#"
+                href="https://www.overexposed.io/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-white/70 hover:text-white transition-all hover:scale-110"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
               </a>
             </div>
