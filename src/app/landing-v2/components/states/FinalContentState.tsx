@@ -40,6 +40,7 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
       className="flex-1 flex flex-col w-full transition-opacity duration-1000"
       style={{
         opacity: mounted ? 1 : 0,
+        position: 'relative',
       }}
     >
       <div className="flex-1 flex flex-col items-center pb-8" style={{ marginTop: 'calc(40% + 550px)' }}>
@@ -168,11 +169,12 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
         className="backdrop-blur-md md:backdrop-blur-lg bg-white/10 overflow-hidden"
         style={{
           zIndex: 20,
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          width: '100%',
+          position: 'relative',
+          width: '100vw',
+          left: '50%',
+          right: '50%',
+          marginLeft: '-50vw',
+          marginRight: '-50vw',
         }}
       >
         <svg className="absolute inset-0 w-full h-full pointer-events-none">
