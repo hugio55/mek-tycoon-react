@@ -48,22 +48,22 @@ const FillTextButton = ({
           @keyframes line-glow {
             0%, 100% {
               opacity: 0.8;
-              box-shadow: 0 0 8px rgba(61, 209, 255, 0.6);
+              box-shadow: 0 0 2px rgba(61, 209, 255, 0.6);
             }
             50% {
               opacity: 1;
-              box-shadow: 0 0 12px rgba(61, 209, 255, 0.8);
+              box-shadow: 0 0 4px rgba(61, 209, 255, 0.8);
             }
           }
 
           @keyframes soft-pulse {
             0%, 100% {
-              text-shadow: 0 0 12px rgba(61, 209, 255, 0.7),
-                          0 0 24px rgba(61, 209, 255, 0.5);
+              text-shadow: 0 0 4px rgba(61, 209, 255, 0.7),
+                          0 0 8px rgba(61, 209, 255, 0.5);
             }
             50% {
-              text-shadow: 0 0 18px rgba(61, 209, 255, 0.9),
-                          0 0 36px rgba(61, 209, 255, 0.6);
+              text-shadow: 0 0 8px rgba(61, 209, 255, 0.9),
+                          0 0 16px rgba(61, 209, 255, 0.6);
             }
           }
         `}
