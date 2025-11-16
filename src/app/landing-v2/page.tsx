@@ -22,6 +22,7 @@ export default function LandingV2() {
   const [backgroundFadedIn, setBackgroundFadedIn] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
   const [entranceStarted, setEntranceStarted] = useState(false);
+  const [logoFadeComplete, setLogoFadeComplete] = useState(false);
 
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
   const { currentState, next, transitionTo, isState } = useLandingStateMachine();
@@ -62,6 +63,13 @@ export default function LandingV2() {
       setTimeout(() => {
         startAudio();
       }, 500);
+
+      // Enable scrolling after logo fade completes
+      const logoDelay = TIMINGS.starsFade;
+      const totalLogoTime = logoDelay + TIMINGS.logoFade;
+      setTimeout(() => {
+        setLogoFadeComplete(true);
+      }, totalLogoTime);
     }
   }, [currentState, revealStarted, startAudio, isState]);
 
@@ -90,6 +98,7 @@ export default function LandingV2() {
       backgroundOpacity={backgroundOpacity}
       showFooter={showFooter}
       transitionDuration={isState('SOUND_SELECTION') ? 1000 : 2000}
+      allowScroll={logoFadeComplete}
     >
       <SoundSelectionState
         isActive={isState('SOUND_SELECTION')}
