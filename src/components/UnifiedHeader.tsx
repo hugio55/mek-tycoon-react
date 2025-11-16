@@ -85,6 +85,10 @@ export default function UnifiedHeader() {
 
   // Get wallet address from encrypted session storage
   useEffect(() => {
+    // Check for disconnect nonce on page load
+    const nonceCheck = localStorage.getItem('mek_disconnect_nonce');
+    console.log('[🔐PAGE-LOAD] UnifiedHeader mounted - disconnect nonce check:', nonceCheck ? `✅ FOUND: ${nonceCheck.slice(0, 8)}...` : '❌ NOT FOUND');
+
     let pollCount = 0;
     let actualStateChanges = 0;
     let storageEventCount = 0;
@@ -243,19 +247,29 @@ export default function UnifiedHeader() {
 
   // Handle disconnect
   const handleDisconnect = async () => {
+    console.log('[🔓DISCONNECT] Disconnect button clicked');
+
     const confirmed = window.confirm(
       'Disconnect wallet?\n\n' +
       'This will log you out and you\'ll need to reconnect your wallet to access Mek Tycoon again.'
     );
 
     if (confirmed) {
+      console.log('[🔓DISCONNECT] User confirmed disconnect');
+      console.log('[🔓DISCONNECT] Calling clearWalletSession()...');
+
       // Clear session storage and invalidate session
       await clearWalletSession();
+
+      console.log('[🔓DISCONNECT] Session cleared, checking localStorage for nonce...');
+      const nonceCheck = localStorage.getItem('mek_disconnect_nonce');
+      console.log('[🔓DISCONNECT] Nonce after clearWalletSession:', nonceCheck ? (nonceCheck.slice(0, 8) + '...') : 'NOT FOUND');
 
       setWalletAddress(null);
       setSessionExpiresAt(null);
       setWalletDropdownOpen(false);
 
+      console.log('[🔓DISCONNECT] Reloading page...');
       // Reload to reset all state
       window.location.reload();
     }
