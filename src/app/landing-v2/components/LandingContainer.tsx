@@ -42,7 +42,7 @@ export default function LandingContainer({
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: isMobile ? '150%' : 'cover',
-          backgroundPosition: isMobile ? 'center calc(50% + 60px)' : 'center',
+          backgroundPosition: isMobile ? 'center calc(50% + 80px)' : 'center',
           zIndex: 0,
         }}
       />

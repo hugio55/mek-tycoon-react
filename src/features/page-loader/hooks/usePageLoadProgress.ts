@@ -18,6 +18,7 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
     getLoadedCount,
     getTotalCount,
     isWalletLoaded,
+    isWindowLoaded,
     startTime,
   } = useLoaderContext();
 
@@ -81,7 +82,8 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
       const milestoneProgress = calculateMilestoneProgress(
         isWalletLoaded,
         loadedCount > 0,
-        loadedCount === totalCount && totalCount > 0
+        loadedCount === totalCount && totalCount > 0,
+        isWindowLoaded
       );
 
       const combined = combineStrategies({
@@ -112,8 +114,8 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
       const minimumAnimationTimeElapsed = elapsed >= minimumProgressTime.current;
       const timedOut = elapsed >= totalTimeout;
 
-      // Only allow completion if minimum animation time has elapsed
-      if (((allQueriesLoaded || noQueriesTracked) && minTimeElapsed && minimumAnimationTimeElapsed) || timedOut) {
+      // Only allow completion if minimum animation time has elapsed AND all window assets loaded
+      if (((allQueriesLoaded || noQueriesTracked) && minTimeElapsed && minimumAnimationTimeElapsed && isWindowLoaded) || timedOut) {
         setProgress(100);
 
         if (!completeTimeoutRef.current && !hasTriggeredCompletion.current) {
