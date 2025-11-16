@@ -48,6 +48,11 @@ export default function LandingV2() {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
+  const handleCardClick = (index: number, isLocked: boolean) => {
+    if (isLocked) return;
+    setSelectedCardIndex(selectedCardIndex === index ? null : index);
+  };
+
   const displayPhases = phaseCards?.slice(0, 4) || [];
 
   return (
