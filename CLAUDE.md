@@ -679,6 +679,35 @@ Example transformation:
 
 **When to Apply**: Any time a modal/lightbox appears in the wrong position relative to the viewport, or when user reports having to scroll to find a modal.
 
+### Wallet Connection System - Lessons Learned
+**Date Fixed**: November 2025
+
+**Critical Issues Discovered:**
+
+1. **Duplicate Modal Instances** - Multiple components rendering the same modal/lightbox
+   - **Problem**: NavigationBar, UnifiedHeader, and HomePage all rendered WalletConnectLightbox
+   - **Symptom**: Lightbox stayed visible after connection (one instance closed, others remained)
+   - **Fix**: Only ONE component should own a modal. Use event-driven architecture if multiple places need to trigger it
+   - **Rule**: High-level components (like UnifiedHeader) should own shared modals, not page-specific components
+
+2. **Signature Verification After Disconnect** - Security feature for shared computers
+   - **Problem**: Wallet extensions cache permissions, so disconnecting didn't force re-authentication
+   - **Fix**: Implement challenge-response with `wallet.api.signData(address, hexMessage)`
+   - **Pattern**: Manual disconnect → create nonce → on reconnect → detect nonce → require signature → clear nonce
+   - **CIP-30 Detail**: ALL wallets expect hex-encoded message payloads, not plain text
+
+3. **Console Log Spam** - Debug logs in render loops cause browser freezing
+   - **Problem**: Logs inside components that re-render frequently = millions of logs per second
+   - **Symptom**: Browser freezes, unusable console, performance degradation
+   - **Fix**: Remove logs from render paths. Use searchable tags for debugging ([🔐TAG] format)
+   - **Rule**: Log state changes, not every render. Remove debug logs when done
+
+**Key Takeaways for Future Work:**
+- Single instance rule: One component owns each modal/lightbox
+- State management: Parent controls visibility, child calls `onClose()` to notify
+- Security: Explicit logout requires re-auth, passive session restore allows auto-reconnect
+- Performance: Be mindful of logs in frequently-called code (renders, animations, polling)
+
 ## Notes for Claude
 - **FIRST THING TO CHECK**: If styles look broken, verify Tailwind is v3 not v4 in package.json
 - Always check existing file conventions before making changes
