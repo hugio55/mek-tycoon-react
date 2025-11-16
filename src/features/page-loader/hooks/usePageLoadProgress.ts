@@ -18,7 +18,7 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
     getLoadedCount,
     getTotalCount,
     isWalletLoaded,
-    isWindowLoaded,
+    areCriticalAssetsLoaded,
     startTime,
   } = useLoaderContext();
 
@@ -77,13 +77,15 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
       const loadedCount = getLoadedCount();
       const totalCount = getTotalCount();
 
+      const criticalAssetsLoaded = areCriticalAssetsLoaded();
+
       const queryProgress = calculateQueryProgress(loadedCount, totalCount);
       const timeProgress = calculateTimeBasedProgress(elapsed);
       const milestoneProgress = calculateMilestoneProgress(
         isWalletLoaded,
         loadedCount > 0,
         loadedCount === totalCount && totalCount > 0,
-        isWindowLoaded
+        criticalAssetsLoaded
       );
 
       const combined = combineStrategies({
@@ -102,9 +104,15 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
       );
 
       // Don't allow progress to exceed minimum time-based progress until minimum time has elapsed
-      const cappedProgress = elapsed < minimumProgressTime.current
+      let cappedProgress = elapsed < minimumProgressTime.current
         ? Math.min(snapped, minimumTimeProgress)
         : snapped;
+
+      // CRITICAL: Don't let progress reach 100% until critical assets are actually loaded
+      // This prevents showing 100% while still downloading logo video, images, etc.
+      if (!criticalAssetsLoaded && cappedProgress >= 100) {
+        cappedProgress = 90; // Cap at 90% until critical assets load
+      }
 
       setProgress(cappedProgress);
 
@@ -114,8 +122,8 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
       const minimumAnimationTimeElapsed = elapsed >= minimumProgressTime.current;
       const timedOut = elapsed >= totalTimeout;
 
-      // Only allow completion if minimum animation time has elapsed AND all window assets loaded
-      if (((allQueriesLoaded || noQueriesTracked) && minTimeElapsed && minimumAnimationTimeElapsed && isWindowLoaded) || timedOut) {
+      // Only allow completion if minimum animation time has elapsed AND critical assets loaded
+      if (((allQueriesLoaded || noQueriesTracked) && minTimeElapsed && minimumAnimationTimeElapsed && criticalAssetsLoaded) || timedOut) {
         setProgress(100);
 
         if (!completeTimeoutRef.current && !hasTriggeredCompletion.current) {

@@ -14,6 +14,10 @@ interface LoaderContextValue {
   setWalletLoaded: (loaded: boolean) => void;
   isWindowLoaded: boolean;
   setWindowLoaded: (loaded: boolean) => void;
+  criticalAssets: Set<string>;
+  registerCriticalAsset: (id: string) => void;
+  markCriticalAssetLoaded: (id: string) => void;
+  areCriticalAssetsLoaded: () => boolean;
   startTime: number;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
@@ -74,6 +78,10 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
   const [isWindowLoaded, setWindowLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(!isBypassed); // Start with false if bypassed
   const startTimeRef = useRef(Date.now());
+
+  // Track critical assets (logo video, background images, etc.)
+  const [criticalAssets, setCriticalAssets] = useState<Set<string>>(new Set());
+  const [loadedAssets, setLoadedAssets] = useState<Set<string>>(new Set());
 
   // Track when all page assets (images, videos, etc.) have loaded
   useEffect(() => {
@@ -153,6 +161,33 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
     return queries.size;
   }, [queries]);
 
+  const registerCriticalAsset = useCallback((id: string) => {
+    setCriticalAssets((prev) => {
+      if (prev.has(id)) return prev;
+      const newSet = new Set(prev);
+      newSet.add(id);
+      console.log(`[🎯LOADER] Critical asset registered: ${id}`);
+      return newSet;
+    });
+  }, []);
+
+  const markCriticalAssetLoaded = useCallback((id: string) => {
+    setLoadedAssets((prev) => {
+      if (prev.has(id)) return prev;
+      const newSet = new Set(prev);
+      newSet.add(id);
+      console.log(`[🎯LOADER] Critical asset loaded: ${id}`);
+      return newSet;
+    });
+  }, []);
+
+  const areCriticalAssetsLoaded = useCallback(() => {
+    // If no critical assets registered, consider them loaded
+    if (criticalAssets.size === 0) return true;
+    // Check if all registered assets are loaded
+    return Array.from(criticalAssets).every((id) => loadedAssets.has(id));
+  }, [criticalAssets, loadedAssets]);
+
   useEffect(() => {
     return () => {
       queries.forEach((query) => {
@@ -173,6 +208,10 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
     setWalletLoaded,
     isWindowLoaded,
     setWindowLoaded,
+    criticalAssets,
+    registerCriticalAsset,
+    markCriticalAssetLoaded,
+    areCriticalAssetsLoaded,
     startTime: startTimeRef.current,
     isLoading,
     setIsLoading,
