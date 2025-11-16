@@ -551,11 +551,19 @@ export default function NavigationBar() {
         {/* Wallet Connect Lightbox */}
         <WalletConnectLightbox
           isOpen={showWalletConnect}
-          onClose={() => setShowWalletConnect(false)}
+          onClose={() => {
+            console.log('[🔍PARENT-CLOSE] NavigationBar onClose() called - setting showWalletConnect to FALSE');
+            console.log('[🔍PARENT-CLOSE] Current showWalletConnect value BEFORE:', showWalletConnect);
+            setShowWalletConnect(false);
+            console.log('[🔍PARENT-CLOSE] setShowWalletConnect(false) called - state update scheduled');
+          }}
           onConnected={(address) => {
+            console.log('[🔍PARENT-CONNECTED] onConnected callback triggered');
             console.log('[🎯NAV] Wallet connected:', address.slice(0, 20) + '...');
             setWalletAddress(address);
+            console.log('[🔍PARENT-CONNECTED] Setting showWalletConnect to FALSE');
             setShowWalletConnect(false);
+            console.log('[🔍PARENT-CONNECTED] Callback complete');
           }}
         />
       </div>

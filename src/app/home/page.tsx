@@ -461,7 +461,7 @@ export default function HomePage() {
   return (
     <Tooltip.Provider delayDuration={200}>
       <div className="flex flex-col text-white relative" style={{ minHeight: '100vh' }}>
-        <div className="flex-1 container mx-auto px-4 py-8" style={{ paddingBottom: '150px' }}>
+        <div className="flex-1 container mx-auto px-4 py-8">
         {/* Commemorative NFT Claim Banner */}
         <div className="mb-8">
           <AirdropClaimBanner
@@ -980,8 +980,13 @@ export default function HomePage() {
         {/* Wallet Connect Lightbox */}
         <WalletConnectLightbox
           isOpen={showWalletConnect}
-          onClose={() => setShowWalletConnect(false)}
+          onClose={() => {
+            console.log('[🚨PARENT-HOME] onClose callback called in HomePage');
+            setShowWalletConnect(false);
+            console.log('[🚨PARENT-HOME] setShowWalletConnect(false) executed');
+          }}
           onConnected={(walletAddress) => {
+            console.log('[🚨PARENT-HOME] onConnected callback called');
             setUserId(walletAddress);
             setShowWalletConnect(false);
           }}

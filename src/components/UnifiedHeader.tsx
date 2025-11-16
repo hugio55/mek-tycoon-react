@@ -74,6 +74,11 @@ export default function UnifiedHeader() {
   const [companyNameModalMode, setCompanyNameModalMode] = useState<'initial' | 'edit'>('initial');
   const [showWalletConnect, setShowWalletConnect] = useState(false);
 
+  // Track showWalletConnect state changes
+  useEffect(() => {
+    console.log('[🔌HEADER-STATE] showWalletConnect changed to:', showWalletConnect);
+  }, [showWalletConnect]);
+
   // Get wallet address from encrypted session storage
   useEffect(() => {
     let pollCount = 0;
@@ -413,8 +418,13 @@ export default function UnifiedHeader() {
       {/* Wallet Connect Lightbox */}
       <WalletConnectLightbox
         isOpen={showWalletConnect}
-        onClose={() => setShowWalletConnect(false)}
+        onClose={() => {
+          console.log('[🚨PARENT-HEADER] onClose callback called in UnifiedHeader');
+          setShowWalletConnect(false);
+          console.log('[🚨PARENT-HEADER] setShowWalletConnect(false) executed');
+        }}
         onConnected={async (address) => {
+          console.log('[🚨PARENT-HEADER] onConnected callback called');
           setWalletAddress(address);
           setShowWalletConnect(false);
           // Refresh session data
