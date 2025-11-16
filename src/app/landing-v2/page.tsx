@@ -50,8 +50,8 @@ export default function LandingV2() {
       // Initial entrance sequence
       // 1. Background fades in (0 → 0.3 opacity) over 1s
       setTimeout(() => setBackgroundFadedIn(true), 100);
-      // 2. Lightbox fades in 800ms after background starts
-      setTimeout(() => setShowLightbox(true), 900);
+      // 2. Lightbox fades in simultaneously with background
+      setTimeout(() => setShowLightbox(true), 100);
     }
   }, [mounted, isLoading, entranceStarted]);
 
@@ -88,8 +88,8 @@ export default function LandingV2() {
 
   // Logo fades simultaneously with stars (no delay)
   const logoDelay = 0;
-  // Content starts 800ms after logo starts fading (500ms + 300ms extra delay)
-  const contentDelay = 800;
+  // Content starts 1100ms after logo starts fading (800ms + 300ms extra delay)
+  const contentDelay = 1100;
 
   // Show pure black until mounted
   if (!mounted) {

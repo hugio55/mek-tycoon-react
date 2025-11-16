@@ -37,6 +37,14 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
           transform: translateX(100%);
         }
       }
+      @keyframes dotPulse {
+        0%, 100% {
+          opacity: 0.2;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
     `;
     document.head.appendChild(style);
     return () => {
@@ -191,40 +199,49 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
 
                   <div className="h-full flex items-center justify-center px-6 relative">
                     <div className="flex items-center gap-2">
-                      {/* TEMPORARY PHASE I INDICATOR - HAMMER ICONS */}
+                      {/* TEMPORARY PHASE I INDICATOR - LOADING SPINNER */}
                       {index === 0 && (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                          {/* Left hammer - diagonal upward-left */}
-                          <g transform="rotate(-45 12 12)">
-                            {/* Claw head */}
-                            <path d="M 8 4 Q 8 3 9 3 L 15 3 Q 16 3 16 4 L 16 7 Q 16 8 15 8 L 14 8 L 14 6 L 10 6 L 10 8 L 9 8 Q 8 8 8 7 Z" fill="rgba(250, 182, 23, 0.9)" />
-                            {/* Handle */}
-                            <rect x="10.5" y="8" width="3" height="12" rx="1" fill="rgba(250, 182, 23, 0.9)" />
-                          </g>
-                        </svg>
+                        <div style={{ animation: 'spinLoader 2s linear infinite' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            {/* 8 dots arranged in a circle */}
+                            <circle cx="12" cy="4" r="1.5" fill="rgba(250, 182, 23, 0.9)" />
+                            <circle cx="16.95" cy="7.05" r="1.5" fill="rgba(250, 182, 23, 0.75)" />
+                            <circle cx="20" cy="12" r="1.5" fill="rgba(250, 182, 23, 0.6)" />
+                            <circle cx="16.95" cy="16.95" r="1.5" fill="rgba(250, 182, 23, 0.45)" />
+                            <circle cx="12" cy="20" r="1.5" fill="rgba(250, 182, 23, 0.3)" />
+                            <circle cx="7.05" cy="16.95" r="1.5" fill="rgba(250, 182, 23, 0.2)" />
+                            <circle cx="4" cy="12" r="1.5" fill="rgba(250, 182, 23, 0.15)" />
+                            <circle cx="7.05" cy="7.05" r="1.5" fill="rgba(250, 182, 23, 0.1)" />
+                          </svg>
+                        </div>
                       )}
 
                       <h3
-                        className="text-white uppercase tracking-wider font-medium"
+                        className="uppercase tracking-wider font-medium"
                         style={{
                           fontFamily: 'Saira, sans-serif',
                           fontSize: '16px',
+                          color: index === 0 ? 'white' : 'rgba(255, 255, 255, 0.5)',
                         }}
                       >
                         {phaseLabel}
                       </h3>
 
-                      {/* TEMPORARY PHASE I INDICATOR - HAMMER ICONS */}
+                      {/* TEMPORARY PHASE I INDICATOR - LOADING SPINNER */}
                       {index === 0 && (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                          {/* Right hammer - diagonal upward-right (mirrored) */}
-                          <g transform="rotate(45 12 12)">
-                            {/* Claw head */}
-                            <path d="M 8 4 Q 8 3 9 3 L 15 3 Q 16 3 16 4 L 16 7 Q 16 8 15 8 L 14 8 L 14 6 L 10 6 L 10 8 L 9 8 Q 8 8 8 7 Z" fill="rgba(250, 182, 23, 0.9)" />
-                            {/* Handle */}
-                            <rect x="10.5" y="8" width="3" height="12" rx="1" fill="rgba(250, 182, 23, 0.9)" />
-                          </g>
-                        </svg>
+                        <div style={{ animation: 'spinLoader 2s linear infinite' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            {/* 8 dots arranged in a circle */}
+                            <circle cx="12" cy="4" r="1.5" fill="rgba(250, 182, 23, 0.9)" />
+                            <circle cx="16.95" cy="7.05" r="1.5" fill="rgba(250, 182, 23, 0.75)" />
+                            <circle cx="20" cy="12" r="1.5" fill="rgba(250, 182, 23, 0.6)" />
+                            <circle cx="16.95" cy="16.95" r="1.5" fill="rgba(250, 182, 23, 0.45)" />
+                            <circle cx="12" cy="20" r="1.5" fill="rgba(250, 182, 23, 0.3)" />
+                            <circle cx="7.05" cy="16.95" r="1.5" fill="rgba(250, 182, 23, 0.2)" />
+                            <circle cx="4" cy="12" r="1.5" fill="rgba(250, 182, 23, 0.15)" />
+                            <circle cx="7.05" cy="7.05" r="1.5" fill="rgba(250, 182, 23, 0.1)" />
+                          </svg>
+                        </div>
                       )}
                     </div>
 
