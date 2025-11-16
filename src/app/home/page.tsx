@@ -10,6 +10,7 @@ import { getVariationInfoFromFullKey } from '@/lib/variationNameLookup';
 import MekNamingLightbox from '@/components/MekNamingLightbox';
 import MekManagementLightbox from '@/components/MekManagementLightbox';
 import AirdropClaimBanner from '@/components/AirdropClaimBanner';
+import WalletConnectLightbox from '@/components/WalletConnectLightbox';
 import * as Tooltip from '@radix-ui/react-tooltip';
 
 export default function HomePage() {
@@ -39,6 +40,9 @@ export default function HomePage() {
     assetName?: string;
     slotNumber: number;
   } | null>(null);
+
+  // Wallet connection lightbox state
+  const [showWalletConnect, setShowWalletConnect] = useState(false);
 
   // Get user's gold mining data (includes correct Mek list)
   const goldMiningData = useQuery(
@@ -439,6 +443,18 @@ export default function HomePage() {
     <Tooltip.Provider delayDuration={200}>
       <div className="min-h-screen text-white relative">
         <div className="container mx-auto px-4 py-8">
+        {/* Connect Wallet Button (if no wallet connected) */}
+        {!userId && (
+          <div className="mb-8 flex justify-center">
+            <button
+              onClick={() => setShowWalletConnect(true)}
+              className="px-6 py-3 bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 border-2 border-yellow-500 rounded transition-colors font-['Orbitron'] uppercase tracking-wider text-lg font-bold"
+            >
+              Connect Wallet
+            </button>
+          </div>
+        )}
+
         {/* Commemorative NFT Claim Banner */}
         <div className="mb-8">
           <AirdropClaimBanner
@@ -953,6 +969,16 @@ export default function HomePage() {
             }}
           />
         )}
+
+        {/* Wallet Connect Lightbox */}
+        <WalletConnectLightbox
+          isOpen={showWalletConnect}
+          onClose={() => setShowWalletConnect(false)}
+          onConnected={(walletAddress) => {
+            setUserId(walletAddress);
+            setShowWalletConnect(false);
+          }}
+        />
         </div>
       </div>
     </Tooltip.Provider>
