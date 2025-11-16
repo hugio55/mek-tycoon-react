@@ -84,8 +84,8 @@ export default function LandingV2() {
   const showFooter = !isState('SOUND_SELECTION');
   const showSpeaker = isRevealing;
 
-  // Calculate when logo should appear (after stars fade completes)
-  const logoDelay = TIMINGS.starsFade;
+  // Logo fades simultaneously with stars (no delay)
+  const logoDelay = 0;
   const contentDelay = logoDelay + TIMINGS.logoFade + TIMINGS.pauseAfterLogo;
 
   // Show pure black until mounted
