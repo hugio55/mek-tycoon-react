@@ -34,9 +34,10 @@ const StarField = () => {
     const SPEED_LAYER2 = 20;
     const MAX_DEPTH = 1000;
     const MIN_DEPTH = 1;
-    const HALF_WIDTH = canvas.width / 2;
-    const HALF_HEIGHT = canvas.height / 2;
     const PI2 = Math.PI * 2;
+
+    let HALF_WIDTH = canvas.width / 2;
+    let HALF_HEIGHT = canvas.height / 2;
 
     const starsLayer1: Star[] = [];
     for (let i = 0; i < STAR_COUNT_LAYER1; i++) {
@@ -67,7 +68,6 @@ const StarField = () => {
       if (deltaTime >= frameInterval) {
         lastFrameTime = currentTime - (deltaTime % frameInterval);
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0)';
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // Layer 1: Slow dots
@@ -154,6 +154,8 @@ const StarField = () => {
 
     const handleResize = () => {
       setCanvasSize();
+      HALF_WIDTH = canvas.width / 2;
+      HALF_HEIGHT = canvas.height / 2;
     };
     window.addEventListener('resize', handleResize);
 
