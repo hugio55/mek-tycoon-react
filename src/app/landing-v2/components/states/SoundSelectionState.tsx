@@ -90,6 +90,8 @@ export default function SoundSelectionState({ isActive, onComplete }: SoundSelec
               }}
               label=""
               enableSounds={true}
+              indicatorColor="green"
+              guardColor="green"
             />
           </div>
 
@@ -132,6 +134,8 @@ export default function SoundSelectionState({ isActive, onComplete }: SoundSelec
               }}
               label=""
               enableSounds={false}
+              indicatorColor="red"
+              guardColor="red"
             />
           </div>
         </div>

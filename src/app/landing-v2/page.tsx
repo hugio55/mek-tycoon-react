@@ -35,9 +35,10 @@ export default function LandingV2() {
   }, []);
 
   const backgroundOpacity = isState('SOUND_SELECTION') ? 0.3 : 1.0;
+  const showFooter = !isState('SOUND_SELECTION');
 
   return (
-    <LandingContainer backgroundOpacity={backgroundOpacity}>
+    <LandingContainer backgroundOpacity={backgroundOpacity} showFooter={showFooter}>
       <SoundSelectionState
         isActive={isState('SOUND_SELECTION')}
         onComplete={next}

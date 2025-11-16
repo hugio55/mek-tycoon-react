@@ -24,6 +24,7 @@ interface ProModeToggleProps {
   label?: string;
   enableSounds?: boolean; // Control whether sounds play on interaction
   indicatorColor?: 'green' | 'red'; // Color of the indicator light when on
+  guardColor?: 'green' | 'red'; // Color of the safety guard
 }
 
 export default function ProModeToggle({
@@ -31,10 +32,22 @@ export default function ProModeToggle({
   onChange,
   label = "Pro Mode",
   enableSounds = true,
-  indicatorColor = 'green'
+  indicatorColor = 'green',
+  guardColor = 'red'
 }: ProModeToggleProps) {
   const [guardOpen, setGuardOpen] = useState(false);
   const [switchOn, setSwitchOn] = useState(enabled);
+
+  // Define guard color gradients
+  const guardGradients = {
+    red: 'linear-gradient(0deg, rgba(166,46,41,1) 0%, rgba(210,47,41,1) 6%, rgba(237,71,65,1) 16%, rgba(237,71,65,1) 27%, rgba(210,47,41,1) 68%, rgba(210,47,41,1) 100%)',
+    green: 'linear-gradient(0deg, rgba(41,166,46,1) 0%, rgba(41,210,47,1) 6%, rgba(65,237,71,1) 16%, rgba(65,237,71,1) 27%, rgba(41,210,47,1) 68%, rgba(41,210,47,1) 100%)'
+  };
+
+  const guardOverlayGradients = {
+    red: 'linear-gradient(0deg, rgba(110,29,25,1) 0%, rgba(173,46,41,1) 4%, rgba(210,47,41,1) 11%, rgba(237,71,65,1) 21%, rgba(242,107,102,1) 32%, rgba(237,71,65,1) 41%, rgba(237,71,65,1) 41%, rgba(210,47,41,1) 63%, rgba(210,47,41,1) 100%)',
+    green: 'linear-gradient(0deg, rgba(25,110,29,1) 0%, rgba(41,173,46,1) 4%, rgba(41,210,47,1) 11%, rgba(65,237,71,1) 21%, rgba(102,242,107,1) 32%, rgba(65,237,71,1) 41%, rgba(65,237,71,1) 41%, rgba(41,210,47,1) 63%, rgba(41,210,47,1) 100%)'
+  };
 
   // Preload audio files for instant playback
   const guardClickAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -133,7 +146,7 @@ export default function ProModeToggle({
             className="peer/guard relative m-0 p-0 appearance-none block w-[50px] h-[100px] rounded-[7px] cursor-grab z-[3] border border-black
                        transition-transform duration-200"
             style={{
-              background: 'linear-gradient(0deg, rgba(166,46,41,1) 0%, rgba(210,47,41,1) 6%, rgba(237,71,65,1) 16%, rgba(237,71,65,1) 27%, rgba(210,47,41,1) 68%, rgba(210,47,41,1) 100%)',
+              background: guardGradients[guardColor],
               boxShadow: 'inset -2px -2px 3px rgba(0,0,0,0.3), inset 2px 2px 3px rgba(255,255,255,0.5)',
               transformOrigin: '50% 0%',
               filter: guardOpen ? 'drop-shadow(0px 0px 0px rgba(0,0,0,1))' : 'drop-shadow(0px 0px 0px rgba(0,0,0,1))',
@@ -152,7 +165,7 @@ export default function ProModeToggle({
             <div
               className="absolute top-5 left-0 w-full h-[calc(100%-20px)] opacity-60 rounded-[7px] pointer-events-none z-[2]"
               style={{
-                background: 'linear-gradient(0deg, rgba(110,29,25,1) 0%, rgba(173,46,41,1) 4%, rgba(210,47,41,1) 11%, rgba(237,71,65,1) 21%, rgba(242,107,102,1) 32%, rgba(237,71,65,1) 41%, rgba(237,71,65,1) 41%, rgba(210,47,41,1) 63%, rgba(210,47,41,1) 100%)'
+                background: guardOverlayGradients[guardColor]
               }}
             />
           )}
@@ -168,7 +181,7 @@ export default function ProModeToggle({
             <div
               className="absolute left-[2px] top-[15px] w-2 h-10 rounded-0"
               style={{
-                background: 'linear-gradient(0deg, rgba(166,46,41,1) 0%, rgba(210,47,41,1) 6%, rgba(237,71,65,1) 16%, rgba(237,71,65,1) 27%, rgba(210,47,41,1) 68%, rgba(210,47,41,1) 100%)',
+                background: guardGradients[guardColor],
                 boxShadow: 'inset -2px -2px 3px rgba(0,0,0,0.3), inset 2px 2px 1px rgba(255,255,255,0.2), 0px 3px 3px rgba(0,0,0,0.4)'
               }}
             />
@@ -176,7 +189,7 @@ export default function ProModeToggle({
             <div
               className="absolute right-[2px] top-[15px] w-2 h-10 rounded-0"
               style={{
-                background: 'linear-gradient(0deg, rgba(166,46,41,1) 0%, rgba(210,47,41,1) 6%, rgba(237,71,65,1) 16%, rgba(237,71,65,1) 27%, rgba(210,47,41,1) 68%, rgba(210,47,41,1) 100%)',
+                background: guardGradients[guardColor],
                 boxShadow: 'inset -2px -2px 3px rgba(0,0,0,0.3), inset 2px 2px 1px rgba(255,255,255,0.2), 0px 3px 3px rgba(0,0,0,0.4)'
               }}
             />
