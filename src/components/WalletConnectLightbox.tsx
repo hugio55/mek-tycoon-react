@@ -181,22 +181,13 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
 
           console.log('[🔐SIGNATURE] Address for signing:', addressForSigning.substring(0, 20) + '...');
 
-          // Wallet-specific message encoding
-          let messagePayload: string;
-
-          if (wallet.name.toLowerCase() === 'eternl') {
-            // Eternl uses plain text message (not hex-encoded)
-            messagePayload = challengeMessage;
-            console.log('[🔐SIGNATURE] Using plain text message for Eternl');
-          } else {
-            // Other wallets typically use hex-encoded message
-            const encoder = new TextEncoder();
-            const messageBytes = encoder.encode(challengeMessage);
-            messagePayload = Array.from(messageBytes)
-              .map(b => b.toString(16).padStart(2, '0'))
-              .join('');
-            console.log('[🔐SIGNATURE] Using hex-encoded message:', messagePayload.substring(0, 40) + '...');
-          }
+          // All wallets use hex-encoded message
+          const encoder = new TextEncoder();
+          const messageBytes = encoder.encode(challengeMessage);
+          const messagePayload = Array.from(messageBytes)
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
+          console.log('[🔐SIGNATURE] Using hex-encoded message:', messagePayload.substring(0, 40) + '...');
 
           // Request signature from wallet
           console.log('[🔐SIGNATURE] Calling api.signData()...');
