@@ -75,7 +75,7 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
                     height: '48px',
                     borderRadius: '8px',
                     background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
-                    backdropFilter: 'blur(4px)',
+                    backdropFilter: 'blur(7px)',
                     transition: 'all 200ms ease',
                   }}
                   onMouseEnter={(e) => {
