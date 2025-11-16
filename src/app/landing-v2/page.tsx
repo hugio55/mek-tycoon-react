@@ -12,18 +12,22 @@ import SoundSelectionState from './components/states/SoundSelectionState';
 import FinalContentState from './components/states/FinalContentState';
 import SpeakerButton from './components/SpeakerButton';
 import StateDebugPanel from './debug/StateDebugPanel';
+import { useLoaderContext } from '@/features/page-loader';
 
 export default function LandingV2() {
+  const { isLoading } = useLoaderContext();
   const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'other'>('other');
   const [mounted, setMounted] = useState(false);
   const [revealStarted, setRevealStarted] = useState(false);
   const [backgroundFadedIn, setBackgroundFadedIn] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
+  const [entranceStarted, setEntranceStarted] = useState(false);
 
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
   const { currentState, next, transitionTo, isState } = useLandingStateMachine();
   const { audioPlaying, toggleAudio, startAudio } = useBackgroundAudio();
 
+  // Detect device type on mount
   useEffect(() => {
     setMounted(true);
     const userAgent = navigator.userAgent.toLowerCase();
@@ -35,13 +39,20 @@ export default function LandingV2() {
     } else {
       setDeviceType('other');
     }
-
-    // Initial entrance sequence
-    // 1. Background fades in (0 → 0.3 opacity) over 1s
-    setTimeout(() => setBackgroundFadedIn(true), 100);
-    // 2. Lightbox fades in 800ms after background starts
-    setTimeout(() => setShowLightbox(true), 900);
   }, []);
+
+  // Wait for loader to finish, THEN start entrance sequence
+  useEffect(() => {
+    if (mounted && !isLoading && !entranceStarted) {
+      setEntranceStarted(true);
+
+      // Initial entrance sequence
+      // 1. Background fades in (0 → 0.3 opacity) over 1s
+      setTimeout(() => setBackgroundFadedIn(true), 100);
+      // 2. Lightbox fades in 800ms after background starts
+      setTimeout(() => setShowLightbox(true), 900);
+    }
+  }, [mounted, isLoading, entranceStarted]);
 
   // Trigger reveal animations when entering REVEAL state
   useEffect(() => {
@@ -56,8 +67,8 @@ export default function LandingV2() {
 
   const isRevealing = isState('REVEAL');
   // Background opacity: 0 → 0.3 (initial fade) → 1.0 (reveal)
-  // Ensure we start at 0 until fully mounted and ready
-  const backgroundOpacity = !mounted ? 0 : (
+  // Ensure we start at 0 until loader finishes and entrance begins
+  const backgroundOpacity = !mounted || !entranceStarted ? 0 : (
     isState('SOUND_SELECTION')
       ? (backgroundFadedIn ? 0.3 : 0)
       : 1.0
@@ -84,7 +95,7 @@ export default function LandingV2() {
         isActive={isState('SOUND_SELECTION')}
         onComplete={next}
         onAudioStart={startAudio}
-        shouldShow={showLightbox}
+        shouldShow={entranceStarted && showLightbox}
       />
 
       {/* Preload assets */}
