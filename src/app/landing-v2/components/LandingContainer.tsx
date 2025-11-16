@@ -7,7 +7,7 @@ interface LandingContainerProps {
 
 export default function LandingContainer({ children, backgroundOpacity }: LandingContainerProps) {
   return (
-    <div className="fixed inset-0 bg-black overflow-y-auto">
+    <div className="fixed inset-0 bg-black overflow-y-auto scrollbar-overlay">
       <div
         className="fixed inset-0 transition-opacity duration-800 ease-out"
         style={{
@@ -18,14 +18,13 @@ export default function LandingContainer({ children, backgroundOpacity }: Landin
         }}
       />
 
-      <div className="relative min-h-screen flex flex-col items-stretch w-full" style={{ zIndex: 10 }}>
+      <div className="relative min-h-screen flex flex-col items-stretch w-full pb-32" style={{ zIndex: 10 }}>
         {children}
       </div>
 
       <footer
+        className="fixed bottom-0 left-0 right-0"
         style={{
-          position: 'relative',
-          width: '100%',
           zIndex: 20,
           overflow: 'hidden',
           backdropFilter: 'blur(12px)',

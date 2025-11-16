@@ -23,13 +23,15 @@ interface ProModeToggleProps {
   onChange?: (enabled: boolean) => void;
   label?: string;
   enableSounds?: boolean; // Control whether sounds play on interaction
+  indicatorColor?: 'green' | 'red'; // Color of the indicator light when on
 }
 
 export default function ProModeToggle({
   enabled = false,
   onChange,
   label = "Pro Mode",
-  enableSounds = true
+  enableSounds = true,
+  indicatorColor = 'green'
 }: ProModeToggleProps) {
   const [guardOpen, setGuardOpen] = useState(false);
   const [switchOn, setSwitchOn] = useState(enabled);
@@ -242,8 +244,14 @@ export default function ProModeToggle({
             className="absolute -bottom-10 block w-[50px] h-5 left-1/2 -translate-x-1/2 p-[2px] bg-gray-500 rounded-[7px] z-0 transition-all duration-[400ms]"
             style={{
               border: '2px ridge black',
-              background: switchOn ? '#22c55e' : 'grey',
-              boxShadow: switchOn ? '0px 0px 10px rgba(34,197,94,1)' : 'none'
+              background: switchOn
+                ? (indicatorColor === 'green' ? '#22c55e' : '#ef4444')
+                : 'grey',
+              boxShadow: switchOn
+                ? (indicatorColor === 'green'
+                  ? '0px 0px 10px rgba(34,197,94,1)'
+                  : '0px 0px 10px rgba(239,68,68,1)')
+                : 'none'
             }}
           >
             {/* Color overlay when lit */}
@@ -252,7 +260,9 @@ export default function ProModeToggle({
                 className="absolute w-full h-full left-0 top-0 opacity-30 transition-all duration-1000"
                 style={{
                   mixBlendMode: 'overlay',
-                  background: 'radial-gradient(at center, #86efac, #22c55e)'
+                  background: indicatorColor === 'green'
+                    ? 'radial-gradient(at center, #86efac, #22c55e)'
+                    : 'radial-gradient(at center, #fca5a5, #ef4444)'
                 }}
               />
             )}
@@ -265,7 +275,11 @@ export default function ProModeToggle({
                 backgroundImage: 'radial-gradient(#ffffff50 2px, transparent 0)',
                 backgroundSize: '5px 5px',
                 backgroundPosition: '-18px -15px',
-                boxShadow: switchOn ? '0px 0px 20px rgba(34,197,94,1)' : 'none'
+                boxShadow: switchOn
+                  ? (indicatorColor === 'green'
+                    ? '0px 0px 20px rgba(34,197,94,1)'
+                    : '0px 0px 20px rgba(239,68,68,1)')
+                  : 'none'
               }}
             />
           </div>
