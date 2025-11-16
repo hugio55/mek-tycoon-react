@@ -19,6 +19,12 @@ export default function LandingV2() {
   const [mounted, setMounted] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
+  // TEMPORARY DEBUG - REMOVE AFTER FONT SELECTION
+  const [titleFont, setTitleFont] = useState('Play');
+  const [descFont, setDescFont] = useState('Saira');
+  const fonts = ['Play', 'Saira', 'Orbitron', 'Inter', 'Roboto', 'Montserrat', 'Poppins', 'Raleway'];
+  // END TEMPORARY DEBUG
+
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
 
   useEffect(() => {
@@ -54,42 +60,47 @@ export default function LandingV2() {
         }}
       />
 
-      <div className="relative min-h-screen flex flex-col" style={{ zIndex: 10 }}>
+      <div className="relative" style={{ zIndex: 10 }}>
         {mounted && (
-          <div className="flex-1 flex flex-col items-center gap-4 px-4 py-8">
-            {deviceType === 'macos' ? (
-              <img
-                src="/random-images/Everydays_4.gif"
-                alt="Mek Tycoon Logo"
-                className="max-w-[40vw] max-h-[40vh] object-contain"
-              />
-            ) : deviceType === 'iphone' ? (
-              <img
-                src="/random-images/logo GIF.gif"
-                alt="Mek Tycoon Logo"
-                className="max-w-[80vw] max-h-[80vh] object-contain"
-              />
-            ) : (
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="max-w-[40vw] max-h-[40vh] object-contain"
-              >
-                <source src="/random-images/Everydays_00000.webm" type="video/webm" />
-              </video>
-            )}
-
-            <p className="text-white/80 text-xs tracking-wide" style={{ fontFamily: 'Saira, sans-serif' }}>
-              An epic idle strategy game where Mekanism NFTs build empires.
-            </p>
-
-            <div className="mt-6">
-              <FillTextButton text="join beta" fontFamily="Play" />
+          <>
+            {/* Logo Section - Full viewport height, centered */}
+            <div className="h-screen flex items-center justify-center">
+              {deviceType === 'macos' ? (
+                <img
+                  src="/random-images/Everydays_4.gif"
+                  alt="Mek Tycoon Logo"
+                  className="max-w-[40vw] max-h-[40vh] object-contain"
+                />
+              ) : deviceType === 'iphone' ? (
+                <img
+                  src="/random-images/Everydays_4.gif"
+                  alt="Mek Tycoon Logo"
+                  className="max-w-[80vw] max-h-[80vh] object-contain"
+                />
+              ) : (
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="max-w-[40vw] max-h-[40vh] object-contain"
+                >
+                  <source src="/random-images/Everydays_00000.webm" type="video/webm" />
+                </video>
+              )}
             </div>
 
-            <div className="w-full max-w-2xl mt-12 flex flex-col gap-3">
+            {/* Content Section - Below the fold */}
+            <div className="flex flex-col items-center gap-4 px-4 py-8">
+              <p className="text-white/80 text-xs tracking-wide" style={{ fontFamily: 'Saira, sans-serif' }}>
+                An epic idle strategy game where Mekanism NFTs build empires.
+              </p>
+
+              <div className="mt-6">
+                <FillTextButton text="join beta" fontFamily="Play" />
+              </div>
+
+              <div className="w-full max-w-2xl mt-12 flex flex-col gap-3">
               {displayPhases.map((card: PhaseCard, index: number) => {
                 const isExpanded = expandedIndex === index;
                 const isLocked = card.locked;
@@ -170,7 +181,7 @@ export default function LandingV2() {
                         <h4
                           className="text-yellow-400 uppercase tracking-wider font-medium mb-3"
                           style={{
-                            fontFamily: 'Orbitron, sans-serif',
+                            fontFamily: 'Play, sans-serif',
                             fontSize: '14px',
                           }}
                         >
@@ -181,7 +192,7 @@ export default function LandingV2() {
                           <p
                             className="text-white/75 leading-relaxed"
                             style={{
-                              fontFamily: 'Inter, sans-serif',
+                              fontFamily: 'Saira, sans-serif',
                               fontSize: '14px',
                             }}
                           >
@@ -193,11 +204,11 @@ export default function LandingV2() {
                   </div>
                 );
               })}
+              </div>
             </div>
-          </div>
-        )}
 
-        <footer
+            {/* Footer */}
+            <footer
           className="backdrop-blur-md md:backdrop-blur-lg bg-white/10 mt-auto relative overflow-hidden"
           style={{
             zIndex: 20,
@@ -277,6 +288,8 @@ export default function LandingV2() {
             </div>
           </div>
         </footer>
+          </>
+        )}
       </div>
     </div>
   );
