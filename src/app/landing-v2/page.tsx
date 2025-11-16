@@ -37,12 +37,8 @@ export default function LandingV2() {
     }
   }, []);
 
-  // Start audio after BACKGROUND_REVEAL completes
-  useEffect(() => {
-    if (isStateOrAfter('STARS_AND_LOGO')) {
-      startAudio();
-    }
-  }, [currentState, startAudio, isStateOrAfter]);
+  // Audio is now started directly from user interaction in SoundSelectionState
+  // No automatic start needed here to avoid browser autoplay blocking
 
   const backgroundOpacity = isState('SOUND_SELECTION') ? 0.3 : 1.0;
   const starsOpacity = isStateOrAfter('STARS_AND_LOGO') ? 1 : 0;
@@ -54,6 +50,7 @@ export default function LandingV2() {
       <SoundSelectionState
         isActive={isState('SOUND_SELECTION')}
         onComplete={next}
+        onAudioStart={startAudio}
       />
 
       <BackgroundRevealState
