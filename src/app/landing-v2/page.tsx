@@ -204,7 +204,7 @@ export default function LandingV2() {
         isVisible={showSpeaker}
       />
 
-      {false && process.env.NODE_ENV === 'development' && mounted && (
+      {process.env.NODE_ENV === 'development' && mounted && (
         <StateDebugPanel
           currentState={currentState}
           onStateChange={transitionTo}

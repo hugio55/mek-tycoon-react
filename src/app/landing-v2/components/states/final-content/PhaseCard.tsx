@@ -153,12 +153,6 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             }}
           >
             <defs>
-              <radialGradient id="cometTailGradient">
-                <stop offset="0%" stopColor="rgba(255, 255, 255, 1)" />
-                <stop offset="30%" stopColor="rgba(255, 255, 255, 0.8)" />
-                <stop offset="60%" stopColor="rgba(255, 255, 255, 0.4)" />
-                <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
-              </radialGradient>
               <filter id="cometGlow">
                 <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
                 <feMerge>
@@ -169,37 +163,52 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             </defs>
 
             <g filter="url(#cometGlow)">
-              <ellipse
-                cx="-6"
-                cy="0"
-                rx="10"
-                ry="1.5"
-                fill="url(#cometTailGradient)"
-                opacity="0.8"
-              >
+              <circle cx="-8" cy="0" r="4" fill="white" opacity="0.15">
                 <animateMotion
                   dur="4s"
                   repeatCount="indefinite"
                   path="M 1,1 L 99,1 L 99,43 L 1,43 Z"
-                  keyPoints="0;0.35;0.50;0.85;1"
+                  keyPoints="0;0.25;0.50;0.75;1"
                   keyTimes="0;0.35;0.50;0.85;1"
                   calcMode="linear"
-                  rotate="auto"
                 />
-              </ellipse>
-
-              <circle
-                cx="0"
-                cy="0"
-                r="1.8"
-                fill="white"
-                opacity="1"
-              >
+              </circle>
+              <circle cx="-6" cy="0" r="3.5" fill="white" opacity="0.25">
                 <animateMotion
                   dur="4s"
                   repeatCount="indefinite"
                   path="M 1,1 L 99,1 L 99,43 L 1,43 Z"
-                  keyPoints="0;0.35;0.50;0.85;1"
+                  keyPoints="0;0.25;0.50;0.75;1"
+                  keyTimes="0;0.35;0.50;0.85;1"
+                  calcMode="linear"
+                />
+              </circle>
+              <circle cx="-4" cy="0" r="3" fill="white" opacity="0.4">
+                <animateMotion
+                  dur="4s"
+                  repeatCount="indefinite"
+                  path="M 1,1 L 99,1 L 99,43 L 1,43 Z"
+                  keyPoints="0;0.25;0.50;0.75;1"
+                  keyTimes="0;0.35;0.50;0.85;1"
+                  calcMode="linear"
+                />
+              </circle>
+              <circle cx="-2" cy="0" r="2.5" fill="white" opacity="0.6">
+                <animateMotion
+                  dur="4s"
+                  repeatCount="indefinite"
+                  path="M 1,1 L 99,1 L 99,43 L 1,43 Z"
+                  keyPoints="0;0.25;0.50;0.75;1"
+                  keyTimes="0;0.35;0.50;0.85;1"
+                  calcMode="linear"
+                />
+              </circle>
+              <circle cx="0" cy="0" r="2" fill="white" opacity="1">
+                <animateMotion
+                  dur="4s"
+                  repeatCount="indefinite"
+                  path="M 1,1 L 99,1 L 99,43 L 1,43 Z"
+                  keyPoints="0;0.25;0.50;0.75;1"
                   keyTimes="0;0.35;0.50;0.85;1"
                   calcMode="linear"
                 />
