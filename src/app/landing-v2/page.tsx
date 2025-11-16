@@ -100,7 +100,7 @@ export default function LandingV2() {
               <FillTextButton text="join beta" fontFamily="Play" />
             </div>
 
-            <div className="w-full max-w-2xl mt-12 flex flex-col gap-3">
+            <div className="w-full max-w-[680px] mt-12 flex flex-col gap-3">
               {displayPhases.map((card: PhaseCard, index: number) => {
                 const isExpanded = expandedIndex === index;
                 const isLocked = card.locked;
@@ -121,17 +121,14 @@ export default function LandingV2() {
                         background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
                         backdropFilter: 'blur(4px)',
                         transition: 'all 200ms ease',
-                        border: '1px solid rgba(250,182,23,0.2)',
                       }}
                       onMouseEnter={(e) => {
                         if (!isLocked) {
-                          e.currentTarget.style.borderColor = 'rgba(250,182,23,0.5)';
                           e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))';
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (!isLocked) {
-                          e.currentTarget.style.borderColor = 'rgba(250,182,23,0.2)';
                           e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))';
                         }
                       }}
@@ -207,6 +204,7 @@ export default function LandingV2() {
                             style={{
                               fontFamily: 'Play, sans-serif',
                               fontSize: '14px',
+                              whiteSpace: 'pre-line',
                             }}
                           >
                             {card.description}
