@@ -4,9 +4,10 @@ interface LandingContainerProps {
   children: ReactNode;
   backgroundOpacity: number;
   showFooter?: boolean;
+  transitionDuration?: number;
 }
 
-export default function LandingContainer({ children, backgroundOpacity, showFooter = true }: LandingContainerProps) {
+export default function LandingContainer({ children, backgroundOpacity, showFooter = true, transitionDuration = 2000 }: LandingContainerProps) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -18,12 +19,13 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
   return (
     <div className="fixed inset-0 bg-black overflow-y-auto scrollbar-hide">
       <div
-        className="fixed inset-0 transition-opacity duration-2000 ease-out"
+        className="fixed inset-0 transition-opacity ease-out"
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: 'cover',
           backgroundPosition: isMobile ? 'center calc(50% - 75px)' : 'center calc(50% + 25px)',
           opacity: backgroundOpacity,
+          transitionDuration: `${transitionDuration}ms`,
         }}
       />
 
