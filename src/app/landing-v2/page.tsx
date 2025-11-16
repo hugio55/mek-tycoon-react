@@ -22,6 +22,7 @@ export default function LandingV2() {
   const [isMobile, setIsMobile] = useState(false);
   const [titleFont, setTitleFont] = useState('Play');
   const [descFont, setDescFont] = useState('Saira');
+  const [showPhaseILightbox, setShowPhaseILightbox] = useState(false);
 
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
 
@@ -92,13 +93,13 @@ export default function LandingV2() {
               )}
             </div>
 
-            {/* Description - 96px below logo */}
-            <p className="text-white/80 text-xs tracking-wide mt-24" style={{ fontFamily: 'Saira, sans-serif' }}>
+            {/* Description - closer to logo */}
+            <p className="text-white/80 text-xs tracking-wide mt-8" style={{ fontFamily: 'Saira, sans-serif' }}>
               An epic idle strategy game where Mekanism NFTs build empires.
             </p>
 
-            {/* Join Beta button - 96px below description */}
-            <div className="mt-24">
+            {/* Join Beta button - closer to description */}
+            <div className="mt-8">
               <FillTextButton text="join beta" fontFamily="Play" />
             </div>
 
@@ -177,7 +178,7 @@ export default function LandingV2() {
 
                     <div
                       style={{
-                        maxHeight: isExpanded ? '300px' : '0',
+                        maxHeight: isExpanded ? '500px' : '0',
                         opacity: isExpanded ? 1 : 0,
                         overflow: 'hidden',
                         transition: 'all 400ms ease',
@@ -206,18 +207,70 @@ export default function LandingV2() {
                             className="text-white/75 leading-relaxed"
                             style={{
                               fontFamily: 'Play, sans-serif',
-                              fontSize: '14px',
+                              fontSize: '13px',
                               whiteSpace: 'pre-line',
                             }}
                           >
                             {card.description}
                           </p>
                         )}
+
+                        {index === 0 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowPhaseILightbox(true);
+                            }}
+                            className="mt-4 text-yellow-400 hover:text-yellow-300 transition-colors uppercase tracking-wider"
+                            style={{
+                              fontFamily: 'Saira, sans-serif',
+                              fontSize: '13px',
+                            }}
+                          >
+                            Read more →
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {showPhaseILightbox && phaseCards && phaseCards[0] && (
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
+            onClick={() => setShowPhaseILightbox(false)}
+          >
+            <div
+              className="bg-black/90 border border-yellow-500/30 rounded-lg p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+              style={{ backdropFilter: 'blur(8px)' }}
+            >
+              <div className="flex justify-between items-start mb-4">
+                <h3
+                  className="text-yellow-400 uppercase tracking-wider font-medium"
+                  style={{ fontFamily: 'Saira, sans-serif', fontSize: '20px' }}
+                >
+                  {phaseCards[0].title}
+                </h3>
+                <button
+                  onClick={() => setShowPhaseILightbox(false)}
+                  className="text-white/50 hover:text-white transition-colors"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p
+                className="text-white/75 leading-relaxed whitespace-pre-line"
+                style={{ fontFamily: 'Play, sans-serif', fontSize: '14px' }}
+              >
+                {phaseCards[0].description}
+              </p>
             </div>
           </div>
         )}

@@ -445,7 +445,9 @@ export const updateWalletGold = mutation({
 });
 
 // Admin query to get all wallets with full details
-// BANDWIDTH OPTIMIZATION: Now cached with 30-second TTL to reduce repeated calls
+// DISABLED: Only needed on Dev, consuming 362.88 MB bandwidth unnecessarily
+// Re-enable if admin dashboard on Dev is needed
+/*
 export const getAllWallets = query({
   args: {},
   handler: async (ctx) => {
