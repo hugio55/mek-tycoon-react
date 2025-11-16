@@ -45,14 +45,9 @@ export function LoadingOverlay({
     if (isComplete && !isFadingOut) {
       setIsFadingOut(true);
 
-      // Delay setting isLoading = false until fade-out is nearly complete (75% done)
-      // This prevents page content from fading in while loading overlay is still visible
-      const contentFadeDelay = TIMING.FADE_DURATION * 0.75; // 1500ms of 2000ms
+      // Wait for loader to completely fade out before showing page content
       setTimeout(() => {
         setIsLoading(false);
-      }, contentFadeDelay);
-
-      setTimeout(() => {
         if (onComplete) {
           onComplete();
         }

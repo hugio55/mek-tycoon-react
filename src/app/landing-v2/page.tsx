@@ -130,7 +130,7 @@ export default function LandingV2() {
       {/* Logo - fade in after stars complete */}
       {isRevealing && (
         <div
-          className="absolute transition-opacity ease-out"
+          className="absolute transition-opacity"
           style={{
             top: (deviceType === 'iphone' || deviceType === 'other' && navigator.userAgent.toLowerCase().includes('android')) ? 'calc(50vh - 400px)' : '50vh',
             left: '50%',
@@ -139,6 +139,7 @@ export default function LandingV2() {
             zIndex: 20,
             transitionDuration: `${TIMINGS.logoFade}ms`,
             transitionDelay: `${logoDelay}ms`,
+            transitionTimingFunction: 'ease-in-out',
           }}
         >
           {deviceType === 'macos' || deviceType === 'iphone' ? (

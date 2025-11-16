@@ -15,7 +15,7 @@ export const TIMINGS = {
   backgroundFade: 2000,     // Background fade in (simultaneous with stars)
   starsFade: 2000,          // Stars fade in (simultaneous with background)
   logoDelay: 2000,          // Wait for stars to complete
-  logoFade: 3000,           // Logo fade + zoom
+  logoFade: 4500,           // Logo fade (slower, more gradual)
   pauseAfterLogo: 1000,     // Pause after logo completes
   descriptionFade: 500,     // Description animation
   buttonDelay: 1000,        // Delay between description and button
