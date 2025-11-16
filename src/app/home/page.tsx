@@ -443,18 +443,6 @@ export default function HomePage() {
     <Tooltip.Provider delayDuration={200}>
       <div className="min-h-screen text-white relative">
         <div className="container mx-auto px-4 py-8">
-        {/* Connect Wallet Button (if no wallet connected) */}
-        {!userId && (
-          <div className="mb-8 flex justify-center">
-            <button
-              onClick={() => setShowWalletConnect(true)}
-              className="px-6 py-3 bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 border-2 border-yellow-500 rounded transition-colors font-['Orbitron'] uppercase tracking-wider text-lg font-bold"
-            >
-              Connect Wallet
-            </button>
-          </div>
-        )}
-
         {/* Commemorative NFT Claim Banner */}
         <div className="mb-8">
           <AirdropClaimBanner
