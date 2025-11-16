@@ -160,7 +160,7 @@ export default function LandingV2() {
             width: '100%',
             display: 'flex',
             justifyContent: 'center',
-            paddingTop: 'calc(10vh + 200px)',
+            paddingTop: '15vh',
             opacity: revealStarted ? 1 : 0,
             zIndex: 20,
             transitionDuration: `${TIMINGS.logoFade}ms`,

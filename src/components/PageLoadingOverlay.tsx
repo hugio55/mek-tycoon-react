@@ -38,29 +38,12 @@ export function PageLoadingOverlay() {
     if (urlParam !== null) {
       const shouldDisable = urlParam === 'true' || urlParam === '';
       localStorage.setItem(settingKey, shouldDisable.toString());
-      console.log('[🎯LOADER] PageLoadingOverlay URL Parameter:', {
-        urlParam,
-        shouldDisable,
-        settingKey
-      });
       return shouldDisable;
     }
 
     // Otherwise check localStorage
     const settingValue = localStorage.getItem(settingKey);
-    const bypassed = settingValue === 'true';
-
-    // Debug logging
-    console.log('[🎯LOADER] PageLoadingOverlay Check:', {
-      hostname,
-      isLocalhost,
-      settingKey,
-      settingValue,
-      bypassed,
-      userAgent: navigator.userAgent.substring(0, 50)
-    });
-
-    return bypassed;
+    return settingValue === 'true';
   })();
 
   useEffect(() => {

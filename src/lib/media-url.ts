@@ -20,17 +20,13 @@ const R2_BASE_URL = process.env.NEXT_PUBLIC_R2_URL || '';
  */
 export function getMediaUrl(path: string): string {
   if (!path.startsWith('/')) {
-    console.warn(`[MEDIA] Path should start with /: ${path}`);
     path = '/' + path;
   }
 
   if (R2_BASE_URL) {
-    const url = `${R2_BASE_URL}${path}`;
-    console.log(`[🌐MEDIA] Using R2: ${url}`);
-    return url;
+    return `${R2_BASE_URL}${path}`;
   }
 
-  console.log(`[🌐MEDIA] Using local: ${path}`);
   return path;
 }
 

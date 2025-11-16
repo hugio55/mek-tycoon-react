@@ -184,17 +184,6 @@ export async function getSession(): Promise<WalletSession | null> {
     }
 
     // Validate session structure (nonce is optional - may not exist if using existing backend session)
-    console.log('[TRACE-GET-5] Validating session structure:', {
-      hasWalletAddress: !!session.walletAddress,
-      hasStakeAddress: !!session.stakeAddress,
-      hasSessionId: !!session.sessionId,
-      hasNonce: !!session.nonce,
-      hasWalletType: !!session.walletType,
-      walletAddress: session.walletAddress?.slice(0, 12) + '...',
-      stakeAddress: session.stakeAddress?.slice(0, 12) + '...',
-      timestamp: new Date().toISOString()
-    });
-
     // CRITICAL: Only require fields that MUST exist (nonce is optional for existing backend sessions)
     if (
       !session.walletAddress ||
@@ -202,24 +191,9 @@ export async function getSession(): Promise<WalletSession | null> {
       !session.sessionId ||
       !session.walletType
     ) {
-      console.warn('[TRACE-GET-6] Invalid session structure detected - clearing');
-      console.warn('[TRACE-GET-6-DETAIL] Missing fields:', {
-        walletAddress: !session.walletAddress,
-        stakeAddress: !session.stakeAddress,
-        sessionId: !session.sessionId,
-        walletType: !session.walletType
-      });
       clearSession();
       return null;
     }
-
-    console.log('[TRACE-GET-7] Session valid, returning');
-    console.log('[Session] Retrieved valid session:', {
-      walletAddress: session.walletAddress.slice(0, 12) + '...',
-      expiresAt: new Date(session.expiresAt).toISOString(),
-      platform: session.platform,
-      age: Math.floor((now - session.createdAt) / 1000 / 60) + ' minutes',
-    });
 
     return session;
   } catch (error) {
