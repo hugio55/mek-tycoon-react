@@ -36,17 +36,19 @@ export default function LandingContainer({
         height
       }}
     >
-      <div
-        className="fixed inset-0 transition-opacity ease-out pointer-events-none"
-        style={{
-          backgroundImage: 'url(/colored-bg-1.webp)',
-          backgroundSize: isMobile ? '150%' : 'cover',
-          backgroundPosition: isMobile ? 'center calc(50% - 75px)' : 'center calc(50% + 25px)',
-          opacity: backgroundOpacity,
-          transitionDuration: `${transitionDuration}ms`,
-          zIndex: 0,
-        }}
-      />
+      {false && (
+        <div
+          className="fixed inset-0 transition-opacity ease-out pointer-events-none"
+          style={{
+            backgroundImage: 'url(/colored-bg-1.webp)',
+            backgroundSize: isMobile ? '150%' : 'cover',
+            backgroundPosition: isMobile ? 'center calc(50% - 75px)' : 'center calc(50% + 25px)',
+            opacity: backgroundOpacity,
+            transitionDuration: `${transitionDuration}ms`,
+            zIndex: 0,
+          }}
+        />
+      )}
 
       <div className="relative w-full flex flex-col pb-8" style={{ zIndex: 10 }}>
         {children}
