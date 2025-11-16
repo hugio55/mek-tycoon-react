@@ -3,9 +3,10 @@ import { ReactNode } from 'react';
 interface LandingContainerProps {
   children: ReactNode;
   backgroundOpacity: number;
+  showFooter?: boolean;
 }
 
-export default function LandingContainer({ children, backgroundOpacity }: LandingContainerProps) {
+export default function LandingContainer({ children, backgroundOpacity, showFooter = true }: LandingContainerProps) {
   return (
     <div className="fixed inset-0 bg-black overflow-y-auto scrollbar-overlay">
       <div
@@ -22,7 +23,8 @@ export default function LandingContainer({ children, backgroundOpacity }: Landin
         {children}
       </div>
 
-      <footer
+      {showFooter && (
+        <footer
         className="fixed bottom-0 left-0 right-0"
         style={{
           zIndex: 20,
@@ -102,6 +104,7 @@ export default function LandingContainer({ children, backgroundOpacity }: Landin
           </div>
         </div>
       </footer>
+      )}
     </div>
   );
 }
