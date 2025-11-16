@@ -25,6 +25,26 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
   const [showBetaLightbox, setShowBetaLightbox] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  // TEMPORARY PHASE I INDICATOR - START
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes slideParticles {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+  // TEMPORARY PHASE I INDICATOR - END
+
   useEffect(() => {
     const userAgent = navigator.userAgent.toLowerCase();
     const mobile = /iphone|ipod|android/.test(userAgent);
@@ -70,11 +90,15 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
     <div
       className="flex flex-col w-full"
       style={{
-        position: 'relative',
-        minHeight: 'fit-content',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        minHeight: '100vh',
+        pointerEvents: 'none',
       }}
     >
-      <div className="flex flex-col items-center" style={{ marginTop: isMobile ? 'calc(50vh - 135px)' : 'calc(60vh - 50px)', paddingBottom: '4rem', marginBottom: 0 }}>
+      <div className="flex flex-col items-center" style={{ marginTop: isMobile ? 'calc(50vh - 135px)' : 'calc(60vh - 50px)', paddingBottom: '4rem', marginBottom: 0, pointerEvents: 'auto' }}>
         {/* Description with fade + slide up */}
         <div
           className="transition-all duration-500 ease-out"
@@ -129,21 +153,46 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
                   style={{
                     height: '48px',
                     borderRadius: '8px',
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
+                    background: index === 0
+                      ? 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08))'
+                      : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
                     backdropFilter: 'blur(10px)',
                     transition: 'all 200ms ease',
+                    border: index === 0 ? '1px solid rgba(255, 255, 255, 0.3)' : 'none',
+                    boxShadow: index === 0 ? '0 0 20px rgba(255, 255, 255, 0.1)' : 'none',
                   }}
                   onMouseEnter={(e) => {
                     if (!isLocked) {
-                      e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))';
+                      if (index === 0) {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.10))';
+                      } else {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))';
+                      }
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isLocked) {
-                      e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))';
+                      if (index === 0) {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08))';
+                      } else {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))';
+                      }
                     }
                   }}
                 >
+                  {/* TEMPORARY PHASE I INDICATOR - START */}
+                  {index === 0 && (
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)',
+                        animation: 'slideParticles 3s linear infinite',
+                        opacity: 0.6,
+                      }}
+                    />
+                  )}
+                  {/* TEMPORARY PHASE I INDICATOR - END */}
+
                   <div className="h-full flex items-center justify-center px-6 relative">
                     <h3
                       className="text-white uppercase tracking-wider font-medium"
