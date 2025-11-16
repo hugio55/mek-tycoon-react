@@ -100,14 +100,14 @@ export default function LandingV2() {
         </div>
       )}
 
-      {/* Logo - fade in with zoom after stars complete */}
+      {/* Logo - fade in after stars complete */}
       {isRevealing && (
         <div
-          className="absolute transition-all ease-out"
+          className="absolute transition-opacity ease-out"
           style={{
             top: '50vh',
             left: '50%',
-            transform: `translate(-50%, -50%) scale(${revealStarted ? 1.0 : 0.95})`,
+            transform: 'translate(-50%, -50%)',
             opacity: revealStarted ? 1 : 0,
             zIndex: 20,
             transitionDuration: `${TIMINGS.logoFade}ms`,
