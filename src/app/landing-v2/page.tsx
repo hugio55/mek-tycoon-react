@@ -73,17 +73,11 @@ export default function LandingV2() {
           <div className="flex-1 flex flex-col items-center gap-4 px-4 py-8">
             {/* Logo - Positioned 15% higher than center */}
             <div className="flex items-center justify-center" style={{ marginTop: '-15vh' }}>
-              {deviceType === 'macos' ? (
+              {deviceType === 'macos' || deviceType === 'iphone' ? (
                 <img
                   src="/random-images/Everydays_4.gif"
                   alt="Mek Tycoon Logo"
-                  className="max-w-[40vw] max-h-[40vh] object-contain"
-                />
-              ) : deviceType === 'iphone' ? (
-                <img
-                  src="/random-images/Everydays_4.gif"
-                  alt="Mek Tycoon Logo"
-                  className="max-w-[80vw] max-h-[80vh] object-contain"
+                  className={deviceType === 'iphone' ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'max-w-[40vw] max-h-[40vh] object-contain'}
                 />
               ) : (
                 <video
@@ -216,11 +210,7 @@ export default function LandingV2() {
 
         <footer
           className="backdrop-blur-md md:backdrop-blur-lg bg-white/10 mt-auto relative overflow-hidden"
-          style={{
-            zIndex: 20,
-            willChange: 'transform',
-            transform: 'translateZ(0)'
-          }}
+          style={{ zIndex: 20 }}
         >
           {/* Honeycomb Pattern */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none">
