@@ -165,8 +165,14 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
       </div>
 
       <footer
-        className="backdrop-blur-md md:backdrop-blur-lg bg-white/10 mt-auto relative overflow-hidden w-full"
-        style={{ zIndex: 20, margin: 0 }}
+        className="backdrop-blur-md md:backdrop-blur-lg bg-white/10 mt-auto overflow-hidden"
+        style={{
+          zIndex: 20,
+          position: 'relative',
+          width: '100%',
+          marginLeft: 0,
+          marginRight: 0,
+        }}
       >
         <svg className="absolute inset-0 w-full h-full pointer-events-none">
           <defs>
