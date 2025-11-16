@@ -158,16 +158,20 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
                     height: '48px',
                     borderRadius: '8px',
                     background: index === 0
+                      ? 'linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))'
+                      : index === 1
                       ? 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08))'
                       : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
                     backdropFilter: 'blur(10px)',
                     transition: 'all 200ms ease',
-                    border: index === 0 ? '1px solid rgba(255, 255, 255, 0.3)' : 'none',
-                    boxShadow: index === 0 ? '0 0 20px rgba(255, 255, 255, 0.1)' : 'none',
+                    border: index === 1 ? '1px solid rgba(255, 255, 255, 0.3)' : 'none',
+                    boxShadow: index === 1 ? '0 0 20px rgba(255, 255, 255, 0.1)' : 'none',
                   }}
                   onMouseEnter={(e) => {
                     if (!isLocked) {
                       if (index === 0) {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08))';
+                      } else if (index === 1) {
                         e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.10))';
                       } else {
                         e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))';
@@ -177,6 +181,8 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
                   onMouseLeave={(e) => {
                     if (!isLocked) {
                       if (index === 0) {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))';
+                      } else if (index === 1) {
                         e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08))';
                       } else {
                         e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))';
@@ -185,7 +191,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
                   }}
                 >
                   {/* TEMPORARY PHASE I INDICATOR - START */}
-                  {index === 0 && (
+                  {index === 1 && (
                     <div
                       className="absolute inset-0 pointer-events-none"
                       style={{
@@ -200,7 +206,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
                   <div className="h-full flex items-center justify-center px-6 relative">
                     <div className="flex items-center gap-2">
                       {/* TEMPORARY PHASE I INDICATOR - LOADING SPINNER */}
-                      {index === 0 && (
+                      {index === 1 && (
                         <div>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                             {/* 8 dots arranged in a circle - stationary, brightness travels */}
@@ -221,14 +227,14 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
                         style={{
                           fontFamily: 'Saira, sans-serif',
                           fontSize: '16px',
-                          color: index === 0 ? 'white' : 'rgba(255, 255, 255, 0.5)',
+                          color: (index === 0 || index === 1) ? 'white' : 'rgba(255, 255, 255, 0.5)',
                         }}
                       >
                         {phaseLabel}
                       </h3>
 
                       {/* TEMPORARY PHASE I INDICATOR - LOADING SPINNER */}
-                      {index === 0 && (
+                      {index === 1 && (
                         <div>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                             {/* 8 dots arranged in a circle - stationary, brightness travels */}
