@@ -88,8 +88,8 @@ export default function LandingV2() {
 
   // Logo fades simultaneously with stars (no delay)
   const logoDelay = 0;
-  // Content wave starts ~500ms after logo begins
-  const contentDelay = 500;
+  // Content wave starts 2 seconds after logo begins
+  const contentDelay = 2000;
 
   // Show pure black until mounted
   if (!mounted) {
@@ -162,7 +162,9 @@ export default function LandingV2() {
             width: '100%',
             display: 'flex',
             justifyContent: 'center',
-            paddingTop: 'calc(8vh + 220px)',
+            paddingTop: (deviceType === 'iphone' || (deviceType === 'other' && navigator.userAgent.toLowerCase().includes('android')))
+              ? 'calc(8vh + 200px)'
+              : 'calc(8vh + 220px)',
             opacity: revealStarted ? 1 : 0,
             zIndex: 20,
             transitionDuration: `${TIMINGS.logoFade}ms`,

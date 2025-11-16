@@ -118,6 +118,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
       style={{
         opacity: shouldShow ? 1 : 0,
         transform: `translateY(${shouldShow ? 0 : 20}px)`,
+        backdropFilter: shouldShow ? 'blur(10px)' : 'blur(0px)',
       }}
     >
       <button
@@ -131,7 +132,6 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           height: '44px',
           borderRadius: '8px',
           background: currentBackground || styles.background,
-          backdropFilter: 'blur(10px)',
           transition: 'all 200ms ease',
           border: styles.border,
           boxShadow: styles.boxShadow,
