@@ -18,7 +18,7 @@ const STATE_ORDER: LandingState[] = [
 export const TIMINGS = {
   backgroundReveal: 1500,
   starsAndLogo: 1200,
-  briefPause: 500,
+  briefPause: 10,
   finalContent: 1000
 };
 
