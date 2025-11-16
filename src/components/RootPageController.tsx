@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import LandingPage from "@/app/landing/page";
+import LandingPage from "@/app/landing-v2/page";
 
 /**
  * Root Page Controller
