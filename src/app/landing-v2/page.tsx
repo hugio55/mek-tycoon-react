@@ -155,11 +155,12 @@ export default function LandingV2() {
       {/* Logo - fade in after stars complete */}
       {isRevealing && (
         <div
-          className="absolute transition-opacity"
+          className="transition-opacity"
           style={{
-            top: (deviceType === 'iphone' || deviceType === 'other' && navigator.userAgent.toLowerCase().includes('android')) ? 'calc(50vh - 400px)' : '50vh',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            paddingTop: '10vh',
             opacity: revealStarted ? 1 : 0,
             zIndex: 20,
             transitionDuration: `${TIMINGS.logoFade}ms`,
