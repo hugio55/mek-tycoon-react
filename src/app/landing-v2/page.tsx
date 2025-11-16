@@ -106,6 +106,16 @@ export default function LandingV2() {
       allowScroll={true}
       isLoading={isLoading}
     >
+      {/* Stars visible during loading and sound selection */}
+      {(isLoading || isState('SOUND_SELECTION')) && (
+        <div
+          className="fixed inset-0 pointer-events-none"
+          style={{ zIndex: 1 }}
+        >
+          <StarField />
+        </div>
+      )}
+
       <SoundSelectionState
         isActive={isState('SOUND_SELECTION')}
         onComplete={next}
