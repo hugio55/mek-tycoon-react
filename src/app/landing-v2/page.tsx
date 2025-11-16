@@ -67,8 +67,8 @@ export default function LandingV2() {
       }, 500);
 
       // Enable scrolling after logo fade completes
-      const logoDelay = TIMINGS.starsFade;
-      const totalLogoTime = logoDelay + TIMINGS.logoFade;
+      // Logo starts at 0ms (no delay) and takes 4500ms to fade
+      const totalLogoTime = TIMINGS.logoFade;
       setTimeout(() => {
         setLogoFadeComplete(true);
       }, totalLogoTime);
@@ -88,8 +88,8 @@ export default function LandingV2() {
 
   // Logo fades simultaneously with stars (no delay)
   const logoDelay = 0;
-  // Content starts 500ms after logo starts fading (not after it completes)
-  const contentDelay = 500;
+  // Content starts 800ms after logo starts fading (500ms + 300ms extra delay)
+  const contentDelay = 800;
 
   // Show pure black until mounted
   if (!mounted) {
