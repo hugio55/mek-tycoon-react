@@ -74,7 +74,7 @@ export const submitBetaSignup = mutation({
 
     if (existingAddress) {
       console.log('[🎮BETA-SERVER] Address already registered');
-      throw new Error('This stake address has already been registered');
+      throw new Error('This address has already been submitted.');
     }
 
     // Check for existing signup from this IP address
