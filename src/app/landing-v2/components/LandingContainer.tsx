@@ -13,7 +13,7 @@ export default function LandingContainer({ children, backgroundOpacity }: Landin
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: 'cover',
-          backgroundPosition: 'center calc(50% + 0px)',
+          backgroundPosition: 'center calc(50% + 25px)',
           opacity: backgroundOpacity,
         }}
       />
