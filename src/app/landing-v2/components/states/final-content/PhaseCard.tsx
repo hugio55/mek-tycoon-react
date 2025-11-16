@@ -79,7 +79,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           ${isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-[1.02] active:scale-[0.98]'}
         `}
         style={{
-          height: '48px',
+          height: '44px',
           borderRadius: '8px',
           background: currentBackground || styles.background,
           backdropFilter: 'blur(10px)',
