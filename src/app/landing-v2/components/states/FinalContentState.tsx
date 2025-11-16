@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import FillTextButton from '@/components/controls/FillTextButton';
+import BetaSignupLightbox from '@/components/BetaSignupLightbox';
 
 interface PhaseCard {
   _id: string;
@@ -17,6 +18,7 @@ interface FinalContentStateProps {
 export default function FinalContentState({ isActive, phaseCards }: FinalContentStateProps) {
   const [mounted, setMounted] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [showBetaLightbox, setShowBetaLightbox] = useState(false);
 
   useEffect(() => {
     if (isActive) {
@@ -46,7 +48,11 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
         </p>
 
         <div className="mt-8" style={{ transform: 'scale(0.8)' }}>
-          <FillTextButton text="join beta" fontFamily="Play" />
+          <FillTextButton
+            text="join beta"
+            fontFamily="Play"
+            onClick={() => setShowBetaLightbox(true)}
+          />
         </div>
 
         <div className="w-full max-w-[680px] mx-auto mt-12 mb-[200px] flex flex-col gap-3">
@@ -124,9 +130,8 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
                 <div
                   style={{
                     maxHeight: isExpanded ? '500px' : '0',
-                    opacity: isExpanded ? 1 : 0,
                     overflow: 'hidden',
-                    transition: 'all 400ms ease',
+                    transition: 'max-height 400ms ease',
                   }}
                 >
                   <div
@@ -135,7 +140,8 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
                       background: 'rgba(0, 0, 0, 0.6)',
                       borderRadius: '8px',
                       backdropFilter: isExpanded ? 'blur(8px)' : 'blur(0px)',
-                      transition: 'backdrop-filter 500ms ease-in-out',
+                      opacity: isExpanded ? 1 : 0,
+                      transition: 'backdrop-filter 400ms ease, opacity 400ms ease',
                     }}
                   >
                     <h4

@@ -5,45 +5,18 @@ interface StateDebugPanelProps {
   onStateChange: (state: LandingState) => void;
 }
 
-const STATE_LABELS: Record<LandingState, string> = {
-  SOUND_SELECTION: 'Sound',
-  BACKGROUND_REVEAL: 'BG Reveal',
-  STARS_AND_LOGO: 'Stars+Logo',
-  BRIEF_PAUSE: 'Pause',
-  FINAL_CONTENT: 'Final',
-};
-
 export default function StateDebugPanel({ currentState, onStateChange }: StateDebugPanelProps) {
-  const states: LandingState[] = [
-    'SOUND_SELECTION',
-    'BACKGROUND_REVEAL',
-    'STARS_AND_LOGO',
-    'BRIEF_PAUSE',
-    'FINAL_CONTENT'
-  ];
-
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] mek-card-industrial p-4 max-w-xs">
-      <div className="mek-label-uppercase mb-3 text-center">
-        Debug: {STATE_LABELS[currentState]}
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {states.map(state => (
-          <button
-            key={state}
-            onClick={() => onStateChange(state)}
-            className={`
-              px-3 py-2 text-xs rounded transition-all
-              ${currentState === state
-                ? 'mek-button-primary'
-                : 'mek-button-secondary hover:scale-105'
-              }
-            `}
-          >
-            {STATE_LABELS[state]}
-          </button>
-        ))}
-      </div>
-    </div>
+    <select
+      value={currentState}
+      onChange={(e) => onStateChange(e.target.value as LandingState)}
+      className="fixed top-2 left-2 z-[9999] text-xs bg-black/80 text-white border border-white/30 rounded px-2 py-1"
+    >
+      <option value="SOUND_SELECTION">Sound Selection</option>
+      <option value="BACKGROUND_REVEAL">BG Reveal</option>
+      <option value="STARS_AND_LOGO">Stars+Logo</option>
+      <option value="BRIEF_PAUSE">Pause</option>
+      <option value="FINAL_CONTENT">Final</option>
+    </select>
   );
 }
