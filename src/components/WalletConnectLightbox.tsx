@@ -28,6 +28,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionSuccessful, setConnectionSuccessful] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<string>('');
   const [availableWallets, setAvailableWallets] = useState<WalletInfo[]>([]);
   const [walletError, setWalletError] = useState<string | null>(null);
@@ -254,7 +255,8 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('walletConnected', { detail: { address: stakeAddress } }));
 
-      // Reset connecting state and close lightbox
+      // Mark as successful and close lightbox
+      setConnectionSuccessful(true);
       setIsConnecting(false);
       setTimeout(() => {
         onClose();
