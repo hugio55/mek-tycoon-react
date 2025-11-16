@@ -17,6 +17,11 @@ export default function LandingV2() {
   const { isLoading, registerCriticalAsset, markCriticalAssetLoaded } = useLoaderContext();
   const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'other'>('other');
   const [mounted, setMounted] = useState(false);
+
+  // Debug: Log isLoading state to help user verify stars appear
+  useEffect(() => {
+    console.log('[⭐STARS] isLoading:', isLoading);
+  }, [isLoading]);
   const [revealStarted, setRevealStarted] = useState(false);
   const [backgroundFadedIn, setBackgroundFadedIn] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
@@ -106,8 +111,8 @@ export default function LandingV2() {
       allowScroll={true}
       isLoading={isLoading}
     >
-      {/* Stars visible during loading and sound selection */}
-      {(isLoading || isState('SOUND_SELECTION')) && (
+      {/* Stars visible ONLY during loading (behind Universal Loader) */}
+      {isLoading && (
         <div
           className="fixed inset-0 pointer-events-none"
           style={{ zIndex: 1 }}
