@@ -7,11 +7,12 @@ interface SoundSelectionStateProps {
   isActive: boolean;
   onComplete: () => void;
   onAudioStart?: () => void;
+  shouldShow?: boolean;
 }
 
 const STORAGE_KEY_AUDIO = 'mek-audio-consent';
 
-export default function SoundSelectionState({ isActive, onComplete, onAudioStart }: SoundSelectionStateProps) {
+export default function SoundSelectionState({ isActive, onComplete, onAudioStart, shouldShow = true }: SoundSelectionStateProps) {
   const [mounted, setMounted] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
 

@@ -143,7 +143,7 @@ export default function ProModeToggle({
             type="checkbox"
             checked={guardOpen}
             onChange={handleGuardToggle}
-            className="peer/guard relative m-0 p-0 appearance-none block w-[50px] h-[100px] rounded-[7px] cursor-grab z-[3] border border-black
+            className="peer/guard relative m-0 p-0 appearance-none block w-[50px] h-[100px] rounded-[7px] cursor-pointer z-[3] border border-black
                        transition-transform duration-200"
             style={{
               background: guardGradients[guardColor],
