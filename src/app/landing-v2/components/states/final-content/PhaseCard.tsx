@@ -153,13 +153,12 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             }}
           >
             <defs>
-              <linearGradient id="cometTailGradient" x1="100%" y1="0%" x2="0%" y2="0%">
+              <radialGradient id="cometTailGradient">
                 <stop offset="0%" stopColor="rgba(255, 255, 255, 1)" />
-                <stop offset="15%" stopColor="rgba(255, 255, 255, 0.8)" />
-                <stop offset="40%" stopColor="rgba(255, 255, 255, 0.5)" />
-                <stop offset="70%" stopColor="rgba(255, 255, 255, 0.2)" />
+                <stop offset="30%" stopColor="rgba(255, 255, 255, 0.8)" />
+                <stop offset="60%" stopColor="rgba(255, 255, 255, 0.4)" />
                 <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
-              </linearGradient>
+              </radialGradient>
               <filter id="cometGlow">
                 <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
                 <feMerge>
@@ -170,30 +169,39 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             </defs>
 
             <g filter="url(#cometGlow)">
-              <polygon
-                points="0,0 -12,-0.8 -12,0.8"
+              <ellipse
+                cx="-6"
+                cy="0"
+                rx="10"
+                ry="1.5"
                 fill="url(#cometTailGradient)"
-                opacity="0.9"
+                opacity="0.8"
               >
                 <animateMotion
-                  dur="3s"
+                  dur="4s"
                   repeatCount="indefinite"
                   path="M 1,1 L 99,1 L 99,43 L 1,43 Z"
+                  keyPoints="0;0.35;0.50;0.85;1"
+                  keyTimes="0;0.35;0.50;0.85;1"
+                  calcMode="linear"
                   rotate="auto"
                 />
-              </polygon>
+              </ellipse>
 
               <circle
                 cx="0"
                 cy="0"
-                r="1.2"
+                r="1.8"
                 fill="white"
                 opacity="1"
               >
                 <animateMotion
-                  dur="3s"
+                  dur="4s"
                   repeatCount="indefinite"
                   path="M 1,1 L 99,1 L 99,43 L 1,43 Z"
+                  keyPoints="0;0.35;0.50;0.85;1"
+                  keyTimes="0;0.35;0.50;0.85;1"
+                  calcMode="linear"
                 />
               </circle>
             </g>
