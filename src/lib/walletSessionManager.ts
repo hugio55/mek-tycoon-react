@@ -47,8 +47,8 @@ export async function saveWalletSession(data: SessionData): Promise<void> {
     paymentAddress: data.paymentAddress, // Store separately for blockchain verification
     sessionId: data.sessionId,
     nonce: data.nonce,
-    walletType: data.walletName.toLowerCase(),
-    walletName: data.walletName,
+    walletType: (data.walletName || 'unknown').toLowerCase(),
+    walletName: data.walletName || 'unknown',
     platform,
     deviceId,
   };
