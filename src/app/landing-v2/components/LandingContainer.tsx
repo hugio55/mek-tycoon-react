@@ -47,13 +47,13 @@ export default function LandingContainer({
         }}
       />
 
-      <div className="relative w-full flex flex-col min-h-screen pb-8" style={{ zIndex: 10 }}>
+      <div className="relative w-full flex flex-col min-h-screen" style={{ zIndex: 10 }}>
         <div style={{ flexGrow: 1 }}>
           {children}
         </div>
 
         {showFooter && (
-          <footer className="w-full relative mt-auto" style={{ paddingTop: '32px', paddingBottom: '32px' }}>
+          <footer className="w-full relative mt-auto" style={{ paddingTop: '32px', paddingBottom: '12px' }}>
             {/* Backdrop blur effect */}
             <div
               className="absolute inset-0"
@@ -83,7 +83,7 @@ export default function LandingContainer({
             </svg>
 
             {/* Content */}
-            <div className="relative z-10 flex flex-col items-center gap-4">
+            <div className="relative z-10 flex flex-col items-center gap-2">
               {/* OE Logo */}
               <a
                 href="https://www.overexposed.io/"
@@ -99,7 +99,7 @@ export default function LandingContainer({
               </a>
 
               {/* Social Icons */}
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-6 scale-95">
                 <a
                   href="https://discord.gg/KnqMF6Ayyc"
                   target="_blank"

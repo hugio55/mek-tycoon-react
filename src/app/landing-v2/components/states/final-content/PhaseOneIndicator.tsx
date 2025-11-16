@@ -57,6 +57,24 @@ export default function PhaseOneIndicator() {
 }
 
 export function LoadingSpinner() {
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes dotPulse {
+        0%, 100% {
+          opacity: 0.2;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   return (
     <div>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none">

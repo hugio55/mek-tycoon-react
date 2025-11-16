@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PhaseOneIndicator, { LoadingSpinner } from './PhaseOneIndicator';
 
 interface PhaseCardData {
@@ -19,6 +19,17 @@ interface PhaseCardProps {
 
 const PHASE_LABELS = ['I', 'II', 'III', 'IV'];
 
+function Checkmark() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+        fill="white"
+      />
+    </svg>
+  );
+}
+
 function getPhaseStyles(index: number) {
   const styles = {
     background: '',
@@ -36,8 +47,8 @@ function getPhaseStyles(index: number) {
     styles.border = '1px solid rgba(255, 255, 255, 0.3)';
     styles.boxShadow = '0 0 20px rgba(255, 255, 255, 0.1)';
   } else {
-    styles.background = 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))';
-    styles.hoverBackground = 'linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))';
+    styles.background = 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))';
+    styles.hoverBackground = 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))';
   }
 
   return styles;
@@ -50,6 +61,26 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
   const isPhaseTwo = index === 1;
   const isPhaseOne = index === 0;
   const isLocked = card.locked;
+
+  useEffect(() => {
+    if (isPhaseTwo) {
+      const style = document.createElement('style');
+      style.innerHTML = `
+        @keyframes slideParticles {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+      return () => {
+        document.head.removeChild(style);
+      };
+    }
+  }, [isPhaseTwo]);
 
   const handleMouseEnter = () => {
     if (!isLocked) {
@@ -90,8 +121,20 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
+        {isPhaseTwo && (
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)',
+              animation: 'slideParticles 3s linear infinite',
+              opacity: 0.6,
+            }}
+          />
+        )}
+
         <div className="h-full flex items-center justify-center px-6 relative">
           <div className="flex items-center gap-2">
+            {isPhaseOne && <Checkmark />}
             {isPhaseTwo && <LoadingSpinner />}
 
             <h3
@@ -99,12 +142,13 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
               style={{
                 fontFamily: 'Saira, sans-serif',
                 fontSize: '16px',
-                color: (isPhaseOne || isPhaseTwo) ? 'white' : 'rgba(255, 255, 255, 0.5)',
+                color: (isPhaseOne || isPhaseTwo) ? 'white' : 'rgba(255, 255, 255, 0.35)',
               }}
             >
               {phaseLabel}
             </h3>
 
+            {isPhaseOne && <Checkmark />}
             {isPhaseTwo && <LoadingSpinner />}
           </div>
 
