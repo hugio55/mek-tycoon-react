@@ -50,8 +50,10 @@ export default function LandingContainer({
         />
       )}
 
-      <div className="relative w-full flex flex-col pb-8" style={{ zIndex: 10 }}>
-        {children}
+      <div className="relative w-full flex flex-col min-h-screen pb-8" style={{ zIndex: 10 }}>
+        <div style={{ flexGrow: 1 }}>
+          {children}
+        </div>
 
         {showFooter && (
           <footer className="mt-12 flex justify-center">

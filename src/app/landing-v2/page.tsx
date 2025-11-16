@@ -83,7 +83,7 @@ export default function LandingV2() {
       ? (backgroundFadedIn ? 0.3 : 0)
       : 1.0
   );
-  const showFooter = !isState('SOUND_SELECTION');
+  const showFooter = true; // Always show footer for testing
   const showSpeaker = isRevealing;
 
   // Logo fades simultaneously with stars (no delay)

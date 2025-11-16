@@ -7,8 +7,8 @@ import { SeededRandom } from "@/lib/seeded-random";
 export default function GlobalBackground() {
   const pathname = usePathname();
 
-  // Don't render background on landing page (has its own custom background)
-  if (pathname === '/landing') {
+  // Don't render background on landing pages (have their own custom backgrounds)
+  if (pathname === '/landing' || pathname === '/landing-v2') {
     return null;
   }
   const backgroundStars = useMemo(() => {
