@@ -92,7 +92,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
         const cardBottom = cardRect.bottom;
 
         if (cardBottom > windowHeight) {
-          const scrollAmount = cardBottom - windowHeight + 40;
+          const scrollAmount = cardBottom - windowHeight + 100;
           window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
         }
       }, 450);
