@@ -41,6 +41,14 @@ export default function NavigationBar() {
   const imageKeyRef = useRef<string | null>(null);
   const [showWalletConnect, setShowWalletConnect] = useState(false);
 
+  // Track showWalletConnect state changes
+  useEffect(() => {
+    console.log('[🔍PARENT-STATE] NavigationBar showWalletConnect changed:', {
+      showWalletConnect,
+      timestamp: Date.now()
+    });
+  }, [showWalletConnect]);
+
   // Check if we're in a loading state (may not be in LoaderProvider)
   let isPageLoading = false;
   try {

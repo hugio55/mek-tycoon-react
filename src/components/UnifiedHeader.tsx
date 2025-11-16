@@ -74,6 +74,14 @@ export default function UnifiedHeader() {
   const [companyNameModalMode, setCompanyNameModalMode] = useState<'initial' | 'edit'>('initial');
   const [showWalletConnect, setShowWalletConnect] = useState(false);
 
+  // Track showWalletConnect state changes
+  useEffect(() => {
+    console.log('[🔍PARENT-STATE] UnifiedHeader showWalletConnect changed:', {
+      showWalletConnect,
+      timestamp: Date.now()
+    });
+  }, [showWalletConnect]);
+
 
   // Get wallet address from encrypted session storage
   useEffect(() => {

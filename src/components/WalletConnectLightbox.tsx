@@ -28,7 +28,6 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [connectionSuccessful, setConnectionSuccessful] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<string>('');
   const [availableWallets, setAvailableWallets] = useState<WalletInfo[]>([]);
   const [walletError, setWalletError] = useState<string | null>(null);
@@ -44,13 +43,9 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       detectAvailableWallets();
-      // Reset success state when opening
-      setConnectionSuccessful(false);
     } else {
       document.body.style.overflow = '';
-      // Reset states when closing
       setIsConnecting(false);
-      setConnectionSuccessful(false);
       setWalletError(null);
     }
 
@@ -229,12 +224,11 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('walletConnected', { detail: { address: stakeAddress } }));
 
-      // Close lightbox FIRST, before any other state changes
-      onClose();
-
-      // Then mark as successful (for cleanup)
-      setConnectionSuccessful(true);
+      // Reset state before closing
       setIsConnecting(false);
+
+      // Close lightbox (parent will update isOpen prop which will unmount this component)
+      onClose();
 
     } catch (error: any) {
       console.error('[WalletConnect] Connection error:', error);
@@ -250,12 +244,11 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
   // Cancel connection
   const cancelConnection = () => {
     setIsConnecting(false);
-    setConnectionSuccessful(false);
     setConnectionStatus('');
   };
 
-  // Early return if not mounted, not open, or connection successful
-  if (!mounted || !isOpen || connectionSuccessful) {
+  // Early return if not mounted or not open
+  if (!mounted || !isOpen) {
     return null;
   }
 
@@ -265,7 +258,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       onClick={onClose}
     >
       {/* Connecting Modal */}
-      {isConnecting && !connectionSuccessful && (
+      {isConnecting && (
         <div
           className="relative max-w-md w-full"
           onClick={(e) => e.stopPropagation()}
@@ -315,7 +308,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       )}
 
       {/* Main Wallet Selection */}
-      {!isConnecting && !connectionSuccessful && (
+      {!isConnecting && (
         <div
           className="relative max-w-[600px] w-full px-2 sm:px-4 md:px-0"
           onClick={(e) => e.stopPropagation()}

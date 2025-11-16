@@ -64,13 +64,9 @@ export async function saveWalletSession(data: SessionData): Promise<void> {
   // Save encrypted session (this is now async due to encryption)
   await saveSession(session);
 
-  // Clear disconnect nonce since user has successfully reconnected
-  try {
-    localStorage.removeItem('mek_disconnect_nonce');
-    console.log('[Session Manager] Cleared disconnect nonce - new session established');
-  } catch (error) {
-    console.error('[Session Manager] Failed to clear disconnect nonce:', error);
-  }
+  // DO NOT clear disconnect nonce here - it gets cleared when user successfully passes signature check
+  // If we clear it here, user can bypass the signature requirement by just having wallet auto-approve enable()
+  console.log('[Session Manager] Session saved (disconnect nonce still in place if exists)');
 
   // Save Meks cache separately (using different key to avoid overwriting encrypted session)
   if (data.cachedMeks && data.cachedMeks.length > 0) {
@@ -95,20 +91,10 @@ export async function saveWalletSession(data: SessionData): Promise<void> {
  * Restore a wallet session with async decryption
  * Returns session data if valid, null if expired or invalid
  * Automatically migrates legacy plaintext sessions to encrypted format
- * Validates against disconnect nonce to ensure session wasn't invalidated
  * @returns Promise that resolves to session or null
  */
 export async function restoreWalletSession(): Promise<WalletSession | null> {
   try {
-    // Check if user has disconnected since this session was created
-    const disconnectNonce = localStorage.getItem('mek_disconnect_nonce');
-    if (disconnectNonce) {
-      console.log('[Session Manager] Disconnect nonce found - session invalidated, user must reconnect');
-      // Don't clear session here - it causes infinite loop
-      // Session will be invalid anyway, just return null
-      return null;
-    }
-
     const session = await getSession();
 
     if (!session) {
