@@ -90,8 +90,6 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        {isPhaseTwo && <PhaseOneIndicator />}
-
         <div className="h-full flex items-center justify-center px-6 relative">
           <div className="flex items-center gap-2">
             {isPhaseTwo && <LoadingSpinner />}
