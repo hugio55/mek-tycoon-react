@@ -142,6 +142,8 @@ export default function LandingV2() {
         <div
           className="transition-opacity ease-out"
           style={{
+            position: 'absolute',
+            inset: 0,
             opacity: revealStarted ? 1 : 0,
             transitionDuration: `${TIMINGS.starsFade}ms`,
           }}
