@@ -67,7 +67,11 @@ export default function LandingV2() {
   const contentDelay = logoDelay + TIMINGS.logoFade + TIMINGS.pauseAfterLogo;
 
   return (
-    <LandingContainer backgroundOpacity={backgroundOpacity} showFooter={showFooter}>
+    <LandingContainer
+      backgroundOpacity={backgroundOpacity}
+      showFooter={showFooter}
+      transitionDuration={isState('SOUND_SELECTION') ? 1000 : 2000}
+    >
       <SoundSelectionState
         isActive={isState('SOUND_SELECTION')}
         onComplete={next}
