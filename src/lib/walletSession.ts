@@ -31,14 +31,6 @@ export interface WalletSession {
 export async function saveSession(session: Omit<WalletSession, 'createdAt' | 'expiresAt'>): Promise<void> {
   if (typeof window === 'undefined') return;
 
-  console.log('[TRACE-SAVE-3] saveSession called with:', {
-    walletAddress: session.walletAddress?.slice(0, 12) + '...',
-    stakeAddress: session.stakeAddress?.slice(0, 12) + '...',
-    walletAddressIsUndefined: session.walletAddress === undefined,
-    stakeAddressIsUndefined: session.stakeAddress === undefined,
-    timestamp: new Date().toISOString()
-  });
-
   const now = Date.now();
   const fullSession: WalletSession = {
     ...session,
@@ -46,39 +38,10 @@ export async function saveSession(session: Omit<WalletSession, 'createdAt' | 'ex
     expiresAt: now + SESSION_DURATION,
   };
 
-  console.log('[TRACE-SAVE-4] fullSession before encryption:', {
-    walletAddress: fullSession.walletAddress?.slice(0, 12) + '...',
-    stakeAddress: fullSession.stakeAddress?.slice(0, 12) + '...',
-    walletAddressIsUndefined: fullSession.walletAddress === undefined,
-    timestamp: new Date().toISOString()
-  });
-
   try {
     // Encrypt session before storing
     const encryptedSession = await encryptSession(fullSession);
-
-    console.log('[TRACE-SAVE-5] Session encrypted, saving to localStorage');
-    console.log('[TRACE-SAVE-5b] SESSION_KEY:', SESSION_KEY);
-    console.log('[TRACE-SAVE-5c] Encrypted session length:', encryptedSession.length);
     localStorage.setItem(SESSION_KEY, encryptedSession);
-
-    console.log('[TRACE-SAVE-6] Saved to localStorage, verifying...');
-    const storedValue = localStorage.getItem(SESSION_KEY);
-    console.log('[TRACE-SAVE-7] Verification:', {
-      exists: !!storedValue,
-      length: storedValue?.length,
-      matchesEncrypted: storedValue === encryptedSession,
-      key: SESSION_KEY
-    });
-
-    // Additional verification - check ALL localStorage keys
-    console.log('[TRACE-SAVE-8] All localStorage keys:', Object.keys(localStorage));
-
-    console.log('[Session] Saved encrypted wallet session:', {
-      walletAddress: session.walletAddress?.slice(0, 12) + '...',
-      expiresAt: new Date(fullSession.expiresAt).toISOString(),
-      platform: session.platform,
-    });
   } catch (error) {
     console.error('[Session] Failed to save session:', error);
     throw error;
@@ -93,24 +56,12 @@ export async function saveSession(session: Omit<WalletSession, 'createdAt' | 'ex
 export async function getSession(): Promise<WalletSession | null> {
   if (typeof window === 'undefined') return null;
 
-  console.log('[TRACE-GET-1] getSession called at', new Date().toISOString());
-  console.log('[TRACE-GET-1b] SESSION_KEY:', SESSION_KEY);
-  console.log('[TRACE-GET-1c] All localStorage keys:', Object.keys(localStorage));
-
   const migrationTracker = new SessionMigrationTracker();
 
   try {
     const stored = localStorage.getItem(SESSION_KEY);
-    console.log('[TRACE-GET-2] Retrieved from localStorage:', {
-      exists: !!stored,
-      length: stored?.length,
-      key: SESSION_KEY,
-      firstChars: stored?.substring(0, 50),
-      timestamp: new Date().toISOString()
-    });
 
     if (!stored) {
-      console.log('[Session] No stored session found');
       return null;
     }
 
@@ -118,17 +69,9 @@ export async function getSession(): Promise<WalletSession | null> {
 
     // Check if this is an encrypted session or legacy plaintext
     if (isEncryptedSession(stored)) {
-      console.log('[TRACE-GET-3] Detected encrypted session, decrypting...');
       // Decrypt the session
       try {
         session = await decryptSession(stored);
-        console.log('[TRACE-GET-4] Decryption successful:', {
-          walletAddress: session.walletAddress?.slice(0, 12) + '...',
-          stakeAddress: session.stakeAddress?.slice(0, 12) + '...',
-          walletAddressIsUndefined: session.walletAddress === undefined,
-          timestamp: new Date().toISOString()
-        });
-        console.log('[Session] Decrypted session successfully');
       } catch (decryptError) {
         console.error('[Session] Failed to decrypt session:', decryptError);
         clearSession();
