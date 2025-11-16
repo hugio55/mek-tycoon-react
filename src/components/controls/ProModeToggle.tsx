@@ -117,8 +117,8 @@ export default function ProModeToggle({
           outline: '3px solid #a1a1a1',
           background: `repeating-linear-gradient(
             -45deg,
-            #5eb3f6,
-            #5eb3f6 12px,
+            #f5dd00,
+            #f5dd00 12px,
             #101010 10px,
             #101010 23px
           )`
