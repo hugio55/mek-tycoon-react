@@ -64,16 +64,12 @@ export default function LandingContainer({
             />
 
             {/* Honeycomb pattern */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-35">
+            <svg className="absolute inset-0 w-full h-full pointer-events-none">
               <defs>
-                <pattern id="honeycomb" width="56" height="97" patternUnits="userSpaceOnUse">
-                  <polygon points="28,0 42,8 42,24 28,32 14,24 14,8" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="0.8"/>
-                  <polygon points="0,16 14,24 14,40 0,48 -14,40 -14,24" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="0.8"/>
-                  <polygon points="56,16 70,24 70,40 56,48 42,40 42,24" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="0.8"/>
-                  <polygon points="28,32 42,40 42,56 28,64 14,56 14,40" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="0.8"/>
-                  <polygon points="0,48 14,56 14,72 0,80 -14,72 -14,56" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="0.8"/>
-                  <polygon points="56,48 70,56 70,72 56,80 42,72 42,56" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="0.8"/>
-                  <polygon points="28,64 42,72 42,88 28,96 14,88 14,72" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="0.8"/>
+                <pattern id="honeycomb" width="28" height="49" patternUnits="userSpaceOnUse">
+                  <path d="M14 0 L21 4 L21 12 L14 16 L7 12 L7 4 Z" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>
+                  <path d="M0 24.5 L7 28.5 L7 36.5 L0 40.5 L-7 36.5 L-7 28.5 Z" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>
+                  <path d="M28 24.5 L35 28.5 L35 36.5 L28 40.5 L21 36.5 L21 28.5 Z" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>
                 </pattern>
                 <linearGradient id="fadeGradient" x1="0%" y1="100%" x2="0%" y2="0%">
                   <stop offset="0%" stopColor="white" stopOpacity="1" />

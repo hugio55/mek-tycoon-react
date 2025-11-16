@@ -25,7 +25,7 @@ export default function PhaseCardsSection({ phaseCards, showPhases }: PhaseCards
   const displayPhases = phaseCards?.slice(0, 4) || [];
 
   return (
-    <div className="w-full max-w-[680px] mx-auto flex flex-col gap-3" style={{ marginTop: '30px', marginBottom: '30px' }}>
+    <div className="w-full max-w-[680px] mx-auto flex flex-col gap-3" style={{ marginTop: '50px', marginBottom: '30px' }}>
       {displayPhases.map((card: PhaseCardData, index: number) => {
         const isExpanded = expandedIndex === index;
         const shouldShow = index < showPhases;
