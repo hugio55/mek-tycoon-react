@@ -111,16 +111,6 @@ export default function LandingV2() {
       allowScroll={true}
       isLoading={isLoading}
     >
-      {/* Stars visible ONLY during loading (behind Universal Loader) */}
-      {isLoading && (
-        <div
-          className="fixed inset-0 pointer-events-none"
-          style={{ zIndex: 5 }}
-        >
-          <StarField />
-        </div>
-      )}
-
       <SoundSelectionState
         isActive={isState('SOUND_SELECTION')}
         onComplete={next}
