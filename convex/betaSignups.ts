@@ -156,3 +156,16 @@ export const getBetaSignupCount = query({
     return signups.length;
   },
 });
+
+/**
+ * Delete a beta signup (admin only)
+ */
+export const deleteBetaSignup = mutation({
+  args: {
+    signupId: v.id("betaSignups"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.signupId);
+    return { success: true };
+  },
+});
