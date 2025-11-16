@@ -25,12 +25,16 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
 
   const handleProceed = (withAudio: boolean) => {
     console.log('[🎵SOUND] User selected audio:', withAudio);
+    console.log('[🎵SOUND] About to store to localStorage - audioEnabled:', withAudio);
 
     // Store preference immediately
-    localStorage.setItem(STORAGE_KEY_AUDIO, JSON.stringify({
+    const dataToStore = {
       audioEnabled: withAudio,
       timestamp: Date.now()
-    }));
+    };
+    localStorage.setItem(STORAGE_KEY_AUDIO, JSON.stringify(dataToStore));
+    console.log('[🎵SOUND] Stored to localStorage:', dataToStore);
+    console.log('[🎵SOUND] Verify read back:', JSON.parse(localStorage.getItem(STORAGE_KEY_AUDIO) || '{}'));
 
     // Start audio immediately if enabled (must happen during user gesture)
     if (withAudio && onAudioStart) {
@@ -85,7 +89,7 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
               enabled={false}
               onChange={(enabled) => {
                 if (enabled) {
-                  handleProceed(false);
+                  handleProceed(true);
                 }
               }}
               label=""
@@ -129,7 +133,7 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
               enabled={false}
               onChange={(enabled) => {
                 if (enabled) {
-                  handleProceed(true);
+                  handleProceed(false);
                 }
               }}
               label=""
