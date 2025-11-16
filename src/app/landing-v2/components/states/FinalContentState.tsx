@@ -90,15 +90,11 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
     <div
       className="flex flex-col w-full"
       style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        minHeight: '100vh',
+        position: 'relative',
         pointerEvents: 'none',
       }}
     >
-      <div className="flex flex-col items-center" style={{ marginTop: isMobile ? 'calc(50vh + 165px)' : 'calc(60vh + 250px)', paddingBottom: '4rem', marginBottom: 0, pointerEvents: 'auto' }}>
+      <div className="flex flex-col items-center" style={{ marginTop: isMobile ? 'calc(50vh + 65px)' : 'calc(60vh + 150px)', paddingBottom: '200px', pointerEvents: 'auto' }}>
         {/* Description with fade + slide up */}
         <div
           className="transition-all duration-500 ease-out"
@@ -194,15 +190,45 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
                   {/* TEMPORARY PHASE I INDICATOR - END */}
 
                   <div className="h-full flex items-center justify-center px-6 relative">
-                    <h3
-                      className="text-white uppercase tracking-wider font-medium"
-                      style={{
-                        fontFamily: 'Saira, sans-serif',
-                        fontSize: '16px',
-                      }}
-                    >
-                      {phaseLabel}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      {/* TEMPORARY PHASE I INDICATOR - HAMMER ICONS */}
+                      {index === 0 && (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                          <g transform="rotate(-45 12 12)">
+                            <rect x="10" y="4" width="4" height="10" fill="rgba(250, 182, 23, 0.9)" />
+                            <rect x="8" y="14" width="8" height="6" rx="1" fill="rgba(250, 182, 23, 0.9)" />
+                          </g>
+                          <g transform="rotate(45 12 12)">
+                            <rect x="10" y="4" width="4" height="10" fill="rgba(250, 182, 23, 0.7)" />
+                            <rect x="8" y="14" width="8" height="6" rx="1" fill="rgba(250, 182, 23, 0.7)" />
+                          </g>
+                        </svg>
+                      )}
+
+                      <h3
+                        className="text-white uppercase tracking-wider font-medium"
+                        style={{
+                          fontFamily: 'Saira, sans-serif',
+                          fontSize: '16px',
+                        }}
+                      >
+                        {phaseLabel}
+                      </h3>
+
+                      {/* TEMPORARY PHASE I INDICATOR - HAMMER ICONS */}
+                      {index === 0 && (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                          <g transform="rotate(-45 12 12)">
+                            <rect x="10" y="4" width="4" height="10" fill="rgba(250, 182, 23, 0.9)" />
+                            <rect x="8" y="14" width="8" height="6" rx="1" fill="rgba(250, 182, 23, 0.9)" />
+                          </g>
+                          <g transform="rotate(45 12 12)">
+                            <rect x="10" y="4" width="4" height="10" fill="rgba(250, 182, 23, 0.7)" />
+                            <rect x="8" y="14" width="8" height="6" rx="1" fill="rgba(250, 182, 23, 0.7)" />
+                          </g>
+                        </svg>
+                      )}
+                    </div>
 
                     {isLocked && (
                       <div

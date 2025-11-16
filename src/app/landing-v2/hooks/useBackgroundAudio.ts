@@ -53,10 +53,14 @@ export function useBackgroundAudio() {
 
   // Handle playing/pausing with fade effects
   useEffect(() => {
-    if (!audioRef.current) return;
+    console.log('[🎵AUDIO-V2] Playback effect triggered - audioPlaying:', audioPlaying, 'audioEnabled:', audioEnabled);
+    if (!audioRef.current) {
+      console.log('[🎵AUDIO-V2] No audio ref, skipping playback effect');
+      return;
+    }
 
     if (audioPlaying && audioEnabled) {
-      console.log('[🎵AUDIO-V2] Starting playback with fade-in');
+      console.log('[🎵AUDIO-V2] ✓ CONDITIONS MET - Starting playback with fade-in');
       audioRef.current.currentTime = 0;
       audioRef.current.volume = 0;
 
@@ -122,13 +126,33 @@ export function useBackgroundAudio() {
   }, [audioPlaying]);
 
   const startAudio = useCallback(() => {
-    if (audioEnabled) {
-      console.log('[🎵AUDIO-V2] Starting audio (user enabled sound)');
+    // Re-read from localStorage to get the LATEST preference (just written by toggle)
+    const stored = localStorage.getItem(STORAGE_KEY_AUDIO);
+    let shouldPlay = false;
+
+    console.log('[🎵AUDIO-V2] startAudio called, re-reading from localStorage...');
+    console.log('[🎵AUDIO-V2] Raw localStorage value:', stored);
+
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        console.log('[🎵AUDIO-V2] Parsed value:', parsed);
+        shouldPlay = parsed.audioEnabled;
+        console.log('[🎵AUDIO-V2] Extracted audioEnabled:', shouldPlay);
+        // Update state to stay in sync
+        setAudioEnabled(shouldPlay);
+      } catch (e) {
+        console.log('[🎵AUDIO-V2] Error parsing stored preference:', e);
+      }
+    }
+
+    if (shouldPlay) {
+      console.log('[🎵AUDIO-V2] Starting audio (user enabled sound) - setting audioPlaying to true');
       setAudioPlaying(true);
     } else {
       console.log('[🎵AUDIO-V2] Audio not started (user disabled sound)');
     }
-  }, [audioEnabled]);
+  }, []);
 
   return {
     audioPlaying,

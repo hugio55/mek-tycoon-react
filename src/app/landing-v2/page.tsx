@@ -58,9 +58,11 @@ export default function LandingV2() {
   // Trigger reveal animations when entering REVEAL state
   useEffect(() => {
     if (isState('REVEAL') && !revealStarted) {
+      console.log('[🎵PAGE] Entering REVEAL state, will call startAudio in 500ms');
       setRevealStarted(true);
       // Start audio after a brief delay (during the reveal)
       setTimeout(() => {
+        console.log('[🎵PAGE] Calling startAudio from REVEAL state...');
         startAudio();
       }, 500);
 
@@ -86,7 +88,8 @@ export default function LandingV2() {
 
   // Logo fades simultaneously with stars (no delay)
   const logoDelay = 0;
-  const contentDelay = logoDelay + TIMINGS.logoFade + TIMINGS.pauseAfterLogo;
+  // Content starts 500ms after logo starts fading (not after it completes)
+  const contentDelay = 500;
 
   // Show pure black until mounted
   if (!mounted) {
