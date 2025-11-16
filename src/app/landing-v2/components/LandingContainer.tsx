@@ -45,7 +45,7 @@ export default function LandingContainer({
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: isMobile ? '180%' : 'cover',
           backgroundPosition: isMobile ? 'center calc(50% + 80px)' : 'center',
-          opacity: backgroundOpacity,
+          opacity: isLoading ? 0 : backgroundOpacity,
           transitionDuration: `${transitionDuration}ms`,
           zIndex: 0,
         }}
