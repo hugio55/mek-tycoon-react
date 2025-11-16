@@ -5,6 +5,7 @@ import { useState } from 'react';
 interface HeightDebugPanelProps {
   onLogoTopChange: (value: number) => void;
   onContentDelayChange: (value: number) => void;
+  onPageHeightChange: (minHeight: string, height: string) => void;
   defaultLogoTop?: number;
   defaultContentDelay?: number;
 }
@@ -12,12 +13,18 @@ interface HeightDebugPanelProps {
 export default function HeightDebugPanel({
   onLogoTopChange,
   onContentDelayChange,
+  onPageHeightChange,
   defaultLogoTop = 8,
   defaultContentDelay = 1600,
 }: HeightDebugPanelProps) {
   const [logoTop, setLogoTop] = useState(defaultLogoTop);
   const [contentDelay, setContentDelay] = useState(defaultContentDelay);
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Page height controls
+  const [minHeightVh, setMinHeightVh] = useState(100);
+  const [heightMode, setHeightMode] = useState<'fit-content' | 'vh'>('fit-content');
+  const [heightVh, setHeightVh] = useState(100);
 
   const handleLogoTopChange = (value: number) => {
     setLogoTop(value);
@@ -29,9 +36,20 @@ export default function HeightDebugPanel({
     onContentDelayChange(value);
   };
 
+  const handlePageHeightChange = (newMinHeightVh: number, newHeightMode: 'fit-content' | 'vh', newHeightVh: number) => {
+    setMinHeightVh(newMinHeightVh);
+    setHeightMode(newHeightMode);
+    setHeightVh(newHeightVh);
+
+    const minHeight = `${newMinHeightVh}vh`;
+    const height = newHeightMode === 'fit-content' ? 'fit-content' : `${newHeightVh}vh`;
+    onPageHeightChange(minHeight, height);
+  };
+
   const handleReset = () => {
     handleLogoTopChange(defaultLogoTop);
     handleContentDelayChange(defaultContentDelay);
+    handlePageHeightChange(100, 'fit-content', 100);
   };
 
   if (isCollapsed) {
@@ -122,6 +140,104 @@ export default function HeightDebugPanel({
           </div>
         </div>
 
+        {/* Page Height Section Divider */}
+        <div className="border-t border-yellow-500/20 pt-3">
+          <div className="text-yellow-500/70 text-xs uppercase tracking-wider mb-3 font-bold">
+            Page Height Controls
+          </div>
+        </div>
+
+        {/* Min Height Control */}
+        <div>
+          <label className="block text-yellow-500/80 text-xs uppercase tracking-wide mb-1">
+            Min Height
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="50"
+              max="200"
+              step="5"
+              value={minHeightVh}
+              onChange={(e) => handlePageHeightChange(Number(e.target.value), heightMode, heightVh)}
+              className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-yellow-500"
+            />
+            <input
+              type="number"
+              min="50"
+              max="200"
+              step="5"
+              value={minHeightVh}
+              onChange={(e) => handlePageHeightChange(Number(e.target.value), heightMode, heightVh)}
+              className="w-16 bg-gray-800 text-yellow-500 border border-yellow-500/30 rounded px-2 py-1 text-xs text-center"
+            />
+          </div>
+          <div className="text-gray-400 text-xs mt-1">
+            Current: {minHeightVh}vh
+          </div>
+        </div>
+
+        {/* Height Mode Control */}
+        <div>
+          <label className="block text-yellow-500/80 text-xs uppercase tracking-wide mb-2">
+            Height Mode
+          </label>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handlePageHeightChange(minHeightVh, 'fit-content', heightVh)}
+              className={`flex-1 py-1.5 px-2 rounded text-xs font-bold transition-colors ${
+                heightMode === 'fit-content'
+                  ? 'bg-yellow-500 text-black'
+                  : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+              }`}
+            >
+              fit-content
+            </button>
+            <button
+              onClick={() => handlePageHeightChange(minHeightVh, 'vh', heightVh)}
+              className={`flex-1 py-1.5 px-2 rounded text-xs font-bold transition-colors ${
+                heightMode === 'vh'
+                  ? 'bg-yellow-500 text-black'
+                  : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+              }`}
+            >
+              vh
+            </button>
+          </div>
+        </div>
+
+        {/* Height VH Control (only visible when vh mode is active) */}
+        {heightMode === 'vh' && (
+          <div>
+            <label className="block text-yellow-500/80 text-xs uppercase tracking-wide mb-1">
+              Height Value
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="50"
+                max="300"
+                step="5"
+                value={heightVh}
+                onChange={(e) => handlePageHeightChange(minHeightVh, heightMode, Number(e.target.value))}
+                className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-yellow-500"
+              />
+              <input
+                type="number"
+                min="50"
+                max="300"
+                step="5"
+                value={heightVh}
+                onChange={(e) => handlePageHeightChange(minHeightVh, heightMode, Number(e.target.value))}
+                className="w-16 bg-gray-800 text-yellow-500 border border-yellow-500/30 rounded px-2 py-1 text-xs text-center"
+              />
+            </div>
+            <div className="text-gray-400 text-xs mt-1">
+              Current: {heightVh}vh
+            </div>
+          </div>
+        )}
+
         {/* Reset Button */}
         <button
           onClick={handleReset}
@@ -133,6 +249,12 @@ export default function HeightDebugPanel({
         {/* Current Values Display */}
         <div className="border-t border-yellow-500/20 pt-3 space-y-1">
           <div className="text-gray-400 text-xs">
+            <span className="text-yellow-500/70">Page minHeight:</span> {minHeightVh}vh
+          </div>
+          <div className="text-gray-400 text-xs">
+            <span className="text-yellow-500/70">Page height:</span> {heightMode === 'fit-content' ? 'fit-content' : `${heightVh}vh`}
+          </div>
+          <div className="text-gray-400 text-xs mt-2">
             <span className="text-yellow-500/70">Default Logo Top:</span> {defaultLogoTop}vh
           </div>
           <div className="text-gray-400 text-xs">

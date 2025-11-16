@@ -41,6 +41,10 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
   // Lock body scroll when lightbox is open
   useEffect(() => {
     if (isOpen) {
+      console.log('[🔐RECONNECT] WalletConnectLightbox opened - checking disconnect nonce...');
+      const nonceCheck = localStorage.getItem('mek_disconnect_nonce');
+      console.log('[🔐RECONNECT] Nonce status at lightbox open:', nonceCheck ? `✅ FOUND: ${nonceCheck.slice(0, 8)}...` : '❌ NOT FOUND');
+
       document.body.style.overflow = 'hidden';
       detectAvailableWallets();
     } else {
@@ -124,9 +128,12 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       ]) as any;
 
       // Check if user manually disconnected (security feature for shared computers)
+      console.log('[🔐RECONNECT] Checking for disconnect nonce in localStorage...');
       const disconnectNonce = localStorage.getItem('mek_disconnect_nonce');
+      console.log('[🔐RECONNECT] Disconnect nonce check result:', disconnectNonce ? `FOUND: ${disconnectNonce.slice(0, 8)}...` : '❌ NOT FOUND');
+
       if (disconnectNonce) {
-        console.log('[🔐SIGNATURE] Disconnect nonce detected - requiring signature verification');
+        console.log('[🔐SIGNATURE] ✅ Disconnect nonce detected - requiring signature verification');
         console.log('[🔐SIGNATURE] Wallet:', wallet.name);
         setConnectionStatus('Verifying wallet ownership...');
 
@@ -211,6 +218,9 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
           });
           throw new Error(`Signature verification failed: ${signError?.message || 'Unknown error'}. You must sign the message to reconnect after disconnecting.`);
         }
+      } else {
+        console.log('[🔐RECONNECT] ⚠️ No disconnect nonce found - skipping signature verification');
+        console.log('[🔐RECONNECT] This connection does NOT require signature (auto-reconnect from saved session)');
       }
 
       // Get wallet addresses
@@ -297,6 +307,11 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
         nonce: crypto.randomUUID(),
         sessionId: generateSessionId(),
       });
+
+      // Clear disconnect nonce after successful connection
+      // User has proven wallet ownership via signature, safe to reconnect
+      localStorage.removeItem('mek_disconnect_nonce');
+      console.log('[WalletConnect] Cleared disconnect nonce - signature verification complete');
 
       // Store wallet type for reconnection
       if (typeof window !== 'undefined') {

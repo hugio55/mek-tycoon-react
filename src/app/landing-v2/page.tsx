@@ -12,6 +12,7 @@ import SoundSelectionState from './components/states/SoundSelectionState';
 import FinalContentState from './components/states/FinalContentState';
 import SpeakerButton from './components/SpeakerButton';
 import StateDebugPanel from './debug/StateDebugPanel';
+import HeightDebugPanel from './debug/HeightDebugPanel';
 import { useLoaderContext } from '@/features/page-loader';
 
 export default function LandingV2() {
@@ -23,6 +24,12 @@ export default function LandingV2() {
   const [showLightbox, setShowLightbox] = useState(false);
   const [entranceStarted, setEntranceStarted] = useState(false);
   const [logoFadeComplete, setLogoFadeComplete] = useState(false);
+
+  // Debug panel state
+  const [logoTopVh, setLogoTopVh] = useState(8);
+  const [contentDelayMs, setContentDelayMs] = useState(1600);
+  const [pageMinHeight, setPageMinHeight] = useState('100vh');
+  const [pageHeight, setPageHeight] = useState('fit-content');
 
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
   const { currentState, next, transitionTo, isState } = useLandingStateMachine();
@@ -88,8 +95,8 @@ export default function LandingV2() {
 
   // Logo fades simultaneously with stars (no delay)
   const logoDelay = 0;
-  // Content starts 1600ms after logo starts fading (1100ms + 500ms extra delay)
-  const contentDelay = 1600;
+  // Content starts after logo starts fading (controlled by debug panel)
+  const contentDelay = contentDelayMs;
 
   // Show pure black until mounted
   if (!mounted) {
@@ -102,6 +109,8 @@ export default function LandingV2() {
       showFooter={showFooter}
       transitionDuration={isState('SOUND_SELECTION') ? 1000 : 2000}
       allowScroll={logoFadeComplete}
+      minHeight={pageMinHeight}
+      height={pageHeight}
     >
       <SoundSelectionState
         isActive={isState('SOUND_SELECTION')}
@@ -160,7 +169,7 @@ export default function LandingV2() {
             width: '100%',
             display: 'flex',
             justifyContent: 'center',
-            paddingTop: '8vh',
+            paddingTop: `${logoTopVh}vh`,
             opacity: revealStarted ? 1 : 0,
             zIndex: 20,
             transitionDuration: `${TIMINGS.logoFade}ms`,
@@ -204,10 +213,22 @@ export default function LandingV2() {
       />
 
       {process.env.NODE_ENV === 'development' && mounted && (
-        <StateDebugPanel
-          currentState={currentState}
-          onStateChange={transitionTo}
-        />
+        <>
+          <StateDebugPanel
+            currentState={currentState}
+            onStateChange={transitionTo}
+          />
+          <HeightDebugPanel
+            onLogoTopChange={setLogoTopVh}
+            onContentDelayChange={setContentDelayMs}
+            onPageHeightChange={(minHeight, height) => {
+              setPageMinHeight(minHeight);
+              setPageHeight(height);
+            }}
+            defaultLogoTop={8}
+            defaultContentDelay={1600}
+          />
+        </>
       )}
 
       <style dangerouslySetInnerHTML={{

@@ -101,16 +101,24 @@ export async function restoreWalletSession(): Promise<WalletSession | null> {
  * Creates disconnect nonce to require signature verification on next login
  */
 export function clearWalletSession(): void {
+  console.log('[🔓DISCONNECT] === Starting Wallet Disconnect Process ===');
+  console.log('[🔓DISCONNECT] Step 1: Clearing encrypted session...');
   clearSession();
 
   // Generate and store disconnect nonce for signature verification
   // This prevents someone from reconnecting without proving wallet ownership
+  console.log('[🔓DISCONNECT] Step 2: Generating disconnect nonce...');
   const disconnectNonce = crypto.randomUUID();
+  console.log('[🔓DISCONNECT] Step 3: Storing disconnect nonce:', disconnectNonce.slice(0, 8) + '...');
   localStorage.setItem('mek_disconnect_nonce', disconnectNonce);
-  console.log('[Session Manager] Created disconnect nonce for signature verification:', disconnectNonce.slice(0, 8) + '...');
+
+  // Verify nonce was stored
+  const nonceVerify = localStorage.getItem('mek_disconnect_nonce');
+  console.log('[🔓DISCONNECT] Step 4: Verifying nonce storage:', nonceVerify ? `✅ SUCCESS (${nonceVerify.slice(0, 8)}...)` : '❌ FAILED');
 
   // Clear all wallet-related data
   try {
+    console.log('[🔓DISCONNECT] Step 5: Clearing all wallet-related localStorage items...');
     localStorage.removeItem('mek_cached_meks');
     localStorage.removeItem('mek_wallet_session');
     localStorage.removeItem('goldMiningWallet');
@@ -119,9 +127,11 @@ export function clearWalletSession(): void {
     localStorage.removeItem('stakeAddress');
     localStorage.removeItem('paymentAddress');
     localStorage.removeItem('mek_migration_status');
-    console.log('[Session Manager] Cleared all session data - user must reconnect wallet and sign verification message');
+    console.log('[🔓DISCONNECT] ✅ Cleared all session data');
+    console.log('[🔓DISCONNECT] === Disconnect Complete ===');
+    console.log('[🔓DISCONNECT] User MUST reconnect wallet and sign verification message to access site');
   } catch (error) {
-    console.error('[Session Manager] Error clearing session data:', error);
+    console.error('[🔓DISCONNECT] ❌ Error clearing session data:', error);
   }
 }
 
