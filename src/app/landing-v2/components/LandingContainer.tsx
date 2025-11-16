@@ -36,10 +36,15 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
         {showFooter && (
           <footer
           style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
             width: '100%',
             overflow: 'hidden',
             backdropFilter: 'blur(12px)',
             backgroundColor: 'rgba(255, 255, 255, 0.005)',
+            zIndex: 30,
           }}
         >
         <svg className="absolute inset-0 w-full h-full pointer-events-none">
