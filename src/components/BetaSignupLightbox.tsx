@@ -205,8 +205,8 @@ export default function BetaSignupLightbox({
           style={{
             background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
             boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
           }}
         >
           {/* Close Button - Top Right */}
@@ -248,7 +248,7 @@ export default function BetaSignupLightbox({
                     >
                       Discord
                     </a>{' '}
-                    channel. If you would like a small perk when Phase II beta launches, please provide your stake address.
+                    channel. If you would like a small perk when Phase II beta launches and a guaranteed position, please provide your stake address.
                   </p>
                 </div>
 
