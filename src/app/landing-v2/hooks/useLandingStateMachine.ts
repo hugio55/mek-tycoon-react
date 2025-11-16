@@ -2,24 +2,26 @@ import { useState, useCallback, useEffect } from 'react';
 
 export type LandingState =
   | 'SOUND_SELECTION'
-  | 'BACKGROUND_REVEAL'
-  | 'STARS_AND_LOGO'
-  | 'BRIEF_PAUSE'
-  | 'FINAL_CONTENT';
+  | 'REVEAL';
 
 const STATE_ORDER: LandingState[] = [
   'SOUND_SELECTION',
-  'BACKGROUND_REVEAL',
-  'STARS_AND_LOGO',
-  'BRIEF_PAUSE',
-  'FINAL_CONTENT'
+  'REVEAL'
 ];
 
+// Choreography timing (in ms)
 export const TIMINGS = {
-  backgroundReveal: 1500,
-  starsAndLogo: 1200,
-  briefPause: 10,
-  finalContent: 1000
+  lightboxFade: 1500,      // Lightbox fade out
+  backgroundFade: 2000,     // Background fade in (simultaneous with stars)
+  starsFade: 2000,          // Stars fade in (simultaneous with background)
+  logoDelay: 2000,          // Wait for stars to complete
+  logoFade: 3000,           // Logo fade + zoom
+  pauseAfterLogo: 1000,     // Pause after logo completes
+  descriptionFade: 500,     // Description animation
+  buttonDelay: 1000,        // Delay between description and button
+  buttonFade: 500,          // Button animation
+  phaseDelay: 1000,         // Delay before phases start
+  phaseStagger: 200,        // Delay between each phase
 };
 
 export function useLandingStateMachine() {
@@ -53,27 +55,7 @@ export function useLandingStateMachine() {
     return currentIndex >= targetIndex;
   }, [currentState]);
 
-  useEffect(() => {
-    if (currentState === 'SOUND_SELECTION') {
-      return;
-    }
-
-    let timeout: NodeJS.Timeout;
-
-    switch (currentState) {
-      case 'BACKGROUND_REVEAL':
-        timeout = setTimeout(() => next(), TIMINGS.backgroundReveal);
-        break;
-      case 'STARS_AND_LOGO':
-        timeout = setTimeout(() => next(), TIMINGS.starsAndLogo);
-        break;
-      case 'BRIEF_PAUSE':
-        timeout = setTimeout(() => next(), TIMINGS.briefPause);
-        break;
-    }
-
-    return () => clearTimeout(timeout);
-  }, [currentState, next]);
+  // No automatic transitions - all choreography handled by CSS delays
 
   return {
     currentState,
