@@ -1524,8 +1524,8 @@ export default function LandingPage() {
         style={{
           margin: 0,
           padding: 0,
-          minHeight: isMobile ? 'auto' : `calc(100vh + ${phaseColumnYOffset}px + ${phaseColumnHeight}px)`,
-          height: isMobile ? 'auto' : `calc(100vh + ${phaseColumnYOffset}px + ${phaseColumnHeight}px)`,
+          minHeight: 'auto',
+          height: 'auto',
           overflowX: 'hidden',
           overflowY: isMobile ? 'visible' : 'auto',
           position: 'relative',
