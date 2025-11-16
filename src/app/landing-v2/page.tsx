@@ -211,119 +211,109 @@ export default function LandingV2() {
                 })}
               </div>
             ) : (
-              <div className="mt-12 flex gap-4 justify-center px-4">
-                {displayPhases.map((card: PhaseCard) => (
-                  <button
-                    key={card._id}
-                    onClick={() => handleCardClick(card)}
-                    disabled={card.locked}
-                    className={`
-                      relative overflow-hidden
-                      ${card.locked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-105'}
-                    `}
-                    style={{
-                      width: '160px',
-                      height: '240px',
-                      borderRadius: '12px',
-                      background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-                      backdropFilter: 'blur(8px)',
-                      border: '1px solid rgba(250,182,23,0.3)',
-                      transition: 'all 300ms ease',
-                    }}
-                  >
-                    <div className="h-full flex items-center justify-center">
-                      <h3
-                        className="text-yellow-400 uppercase tracking-wider font-medium text-center"
-                        style={{
-                          fontFamily: 'Orbitron, sans-serif',
-                          fontSize: '18px',
-                        }}
-                      >
-                        {card.title}
-                      </h3>
-                    </div>
+              <div className="flex gap-6 justify-center px-4 mt-auto mb-32">
+                {displayPhases.map((card: PhaseCard, index: number) => {
+                  const isSelected = selectedCardIndex === index;
 
-                    {card.locked && (
-                      <div className="absolute top-4 right-4">
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                          <path
-                            d="M10 2C7.79 2 6 3.79 6 6V8H5C3.9 8 3 8.9 3 10V16C3 17.1 3.9 18 5 18H15C16.1 18 17 17.1 17 16V10C17 8.9 16.1 8 15 8H14V6C14 3.79 12.21 2 10 2ZM10 4C11.13 4 12 4.87 12 6V8H8V6C8 4.87 8.87 4 10 4ZM10 12C10.55 12 11 12.45 11 13C11 13.55 10.55 14 10 14C9.45 14 9 13.55 9 13C9 12.45 9.45 12 10 12Z"
-                            fill="rgba(250, 182, 23, 0.5)"
-                          />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-                ))}
+                  return (
+                    <button
+                      key={card._id}
+                      onClick={() => handleCardClick(index, card.locked)}
+                      disabled={card.locked}
+                      className={`
+                        relative overflow-hidden
+                        ${card.locked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-105'}
+                      `}
+                      style={{
+                        width: '220px',
+                        height: '320px',
+                        borderRadius: '16px',
+                        background: isSelected
+                          ? 'rgba(0, 0, 0, 0.95)'
+                          : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
+                        border: `2px solid ${isSelected ? 'rgba(250,182,23,0.8)' : 'rgba(250,182,23,0.3)'}`,
+                        transition: 'all 300ms ease',
+                        zIndex: isSelected ? 50 : 1,
+                      }}
+                    >
+                      {!isSelected ? (
+                        <div className="h-full flex items-center justify-center p-4">
+                          <h3
+                            className="text-yellow-400 uppercase tracking-wider font-medium text-center"
+                            style={{
+                              fontFamily: 'Orbitron, sans-serif',
+                              fontSize: '20px',
+                            }}
+                          >
+                            {card.title}
+                          </h3>
+                        </div>
+                      ) : (
+                        <div className="h-full flex flex-col items-center justify-center p-6">
+                          <h3
+                            className="text-yellow-400 uppercase tracking-wider font-medium text-center mb-4"
+                            style={{
+                              fontFamily: 'Orbitron, sans-serif',
+                              fontSize: '18px',
+                            }}
+                          >
+                            {card.title}
+                          </h3>
+
+                          {card.description && (
+                            <p
+                              className="text-white/80 text-center leading-relaxed text-sm"
+                              style={{
+                                fontFamily: 'Inter, sans-serif',
+                              }}
+                            >
+                              {card.description}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {card.locked && !isSelected && (
+                        <div className="absolute top-4 right-4">
+                          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path
+                              d="M10 2C7.79 2 6 3.79 6 6V8H5C3.9 8 3 8.9 3 10V16C3 17.1 3.9 18 5 18H15C16.1 18 17 17.1 17 16V10C17 8.9 16.1 8 15 8H14V6C14 3.79 12.21 2 10 2ZM10 4C11.13 4 12 4.87 12 6V8H8V6C8 4.87 8.87 4 10 4ZM10 12C10.55 12 11 12.45 11 13C11 13.55 10.55 14 10 14C9.45 14 9 13.55 9 13C9 12.45 9.45 12 10 12Z"
+                              fill="rgba(250, 182, 23, 0.5)"
+                            />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
         )}
 
-        {selectedPhase && (
-          <div
-            className="fixed inset-0 flex items-center justify-center"
-            style={{
-              zIndex: 100,
-              backdropFilter: 'blur(12px)',
-              background: 'rgba(0, 0, 0, 0.7)',
-            }}
-            onClick={() => setSelectedPhase(null)}
-          >
-            <div
-              className="relative max-w-2xl mx-4"
-              style={{
-                background: 'rgba(0, 0, 0, 0.9)',
-                borderRadius: '16px',
-                border: '2px solid rgba(250,182,23,0.5)',
-                backdropFilter: 'blur(16px)',
-                padding: '48px',
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => setSelectedPhase(null)}
-                className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </button>
-
-              <h2
-                className="text-yellow-400 uppercase tracking-wider font-medium mb-6"
-                style={{
-                  fontFamily: 'Orbitron, sans-serif',
-                  fontSize: '28px',
-                }}
-              >
-                {selectedPhase.title}
-              </h2>
-
-              {selectedPhase.description && (
-                <p
-                  className="text-white/80 leading-relaxed"
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontSize: '16px',
-                  }}
-                >
-                  {selectedPhase.description}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-
         <footer
-          className="backdrop-blur-md md:backdrop-blur-lg bg-white/10 mt-auto"
+          className="backdrop-blur-md md:backdrop-blur-lg bg-white/10 mt-auto relative overflow-hidden"
           style={{
             zIndex: 20,
             willChange: 'transform',
             transform: 'translateZ(0)'
           }}
         >
-          <div className="container mx-auto px-6 py-8">
+          {/* Hexagonal Pattern */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: `
+                repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255,255,255,0.03) 30px, rgba(255,255,255,0.03) 31px),
+                repeating-linear-gradient(60deg, transparent, transparent 30px, rgba(255,255,255,0.03) 30px, rgba(255,255,255,0.03) 31px),
+                repeating-linear-gradient(120deg, transparent, transparent 30px, rgba(255,255,255,0.03) 30px, rgba(255,255,255,0.03) 31px)
+              `,
+              maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 60%)',
+              WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 60%)',
+            }}
+          />
+
+          <div className="container mx-auto px-6 py-8 relative">
             <div className="flex flex-col items-center gap-4">
               <a
                 href="https://www.overexposed.io/"
