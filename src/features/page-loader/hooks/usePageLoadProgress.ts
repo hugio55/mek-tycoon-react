@@ -110,8 +110,11 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
 
       // CRITICAL: Don't let progress reach 100% until critical assets are actually loaded
       // This prevents showing 100% while still downloading logo video, images, etc.
-      if (!criticalAssetsLoaded && cappedProgress >= 100) {
-        cappedProgress = 90; // Cap at 90% until critical assets load
+      if (!criticalAssetsLoaded && cappedProgress >= 90) {
+        // Allow slow creep from 90% → 95% while waiting for assets
+        const elapsedSinceNinety = Math.max(0, elapsed - 1200);
+        const slowCreep = 90 + Math.min(5, elapsedSinceNinety / 500); // +1% every 500ms
+        cappedProgress = Math.min(cappedProgress, slowCreep);
       }
 
       setProgress(cappedProgress);
