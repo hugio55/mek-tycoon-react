@@ -142,10 +142,12 @@ export default function LandingV2() {
         <div
           className="transition-opacity ease-out"
           style={{
-            position: 'absolute',
+            position: 'fixed',
             inset: 0,
             opacity: revealStarted ? 1 : 0,
             transitionDuration: `${TIMINGS.starsFade}ms`,
+            pointerEvents: 'none',
+            zIndex: 5,
           }}
         >
           <StarField />
@@ -155,7 +157,7 @@ export default function LandingV2() {
       {/* Logo - fade in after stars complete */}
       {isRevealing && (
         <div
-          className="absolute transition-opacity"
+          className="fixed transition-opacity"
           style={{
             top: (deviceType === 'iphone' || deviceType === 'other' && navigator.userAgent.toLowerCase().includes('android')) ? 'calc(50vh - 400px)' : '50vh',
             left: '50%',
@@ -165,6 +167,7 @@ export default function LandingV2() {
             transitionDuration: `${TIMINGS.logoFade}ms`,
             transitionDelay: `${logoDelay}ms`,
             transitionTimingFunction: 'ease-in-out',
+            pointerEvents: 'none',
           }}
         >
           {deviceType === 'macos' || deviceType === 'iphone' ? (
