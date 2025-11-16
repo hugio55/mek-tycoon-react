@@ -122,11 +122,7 @@ const FillTextButton = ({
           className="inline-block whitespace-nowrap"
           style={{
             color: '#3DD1FF',
-            WebkitTextStroke: '0.5px #3DD1FF',
-            padding: '0 20px',
-            margin: '0 -20px',
             transform: 'translateZ(0)',
-            mixBlendMode: 'screen',
           }}
           aria-hidden="true"
         >

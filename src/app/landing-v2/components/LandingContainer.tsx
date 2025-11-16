@@ -30,7 +30,7 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
           width: '100%',
           overflow: 'hidden',
           backdropFilter: 'blur(12px)',
-          backgroundColor: 'rgba(255, 255, 255, 0.02)',
+          backgroundColor: 'rgba(255, 255, 255, 0.005)',
         }}
       >
         <svg className="absolute inset-0 w-full h-full pointer-events-none">
