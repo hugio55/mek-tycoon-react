@@ -291,7 +291,7 @@ export const verifyBackupIntegrity = query({
       }
 
       // Check for reasonable values (no negatives, no infinity)
-      if (record.accumulatedGold < 0 || !isFinite(record.accumulatedGold)) {
+      if ((record.accumulatedGold ?? 0) < 0 || !isFinite(record.accumulatedGold ?? 0)) {
         isValid = false;
         issues.push(`${record.walletAddress}: Invalid accumulatedGold (${record.accumulatedGold})`);
       }

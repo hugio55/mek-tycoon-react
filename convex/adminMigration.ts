@@ -12,8 +12,8 @@ export const listTables = query({
     const tables: string[] = [];
 
     // Use the internal API to get table names
-    const allTables = await ctx.db.system.query("_tables").collect();
-    return allTables.map(t => t.name);
+    const allTables = await ctx.db.system.query("_tables" as any).collect();
+    return allTables.map((t: any) => t.name);
   },
 });
 

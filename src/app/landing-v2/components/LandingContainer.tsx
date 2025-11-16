@@ -19,15 +19,15 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
         }}
       />
 
-      <div className="relative min-h-screen flex flex-col items-stretch w-full pb-32" style={{ zIndex: 10 }}>
+      <div className="relative min-h-screen flex flex-col items-stretch w-full" style={{ zIndex: 10 }}>
         {children}
       </div>
 
       {showFooter && (
         <footer
-        className="fixed bottom-0 left-0 right-0"
         style={{
           zIndex: 20,
+          width: '100%',
           overflow: 'hidden',
           backdropFilter: 'blur(12px)',
           backgroundColor: 'rgba(255, 255, 255, 0.1)',
