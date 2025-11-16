@@ -64,7 +64,7 @@ export default function LandingV2() {
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: 'cover',
-          backgroundPosition: 'center calc(50% + 0px)',
+          backgroundPosition: 'center calc(50% + 50px)',
         }}
       />
 
@@ -136,7 +136,7 @@ export default function LandingV2() {
                         }
                       }}
                     >
-                      <div className="h-full flex items-center justify-between px-6">
+                      <div className="h-full flex items-center justify-center px-6">
                         <h3
                           className="text-white uppercase tracking-wider font-medium"
                           style={{
@@ -147,31 +147,16 @@ export default function LandingV2() {
                           {phaseLabel}
                         </h3>
 
-                        <div
-                          style={{
-                            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                            transition: 'transform 200ms ease',
-                          }}
-                        >
-                          {isLocked ? (
+                        {isLocked && (
+                          <div className="absolute right-6">
                             <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
                               <path
                                 d="M10 2C7.79 2 6 3.79 6 6V8H5C3.9 8 3 8.9 3 10V16C3 17.1 3.9 18 5 18H15C16.1 18 17 17.1 17 16V10C17 8.9 16.1 8 15 8H14V6C14 3.79 12.21 2 10 2ZM10 4C11.13 4 12 4.87 12 6V8H8V6C8 4.87 8.87 4 10 4ZM10 12C10.55 12 11 12.45 11 13C11 13.55 10.55 14 10 14C9.45 14 9 13.55 9 13C9 12.45 9.45 12 10 12Z"
                                 fill="rgba(250, 182, 23, 0.5)"
                               />
                             </svg>
-                          ) : (
-                            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                              <path
-                                d="M5 8L10 13L15 8"
-                                stroke="rgba(250, 182, 23, 0.7)"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </button>
 

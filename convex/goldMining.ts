@@ -423,22 +423,23 @@ export const updateGoldCheckpoint = mutation({
         newTotalCumulativeGold
       });
 
-      // LOG: Significant gold accumulation (only if > 10 gold to reduce noise)
-      if (goldEarnedThisUpdate > 10) {
-        await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
-          eventType: "info",
-          category: "gold",
-          message: `Gold accumulated: +${goldEarnedThisUpdate.toFixed(2)} gold`,
-          severity: "low",
-          functionName: "updateGoldCheckpoint",
-          walletAddress: args.walletAddress,
-          details: {
-            goldEarned: goldEarnedThisUpdate,
-            newTotal: newAccumulatedGold,
-            rate: existing.totalGoldPerHour,
-          },
-        });
-      }
+      // LOG: Significant gold accumulation - DISABLED for bandwidth optimization (77.5 MB on Prod)
+      // Normal gold accumulation doesn't need monitoring logs, only errors/race conditions
+      // if (goldEarnedThisUpdate > 10) {
+      //   await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
+      //     eventType: "info",
+      //     category: "gold",
+      //     message: `Gold accumulated: +${goldEarnedThisUpdate.toFixed(2)} gold`,
+      //     severity: "low",
+      //     functionName: "updateGoldCheckpoint",
+      //     walletAddress: args.walletAddress,
+      //     details: {
+      //       goldEarned: goldEarnedThisUpdate,
+      //       newTotal: newAccumulatedGold,
+      //       rate: existing.totalGoldPerHour,
+      //     },
+      //   });
+      // }
     } else {
       // If not verified, keep existing values (no new accumulation)
       newAccumulatedGold = existing.accumulatedGold || 0;
