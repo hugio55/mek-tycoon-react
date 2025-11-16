@@ -179,13 +179,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} ${inter.variable} ${cinzel.variable} ${lora.variable} ${rajdhani.variable} ${spaceGrotesk.variable} ${exo2.variable} ${sairaCondensed.variable} ${teko.variable} ${abel.variable} ${josefinSans.variable} ${economica.variable} ${adventPro.variable} ${archivoNarrow.variable} ${electrolize.variable} ${audiowide.variable} ${michroma.variable} ${play.variable} ${quantico.variable} ${saira.variable} antialiased min-h-screen overflow-x-hidden overflow-y-scroll`}
         style={{ backgroundColor: 'transparent', width: '100vw', maxWidth: '100vw', height: 'auto', margin: 0, padding: 0 }}
       >
-        {/* Global background with animated stars and particles */}
-        <GlobalBackground />
-
         {/* Content layer */}
         <div className="relative z-10">
           <DemoModeWrapper>
             <Providers>
+              {/* Global background with animated stars and particles */}
+              <GlobalBackground />
+
               {/* SessionCleanup removed - was clearing wallet sessions on every page load */}
               <PageLoadingOverlay />
               <NavigationBar />
