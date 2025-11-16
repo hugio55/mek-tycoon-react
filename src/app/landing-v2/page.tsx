@@ -18,6 +18,8 @@ export default function LandingV2() {
   const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'other'>('other');
   const [mounted, setMounted] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
 
@@ -32,11 +34,21 @@ export default function LandingV2() {
     } else {
       setDeviceType('other');
     }
+
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   const handleToggle = (index: number, isLocked: boolean) => {
     if (isLocked) return;
     setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
+  const handleCardClick = (index: number, isLocked: boolean) => {
+    if (isLocked) return;
+    setSelectedCardIndex(selectedCardIndex === index ? null : index);
   };
 
   const displayPhases = phaseCards?.slice(0, 4) || [];
@@ -51,12 +63,14 @@ export default function LandingV2() {
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: 'cover',
           backgroundPosition: 'center calc(50% + 200px)',
+          filter: selectedCardIndex !== null ? 'blur(8px)' : 'none',
+          transition: 'filter 300ms ease',
         }}
       />
 
       <div className="relative min-h-screen flex flex-col" style={{ zIndex: 10 }}>
         {mounted && (
-          <div className="flex-1 flex flex-col items-center justify-center gap-4 px-4 py-8">
+          <div className="flex-1 flex flex-col items-center gap-4 px-4 py-8">
             {deviceType === 'macos' ? (
               <img
                 src="/random-images/Everydays_4.gif"
@@ -89,118 +103,225 @@ export default function LandingV2() {
               <FillTextButton text="join beta" fontFamily="Play" />
             </div>
 
-            <div className="w-full max-w-2xl mt-12 flex flex-col gap-3">
-              {displayPhases.map((card: PhaseCard, index: number) => {
-                const isExpanded = expandedIndex === index;
-                const isLocked = card.locked;
+            {isMobile ? (
+              <div className="w-full max-w-2xl mt-12 flex flex-col gap-3">
+                {displayPhases.map((card: PhaseCard, index: number) => {
+                  const isExpanded = expandedIndex === index;
+                  const isLocked = card.locked;
 
-                return (
-                  <div key={card._id} className="w-full">
-                    <button
-                      onClick={() => handleToggle(index, isLocked)}
-                      disabled={isLocked}
-                      className={`
-                        w-full text-left relative overflow-hidden
-                        ${isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
-                      `}
-                      style={{
-                        height: '48px',
-                        borderRadius: '8px',
-                        background: isExpanded
-                          ? 'linear-gradient(135deg, rgba(250,182,23,0.15), rgba(250,182,23,0.08))'
-                          : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
-                        backdropFilter: 'blur(4px)',
-                        transition: 'all 200ms ease',
-                      }}
-                    >
-                      <div className="h-full flex items-center justify-between px-6">
-                        <h3
-                          className="text-yellow-400 uppercase tracking-wider font-medium"
-                          style={{
-                            fontFamily: 'Orbitron, sans-serif',
-                            fontSize: '16px',
-                          }}
-                        >
-                          {card.title}
-                        </h3>
-
-                        <div
-                          style={{
-                            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                            transition: 'transform 200ms ease',
-                          }}
-                        >
-                          {isLocked ? (
-                            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                              <path
-                                d="M10 2C7.79 2 6 3.79 6 6V8H5C3.9 8 3 8.9 3 10V16C3 17.1 3.9 18 5 18H15C16.1 18 17 17.1 17 16V10C17 8.9 16.1 8 15 8H14V6C14 3.79 12.21 2 10 2ZM10 4C11.13 4 12 4.87 12 6V8H8V6C8 4.87 8.87 4 10 4ZM10 12C10.55 12 11 12.45 11 13C11 13.55 10.55 14 10 14C9.45 14 9 13.55 9 13C9 12.45 9.45 12 10 12Z"
-                                fill="rgba(250, 182, 23, 0.5)"
-                              />
-                            </svg>
-                          ) : (
-                            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                              <path
-                                d="M5 8L10 13L15 8"
-                                stroke="rgba(250, 182, 23, 0.7)"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-
-                    <div
-                      style={{
-                        maxHeight: isExpanded ? '300px' : '0',
-                        opacity: isExpanded ? 1 : 0,
-                        overflow: 'hidden',
-                        transition: 'all 400ms ease',
-                      }}
-                    >
-                      <div
-                        className="mt-2 px-6 py-4"
+                  return (
+                    <div key={card._id} className="w-full">
+                      <button
+                        onClick={() => handleToggle(index, isLocked)}
+                        disabled={isLocked}
+                        className={`
+                          w-full text-left relative overflow-hidden
+                          ${isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+                        `}
                         style={{
-                          background: 'rgba(0, 0, 0, 0.6)',
+                          height: '48px',
                           borderRadius: '8px',
-                          backdropFilter: 'blur(8px)',
+                          background: isExpanded
+                            ? 'linear-gradient(135deg, rgba(250,182,23,0.15), rgba(250,182,23,0.08))'
+                            : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
+                          backdropFilter: 'blur(4px)',
+                          transition: 'all 200ms ease',
                         }}
                       >
-                        <h4
-                          className="text-yellow-400 uppercase tracking-wider font-medium mb-3"
+                        <div className="h-full flex items-center justify-between px-6">
+                          <h3
+                            className="text-yellow-400 uppercase tracking-wider font-medium"
+                            style={{
+                              fontFamily: 'Orbitron, sans-serif',
+                              fontSize: '16px',
+                            }}
+                          >
+                            {card.title}
+                          </h3>
+
+                          <div
+                            style={{
+                              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                              transition: 'transform 200ms ease',
+                            }}
+                          >
+                            {isLocked ? (
+                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                                <path
+                                  d="M10 2C7.79 2 6 3.79 6 6V8H5C3.9 8 3 8.9 3 10V16C3 17.1 3.9 18 5 18H15C16.1 18 17 17.1 17 16V10C17 8.9 16.1 8 15 8H14V6C14 3.79 12.21 2 10 2ZM10 4C11.13 4 12 4.87 12 6V8H8V6C8 4.87 8.87 4 10 4ZM10 12C10.55 12 11 12.45 11 13C11 13.55 10.55 14 10 14C9.45 14 9 13.55 9 13C9 12.45 9.45 12 10 12Z"
+                                  fill="rgba(250, 182, 23, 0.5)"
+                                />
+                              </svg>
+                            ) : (
+                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                                <path
+                                  d="M5 8L10 13L15 8"
+                                  stroke="rgba(250, 182, 23, 0.7)"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+
+                      <div
+                        style={{
+                          maxHeight: isExpanded ? '300px' : '0',
+                          opacity: isExpanded ? 1 : 0,
+                          overflow: 'hidden',
+                          transition: 'all 400ms ease',
+                        }}
+                      >
+                        <div
+                          className="mt-2 px-6 py-4"
                           style={{
-                            fontFamily: 'Orbitron, sans-serif',
-                            fontSize: '14px',
+                            background: 'rgba(0, 0, 0, 0.6)',
+                            borderRadius: '8px',
+                            backdropFilter: 'blur(8px)',
                           }}
                         >
-                          {card.title}
-                        </h4>
-
-                        {card.description && (
-                          <p
-                            className="text-white/75 leading-relaxed"
+                          <h4
+                            className="text-yellow-400 uppercase tracking-wider font-medium mb-3"
                             style={{
-                              fontFamily: 'Inter, sans-serif',
+                              fontFamily: 'Orbitron, sans-serif',
                               fontSize: '14px',
                             }}
                           >
-                            {card.description}
-                          </p>
-                        )}
+                            {card.title}
+                          </h4>
+
+                          {card.description && (
+                            <p
+                              className="text-white/75 leading-relaxed"
+                              style={{
+                                fontFamily: 'Inter, sans-serif',
+                                fontSize: '14px',
+                              }}
+                            >
+                              {card.description}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="mt-12 flex gap-4 justify-center px-4">
+                {displayPhases.map((card: PhaseCard) => (
+                  <button
+                    key={card._id}
+                    onClick={() => handleCardClick(card)}
+                    disabled={card.locked}
+                    className={`
+                      relative overflow-hidden
+                      ${card.locked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-105'}
+                    `}
+                    style={{
+                      width: '160px',
+                      height: '240px',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                      backdropFilter: 'blur(8px)',
+                      border: '1px solid rgba(250,182,23,0.3)',
+                      transition: 'all 300ms ease',
+                    }}
+                  >
+                    <div className="h-full flex items-center justify-center">
+                      <h3
+                        className="text-yellow-400 uppercase tracking-wider font-medium text-center"
+                        style={{
+                          fontFamily: 'Orbitron, sans-serif',
+                          fontSize: '18px',
+                        }}
+                      >
+                        {card.title}
+                      </h3>
+                    </div>
+
+                    {card.locked && (
+                      <div className="absolute top-4 right-4">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                          <path
+                            d="M10 2C7.79 2 6 3.79 6 6V8H5C3.9 8 3 8.9 3 10V16C3 17.1 3.9 18 5 18H15C16.1 18 17 17.1 17 16V10C17 8.9 16.1 8 15 8H14V6C14 3.79 12.21 2 10 2ZM10 4C11.13 4 12 4.87 12 6V8H8V6C8 4.87 8.87 4 10 4ZM10 12C10.55 12 11 12.45 11 13C11 13.55 10.55 14 10 14C9.45 14 9 13.55 9 13C9 12.45 9.45 12 10 12Z"
+                            fill="rgba(250, 182, 23, 0.5)"
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {selectedPhase && (
+          <div
+            className="fixed inset-0 flex items-center justify-center"
+            style={{
+              zIndex: 100,
+              backdropFilter: 'blur(12px)',
+              background: 'rgba(0, 0, 0, 0.7)',
+            }}
+            onClick={() => setSelectedPhase(null)}
+          >
+            <div
+              className="relative max-w-2xl mx-4"
+              style={{
+                background: 'rgba(0, 0, 0, 0.9)',
+                borderRadius: '16px',
+                border: '2px solid rgba(250,182,23,0.5)',
+                backdropFilter: 'blur(16px)',
+                padding: '48px',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSelectedPhase(null)}
+                className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+
+              <h2
+                className="text-yellow-400 uppercase tracking-wider font-medium mb-6"
+                style={{
+                  fontFamily: 'Orbitron, sans-serif',
+                  fontSize: '28px',
+                }}
+              >
+                {selectedPhase.title}
+              </h2>
+
+              {selectedPhase.description && (
+                <p
+                  className="text-white/80 leading-relaxed"
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '16px',
+                  }}
+                >
+                  {selectedPhase.description}
+                </p>
+              )}
             </div>
           </div>
         )}
 
         <footer
-          className="backdrop-blur-xl bg-white/10 mt-auto"
-          style={{ zIndex: 20 }}
+          className="backdrop-blur-md md:backdrop-blur-lg bg-white/10 mt-auto"
+          style={{
+            zIndex: 20,
+            willChange: 'transform',
+            transform: 'translateZ(0)'
+          }}
         >
           <div className="container mx-auto px-6 py-8">
             <div className="flex flex-col items-center gap-4">

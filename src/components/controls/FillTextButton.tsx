@@ -58,11 +58,13 @@ const FillTextButton = ({
 
           @keyframes soft-pulse {
             0%, 100% {
-              text-shadow: 0 0 4px rgba(61, 209, 255, 0.7),
+              text-shadow: 0 0 2px rgba(255, 255, 255, 0.9),
+                          0 0 4px rgba(61, 209, 255, 0.7),
                           0 0 8px rgba(61, 209, 255, 0.5);
             }
             50% {
-              text-shadow: 0 0 8px rgba(61, 209, 255, 0.9),
+              text-shadow: 0 0 3px rgba(255, 255, 255, 1),
+                          0 0 8px rgba(61, 209, 255, 0.9),
                           0 0 16px rgba(61, 209, 255, 0.6);
             }
           }
@@ -123,6 +125,7 @@ const FillTextButton = ({
             margin: '0 -20px',
             willChange: 'text-shadow',
             transform: 'translateZ(0)',
+            mixBlendMode: 'screen',
           }}
           aria-hidden="true"
         >
