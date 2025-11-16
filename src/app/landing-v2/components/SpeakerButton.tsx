@@ -13,7 +13,7 @@ export default function SpeakerButton({ isPlaying, onClick, isVisible }: Speaker
     <button
       onClick={onClick}
       className={`
-        fixed top-4 right-4
+        fixed top-3 right-3
         transition-all ease-out
         active:scale-95
         cursor-pointer
@@ -42,7 +42,7 @@ export default function SpeakerButton({ isPlaying, onClick, isVisible }: Speaker
           : 'drop-shadow(0 0 0px rgba(251, 191, 36, 0))';
       }}
     >
-      <GeometricSpeakerIcon size={58} isPlaying={isPlaying} />
+      <GeometricSpeakerIcon size={44} isPlaying={isPlaying} />
     </button>
   );
 }
