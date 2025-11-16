@@ -30,16 +30,13 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
         }}
       />
 
-      <div className="relative w-full" style={{ zIndex: 10, minHeight: '100vh' }}>
+      <div className="relative w-full" style={{ zIndex: 10 }}>
         {children}
 
         {showFooter && (
           <footer
           style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
+            position: 'relative',
             width: '100%',
             overflow: 'hidden',
             backdropFilter: 'blur(12px)',
