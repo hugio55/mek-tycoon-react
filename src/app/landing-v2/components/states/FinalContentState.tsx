@@ -68,12 +68,12 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
 
   return (
     <div
-      className="flex-1 flex flex-col w-full"
+      className="flex flex-col w-full flex-grow"
       style={{
         position: 'relative',
       }}
     >
-      <div className="flex-1 flex flex-col items-center pb-8" style={{ marginTop: isMobile ? 'calc(50vh - 135px)' : 'calc(50% + 25vh - 50px)' }}>
+      <div className="flex flex-col items-center" style={{ marginTop: isMobile ? 'calc(50vh - 135px)' : 'calc(50% + 25vh - 50px)', paddingBottom: '2rem' }}>
         {/* Description with fade + slide up */}
         <div
           className="transition-all duration-500 ease-out"
@@ -102,7 +102,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
           />
         </div>
 
-        <div className="w-full max-w-[680px] mx-auto mb-[150px] flex flex-col gap-3" style={{ marginTop: '83px' }}>
+        <div className="w-full max-w-[680px] mx-auto mb-8 flex flex-col gap-3" style={{ marginTop: '83px' }}>
           {displayPhases.map((card: PhaseCard, index: number) => {
             const isExpanded = expandedIndex === index;
             const isLocked = card.locked;

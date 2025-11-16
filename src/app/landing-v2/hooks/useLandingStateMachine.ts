@@ -16,11 +16,11 @@ export const TIMINGS = {
   starsFade: 2000,          // Stars fade in (simultaneous with background)
   logoDelay: 2000,          // Wait for stars to complete
   logoFade: 4500,           // Logo fade (slower, more gradual)
-  pauseAfterLogo: 1000,     // Pause after logo completes
+  pauseAfterLogo: 400,      // Pause after logo completes (shorter)
   descriptionFade: 500,     // Description animation
-  buttonDelay: 1000,        // Delay between description and button
+  buttonDelay: 600,         // Delay between description and button (shorter)
   buttonFade: 500,          // Button animation
-  phaseDelay: 1000,         // Delay before phases start
+  phaseDelay: 600,          // Delay before phases start (shorter)
   phaseStagger: 200,        // Delay between each phase
 };
 
