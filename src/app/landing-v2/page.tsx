@@ -82,7 +82,7 @@ export default function LandingV2() {
   // Ensure we start at 0 until loader finishes and entrance begins
   const backgroundOpacity = !mounted || !entranceStarted ? 0 : (
     isState('SOUND_SELECTION')
-      ? (backgroundFadedIn ? 0.12 : 0)
+      ? (backgroundFadedIn ? 0.17 : 0)
       : 0.77
   );
   const showFooter = isRevealing; // Only show footer in REVEAL state
