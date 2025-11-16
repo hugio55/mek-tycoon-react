@@ -20,9 +20,9 @@ interface FinalContentStateProps {
 }
 
 export default function FinalContentState({ isActive, phaseCards, startDelay = 0 }: FinalContentStateProps) {
-  const [showDescription, setShowDescription] = useState(false);
-  const [showButton, setShowButton] = useState(false);
-  const [showPhases, setShowPhases] = useState<number>(0);
+  const [showDescription, setShowDescription] = useState(true);
+  const [showButton, setShowButton] = useState(true);
+  const [showPhases, setShowPhases] = useState<number>(4);
   const [showBetaLightbox, setShowBetaLightbox] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
