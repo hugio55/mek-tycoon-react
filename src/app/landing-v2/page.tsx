@@ -6,12 +6,14 @@ import { api } from '@/convex/_generated/api';
 import StarField from '@/components/StarField';
 
 import { useLandingStateMachine } from './hooks/useLandingStateMachine';
+import { useBackgroundAudio } from './hooks/useBackgroundAudio';
 import LandingContainer from './components/LandingContainer';
 import SoundSelectionState from './components/states/SoundSelectionState';
 import BackgroundRevealState from './components/states/BackgroundRevealState';
 import StarsAndLogoState from './components/states/StarsAndLogoState';
 import BriefPauseState from './components/states/BriefPauseState';
 import FinalContentState from './components/states/FinalContentState';
+import SpeakerButton from './components/SpeakerButton';
 import StateDebugPanel from './debug/StateDebugPanel';
 
 export default function LandingV2() {
@@ -20,6 +22,7 @@ export default function LandingV2() {
 
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
   const { currentState, next, transitionTo, isState, isStateOrAfter } = useLandingStateMachine();
+  const { audioPlaying, audioEnabled, toggleAudio, startAudio } = useBackgroundAudio();
 
   useEffect(() => {
     setMounted(true);
@@ -34,9 +37,17 @@ export default function LandingV2() {
     }
   }, []);
 
+  // Start audio after BACKGROUND_REVEAL completes
+  useEffect(() => {
+    if (isStateOrAfter('STARS_AND_LOGO')) {
+      startAudio();
+    }
+  }, [currentState, startAudio, isStateOrAfter]);
+
   const backgroundOpacity = isState('SOUND_SELECTION') ? 0.3 : 1.0;
-  const starsOpacity = isStateOrAfter('BACKGROUND_REVEAL') ? 1 : 0;
+  const starsOpacity = isStateOrAfter('STARS_AND_LOGO') ? 1 : 0;
   const showFooter = !isState('SOUND_SELECTION');
+  const showSpeaker = isStateOrAfter('BACKGROUND_REVEAL'); // Show speaker for everyone
 
   return (
     <LandingContainer backgroundOpacity={backgroundOpacity} showFooter={showFooter}>
@@ -74,12 +85,27 @@ export default function LandingV2() {
         phaseCards={phaseCards}
       />
 
+      <SpeakerButton
+        isPlaying={audioPlaying}
+        onClick={toggleAudio}
+        isVisible={showSpeaker}
+      />
+
       {process.env.NODE_ENV === 'development' && mounted && (
         <StateDebugPanel
           currentState={currentState}
           onStateChange={transitionTo}
         />
       )}
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes speakerFadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+          }
+        `
+      }} />
     </LandingContainer>
   );
 }
