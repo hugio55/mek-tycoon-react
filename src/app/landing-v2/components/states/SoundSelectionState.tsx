@@ -6,11 +6,12 @@ import { GeometricSpeakerIcon } from '@/components/SpeakerIcons';
 interface SoundSelectionStateProps {
   isActive: boolean;
   onComplete: () => void;
+  onAudioStart?: () => void;
 }
 
 const STORAGE_KEY_AUDIO = 'mek-audio-consent';
 
-export default function SoundSelectionState({ isActive, onComplete }: SoundSelectionStateProps) {
+export default function SoundSelectionState({ isActive, onComplete, onAudioStart }: SoundSelectionStateProps) {
   const [mounted, setMounted] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
 
@@ -42,6 +43,12 @@ export default function SoundSelectionState({ isActive, onComplete }: SoundSelec
       audioEnabled: withAudio,
       timestamp: Date.now()
     }));
+
+    // Start audio immediately if enabled (must happen during user gesture)
+    if (withAudio && onAudioStart) {
+      console.log('[🎵SOUND] Starting audio during user gesture...');
+      onAudioStart();
+    }
 
     // Start fade animation after brief delay (400ms to show green light)
     setTimeout(() => {
