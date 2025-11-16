@@ -18,28 +18,29 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
   }, []);
 
   return (
-    <div className={`fixed inset-0 bg-black scrollbar-hide ${allowScroll ? 'overflow-y-auto' : 'overflow-hidden'}`}>
+    <div className={`min-h-screen bg-black scrollbar-hide ${allowScroll ? '' : 'overflow-hidden'}`}>
       <div
-        className="fixed inset-0 transition-opacity ease-out"
+        className="fixed inset-0 transition-opacity ease-out pointer-events-none"
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: isMobile ? '150%' : 'cover',
           backgroundPosition: isMobile ? 'center calc(50% - 75px)' : 'center calc(50% + 25px)',
           opacity: backgroundOpacity,
           transitionDuration: `${transitionDuration}ms`,
+          zIndex: 0,
         }}
       />
 
-      <div className="relative w-full" style={{ zIndex: 10, paddingBottom: 0, marginBottom: 0 }}>
-        {children}
+      <div className="relative w-full min-h-screen flex flex-col" style={{ zIndex: 10 }}>
+        <div className="flex-grow">
+          {children}
+        </div>
 
         {showFooter && (
           <footer
           style={{
             position: 'relative',
-            marginTop: '0',
-            marginBottom: '0',
-            paddingBottom: '0',
+            marginTop: '80px',
             width: '100%',
             overflow: 'hidden',
             backdropFilter: 'blur(12px)',
