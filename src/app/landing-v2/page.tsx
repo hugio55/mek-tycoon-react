@@ -35,6 +35,7 @@ export default function LandingV2() {
   }, []);
 
   const backgroundOpacity = isState('SOUND_SELECTION') ? 0.3 : 1.0;
+  const starsOpacity = isStateOrAfter('BACKGROUND_REVEAL') ? 1 : 0;
   const showFooter = !isState('SOUND_SELECTION');
 
   return (
@@ -48,14 +49,20 @@ export default function LandingV2() {
         isActive={isState('BACKGROUND_REVEAL')}
       />
 
-      {isStateOrAfter('STARS_AND_LOGO') && (
-        <>
+      {isStateOrAfter('BACKGROUND_REVEAL') && (
+        <div
+          className="transition-opacity duration-1500 ease-out"
+          style={{ opacity: starsOpacity }}
+        >
           <StarField />
-          <StarsAndLogoState
-            isActive={isStateOrAfter('STARS_AND_LOGO')}
-            deviceType={deviceType}
-          />
-        </>
+        </div>
+      )}
+
+      {isStateOrAfter('STARS_AND_LOGO') && (
+        <StarsAndLogoState
+          isActive={isStateOrAfter('STARS_AND_LOGO')}
+          deviceType={deviceType}
+        />
       )}
 
       <BriefPauseState
