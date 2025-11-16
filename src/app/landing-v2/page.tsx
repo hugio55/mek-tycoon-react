@@ -60,7 +60,7 @@ export default function LandingV2() {
       <StarField />
 
       <div
-        className="absolute inset-0"
+        className="fixed inset-0"
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: 'cover',
@@ -70,7 +70,7 @@ export default function LandingV2() {
 
       <div className="relative min-h-screen flex flex-col" style={{ zIndex: 10 }}>
         {mounted && (
-          <div className="flex-1 flex flex-col items-center gap-4 px-4 pb-8" style={{ paddingTop: '50vh' }}>
+          <div className="flex-1 flex flex-col items-center px-4 pb-8" style={{ paddingTop: '50vh' }}>
             {/* Logo */}
             <div className="flex items-center justify-center" style={{ transform: 'translateY(-50%)' }}>
               {deviceType === 'macos' || deviceType === 'iphone' ? (
@@ -92,11 +92,11 @@ export default function LandingV2() {
               )}
             </div>
 
-            <p className="text-white/80 text-xs tracking-wide" style={{ fontFamily: 'Saira, sans-serif' }}>
+            <p className="text-white/80 text-xs tracking-wide" style={{ fontFamily: 'Saira, sans-serif', marginTop: '100px' }}>
               An epic idle strategy game where Mekanism NFTs build empires.
             </p>
 
-            <div className="mt-6">
+            <div style={{ marginTop: '100px' }}>
               <FillTextButton text="join beta" fontFamily="Play" />
             </div>
 
@@ -113,7 +113,7 @@ export default function LandingV2() {
                       disabled={isLocked}
                       className={`
                         w-full text-left relative overflow-hidden
-                        ${isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+                        ${isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-[1.02] active:scale-[0.98]'}
                       `}
                       style={{
                         height: '48px',
@@ -121,6 +121,19 @@ export default function LandingV2() {
                         background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
                         backdropFilter: 'blur(4px)',
                         transition: 'all 200ms ease',
+                        border: '1px solid rgba(250,182,23,0.2)',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isLocked) {
+                          e.currentTarget.style.borderColor = 'rgba(250,182,23,0.5)';
+                          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isLocked) {
+                          e.currentTarget.style.borderColor = 'rgba(250,182,23,0.2)';
+                          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))';
+                        }
                       }}
                     >
                       <div className="h-full flex items-center justify-between px-6">
