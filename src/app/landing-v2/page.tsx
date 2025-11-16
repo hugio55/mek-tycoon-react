@@ -65,14 +65,12 @@ export default function LandingV2() {
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: 'cover',
           backgroundPosition: 'center calc(50% + 0px)',
-          filter: expandedIndex !== null ? 'blur(4px)' : 'blur(0px)',
-          transition: 'filter 500ms ease-in-out',
         }}
       />
 
       <div className="relative min-h-screen flex flex-col" style={{ zIndex: 10 }}>
         {mounted && (
-          <div className="flex-1 flex flex-col items-center justify-center pb-8 pt-[20vh]">
+          <div className="flex-1 flex flex-col items-center justify-center pb-8 pt-[20vh]" style={{ marginTop: '-70px' }}>
             {/* Logo - centered slightly above middle */}
             <div className="flex items-center justify-center">
               {deviceType === 'macos' || deviceType === 'iphone' ? (
@@ -95,7 +93,7 @@ export default function LandingV2() {
             </div>
 
             {/* Description - closer to logo */}
-            <p className="text-white/80 text-sm tracking-wide mt-6" style={{ fontFamily: 'Saira, sans-serif' }}>
+            <p className="text-white/80 text-sm tracking-wide" style={{ fontFamily: 'Saira, sans-serif', marginTop: '-11px' }}>
               An epic idle strategy game where Mekanism NFTs build empires.
             </p>
 
@@ -105,7 +103,7 @@ export default function LandingV2() {
             </div>
 
             {/* Phase cards - small gap below button */}
-            <div className="w-full max-w-[680px] mx-auto mt-12 mb-[200px] flex flex-col gap-3">
+            <div className="w-full max-w-[680px] mx-auto mb-[200px] flex flex-col gap-3" style={{ marginTop: '83px' }}>
               {displayPhases.map((card: PhaseCard, index: number) => {
                 const isExpanded = expandedIndex === index;
                 const isLocked = card.locked;
@@ -191,6 +189,7 @@ export default function LandingV2() {
                           background: 'rgba(0, 0, 0, 0.6)',
                           borderRadius: '8px',
                           backdropFilter: 'blur(8px)',
+                          transition: 'backdrop-filter 500ms ease-in-out',
                         }}
                       >
                         <h4
