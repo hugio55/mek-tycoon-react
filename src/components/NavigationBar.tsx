@@ -7,6 +7,7 @@ import { restoreWalletSession } from "@/lib/walletSessionManager";
 import { useState, useEffect, useRef } from "react";
 import { useLoaderContext } from "@/features/page-loader";
 import { TIMING } from "@/features/page-loader/config/constants";
+import WalletConnectLightbox from "@/components/WalletConnectLightbox";
 
 export default function NavigationBar() {
   const router = useRouter();
@@ -44,6 +45,7 @@ export default function NavigationBar() {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const imageKeyRef = useRef<string | null>(null);
+  const [showWalletConnect, setShowWalletConnect] = useState(false);
 
   // Check if we're in a loading state (may not be in LoaderProvider)
   let isPageLoading = false;
@@ -68,6 +70,20 @@ export default function NavigationBar() {
       setWalletAddress(address);
     };
     loadWallet();
+  }, []);
+
+  // Listen for wallet connect lightbox open event
+  useEffect(() => {
+    const handleOpenWalletConnect = () => {
+      console.log('[🎯NAV] Opening wallet connect lightbox');
+      setShowWalletConnect(true);
+    };
+
+    window.addEventListener('openWalletConnect', handleOpenWalletConnect);
+
+    return () => {
+      window.removeEventListener('openWalletConnect', handleOpenWalletConnect);
+    };
   }, []);
 
   // Get active navigation configuration
@@ -531,6 +547,17 @@ export default function NavigationBar() {
             </div>
           );
         })}
+
+        {/* Wallet Connect Lightbox */}
+        <WalletConnectLightbox
+          isOpen={showWalletConnect}
+          onClose={() => setShowWalletConnect(false)}
+          onConnected={(address) => {
+            console.log('[🎯NAV] Wallet connected:', address.slice(0, 20) + '...');
+            setWalletAddress(address);
+            setShowWalletConnect(false);
+          }}
+        />
       </div>
     </div>
   );
