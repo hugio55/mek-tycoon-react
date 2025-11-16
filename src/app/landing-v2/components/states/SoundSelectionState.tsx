@@ -57,7 +57,7 @@ export default function SoundSelectionState({ isActive, onComplete }: SoundSelec
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center px-4 transition-opacity duration-[2500ms]"
       style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
         opacity: isFadingOut ? 0 : 1
       }}
     >
