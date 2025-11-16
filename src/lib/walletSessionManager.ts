@@ -104,8 +104,8 @@ export async function restoreWalletSession(): Promise<WalletSession | null> {
     const disconnectNonce = localStorage.getItem('mek_disconnect_nonce');
     if (disconnectNonce) {
       console.log('[Session Manager] Disconnect nonce found - session invalidated, user must reconnect');
-      // Clear the encrypted session to force new login
-      clearSession();
+      // Don't clear session here - it causes infinite loop
+      // Session will be invalid anyway, just return null
       return null;
     }
 
