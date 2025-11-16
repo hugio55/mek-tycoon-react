@@ -265,6 +265,9 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       setWalletError(error.message || 'Failed to connect to wallet');
       setIsConnecting(false);
       setConnectionStatus('');
+    } finally {
+      // Always reset connecting state
+      setIsConnecting(false);
     }
   };
 
