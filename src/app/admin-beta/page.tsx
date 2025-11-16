@@ -1,10 +1,23 @@
 'use client';
 
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
 
 export default function AdminBetaSignups() {
   const signups = useQuery(api.betaSignups.getAllBetaSignups);
+  const deleteBetaSignup = useMutation(api.betaSignups.deleteBetaSignup);
+
+  const handleDelete = async (signupId: Id<"betaSignups">, stakeAddress: string) => {
+    if (confirm(`Are you sure you want to delete signup:\n${stakeAddress}?`)) {
+      try {
+        await deleteBetaSignup({ signupId });
+      } catch (error) {
+        alert('Failed to delete signup');
+        console.error(error);
+      }
+    }
+  };
 
   if (!signups) {
     return (
@@ -79,12 +92,15 @@ export default function AdminBetaSignups() {
                 <th className="px-6 py-4 text-left text-sm font-semibold text-yellow-400">
                   Submitted At
                 </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-yellow-400">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {signups.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-white/50">
+                  <td colSpan={5} className="px-6 py-8 text-center text-white/50">
                     No signups yet
                   </td>
                 </tr>
@@ -105,6 +121,14 @@ export default function AdminBetaSignups() {
                     </td>
                     <td className="px-6 py-4 text-sm text-white/70">
                       {formatDate(signup.submittedAt)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => handleDelete(signup._id, signup.stakeAddress)}
+                        className="px-3 py-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/50 rounded-md text-sm font-semibold transition-colors"
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))
