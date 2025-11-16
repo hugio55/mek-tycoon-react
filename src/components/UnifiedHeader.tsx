@@ -239,8 +239,16 @@ export default function UnifiedHeader() {
 
   // Handle disconnect
   const handleDisconnect = async () => {
-    if (window.confirm('Are you sure you want to disconnect your wallet?')) {
+    const confirmed = window.confirm(
+      'Disconnect wallet?\n\n' +
+      'This will log you out of Mek Tycoon. To require signature approval on next connection, ' +
+      'also disconnect this site in your wallet extension settings.'
+    );
+
+    if (confirmed) {
+      // Clear session storage
       await clearWalletSession();
+
       setWalletAddress(null);
       setSessionExpiresAt(null);
       setWalletDropdownOpen(false);
