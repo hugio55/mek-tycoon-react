@@ -12,7 +12,6 @@ import SoundSelectionState from './components/states/SoundSelectionState';
 import FinalContentState from './components/states/FinalContentState';
 import SpeakerButton from './components/SpeakerButton';
 import StateDebugPanel from './debug/StateDebugPanel';
-import HeightDebugPanel from './debug/HeightDebugPanel';
 import { useLoaderContext } from '@/features/page-loader';
 
 export default function LandingV2() {
@@ -24,12 +23,6 @@ export default function LandingV2() {
   const [showLightbox, setShowLightbox] = useState(false);
   const [entranceStarted, setEntranceStarted] = useState(false);
   const [logoFadeComplete, setLogoFadeComplete] = useState(false);
-
-  // Debug panel state
-  const [logoTopVh, setLogoTopVh] = useState(8);
-  const [contentDelayMs, setContentDelayMs] = useState(1600);
-  const [pageMinHeight, setPageMinHeight] = useState('100vh');
-  const [pageHeight, setPageHeight] = useState('fit-content');
 
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
   const { currentState, next, transitionTo, isState } = useLandingStateMachine();
@@ -95,8 +88,8 @@ export default function LandingV2() {
 
   // Logo fades simultaneously with stars (no delay)
   const logoDelay = 0;
-  // Content starts after logo starts fading (controlled by debug panel)
-  const contentDelay = contentDelayMs;
+  // Content starts after logo starts fading
+  const contentDelay = 1600;
 
   // Show pure black until mounted
   if (!mounted) {
@@ -108,19 +101,19 @@ export default function LandingV2() {
       backgroundOpacity={backgroundOpacity}
       showFooter={showFooter}
       transitionDuration={isState('SOUND_SELECTION') ? 1000 : 2000}
-      allowScroll={logoFadeComplete}
-      minHeight={pageMinHeight}
-      height={pageHeight}
+      allowScroll={true}
     >
-      <SoundSelectionState
-        isActive={isState('SOUND_SELECTION')}
-        onComplete={next}
-        onAudioStart={startAudio}
-        shouldShow={entranceStarted && showLightbox}
-      />
+      {false && (
+        <SoundSelectionState
+          isActive={isState('SOUND_SELECTION')}
+          onComplete={next}
+          onAudioStart={startAudio}
+          shouldShow={entranceStarted && showLightbox}
+        />
+      )}
 
       {/* Preload assets */}
-      {mounted && (
+      {false && mounted && (
         <div style={{ opacity: 0, position: 'absolute', pointerEvents: 'none' }}>
           {/* Preload background image immediately */}
           <img src="/colored-bg-1.webp" alt="Preload background" />
@@ -162,14 +155,14 @@ export default function LandingV2() {
       )}
 
       {/* Logo - fade in after stars complete */}
-      {isRevealing && (
+      {false && isRevealing && (
         <div
           className="transition-opacity"
           style={{
             width: '100%',
             display: 'flex',
             justifyContent: 'center',
-            paddingTop: `${logoTopVh}vh`,
+            paddingTop: '8vh',
             opacity: revealStarted ? 1 : 0,
             zIndex: 20,
             transitionDuration: `${TIMINGS.logoFade}ms`,
@@ -200,35 +193,27 @@ export default function LandingV2() {
       )}
 
       {/* Final content - starts after logo completes + pause */}
-      <FinalContentState
-        isActive={isRevealing}
-        phaseCards={phaseCards}
-        startDelay={contentDelay}
-      />
+      {false && (
+        <FinalContentState
+          isActive={isRevealing}
+          phaseCards={phaseCards}
+          startDelay={contentDelay}
+        />
+      )}
 
-      <SpeakerButton
-        isPlaying={audioPlaying}
-        onClick={toggleAudio}
-        isVisible={showSpeaker}
-      />
+      {false && (
+        <SpeakerButton
+          isPlaying={audioPlaying}
+          onClick={toggleAudio}
+          isVisible={showSpeaker}
+        />
+      )}
 
-      {process.env.NODE_ENV === 'development' && mounted && (
-        <>
-          <StateDebugPanel
-            currentState={currentState}
-            onStateChange={transitionTo}
-          />
-          <HeightDebugPanel
-            onLogoTopChange={setLogoTopVh}
-            onContentDelayChange={setContentDelayMs}
-            onPageHeightChange={(minHeight, height) => {
-              setPageMinHeight(minHeight);
-              setPageHeight(height);
-            }}
-            defaultLogoTop={8}
-            defaultContentDelay={1600}
-          />
-        </>
+      {false && process.env.NODE_ENV === 'development' && mounted && (
+        <StateDebugPanel
+          currentState={currentState}
+          onStateChange={transitionTo}
+        />
       )}
 
       <style dangerouslySetInnerHTML={{
