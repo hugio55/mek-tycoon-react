@@ -22,7 +22,7 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
         className="fixed inset-0 transition-opacity ease-out"
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
-          backgroundSize: 'cover',
+          backgroundSize: isMobile ? '150%' : 'cover',
           backgroundPosition: isMobile ? 'center calc(50% - 75px)' : 'center calc(50% + 25px)',
           opacity: backgroundOpacity,
           transitionDuration: `${transitionDuration}ms`,
