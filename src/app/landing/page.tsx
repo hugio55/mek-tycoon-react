@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { useSearchParams } from 'next/navigation';
 import HorizontalTimeline from '@/components/HorizontalTimeline';
 import PhaseAccordion from '@/components/PhaseAccordion';
 import { SPEAKER_ICON_STYLES, type SpeakerIconStyle } from '@/components/SpeakerIcons';
@@ -19,17 +18,13 @@ import { DEFAULT_CONFIG, STORAGE_KEY, AUDIO_CONSENT_KEY } from '@/features/landi
 import { useResponsiveLayout } from '@/features/landing-page/hooks/useResponsiveLayout';
 import LandingFooter from '@/features/landing-page/components/LandingFooter';
 import DebugSidebar from '@/features/landing-page/components/DebugSidebar';
+import DebugParamChecker from './components/DebugParamChecker';
 
 // Configuration imported from /features/landing-page/config/default-config.ts
 
 export default function LandingPage() {
   // Check for ?debug=true in URL
-  const searchParams = useSearchParams();
   const [showDebugSidebar, setShowDebugSidebar] = useState(false);
-
-  useEffect(() => {
-    setShowDebugSidebar(searchParams.get('debug') === 'true');
-  }, [searchParams]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -1520,6 +1515,9 @@ export default function LandingPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-black">
+      <Suspense fallback={null}>
+        <DebugParamChecker onDebugChange={setShowDebugSidebar} />
+      </Suspense>
       {/* Main content area */}
       <div
         className="bg-black"
