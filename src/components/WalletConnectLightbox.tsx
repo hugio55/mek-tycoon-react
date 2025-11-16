@@ -39,14 +39,21 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
     return () => setMounted(false);
   }, []);
 
+  // Track isOpen prop changes
+  useEffect(() => {
+    console.log('[🚨PROP] isOpen prop changed to:', isOpen);
+  }, [isOpen]);
+
   // Lock body scroll when lightbox is open
   useEffect(() => {
+    console.log('[🚨EFFECT] Body scroll effect running - isOpen:', isOpen);
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       detectAvailableWallets();
       // Reset success state when opening
       setConnectionSuccessful(false);
     } else {
+      console.log('[🚨EFFECT] Lightbox is closed - resetting states and body overflow');
       document.body.style.overflow = '';
       // Reset states when closing
       setIsConnecting(false);
@@ -267,7 +274,14 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       setIsConnecting(false);
 
       // Close immediately - no delay needed
-      onClose();
+      console.log('[🚨CLOSE] About to call onClose() - line 270');
+      try {
+        onClose();
+        console.log('[🚨CLOSE] onClose() called successfully - line 272');
+      } catch (closeError) {
+        console.error('[🚨CLOSE] ERROR calling onClose():', closeError);
+        throw closeError; // Re-throw to see if this is the issue
+      }
 
       // Small delay before navigation to ensure state updates propagate
       setTimeout(() => {
@@ -276,11 +290,13 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       }, 100);
 
     } catch (error: any) {
-      console.error('[WalletConnect] Connection error:', error);
+      console.error('[🚨ERROR] Connection error caught:', error);
+      console.log('[🚨ERROR] Error type:', typeof error, 'Message:', error.message);
       setWalletError(error.message || 'Failed to connect to wallet');
       setIsConnecting(false);
       setConnectionStatus('');
     } finally {
+      console.log('[🚨FINALLY] Finally block executing - line 285');
       // Always reset connecting state
       setIsConnecting(false);
     }
@@ -293,7 +309,15 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
     setConnectionStatus('');
   };
 
-  if (!mounted || !isOpen) return null;
+  // Debug logging BEFORE render check
+  console.log('[🚨RENDER] Component render called - mounted:', mounted, 'isOpen:', isOpen);
+
+  if (!mounted || !isOpen) {
+    console.log('[🚨RENDER] Returning null - not rendering lightbox');
+    return null;
+  }
+
+  console.log('[🚨RENDER] Lightbox WILL render');
 
   // Debug logging for render state
   console.log('[WalletConnect] Render state:', {

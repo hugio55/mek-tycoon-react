@@ -30,7 +30,7 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
         }}
       />
 
-      <div className="relative w-full" style={{ zIndex: 10 }}>
+      <div className="relative w-full" style={{ zIndex: 10, paddingBottom: 0, marginBottom: 0 }}>
         {children}
 
         {showFooter && (
@@ -38,6 +38,8 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
           style={{
             position: 'relative',
             marginTop: '0',
+            marginBottom: '0',
+            paddingBottom: '0',
             width: '100%',
             overflow: 'hidden',
             backdropFilter: 'blur(12px)',
