@@ -163,7 +163,7 @@ export default function LandingV2() {
             display: 'flex',
             justifyContent: 'center',
             paddingTop: (deviceType === 'iphone' || (deviceType === 'other' && navigator.userAgent.toLowerCase().includes('android')))
-              ? 'calc(8vh + 200px)'
+              ? 'calc(8vh + 180px)'
               : 'calc(8vh + 220px)',
             opacity: revealStarted ? 1 : 0,
             zIndex: 20,
