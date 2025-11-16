@@ -52,8 +52,10 @@ export default function LandingV2() {
       setTimeout(() => setBackgroundFadedIn(true), 100);
       // 2. Lightbox fades in simultaneously with background
       setTimeout(() => setShowLightbox(true), 100);
+      // 3. Since SoundSelectionState is disabled, immediately transition to REVEAL
+      setTimeout(() => transitionTo('REVEAL'), 200);
     }
-  }, [mounted, isLoading, entranceStarted]);
+  }, [mounted, isLoading, entranceStarted, transitionTo]);
 
   // Trigger reveal animations when entering REVEAL state
   useEffect(() => {
@@ -193,13 +195,11 @@ export default function LandingV2() {
       )}
 
       {/* Final content - starts after logo completes + pause */}
-      {false && (
-        <FinalContentState
-          isActive={isRevealing}
-          phaseCards={phaseCards}
-          startDelay={contentDelay}
-        />
-      )}
+      <FinalContentState
+        isActive={isRevealing}
+        phaseCards={phaseCards}
+        startDelay={contentDelay}
+      />
 
       {false && (
         <SpeakerButton

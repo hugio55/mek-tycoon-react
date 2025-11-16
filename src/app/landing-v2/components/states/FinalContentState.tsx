@@ -73,7 +73,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
 
         <JoinBetaSection show={showButton} onJoinBeta={() => setShowBetaLightbox(true)} />
 
-        {false && <PhaseCardsSection phaseCards={phaseCards} showPhases={showPhases} />}
+        <PhaseCardsSection phaseCards={phaseCards} showPhases={showPhases} />
       </div>
 
       <BetaSignupLightbox
