@@ -447,40 +447,6 @@ export default function HomePage() {
           />
         </div>
 
-        {/* DEBUG: Owned Variations Panel */}
-        <details className="mb-8 mek-card-industrial mek-border-sharp-gold p-4 rounded-lg">
-          <summary className="cursor-pointer text-yellow-400 font-bold text-lg uppercase mb-2">
-            📊 Active Variations ({(essenceState?.slots?.filter((s: any) => s.mekAssetId) || []).length} Slotted Meks)
-          </summary>
-          <div className="text-gray-400 text-sm mb-4 px-2">
-            Showing variations from SLOTTED Meks only (those generating essence).
-            Triangle sprites light up for variations in your active slots.
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            {Object.entries(variationBreakdown).map(([type, variations]) => (
-              <div key={type} className="border border-yellow-500/30 rounded p-3">
-                <h3 className="text-yellow-400 font-bold uppercase mb-2">{type}s ({variations.length} unique)</h3>
-                <div className="max-h-96 overflow-y-auto">
-                  {variations.map((v, i) => {
-                    const totalCount = getTotalCount(v.name, v.type);
-                    return (
-                      <div key={i} className="text-sm py-1 border-b border-gray-700/50 flex items-center justify-between">
-                        <span className="text-gray-300">{v.name}</span>
-                        <span className="font-mono">
-                          <span className="text-yellow-400">{v.count}</span>
-                          <span className="text-gray-400">/</span>
-                          <span className="text-gray-500">{totalCount}</span>
-                          <span className="text-gray-400 ml-1 text-xs">owned</span>
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </details>
-
         {/* Header with Triangle */}
         <div className="relative flex items-start justify-center mb-12">
           {/* Triangle with sprites - using OverlayRenderer (includes base image + sprites) */}
