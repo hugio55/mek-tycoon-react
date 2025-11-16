@@ -139,15 +139,24 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             height="100%"
             style={{
               borderRadius: '8px',
+              filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.6))',
             }}
           >
             <defs>
               <linearGradient id="tracerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="rgba(255, 255, 255, 0)" />
-                <stop offset="30%" stopColor="rgba(255, 255, 255, 0.3)" />
-                <stop offset="70%" stopColor="rgba(255, 255, 255, 0.8)" />
+                <stop offset="40%" stopColor="rgba(255, 255, 255, 0.1)" />
+                <stop offset="60%" stopColor="rgba(255, 255, 255, 0.3)" />
+                <stop offset="75%" stopColor="rgba(255, 255, 255, 0.6)" />
+                <stop offset="85%" stopColor="rgba(255, 255, 255, 0.85)" />
+                <stop offset="92%" stopColor="rgba(255, 255, 255, 0.95)" />
                 <stop offset="100%" stopColor="rgba(255, 255, 255, 1)" />
               </linearGradient>
+              <radialGradient id="flareGradient">
+                <stop offset="0%" stopColor="rgba(255, 255, 255, 1)" />
+                <stop offset="50%" stopColor="rgba(255, 255, 255, 0.8)" />
+                <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
+              </radialGradient>
             </defs>
             <rect
               x="1"
@@ -158,10 +167,11 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
               ry="7"
               fill="none"
               stroke="url(#tracerGradient)"
-              strokeWidth="2"
-              strokeDasharray="60 340"
+              strokeWidth="2.5"
+              strokeDasharray="80 320"
+              strokeLinecap="round"
               style={{
-                animation: 'traceBorder 3.5s linear infinite',
+                animation: 'traceBorder 2s linear infinite',
               }}
             />
           </svg>
