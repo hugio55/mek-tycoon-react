@@ -7,6 +7,7 @@ import {
   saveWalletSession,
   restoreWalletSession,
   clearWalletSession,
+  generateSessionId,
 } from '@/lib/walletSessionManager';
 
 interface WalletInfo {
@@ -133,10 +134,11 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       // Save session
       setConnectionStatus('Saving session...');
       await saveWalletSession({
-        walletAddress: paymentAddress || stakeAddress,
+        walletName: wallet.name,
         stakeAddress: stakeAddress,
-        walletType: wallet.name,
-        expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
+        paymentAddress: paymentAddress,
+        nonce: crypto.randomUUID(),
+        sessionId: generateSessionId(),
       });
 
       // Store wallet type for reconnection
