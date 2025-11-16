@@ -111,16 +111,28 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
     try {
       // Enable the wallet API
       setConnectionStatus(`Connecting to ${wallet.name}...`);
-      const api = await wallet.api.enable();
+      console.log('[WalletConnect] Calling wallet.api.enable()...');
+
+      const api = await Promise.race([
+        wallet.api.enable(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Wallet connection timeout after 30 seconds')), 30000)
+        )
+      ]) as any;
 
       // Get wallet addresses
       setConnectionStatus('Retrieving wallet addresses...');
-      const unusedAddresses = await api.getUnusedAddresses();
-      const usedAddresses = await api.getUsedAddresses();
-      const rewardAddresses = await api.getRewardAddresses();
+      const stakeAddresses = await api.getRewardAddresses();
 
-      const paymentAddress = unusedAddresses?.[0] || usedAddresses?.[0];
-      const stakeAddress = rewardAddresses?.[0];
+      if (!stakeAddresses || stakeAddresses.length === 0) {
+        throw new Error('No stake addresses found in wallet');
+      }
+
+      const stakeAddress = stakeAddresses[0];
+
+      // Get payment addresses
+      const usedAddresses = await api.getUsedAddresses();
+      const paymentAddress = usedAddresses?.[0];
 
       if (!stakeAddress) {
         throw new Error('Could not retrieve stake address from wallet');
@@ -130,6 +142,65 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
         wallet: wallet.name,
         stakeAddress: stakeAddress.slice(0, 20) + '...',
       });
+
+      // Fetch NFTs from blockchain via Blockfrost
+      console.log('[WalletConnect] Fetching NFTs from blockchain...');
+      setConnectionStatus('Loading your Meks from blockchain...');
+
+      let meks: any[] = [];
+
+      try {
+        // Import the initialization function
+        const { initializeWithBlockfrost } = await import('@/lib/blockfrostInit');
+
+        const initResult = await initializeWithBlockfrost({
+          walletAddress: stakeAddress,
+          stakeAddress,
+          walletType: wallet.name.toLowerCase(),
+          paymentAddresses: usedAddresses
+        });
+
+        if (initResult.success) {
+          console.log(`[WalletConnect] Successfully fetched ${initResult.mekCount} Meks from blockchain`);
+          meks = initResult.meks || [];
+        } else {
+          throw new Error(initResult.error || 'Failed to fetch NFTs from blockchain');
+        }
+      } catch (blockfrostError: any) {
+        console.error('[WalletConnect] Blockfrost initialization failed:', blockfrostError);
+
+        // Fallback to client-side parsing
+        console.log('[WalletConnect] Falling back to client-side NFT parsing...');
+        try {
+          const { parseMeksFromUtxos } = await import('@/lib/nftExtractor');
+          const utxos = await api.getUtxos();
+          meks = await parseMeksFromUtxos(utxos, stakeAddress, []);
+
+          // Initialize with client-parsed meks
+          if (meks.length > 0) {
+            const { initializeGoldMining } = await import('@/lib/goldMining');
+            await initializeGoldMining({
+              walletAddress: stakeAddress,
+              walletType: wallet.name.toLowerCase(),
+              paymentAddresses: usedAddresses,
+              ownedMeks: meks.map(mek => ({
+                assetId: mek.assetId,
+                policyId: mek.policyId,
+                assetName: mek.assetName,
+                imageUrl: mek.imageUrl,
+                goldPerHour: mek.goldPerHour,
+                rarityRank: mek.rarityRank,
+                headVariation: mek.headGroup,
+                bodyVariation: mek.bodyGroup,
+                itemVariation: mek.itemGroup
+              }))
+            });
+          }
+        } catch (fallbackError: any) {
+          console.error('[WalletConnect] Client-side parsing also failed:', fallbackError);
+          // Continue anyway - user can still connect without meks
+        }
+      }
 
       // Save session
       setConnectionStatus('Saving session...');
