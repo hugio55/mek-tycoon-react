@@ -143,16 +143,8 @@ export function clearWalletSession(): void {
  */
 export function getCachedMeks(walletAddress?: string): any[] | null {
   try {
-    // Try new cache key first
-    let cacheData = localStorage.getItem('mek_cached_meks');
-
-    // Fall back to legacy key for backwards compatibility
-    if (!cacheData) {
-      cacheData = localStorage.getItem('mek_wallet_session');
-      if (cacheData) {
-        console.log('[Session Manager] Found legacy cache, will migrate on next save');
-      }
-    }
+    // Get cache data from dedicated cache key
+    const cacheData = localStorage.getItem('mek_cached_meks');
 
     if (!cacheData) return null;
 
