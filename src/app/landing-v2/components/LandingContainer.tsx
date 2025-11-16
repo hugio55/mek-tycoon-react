@@ -31,7 +31,7 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
         }}
       />
 
-      <div className="relative w-full flex flex-col" style={{ zIndex: 10 }}>
+      <div className="relative w-full flex flex-col min-h-0" style={{ zIndex: 10, flex: '1 1 0%' }}>
         {children}
 
         {showFooter && (
@@ -44,6 +44,7 @@ export default function LandingContainer({ children, backgroundOpacity, showFoot
             backdropFilter: 'blur(12px)',
             backgroundColor: 'rgba(255, 255, 255, 0.005)',
             zIndex: 30,
+            flexShrink: 0,
           }}
         >
         <svg className="absolute inset-0 w-full h-full pointer-events-none">
