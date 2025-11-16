@@ -24,7 +24,7 @@ export default function StarsAndLogoState({ isActive, deviceType }: StarsAndLogo
       <div
         className="absolute transition-opacity duration-2000"
         style={{
-          top: 'calc(50% - 100px)',
+          top: 'calc(40% - 100px)',
           left: '50%',
           transform: 'translateX(-50%)',
           opacity: mounted ? 1 : 0,
