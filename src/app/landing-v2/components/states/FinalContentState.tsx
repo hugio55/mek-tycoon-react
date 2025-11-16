@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import FillTextButton from '@/components/controls/FillTextButton';
 import BetaSignupLightbox from '@/components/BetaSignupLightbox';
+import { TIMINGS } from '../../hooks/useLandingStateMachine';
 
 interface PhaseCard {
   _id: string;
@@ -13,18 +14,41 @@ interface PhaseCard {
 interface FinalContentStateProps {
   isActive: boolean;
   phaseCards: PhaseCard[] | undefined;
+  startDelay?: number; // Delay before starting animations (ms)
 }
 
-export default function FinalContentState({ isActive, phaseCards }: FinalContentStateProps) {
-  const [mounted, setMounted] = useState(false);
+export default function FinalContentState({ isActive, phaseCards, startDelay = 0 }: FinalContentStateProps) {
+  const [showDescription, setShowDescription] = useState(false);
+  const [showButton, setShowButton] = useState(false);
+  const [showPhases, setShowPhases] = useState<number>(0); // Number of phases to show
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [showBetaLightbox, setShowBetaLightbox] = useState(false);
 
   useEffect(() => {
     if (isActive) {
-      setMounted(true);
+      // Staggered reveal sequence
+      const descTimer = setTimeout(() => setShowDescription(true), startDelay);
+      const buttonTimer = setTimeout(() => setShowButton(true), startDelay + TIMINGS.descriptionFade + TIMINGS.buttonDelay);
+      const phasesStartTimer = setTimeout(() => {
+        // Show phases one by one
+        setShowPhases(1);
+        const phase2Timer = setTimeout(() => setShowPhases(2), TIMINGS.phaseStagger);
+        const phase3Timer = setTimeout(() => setShowPhases(3), TIMINGS.phaseStagger * 2);
+        const phase4Timer = setTimeout(() => setShowPhases(4), TIMINGS.phaseStagger * 3);
+        return () => {
+          clearTimeout(phase2Timer);
+          clearTimeout(phase3Timer);
+          clearTimeout(phase4Timer);
+        };
+      }, startDelay + TIMINGS.descriptionFade + TIMINGS.buttonDelay + TIMINGS.buttonFade + TIMINGS.phaseDelay);
+
+      return () => {
+        clearTimeout(descTimer);
+        clearTimeout(buttonTimer);
+        clearTimeout(phasesStartTimer);
+      };
     }
-  }, [isActive]);
+  }, [isActive, startDelay]);
 
   if (!isActive) return null;
 
@@ -37,18 +61,33 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
 
   return (
     <div
-      className="flex-1 flex flex-col w-full transition-opacity duration-1000"
+      className="flex-1 flex flex-col w-full"
       style={{
-        opacity: mounted ? 1 : 0,
         position: 'relative',
       }}
     >
       <div className="flex-1 flex flex-col items-center pb-8" style={{ marginTop: 'calc(50% + 25vh - 50px)' }}>
-        <p className="text-white/80 text-sm tracking-wide" style={{ fontFamily: 'Saira, sans-serif' }}>
-          An epic idle strategy game where Mekanism NFTs build empires.
-        </p>
+        {/* Description with fade + slide up */}
+        <div
+          className="transition-all duration-500 ease-out"
+          style={{
+            opacity: showDescription ? 1 : 0,
+            transform: `translateY(${showDescription ? 0 : 20}px)`,
+          }}
+        >
+          <p className="text-white/80 text-sm tracking-wide" style={{ fontFamily: 'Saira, sans-serif' }}>
+            An epic idle strategy game where Mekanism NFTs build empires.
+          </p>
+        </div>
 
-        <div className="mt-8" style={{ transform: 'scale(0.8)' }}>
+        {/* Join Beta button with fade + slide up */}
+        <div
+          className="mt-8 transition-all duration-500 ease-out"
+          style={{
+            transform: `scale(0.8) translateY(${showButton ? 0 : 20}px)`,
+            opacity: showButton ? 1 : 0,
+          }}
+        >
           <FillTextButton
             text="join beta"
             fontFamily="Play"
@@ -61,9 +100,17 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
             const isExpanded = expandedIndex === index;
             const isLocked = card.locked;
             const phaseLabel = `Phase ${['I', 'II', 'III', 'IV'][index]}`;
+            const shouldShow = index < showPhases;
 
             return (
-              <div key={card._id} className="w-full">
+              <div
+                key={card._id}
+                className="w-full transition-all duration-500 ease-out"
+                style={{
+                  opacity: shouldShow ? 1 : 0,
+                  transform: `translateY(${shouldShow ? 0 : 20}px)`,
+                }}
+              >
                 <button
                   onClick={() => handleToggle(index, isLocked)}
                   disabled={isLocked}
