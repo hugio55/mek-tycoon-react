@@ -15,13 +15,15 @@ export function calculateTimeBasedProgress(elapsedMs: number): number {
 export function calculateMilestoneProgress(
   walletLoaded: boolean,
   criticalDataLoaded: boolean,
-  pageDataLoaded: boolean
+  pageDataLoaded: boolean,
+  windowLoaded: boolean
 ): number {
   let progress = 0;
 
-  if (walletLoaded) progress += 25;
-  if (criticalDataLoaded) progress += 25;
-  if (pageDataLoaded) progress += 40;
+  if (walletLoaded) progress += 20;
+  if (criticalDataLoaded) progress += 20;
+  if (pageDataLoaded) progress += 30;
+  if (windowLoaded) progress += 30; // Images, videos, all assets loaded
 
   return progress;
 }

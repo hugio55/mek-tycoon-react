@@ -12,6 +12,8 @@ interface LoaderContextValue {
   getTotalCount: () => number;
   isWalletLoaded: boolean;
   setWalletLoaded: (loaded: boolean) => void;
+  isWindowLoaded: boolean;
+  setWindowLoaded: (loaded: boolean) => void;
   startTime: number;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
@@ -69,8 +71,29 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
 
   const [queries, setQueries] = useState<Map<string, QueryState>>(new Map());
   const [isWalletLoaded, setWalletLoaded] = useState(false);
+  const [isWindowLoaded, setWindowLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(!isBypassed); // Start with false if bypassed
   const startTimeRef = useRef(Date.now());
+
+  // Track when all page assets (images, videos, etc.) have loaded
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Check if window is already loaded
+    if (document.readyState === 'complete') {
+      setWindowLoaded(true);
+      console.log('[🎯LOADER] Window already loaded (all assets downloaded)');
+      return;
+    }
+
+    const handleLoad = () => {
+      setWindowLoaded(true);
+      console.log('[🎯LOADER] Window load complete (all assets downloaded)');
+    };
+
+    window.addEventListener('load', handleLoad);
+    return () => window.removeEventListener('load', handleLoad);
+  }, []);
 
   const registerQuery = useCallback((id: string) => {
     setQueries((prev) => {
@@ -148,6 +171,8 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
     getTotalCount,
     isWalletLoaded,
     setWalletLoaded,
+    isWindowLoaded,
+    setWindowLoaded,
     startTime: startTimeRef.current,
     isLoading,
     setIsLoading,
