@@ -11,16 +11,12 @@ const STATE_ORDER: LandingState[] = [
 
 // Choreography timing (in ms)
 export const TIMINGS = {
-  lightboxFade: 1500,      // Lightbox fade out
-  backgroundFade: 2000,     // Background fade in (simultaneous with stars)
-  starsFade: 2000,          // Stars fade in (simultaneous with background)
-  logoDelay: 2000,          // Wait for stars to complete
+  starsFade: 2000,          // Stars fade in simultaneously with background
   logoFade: 4500,           // Logo fade (slower, more gradual)
-  pauseAfterLogo: 0,        // No pause - description starts immediately
-  descriptionFade: 1800,    // Description animation (extra second added)
-  buttonDelay: 50,          // Shorter gap between description and button
-  buttonFade: 1800,         // Button animation (extra second added)
-  phaseDelay: 50,           // Shorter gap between button and phases
+  descriptionFade: 1800,    // Description animation
+  buttonDelay: 50,          // Gap between description and button
+  buttonFade: 1800,         // Button animation
+  phaseDelay: 50,           // Gap between button and phases
   phaseStagger: 200,        // Delay between each phase
 };
 

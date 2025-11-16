@@ -66,7 +66,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
         pointerEvents: 'none',
       }}
     >
-      <div className="flex flex-col items-center" style={{ paddingTop: '100px', pointerEvents: 'auto' }}>
+      <div className="flex flex-col items-center" style={{ paddingTop: '60px', pointerEvents: 'auto' }}>
         <SubtitleSection show={showDescription} isMobile={isMobile} />
 
         <JoinBetaSection show={showButton} onJoinBeta={() => setShowBetaLightbox(true)} />
