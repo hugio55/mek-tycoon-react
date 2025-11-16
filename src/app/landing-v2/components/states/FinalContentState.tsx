@@ -42,7 +42,7 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
         opacity: mounted ? 1 : 0,
       }}
     >
-      <div className="flex-1 flex flex-col items-center pb-8" style={{ marginTop: 'calc(40% + 250px)' }}>
+      <div className="flex-1 flex flex-col items-center pb-8" style={{ marginTop: 'calc(40% + 550px)' }}>
         <p className="text-white/80 text-sm tracking-wide" style={{ fontFamily: 'Saira, sans-serif' }}>
           An epic idle strategy game where Mekanism NFTs build empires.
         </p>
@@ -165,9 +165,17 @@ export default function FinalContentState({ isActive, phaseCards }: FinalContent
       </div>
 
       <footer
-        className="backdrop-blur-md md:backdrop-blur-lg bg-white/10 mt-auto overflow-hidden w-full"
+        className="backdrop-blur-md md:backdrop-blur-lg bg-white/10 mt-auto overflow-hidden"
         style={{
           zIndex: 20,
+          position: 'relative',
+          width: '100%',
+          marginLeft: 0,
+          marginRight: 0,
+          paddingLeft: 0,
+          paddingRight: 0,
+          left: 0,
+          right: 0,
         }}
       >
         <svg className="absolute inset-0 w-full h-full pointer-events-none">
