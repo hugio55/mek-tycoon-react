@@ -102,7 +102,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
         pointerEvents: 'none',
       }}
     >
-      <div className="flex flex-col items-center" style={{ marginTop: isMobile ? 'calc(50vh + 85px)' : 'calc(60vh + 20px)', paddingBottom: '200px', pointerEvents: 'auto' }}>
+      <div className="flex flex-col items-center" style={{ marginTop: isMobile ? 'calc(50vh + 85px)' : 'calc(60vh + 20px)', paddingBottom: '0', pointerEvents: 'auto' }}>
         {/* Description with fade + slide up */}
         <div
           className="transition-all duration-500 ease-out"
@@ -201,17 +201,17 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
                     <div className="flex items-center gap-2">
                       {/* TEMPORARY PHASE I INDICATOR - LOADING SPINNER */}
                       {index === 0 && (
-                        <div style={{ animation: 'spinLoader 2s linear infinite' }}>
+                        <div>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            {/* 8 dots arranged in a circle */}
-                            <circle cx="12" cy="4" r="1.5" fill="rgba(250, 182, 23, 0.9)" />
-                            <circle cx="16.95" cy="7.05" r="1.5" fill="rgba(250, 182, 23, 0.75)" />
-                            <circle cx="20" cy="12" r="1.5" fill="rgba(250, 182, 23, 0.6)" />
-                            <circle cx="16.95" cy="16.95" r="1.5" fill="rgba(250, 182, 23, 0.45)" />
-                            <circle cx="12" cy="20" r="1.5" fill="rgba(250, 182, 23, 0.3)" />
-                            <circle cx="7.05" cy="16.95" r="1.5" fill="rgba(250, 182, 23, 0.2)" />
-                            <circle cx="4" cy="12" r="1.5" fill="rgba(250, 182, 23, 0.15)" />
-                            <circle cx="7.05" cy="7.05" r="1.5" fill="rgba(250, 182, 23, 0.1)" />
+                            {/* 8 dots arranged in a circle - stationary, brightness travels */}
+                            <circle cx="12" cy="4" r="1.5" fill="white" style={{ animation: 'dotPulse 1s ease-in-out infinite', animationDelay: '0ms' }} />
+                            <circle cx="16.95" cy="7.05" r="1.5" fill="white" style={{ animation: 'dotPulse 1s ease-in-out infinite', animationDelay: '125ms' }} />
+                            <circle cx="20" cy="12" r="1.5" fill="white" style={{ animation: 'dotPulse 1s ease-in-out infinite', animationDelay: '250ms' }} />
+                            <circle cx="16.95" cy="16.95" r="1.5" fill="white" style={{ animation: 'dotPulse 1s ease-in-out infinite', animationDelay: '375ms' }} />
+                            <circle cx="12" cy="20" r="1.5" fill="white" style={{ animation: 'dotPulse 1s ease-in-out infinite', animationDelay: '500ms' }} />
+                            <circle cx="7.05" cy="16.95" r="1.5" fill="white" style={{ animation: 'dotPulse 1s ease-in-out infinite', animationDelay: '625ms' }} />
+                            <circle cx="4" cy="12" r="1.5" fill="white" style={{ animation: 'dotPulse 1s ease-in-out infinite', animationDelay: '750ms' }} />
+                            <circle cx="7.05" cy="7.05" r="1.5" fill="white" style={{ animation: 'dotPulse 1s ease-in-out infinite', animationDelay: '875ms' }} />
                           </svg>
                         </div>
                       )}
@@ -229,17 +229,17 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
 
                       {/* TEMPORARY PHASE I INDICATOR - LOADING SPINNER */}
                       {index === 0 && (
-                        <div style={{ animation: 'spinLoader 2s linear infinite' }}>
+                        <div>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            {/* 8 dots arranged in a circle */}
-                            <circle cx="12" cy="4" r="1.5" fill="rgba(250, 182, 23, 0.9)" />
-                            <circle cx="16.95" cy="7.05" r="1.5" fill="rgba(250, 182, 23, 0.75)" />
-                            <circle cx="20" cy="12" r="1.5" fill="rgba(250, 182, 23, 0.6)" />
-                            <circle cx="16.95" cy="16.95" r="1.5" fill="rgba(250, 182, 23, 0.45)" />
-                            <circle cx="12" cy="20" r="1.5" fill="rgba(250, 182, 23, 0.3)" />
-                            <circle cx="7.05" cy="16.95" r="1.5" fill="rgba(250, 182, 23, 0.2)" />
-                            <circle cx="4" cy="12" r="1.5" fill="rgba(250, 182, 23, 0.15)" />
-                            <circle cx="7.05" cy="7.05" r="1.5" fill="rgba(250, 182, 23, 0.1)" />
+                            {/* 8 dots arranged in a circle - stationary, brightness travels */}
+                            <circle cx="12" cy="4" r="1.5" fill="white" style={{ animation: 'dotPulse 1s ease-in-out infinite', animationDelay: '0ms' }} />
+                            <circle cx="16.95" cy="7.05" r="1.5" fill="white" style={{ animation: 'dotPulse 1s ease-in-out infinite', animationDelay: '125ms' }} />
+                            <circle cx="20" cy="12" r="1.5" fill="white" style={{ animation: 'dotPulse 1s ease-in-out infinite', animationDelay: '250ms' }} />
+                            <circle cx="16.95" cy="16.95" r="1.5" fill="white" style={{ animation: 'dotPulse 1s ease-in-out infinite', animationDelay: '375ms' }} />
+                            <circle cx="12" cy="20" r="1.5" fill="white" style={{ animation: 'dotPulse 1s ease-in-out infinite', animationDelay: '500ms' }} />
+                            <circle cx="7.05" cy="16.95" r="1.5" fill="white" style={{ animation: 'dotPulse 1s ease-in-out infinite', animationDelay: '625ms' }} />
+                            <circle cx="4" cy="12" r="1.5" fill="white" style={{ animation: 'dotPulse 1s ease-in-out infinite', animationDelay: '750ms' }} />
+                            <circle cx="7.05" cy="7.05" r="1.5" fill="white" style={{ animation: 'dotPulse 1s ease-in-out infinite', animationDelay: '875ms' }} />
                           </svg>
                         </div>
                       )}
