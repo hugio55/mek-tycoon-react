@@ -157,7 +157,7 @@ export default function LandingV2() {
       )}
 
       {/* Logo - fade in after stars complete */}
-      {false && isRevealing && (
+      {isRevealing && (
         <div
           className="transition-opacity"
           style={{
