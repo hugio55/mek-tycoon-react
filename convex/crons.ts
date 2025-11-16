@@ -89,13 +89,14 @@ crons.interval(
 );
 
 // Generate monitoring summaries every 15 minutes
-crons.interval(
-  "generate monitoring summary",
-  {
-    minutes: 15
-  },
-  internal.monitoringSummaryGenerator.generateSummary
-);
+// DISABLED: Was consuming massive bandwidth (477MB on Prod, 404MB on Dev)
+// crons.interval(
+//   "generate monitoring summary",
+//   {
+//     minutes: 15
+//   },
+//   internal.monitoringSummaryGenerator.generateSummary
+// );
 
 // Clean up monitoring logs older than 30 days (runs daily at 3 AM UTC)
 crons.daily(
