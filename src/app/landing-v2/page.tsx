@@ -11,7 +11,6 @@ import LandingContainer from './components/LandingContainer';
 import SoundSelectionState from './components/states/SoundSelectionState';
 import FinalContentState from './components/states/FinalContentState';
 import SpeakerButton from './components/SpeakerButton';
-import StateDebugPanel from './debug/StateDebugPanel';
 import { useLoaderContext } from '@/features/page-loader';
 
 export default function LandingV2() {
@@ -83,7 +82,7 @@ export default function LandingV2() {
   // Ensure we start at 0 until loader finishes and entrance begins
   const backgroundOpacity = !mounted || !entranceStarted ? 0 : (
     isState('SOUND_SELECTION')
-      ? (backgroundFadedIn ? 0.09 : 0)
+      ? (backgroundFadedIn ? 0.12 : 0)
       : 0.77
   );
   const showFooter = isRevealing; // Only show footer in REVEAL state
@@ -211,13 +210,6 @@ export default function LandingV2() {
         onClick={toggleAudio}
         isVisible={showSpeaker}
       />
-
-      {process.env.NODE_ENV === 'development' && mounted && (
-        <StateDebugPanel
-          currentState={currentState}
-          onStateChange={transitionTo}
-        />
-      )}
 
       <style dangerouslySetInnerHTML={{
         __html: `
