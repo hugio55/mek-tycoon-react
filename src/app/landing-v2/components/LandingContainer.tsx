@@ -38,11 +38,13 @@ export default function LandingContainer({
     >
       {/* Background image */}
       <div
-        className="fixed inset-0 pointer-events-none"
+        className="fixed inset-0 pointer-events-none transition-opacity ease-out"
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
           backgroundSize: isMobile ? '180%' : 'cover',
           backgroundPosition: isMobile ? 'center calc(50% + 80px)' : 'center',
+          opacity: backgroundOpacity,
+          transitionDuration: `${transitionDuration}ms`,
           zIndex: 0,
         }}
       />
