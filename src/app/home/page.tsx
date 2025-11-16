@@ -87,6 +87,25 @@ export default function HomePage() {
       }
     };
     initWallet();
+
+    // Listen for wallet connection events
+    const handleWalletConnected = (event: any) => {
+      console.log('[HomePage] Wallet connected event received:', event.detail);
+      initWallet();
+    };
+
+    const handleStorageChange = () => {
+      console.log('[HomePage] Storage changed, re-checking wallet session...');
+      initWallet();
+    };
+
+    window.addEventListener('walletConnected', handleWalletConnected as EventListener);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('walletConnected', handleWalletConnected as EventListener);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   // Auto-initialize essence system if needed
