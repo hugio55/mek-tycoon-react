@@ -31,31 +31,31 @@ export default function SoundSelectionState({ isActive, onComplete }: SoundSelec
     }
   }, [isActive, onComplete]);
 
-  if (!isActive || !mounted) return null;
+  // Keep component mounted during fade-out even if isActive becomes false
+  if (!mounted || (!isActive && !isFadingOut)) return null;
 
   const handleProceed = (withAudio: boolean) => {
     console.log('[🎵SOUND] User selected audio:', withAudio);
 
-    // Start fade animation after brief delay (600ms to show green light)
+    // Store preference immediately
+    localStorage.setItem(STORAGE_KEY_AUDIO, JSON.stringify({
+      audioEnabled: withAudio,
+      timestamp: Date.now()
+    }));
+
+    // Start fade animation after brief delay (400ms to show green light)
     setTimeout(() => {
-      console.log('[🎵SOUND] Starting fade out...');
+      console.log('[🎵SOUND] Starting fade out and background reveal simultaneously...');
       setIsFadingOut(true);
 
-      // After fade completes, store preference and proceed
-      setTimeout(() => {
-        console.log('[🎵SOUND] Fade complete, storing preference and proceeding...');
-        localStorage.setItem(STORAGE_KEY_AUDIO, JSON.stringify({
-          audioEnabled: withAudio,
-          timestamp: Date.now()
-        }));
-        onComplete();
-      }, 2500);
-    }, 600);
+      // Trigger background fade immediately (simultaneous with lightbox fade)
+      onComplete();
+    }, 400);
   };
 
   const overlay = (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center px-4 transition-opacity duration-[2500ms]"
+      className="fixed inset-0 z-[9999] flex items-center justify-center px-4 transition-opacity duration-[1500ms]"
       style={{
         backgroundColor: 'rgba(0, 0, 0, 0.65)',
         opacity: isFadingOut ? 0 : 1

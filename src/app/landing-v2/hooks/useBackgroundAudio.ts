@@ -101,8 +101,18 @@ export function useBackgroundAudio() {
   }, [audioPlaying, audioEnabled]);
 
   const toggleAudio = useCallback(() => {
-    console.log('[🎵AUDIO-V2] Toggling audio:', !audioPlaying);
-    setAudioPlaying(!audioPlaying);
+    const newPlayingState = !audioPlaying;
+    console.log('[🎵AUDIO-V2] Toggling audio:', newPlayingState);
+    setAudioPlaying(newPlayingState);
+
+    // Update localStorage to persist preference
+    localStorage.setItem(STORAGE_KEY_AUDIO, JSON.stringify({
+      audioEnabled: newPlayingState,
+      timestamp: Date.now()
+    }));
+
+    // Update audioEnabled state so it stays in sync
+    setAudioEnabled(newPlayingState);
   }, [audioPlaying]);
 
   const startAudio = useCallback(() => {
