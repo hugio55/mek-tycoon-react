@@ -26,6 +26,11 @@ export default function VariationAnalysisPage() {
 
   const { summary, userBreakdown, variationList, missingVariationsList } = analysisData;
 
+  console.log('[DEBUG] Found variations count:', variationList.length);
+  console.log('[DEBUG] Missing variations count:', missingVariationsList?.length);
+  console.log('[DEBUG] Summary says missing:', summary.missingVariations);
+  console.log('[DEBUG] Missing variations list:', missingVariationsList);
+
   return (
     <div className="min-h-screen bg-black text-white p-8 relative z-50">
       <div className="max-w-7xl mx-auto relative z-50">
