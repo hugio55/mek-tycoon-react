@@ -13,39 +13,39 @@ import { query } from "./_generated/server";
 export const analyzeVariationCoverage = query({
   args: {},
   handler: async (ctx) => {
-    // Step 1: Get all users
-    const allUsers = await ctx.db.query("users").collect();
+    // Step 1: Get all corporations/players from goldMining table
+    const allCorporations = await ctx.db.query("goldMining").collect();
 
-    console.log(`Total users: ${allUsers.length}`);
+    console.log(`Total corporations: ${allCorporations.length}`);
 
-    // Step 2: Collect all variations across all users' meks
+    // Step 2: Collect all variations across all corporations' meks
     const allVariations = new Set<string>();
     let totalMeks = 0;
     let meksWithMissingVariations = 0;
 
     const userBreakdown = [];
 
-    for (const user of allUsers) {
-      // Get all meks for this user
-      const userMeks = await ctx.db
+    for (const corp of allCorporations) {
+      // Get all meks for this corporation
+      const corpMeks = await ctx.db
         .query("meks")
-        .withIndex("by_owner", (q) => q.eq("owner", user.walletAddress))
+        .withIndex("by_owner", (q) => q.eq("owner", corp.walletAddress))
         .collect();
 
-      // Skip users with no meks
-      if (userMeks.length === 0) {
+      // Skip corporations with no meks
+      if (corpMeks.length === 0) {
         continue;
       }
 
-      totalMeks += userMeks.length;
+      totalMeks += corpMeks.length;
 
       // Extract variations from each mek
-      const userVariations = new Set<string>();
-      for (const mek of userMeks) {
+      const corpVariations = new Set<string>();
+      for (const mek of corpMeks) {
         // Track head variation
         if (mek.headVariation) {
           allVariations.add(mek.headVariation);
-          userVariations.add(mek.headVariation);
+          corpVariations.add(mek.headVariation);
         } else {
           meksWithMissingVariations++;
         }
@@ -53,7 +53,7 @@ export const analyzeVariationCoverage = query({
         // Track body variation
         if (mek.bodyVariation) {
           allVariations.add(mek.bodyVariation);
-          userVariations.add(mek.bodyVariation);
+          corpVariations.add(mek.bodyVariation);
         } else {
           meksWithMissingVariations++;
         }
@@ -61,20 +61,20 @@ export const analyzeVariationCoverage = query({
         // Track item/trait variation
         if (mek.itemVariation) {
           allVariations.add(mek.itemVariation);
-          userVariations.add(mek.itemVariation);
+          corpVariations.add(mek.itemVariation);
         }
         // Note: itemVariation is optional, so we don't count it as "missing"
       }
 
       userBreakdown.push({
-        walletAddress: user.walletAddress,
-        displayName: user.displayName || "Unknown",
-        mekCount: userMeks.length,
-        uniqueVariations: userVariations.size,
+        walletAddress: corp.walletAddress,
+        displayName: corp.companyName || "Unknown Corporation",
+        mekCount: corpMeks.length,
+        uniqueVariations: corpVariations.size,
       });
     }
 
-    console.log(`Users with meks: ${userBreakdown.length}`);
+    console.log(`Corporations with meks: ${userBreakdown.length}`);
 
     // Step 3: Calculate statistics
     const uniqueVariationCount = allVariations.size;
