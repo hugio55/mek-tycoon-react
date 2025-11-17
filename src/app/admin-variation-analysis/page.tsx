@@ -84,20 +84,28 @@ export default function VariationAnalysisPage() {
                   <th className="text-left py-2 px-4 text-gray-400">Wallet Address</th>
                   <th className="text-right py-2 px-4 text-gray-400">Mek Count</th>
                   <th className="text-right py-2 px-4 text-gray-400">Unique Variations</th>
+                  <th className="text-right py-2 px-4 text-gray-400">Ratio</th>
                 </tr>
               </thead>
               <tbody>
-                {userBreakdown.map((user, index) => (
-                  <tr key={user.walletAddress} className="border-b border-gray-800 hover:bg-gray-800/50">
-                    <td className="py-2 px-4 text-gray-500">{index + 1}</td>
-                    <td className="py-2 px-4 font-semibold">{user.displayName}</td>
-                    <td className="py-2 px-4 font-mono text-xs text-gray-400">
-                      {user.walletAddress.slice(0, 12)}...{user.walletAddress.slice(-8)}
-                    </td>
-                    <td className="py-2 px-4 text-right text-white">{user.mekCount}</td>
-                    <td className="py-2 px-4 text-right text-green-400">{user.uniqueVariations}</td>
-                  </tr>
-                ))}
+                {userBreakdown.map((user, index) => {
+                  const ratio = user.uniqueVariations > 0
+                    ? (user.mekCount / user.uniqueVariations).toFixed(2)
+                    : '0.00';
+
+                  return (
+                    <tr key={user.walletAddress} className="border-b border-gray-800 hover:bg-gray-800/50">
+                      <td className="py-2 px-4 text-gray-500">{index + 1}</td>
+                      <td className="py-2 px-4 font-semibold">{user.displayName}</td>
+                      <td className="py-2 px-4 font-mono text-xs text-gray-400">
+                        {user.walletAddress.slice(0, 12)}...{user.walletAddress.slice(-8)}
+                      </td>
+                      <td className="py-2 px-4 text-right text-white">{user.mekCount}</td>
+                      <td className="py-2 px-4 text-right text-green-400">{user.uniqueVariations}</td>
+                      <td className="py-2 px-4 text-right text-blue-400">{ratio}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
