@@ -22,12 +22,22 @@ export default function RootPageController() {
   const [mounted, setMounted] = useState(false);
   const [isLocalhost, setIsLocalhost] = useState(false);
 
+  console.log('[🏠ROOT] RootPageController render:', {
+    mounted,
+    siteSettings: siteSettings !== undefined ? 'loaded' : 'undefined',
+    isLocalhost,
+    landingPageEnabled: siteSettings?.landingPageEnabled,
+    ignoreLocalhostRule: siteSettings?.ignoreLocalhostRule,
+  });
+
   // Handle client-side mounting and check if localhost
   useEffect(() => {
     setMounted(true);
     // Check if we're on localhost (development environment)
     const hostname = window.location.hostname;
-    setIsLocalhost(hostname === 'localhost' || hostname === '127.0.0.1');
+    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+    setIsLocalhost(isLocal);
+    console.log('[🏠ROOT] Mounted, hostname:', hostname, 'isLocalhost:', isLocal);
   }, []);
 
   // Redirect to /home if landing page is disabled OR if on localhost (unless ignoreLocalhostRule is true)
@@ -35,10 +45,19 @@ export default function RootPageController() {
     if (mounted && siteSettings !== undefined) {
       const shouldBypassOnLocalhost = isLocalhost && !siteSettings.ignoreLocalhostRule;
 
+      console.log('[🏠ROOT] Redirect check:', {
+        landingPageEnabled: siteSettings.landingPageEnabled,
+        isLocalhost,
+        ignoreLocalhostRule: siteSettings.ignoreLocalhostRule,
+        shouldBypassOnLocalhost,
+        willRedirect: !siteSettings.landingPageEnabled || shouldBypassOnLocalhost,
+      });
+
       // Bypass landing page if:
       // 1. Landing page is disabled globally, OR
       // 2. We're on localhost AND ignoreLocalhostRule is false (default behavior)
       if (!siteSettings.landingPageEnabled || shouldBypassOnLocalhost) {
+        console.log('[🏠ROOT] Redirecting to /home');
         router.push('/home');
       }
     }
@@ -46,22 +65,31 @@ export default function RootPageController() {
 
   // Show loading state while checking settings
   if (!mounted || siteSettings === undefined) {
+    console.log('[🏠ROOT] Showing loading state');
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-yellow-400 text-xl">Loading...</div>
+      <div className="min-h-screen bg-black flex items-center justify-center z-50 relative">
+        <div className="text-yellow-400 text-xl">Loading site settings...</div>
       </div>
     );
   }
 
   // Show landing page if enabled AND (not on localhost OR ignoreLocalhostRule is true)
   const shouldShowLanding = siteSettings.landingPageEnabled && (!isLocalhost || siteSettings.ignoreLocalhostRule);
+  console.log('[🏠ROOT] Render decision:', {
+    shouldShowLanding,
+    willShowLanding: shouldShowLanding,
+    willShowRedirectMessage: !shouldShowLanding,
+  });
+
   if (shouldShowLanding) {
+    console.log('[🏠ROOT] Rendering LandingPage component');
     return <LandingPage />;
   }
 
   // Show loading while redirecting to /home
+  console.log('[🏠ROOT] Showing redirect message');
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
+    <div className="min-h-screen bg-black flex items-center justify-center z-50 relative">
       <div className="text-yellow-400 text-xl">Redirecting to game...</div>
     </div>
   );
