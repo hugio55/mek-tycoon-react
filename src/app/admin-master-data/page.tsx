@@ -812,7 +812,7 @@ export default function AdminMasterDataPage() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white p-8 relative z-10">
       {/* Header */}
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-yellow-500 mb-2 font-orbitron tracking-wider">
