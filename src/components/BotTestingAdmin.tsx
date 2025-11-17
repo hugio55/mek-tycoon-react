@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { api } from "@/convex/_generated/api";
 
 export default function BotTestingAdmin() {
   const [activeTab, setActiveTab] = useState<'snapshot' | 'bots' | 'monitor'>('snapshot');

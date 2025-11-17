@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useMutation, useQuery, useAction } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { api } from "@/convex/_generated/api";
 import type { Campaign, CampaignStatus } from "@/types/campaign";
-import type { Id } from "../../../../convex/_generated/dataModel";
+import type { Id } from "@/convex/_generated/dataModel";
 import NFTInventoryTable from "./NFTInventoryTable";
 
 interface CampaignManagerProps {
