@@ -169,7 +169,7 @@ const StarField = () => {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none"
-      style={{ zIndex: 5 }}
+      style={{ zIndex: 1 }}
     />
   );
 };
