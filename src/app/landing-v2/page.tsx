@@ -134,7 +134,7 @@ export default function LandingV2() {
       }, totalLogoTime);
 
       // Footer appears after all phases complete their staggered fade-in
-      // Content delay: 2000ms + last phase start: 1000ms + phase fade: 500ms + buffer: 300ms = 3800ms
+      // Content delay: 4000ms + last phase start: 1000ms + phase fade: 500ms + buffer: 300ms = 5800ms
       const footerDelay = contentDelay + 1000 + 500 + 300;
       setTimeout(() => {
         setShowFooter(true);
@@ -154,8 +154,8 @@ export default function LandingV2() {
 
   // Logo fades simultaneously with stars (no delay)
   const logoDelay = 0;
-  // Content wave starts 2 seconds after logo begins
-  const contentDelay = 2000;
+  // Content wave starts 4 seconds after logo begins
+  const contentDelay = 4000;
 
   // Show pure black until mounted
   if (!mounted) {

@@ -84,18 +84,28 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
               isPlaying={true}
               className="text-white/70"
             />
-            <ProModeToggle
-              enabled={false}
-              onChange={(enabled) => {
-                if (enabled) {
-                  handleProceed(true);
-                }
-              }}
-              label=""
-              enableSounds={true}
-              indicatorColor="green"
-              guardColor="green"
-            />
+            <div className="relative">
+              <div
+                className="absolute inset-0 -z-10"
+                style={{
+                  filter: 'blur(24px)',
+                  background: 'radial-gradient(circle, rgba(59, 130, 246, 0.6) 0%, rgba(59, 130, 246, 0) 70%)',
+                  transform: 'scale(1.5)',
+                }}
+              />
+              <ProModeToggle
+                enabled={false}
+                onChange={(enabled) => {
+                  if (enabled) {
+                    handleProceed(true);
+                  }
+                }}
+                label=""
+                enableSounds={true}
+                indicatorColor="green"
+                guardColor="green"
+              />
+            </div>
           </div>
 
           {/* No Sound Toggle - Silent (no sounds) */}
@@ -128,18 +138,28 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
                 />
               </svg>
             </div>
-            <ProModeToggle
-              enabled={false}
-              onChange={(enabled) => {
-                if (enabled) {
-                  handleProceed(false);
-                }
-              }}
-              label=""
-              enableSounds={false}
-              indicatorColor="red"
-              guardColor="red"
-            />
+            <div className="relative">
+              <div
+                className="absolute inset-0 -z-10"
+                style={{
+                  filter: 'blur(24px)',
+                  background: 'radial-gradient(circle, rgba(59, 130, 246, 0.6) 0%, rgba(59, 130, 246, 0) 70%)',
+                  transform: 'scale(1.5)',
+                }}
+              />
+              <ProModeToggle
+                enabled={false}
+                onChange={(enabled) => {
+                  if (enabled) {
+                    handleProceed(false);
+                  }
+                }}
+                label=""
+                enableSounds={false}
+                indicatorColor="red"
+                guardColor="red"
+              />
+            </div>
           </div>
         </div>
       </div>

@@ -30,12 +30,12 @@ export function LoadingOverlay({
   const savedSettings = useQuery(api.loaderSettings.getLoaderSettings);
 
   // Use saved settings or defaults
-  const fontSize = savedSettings?.fontSize ?? 48;
+  const fontSize = savedSettings?.fontSize ?? 15;
   const spacing = savedSettings?.spacing ?? 16;
   const horizontalOffset = savedSettings?.horizontalOffset ?? 0;
-  const fontFamily = savedSettings?.fontFamily ?? 'Orbitron';
+  const fontFamily = savedSettings?.fontFamily ?? 'Saira';
   const chromaticOffset = savedSettings?.chromaticOffset ?? 0;
-  const triangleSize = savedSettings?.triangleSize ?? 1;
+  const triangleSize = savedSettings?.triangleSize ?? 0.75;
 
   useEffect(() => {
     setMounted(true);
