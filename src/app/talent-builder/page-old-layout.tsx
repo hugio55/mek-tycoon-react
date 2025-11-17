@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import { Id } from "../../../convex/_generated/dataModel";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { getAllVariations } from "../../lib/variationsData";
 
 // Helper function to safely get error message

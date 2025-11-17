@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import { Id } from "../../../convex/_generated/dataModel";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 // 5 essence types for the distribution graph
 const essenceTypes = [
