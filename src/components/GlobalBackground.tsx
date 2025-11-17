@@ -104,7 +104,7 @@ export default function GlobalBackground() {
   }, []);
 
   return (
-    <div className="fixed inset-0 overflow-hidden" style={{ zIndex: 1 }}>
+    <div className="fixed inset-0 overflow-hidden" style={{ zIndex: 0 }}>
       {/* Deep space background gradient - enhanced for visibility */}
       <div className="absolute inset-0 bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950" style={{ transform: 'translateZ(0)', willChange: 'auto' }} />
 
