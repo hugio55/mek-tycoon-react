@@ -47,6 +47,29 @@ export default function LandingV2() {
 
     // Register logo as a critical asset that loader should wait for
     registerCriticalAsset('landing-logo');
+
+    // Preload toggle click sounds immediately during page load (before loader finishes)
+    const guardSound = new Audio('/sounds/main_click.mp3');
+    const switchSound = new Audio('/sounds/click reverb 2.mp3');
+    guardSound.preload = 'auto';
+    switchSound.preload = 'auto';
+    guardSound.load();
+    switchSound.load();
+    // Force-load by playing silently
+    guardSound.volume = 0;
+    switchSound.volume = 0;
+    guardSound.play()
+      .then(() => {
+        guardSound.pause();
+        guardSound.currentTime = 0;
+      })
+      .catch(() => {});
+    switchSound.play()
+      .then(() => {
+        switchSound.pause();
+        switchSound.currentTime = 0;
+      })
+      .catch(() => {});
   }, [registerCriticalAsset]);
 
   // Wait for Universal Loader to finish, THEN start entrance sequence

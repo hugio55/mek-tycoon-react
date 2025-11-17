@@ -37,8 +37,8 @@ export default function GlobalBackground() {
       id: i,
       left: `${rng.random() * 100}%`,
       top: `${rng.random() * 100}%`,
-      size: rng.random() * 2 + 0.5,
-      opacity: rng.random() * 0.8 + 0.4,
+      size: rng.random() * 2 + 1, // Increased from 0.5 to 1 for better visibility
+      opacity: rng.random() * 0.6 + 0.6, // Increased minimum opacity from 0.4 to 0.6
       twinkle: rng.random() > 0.5,
       delay: rng.random() * 4, // Random delay between 0-4 seconds for each star
     }));
@@ -54,7 +54,7 @@ export default function GlobalBackground() {
         top: `${rng.random() * 100}%`,
         delay: `${rng.random() * 30}s`,
         duration: `${20 + rng.random() * 15}s`,
-        size: 0.8 + rng.random() * 0.8,
+        size: 1.5 + rng.random() * 1.5, // Increased from 0.8-1.6 to 1.5-3.0 for better visibility
         driftAngle: driftAngle,
       };
     });
@@ -119,8 +119,8 @@ export default function GlobalBackground() {
 
   return (
     <div className="fixed inset-0 overflow-hidden" style={{ zIndex: 1 }}>
-      {/* Deep space background gradient from root page */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-950 to-black" style={{ transform: 'translateZ(0)', willChange: 'auto' }} />
+      {/* Deep space background gradient - enhanced for visibility */}
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950" style={{ transform: 'translateZ(0)', willChange: 'auto' }} />
 
       {/* Industrial grid overlay */}
       <div
@@ -131,7 +131,12 @@ export default function GlobalBackground() {
       />
 
       {/* Stationary twinkling stars */}
-      {backgroundStars.map((star) => (
+      {backgroundStars.map((star) => {
+        const finalOpacity = star.twinkle ? (mounted ? 0.3 : star.opacity) : star.opacity;
+        if (star.id < 3) { // Log first 3 stars only
+          console.log(`[🌌BG] Star ${star.id}:`, { mounted, twinkle: star.twinkle, finalOpacity });
+        }
+        return (
         <div
           key={star.id}
           className="absolute rounded-full bg-white pointer-events-none"
@@ -140,7 +145,7 @@ export default function GlobalBackground() {
             top: star.top,
             width: `${star.size}px`,
             height: `${star.size}px`,
-            opacity: star.twinkle ? (mounted ? 0.3 : star.opacity) : star.opacity,
+            opacity: finalOpacity,
             animationName: mounted && star.twinkle ? 'starTwinkle' : 'none',
             animationDuration: '2s',
             animationTimingFunction: 'ease-in-out',
@@ -148,10 +153,13 @@ export default function GlobalBackground() {
             animationDelay: `${star.delay}s`,
           }}
         />
-      ))}
+        );
+      })}
 
       {/* Yellow particles drifting like space debris */}
-      {mounted && particles.map((particle) => (
+      {mounted && particles.map((particle) => {
+        console.log('[🌌BG] Rendering particle', particle.id);
+        return (
         <div
           key={particle.id}
           className="absolute bg-yellow-400 rounded-full pointer-events-none"
@@ -170,10 +178,12 @@ export default function GlobalBackground() {
             '--drift-y': `${Math.sin(particle.driftAngle * Math.PI / 180) * 150}vh`,
           } as React.CSSProperties}
         />
-      ))}
+        );
+      })}
 
       {/* Satellites moving across screen */}
       {mounted && satellites.map((satellite) => {
+        console.log('[🌌BG] Rendering satellite', satellite.id);
         const startXNum = parseFloat(satellite.startX);
         const startYNum = parseFloat(satellite.startY);
         const endXNum = parseFloat(satellite.endX);
@@ -185,7 +195,7 @@ export default function GlobalBackground() {
         return (
           <div
             key={satellite.id}
-            className="absolute w-[2px] h-[2px] bg-white rounded-full pointer-events-none"
+            className="absolute w-[3px] h-[3px] bg-white rounded-full pointer-events-none"
             style={{
               left: satellite.startX,
               top: satellite.startY,
