@@ -25,7 +25,7 @@ export const getSiteSettings = query({
 
     // Return default settings if none exist
     return {
-      landingPageEnabled: false, // Default: show game interface, not landing page
+      landingPageEnabled: true, // Default: show landing page
       ignoreLocalhostRule: false, // Default: localhost bypasses landing page for dev convenience
     };
   },
@@ -76,7 +76,7 @@ export const toggleIgnoreLocalhostRule = mutation({
     } else {
       // Create new settings document with default landing page setting
       await ctx.db.insert("siteSettings", {
-        landingPageEnabled: false,
+        landingPageEnabled: true,
         ignoreLocalhostRule: args.enabled,
       });
       return { success: true, ignoreLocalhostRule: args.enabled };
@@ -94,7 +94,7 @@ export const initializeSiteSettings = mutation({
 
     if (!existing) {
       await ctx.db.insert("siteSettings", {
-        landingPageEnabled: false, // Default to game interface
+        landingPageEnabled: true, // Default to landing page
         ignoreLocalhostRule: false, // Default: localhost bypasses landing page
       });
       return { success: true, message: "Site settings initialized" };

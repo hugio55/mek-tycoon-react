@@ -9,26 +9,15 @@ export default function GlobalBackground() {
   const pathname = usePathname();
   const { isLoading } = useLoaderContext();
 
-  // Debug logging
-  console.log('[🌌BG] GlobalBackground render check:', {
-    pathname,
-    isLoading,
-    timestamp: new Date().toISOString(),
-    willRender: !(pathname === '/landing-v2' && !isLoading) && pathname !== '/landing'
-  });
+  // Background visibility check (logging disabled to reduce console spam)
 
   // On landing-v2: only show during loader, then hide
-  if (pathname === '/landing-v2') {
-    if (!isLoading) {
-      console.log('[🌌BG] Landing-v2 path, isLoading=false → RETURNING NULL');
-      return null;
-    }
-    console.log('[🌌BG] Landing-v2 path, isLoading=true → WILL RENDER');
+  if (pathname === '/landing-v2' && !isLoading) {
+    return null;
   }
 
   // Don't render background on original landing page (has its own custom background)
   if (pathname === '/landing') {
-    console.log('[🌌BG] Landing path → RETURNING NULL');
     return null;
   }
   const backgroundStars = useMemo(() => {
@@ -104,18 +93,7 @@ export default function GlobalBackground() {
 
   useEffect(() => {
     setMounted(true);
-    console.log('[🌌BG] useEffect ran - setMounted(true)');
   }, []);
-
-  // Log render state details
-  console.log('[🌌BG] RENDERING BACKGROUND:', {
-    mounted,
-    starsCount: backgroundStars.length,
-    particlesCount: particles.length,
-    satellitesCount: satellites.length,
-    willRenderParticles: mounted && particles.length > 0,
-    willRenderSatellites: mounted && satellites.length > 0
-  });
 
   return (
     <div className="fixed inset-0 overflow-hidden" style={{ zIndex: 1 }}>
@@ -133,9 +111,6 @@ export default function GlobalBackground() {
       {/* Stationary twinkling stars */}
       {backgroundStars.map((star) => {
         const finalOpacity = star.twinkle ? (mounted ? 0.3 : star.opacity) : star.opacity;
-        if (star.id < 3) { // Log first 3 stars only
-          console.log(`[🌌BG] Star ${star.id}:`, { mounted, twinkle: star.twinkle, finalOpacity });
-        }
         return (
         <div
           key={star.id}
@@ -157,9 +132,7 @@ export default function GlobalBackground() {
       })}
 
       {/* Yellow particles drifting like space debris */}
-      {mounted && particles.map((particle) => {
-        console.log('[🌌BG] Rendering particle', particle.id);
-        return (
+      {mounted && particles.map((particle) => (
         <div
           key={particle.id}
           className="absolute bg-yellow-400 rounded-full pointer-events-none"
@@ -178,12 +151,10 @@ export default function GlobalBackground() {
             '--drift-y': `${Math.sin(particle.driftAngle * Math.PI / 180) * 150}vh`,
           } as React.CSSProperties}
         />
-        );
-      })}
+      ))}
 
       {/* Satellites moving across screen */}
       {mounted && satellites.map((satellite) => {
-        console.log('[🌌BG] Rendering satellite', satellite.id);
         const startXNum = parseFloat(satellite.startX);
         const startYNum = parseFloat(satellite.startY);
         const endXNum = parseFloat(satellite.endX);
