@@ -69,7 +69,7 @@ export function LoadingOverlay({
     >
 
       {/* Center Content Container */}
-      <div className="relative z-10 flex flex-col items-center gap-2 w-full max-w-xl px-4">
+      <div className="relative z-10 flex flex-col items-center gap-0 w-full max-w-xl px-4">
         {/* Triangle Kaleidoscope Spinner */}
         <div
           className="w-48 h-48 md:w-64 md:h-64"
