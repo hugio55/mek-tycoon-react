@@ -166,19 +166,20 @@ export default function ProModeToggle({
           <div className="absolute left-[1px] top-2.5 h-5 w-[2px] rounded-tl-[3px] bg-[#a3a3a3]" />
           <div className="absolute right-[1px] top-2.5 h-5 w-[2px] rounded-tr-[3px] bg-[#a3a3a3] z-[1]" />
 
-          {/* Safety Guard (checkbox input) */}
-          <input
-            type="checkbox"
-            checked={guardOpen}
-            onChange={handleGuardToggle}
-            className="peer/guard relative m-0 p-0 appearance-none block w-[50px] h-[100px] rounded-[7px] cursor-pointer z-[3] border border-black
+          {/* Safety Guard (clickable div for instant response) */}
+          <div
+            onClick={handleGuardToggle}
+            className="peer/guard relative m-0 p-0 block w-[50px] h-[100px] rounded-[7px] cursor-pointer z-[3] border border-black
                        transition-transform duration-200"
             style={{
               background: guardGradients[guardColor],
               boxShadow: 'inset -2px -2px 3px rgba(0,0,0,0.3), inset 2px 2px 3px rgba(255,255,255,0.5)',
               transformOrigin: '50% 0%',
               filter: guardOpen ? 'drop-shadow(0px 0px 0px rgba(0,0,0,1))' : 'drop-shadow(0px 0px 0px rgba(0,0,0,1))',
-              transform: guardOpen ? 'rotateX(70deg)' : 'rotateX(0deg)'
+              transform: guardOpen ? 'rotateX(70deg)' : 'rotateX(0deg)',
+              touchAction: 'manipulation',
+              willChange: 'transform',
+              WebkitTapHighlightColor: 'transparent'
             }}
           />
 
@@ -202,7 +203,8 @@ export default function ProModeToggle({
           <div
             className="absolute left-0 top-0 w-full h-[100px] block pointer-events-none transition-transform duration-200"
             style={{
-              transform: guardOpen ? 'translateY(0px)' : 'translateY(45px)'
+              transform: guardOpen ? 'translateY(0px)' : 'translateY(45px)',
+              willChange: 'transform'
             }}
           >
             {/* Left rail */}
@@ -233,7 +235,9 @@ export default function ProModeToggle({
               transform: 'translateX(-50%) translateY(-50%) rotate(-90deg)',
               background: 'linear-gradient(to left, #a1a1a1 0%, #a1a1a1 1%, #c0c0c0 26%, #b1b1b1 48%, #909090 75%, #a1a1a1 100%)',
               clipPath: 'polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%)',
-              filter: 'drop-shadow(1px 1px 3px rgba(255,255,255,1))'
+              filter: 'drop-shadow(1px 1px 3px rgba(255,255,255,1))',
+              touchAction: 'manipulation',
+              WebkitTapHighlightColor: 'transparent'
             }}
           >
             {/* Hexagon center symbol */}
@@ -265,7 +269,8 @@ export default function ProModeToggle({
               transform: switchOn
                 ? 'translateX(-50%) rotateX(0deg)'
                 : 'translateX(-50%) translateY(-14px) rotateX(-175deg)',
-              bottom: switchOn ? '13px' : '15px'
+              bottom: switchOn ? '13px' : '15px',
+              willChange: 'transform'
             }}
           >
             {/* Knob base */}
