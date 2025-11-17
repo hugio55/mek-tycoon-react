@@ -159,8 +159,7 @@ export default function ProModeToggle({
             outline: '2px solid #a1a1a1',
             outlineOffset: '0px',
             perspective: '300px',
-            transformStyle: 'preserve-3d',
-            WebkitTransformStyle: 'preserve-3d',
+            isolation: 'isolate',
             boxShadow: '0 0 1px #050506, inset 0 0 0 2px #050506, inset 0 3px 1px #66646c'
           }}
         >
@@ -178,12 +177,7 @@ export default function ProModeToggle({
               boxShadow: 'inset -2px -2px 3px rgba(0,0,0,0.3), inset 2px 2px 3px rgba(255,255,255,0.5)',
               transformOrigin: '50% 0%',
               filter: guardOpen ? 'drop-shadow(0px 0px 0px rgba(0,0,0,1))' : 'drop-shadow(0px 0px 0px rgba(0,0,0,1))',
-              transform: guardOpen ? 'rotateX(70deg) translateZ(5px)' : 'rotateX(0deg) translateZ(5px)',
-              WebkitTransform: guardOpen ? 'rotateX(70deg) translateZ(5px)' : 'rotateX(0deg) translateZ(5px)',
-              transformStyle: 'preserve-3d',
-              WebkitTransformStyle: 'preserve-3d',
-              backfaceVisibility: 'visible',
-              WebkitBackfaceVisibility: 'visible',
+              transform: guardOpen ? 'rotateX(70deg)' : 'rotateX(0deg)',
               touchAction: 'manipulation',
               willChange: 'transform',
               WebkitTapHighlightColor: 'transparent'
@@ -229,8 +223,7 @@ export default function ProModeToggle({
               !guardOpen ? 'pointer-events-none' : ''
             }`}
             style={{
-              transform: 'translateX(-50%) translateY(-50%) rotate(-90deg) translateZ(-15px)',
-              WebkitTransform: 'translateX(-50%) translateY(-50%) rotate(-90deg) translateZ(-15px)',
+              transform: 'translateX(-50%) translateY(-50%) rotate(-90deg)',
               background: 'linear-gradient(to left, #a1a1a1 0%, #a1a1a1 1%, #c0c0c0 26%, #b1b1b1 48%, #909090 75%, #a1a1a1 100%)',
               clipPath: 'polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%)',
               filter: 'drop-shadow(1px 1px 3px rgba(255,255,255,1))',
@@ -265,16 +258,9 @@ export default function ProModeToggle({
               background: 'linear-gradient(to left, lightgrey 0%, lightgrey 1%, #e0e0e0 26%, #efefef 48%, #d9d9d9 75%, #bcbcbc 100%)',
               boxShadow: 'inset 0px -3px 3px rgba(0,0,0,1), inset 0px 3px 3px rgba(0,0,0,0.7)',
               transform: switchOn
-                ? 'translateX(-50%) rotateX(0deg) translateZ(-10px)'
-                : 'translateX(-50%) translateY(-14px) rotateX(-175deg) translateZ(-10px)',
-              WebkitTransform: switchOn
-                ? 'translateX(-50%) rotateX(0deg) translateZ(-10px)'
-                : 'translateX(-50%) translateY(-14px) rotateX(-175deg) translateZ(-10px)',
+                ? 'translateX(-50%) rotateX(0deg)'
+                : 'translateX(-50%) translateY(-14px) rotateX(-175deg)',
               bottom: switchOn ? '13px' : '15px',
-              transformStyle: 'preserve-3d',
-              WebkitTransformStyle: 'preserve-3d',
-              backfaceVisibility: 'visible',
-              WebkitBackfaceVisibility: 'visible',
               willChange: 'transform'
             }}
           >
@@ -290,17 +276,13 @@ export default function ProModeToggle({
             />
           </div>
 
-          {/* Guard translucent overlay (shows when guard is down) - MUST render after knob */}
+          {/* Guard translucent overlay (shows when guard is down) - renders after knob for proper paint order */}
           {!guardOpen && (
             <div
-              className="absolute top-5 left-0 w-full h-[calc(100%-20px)] opacity-60 rounded-[7px] pointer-events-none z-[5]"
+              className="absolute top-5 left-0 w-full h-[calc(100%-20px)] opacity-90 rounded-[7px] pointer-events-none z-[5]"
               style={{
                 background: guardOverlayGradients[guardColor],
-                isolation: 'isolate',
-                transform: 'translateZ(30px)',
-                WebkitTransform: 'translateZ(30px)',
-                backfaceVisibility: 'visible',
-                WebkitBackfaceVisibility: 'visible'
+                isolation: 'isolate'
               }}
             />
           )}
