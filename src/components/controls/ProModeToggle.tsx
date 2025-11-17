@@ -159,6 +159,8 @@ export default function ProModeToggle({
             outline: '2px solid #a1a1a1',
             outlineOffset: '0px',
             perspective: '300px',
+            transformStyle: 'preserve-3d',
+            WebkitTransformStyle: 'preserve-3d',
             boxShadow: '0 0 1px #050506, inset 0 0 0 2px #050506, inset 0 3px 1px #66646c'
           }}
         >
