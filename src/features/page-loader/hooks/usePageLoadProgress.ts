@@ -125,6 +125,22 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
       const minimumAnimationTimeElapsed = elapsed >= minimumProgressTime.current;
       const timedOut = elapsed >= totalTimeout;
 
+      // Debug logging every 2 seconds to track what's blocking completion
+      if (elapsed % 2000 < 100) {
+        console.log('[🎯LOADER] Completion Check:', {
+          elapsed: `${elapsed}ms`,
+          progress: `${cappedProgress.toFixed(1)}%`,
+          allQueriesLoaded,
+          noQueriesTracked,
+          minTimeElapsed,
+          minimumAnimationTimeElapsed,
+          criticalAssetsLoaded,
+          timedOut,
+          loadedCount,
+          totalCount,
+        });
+      }
+
       // Only allow completion if minimum animation time has elapsed AND critical assets loaded
       if (((allQueriesLoaded || noQueriesTracked) && minTimeElapsed && minimumAnimationTimeElapsed && criticalAssetsLoaded) || timedOut) {
         setProgress(100);

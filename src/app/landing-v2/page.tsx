@@ -14,7 +14,7 @@ import SpeakerButton from './components/SpeakerButton';
 import { useLoaderContext } from '@/features/page-loader';
 
 export default function LandingV2() {
-  const { isLoading, registerCriticalAsset, markCriticalAssetLoaded } = useLoaderContext();
+  const { isLoading } = useLoaderContext();
   const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'other'>('other');
   const [mounted, setMounted] = useState(false);
 
@@ -45,8 +45,8 @@ export default function LandingV2() {
       setDeviceType('other');
     }
 
-    // Register logo as a critical asset that loader should wait for
-    registerCriticalAsset('landing-logo');
+    // Logo will load after entrance sequence, not during loader
+    // (Removed critical asset registration to prevent circular dependency)
 
     // Preload toggle click sounds immediately during page load (before loader finishes)
     const guardSound = new Audio('/sounds/main_click.mp3');
@@ -70,7 +70,7 @@ export default function LandingV2() {
         switchSound.currentTime = 0;
       })
       .catch(() => {});
-  }, [registerCriticalAsset]);
+  }, []);
 
   // Wait for Universal Loader to finish, THEN start entrance sequence
   useEffect(() => {
@@ -209,7 +209,12 @@ export default function LandingV2() {
               alt="Mek Tycoon Logo"
               className={deviceType === 'iphone' ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'landing-logo max-w-[40vw] max-h-[40vh] object-contain'}
               style={deviceType === 'iphone' ? { transform: 'scale(1.0125)' } : {}}
-              onLoad={() => markCriticalAssetLoaded('landing-logo')}
+              onLoad={() => {
+                console.log('[⭐LANDING] Logo GIF loaded successfully');
+              }}
+              onError={() => {
+                console.error('[⭐LANDING] Logo GIF failed to load!');
+              }}
             />
           ) : (
             <video
@@ -219,7 +224,12 @@ export default function LandingV2() {
               playsInline
               className="landing-logo max-w-[40vw] max-h-[40vh] object-contain"
               style={navigator.userAgent.toLowerCase().includes('android') ? { transform: 'scale(1.0125)' } : {}}
-              onLoadedData={() => markCriticalAssetLoaded('landing-logo')}
+              onLoadedData={() => {
+                console.log('[⭐LANDING] Logo video loaded successfully');
+              }}
+              onError={() => {
+                console.error('[⭐LANDING] Logo video failed to load!');
+              }}
             >
               <source src="/random-images/Everydays_00000.webm" type="video/webm" />
             </video>
