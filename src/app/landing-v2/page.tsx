@@ -30,7 +30,6 @@ export default function LandingV2() {
   const [backgroundFadedIn, setBackgroundFadedIn] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
   const [entranceStarted, setEntranceStarted] = useState(false);
-  const [logoFadeComplete, setLogoFadeComplete] = useState(false);
   const [showFooter, setShowFooter] = useState(false);
 
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
@@ -219,6 +218,7 @@ export default function LandingV2() {
         <div
           className="transition-opacity"
           style={{
+            position: 'relative',
             width: '100%',
             display: 'flex',
             justifyContent: 'center',
