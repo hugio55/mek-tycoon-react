@@ -13,11 +13,11 @@ const STATE_ORDER: LandingState[] = [
 export const TIMINGS = {
   starsFade: 2000,          // Stars fade in simultaneously with background
   logoFade: 4500,           // Logo fade (slower, more gradual)
-  descriptionFade: 1800,    // Description animation
+  descriptionFade: 2400,    // Description animation (moderate slowdown)
   buttonDelay: 50,          // Gap between description and button
-  buttonFade: 1800,         // Button animation
+  buttonFade: 2400,         // Button animation (moderate slowdown)
   phaseDelay: 50,           // Gap between button and phases
-  phaseStagger: 200,        // Delay between each phase
+  phaseStagger: 350,        // Delay between each phase (moderate slowdown)
 };
 
 export function useLandingStateMachine() {
