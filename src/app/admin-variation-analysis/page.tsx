@@ -24,7 +24,7 @@ export default function VariationAnalysisPage() {
     );
   }
 
-  const { summary, userBreakdown, variationList } = analysisData;
+  const { summary, userBreakdown, variationList, missingVariationsList } = analysisData;
 
   return (
     <div className="min-h-screen bg-black text-white p-8 relative z-50">
@@ -104,7 +104,7 @@ export default function VariationAnalysisPage() {
         </div>
 
         {/* Variations List Section */}
-        <div className="bg-gray-900 border-2 border-yellow-500/50 rounded-lg p-6">
+        <div className="bg-gray-900 border-2 border-yellow-500/50 rounded-lg p-6 mb-8">
           <h2 className="text-2xl font-bold mb-4 text-yellow-400">
             All Unique Variations Found ({variationList.length})
           </h2>
@@ -121,6 +121,27 @@ export default function VariationAnalysisPage() {
             </div>
           </div>
         </div>
+
+        {/* Missing Variations Section */}
+        {missingVariationsList && missingVariationsList.length > 0 && (
+          <div className="bg-gray-900 border-2 border-red-500/50 rounded-lg p-6">
+            <h2 className="text-2xl font-bold mb-4 text-red-400">
+              Missing Variations ({missingVariationsList.length})
+            </h2>
+            <div className="max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                {missingVariationsList.map((variation) => (
+                  <div
+                    key={variation}
+                    className="bg-gray-800 border border-red-700 rounded px-3 py-2 text-sm text-red-300 hover:border-red-500/50 hover:text-red-100 transition-colors"
+                  >
+                    {variation}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
