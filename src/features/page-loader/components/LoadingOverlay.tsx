@@ -72,7 +72,7 @@ export function LoadingOverlay({
       <div className="relative z-10 flex flex-col items-center gap-0 w-full max-w-xl px-4">
         {/* Triangle Kaleidoscope Spinner */}
         <div
-          className="w-36 h-36 md:w-48 md:h-48"
+          className="w-40 h-40 md:w-52 md:h-52"
           style={{
             transform: `scale(${triangleSize})`,
           }}
