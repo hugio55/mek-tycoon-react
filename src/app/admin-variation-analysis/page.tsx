@@ -30,6 +30,7 @@ export default function VariationAnalysisPage() {
   console.log('[DEBUG] Missing variations count:', missingVariationsList?.length);
   console.log('[DEBUG] Summary says missing:', summary.missingVariations);
   console.log('[DEBUG] Missing variations list:', missingVariationsList);
+  console.log('[DEBUG] ALL FOUND VARIATIONS:', variationList);
 
   return (
     <div className="min-h-screen bg-black text-white p-8 relative z-50">
