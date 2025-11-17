@@ -49,28 +49,12 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
     if (urlParam !== null) {
       const shouldDisable = urlParam === 'true' || urlParam === '';
       localStorage.setItem(settingKey, shouldDisable.toString());
-      console.log('[🎯LOADER] URL Parameter Detected - Saved to localStorage:', {
-        urlParam,
-        shouldDisable,
-        settingKey
-      });
       return shouldDisable;
     }
 
     // Otherwise check localStorage
     const settingValue = localStorage.getItem(settingKey);
-    const bypassed = settingValue === 'true';
-
-    // Debug logging
-    console.log('[🎯LOADER] LoaderContext Check:', {
-      hostname,
-      isLocalhost,
-      settingKey,
-      settingValue,
-      bypassed
-    });
-
-    return bypassed;
+    return settingValue === 'true';
   })();
 
   const [queries, setQueries] = useState<Map<string, QueryState>>(new Map());
@@ -90,13 +74,11 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
     // Check if window is already loaded
     if (document.readyState === 'complete') {
       setWindowLoaded(true);
-      console.log('[🎯LOADER] Window already loaded (all assets downloaded)');
       return;
     }
 
     const handleLoad = () => {
       setWindowLoaded(true);
-      console.log('[🎯LOADER] Window load complete (all assets downloaded)');
     };
 
     window.addEventListener('load', handleLoad);
@@ -166,7 +148,6 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
       if (prev.has(id)) return prev;
       const newSet = new Set(prev);
       newSet.add(id);
-      console.log(`[🎯LOADER] Critical asset registered: ${id}`);
       return newSet;
     });
   }, []);
@@ -176,7 +157,6 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
       if (prev.has(id)) return prev;
       const newSet = new Set(prev);
       newSet.add(id);
-      console.log(`[🎯LOADER] Critical asset loaded: ${id}`);
       return newSet;
     });
   }, []);
