@@ -75,7 +75,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
 
         <JoinBetaSection show={showButton} onJoinBeta={() => {
           if (isMobile) {
-            setTimeout(() => setShowBetaLightbox(true), 200);
+            setTimeout(() => setShowBetaLightbox(true), 300);
           } else {
             setShowBetaLightbox(true);
           }
