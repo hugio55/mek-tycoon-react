@@ -19,7 +19,7 @@ export default function LandingV2() {
   const logoPositionMobile = '20vh';  // iPhone and Android
 
   const { isLoading, registerCriticalAsset, markCriticalAssetLoaded } = useLoaderContext();
-  const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'other'>('other');
+  const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'android' | 'other'>('other');
   const [mounted, setMounted] = useState(false);
 
   // Debug: Log isLoading state to help user verify stars appear
@@ -44,6 +44,8 @@ export default function LandingV2() {
 
     if (/iphone|ipod/.test(userAgent)) {
       setDeviceType('iphone');
+    } else if (/android/.test(userAgent)) {
+      setDeviceType('android');
     } else if (/macintosh|mac os x|ipad/.test(userAgent)) {
       setDeviceType('macos');
     } else {
@@ -220,7 +222,7 @@ export default function LandingV2() {
             width: '100%',
             display: 'flex',
             justifyContent: 'center',
-            paddingTop: (deviceType === 'iphone' || (deviceType === 'other' && navigator.userAgent.toLowerCase().includes('android')))
+            paddingTop: (deviceType === 'iphone' || deviceType === 'android')
               ? logoPositionMobile
               : logoPositionDesktop,
             opacity: revealStarted ? 1 : 0,
@@ -249,8 +251,8 @@ export default function LandingV2() {
               loop
               muted
               playsInline
-              className={navigator.userAgent.toLowerCase().includes('android') ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'landing-logo max-w-[40vw] max-h-[40vh] object-contain'}
-              style={navigator.userAgent.toLowerCase().includes('android') ? { transform: 'scale(1.0125)' } : {}}
+              className={deviceType === 'android' ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'landing-logo max-w-[40vw] max-h-[40vh] object-contain'}
+              style={deviceType === 'android' ? { transform: 'scale(1.0125)' } : {}}
               onLoadedData={() => {
                 console.log('[⭐LANDING] Logo video loaded successfully');
               }}
