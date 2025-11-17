@@ -177,33 +177,6 @@ export default function LandingV2() {
         shouldShow={entranceStarted && showLightbox}
       />
 
-      {/* Preload assets */}
-      {false && mounted && (
-        <div style={{ opacity: 0, position: 'absolute', pointerEvents: 'none' }}>
-          {/* Preload background image immediately */}
-          <img src="/colored-bg-1.webp" alt="Preload background" />
-
-          {isState('SOUND_SELECTION') && (
-            <>
-              {/* Preload StarField */}
-              <StarField />
-
-              {/* Preload logo video/gif */}
-              {deviceType === 'macos' || deviceType === 'iphone' ? (
-                <img
-                  src="/random-images/Everydays_4.gif"
-                  alt="Preload logo"
-                />
-              ) : (
-                <video autoPlay loop muted playsInline>
-                  <source src="/random-images/Everydays_00000.webm" type="video/webm" />
-                </video>
-              )}
-            </>
-          )}
-        </div>
-      )}
-
       {/* Stars - fade in simultaneously with background */}
       {isRevealing && (
         <div

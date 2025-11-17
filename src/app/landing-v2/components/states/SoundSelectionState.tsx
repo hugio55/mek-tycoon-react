@@ -85,12 +85,22 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
               className="text-white/70"
             />
             <div className="relative">
+              {/* Large outer glow */}
               <div
                 className="absolute inset-0 -z-10"
                 style={{
                   filter: 'blur(24px)',
                   background: 'radial-gradient(circle, rgba(59, 130, 246, 0.6) 0%, rgba(59, 130, 246, 0) 70%)',
                   transform: 'scale(1.5)',
+                }}
+              />
+              {/* Bright tight inner glow */}
+              <div
+                className="absolute inset-0 -z-10"
+                style={{
+                  filter: 'blur(4px)',
+                  background: 'radial-gradient(circle, rgba(59, 130, 246, 1) 0%, rgba(59, 130, 246, 0.8) 40%, rgba(59, 130, 246, 0) 55%)',
+                  transform: 'scale(0.95)',
                 }}
               />
               <ProModeToggle
@@ -139,12 +149,22 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
               </svg>
             </div>
             <div className="relative">
+              {/* Large outer glow */}
               <div
                 className="absolute inset-0 -z-10"
                 style={{
                   filter: 'blur(24px)',
                   background: 'radial-gradient(circle, rgba(59, 130, 246, 0.6) 0%, rgba(59, 130, 246, 0) 70%)',
                   transform: 'scale(1.5)',
+                }}
+              />
+              {/* Bright tight inner glow */}
+              <div
+                className="absolute inset-0 -z-10"
+                style={{
+                  filter: 'blur(4px)',
+                  background: 'radial-gradient(circle, rgba(59, 130, 246, 1) 0%, rgba(59, 130, 246, 0.8) 40%, rgba(59, 130, 246, 0) 55%)',
+                  transform: 'scale(0.95)',
                 }}
               />
               <ProModeToggle
