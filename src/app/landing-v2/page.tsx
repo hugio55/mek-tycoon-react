@@ -207,7 +207,7 @@ export default function LandingV2() {
             <img
               src="/random-images/Everydays_4.gif"
               alt="Mek Tycoon Logo"
-              className={deviceType === 'iphone' ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'max-w-[40vw] max-h-[40vh] object-contain'}
+              className={deviceType === 'iphone' ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'landing-logo max-w-[40vw] max-h-[40vh] object-contain'}
               style={deviceType === 'iphone' ? { transform: 'scale(1.0125)' } : {}}
               onLoad={() => markCriticalAssetLoaded('landing-logo')}
             />
@@ -217,7 +217,7 @@ export default function LandingV2() {
               loop
               muted
               playsInline
-              className="max-w-[40vw] max-h-[40vh] object-contain"
+              className="landing-logo max-w-[40vw] max-h-[40vh] object-contain"
               style={navigator.userAgent.toLowerCase().includes('android') ? { transform: 'scale(1.0125)' } : {}}
               onLoadedData={() => markCriticalAssetLoaded('landing-logo')}
             >
@@ -245,6 +245,15 @@ export default function LandingV2() {
           @keyframes speakerFadeIn {
             0% { opacity: 0; }
             100% { opacity: 1; }
+          }
+
+          /* iPad Mini - 20% smaller logo */
+          @media (width: 744px) and (height: 1133px),
+                 (width: 1133px) and (height: 744px) {
+            .landing-logo {
+              max-width: 32vw !important;
+              max-height: 32vh !important;
+            }
           }
         `
       }} />
