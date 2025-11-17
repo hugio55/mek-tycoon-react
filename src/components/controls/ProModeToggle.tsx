@@ -179,6 +179,10 @@ export default function ProModeToggle({
               transformOrigin: '50% 0%',
               filter: guardOpen ? 'drop-shadow(0px 0px 0px rgba(0,0,0,1))' : 'drop-shadow(0px 0px 0px rgba(0,0,0,1))',
               transform: guardOpen ? 'rotateX(70deg)' : 'rotateX(0deg)',
+              transformStyle: 'preserve-3d',
+              WebkitTransformStyle: 'preserve-3d',
+              backfaceVisibility: 'visible',
+              WebkitBackfaceVisibility: 'visible',
               touchAction: 'manipulation',
               willChange: 'transform',
               WebkitTapHighlightColor: 'transparent'
@@ -190,16 +194,6 @@ export default function ProModeToggle({
             className="absolute left-1/2 -translate-x-1/2 w-1/2 h-2.5 bg-[#303030] rounded-b-[10px] border-[3px] border-[#656565] top-[-2px] pointer-events-none z-[4]"
             style={{ borderStyle: 'ridge' }}
           />
-
-          {/* Guard translucent overlay (shows when guard is down) */}
-          {!guardOpen && (
-            <div
-              className="absolute top-5 left-0 w-full h-[calc(100%-20px)] opacity-60 rounded-[7px] pointer-events-none z-[2]"
-              style={{
-                background: guardOverlayGradients[guardColor]
-              }}
-            />
-          )}
 
           {/* Guard side rails */}
           <div
@@ -269,9 +263,16 @@ export default function ProModeToggle({
               background: 'linear-gradient(to left, lightgrey 0%, lightgrey 1%, #e0e0e0 26%, #efefef 48%, #d9d9d9 75%, #bcbcbc 100%)',
               boxShadow: 'inset 0px -3px 3px rgba(0,0,0,1), inset 0px 3px 3px rgba(0,0,0,0.7)',
               transform: switchOn
-                ? 'translateX(-50%) rotateX(0deg)'
-                : 'translateX(-50%) translateY(-14px) rotateX(-175deg)',
+                ? 'translateX(-50%) rotateX(0deg) translateZ(-10px)'
+                : 'translateX(-50%) translateY(-14px) rotateX(-175deg) translateZ(-10px)',
+              WebkitTransform: switchOn
+                ? 'translateX(-50%) rotateX(0deg) translateZ(-10px)'
+                : 'translateX(-50%) translateY(-14px) rotateX(-175deg) translateZ(-10px)',
               bottom: switchOn ? '13px' : '15px',
+              transformStyle: 'preserve-3d',
+              WebkitTransformStyle: 'preserve-3d',
+              backfaceVisibility: 'visible',
+              WebkitBackfaceVisibility: 'visible',
               willChange: 'transform'
             }}
           >
@@ -286,6 +287,21 @@ export default function ProModeToggle({
               }}
             />
           </div>
+
+          {/* Guard translucent overlay (shows when guard is down) - MUST render after knob */}
+          {!guardOpen && (
+            <div
+              className="absolute top-5 left-0 w-full h-[calc(100%-20px)] opacity-60 rounded-[7px] pointer-events-none z-[5]"
+              style={{
+                background: guardOverlayGradients[guardColor],
+                isolation: 'isolate',
+                transform: 'translateZ(30px)',
+                WebkitTransform: 'translateZ(30px)',
+                backfaceVisibility: 'visible',
+                WebkitBackfaceVisibility: 'visible'
+              }}
+            />
+          )}
 
           {/* Indicator light */}
           <div

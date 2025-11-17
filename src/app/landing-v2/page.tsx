@@ -157,9 +157,9 @@ export default function LandingV2() {
         setLogoFadeComplete(true);
       }, totalLogoTime);
 
-      // Footer appears after all phases complete their staggered fade-in
-      // Content delay: 4000ms + last phase start: 1000ms + phase fade: 500ms + buffer: 300ms = 5800ms
-      const footerDelay = contentDelay + 1000 + 500 + 300;
+      // Footer fades in simultaneously with Phase 4
+      // Content delay: 4000ms + last phase start: 1000ms = 5000ms
+      const footerDelay = contentDelay + 1000;
       setTimeout(() => {
         setShowFooter(true);
       }, footerDelay);
