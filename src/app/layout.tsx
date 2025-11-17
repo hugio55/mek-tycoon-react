@@ -1,3 +1,6 @@
+// WeakRef polyfill for iOS 12-14 (must be first import)
+import '@/polyfills/weakref';
+
 // Force cache bust: fabulous-sturgeon-691 deployment
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Orbitron, Inter, Cinzel, Lora, Rajdhani, Space_Grotesk, Exo_2, Saira_Condensed, Teko, Abel, Josefin_Sans, Economica, Advent_Pro, Archivo_Narrow, Electrolize, Audiowide, Michroma, Play, Quantico, Saira } from "next/font/google";
