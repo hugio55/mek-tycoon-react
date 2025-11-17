@@ -14,7 +14,7 @@ export function PercentageDisplay({
   percentage,
   fontSize = 15,
   fontFamily = 'Saira',
-  spacing = 13,
+  spacing = 8,
   horizontalOffset = 0
 }: PercentageDisplayProps) {
   const isComplete = percentage >= 100;

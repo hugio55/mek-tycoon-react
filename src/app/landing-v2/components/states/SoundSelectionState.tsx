@@ -84,11 +84,12 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
               isPlaying={true}
               className="text-white/70"
             />
-            <div className="relative">
+            <div className="relative" style={{ zIndex: 0 }}>
               {/* Large outer glow */}
               <div
-                className="absolute inset-0 -z-10"
+                className="absolute inset-0"
                 style={{
+                  zIndex: -1,
                   filter: 'blur(24px)',
                   background: 'radial-gradient(circle, rgba(59, 130, 246, 0.6) 0%, rgba(59, 130, 246, 0) 70%)',
                   transform: 'scale(1.5)',
@@ -96,8 +97,9 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
               />
               {/* Bright tight inner glow */}
               <div
-                className="absolute inset-0 -z-10"
+                className="absolute inset-0"
                 style={{
+                  zIndex: -1,
                   filter: 'blur(4px)',
                   background: 'radial-gradient(circle, rgba(59, 130, 246, 1) 0%, rgba(59, 130, 246, 0.8) 40%, rgba(59, 130, 246, 0) 55%)',
                   transform: 'scale(0.95)',
@@ -148,11 +150,12 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
                 />
               </svg>
             </div>
-            <div className="relative">
+            <div className="relative" style={{ zIndex: 0 }}>
               {/* Large outer glow */}
               <div
-                className="absolute inset-0 -z-10"
+                className="absolute inset-0"
                 style={{
+                  zIndex: -1,
                   filter: 'blur(24px)',
                   background: 'radial-gradient(circle, rgba(59, 130, 246, 0.6) 0%, rgba(59, 130, 246, 0) 70%)',
                   transform: 'scale(1.5)',
@@ -160,8 +163,9 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
               />
               {/* Bright tight inner glow */}
               <div
-                className="absolute inset-0 -z-10"
+                className="absolute inset-0"
                 style={{
+                  zIndex: -1,
                   filter: 'blur(4px)',
                   background: 'radial-gradient(circle, rgba(59, 130, 246, 1) 0%, rgba(59, 130, 246, 0.8) 40%, rgba(59, 130, 246, 0) 55%)',
                   transform: 'scale(0.95)',
