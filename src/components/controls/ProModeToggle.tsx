@@ -228,7 +228,8 @@ export default function ProModeToggle({
               !guardOpen ? 'pointer-events-none' : ''
             }`}
             style={{
-              transform: 'translateX(-50%) translateY(-50%) rotate(-90deg)',
+              transform: 'translateX(-50%) translateY(-50%) rotate(-90deg) translateZ(-15px)',
+              WebkitTransform: 'translateX(-50%) translateY(-50%) rotate(-90deg) translateZ(-15px)',
               background: 'linear-gradient(to left, #a1a1a1 0%, #a1a1a1 1%, #c0c0c0 26%, #b1b1b1 48%, #909090 75%, #a1a1a1 100%)',
               clipPath: 'polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%)',
               filter: 'drop-shadow(1px 1px 3px rgba(255,255,255,1))',
