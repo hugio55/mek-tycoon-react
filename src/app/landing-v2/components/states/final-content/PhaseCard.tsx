@@ -114,7 +114,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
   return (
     <div
       ref={cardRef}
-      className="w-full transition-all duration-500 ease-out"
+      className="w-full transition-all duration-[900ms] ease-out"
       style={{
         opacity: shouldShow ? 1 : 0,
         transform: `translateY(${shouldShow ? 0 : 20}px)`,

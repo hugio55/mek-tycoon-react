@@ -37,14 +37,14 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
       // Description starts first
       const descTimer = setTimeout(() => setShowDescription(true), startDelay);
 
-      // Button starts shortly after description (200ms gap)
-      const buttonTimer = setTimeout(() => setShowButton(true), startDelay + 200);
+      // Button starts after description (400ms gap - moderate slowdown)
+      const buttonTimer = setTimeout(() => setShowButton(true), startDelay + 400);
 
-      // Phases cascade in quick succession (200ms apart each)
-      const phase1Timer = setTimeout(() => setShowPhases(1), startDelay + 400);
-      const phase2Timer = setTimeout(() => setShowPhases(2), startDelay + 600);
-      const phase3Timer = setTimeout(() => setShowPhases(3), startDelay + 800);
-      const phase4Timer = setTimeout(() => setShowPhases(4), startDelay + 1000);
+      // Phases cascade with more breathing room (350ms apart each - moderate slowdown)
+      const phase1Timer = setTimeout(() => setShowPhases(1), startDelay + 600);
+      const phase2Timer = setTimeout(() => setShowPhases(2), startDelay + 950);
+      const phase3Timer = setTimeout(() => setShowPhases(3), startDelay + 1300);
+      const phase4Timer = setTimeout(() => setShowPhases(4), startDelay + 1650);
 
       return () => {
         clearTimeout(descTimer);

@@ -6,7 +6,7 @@ interface SubtitleSectionProps {
 export default function SubtitleSection({ show, isMobile }: SubtitleSectionProps) {
   return (
     <div
-      className={`transition-all duration-500 ease-out ${isMobile ? 'px-[60px]' : 'px-[20px]'}`}
+      className={`transition-all duration-[900ms] ease-out ${isMobile ? 'px-[60px]' : 'px-[20px]'}`}
       style={{
         opacity: show ? 1 : 0,
         transform: `translateY(${show ? 0 : 20}px)`,

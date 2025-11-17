@@ -150,8 +150,8 @@ export default function LandingV2() {
       }, 500);
 
       // Footer fades in simultaneously with Phase 4
-      // Content delay: 4000ms + last phase start: 1000ms = 5000ms
-      const footerDelay = contentDelay + 1000;
+      // Content delay: 4000ms + last phase start: 1650ms = 5650ms
+      const footerDelay = contentDelay + 1650;
       setTimeout(() => {
         setShowFooter(true);
       }, footerDelay);
