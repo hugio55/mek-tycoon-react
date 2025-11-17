@@ -262,7 +262,7 @@ export default function ProModeToggle({
 
           {/* Knob (moves when switch flips) */}
           <div
-            className="absolute block w-3 h-[25px] left-1/2 pointer-events-none rounded-t-[4px] z-[2] border border-black transition-all duration-200"
+            className="absolute block w-3 h-[25px] left-1/2 pointer-events-none rounded-t-[4px] z-[1] border border-black transition-all duration-200"
             style={{
               background: 'linear-gradient(to left, lightgrey 0%, lightgrey 1%, #e0e0e0 26%, #efefef 48%, #d9d9d9 75%, #bcbcbc 100%)',
               boxShadow: 'inset 0px -3px 3px rgba(0,0,0,1), inset 0px 3px 3px rgba(0,0,0,0.7)',
