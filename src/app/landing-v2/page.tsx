@@ -14,6 +14,10 @@ import SpeakerButton from './components/SpeakerButton';
 import { useLoaderContext } from '@/features/page-loader';
 
 export default function LandingV2() {
+  // Logo positioning (adjust these values to move logo up/down on all devices)
+  const logoPositionDesktop = '28vh'; // Desktop and Mac
+  const logoPositionMobile = '20vh';  // iPhone and Android
+
   const { isLoading, registerCriticalAsset, markCriticalAssetLoaded } = useLoaderContext();
   const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'other'>('other');
   const [mounted, setMounted] = useState(false);
@@ -204,8 +208,8 @@ export default function LandingV2() {
             display: 'flex',
             justifyContent: 'center',
             paddingTop: (deviceType === 'iphone' || (deviceType === 'other' && navigator.userAgent.toLowerCase().includes('android')))
-              ? '160px'
-              : 'calc(8vh + 220px)',
+              ? logoPositionMobile
+              : logoPositionDesktop,
             opacity: revealStarted ? 1 : 0,
             zIndex: 20,
             transitionDuration: `${TIMINGS.logoFade}ms`,
