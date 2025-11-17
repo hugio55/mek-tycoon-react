@@ -143,6 +143,11 @@ export default function LandingV2() {
   }, [currentState, revealStarted, startAudio, isState]);
 
   const isRevealing = isState('REVEAL');
+  // Logo fades simultaneously with stars (no delay)
+  const logoDelay = 0;
+  // Content wave starts 4 seconds after logo begins
+  const contentDelay = 4000;
+
   // Background opacity: 0 → 0.3 (initial fade) → 1.0 (reveal)
   // Ensure we start at 0 until loader finishes and entrance begins
   const backgroundOpacity = !mounted || !entranceStarted ? 0 : (
@@ -151,11 +156,6 @@ export default function LandingV2() {
       : 0.77
   );
   const showSpeaker = isRevealing;
-
-  // Logo fades simultaneously with stars (no delay)
-  const logoDelay = 0;
-  // Content wave starts 4 seconds after logo begins
-  const contentDelay = 4000;
 
   // Show pure black until mounted
   if (!mounted) {
