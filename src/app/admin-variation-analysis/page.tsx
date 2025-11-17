@@ -6,6 +6,8 @@ import { api } from "@/convex/_generated/api";
 export default function VariationAnalysisPage() {
   const analysisData = useQuery(api.analysisVariationCoverage.analyzeVariationCoverage);
 
+  console.log('[ANALYSIS] Query result:', analysisData);
+
   if (!analysisData) {
     return (
       <div className="min-h-screen bg-black text-white p-8">
@@ -14,6 +16,9 @@ export default function VariationAnalysisPage() {
             Variation Coverage Analysis
           </h1>
           <div className="text-gray-400">Loading analysis data...</div>
+          <div className="text-xs text-gray-600 mt-4">
+            (Check browser console for debug info)
+          </div>
         </div>
       </div>
     );

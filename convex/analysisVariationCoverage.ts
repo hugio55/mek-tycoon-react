@@ -1,12 +1,11 @@
 import { query } from "./_generated/server";
 
 /**
- * Analyze variation coverage across all Phase I verified players
+ * Analyze variation coverage across all players with meks
  *
- * Phase I players are identified as users with verified wallet status
  * This query:
- * 1. Gets all verified users (Phase I players)
- * 2. For each user, retrieves all their meks
+ * 1. Gets all users
+ * 2. For each user with meks, retrieves all their meks
  * 3. Extracts headVariation, bodyVariation, and itemVariation from each mek
  * 4. Tallies unique variations (out of 291 total)
  * 5. Returns coverage statistics
@@ -14,26 +13,29 @@ import { query } from "./_generated/server";
 export const analyzeVariationCoverage = query({
   args: {},
   handler: async (ctx) => {
-    // Step 1: Get all verified users (Phase I players)
+    // Step 1: Get all users
     const allUsers = await ctx.db.query("users").collect();
-    const verifiedUsers = allUsers.filter(user => user.walletVerified === true);
 
     console.log(`Total users: ${allUsers.length}`);
-    console.log(`Verified users (Phase I players): ${verifiedUsers.length}`);
 
-    // Step 2: Collect all variations across all verified users' meks
+    // Step 2: Collect all variations across all users' meks
     const allVariations = new Set<string>();
     let totalMeks = 0;
     let meksWithMissingVariations = 0;
 
     const userBreakdown = [];
 
-    for (const user of verifiedUsers) {
+    for (const user of allUsers) {
       // Get all meks for this user
       const userMeks = await ctx.db
         .query("meks")
         .withIndex("by_owner", (q) => q.eq("owner", user.walletAddress))
         .collect();
+
+      // Skip users with no meks
+      if (userMeks.length === 0) {
+        continue;
+      }
 
       totalMeks += userMeks.length;
 
@@ -72,6 +74,8 @@ export const analyzeVariationCoverage = query({
       });
     }
 
+    console.log(`Users with meks: ${userBreakdown.length}`);
+
     // Step 3: Calculate statistics
     const uniqueVariationCount = allVariations.size;
     const coveragePercentage = ((uniqueVariationCount / 291) * 100).toFixed(2);
@@ -81,7 +85,7 @@ export const analyzeVariationCoverage = query({
 
     return {
       summary: {
-        totalVerifiedPlayers: verifiedUsers.length,
+        totalVerifiedPlayers: userBreakdown.length,
         totalMeks,
         uniqueVariationsFound: uniqueVariationCount,
         totalVariationsPossible: 291,
