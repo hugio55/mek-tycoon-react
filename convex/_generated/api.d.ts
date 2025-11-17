@@ -29,6 +29,7 @@ import type * as adminUnlockSlot from "../adminUnlockSlot.js";
 import type * as adminUsers from "../adminUsers.js";
 import type * as adminVerificationReset from "../adminVerificationReset.js";
 import type * as airdrop from "../airdrop.js";
+import type * as analysisVariationCoverage from "../analysisVariationCoverage.js";
 import type * as attributeRarity from "../attributeRarity.js";
 import type * as attributeRarityManual from "../attributeRarityManual.js";
 import type * as auditLogs from "../auditLogs.js";
@@ -269,6 +270,7 @@ declare const fullApi: ApiFromModules<{
   adminUsers: typeof adminUsers;
   adminVerificationReset: typeof adminVerificationReset;
   airdrop: typeof airdrop;
+  analysisVariationCoverage: typeof analysisVariationCoverage;
   attributeRarity: typeof attributeRarity;
   attributeRarityManual: typeof attributeRarityManual;
   auditLogs: typeof auditLogs;
