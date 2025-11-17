@@ -28,7 +28,7 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
   const hasShownLoader = useRef(false);
   const completeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasTriggeredCompletion = useRef(false);
-  const minimumProgressTime = useRef(1200); // Minimum time to show progress animation (ms)
+  const minimumProgressTime = useRef(2200); // Minimum time to show progress animation (ms)
 
   const minDisplayTime = config?.minDisplayTime ?? TIMING.MIN_DISPLAY_TIME;
   const totalTimeout = config?.totalTimeout ?? TIMING.TOTAL_TIMEOUT;
