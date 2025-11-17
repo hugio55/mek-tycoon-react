@@ -53,6 +53,19 @@ export default function LandingV2() {
     // Preload logo video as critical asset DURING loader phase
     registerCriticalAsset('landing-logo');
 
+    // Preload background image as critical asset
+    registerCriticalAsset('landing-background');
+    const backgroundImg = new Image();
+    backgroundImg.src = '/colored-bg-1.webp';
+    backgroundImg.onload = () => {
+      console.log('[🎯LOADER] Background image preloaded successfully');
+      markCriticalAssetLoaded('landing-background');
+    };
+    backgroundImg.onerror = () => {
+      console.error('[🎯LOADER] Background image preload failed');
+      markCriticalAssetLoaded('landing-background'); // Mark as loaded anyway to prevent blocking
+    };
+
     // Preload the logo video/gif based on device type
     if (deviceType === 'macos' || deviceType === 'iphone') {
       // Preload GIF
