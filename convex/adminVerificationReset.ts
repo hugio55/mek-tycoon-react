@@ -445,9 +445,6 @@ export const updateWalletGold = mutation({
 });
 
 // Admin query to get all wallets with full details
-// DISABLED: Only needed on Dev, consuming 362.88 MB bandwidth unnecessarily
-// Re-enable if admin dashboard on Dev is needed
-/*
 export const getAllWallets = query({
   args: {},
   handler: async (ctx) => {
@@ -516,7 +513,6 @@ export const getAllWallets = query({
     });
   }
 });
-*/
 
 // Admin function to fix corrupted cumulative gold values
 // Ensures the invariant: totalCumulativeGold >= accumulatedGold + totalGoldSpentOnUpgrades
