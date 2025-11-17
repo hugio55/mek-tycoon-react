@@ -50,3 +50,15 @@ export const saveLoaderSettings = mutation({
     }
   },
 });
+
+// Clear all loader settings (resets to code defaults)
+export const clearLoaderSettings = mutation({
+  handler: async (ctx) => {
+    const existing = await ctx.db.query("loaderSettings").first();
+    if (existing) {
+      await ctx.db.delete(existing._id);
+      return { deleted: true, id: existing._id };
+    }
+    return { deleted: false, message: "No settings found to delete" };
+  },
+});

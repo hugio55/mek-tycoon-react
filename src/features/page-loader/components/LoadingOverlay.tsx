@@ -31,7 +31,7 @@ export function LoadingOverlay({
 
   // Use saved settings or defaults
   const fontSize = savedSettings?.fontSize ?? 15;
-  const spacing = savedSettings?.spacing ?? 13;
+  const spacing = savedSettings?.spacing ?? 8;
   const horizontalOffset = savedSettings?.horizontalOffset ?? 0;
   const fontFamily = savedSettings?.fontFamily ?? 'Saira';
   const chromaticOffset = savedSettings?.chromaticOffset ?? 0;
