@@ -1,6 +1,6 @@
 "use client";
 
-import { Id } from "../../convex/_generated/dataModel";
+import { Id } from "@/convex/_generated/dataModel";
 
 interface Recipe {
   _id: Id<"craftingRecipes">;

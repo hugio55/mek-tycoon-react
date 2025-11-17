@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { api } from "@/convex/_generated/api";
 import "@/styles/global-design-system.css";
 import PowerSwitch from "@/components/controls/PowerSwitch";
 import CloseButton from "@/components/controls/CloseButton";

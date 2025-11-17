@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { api } from "@/convex/_generated/api";
 import EssenceDonutChart from "@/components/essence-donut-chart";
 import "@/styles/global-design-system.css";
 import { useEssence } from "@/contexts/EssenceContext";

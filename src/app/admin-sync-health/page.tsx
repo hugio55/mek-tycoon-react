@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useAction } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { api } from "@/convex/_generated/api";
 import { useState } from "react";
 
 export default function AdminSyncHealthPage() {
