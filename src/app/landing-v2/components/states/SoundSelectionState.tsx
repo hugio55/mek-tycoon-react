@@ -72,9 +72,9 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
         <div
           className="flex items-center justify-center"
           style={{
-            gap: '48px',
+            gap: '32px',
             transform: 'translateY(0px)',
-            scale: '1.0'
+            scale: '0.9'
           }}
         >
           {/* Sound Toggle - Plays sounds */}
