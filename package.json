@@ -22,7 +22,6 @@
     "@radix-ui/react-accordion": "^1.2.2",
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@sentry/nextjs": "^10.22.0",
     "@types/adm-zip": "^0.5.7",
     "@types/archiver": "^6.0.3",
     "@types/fs-extra": "^11.0.4",
