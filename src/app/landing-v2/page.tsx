@@ -226,7 +226,7 @@ export default function LandingV2() {
               ? logoPositionMobile
               : logoPositionDesktop,
             opacity: revealStarted ? 1 : 0,
-            zIndex: 20,
+            zIndex: 100,
             transitionDuration: `${TIMINGS.logoFade}ms`,
             transitionDelay: `${logoDelay}ms`,
             transitionTimingFunction: 'ease-in-out',
