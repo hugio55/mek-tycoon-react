@@ -236,7 +236,7 @@ export default function LandingV2() {
               loop
               muted
               playsInline
-              className="landing-logo max-w-[40vw] max-h-[40vh] object-contain"
+              className={navigator.userAgent.toLowerCase().includes('android') ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'landing-logo max-w-[40vw] max-h-[40vh] object-contain'}
               style={navigator.userAgent.toLowerCase().includes('android') ? { transform: 'scale(1.0125)' } : {}}
               onLoadedData={() => {
                 console.log('[⭐LANDING] Logo video loaded successfully');
