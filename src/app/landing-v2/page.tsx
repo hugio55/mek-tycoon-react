@@ -14,7 +14,7 @@ import SpeakerButton from './components/SpeakerButton';
 import { useLoaderContext } from '@/features/page-loader';
 
 export default function LandingV2() {
-  const { isLoading } = useLoaderContext();
+  const { isLoading, registerCriticalAsset, markCriticalAssetLoaded } = useLoaderContext();
   const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'other'>('other');
   const [mounted, setMounted] = useState(false);
 
@@ -45,8 +45,37 @@ export default function LandingV2() {
       setDeviceType('other');
     }
 
-    // Logo will load after entrance sequence, not during loader
-    // (Removed critical asset registration to prevent circular dependency)
+    // Preload logo video as critical asset DURING loader phase
+    registerCriticalAsset('landing-logo');
+
+    // Preload the logo video/gif based on device type
+    if (deviceType === 'macos' || deviceType === 'iphone') {
+      // Preload GIF
+      const logoImg = new Image();
+      logoImg.src = '/random-images/Everydays_4.gif';
+      logoImg.onload = () => {
+        console.log('[🎯LOADER] Logo GIF preloaded successfully');
+        markCriticalAssetLoaded('landing-logo');
+      };
+      logoImg.onerror = () => {
+        console.error('[🎯LOADER] Logo GIF preload failed');
+        markCriticalAssetLoaded('landing-logo'); // Mark as loaded anyway to prevent blocking
+      };
+    } else {
+      // Preload video
+      const logoVideo = document.createElement('video');
+      logoVideo.src = '/random-images/Everydays_00000.webm';
+      logoVideo.preload = 'auto';
+      logoVideo.load();
+      logoVideo.onloadeddata = () => {
+        console.log('[🎯LOADER] Logo video preloaded successfully');
+        markCriticalAssetLoaded('landing-logo');
+      };
+      logoVideo.onerror = () => {
+        console.error('[🎯LOADER] Logo video preload failed');
+        markCriticalAssetLoaded('landing-logo'); // Mark as loaded anyway to prevent blocking
+      };
+    }
 
     // Preload toggle click sounds immediately during page load (before loader finishes)
     const guardSound = new Audio('/sounds/main_click.mp3');
@@ -70,7 +99,7 @@ export default function LandingV2() {
         switchSound.currentTime = 0;
       })
       .catch(() => {});
-  }, []);
+  }, [deviceType, registerCriticalAsset, markCriticalAssetLoaded]);
 
   // Wait for Universal Loader to finish, THEN start entrance sequence
   useEffect(() => {
