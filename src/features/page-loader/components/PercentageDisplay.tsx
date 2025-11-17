@@ -12,8 +12,8 @@ interface PercentageDisplayProps {
 
 export function PercentageDisplay({
   percentage,
-  fontSize = 48,
-  fontFamily = 'Orbitron',
+  fontSize = 15,
+  fontFamily = 'Saira',
   spacing = 16,
   horizontalOffset = 0
 }: PercentageDisplayProps) {

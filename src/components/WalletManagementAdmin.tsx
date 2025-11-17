@@ -833,6 +833,8 @@ Check console for full timeline.
             </div>
           </div>
         </div>
+      ) : activeSubmenu === 'variation-spread' ? (
+        <VariationSpreadViewer />
       ) : activeSubmenu === 'beta-signups' ? (
         <BetaSignupsViewer />
       ) : (
