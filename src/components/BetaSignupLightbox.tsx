@@ -157,8 +157,8 @@ export default function BetaSignupLightbox({
             }
             to {
               opacity: 1;
-              backdrop-filter: blur(8px);
-              -webkit-backdrop-filter: blur(8px);
+              backdrop-filter: blur(20px);
+              -webkit-backdrop-filter: blur(20px);
             }
           }
           @keyframes slideUp {
@@ -183,8 +183,8 @@ export default function BetaSignupLightbox({
       <div
         className="absolute inset-0 bg-black/60"
         style={{
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           animation: 'fadeInBlur 600ms ease-out',
         }}
         onClick={handleBackdropClick}
@@ -205,8 +205,8 @@ export default function BetaSignupLightbox({
           style={{
             background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
             boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
+            backdropFilter: 'blur(30px)',
+            WebkitBackdropFilter: 'blur(30px)',
           }}
         >
           {/* Close Button - Top Right */}
