@@ -110,7 +110,7 @@ export default function GlobalBackground() {
   console.log('[🌌BG] RENDERING BACKGROUND (stars, particles, satellites)');
 
   return (
-    <div className="fixed inset-0 overflow-hidden" style={{ zIndex: -1 }}>
+    <div className="fixed inset-0 overflow-hidden" style={{ zIndex: 1 }}>
       {/* Deep space background gradient from root page */}
       <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-950 to-black" style={{ transform: 'translateZ(0)', willChange: 'auto' }} />
 
