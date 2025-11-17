@@ -62,3 +62,34 @@ export const clearLoaderSettings = mutation({
     return { deleted: false, message: "No settings found to delete" };
   },
 });
+
+// Reset loader settings to new defaults
+export const resetToNewDefaults = mutation({
+  handler: async (ctx) => {
+    const existing = await ctx.db.query("loaderSettings").first();
+
+    const newDefaults = {
+      fontSize: 15,
+      spacing: 8,
+      horizontalOffset: 0,
+      fontFamily: 'Saira',
+      chromaticOffset: 0,
+      triangleSize: 0.75,
+    };
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        ...newDefaults,
+        updatedAt: Date.now(),
+      });
+      return { success: true, message: "Settings updated to new defaults", settings: newDefaults };
+    } else {
+      const id = await ctx.db.insert("loaderSettings", {
+        ...newDefaults,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      return { success: true, message: "New default settings created", id, settings: newDefaults };
+    }
+  },
+});
