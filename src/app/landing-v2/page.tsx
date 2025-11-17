@@ -27,6 +27,7 @@ export default function LandingV2() {
   const [showLightbox, setShowLightbox] = useState(false);
   const [entranceStarted, setEntranceStarted] = useState(false);
   const [logoFadeComplete, setLogoFadeComplete] = useState(false);
+  const [showFooter, setShowFooter] = useState(false);
 
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
   const { currentState, next, transitionTo, isState } = useLandingStateMachine();
@@ -131,6 +132,13 @@ export default function LandingV2() {
       setTimeout(() => {
         setLogoFadeComplete(true);
       }, totalLogoTime);
+
+      // Footer appears after all phases complete their staggered fade-in
+      // Content delay: 2000ms + last phase start: 1000ms + phase fade: 500ms + buffer: 300ms = 3800ms
+      const footerDelay = contentDelay + 1000 + 500 + 300;
+      setTimeout(() => {
+        setShowFooter(true);
+      }, footerDelay);
     }
   }, [currentState, revealStarted, startAudio, isState]);
 
@@ -142,7 +150,6 @@ export default function LandingV2() {
       ? (backgroundFadedIn ? 0.17 : 0)
       : 0.77
   );
-  const showFooter = isRevealing; // Only show footer in REVEAL state
   const showSpeaker = isRevealing;
 
   // Logo fades simultaneously with stars (no delay)

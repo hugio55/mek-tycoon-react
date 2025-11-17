@@ -56,8 +56,16 @@ export default function LandingContainer({
           {children}
         </div>
 
-        {showFooter && (
-          <footer className="w-full relative mt-auto" style={{ marginTop: '50px', paddingTop: '32px', paddingBottom: '12px' }}>
+        <footer
+          className="w-full relative mt-auto transition-opacity duration-1000 ease-out"
+          style={{
+            marginTop: '50px',
+            paddingTop: '32px',
+            paddingBottom: '12px',
+            opacity: showFooter ? 1 : 0,
+            pointerEvents: showFooter ? 'auto' : 'none'
+          }}
+        >
             {/* Backdrop blur effect */}
             <div
               className="absolute"
@@ -143,8 +151,7 @@ export default function LandingContainer({
                 </a>
               </div>
             </div>
-          </footer>
-        )}
+        </footer>
       </div>
     </div>
   );
