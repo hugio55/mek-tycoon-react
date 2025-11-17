@@ -16,12 +16,13 @@ import DuplicateWalletDetector from '@/components/DuplicateWalletDetector';
 import EssenceBalancesViewer from '@/components/EssenceBalancesViewer';
 import BuffManagement from '@/components/BuffManagement';
 import BetaSignupsViewer from '@/components/BetaSignupsViewer';
+import VariationSpreadViewer from '@/components/VariationSpreadViewer';
 import { EssenceProvider } from '@/contexts/EssenceContext';
 
 // Lazy load heavy components
 const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryViewer'));
 
-type SubMenu = 'wallet-list' | 'storage-monitoring' | 'snapshot-history' | 'snapshot-health' | 'duplicate-detection' | 'production-launch-cleaner' | 'gold-repair' | 'beta-signups';
+type SubMenu = 'wallet-list' | 'storage-monitoring' | 'snapshot-history' | 'snapshot-health' | 'duplicate-detection' | 'production-launch-cleaner' | 'gold-repair' | 'variation-spread' | 'beta-signups';
 type SnapshotHealthTab = 'health' | 'logging';
 
 export default function WalletManagementAdmin() {
@@ -640,6 +641,17 @@ Check console for full timeline.
           }`}
         >
           🔧 Gold Repair
+        </button>
+
+        <button
+          onClick={() => setActiveSubmenu('variation-spread')}
+          className={`px-4 py-2 text-sm font-semibold transition-colors ${
+            activeSubmenu === 'variation-spread'
+              ? 'text-yellow-400 border-b-2 border-yellow-400'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          📊 Variation Spread
         </button>
 
         <button
