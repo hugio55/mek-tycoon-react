@@ -10,8 +10,8 @@ export default function VariationAnalysisPage() {
 
   if (!analysisData) {
     return (
-      <div className="min-h-screen bg-black text-white p-8">
-        <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen bg-black text-white p-8 relative z-50">
+        <div className="max-w-7xl mx-auto relative z-50">
           <h1 className="text-3xl font-bold mb-8 text-yellow-500">
             Variation Coverage Analysis
           </h1>
@@ -27,8 +27,8 @@ export default function VariationAnalysisPage() {
   const { summary, userBreakdown, variationList } = analysisData;
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-black text-white p-8 relative z-50">
+      <div className="max-w-7xl mx-auto relative z-50">
         <h1 className="text-3xl font-bold mb-8 text-yellow-500">
           Variation Coverage Analysis
         </h1>
