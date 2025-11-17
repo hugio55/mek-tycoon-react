@@ -104,10 +104,18 @@ export default function GlobalBackground() {
 
   useEffect(() => {
     setMounted(true);
-    console.log('[🌌BG] Component mounted, will show animations');
+    console.log('[🌌BG] useEffect ran - setMounted(true)');
   }, []);
 
-  console.log('[🌌BG] RENDERING BACKGROUND (stars, particles, satellites)');
+  // Log render state details
+  console.log('[🌌BG] RENDERING BACKGROUND:', {
+    mounted,
+    starsCount: backgroundStars.length,
+    particlesCount: particles.length,
+    satellitesCount: satellites.length,
+    willRenderParticles: mounted && particles.length > 0,
+    willRenderSatellites: mounted && satellites.length > 0
+  });
 
   return (
     <div className="fixed inset-0 overflow-hidden" style={{ zIndex: 1 }}>
