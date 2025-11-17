@@ -11,23 +11,9 @@ export default function GlobalBackground() {
   const pathname = usePathname();
   const { isLoading } = useLoaderContext();
   const siteSettings = useQuery(api.siteSettings.getSiteSettings);
+  const [mounted, setMounted] = useState(false);
 
-  // Background visibility check (logging disabled to reduce console spam)
-
-  // On landing-v2: only show during loader, then hide
-  if (pathname === '/landing-v2' && !isLoading) {
-    return null;
-  }
-
-  // Don't render background on original landing page (has its own custom background)
-  if (pathname === '/landing') {
-    return null;
-  }
-
-  // Don't render on root path if landing page is enabled (landing page has its own background)
-  if (pathname === '/' && siteSettings?.landingPageEnabled && !isLoading) {
-    return null;
-  }
+  // ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
   const backgroundStars = useMemo(() => {
     const rng = new SeededRandom(67890); // Seed for stationary stars
     return [...Array(200)].map((_, i) => ({
@@ -97,11 +83,25 @@ export default function GlobalBackground() {
     });
   }, []);
 
-  const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Background visibility check - AFTER all hooks are called
+  // On landing-v2: only show during loader, then hide
+  if (pathname === '/landing-v2' && !isLoading) {
+    return null;
+  }
+
+  // Don't render background on original landing page (has its own custom background)
+  if (pathname === '/landing') {
+    return null;
+  }
+
+  // Don't render on root path if landing page is enabled (landing page has its own background)
+  if (pathname === '/' && siteSettings?.landingPageEnabled && !isLoading) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 overflow-hidden" style={{ zIndex: 0 }}>
