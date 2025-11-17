@@ -4,10 +4,13 @@ import { useState, useEffect, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { SeededRandom } from "@/lib/seeded-random";
 import { useLoaderContext } from "@/features/page-loader";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 export default function GlobalBackground() {
   const pathname = usePathname();
   const { isLoading } = useLoaderContext();
+  const siteSettings = useQuery(api.siteSettings.getSiteSettings);
 
   // Background visibility check (logging disabled to reduce console spam)
 
@@ -18,6 +21,11 @@ export default function GlobalBackground() {
 
   // Don't render background on original landing page (has its own custom background)
   if (pathname === '/landing') {
+    return null;
+  }
+
+  // Don't render on root path if landing page is enabled (landing page has its own background)
+  if (pathname === '/' && siteSettings?.landingPageEnabled && !isLoading) {
     return null;
   }
   const backgroundStars = useMemo(() => {
