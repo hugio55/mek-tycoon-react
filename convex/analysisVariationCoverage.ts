@@ -129,6 +129,13 @@ export const analyzeVariationCoverage = query({
       variation => !allVariations.has(variation)
     );
 
+    console.log(`[DEBUG] ALL_VARIATIONS count: ${ALL_VARIATIONS.length}`);
+    console.log(`[DEBUG] Found variations count: ${allVariations.size}`);
+    console.log(`[DEBUG] Missing variations count: ${missingVariationsList.length}`);
+    console.log(`[DEBUG] Math check: ${ALL_VARIATIONS.length} - ${allVariations.size} = ${ALL_VARIATIONS.length - allVariations.size}`);
+    console.log(`[DEBUG] First 10 missing:`, missingVariationsList.slice(0, 10));
+    console.log(`[DEBUG] First 10 found:`, Array.from(allVariations).slice(0, 10));
+
     // Sort user breakdown by mek count (descending)
     userBreakdown.sort((a, b) => b.mekCount - a.mekCount);
 
