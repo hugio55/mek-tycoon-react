@@ -28,7 +28,7 @@ const StarField = () => {
     };
     setCanvasSize();
 
-    const STAR_COUNT_LAYER1 = 300;
+    const STAR_COUNT_LAYER1 = 500;
     const STAR_COUNT_LAYER2 = 40;
     const SPEED_LAYER1 = 3;
     const SPEED_LAYER2 = 20;
@@ -97,7 +97,7 @@ const StarField = () => {
           const fadeInProgress = Math.min(star.age / fadeInDuration, 1);
           const opacity = fadeInProgress * 0.8;
 
-          const size = Math.max(1, Math.floor((1 - star.z / MAX_DEPTH) * 2));
+          const size = 1;
 
           ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
           ctx.beginPath();
