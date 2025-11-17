@@ -149,13 +149,6 @@ export default function LandingV2() {
         startAudio();
       }, 500);
 
-      // Enable scrolling after logo fade completes
-      // Logo starts at 0ms (no delay) and takes 4500ms to fade
-      const totalLogoTime = TIMINGS.logoFade;
-      setTimeout(() => {
-        setLogoFadeComplete(true);
-      }, totalLogoTime);
-
       // Footer fades in simultaneously with Phase 4
       // Content delay: 4000ms + last phase start: 1000ms = 5000ms
       const footerDelay = contentDelay + 1000;
