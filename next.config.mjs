@@ -1,4 +1,3 @@
-import {withSentryConfig} from '@sentry/nextjs';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Enable standalone output for optimized Vercel deployments (reduces serverless bundle size)
@@ -102,42 +101,4 @@ const nextConfig = {
   },
 };
 
-// Conditionally enable Sentry only when explicitly enabled via environment variable
-// This prevents Sentry from bloating the Vercel deployment bundle (~16-20 MB per function)
-// To enable Sentry, set ENABLE_SENTRY=true in environment variables
-const useSentry = process.env.ENABLE_SENTRY === 'true';
-
-export default useSentry
-  ? withSentryConfig(nextConfig, {
-      // For all available options, see:
-      // https://www.npmjs.com/package/@sentry/webpack-plugin#options
-
-      org: "over-exposed",
-
-      project: "javascript-nextjs",
-
-      // Only print logs for uploading source maps in CI
-      silent: !process.env.CI,
-
-      // For all available options, see:
-      // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
-
-      // DISABLED: Upload a larger set of source maps (was increasing bundle size)
-      widenClientFileUpload: false,
-
-      // DISABLED: Route browser requests to Sentry (adds runtime overhead)
-      // tunnelRoute: "/monitoring",
-
-      // Automatically tree-shake Sentry logger statements to reduce bundle size
-      disableLogger: true,
-
-      // Hide source maps from bundle (don't include in deployment)
-      hideSourceMaps: true,
-
-      // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-      // See the following for more information:
-      // https://docs.sentry.io/product/crons/
-      // https://vercel.com/docs/cron-jobs
-      automaticVercelMonitors: true,
-    })
-  : nextConfig;
+export default nextConfig;
