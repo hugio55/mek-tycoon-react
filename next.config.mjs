@@ -13,6 +13,9 @@ const nextConfig = {
   experimental: {
     workerThreads: false,
     cpus: 1,
+    // Enable legacy browser support (transpiles to ES5 for iOS 12+)
+    legacyBrowsers: true,
+    browsersListForSwc: true,
   },
 
   // Optimize image handling
