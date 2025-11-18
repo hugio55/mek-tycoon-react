@@ -34,33 +34,24 @@ export function useBackgroundAudio() {
   // Check localStorage for user's audio preference
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY_AUDIO);
-    console.log('[🎵AUDIO-V2] Raw localStorage value:', stored);
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        console.log('[🎵AUDIO-V2] Parsed localStorage:', parsed);
         const { audioEnabled: enabled } = parsed;
-        console.log('[🎵AUDIO-V2] Extracted audioEnabled value:', enabled);
-        console.log('[🎵AUDIO-V2] About to setAudioEnabled to:', enabled);
         setAudioEnabled(enabled);
       } catch (e) {
-        console.log('[🎵AUDIO-V2] Error parsing stored preference:', e);
+        console.error('[🎵AUDIO-V2] Error parsing stored preference:', e);
       }
-    } else {
-      console.log('[🎵AUDIO-V2] No stored preference found');
     }
   }, []);
 
   // Handle playing/pausing with fade effects
   useEffect(() => {
-    console.log('[🎵AUDIO-V2] Playback effect triggered - audioPlaying:', audioPlaying, 'audioEnabled:', audioEnabled);
     if (!audioRef.current) {
-      console.log('[🎵AUDIO-V2] No audio ref, skipping playback effect');
       return;
     }
 
     if (audioPlaying && audioEnabled) {
-      console.log('[🎵AUDIO-V2] ✓ CONDITIONS MET - Starting playback with fade-in');
       audioRef.current.currentTime = 0;
       audioRef.current.volume = 0;
 
@@ -80,14 +71,11 @@ export function useBackgroundAudio() {
         audioRef.current.volume = progress;
         if (progress >= 1) {
           clearInterval(fadeIn);
-          console.log('[🎵AUDIO-V2] Fade-in complete');
         }
       }, 20);
 
       return () => clearInterval(fadeIn);
     } else if (!audioPlaying && audioRef.current.volume > 0) {
-      console.log('[🎵AUDIO-V2] Stopping playback with fade-out');
-
       // Fade out over 500ms
       let startTime = Date.now();
       const startVolume = audioRef.current.volume;
@@ -102,7 +90,6 @@ export function useBackgroundAudio() {
         if (progress >= 1) {
           audioRef.current.pause();
           clearInterval(fadeOut);
-          console.log('[🎵AUDIO-V2] Fade-out complete, paused');
         }
       }, 20);
 
@@ -130,27 +117,19 @@ export function useBackgroundAudio() {
     const stored = localStorage.getItem(STORAGE_KEY_AUDIO);
     let shouldPlay = false;
 
-    console.log('[🎵AUDIO-V2] startAudio called, re-reading from localStorage...');
-    console.log('[🎵AUDIO-V2] Raw localStorage value:', stored);
-
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        console.log('[🎵AUDIO-V2] Parsed value:', parsed);
         shouldPlay = parsed.audioEnabled;
-        console.log('[🎵AUDIO-V2] Extracted audioEnabled:', shouldPlay);
         // Update state to stay in sync
         setAudioEnabled(shouldPlay);
       } catch (e) {
-        console.log('[🎵AUDIO-V2] Error parsing stored preference:', e);
+        console.error('[🎵AUDIO-V2] Error parsing stored preference:', e);
       }
     }
 
     if (shouldPlay) {
-      console.log('[🎵AUDIO-V2] Starting audio (user enabled sound) - setting audioPlaying to true');
       setAudioPlaying(true);
-    } else {
-      console.log('[🎵AUDIO-V2] Audio not started (user disabled sound)');
     }
   }, []);
 
