@@ -420,7 +420,7 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
       {/* NMKR Payment Lightbox */}
       {showLightbox && (
         <NMKRPayLightbox
-          walletAddress={walletAddress}
+          walletAddress={null}
           onClose={() => {
             setShowLightbox(false);
             setClaimStatus("eligible");
