@@ -417,6 +417,87 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
           </div>
         );
 
+      case 'checking_eligibility':
+        return (
+          <div className="text-center py-8 sm:py-12">
+            <div className="mb-4 sm:mb-6">
+              <svg
+                className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-yellow-400 animate-spin"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            </div>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-light text-white tracking-wide mb-3">
+              Checking Eligibility...
+            </h3>
+            <p className="text-sm sm:text-base text-white/60 font-light">
+              Verifying your Phase I participation
+            </p>
+          </div>
+        );
+
+      case 'ineligible':
+        return (
+          <div className="text-center py-6 sm:py-8">
+            <div className="mb-4 sm:mb-6">
+              <svg
+                className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-light text-white tracking-wide mb-3">
+              Not Eligible
+            </h3>
+            <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-6">
+              We are sorry, you do not meet the prerequisites. Only Phase 1 beta testers prior to 11/20/2025 are eligible.
+            </p>
+            <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-6">
+              No worries - there will be another commemorative NFT at the end of Phase 2!
+            </p>
+            <button
+              onClick={() => {
+                // Close this lightbox so user can click Join Beta button on page
+                onClose();
+              }}
+              className="text-yellow-400 hover:text-yellow-300 transition-colors underline font-medium text-sm sm:text-base"
+            >
+              Join Phase II Beta
+            </button>
+          </div>
+        );
+
+      case 'already_claimed':
+        return (
+          <div className="text-center py-6 sm:py-8">
+            <div className="mb-4 sm:mb-6">
+              <svg
+                className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-yellow-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-light text-white tracking-wide mb-3">
+              Already Claimed
+            </h3>
+            <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-4">
+              Thank you for being part of Phase 1 beta! This corporation has already minted their commemorative token.
+            </p>
+            <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed">
+              Stick around - there will be another at the end of Phase 2. We encourage you to hold onto this P1 token.
+            </p>
+          </div>
+        );
+
       case 'creating':
         return (
           <div className="text-center">
