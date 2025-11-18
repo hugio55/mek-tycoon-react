@@ -47,9 +47,15 @@ export default function WalletManagementAdmin() {
   }, []);
 
   // Database selection: Trout (dev) or Sturgeon (production READ ONLY)
-  const [selectedDatabase, setSelectedDatabase] = useState<'trout' | 'sturgeon'>('sturgeon');
+  // DEFAULT TO TROUT for safety - user must explicitly switch to production
+  const [selectedDatabase, setSelectedDatabase] = useState<'trout' | 'sturgeon'>('trout');
   const [walletsData, setWalletsData] = useState<any>(null);
   const [isLoadingWallets, setIsLoadingWallets] = useState(false);
+
+  // Production mutation override - DANGEROUS, requires explicit enabling
+  const [productionMutationsEnabled, setProductionMutationsEnabled] = useState(false);
+  const [confirmationText, setConfirmationText] = useState('');
+  const [showConfirmationPrompt, setShowConfirmationPrompt] = useState(false);
 
   // BANDWIDTH OPTIMIZATION: Only load wallets when user clicks "Load Wallets" button
   const [walletsLoaded, setWalletsLoaded] = useState(false);
@@ -871,11 +877,11 @@ Check console for full timeline.
       ) : (
         <>
           {/* Database Selection Warning Banner */}
-          {selectedDatabase === 'sturgeon' && (
+          {selectedDatabase === 'sturgeon' && !productionMutationsEnabled && (
             <div className="mb-4 p-4 bg-red-900/30 border-2 border-red-500/50 rounded-lg">
               <div className="flex items-center gap-3">
                 <span className="text-3xl">⚠️</span>
-                <div>
+                <div className="flex-1">
                   <h4 className="text-lg font-bold text-red-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
                     VIEWING PRODUCTION DATA - READ ONLY MODE
                   </h4>
@@ -883,8 +889,108 @@ Check console for full timeline.
                     You are viewing real production player data from Sturgeon database. All mutation buttons are disabled.
                   </p>
                 </div>
+                <button
+                  onClick={() => setShowConfirmationPrompt(true)}
+                  className="px-4 py-2 bg-orange-600 hover:bg-orange-500 border border-orange-500 rounded-lg text-white font-bold transition-colors whitespace-nowrap"
+                  style={{ fontFamily: "'Orbitron', sans-serif" }}
+                >
+                  🔓 Enable Mutations
+                </button>
               </div>
             </div>
+          )}
+
+          {/* Production Mutations Enabled Warning */}
+          {selectedDatabase === 'sturgeon' && productionMutationsEnabled && (
+            <div className="mb-4 p-4 bg-red-600/50 border-4 border-red-500 rounded-lg animate-pulse">
+              <div className="flex items-center gap-3">
+                <span className="text-4xl">🔥</span>
+                <div className="flex-1">
+                  <h4 className="text-xl font-bold text-red-100" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                    ⚠️ DANGER: PRODUCTION MUTATIONS ENABLED ⚠️
+                  </h4>
+                  <p className="text-sm text-red-200 mt-1 font-bold">
+                    You can now modify REAL PRODUCTION DATA. All changes affect live players immediately. Use extreme caution!
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setProductionMutationsEnabled(false);
+                    setConfirmationText('');
+                  }}
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg text-white font-bold transition-colors whitespace-nowrap"
+                  style={{ fontFamily: "'Orbitron', sans-serif" }}
+                >
+                  🔒 Disable Mutations
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Confirmation Prompt Modal */}
+          {showConfirmationPrompt && mounted && createPortal(
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[99999]">
+              <div className="bg-gray-900 border-4 border-red-500 rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 className="text-2xl font-bold text-red-400 mb-4" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                  ⚠️ ENABLE PRODUCTION MUTATIONS?
+                </h3>
+                <div className="space-y-4 text-sm text-gray-300 mb-6">
+                  <p className="font-bold text-red-300">
+                    You are about to enable mutations on the PRODUCTION database (Sturgeon).
+                  </p>
+                  <p>This will allow you to:</p>
+                  <ul className="list-disc list-inside space-y-1 text-red-200">
+                    <li>Delete real player accounts</li>
+                    <li>Modify gold balances for live users</li>
+                    <li>Reset player progress</li>
+                    <li>Make irreversible changes to production data</li>
+                  </ul>
+                  <p className="font-bold text-yellow-300">
+                    All changes affect REAL PLAYERS immediately!
+                  </p>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-red-400 mb-2">
+                    Type "ENABLE MUTATIONS" to confirm:
+                  </label>
+                  <input
+                    type="text"
+                    value={confirmationText}
+                    onChange={(e) => setConfirmationText(e.target.value)}
+                    className="w-full px-4 py-2 bg-gray-800 border-2 border-red-500 rounded-lg text-white focus:outline-none focus:border-red-400"
+                    placeholder="ENABLE MUTATIONS"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowConfirmationPrompt(false);
+                      setConfirmationText('');
+                    }}
+                    className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg text-white font-bold transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirmationText === 'ENABLE MUTATIONS') {
+                        setProductionMutationsEnabled(true);
+                        setShowConfirmationPrompt(false);
+                        setConfirmationText('');
+                      }
+                    }}
+                    disabled={confirmationText !== 'ENABLE MUTATIONS'}
+                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-500 border border-red-500 rounded-lg text-white font-bold transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    Enable Mutations
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body
           )}
 
           <div className="flex items-center justify-between gap-4">
@@ -969,11 +1075,11 @@ Check console for full timeline.
                   break;
               }
             }}
-            disabled={isRunningSnapshot || selectedDatabase === 'sturgeon'}
+            disabled={isRunningSnapshot || (selectedDatabase === 'sturgeon' && !productionMutationsEnabled)}
             className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            title={selectedDatabase === 'sturgeon' ? '🔒 Mutations disabled in READ ONLY mode' : ''}
+            title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Mutations disabled in READ ONLY mode' : ''}
           >
-            <option value="">Admin Actions... {selectedDatabase === 'sturgeon' ? '(READ ONLY)' : ''}</option>
+            <option value="">Admin Actions... {(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '(READ ONLY)' : ''}</option>
             <option value="run-snapshot">▶ Run Snapshot</option>
             <option value="reset-all">🔴 RESET ALL PROGRESS</option>
           </select>
