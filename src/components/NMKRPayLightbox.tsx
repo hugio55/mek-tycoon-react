@@ -26,6 +26,10 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
   // Track if we've already initiated a timeout release to prevent multiple attempts
   const hasInitiatedTimeoutRelease = useRef(false);
 
+  // Get effective wallet address (either from prop or manual entry)
+  // MUST be defined BEFORE useQuery calls
+  const effectiveWalletAddress = walletAddress || manualAddress;
+
   // Mutations
   const createReservation = useMutation(api.commemorativeNFTReservations.createReservation);
   const releaseReservation = useMutation(api.commemorativeNFTReservations.releaseReservation);
@@ -53,9 +57,6 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
       document.body.style.overflow = 'unset';
     };
   }, []);
-
-  // Get effective wallet address (either from prop or manual entry)
-  const effectiveWalletAddress = walletAddress || manualAddress;
 
   // Validate Cardano address format
   const validateCardanoAddress = (address: string): boolean => {
