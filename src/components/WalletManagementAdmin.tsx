@@ -1286,59 +1286,64 @@ Check console for full timeline.
                                 setDropdownPosition(null);
                               }}
                             >
-                              {selectedDatabase === 'sturgeon' && (
+                              {selectedDatabase === 'sturgeon' && !productionMutationsEnabled && (
                                 <div className="px-3 py-2 text-xs text-red-400 bg-red-900/30 border-b border-red-700">
                                   🔒 READ ONLY MODE - Mutations Disabled
                                 </div>
                               )}
+                              {selectedDatabase === 'sturgeon' && productionMutationsEnabled && (
+                                <div className="px-3 py-2 text-xs text-orange-300 bg-red-600/50 border-b border-red-500 font-bold animate-pulse">
+                                  ⚠️ PRODUCTION MUTATIONS ENABLED
+                                </div>
+                              )}
                               <button
-                                onClick={() => { if (selectedDatabase !== 'sturgeon') { handleDeleteWallet(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
-                                disabled={selectedDatabase === 'sturgeon'}
+                                onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleDeleteWallet(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                disabled={selectedDatabase === 'sturgeon' && !productionMutationsEnabled}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-red-900/50 text-red-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                title={selectedDatabase === 'sturgeon' ? '🔒 Disabled in READ ONLY mode' : 'Delete wallet permanently'}
+                                title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Delete wallet permanently'}
                               >
                                 Delete
                               </button>
                               <div className="border-t border-gray-700 my-1"></div>
                               <button
-                                onClick={() => { if (selectedDatabase !== 'sturgeon') { handleResetAllGold(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
-                                disabled={selectedDatabase === 'sturgeon'}
+                                onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleResetAllGold(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                disabled={selectedDatabase === 'sturgeon' && !productionMutationsEnabled}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-purple-900/50 text-purple-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                title={selectedDatabase === 'sturgeon' ? '🔒 Disabled in READ ONLY mode' : 'Reset all gold (spendable + cumulative) to zero'}
+                                title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Reset all gold (spendable + cumulative) to zero'}
                               >
                                 Reset All Gold
                               </button>
                               <button
-                                onClick={() => { if (selectedDatabase !== 'sturgeon') { handleResetMekLevels(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
-                                disabled={selectedDatabase === 'sturgeon'}
+                                onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleResetMekLevels(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                disabled={selectedDatabase === 'sturgeon' && !productionMutationsEnabled}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-yellow-900/50 text-yellow-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                title={selectedDatabase === 'sturgeon' ? '🔒 Disabled in READ ONLY mode' : 'Reset all Mek levels to Level 1'}
+                                title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Reset all Mek levels to Level 1'}
                               >
                                 Reset Levels
                               </button>
                               <button
-                                onClick={() => { if (selectedDatabase !== 'sturgeon') { handleReconstructExact(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
-                                disabled={selectedDatabase === 'sturgeon'}
+                                onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleReconstructExact(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                disabled={selectedDatabase === 'sturgeon' && !productionMutationsEnabled}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-cyan-900/50 text-cyan-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                title={selectedDatabase === 'sturgeon' ? '🔒 Disabled in READ ONLY mode' : '100% ACCURATE reconstruction using snapshot history + upgrade tracking with minute-by-minute timeline'}
+                                title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : '100% ACCURATE reconstruction using snapshot history + upgrade tracking with minute-by-minute timeline'}
                               >
                                 🎯 Exact Recon.
                               </button>
                               {wallet.totalCumulativeGold < wallet.currentGold && (
                                 <>
                                   <button
-                                    onClick={() => { if (selectedDatabase !== 'sturgeon') { handleReconstructFromSnapshots(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                    onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleReconstructFromSnapshots(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
                                     disabled={selectedDatabase === 'sturgeon'}
                                     className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-blue-900/50 text-blue-400 transition-colors animate-pulse disabled:opacity-30 disabled:cursor-not-allowed"
-                                    title={selectedDatabase === 'sturgeon' ? '🔒 Disabled in READ ONLY mode' : 'Reconstruct from Snapshots'}
+                                    title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Reconstruct from Snapshots'}
                                   >
                                     📸 Reconstruct
                                   </button>
                                   <button
-                                    onClick={() => { if (selectedDatabase !== 'sturgeon') { handleFixCumulativeGold(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                    onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleFixCumulativeGold(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
                                     disabled={selectedDatabase === 'sturgeon'}
                                     className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors animate-pulse disabled:opacity-30 disabled:cursor-not-allowed"
-                                    title={selectedDatabase === 'sturgeon' ? '🔒 Disabled in READ ONLY mode' : 'Fix corrupted cumulative gold (cumulative cannot be less than current!)'}
+                                    title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Fix corrupted cumulative gold (cumulative cannot be less than current!)'}
                                   >
                                     🔧 Fix Cumul.
                                   </button>
@@ -1346,29 +1351,29 @@ Check console for full timeline.
                               )}
                               {wallet.totalGoldPerHour === 0 && wallet.walletAddress.endsWith('fe6012f1') && (
                                 <button
-                                  onClick={() => { if (selectedDatabase !== 'sturgeon') { manualSetMeks({ walletAddress: wallet.walletAddress, mekCount: 45, totalGoldPerHour: 176.56 }); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                  onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { manualSetMeks({ walletAddress: wallet.walletAddress, mekCount: 45, totalGoldPerHour: 176.56 }); setHoveredDropdown(null); setDropdownPosition(null); } }}
                                   disabled={selectedDatabase === 'sturgeon'}
                                   className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                  title={selectedDatabase === 'sturgeon' ? '🔒 Disabled in READ ONLY mode' : 'Manually fix MEK ownership'}
+                                  title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Manually fix MEK ownership'}
                                 >
                                   Fix MEKs
                                 </button>
                               )}
                               {wallet.isVerified && (
                                 <button
-                                  onClick={() => { if (selectedDatabase !== 'sturgeon') { handleResetVerification(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                  onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleResetVerification(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
                                   disabled={selectedDatabase === 'sturgeon'}
                                   className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-orange-900/50 text-orange-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                  title={selectedDatabase === 'sturgeon' ? '🔒 Disabled in READ ONLY mode' : 'Reset verification (for testing)'}
+                                  title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Reset verification (for testing)'}
                                 >
                                   Reset Verify
                                 </button>
                               )}
                               <button
-                                onClick={() => { if (selectedDatabase !== 'sturgeon') { handleSingleWalletSnapshot(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
-                                disabled={isRunningSnapshot || selectedDatabase === 'sturgeon'}
+                                onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleSingleWalletSnapshot(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                disabled={isRunningSnapshot || (selectedDatabase === 'sturgeon' && !productionMutationsEnabled)}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-indigo-900/50 text-indigo-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                title={selectedDatabase === 'sturgeon' ? '🔒 Disabled in READ ONLY mode' : 'Run blockchain snapshot for this wallet (with debug logging)'}
+                                title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Run blockchain snapshot for this wallet (with debug logging)'}
                               >
                                 📸 Snapshot
                               </button>
@@ -1388,9 +1393,9 @@ Check console for full timeline.
                               </button>
                               <button
                                 onClick={() => { setViewingBuffs(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                disabled={selectedDatabase === 'sturgeon'}
+                                disabled={selectedDatabase === 'sturgeon' && !productionMutationsEnabled}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-yellow-900/50 text-yellow-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                title={selectedDatabase === 'sturgeon' ? '🔒 Disabled in READ ONLY mode' : 'Manage essence buffs (generation rate & max cap)'}
+                                title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Manage essence buffs (generation rate & max cap)'}
                               >
                                 ⚡ Buffs
                               </button>
