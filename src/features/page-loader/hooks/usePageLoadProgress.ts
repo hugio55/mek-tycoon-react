@@ -125,8 +125,8 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
       const minimumAnimationTimeElapsed = elapsed >= minimumProgressTime.current;
       const timedOut = elapsed >= totalTimeout;
 
-      // Debug logging every 2 seconds to track what's blocking completion
-      if (elapsed % 2000 < 100) {
+      // Debug logging every 2 seconds to track what's blocking completion (only if DEBUG_LOADER is enabled)
+      if (elapsed % 2000 < 100 && typeof window !== 'undefined' && (window as any).DEBUG_LOADER) {
         console.log('[🎯LOADER] Completion Check:', {
           elapsed: `${elapsed}ms`,
           progress: `${cappedProgress.toFixed(1)}%`,

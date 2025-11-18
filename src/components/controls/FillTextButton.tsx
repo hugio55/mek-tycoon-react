@@ -25,10 +25,7 @@ const FillTextButton = ({
   // Force animation restart on hover by changing key
   useEffect(() => {
     if (isHovered) {
-      console.log('[✨GLOW] Hover detected, restarting animation (key:', animationKey + 1, ')');
       setAnimationKey(prev => prev + 1);
-    } else {
-      console.log('[✨GLOW] Hover ended, stopping animation');
     }
   }, [isHovered]);
 

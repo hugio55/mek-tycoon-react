@@ -25,7 +25,6 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
 
   const handleProceed = (withAudio: boolean) => {
     console.log('[🎵SOUND] User selected audio:', withAudio);
-    console.log('[🎵SOUND] About to store to localStorage - audioEnabled:', withAudio);
 
     // Store preference immediately
     const dataToStore = {
@@ -33,18 +32,14 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
       timestamp: Date.now()
     };
     localStorage.setItem(STORAGE_KEY_AUDIO, JSON.stringify(dataToStore));
-    console.log('[🎵SOUND] Stored to localStorage:', dataToStore);
-    console.log('[🎵SOUND] Verify read back:', JSON.parse(localStorage.getItem(STORAGE_KEY_AUDIO) || '{}'));
 
     // Start audio immediately if enabled (must happen during user gesture)
     if (withAudio && onAudioStart) {
-      console.log('[🎵SOUND] Starting audio during user gesture...');
       onAudioStart();
     }
 
     // Start fade animation after brief delay (400ms to show green light)
     setTimeout(() => {
-      console.log('[🎵SOUND] Starting fade out and background reveal simultaneously...');
       setIsFadingOut(true);
 
       // Trigger background fade immediately (simultaneous with lightbox fade)
