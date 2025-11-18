@@ -11,6 +11,7 @@ import MekNamingLightbox from '@/components/MekNamingLightbox';
 import MekManagementLightbox from '@/components/MekManagementLightbox';
 import AirdropClaimBanner from '@/components/AirdropClaimBanner';
 import * as Tooltip from '@radix-ui/react-tooltip';
+import { getMediaUrl } from '@/lib/media-url';
 
 export default function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -165,7 +166,7 @@ export default function HomePage() {
         setNamingMekAssetId(mekAssetId);
         // Generate Mek image path (using high-res 500px version)
         const cleanKey = (sourceKey || mek.sourceKeyBase)?.replace(/-[A-Z]$/, '').toLowerCase();
-        setNamingMekImage(cleanKey ? `/mek-images/500px/${cleanKey}.webp` : null);
+        setNamingMekImage(cleanKey ? getMediaUrl(`/mek-images/500px/${cleanKey}.webp`) : null);
         // Store slotting info to execute after naming
         setPendingSlotInfo({ slotNumber, variations });
         setShowNamingLightbox(true);
@@ -602,7 +603,7 @@ export default function HomePage() {
                       }}
                     >
                       <img
-                        src={`/mek-images/150px/${slot1.mekSourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`}
+                        src={getMediaUrl(`/mek-images/150px/${slot1.mekSourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`)}
                         alt={slot1.headVariationName}
                         className={`w-full h-full object-contain ${displayZone.metadata?.isClickable ? 'transition-transform duration-300 hover:scale-110' : ''}`}
                         onError={(e) => {
@@ -704,7 +705,7 @@ export default function HomePage() {
                           {slot.mekSourceKey && (
                             <div className="w-32 h-32 mx-auto mb-3 relative">
                               <img
-                                src={`/mek-images/150px/${slot.mekSourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`}
+                                src={getMediaUrl(`/mek-images/150px/${slot.mekSourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`)}
                                 alt={slot.headVariationName}
                                 className="w-full h-full object-contain rounded-lg"
                                 onError={(e) => {
@@ -875,7 +876,7 @@ export default function HomePage() {
                         body: variations.body.name,
                         trait: variations.trait.name
                       },
-                      imagePath: cleanSourceKey ? `/mek-images/150px/${cleanSourceKey}.webp` : 'NO sourceKey - image cannot load'
+                      imagePath: cleanSourceKey ? getMediaUrl(`/mek-images/150px/${cleanSourceKey}.webp`) : 'NO sourceKey - image cannot load'
                     });
                   }
 
@@ -889,7 +890,7 @@ export default function HomePage() {
                       <div className="w-24 h-24 mx-auto mb-3 relative bg-gray-900/50 rounded-lg flex items-center justify-center">
                         {cleanSourceKey ? (
                           <img
-                            src={`/mek-images/150px/${cleanSourceKey}.webp`}
+                            src={getMediaUrl(`/mek-images/150px/${cleanSourceKey}.webp`)}
                             alt={variations.head.name}
                             className="w-full h-full object-contain rounded-lg"
                             onError={(e) => {
