@@ -293,7 +293,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           {/* Claim NFT Button for Phase I */}
           {isPhaseOne && (
             <div className="mt-6 flex justify-start">
-              <div style={{ filter: 'none' }}>
+              <div className="overflow-hidden inline-block" style={{ filter: 'none' }}>
                 <HolographicButton
                   text="CLAIM NFT"
                   onClick={() => {
