@@ -48,7 +48,6 @@ jobs:
             --transfers 8 \
             --checkers 16 \
             --fast-list \
-            --ignore-times \
             --exclude ".DS_Store" \
             --exclude "*.html" \
             --exclude "CLAUDE.md" \
