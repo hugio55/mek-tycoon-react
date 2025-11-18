@@ -141,8 +141,15 @@ export default function LandingV2() {
   // Trigger reveal animations when entering REVEAL state
   useEffect(() => {
     if (isState('REVEAL') && !revealStarted) {
-      console.log('[🎵PAGE] Entering REVEAL state, will call startAudio in 500ms');
-      setRevealStarted(true);
+      console.log('[🎵PAGE] Entering REVEAL state');
+
+      // Small delay before starting reveal to ensure logo/stars render with opacity: 0 first
+      // This prevents the transition from being skipped in production builds
+      setTimeout(() => {
+        setRevealStarted(true);
+        console.log('[🎵PAGE] revealStarted set to true, transitions beginning');
+      }, 50);
+
       // Start audio after a brief delay (during the reveal)
       setTimeout(() => {
         console.log('[🎵PAGE] Calling startAudio from REVEAL state...');
