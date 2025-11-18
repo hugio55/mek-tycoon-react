@@ -31,8 +31,22 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
   const [bannerVariation, setBannerVariation] = useState<BannerVariation>("industrial");
   const [showVariationPicker, setShowVariationPicker] = useState(false);
   const [alreadyClaimed, setAlreadyClaimed] = useState(false);
+  const [testMode, setTestMode] = useState(false);
 
   const PRICE_ADA = 10;
+
+  // Check for test mode URL parameter
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const isTestMode = params.get('test') === 'claim';
+      setTestMode(isTestMode);
+      if (isTestMode) {
+        console.log('[🧪TEST] Test mode enabled - showing claim button for everyone');
+        setClaimStatus('eligible');
+      }
+    }
+  }, []);
 
   // Load banner variation from localStorage
   useEffect(() => {
@@ -78,6 +92,11 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
 
   // Update status based on eligibility
   useEffect(() => {
+    // Skip eligibility checks in test mode
+    if (testMode) {
+      return;
+    }
+
     console.log('[🎯CLAIM] AirdropClaimBanner state:', {
       walletAddress,
       eligibility,
@@ -104,7 +123,7 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
       setAlreadyClaimed(claimed);
       setClaimStatus(claimed ? "eligible" : "ineligible"); // Show banner if already claimed
     }
-  }, [walletAddress, eligibility]);
+  }, [walletAddress, eligibility, testMode]);
 
   // Format claim date nicely
   const formatClaimDate = (timestamp: number) => {
@@ -121,15 +140,16 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
   };
 
   const handleClaim = () => {
-    if (!walletAddress || !eligibility?.eligible || alreadyClaimed) return;
+    // In test mode, allow claim even without wallet (will prompt for address in lightbox)
+    if (!testMode && (!walletAddress || !eligibility?.eligible || alreadyClaimed)) return;
 
     // Show processing lightbox (NMKRPayLightbox will handle opening payment window)
     setShowLightbox(true);
     setClaimStatus("processing");
   };
 
-  // Don't show banner if not connected
-  if (claimStatus === "idle" || claimStatus === "checking") return null;
+  // Don't show banner if not connected (unless test mode)
+  if (!testMode && (claimStatus === "idle" || claimStatus === "checking")) return null;
 
   // Debug override: force show claimed text if debug state is 'claimed'
   if (debugClaimState === 'claimed') {
