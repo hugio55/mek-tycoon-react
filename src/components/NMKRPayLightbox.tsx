@@ -774,63 +774,52 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
           attemptCancel();
         }}
       >
-        {/* Backdrop */}
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" />
-
-        {/* Modal container */}
+        {/* Backdrop - Match Join Beta */}
         <div
-          className={`relative w-full ${state === 'reserved' ? 'max-w-2xl' : 'max-w-md'} bg-black/20 backdrop-blur-md border-2 rounded-lg shadow-2xl p-8 transition-all duration-300`}
+          className="fixed inset-0 bg-black/60"
           style={{
-            borderColor: 'rgba(34, 211, 238, 0.5)',
-            boxShadow: '0 0 30px rgba(6, 182, 212, 0.3)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+          }}
+        />
+
+        {/* Modal container - Match Join Beta */}
+        <div
+          className={`relative w-full ${state === 'reserved' ? 'max-w-2xl' : 'max-w-md'} overflow-hidden rounded-2xl border border-white/10 transition-all duration-300`}
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset',
+            backdropFilter: 'blur(30px)',
+            WebkitBackdropFilter: 'blur(30px)',
             maxHeight: '90vh',
             overflowY: 'auto'
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Corner accents */}
-          <div
-            className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2"
-            style={{ borderColor: 'rgba(34, 211, 238, 0.7)' }}
-          ></div>
-          <div
-            className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2"
-            style={{ borderColor: 'rgba(34, 211, 238, 0.7)' }}
-          ></div>
-
-          {renderContent()}
-
-          {/* Close button */}
+          {/* Close Button - Top Right - Match Join Beta */}
           <button
             onClick={attemptCancel}
-            className="absolute top-2 right-2 text-gray-500 transition-colors z-[10000] w-8 h-8 flex items-center justify-center border border-gray-600 bg-black/80 backdrop-blur-sm rounded"
+            className="absolute top-4 right-4 text-white/50 hover:text-white/80 transition-colors z-10 touch-manipulation"
             style={{
-              color: '#9ca3af',
+              minWidth: '44px',
+              minHeight: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              WebkitTapHighlightColor: 'transparent',
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = '#22d3ee';
-              e.currentTarget.style.borderColor = 'rgba(34, 211, 238, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = '#9ca3af';
-              e.currentTarget.style.borderColor = 'rgb(75, 85, 99)';
-            }}
-            title="Cancel and close"
+            aria-label="Close"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
+
+          {/* Content */}
+          <div className="p-6 sm:p-8 md:p-10">
+            {renderContent()}
+          </div>
         </div>
       </div>
 
