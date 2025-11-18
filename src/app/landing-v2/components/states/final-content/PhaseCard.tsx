@@ -231,21 +231,52 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           </div>
 
           {card.description && (
-            <p
-              className="text-white/75 leading-relaxed"
-              style={{
-                fontFamily: 'Play, sans-serif',
-                fontSize: '13px',
-                whiteSpace: 'pre-line',
-              }}
-            >
-              {card.description}
-            </p>
+            <>
+              {isPhaseOne ? (
+                // For Phase I, split description and italicize last sentence
+                (() => {
+                  const lines = card.description.split('\n');
+                  const lastLineIndex = lines.length - 1;
+
+                  return (
+                    <div
+                      className="text-white/75 leading-relaxed"
+                      style={{
+                        fontFamily: 'Play, sans-serif',
+                        fontSize: '13px',
+                      }}
+                    >
+                      {lines.map((line, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            fontStyle: index === lastLineIndex ? 'italic' : 'normal',
+                          }}
+                        >
+                          {line || '\u00A0'}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()
+              ) : (
+                <p
+                  className="text-white/75 leading-relaxed"
+                  style={{
+                    fontFamily: 'Play, sans-serif',
+                    fontSize: '13px',
+                    whiteSpace: 'pre-line',
+                  }}
+                >
+                  {card.description}
+                </p>
+              )}
+            </>
           )}
 
           {/* Claim NFT Button for Phase I */}
           {isPhaseOne && (
-            <div className="mt-6">
+            <div className="mt-6 flex justify-start">
               <HolographicButton
                 text="CLAIM NFT"
                 onClick={() => {
@@ -254,7 +285,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
                 }}
                 variant="yellow"
                 alwaysOn={true}
-                className="w-full"
+                className="px-6 py-2 text-sm"
               />
             </div>
           )}
