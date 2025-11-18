@@ -162,8 +162,8 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
     );
   }
 
-  // Don't show banner if ineligible (unless debug unclaimed override)
-  if (claimStatus === "ineligible" && debugClaimState !== 'unclaimed') return null;
+  // Don't show banner if ineligible (unless debug unclaimed override or test mode)
+  if (!testMode && claimStatus === "ineligible" && debugClaimState !== 'unclaimed') return null;
 
   // Render variation selector (debug dropdown on right side)
   const renderVariationSelector = () => (

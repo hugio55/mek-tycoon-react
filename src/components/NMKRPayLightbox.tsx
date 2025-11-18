@@ -7,19 +7,21 @@ import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 
 interface NMKRPayLightboxProps {
-  walletAddress: string;
+  walletAddress: string | null;
   onClose: () => void;
 }
 
-type LightboxState = 'creating' | 'reserved' | 'payment' | 'processing' | 'success' | 'error' | 'timeout';
+type LightboxState = 'address_entry' | 'creating' | 'reserved' | 'payment' | 'processing' | 'success' | 'error' | 'timeout';
 
 export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLightboxProps) {
   const [mounted, setMounted] = useState(false);
-  const [state, setState] = useState<LightboxState>('creating');
+  const [state, setState] = useState<LightboxState>(walletAddress ? 'creating' : 'address_entry');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [paymentWindow, setPaymentWindow] = useState<Window | null>(null);
   const [reservationId, setReservationId] = useState<Id<"commemorativeNFTReservations"> | null>(null);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
+  const [manualAddress, setManualAddress] = useState<string>('');
+  const [addressError, setAddressError] = useState<string>('');
 
   // Track if we've already initiated a timeout release to prevent multiple attempts
   const hasInitiatedTimeoutRelease = useRef(false);
@@ -34,13 +36,13 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
   // Query active reservation
   const activeReservation = useQuery(
     api.commemorativeNFTReservations.getActiveReservation,
-    reservationId ? { walletAddress } : "skip"
+    reservationId && effectiveWalletAddress ? { walletAddress: effectiveWalletAddress } : "skip"
   );
 
   // Query for payment completion (polls when in processing state)
   const claimStatus = useQuery(
     api.commemorativeNFTClaims.checkClaimed,
-    state === 'processing' ? { walletAddress } : "skip"
+    state === 'processing' && effectiveWalletAddress ? { walletAddress: effectiveWalletAddress } : "skip"
   );
 
   // Mount portal and lock body scroll
@@ -52,15 +54,47 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     };
   }, []);
 
-  // Create reservation on mount
+  // Get effective wallet address (either from prop or manual entry)
+  const effectiveWalletAddress = walletAddress || manualAddress;
+
+  // Validate Cardano address format
+  const validateCardanoAddress = (address: string): boolean => {
+    // Basic validation: Cardano addresses start with 'addr1' (mainnet) or 'addr_test1' (testnet)
+    // and are typically 103-108 characters long
+    if (!address) return false;
+
+    const isMainnet = address.startsWith('addr1');
+    const isTestnet = address.startsWith('addr_test1');
+    const isStakeAddress = address.startsWith('stake1') || address.startsWith('stake_test1');
+
+    const validLength = address.length >= 50 && address.length <= 150;
+
+    return (isMainnet || isTestnet || isStakeAddress) && validLength;
+  };
+
+  // Handle manual address submission
+  const handleAddressSubmit = () => {
+    const trimmedAddress = manualAddress.trim();
+
+    if (!validateCardanoAddress(trimmedAddress)) {
+      setAddressError('Please enter a valid Cardano wallet address (starts with addr1 or addr_test1)');
+      return;
+    }
+
+    console.log('[🧪TEST] Manual address entered:', trimmedAddress);
+    setAddressError('');
+    setState('creating');
+  };
+
+  // Create reservation on mount or after address entry
   useEffect(() => {
-    if (!mounted || state !== 'creating') return;
+    if (!mounted || state !== 'creating' || !effectiveWalletAddress) return;
 
     const createNewReservation = async () => {
-      console.log('[🎟️RESERVE] Creating reservation for:', walletAddress);
+      console.log('[🎟️RESERVE] Creating reservation for:', effectiveWalletAddress);
 
       try {
-        const result = await createReservation({ walletAddress });
+        const result = await createReservation({ walletAddress: effectiveWalletAddress });
 
         if (!result.success) {
           console.error('[🎟️RESERVE] Failed to create reservation:', result.error);
@@ -81,7 +115,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     };
 
     createNewReservation();
-  }, [mounted, state, walletAddress, createReservation]);
+  }, [mounted, state, effectiveWalletAddress, createReservation]);
 
   // Handle payment window opening
   const handleOpenPayment = async () => {
@@ -289,6 +323,63 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
   const renderContent = () => {
     switch (state) {
+      case 'address_entry':
+        return (
+          <div className="text-center">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-yellow-400 mb-4 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                Enter Your Wallet Address
+              </h2>
+              <p className="text-gray-400 mb-6">
+                Please enter your Cardano wallet address to claim your NFT
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <input
+                    type="text"
+                    placeholder="addr1... or addr_test1..."
+                    value={manualAddress}
+                    onChange={(e) => {
+                      setManualAddress(e.target.value);
+                      setAddressError('');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddressSubmit();
+                      }
+                    }}
+                    className="w-full px-4 py-3 bg-black/60 border-2 border-cyan-500/30 text-white placeholder-gray-500 focus:border-cyan-500/60 focus:outline-none transition-colors rounded font-mono text-sm"
+                    autoFocus
+                  />
+                  {addressError && (
+                    <p className="text-red-400 text-sm mt-2 text-left">{addressError}</p>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleAddressSubmit}
+                  className="w-full py-3 px-6 rounded-xl font-semibold text-lg transition-all duration-200 hover:brightness-110"
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
+                    color: '#ffffff',
+                    boxShadow: '0 6px 24px rgba(6, 182, 212, 0.4)',
+                    border: 'none',
+                    letterSpacing: '0.02em'
+                  }}
+                >
+                  Continue
+                </button>
+
+                <p className="text-xs text-gray-500 mt-4">
+                  Your wallet address will receive the NFT after payment
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+
       case 'creating':
         return (
           <div className="text-center">
