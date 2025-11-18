@@ -2,9 +2,10 @@
 
 import { useState, lazy, Suspense, useMemo, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useQuery, useMutation, useAction } from 'convex/react';
+import { useQuery, useMutation, useAction, ConvexProvider } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { restoreWalletSession } from '@/lib/walletSessionManager';
+import { sturgeonClient } from '@/lib/sturgeonClient';
 import StorageMonitoringDashboard from '@/components/StorageMonitoringDashboard';
 import SystemMonitoringDashboard from '@/components/SystemMonitoringDashboard';
 import ProductionLaunchCleaner from '@/components/ProductionLaunchCleaner';
@@ -45,13 +46,37 @@ export default function WalletManagementAdmin() {
     setMounted(true);
   }, []);
 
+  // Database selection: Trout (dev) or Sturgeon (production READ ONLY)
+  const [selectedDatabase, setSelectedDatabase] = useState<'trout' | 'sturgeon'>('sturgeon');
+  const [walletsData, setWalletsData] = useState<any>(null);
+  const [isLoadingWallets, setIsLoadingWallets] = useState(false);
+
   // BANDWIDTH OPTIMIZATION: Only load wallets when user clicks "Load Wallets" button
   const [walletsLoaded, setWalletsLoaded] = useState(false);
   const [showOnlyWrenCo, setShowOnlyWrenCo] = useState(false);
-  const wallets = useQuery(
-    api.adminVerificationReset.getAllWallets,
-    walletsLoaded ? undefined : "skip"
-  );
+
+  // Load wallets from selected database
+  useEffect(() => {
+    if (!walletsLoaded) {
+      setWalletsData(null);
+      return;
+    }
+
+    setIsLoadingWallets(true);
+    const client = selectedDatabase === 'sturgeon' ? sturgeonClient : window.convex;
+
+    client.query(api.adminVerificationReset.getAllWallets)
+      .then((data: any) => {
+        setWalletsData(data);
+        setIsLoadingWallets(false);
+      })
+      .catch((error: Error) => {
+        console.error(`[Player Management] Error loading from ${selectedDatabase}:`, error);
+        setIsLoadingWallets(false);
+      });
+  }, [walletsLoaded, selectedDatabase]);
+
+  const wallets = walletsData;
 
   const resetVerification = useMutation(api.adminVerificationReset.resetVerificationStatus);
   const deleteWallet = useMutation(api.adminVerificationReset.deleteWallet);
@@ -839,18 +864,54 @@ Check console for full timeline.
         <BetaSignupsViewer />
       ) : (
         <>
+          {/* Database Selection Warning Banner */}
+          {selectedDatabase === 'sturgeon' && (
+            <div className="mb-4 p-4 bg-red-900/30 border-2 border-red-500/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">⚠️</span>
+                <div>
+                  <h4 className="text-lg font-bold text-red-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                    VIEWING PRODUCTION DATA - READ ONLY MODE
+                  </h4>
+                  <p className="text-sm text-red-300 mt-1">
+                    You are viewing real production player data from Sturgeon database. All mutation buttons are disabled.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between gap-4">
-            <div>
-              <h3 className="text-xl font-bold text-yellow-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                Player Management
-              </h3>
-              <p className="text-sm text-gray-400 mt-1">
-                {walletsLoaded && wallets ? (
-                  <>{wallets.length} connected wallets • {verifiedCount} verified</>
-                ) : (
-                  <>Click "Load Wallets" to view player data</>
-                )}
-              </p>
+            <div className="flex items-center gap-4">
+              <div>
+                <h3 className="text-xl font-bold text-yellow-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                  Player Management
+                </h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  {walletsLoaded && wallets ? (
+                    <>{wallets.length} connected wallets • {verifiedCount} verified</>
+                  ) : (
+                    <>Click "Load Wallets" to view player data</>
+                  )}
+                </p>
+              </div>
+
+              {/* Database Selector */}
+              <div className="flex items-center gap-2 px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg">
+                <span className="text-sm text-gray-400">Database:</span>
+                <select
+                  value={selectedDatabase}
+                  onChange={(e) => {
+                    setSelectedDatabase(e.target.value as 'trout' | 'sturgeon');
+                    setWalletsLoaded(false); // Reset to require reload
+                  }}
+                  className="bg-gray-800 border border-gray-600 rounded px-3 py-1 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  style={{ fontFamily: "'Orbitron', sans-serif" }}
+                >
+                  <option value="sturgeon" className="bg-gray-800">🔴 Sturgeon (Production - READ ONLY)</option>
+                  <option value="trout" className="bg-gray-800">🔹 Trout (Development)</option>
+                </select>
+              </div>
             </div>
 
         <div className="flex items-center gap-3">
