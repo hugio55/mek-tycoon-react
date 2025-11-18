@@ -65,6 +65,12 @@ export default function WalletManagementAdmin() {
     setIsLoadingWallets(true);
     const client = selectedDatabase === 'sturgeon' ? sturgeonClient : window.convex;
 
+    if (!client) {
+      console.error('[Player Management] Convex client not initialized');
+      setIsLoadingWallets(false);
+      return;
+    }
+
     client.query(api.adminVerificationReset.getAllWallets)
       .then((data: any) => {
         setWalletsData(data);
