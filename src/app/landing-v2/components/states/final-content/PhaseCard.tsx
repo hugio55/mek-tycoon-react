@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import PhaseOneIndicator, { LoadingSpinner } from './PhaseOneIndicator';
 import HolographicButton from '@/components/ui/IndustrialButtons/HolographicButton';
+import NMKRPayLightbox from '@/components/NMKRPayLightbox';
+import { restoreWalletSession } from '@/lib/walletSessionManager';
 
 interface PhaseCardData {
   _id: string;
@@ -57,12 +59,26 @@ function getPhaseStyles(index: number) {
 
 export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggle }: PhaseCardProps) {
   const [currentBackground, setCurrentBackground] = useState('');
+  const [showClaimLightbox, setShowClaimLightbox] = useState(false);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const phaseLabel = `Phase ${PHASE_LABELS[index]}`;
   const styles = getPhaseStyles(index);
   const isPhaseTwo = index === 1;
   const isPhaseOne = index === 0;
   const isLocked = card.locked;
+
+  // Restore wallet session on mount
+  useEffect(() => {
+    const initWallet = async () => {
+      const session = await restoreWalletSession();
+      if (session) {
+        const address = session.stakeAddress || session.walletAddress;
+        setWalletAddress(address);
+      }
+    };
+    initWallet();
+  }, []);
 
   useEffect(() => {
     if (isPhaseTwo) {
@@ -281,8 +297,8 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
                 <HolographicButton
                   text="CLAIM NFT"
                   onClick={() => {
-                    // TODO: Add claim NFT functionality
-                    console.log('Claim NFT clicked');
+                    console.log('[PhaseCard] Opening NFT claim lightbox');
+                    setShowClaimLightbox(true);
                   }}
                   variant="yellow"
                   alwaysOn={true}
@@ -294,6 +310,14 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           )}
         </div>
       </div>
+
+      {/* NFT Claim Lightbox */}
+      {showClaimLightbox && (
+        <NMKRPayLightbox
+          walletAddress={walletAddress}
+          onClose={() => setShowClaimLightbox(false)}
+        />
+      )}
     </div>
   );
 }
