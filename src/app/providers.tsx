@@ -14,6 +14,17 @@ import { ConvexProviderWithLoader } from "@/providers/ConvexProviderWithLoader";
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
+// Component that exposes Convex client to window (client-side only)
+function ConvexWindowBridge() {
+  useEffect(() => {
+    // Expose Convex client to window for admin components that need direct access
+    (window as any).convex = convex;
+    console.log('[Convex] Client exposed to window.convex');
+  }, []);
+
+  return null;
+}
+
 // Inner component that uses the wallet context to provide essence context
 function EssenceProviderWrapper({ children }: { children: ReactNode }) {
   const { walletAddress } = useDemoWallet();
@@ -75,6 +86,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <LoaderProvider>
       <ConvexProviderWithLoader client={convex}>
+        <ConvexWindowBridge />
         <DemoWalletProvider>
           <UserProvider>
             <EssenceProviderWrapper>
