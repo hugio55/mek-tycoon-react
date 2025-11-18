@@ -276,10 +276,10 @@ export default function ProModeToggle({
             />
           </div>
 
-          {/* Guard translucent overlay (shows when guard is down) - renders after knob for proper paint order */}
+          {/* Guard overlay (shows when guard is down) - fully opaque for cross-browser compatibility */}
           {!guardOpen && (
             <div
-              className="absolute top-5 left-0 w-full h-[calc(100%-20px)] opacity-90 rounded-[7px] pointer-events-none z-[5]"
+              className="absolute top-5 left-0 w-full h-[calc(100%-20px)] opacity-100 rounded-[7px] pointer-events-none z-[5]"
               style={{
                 background: guardOverlayGradients[guardColor],
                 isolation: 'isolate'
