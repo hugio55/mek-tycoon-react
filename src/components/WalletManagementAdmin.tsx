@@ -2,7 +2,7 @@
 
 import { useState, lazy, Suspense, useMemo, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useQuery, useMutation, useAction, ConvexProvider } from 'convex/react';
+import { useQuery, ConvexProvider } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { restoreWalletSession } from '@/lib/walletSessionManager';
 import { sturgeonClient } from '@/lib/sturgeonClient';
@@ -90,23 +90,138 @@ export default function WalletManagementAdmin() {
 
   const wallets = walletsData;
 
-  const resetVerification = useMutation(api.adminVerificationReset.resetVerificationStatus);
-  const deleteWallet = useMutation(api.adminVerificationReset.deleteWallet);
-  const mergeDuplicates = useMutation(api.adminVerificationReset.mergeDuplicateWallets);
-  const autoMergeAll = useMutation(api.adminVerificationReset.autoMergeDuplicates);
-  const manualMergeBySuffix = useMutation(api.manualWalletMerge.manualMergeWalletsBySuffix);
-  const triggerSnapshot = useAction(api.goldMiningSnapshot.triggerSnapshot);
-  const manualSetMeks = useMutation(api.fixWalletSnapshot.manualSetMekOwnership);
-  const updateWalletGold = useMutation(api.adminVerificationReset.updateWalletGold);
-  const resetAllGoldToZero = useMutation(api.adminVerificationReset.resetAllGoldToZero);
-  const fixCumulativeGold = useMutation(api.adminVerificationReset.fixCumulativeGold);
-  const reconstructCumulativeFromSnapshots = useMutation(api.adminVerificationReset.reconstructCumulativeFromSnapshots);
-  const reconstructCumulativeGoldExact = useMutation(api.adminVerificationReset.reconstructCumulativeGoldExact);
-  const cleanupDuplicates = useMutation(api.finalDuplicateCleanup.removeAllNonStakeWallets);
-  const resetAllMekLevels = useMutation(api.mekLeveling.resetAllMekLevels);
-  const findCorruptedGoldRecords = useMutation(api.diagnosticCorruptedGold.findCorruptedGoldRecords);
-  const fixCorruptedCumulativeGold = useMutation(api.fixCorruptedGold.fixCorruptedCumulativeGold);
-  const resetAllProgress = useMutation(api.adminResetAllProgress.resetAllProgress);
+  // Helper to get the correct client based on selected database
+  const getClient = () => {
+    if (!mounted) return null;
+    return selectedDatabase === 'sturgeon' ? sturgeonClient : window.convex;
+  };
+
+  // Helper to check if mutations are allowed
+  const canMutate = () => {
+    if (selectedDatabase === 'trout') return true; // Always allow on dev
+    return productionMutationsEnabled; // Require override for production
+  };
+
+  // CRITICAL FIX: Replace useMutation hooks with direct client calls
+  // This ensures mutations respect the selectedDatabase state
+  const resetVerification = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.resetVerificationStatus, args);
+  };
+
+  const deleteWallet = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.deleteWallet, args);
+  };
+
+  const mergeDuplicates = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.mergeDuplicateWallets, args);
+  };
+
+  const autoMergeAll = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.autoMergeDuplicates, args);
+  };
+
+  const manualMergeBySuffix = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.manualWalletMerge.manualMergeWalletsBySuffix, args);
+  };
+
+  const triggerSnapshot = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.action(api.goldMiningSnapshot.triggerSnapshot, args);
+  };
+
+  const manualSetMeks = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.fixWalletSnapshot.manualSetMekOwnership, args);
+  };
+
+  const updateWalletGold = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.updateWalletGold, args);
+  };
+
+  const resetAllGoldToZero = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.resetAllGoldToZero, args);
+  };
+
+  const fixCumulativeGold = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.fixCumulativeGold, args);
+  };
+
+  const reconstructCumulativeFromSnapshots = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.reconstructCumulativeFromSnapshots, args);
+  };
+
+  const reconstructCumulativeGoldExact = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.reconstructCumulativeGoldExact, args);
+  };
+
+  const cleanupDuplicates = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.finalDuplicateCleanup.removeAllNonStakeWallets, args);
+  };
+
+  const resetAllMekLevels = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.mekLeveling.resetAllMekLevels, args);
+  };
+
+  const findCorruptedGoldRecords = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.diagnosticCorruptedGold.findCorruptedGoldRecords, args);
+  };
+
+  const fixCorruptedCumulativeGold = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.fixCorruptedGold.fixCorruptedCumulativeGold, args);
+  };
+
+  const resetAllProgress = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminResetAllProgress.resetAllProgress, args);
+  };
 
   const [activeSubmenu, setActiveSubmenu] = useState<SubMenu>('wallet-list');
   const [snapshotHealthTab, setSnapshotHealthTab] = useState<SnapshotHealthTab>('health');
