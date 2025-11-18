@@ -18,12 +18,13 @@ import EssenceBalancesViewer from '@/components/EssenceBalancesViewer';
 import BuffManagement from '@/components/BuffManagement';
 import BetaSignupsViewer from '@/components/BetaSignupsViewer';
 import VariationSpreadViewer from '@/components/VariationSpreadViewer';
+import ResetTimelineChecker from '@/components/ResetTimelineChecker';
 import { EssenceProvider } from '@/contexts/EssenceContext';
 
 // Lazy load heavy components
 const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryViewer'));
 
-type SubMenu = 'wallet-list' | 'storage-monitoring' | 'snapshot-history' | 'snapshot-health' | 'duplicate-detection' | 'production-launch-cleaner' | 'gold-repair' | 'variation-spread' | 'beta-signups';
+type SubMenu = 'wallet-list' | 'storage-monitoring' | 'snapshot-history' | 'snapshot-health' | 'duplicate-detection' | 'production-launch-cleaner' | 'gold-repair' | 'variation-spread' | 'beta-signups' | 'reset-timeline';
 type SnapshotHealthTab = 'health' | 'logging';
 
 export default function WalletManagementAdmin() {
@@ -65,6 +66,13 @@ export default function WalletManagementAdmin() {
   useEffect(() => {
     if (!walletsLoaded) {
       setWalletsData(null);
+      return;
+    }
+
+    // Auto-switch to Trout if Sturgeon selected but not configured
+    if (selectedDatabase === 'sturgeon' && !sturgeonClient) {
+      console.warn('[Player Management] Sturgeon not configured, switching to Trout');
+      setSelectedDatabase('trout');
       return;
     }
 
@@ -816,6 +824,17 @@ Check console for full timeline.
         >
           🎮 Beta Signups
         </button>
+
+        <button
+          onClick={() => setActiveSubmenu('reset-timeline')}
+          className={`px-4 py-2 text-sm font-semibold transition-colors ${
+            activeSubmenu === 'reset-timeline'
+              ? 'text-yellow-400 border-b-2 border-yellow-400'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          🕐 Reset Timeline
+        </button>
       </div>
 
       {activeSubmenu === 'storage-monitoring' ? (
@@ -989,6 +1008,8 @@ Check console for full timeline.
         <VariationSpreadViewer />
       ) : activeSubmenu === 'beta-signups' ? (
         <BetaSignupsViewer />
+      ) : activeSubmenu === 'reset-timeline' ? (
+        <ResetTimelineChecker />
       ) : (
         <>
           {/* Database Selection Warning Banner */}
@@ -1135,9 +1156,20 @@ Check console for full timeline.
                   className="bg-gray-800 border border-gray-600 rounded px-3 py-1 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-yellow-500"
                   style={{ fontFamily: "'Orbitron', sans-serif" }}
                 >
-                  <option value="sturgeon" className="bg-gray-800">🔴 Sturgeon (Production - READ ONLY)</option>
+                  <option
+                    value="sturgeon"
+                    className="bg-gray-800"
+                    disabled={!sturgeonClient}
+                  >
+                    🔴 Sturgeon (Production - READ ONLY){!sturgeonClient ? ' - Not Configured' : ''}
+                  </option>
                   <option value="trout" className="bg-gray-800">🔹 Trout (Development)</option>
                 </select>
+                {!sturgeonClient && (
+                  <span className="text-xs text-gray-500" title="Add NEXT_PUBLIC_STURGEON_URL to .env.local to enable production monitoring">
+                    ⓘ
+                  </span>
+                )}
               </div>
             </div>
 
