@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import StarField from '@/components/StarField';
+import { getMediaUrl } from '@/lib/media-url';
 
 import { useLandingStateMachine, TIMINGS } from './hooks/useLandingStateMachine';
 import { useBackgroundAudio } from './hooks/useBackgroundAudio';
