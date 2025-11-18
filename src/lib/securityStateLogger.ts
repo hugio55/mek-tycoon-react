@@ -66,7 +66,9 @@ export class SecurityStateLogger {
       case 'session_decrypt_complete':
       case 'session_migrate_complete':
       case 'signature_success':
-        console.log(`${prefix} ✅ ${event}`, data);
+        if (typeof window !== 'undefined' && (window as any).DEBUG_SECURITY) {
+          console.log(`${prefix} ✅ ${event}`, data);
+        }
         break;
       case 'session_encrypt_error':
       case 'session_decrypt_error':
@@ -134,10 +136,12 @@ export class SecurityStateLogger {
    * Complete operation with summary
    */
   complete(summary?: any) {
-    const totalElapsed = Date.now() - this.startTime;
-    console.log(`${this.operationId} ===== COMPLETE (${totalElapsed}ms) =====`);
-    if (summary) {
-      console.log(`${this.operationId} Summary:`, summary);
+    if (typeof window !== 'undefined' && (window as any).DEBUG_SECURITY) {
+      const totalElapsed = Date.now() - this.startTime;
+      console.log(`${this.operationId} ===== COMPLETE (${totalElapsed}ms) =====`);
+      if (summary) {
+        console.log(`${this.operationId} Summary:`, summary);
+      }
     }
   }
 }

@@ -81,12 +81,14 @@ export async function restoreWalletSession(): Promise<WalletSession | null> {
       return null;
     }
 
-    console.log('[Session Manager] Restored encrypted session:', {
-      walletAddress: session.walletAddress.slice(0, 12) + '...',
-      platform: session.platform,
-      walletName: session.walletName,
-      age: Math.floor((Date.now() - session.createdAt) / 1000 / 60) + ' minutes',
-    });
+    if (typeof window !== 'undefined' && (window as any).DEBUG_SECURITY) {
+      console.log('[Session Manager] Restored encrypted session:', {
+        walletAddress: session.walletAddress.slice(0, 12) + '...',
+        platform: session.platform,
+        walletName: session.walletName,
+        age: Math.floor((Date.now() - session.createdAt) / 1000 / 60) + ' minutes',
+      });
+    }
 
     return session;
   } catch (error) {
