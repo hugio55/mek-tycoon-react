@@ -417,8 +417,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
         // Modern (Sans) variation
         return (
             <div className="text-center">
-              <div className="mb-6">
-                <h2 className="text-3xl font-bold mb-6" style={{
+              <div className="mb-4">
+                <h2 className="text-2xl font-bold mb-4" style={{
                   fontFamily: 'Inter, sans-serif',
                   color: '#e0f2fe',
                   letterSpacing: '-0.01em'
@@ -426,7 +426,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                   Your NFT Reserved
                 </h2>
 
-                <div className="relative w-full max-w-[400px] mx-auto mb-6 rounded-2xl overflow-hidden bg-black/50 backdrop-blur-md border border-cyan-400/30 shadow-2xl shadow-cyan-500/20">
+                <div className="relative w-full max-w-[300px] mx-auto mb-4 rounded-2xl overflow-hidden bg-black/50 backdrop-blur-md border border-cyan-400/30 shadow-2xl shadow-cyan-500/20">
                   <img
                     src={activeReservation.nft?.imageUrl || "/random-images/Lab%20Rat.jpg"}
                     alt={activeReservation.nft?.name || "NFT"}
@@ -435,11 +435,11 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                   />
                 </div>
 
-                <div className="mb-6 p-5 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-400/20 rounded-2xl backdrop-blur-md">
-                  <h3 className="text-4xl font-bold mb-3" style={{ fontFamily: 'Inter, sans-serif', color: '#e0f2fe', letterSpacing: '-0.02em' }}>
+                <div className="mb-4 p-4 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-400/20 rounded-2xl backdrop-blur-md">
+                  <h3 className="text-3xl font-bold mb-2" style={{ fontFamily: 'Inter, sans-serif', color: '#e0f2fe', letterSpacing: '-0.02em' }}>
                     {activeReservation.nft?.name || "NFT"}
                   </h3>
-                  <p style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', fontSize: '0.95rem', lineHeight: '1.6', fontWeight: 400 }}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', fontSize: '0.875rem', lineHeight: '1.5', fontWeight: 400 }}>
                     You are currently reserving <span style={{
                       color: '#22d3ee',
                       fontWeight: 600,
@@ -447,15 +447,15 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                     }}>edition number {activeReservation.nftNumber}</span>. This will last for 5 minutes, and then that edition will be released.
                   </p>
 
-                  <div className={`mt-5 p-4 rounded-xl backdrop-blur-sm ${
+                  <div className={`mt-3 p-3 rounded-xl backdrop-blur-sm ${
                     isInGracePeriod ? 'bg-red-500/20 border border-red-400/50' :
                     activeReservation.isPaymentWindowOpen ? 'bg-blue-500/20 border border-blue-400/50' :
                     'bg-cyan-500/20 border border-cyan-400/50'
                   }`}>
-                    <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: '#d4d4d8', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+                    <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: '#d4d4d8', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
                       {isInGracePeriod ? 'Grace Period' : 'Time Remaining'}
                     </div>
-                    <div className={`font-mono text-4xl font-bold ${
+                    <div className={`font-mono text-3xl font-bold ${
                       isInGracePeriod ? 'text-red-400 animate-pulse' : activeReservation.isPaymentWindowOpen ? 'text-blue-300' : 'text-cyan-300'
                     }`}>
                       {remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')}
@@ -662,10 +662,12 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
         {/* Modal container */}
         <div
-          className={`relative w-full ${state === 'reserved' ? 'max-w-2xl' : 'max-w-md'} bg-black/20 backdrop-blur-md border-2 rounded-lg overflow-hidden shadow-2xl p-8 transition-all duration-300`}
+          className={`relative w-full ${state === 'reserved' ? 'max-w-2xl' : 'max-w-md'} bg-black/20 backdrop-blur-md border-2 rounded-lg shadow-2xl p-8 transition-all duration-300`}
           style={{
             borderColor: 'rgba(34, 211, 238, 0.5)',
-            boxShadow: '0 0 30px rgba(6, 182, 212, 0.3)'
+            boxShadow: '0 0 30px rgba(6, 182, 212, 0.3)',
+            maxHeight: '90vh',
+            overflowY: 'auto'
           }}
           onClick={(e) => e.stopPropagation()}
         >
