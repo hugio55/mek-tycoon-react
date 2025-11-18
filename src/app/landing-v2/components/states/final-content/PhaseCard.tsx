@@ -187,7 +187,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
 
       <div
         style={{
-          maxHeight: isExpanded ? '500px' : '0',
+          maxHeight: isExpanded ? '1000px' : '0',
           overflow: 'hidden',
           transition: 'max-height 300ms ease-out',
         }}
