@@ -51,6 +51,7 @@ import FillTextButton from '@/components/controls/FillTextButton';
 import FloatingLabelInput from '@/components/controls/FloatingLabelInput';
 import IndustrialFlipCard from '@/components/controls/IndustrialFlipCard';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
+import PortMonitor from '@/components/PortMonitor';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
 import { getVariationTrueRank, VARIATION_MEK_RANKS } from '@/lib/variationRarityMekRanks';
@@ -109,6 +110,7 @@ const DATA_SYSTEMS = [
   { id: 'slots-system', name: 'Slots', icon: '📦', implemented: true },
   { id: 'gold-backup-system', name: 'Gold Backup System', icon: '💾', implemented: true },
   { id: 'wallet-management', name: 'Player Management', icon: '👥', implemented: true },
+  { id: 'port-monitor', name: 'Port Monitor', icon: '🔌', implemented: true },
   { id: 'sourcekey-migration', name: 'SourceKey Migration', icon: '🔧', implemented: true },
   { id: 'claude-manager', name: 'Claude Manager', icon: '🤖', implemented: true },
   { id: 'notification-system', name: 'Notification System', icon: '🔔', implemented: false },
@@ -3009,6 +3011,19 @@ export default function AdminMasterDataPage() {
 
                 {/* Player Management Component with built-in tabs */}
                 <WalletManagementAdmin />
+              </div>
+          </div>
+          )}
+
+          {/* Port Monitor */}
+          {activeTab === 'port-monitor' && (
+          <div id="section-port-monitor" className="bg-black/50 backdrop-blur border-2 border-yellow-500/30 rounded-lg shadow-lg shadow-black/50">
+            <div className="p-4">
+                <p className="text-gray-400 mb-4">
+                  Monitor which processes are using dev server ports. Quickly identify and kill zombie processes that cause "EADDRINUSE" errors.
+                </p>
+
+                <PortMonitor />
               </div>
           </div>
           )}
