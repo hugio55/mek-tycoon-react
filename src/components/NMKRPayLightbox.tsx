@@ -364,6 +364,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
               <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed">
                 Please enter the stake address of the wallet you used to create your Phase I corporation.
               </p>
+              <p className="text-sm sm:text-base text-white/40 font-light tracking-wide leading-relaxed italic mt-2">
+                Formation must have taken place on or before 11/18/2025.
+              </p>
             </div>
 
             {/* Form - Match Join Beta */}
