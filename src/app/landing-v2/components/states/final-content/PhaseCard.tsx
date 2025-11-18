@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import PhaseOneIndicator, { LoadingSpinner } from './PhaseOneIndicator';
+import HolographicButton from '@/components/ui/IndustrialButtons/HolographicButton';
 
 interface PhaseCardData {
   _id: string;
@@ -240,6 +241,22 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             >
               {card.description}
             </p>
+          )}
+
+          {/* Claim NFT Button for Phase I */}
+          {isPhaseOne && (
+            <div className="mt-6">
+              <HolographicButton
+                text="CLAIM NFT"
+                onClick={() => {
+                  // TODO: Add claim NFT functionality
+                  console.log('Claim NFT clicked');
+                }}
+                variant="yellow"
+                alwaysOn={true}
+                className="w-full"
+              />
+            </div>
           )}
         </div>
       </div>
