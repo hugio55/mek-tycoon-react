@@ -11,7 +11,7 @@ interface NMKRPayLightboxProps {
   onClose: () => void;
 }
 
-type LightboxState = 'address_entry' | 'creating' | 'reserved' | 'payment' | 'processing' | 'success' | 'error' | 'timeout';
+type LightboxState = 'address_entry' | 'checking_eligibility' | 'ineligible' | 'already_claimed' | 'creating' | 'reserved' | 'payment' | 'processing' | 'success' | 'error' | 'timeout';
 
 export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLightboxProps) {
   const [mounted, setMounted] = useState(false);
@@ -49,6 +49,12 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     state === 'processing' && effectiveWalletAddress ? { walletAddress: effectiveWalletAddress } : "skip"
   );
 
+  // Query for eligibility checking
+  const eligibility = useQuery(
+    api.nftEligibility.checkClaimEligibility,
+    state === 'checking_eligibility' && effectiveWalletAddress ? { walletAddress: effectiveWalletAddress } : "skip"
+  );
+
   // Mount portal and lock body scroll
   useEffect(() => {
     setMounted(true);
@@ -78,14 +84,37 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     const trimmedAddress = manualAddress.trim();
 
     if (!validateCardanoAddress(trimmedAddress)) {
-      setAddressError('Please enter a valid Cardano wallet address (starts with addr1 or addr_test1)');
+      setAddressError('Please enter a valid Cardano stake address (starts with stake1 or stake_test1)');
       return;
     }
 
-    console.log('[🧪TEST] Manual address entered:', trimmedAddress);
+    console.log('[🎟️ELIGIBILITY] Checking eligibility for:', trimmedAddress);
     setAddressError('');
-    setState('creating');
+    setState('checking_eligibility');
   };
+
+  // Handle eligibility check result
+  useEffect(() => {
+    if (state !== 'checking_eligibility' || !eligibility) return;
+
+    console.log('[🎟️ELIGIBILITY] Result:', eligibility);
+
+    // Check if already claimed
+    if (eligibility.alreadyClaimed) {
+      console.log('[🎟️ELIGIBILITY] User already claimed');
+      setState('already_claimed');
+      return;
+    }
+
+    // Check if eligible
+    if (eligibility.eligible) {
+      console.log('[🎟️ELIGIBILITY] User is eligible, proceeding to reservation');
+      setState('creating');
+    } else {
+      console.log('[🎟️ELIGIBILITY] User is not eligible:', eligibility.reason);
+      setState('ineligible');
+    }
+  }, [state, eligibility]);
 
   // Create reservation on mount or after address entry
   useEffect(() => {
@@ -327,57 +356,64 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
       case 'address_entry':
         return (
           <div className="text-center">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-yellow-400 mb-4 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                Enter Your Wallet Address
+            {/* Header - Match Join Beta */}
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-light text-white tracking-wide mb-3">
+                Phase 1: Commemorative NFT
               </h2>
-              <p className="text-gray-400 mb-6">
-                Please enter your Cardano wallet address to claim your NFT
+              <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed">
+                Please enter the stake address of the wallet you used to create your Phase I corporation.
               </p>
-
-              <div className="space-y-4">
-                <div>
-                  <input
-                    type="text"
-                    placeholder="addr1... or addr_test1..."
-                    value={manualAddress}
-                    onChange={(e) => {
-                      setManualAddress(e.target.value);
-                      setAddressError('');
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleAddressSubmit();
-                      }
-                    }}
-                    className="w-full px-4 py-3 bg-black/60 border-2 border-cyan-500/30 text-white placeholder-gray-500 focus:border-cyan-500/60 focus:outline-none transition-colors rounded font-mono text-sm"
-                    autoFocus
-                  />
-                  {addressError && (
-                    <p className="text-red-400 text-sm mt-2 text-left">{addressError}</p>
-                  )}
-                </div>
-
-                <button
-                  onClick={handleAddressSubmit}
-                  className="w-full py-3 px-6 rounded-xl font-semibold text-lg transition-all duration-200 hover:brightness-110"
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
-                    color: '#ffffff',
-                    boxShadow: '0 6px 24px rgba(6, 182, 212, 0.4)',
-                    border: 'none',
-                    letterSpacing: '0.02em'
-                  }}
-                >
-                  Continue
-                </button>
-
-                <p className="text-xs text-gray-500 mt-4">
-                  Your wallet address will receive the NFT after payment
-                </p>
-              </div>
             </div>
+
+            {/* Form - Match Join Beta */}
+            <form onSubmit={(e) => { e.preventDefault(); handleAddressSubmit(); }} className="space-y-4 sm:space-y-6">
+              {/* Stake Address Input */}
+              <div>
+                <label htmlFor="stake-address" className="sr-only">
+                  Stake Address
+                </label>
+                <input
+                  id="stake-address"
+                  type="text"
+                  value={manualAddress}
+                  onChange={(e) => {
+                    setManualAddress(e.target.value);
+                    setAddressError('');
+                  }}
+                  placeholder="stake1..."
+                  className={`w-full px-4 py-3 sm:py-4 text-base sm:text-lg bg-white/5 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:bg-white/10 transition-all touch-manipulation ${
+                    addressError
+                      ? 'border-red-500/50 focus:border-red-500/70'
+                      : 'border-white/10 focus:border-yellow-500/50'
+                  }`}
+                  style={{
+                    minHeight: '48px',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                  autoComplete="off"
+                  autoFocus
+                />
+                {addressError && (
+                  <p className="mt-3 text-sm sm:text-base text-red-400 font-semibold tracking-wide leading-relaxed">
+                    {addressError}
+                  </p>
+                )}
+              </div>
+
+              {/* Submit Button - Match Join Beta */}
+              <button
+                type="submit"
+                className="w-full py-3 sm:py-4 text-base sm:text-lg font-semibold tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl hover:from-yellow-300 hover:to-yellow-400 transition-all duration-300 touch-manipulation shadow-lg shadow-yellow-500/20 active:scale-[0.98]"
+                style={{
+                  minHeight: '48px',
+                  WebkitTapHighlightColor: 'transparent',
+                  fontFamily: "'Inter', 'Arial', sans-serif",
+                }}
+              >
+                Continue
+              </button>
+            </form>
           </div>
         );
 
