@@ -58,7 +58,7 @@ export default function LandingV2() {
     // Preload background image as critical asset
     registerCriticalAsset('landing-background');
     const backgroundImg = new Image();
-    backgroundImg.src = '/colored-bg-1.webp';
+    backgroundImg.src = getMediaUrl('/colored-bg-1.webp');
     backgroundImg.onload = () => {
       console.log('[🎯LOADER] Background image preloaded successfully');
       markCriticalAssetLoaded('landing-background');
@@ -72,7 +72,7 @@ export default function LandingV2() {
     if (deviceType === 'macos' || deviceType === 'iphone') {
       // Preload GIF
       const logoImg = new Image();
-      logoImg.src = '/random-images/Everydays_4.gif';
+      logoImg.src = getMediaUrl('/random-images/Everydays_4.gif');
       logoImg.onload = () => {
         console.log('[🎯LOADER] Logo GIF preloaded successfully');
         markCriticalAssetLoaded('landing-logo');
@@ -84,7 +84,7 @@ export default function LandingV2() {
     } else {
       // Preload video
       const logoVideo = document.createElement('video');
-      logoVideo.src = '/random-images/Everydays_00000.webm';
+      logoVideo.src = getMediaUrl('/random-images/Everydays_00000.webm');
       logoVideo.preload = 'auto';
       logoVideo.load();
       logoVideo.onloadeddata = () => {
@@ -98,8 +98,8 @@ export default function LandingV2() {
     }
 
     // Preload toggle click sounds immediately during page load (before loader finishes)
-    const guardSound = new Audio('/sounds/main_click.mp3');
-    const switchSound = new Audio('/sounds/click reverb 2.mp3');
+    const guardSound = new Audio(getMediaUrl('/sounds/main_click.mp3'));
+    const switchSound = new Audio(getMediaUrl('/sounds/click reverb 2.mp3'));
     guardSound.preload = 'auto';
     switchSound.preload = 'auto';
     guardSound.load();
@@ -235,7 +235,7 @@ export default function LandingV2() {
         >
           {deviceType === 'macos' || deviceType === 'iphone' ? (
             <img
-              src="/random-images/Everydays_4.gif"
+              src={getMediaUrl('/random-images/Everydays_4.gif')}
               alt="Mek Tycoon Logo"
               className={deviceType === 'iphone' ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'landing-logo max-w-[40vw] max-h-[40vh] object-contain'}
               style={deviceType === 'iphone' ? { transform: 'scale(1.0125)' } : {}}
@@ -261,7 +261,7 @@ export default function LandingV2() {
                 console.error('[⭐LANDING] Logo video failed to load!');
               }}
             >
-              <source src="/random-images/Everydays_00000.webm" type="video/webm" />
+              <source src={getMediaUrl('/random-images/Everydays_00000.webm')} type="video/webm" />
             </video>
           )}
         </div>
