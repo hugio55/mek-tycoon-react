@@ -18,16 +18,19 @@ import { ConvexReactClient } from "convex/react";
 // Verify Sturgeon URL is configured
 const sturgeonUrl = process.env.NEXT_PUBLIC_STURGEON_URL;
 
-if (!sturgeonUrl) {
-  console.error('[STURGEON CLIENT] NEXT_PUBLIC_STURGEON_URL not configured in .env.local');
-}
+// Create read-only client for production monitoring (null if not configured)
+export const sturgeonClient = sturgeonUrl
+  ? new ConvexReactClient(sturgeonUrl)
+  : null;
 
-// Create read-only client for production monitoring
-export const sturgeonClient = new ConvexReactClient(sturgeonUrl || '');
-
-// Log client creation (only in development)
-if (process.env.NODE_ENV === 'development' && sturgeonUrl) {
-  console.log('[STURGEON CLIENT] Read-only client initialized for production monitoring');
-  console.log('[STURGEON CLIENT] Database:', sturgeonUrl);
-  console.log('[STURGEON CLIENT] ⚠️ READ ONLY MODE - No mutations allowed');
+// Log client status (only in development)
+if (process.env.NODE_ENV === 'development') {
+  if (sturgeonUrl) {
+    console.log('[STURGEON CLIENT] Read-only client initialized for production monitoring');
+    console.log('[STURGEON CLIENT] Database:', sturgeonUrl);
+    console.log('[STURGEON CLIENT] ⚠️ READ ONLY MODE - No mutations allowed');
+  } else {
+    console.warn('[STURGEON CLIENT] Not configured - Sturgeon monitoring unavailable');
+    console.warn('[STURGEON CLIENT] Add NEXT_PUBLIC_STURGEON_URL to .env.local to enable production monitoring');
+  }
 }
