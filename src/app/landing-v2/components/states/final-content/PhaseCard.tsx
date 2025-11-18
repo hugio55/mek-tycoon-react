@@ -310,6 +310,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
                   variant="yellow"
                   alwaysOn={true}
                   hideIcon={true}
+                  particleSpeed={0.03}
                   className="!px-8 !py-2 [&_span]:!text-[1em] [&_span]:!tracking-wide [&_span]:!font-['Saira',sans-serif] [&>div>div]:!shadow-none [&>div>div]:!rounded [&_div[style*='holo-shimmer']]:![animation-name:phase1-shimmer-contained] [&_div[style*='holo-shimmer']]:![animation-duration:6s]"
                 />
               </div>

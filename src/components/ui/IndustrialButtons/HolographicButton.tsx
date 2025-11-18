@@ -11,6 +11,7 @@ interface HolographicButtonProps {
   className?: string;
   disabled?: boolean;
   hideIcon?: boolean;
+  particleSpeed?: number;
 }
 
 export default function HolographicButton({
@@ -21,7 +22,8 @@ export default function HolographicButton({
   alwaysOn = false,
   className = "",
   disabled = false,
-  hideIcon = false
+  hideIcon = false,
+  particleSpeed = 0.1125
 }: HolographicButtonProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
@@ -105,10 +107,10 @@ export default function HolographicButton({
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const isAlwaysActive = alwaysOn && isActive;
-      const particleSpeed = isHovered && isAlwaysActive ? 0.48 : isAlwaysActive ? 0.1125 : 0.3;
+      const currentParticleSpeed = isHovered && isAlwaysActive ? 0.48 : isAlwaysActive ? particleSpeed : 0.3;
 
       if (isHovered || particlesRef.current.length > 0 || isAlwaysActive) {
-        if ((isHovered || isAlwaysActive) && Math.random() < particleSpeed) {
+        if ((isHovered || isAlwaysActive) && Math.random() < currentParticleSpeed) {
           const x = Math.random() * canvas.width;
           const y = Math.random() * canvas.height;
           particlesRef.current.push(new Particle(x, y, variant));
@@ -132,7 +134,7 @@ export default function HolographicButton({
       }
       window.removeEventListener('resize', updateCanvasSize);
     };
-  }, [isHovered, variant, isActive, alwaysOn]);
+  }, [isHovered, variant, isActive, alwaysOn, particleSpeed]);
 
   const colors = variant === 'yellow'
     ? {
