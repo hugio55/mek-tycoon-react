@@ -86,17 +86,17 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
     }
   }, [isPhaseTwo]);
 
-  // Custom shimmer animation for Phase I button (contained within bounds)
+  // Custom shimmer animation for Phase I button (enters left, exits right)
   useEffect(() => {
     if (isPhaseOne) {
       const style = document.createElement('style');
       style.innerHTML = `
         @keyframes phase1-shimmer-contained {
           0% {
-            transform: translateX(-30%);
+            transform: translateX(-70%);
           }
           100% {
-            transform: translateX(30%);
+            transform: translateX(70%);
           }
         }
       `;
@@ -310,7 +310,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
                   variant="yellow"
                   alwaysOn={true}
                   hideIcon={true}
-                  className="!px-5 !py-3 [&_span]:!text-[1em] [&_span]:!tracking-wide [&_span]:!font-['Saira',sans-serif] [&>div>div]:!shadow-none [&>div>div]:!rounded [&_div[style*='holo-shimmer']]:![animation-name:phase1-shimmer-contained] [&_div[style*='holo-shimmer']]:![animation-duration:6s]"
+                  className="!px-5 !py-2 [&_span]:!text-[1em] [&_span]:!tracking-wide [&_span]:!font-['Saira',sans-serif] [&>div>div]:!shadow-none [&>div>div]:!rounded [&_div[style*='holo-shimmer']]:![animation-name:phase1-shimmer-contained] [&_div[style*='holo-shimmer']]:![animation-duration:6s]"
                 />
               </div>
             </div>
