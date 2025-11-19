@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import { DatabaseProvider, useDatabaseContext } from '@/contexts/DatabaseContext';
@@ -11,7 +12,9 @@ function WhitelistManagerAdminContent() {
     selectedDatabase,
     setSelectedDatabase,
     client,
-    canMutate
+    canMutate,
+    productionMutationsEnabled,
+    setProductionMutationsEnabled
   } = useDatabaseContext();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -22,6 +25,16 @@ function WhitelistManagerAdminContent() {
   const [showSnapshotModal, setShowSnapshotModal] = useState(false);
   const [snapshotName, setSnapshotName] = useState('');
   const [snapshotDescription, setSnapshotDescription] = useState('');
+
+  // Production mutation confirmation
+  const [confirmationText, setConfirmationText] = useState('');
+  const [showConfirmationPrompt, setShowConfirmationPrompt] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Mount portal
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // State for data
   const [allWhitelists, setAllWhitelists] = useState<any[]>([]);
