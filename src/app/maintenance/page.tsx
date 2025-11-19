@@ -1,6 +1,6 @@
 export default function MaintenancePage() {
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-2xl w-full">
         {/* Industrial Frame */}
         <div className="relative border-2 border-yellow-500/50 bg-black/80 backdrop-blur-sm p-8 md:p-12">
@@ -40,9 +40,6 @@ export default function MaintenancePage() {
               <p className="text-lg">
                 We&apos;re currently performing system upgrades to improve your Mek Tycoon experience.
               </p>
-              <p className="text-sm">
-                Expected downtime: <span className="text-yellow-500 font-semibold">30-60 minutes</span>
-              </p>
             </div>
 
             {/* Status Indicator */}
@@ -58,15 +55,15 @@ export default function MaintenancePage() {
 
         {/* Footer */}
         <div className="text-center mt-8">
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-400 text-sm">
             Follow updates on{' '}
             <a
-              href="https://twitter.com/MekTycoon"
+              href="https://discord.gg/mektycoon"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-yellow-500 hover:text-yellow-400 underline"
+              className="text-yellow-500 hover:text-yellow-400 underline font-semibold"
             >
-              Twitter
+              Discord
             </a>
           </p>
         </div>
