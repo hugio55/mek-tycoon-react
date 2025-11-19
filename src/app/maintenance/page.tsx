@@ -1,3 +1,5 @@
+import GeneratingLoader from '@/components/loaders/GeneratingLoader';
+
 export default function MaintenancePage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -13,6 +15,11 @@ export default function MaintenancePage() {
 
             {/* Divider */}
             <div className="w-24 h-px bg-gradient-to-r from-transparent via-gray-500 to-transparent mx-auto my-6"></div>
+
+            {/* Generating Loader */}
+            <div className="flex items-center justify-center py-4">
+              <GeneratingLoader text="Under Construction" />
+            </div>
 
             {/* Message */}
             <div className="text-gray-400 text-sm leading-relaxed">
