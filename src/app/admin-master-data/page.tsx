@@ -869,49 +869,10 @@ export default function AdminMasterDataPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white p-8 relative z-10">
       {/* Header */}
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-start justify-between mb-2">
-          <div>
-            <h1 className="text-4xl font-bold text-yellow-500 font-orbitron tracking-wider">
-              MASTER DATA SYSTEMS
-            </h1>
-            <p className="text-gray-400 mt-2">Centralized procedural generation and game balance control</p>
-          </div>
-
-          {/* Emergency Maintenance Mode - Compact */}
-          <div className="flex items-center gap-3 bg-red-900/20 border border-red-500 rounded-lg px-4 py-2">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🚨</span>
-              <span className="text-sm font-bold text-red-400 uppercase">Maintenance</span>
-            </div>
-            <Switch.Root
-              checked={siteSettings?.maintenanceMode ?? false}
-              onCheckedChange={async (enabled) => {
-                if (enabled) {
-                  const confirmed = window.confirm(
-                    '🚨 EMERGENCY MAINTENANCE MODE 🚨\n\n' +
-                    'This will IMMEDIATELY redirect ALL routes to the maintenance page.\n' +
-                    'Only admin panel will remain accessible.\n\n' +
-                    'Takes effect within 10 seconds.\n\n' +
-                    'Are you ABSOLUTELY SURE?'
-                  );
-                  if (!confirmed) return;
-                }
-                await toggleMaintenanceMode({ enabled });
-                if (enabled) {
-                  alert('⚠️ Maintenance mode activated! Takes effect within 10 seconds.');
-                } else {
-                  alert('✓ Maintenance mode deactivated! Site returning to normal.');
-                }
-              }}
-              className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-red-600 transition-colors cursor-pointer"
-            >
-              <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
-            </Switch.Root>
-            <span className={`text-xs font-bold ${siteSettings?.maintenanceMode ? 'text-red-400' : 'text-gray-500'}`}>
-              {siteSettings?.maintenanceMode ? 'ON' : 'OFF'}
-            </span>
-          </div>
-        </div>
+        <h1 className="text-4xl font-bold text-yellow-500 mb-2 font-orbitron tracking-wider">
+          MASTER DATA SYSTEMS
+        </h1>
+        <p className="text-gray-400 mb-4">Centralized procedural generation and game balance control</p>
 
         {/* 🐟 DUAL DATABASE CONTROLS 🐟 */}
         <div className="mb-4 grid grid-cols-2 gap-3">
@@ -960,6 +921,27 @@ export default function AdminMasterDataPage() {
                     </Switch.Root>
                     <span className={`text-[10px] font-bold w-6 ${troutSettings?.localhostBypass ? 'text-blue-400' : 'text-gray-500'}`}>
                       {troutSettings?.localhostBypass ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between border-t border-blue-900/50 pt-2">
+                  <span className="text-xs text-blue-300 flex items-center gap-1">
+                    <span className="text-[10px]">🚨</span> Maintenance
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Switch.Root
+                      checked={troutSettings?.maintenanceMode ?? false}
+                      onCheckedChange={async (enabled) => {
+                        await troutClient.mutation(api.siteSettings.toggleMaintenanceMode, { enabled });
+                        const updated = await troutClient.query(api.siteSettings.getSiteSettings);
+                        setTroutSettings(updated);
+                      }}
+                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-orange-500 transition-colors cursor-pointer"
+                    >
+                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                    </Switch.Root>
+                    <span className={`text-[10px] font-bold w-6 ${troutSettings?.maintenanceMode ? 'text-orange-400' : 'text-gray-500'}`}>
+                      {troutSettings?.maintenanceMode ? 'ON' : 'OFF'}
                     </span>
                   </div>
                 </div>
@@ -1026,6 +1008,40 @@ export default function AdminMasterDataPage() {
                     </Switch.Root>
                     <span className={`text-[10px] font-bold w-6 ${sturgeonSettings?.localhostBypass ? 'text-red-400' : 'text-gray-500'}`}>
                       {sturgeonSettings?.localhostBypass ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between border-t border-red-900/50 pt-2">
+                  <span className="text-xs text-red-300 flex items-center gap-1">
+                    <span className="text-[10px]">🚨</span> Maintenance
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Switch.Root
+                      checked={sturgeonSettings?.maintenanceMode ?? false}
+                      onCheckedChange={async (enabled) => {
+                        const confirmed = window.confirm(
+                          '🚨 EMERGENCY: PRODUCTION MAINTENANCE MODE 🚨\n\n' +
+                          `You are about to ${enabled ? 'ENABLE' : 'DISABLE'} maintenance mode on STURGEON (PRODUCTION).\n\n` +
+                          'This will IMMEDIATELY redirect ALL routes on the LIVE WEBSITE to the maintenance page.\n' +
+                          'Real users will see the maintenance page within 10 seconds.\n\n' +
+                          'Are you ABSOLUTELY SURE?'
+                        );
+                        if (!confirmed) return;
+                        await sturgeonClient.mutation(api.siteSettings.toggleMaintenanceMode, { enabled });
+                        const updated = await sturgeonClient.query(api.siteSettings.getSiteSettings);
+                        setSturgeonSettings(updated);
+                        if (enabled) {
+                          alert('🚨 PRODUCTION MAINTENANCE MODE ACTIVATED!\n\nLive site will show maintenance page within 10 seconds.');
+                        } else {
+                          alert('✓ Production maintenance mode deactivated.\n\nLive site returning to normal.');
+                        }
+                      }}
+                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-orange-500 transition-colors cursor-pointer"
+                    >
+                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                    </Switch.Root>
+                    <span className={`text-[10px] font-bold w-6 ${sturgeonSettings?.maintenanceMode ? 'text-orange-400' : 'text-gray-500'}`}>
+                      {sturgeonSettings?.maintenanceMode ? 'ON' : 'OFF'}
                     </span>
                   </div>
                 </div>
