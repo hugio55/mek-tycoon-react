@@ -851,8 +851,11 @@ export default function AdminMasterDataPage() {
               checked={siteSettings?.localhostBypass ?? true}
               onCheckedChange={async (enabled) => {
                 console.log('[🔧LOCALHOST-BYPASS] Toggle clicked, new value:', enabled);
+                console.log('[🔧LOCALHOST-BYPASS] Current siteSettings:', siteSettings);
+                console.log('[🔧LOCALHOST-BYPASS] Current localhostBypass value:', siteSettings?.localhostBypass);
                 try {
-                  await toggleLocalhostBypass({ enabled });
+                  const result = await toggleLocalhostBypass({ enabled });
+                  console.log('[🔧LOCALHOST-BYPASS] Mutation result:', result);
                   console.log('[🔧LOCALHOST-BYPASS] Toggle updated successfully');
                 } catch (error) {
                   console.error('[🔧LOCALHOST-BYPASS] Error updating toggle:', error);
