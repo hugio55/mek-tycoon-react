@@ -19,9 +19,19 @@ export const getSiteSettings = query({
       .query("siteSettings")
       .first();
 
-    // Return existing settings or default values
+    // Return existing settings with backwards compatibility
     if (settings) {
-      return settings;
+      // Handle backwards compatibility: if old field exists but new one doesn't, migrate it
+      const localhostBypass = settings.localhostBypass ??
+                              (settings as any).ignoreLocalhostRule !== undefined
+                                ? !(settings as any).ignoreLocalhostRule // Invert: ignoreLocalhostRule=true meant bypass=false
+                                : true; // Default if neither exists
+
+      return {
+        ...settings,
+        localhostBypass,
+        maintenanceMode: settings.maintenanceMode ?? false,
+      };
     }
 
     // Return default settings if none exist
