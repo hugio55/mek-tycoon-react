@@ -42,13 +42,19 @@ export default function LandingV2() {
     setMounted(true);
     const userAgent = navigator.userAgent.toLowerCase();
 
+    // Detect device type and store in local variable for immediate use
+    let detectedDeviceType: 'macos' | 'iphone' | 'android' | 'other';
     if (/iphone|ipod/.test(userAgent)) {
+      detectedDeviceType = 'iphone';
       setDeviceType('iphone');
     } else if (/android/.test(userAgent)) {
+      detectedDeviceType = 'android';
       setDeviceType('android');
     } else if (/macintosh|mac os x|ipad/.test(userAgent)) {
+      detectedDeviceType = 'macos';
       setDeviceType('macos');
     } else {
+      detectedDeviceType = 'other';
       setDeviceType('other');
     }
 
@@ -68,8 +74,8 @@ export default function LandingV2() {
       markCriticalAssetLoaded('landing-background'); // Mark as loaded anyway to prevent blocking
     };
 
-    // Preload the logo video/gif based on device type
-    if (deviceType === 'macos' || deviceType === 'iphone') {
+    // Preload the logo video/gif based on detected device type (use local variable, not state)
+    if (detectedDeviceType === 'macos' || detectedDeviceType === 'iphone') {
       // Preload GIF
       const logoImg = new Image();
       logoImg.src = getMediaUrl('/random-images/Everydays_4.gif');
@@ -119,7 +125,7 @@ export default function LandingV2() {
         switchSound.currentTime = 0;
       })
       .catch(() => {});
-  }, [deviceType, registerCriticalAsset, markCriticalAssetLoaded]);
+  }, [registerCriticalAsset, markCriticalAssetLoaded]);
 
   // Wait for Universal Loader to finish, THEN start entrance sequence
   useEffect(() => {

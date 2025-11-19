@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import PhaseOneIndicator, { LoadingSpinner } from './PhaseOneIndicator';
-import SimpleNFTButton from '@/components/ui/SimpleNFTButton';
+import HolographicButton from '@/components/ui/IndustrialButtons/HolographicButton';
 import NMKRPayLightbox from '@/components/NMKRPayLightbox';
 
 interface PhaseCardData {
@@ -279,15 +279,17 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           {/* Claim NFT Button for Phase I */}
           {isPhaseOne && (
             <div className="mt-6 flex justify-start">
-              <SimpleNFTButton
+              <HolographicButton
                 text="CLAIM NFT"
                 onClick={() => {
                   console.log('[PhaseCard] Opening NFT claim lightbox');
                   setShowClaimLightbox(true);
                 }}
-                width="auto"
-                height="auto"
-                fontSize="15px"
+                isActive={true}
+                variant="yellow"
+                alwaysOn={true}
+                hideIcon={true}
+                className="[&>div>div]:!py-3 [&>div>div]:!px-6 [&_span]:!text-base [&_span]:!tracking-[0.15em]"
               />
             </div>
           )}
