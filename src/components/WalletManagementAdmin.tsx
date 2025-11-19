@@ -20,6 +20,7 @@ import BetaSignupsViewer from '@/components/BetaSignupsViewer';
 import VariationSpreadViewer from '@/components/VariationSpreadViewer';
 import ResetTimelineChecker from '@/components/ResetTimelineChecker';
 import { EssenceProvider } from '@/contexts/EssenceContext';
+import { DatabaseProvider, useDatabaseContext } from '@/contexts/DatabaseContext';
 
 // Lazy load heavy components
 const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryViewer'));
@@ -27,7 +28,18 @@ const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryVie
 type SubMenu = 'wallet-list' | 'storage-monitoring' | 'snapshot-history' | 'snapshot-health' | 'duplicate-detection' | 'production-launch-cleaner' | 'gold-repair' | 'variation-spread' | 'beta-signups' | 'reset-timeline';
 type SnapshotHealthTab = 'health' | 'logging';
 
-export default function WalletManagementAdmin() {
+function WalletManagementAdminContent() {
+  // Get database context
+  const {
+    selectedDatabase,
+    setSelectedDatabase,
+    client,
+    canMutate,
+    productionMutationsEnabled,
+    setProductionMutationsEnabled
+  } = useDatabaseContext();
+
+  const getClient = () => client;
   // Restore wallet session for authentication
   const [stakeAddress, setStakeAddress] = useState<string | null>(null);
 
@@ -734,8 +746,9 @@ Check console for full timeline.
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3 mb-6 border-b border-gray-700 pb-2">
+    <DatabaseProvider>
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 mb-6 border-b border-gray-700 pb-2">
         <button
           onClick={() => setActiveSubmenu('wallet-list')}
           className={`px-4 py-2 text-sm font-semibold transition-colors ${
@@ -1934,6 +1947,7 @@ Check console for full timeline.
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </DatabaseProvider>
   );
 }
