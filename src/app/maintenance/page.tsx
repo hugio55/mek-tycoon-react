@@ -8,13 +8,8 @@ export default function MaintenancePage() {
           <div className="text-center space-y-6">
             {/* Title */}
             <h1 className="text-3xl md:text-4xl font-bold text-white tracking-wide" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-              System Maintenance
+              Under Construction
             </h1>
-
-            {/* Subtitle */}
-            <p className="text-base text-gray-300">
-              Upgrading Mek Infrastructure
-            </p>
 
             {/* Divider */}
             <div className="w-24 h-px bg-gradient-to-r from-transparent via-gray-500 to-transparent mx-auto my-6"></div>
@@ -22,7 +17,7 @@ export default function MaintenancePage() {
             {/* Message */}
             <div className="text-gray-400 text-sm leading-relaxed">
               <p>
-                We&apos;re currently performing system upgrades to improve your Mek Tycoon experience.
+                Mek Tycoon is being built.
               </p>
             </div>
 
