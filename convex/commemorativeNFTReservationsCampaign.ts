@@ -818,8 +818,32 @@ export const internalCleanupExpiredReservations = internalMutation({
   handler: async (ctx) => {
     const now = Date.now();
 
+    console.log('[CRON CLEANUP] Starting cleanup check at:', new Date(now).toISOString());
+
     // Get all campaigns
     const campaigns = await ctx.db.query("commemorativeCampaigns").collect();
+    console.log('[CRON CLEANUP] Found', campaigns.length, 'campaigns to check');
+
+    // ALSO check inventory items without campaignId (might be orphaned)
+    const allReservedInventory = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_status", (q) => q.eq("status", "reserved"))
+      .collect();
+
+    console.log('[CRON CLEANUP] Found', allReservedInventory.length, 'total reserved inventory items');
+
+    // Log details about each reserved item
+    for (const item of allReservedInventory) {
+      const isExpired = item.expiresAt && item.expiresAt < now;
+      console.log('[CRON CLEANUP] Reserved item:', {
+        nftNumber: item.nftNumber,
+        campaignId: item.campaignId,
+        expiresAt: item.expiresAt,
+        expiresAtDate: item.expiresAt ? new Date(item.expiresAt).toISOString() : 'undefined',
+        isExpired,
+        now: new Date(now).toISOString(),
+      });
+    }
 
     let totalExpiredReservations = 0;
     for (const campaign of campaigns) {
@@ -830,6 +854,8 @@ export const internalCleanupExpiredReservations = internalMutation({
     // Only log when we actually found and cleaned up expired reservations
     if (totalExpiredReservations > 0) {
       console.log('[CRON CLEANUP] Cleaned up', totalExpiredReservations, 'expired reservations across', campaigns.length, 'campaigns');
+    } else {
+      console.log('[CRON CLEANUP] No expired reservations found to clean up');
     }
 
     return { success: true, campaignsProcessed: campaigns.length, expiredReservationsCleaned: totalExpiredReservations };
