@@ -299,3 +299,68 @@ export const comprehensiveCleanup = mutation({
     };
   },
 });
+
+/**
+ * FIX BROKEN RESERVATIONS: Cancel all reservations with undefined expiresAt
+ *
+ * These are broken reservations from old code or bugs that never set expiration.
+ * They can't be auto-cleaned by cron (which requires expiresAt to be set).
+ */
+export const fixBrokenReservations = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // Find all reserved items with undefined expiresAt
+    const allReserved = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_status", (q) => q.eq("status", "reserved"))
+      .collect();
+
+    const brokenReservations = allReserved.filter(inv => !inv.expiresAt);
+
+    console.log('[FIX BROKEN] Found', brokenReservations.length, 'broken reservations with undefined expiresAt');
+
+    const fixed = [];
+    for (const inv of brokenReservations) {
+      console.log('[FIX BROKEN] Canceling broken reservation:', inv._id, 'NFT:', inv.nftNumber, inv.name);
+
+      // Clear reservation fields and return to available
+      await ctx.db.patch(inv._id, {
+        status: "available",
+        reservedBy: undefined,
+        reservedAt: undefined,
+        expiresAt: undefined,
+        paymentWindowOpenedAt: undefined,
+        paymentWindowClosedAt: undefined,
+      });
+
+      fixed.push({
+        _id: inv._id,
+        nftNumber: inv.nftNumber,
+        name: inv.name,
+        reservedBy: inv.reservedBy,
+        reservedAt: inv.reservedAt,
+      });
+
+      // Update campaign counters if campaign exists
+      if (inv.campaignId) {
+        const campaign = await ctx.db.get(inv.campaignId);
+        if (campaign) {
+          await ctx.db.patch(inv.campaignId, {
+            availableNFTs: campaign.availableNFTs + 1,
+            reservedNFTs: Math.max(0, campaign.reservedNFTs - 1),
+            updatedAt: Date.now(),
+          });
+        }
+      }
+    }
+
+    return {
+      success: true,
+      fixedCount: fixed.length,
+      fixedReservations: fixed,
+      message: fixed.length > 0
+        ? `Fixed ${fixed.length} broken reservation(s) with undefined expiresAt`
+        : "No broken reservations found",
+    };
+  },
+});
