@@ -1,11 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
+import { DatabaseProvider, useDatabaseContext } from '@/contexts/DatabaseContext';
 
-export default function WhitelistManagerAdmin() {
+function WhitelistManagerAdminContent() {
+  // Get database context
+  const {
+    selectedDatabase,
+    setSelectedDatabase,
+    client,
+    canMutate
+  } = useDatabaseContext();
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
   const [editingWhitelist, setEditingWhitelist] = useState<any | null>(null);
@@ -15,36 +23,160 @@ export default function WhitelistManagerAdmin() {
   const [snapshotName, setSnapshotName] = useState('');
   const [snapshotDescription, setSnapshotDescription] = useState('');
 
-  // Queries
-  const allWhitelists = useQuery(api.whitelists.getAllWhitelists);
-  const allCriteria = useQuery(api.whitelists.getAllCriteria);
-  const allSnapshots = useQuery(api.whitelists.getAllWhitelistSnapshots);
-  const selectedWhitelistData = useQuery(
-    api.whitelists.getWhitelistById,
-    selectedWhitelist ? { whitelistId: selectedWhitelist } : "skip"
-  );
-  const snapshots = useQuery(
-    api.whitelists.getSnapshotsByWhitelist,
-    selectedWhitelist ? { whitelistId: selectedWhitelist } : "skip"
-  );
+  // State for data
+  const [allWhitelists, setAllWhitelists] = useState<any[]>([]);
+  const [allCriteria, setAllCriteria] = useState<any[]>([]);
+  const [allSnapshots, setAllSnapshots] = useState<any[]>([]);
+  const [selectedWhitelistData, setSelectedWhitelistData] = useState<any>(null);
+  const [snapshots, setSnapshots] = useState<any[]>([]);
 
-  // Mutations
-  const initializeCriteria = useMutation(api.whitelists.initializeDefaultCriteria);
-  const deleteWhitelist = useMutation(api.whitelists.deleteWhitelist);
-  const generateWhitelist = useMutation(api.whitelists.generateWhitelist);
-  const removeUserFromWhitelist = useMutation(api.whitelists.removeUserFromWhitelist);
-  const addUserToWhitelistByCompanyName = useMutation(api.whitelists.addUserToWhitelistByCompanyName);
-  const addUserToWhitelistByAddress = useMutation(api.whitelists.addUserToWhitelistByAddress);
-  const createSnapshot = useMutation(api.whitelists.createSnapshot);
-  const deleteSnapshot = useMutation(api.whitelists.deleteSnapshot);
-  const createManualWhitelist = useMutation(api.whitelists.createManualWhitelist);
+  // Query data from selected database
+  useEffect(() => {
+    if (!client) return;
+
+    let cancelled = false;
+
+    const fetchData = async () => {
+      try {
+        const [whitelists, criteria, snaps] = await Promise.all([
+          client.query(api.whitelists.getAllWhitelists),
+          client.query(api.whitelists.getAllCriteria),
+          client.query(api.whitelists.getAllWhitelistSnapshots)
+        ]);
+
+        if (!cancelled) {
+          setAllWhitelists(whitelists);
+          setAllCriteria(criteria);
+          setAllSnapshots(snaps);
+        }
+      } catch (error) {
+        console.error('[WhitelistManager] Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [client, selectedDatabase]);
+
+  // Query selected whitelist details
+  useEffect(() => {
+    if (!client || !selectedWhitelist) {
+      setSelectedWhitelistData(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchWhitelist = async () => {
+      try {
+        const data = await client.query(api.whitelists.getWhitelistById, {
+          whitelistId: selectedWhitelist
+        });
+        if (!cancelled) {
+          setSelectedWhitelistData(data);
+        }
+      } catch (error) {
+        console.error('[WhitelistManager] Error fetching whitelist:', error);
+      }
+    };
+
+    fetchWhitelist();
+    const interval = setInterval(fetchWhitelist, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [client, selectedWhitelist]);
+
+  // Query snapshots for selected whitelist
+  useEffect(() => {
+    if (!client || !selectedWhitelist) {
+      setSnapshots([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchSnapshots = async () => {
+      try {
+        const data = await client.query(api.whitelists.getSnapshotsByWhitelist, {
+          whitelistId: selectedWhitelist
+        });
+        if (!cancelled) {
+          setSnapshots(data);
+        }
+      } catch (error) {
+        console.error('[WhitelistManager] Error fetching snapshots:', error);
+      }
+    };
+
+    fetchSnapshots();
+    const interval = setInterval(fetchSnapshots, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [client, selectedWhitelist]);
+
+  // Mutation helpers using client
+  const initializeCriteria = async () => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.initializeDefaultCriteria, {});
+  };
+
+  const deleteWhitelist = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.deleteWhitelist, args);
+  };
+
+  const generateWhitelist = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.generateWhitelist, args);
+  };
+
+  const removeUserFromWhitelist = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.removeUserFromWhitelist, args);
+  };
+
+  const addUserToWhitelistByCompanyName = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.addUserToWhitelistByCompanyName, args);
+  };
+
+  const addUserToWhitelistByAddress = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.addUserToWhitelistByAddress, args);
+  };
+
+  const createSnapshot = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.createSnapshot, args);
+  };
+
+  const deleteSnapshot = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.deleteSnapshot, args);
+  };
+
+  const createManualWhitelist = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.createManualWhitelist, args);
+  };
 
   // Initialize default criteria on mount
   useEffect(() => {
     if (allCriteria && allCriteria.length === 0) {
-      initializeCriteria({});
+      initializeCriteria();
     }
-  }, [allCriteria, initializeCriteria]);
+  }, [allCriteria]);
 
   const handleGenerateWhitelist = async (whitelistId: Id<"whitelists">) => {
     try {
