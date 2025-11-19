@@ -27,7 +27,7 @@ const GeneratingLoader = ({ text = 'Generating', colorScheme }: GeneratingLoader
   return (
     <div className={styles['loader-wrapper']}>
       <div style={{
-        transform: 'translateY(1px)',
+        transform: 'translateY(3px)',
         fontSize: '0.35em',
         opacity: 0.7,
         color: 'white'

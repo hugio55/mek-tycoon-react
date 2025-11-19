@@ -126,9 +126,15 @@ export const createReservation = mutation({
         status: "active",
       });
 
-      // Then update NFT inventory status to reserved (atomic operation)
+      // CRITICAL FIX: Update NFT inventory with ALL reservation fields
+      // This ensures expiresAt is set so cron cleanup can work
       await ctx.db.patch(availableNFT._id, {
         status: "reserved",
+        reservedBy: args.walletAddress,
+        reservedAt: now,
+        expiresAt: expiresAt,
+        paymentWindowOpenedAt: undefined,
+        paymentWindowClosedAt: undefined,
       });
 
       console.log('[RESERVATION] Created reservation:', reservationId, 'for NFT:', availableNFT.nftNumber);
