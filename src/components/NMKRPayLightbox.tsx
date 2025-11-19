@@ -484,42 +484,49 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
         // Regular ineligible case (not in whitelist)
         return (
-          <div className="text-center p-6 sm:p-8">
-            <div className="mb-4 sm:mb-6">
-              <svg
-                className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-red-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
+          <div className="p-6 sm:p-8 md:p-10">
+            {/* Header section matching Join Beta lightbox */}
+            <div className="text-center mb-6 sm:mb-8">
+              <div className="mb-3">
+                <svg
+                  className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-red-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-light text-white tracking-wide mb-3">
+                Not Eligible
+              </h2>
+              <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed">
+                We are sorry, you do not meet the prerequisites. Only Phase 1 beta testers prior to 11/20/2025 are eligible.
+              </p>
+              <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mt-3">
+                No worries - there will be another commemorative NFT at the end of Phase 2!
+              </p>
             </div>
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-light text-white tracking-wide mb-3">
-              Not Eligible
-            </h3>
-            <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-6">
-              We are sorry, you do not meet the prerequisites. Only Phase 1 beta testers prior to 11/20/2025 are eligible.
-            </p>
-            <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-4">
-              No worries - there will be another commemorative NFT at the end of Phase 2!
-            </p>
-            <button
-              onClick={() => {
-                // Close this lightbox and open beta signup lightbox
-                onClose();
-                // Trigger the beta signup lightbox via custom event
-                window.dispatchEvent(new CustomEvent('openLightbox', { detail: { lightboxId: 'beta-signup' } }));
-              }}
-              className="w-full py-3 sm:py-4 text-base sm:text-lg font-semibold tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl hover:from-yellow-300 hover:to-yellow-400 transition-all duration-300 touch-manipulation shadow-lg shadow-yellow-500/20 active:scale-[0.98]"
-              style={{
-                minHeight: '48px',
-                WebkitTapHighlightColor: 'transparent',
-                fontFamily: "'Inter', 'Arial', sans-serif",
-              }}
-            >
-              Join Beta
-            </button>
+
+            {/* Button matching Join Beta lightbox */}
+            <div className="space-y-4 sm:space-y-6">
+              <button
+                onClick={() => {
+                  // Close this lightbox and open beta signup lightbox
+                  onClose();
+                  // Trigger the beta signup lightbox via custom event
+                  window.dispatchEvent(new CustomEvent('openLightbox', { detail: { lightboxId: 'beta-signup' } }));
+                }}
+                className="w-full py-3 sm:py-4 text-base sm:text-lg font-semibold tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl hover:from-yellow-300 hover:to-yellow-400 transition-all duration-300 touch-manipulation shadow-lg shadow-yellow-500/20 active:scale-[0.98]"
+                style={{
+                  minHeight: '48px',
+                  WebkitTapHighlightColor: 'transparent',
+                  fontFamily: "'Inter', 'Arial', sans-serif",
+                }}
+              >
+                Join Beta
+              </button>
+            </div>
           </div>
         );
 
