@@ -850,9 +850,15 @@ export default function AdminMasterDataPage() {
             <Switch.Root
               checked={siteSettings?.localhostBypass ?? true}
               onCheckedChange={async (enabled) => {
-                await toggleLocalhostBypass({ enabled });
+                console.log('[🔧LOCALHOST-BYPASS] Toggle clicked, new value:', enabled);
+                try {
+                  await toggleLocalhostBypass({ enabled });
+                  console.log('[🔧LOCALHOST-BYPASS] Toggle updated successfully');
+                } catch (error) {
+                  console.error('[🔧LOCALHOST-BYPASS] Error updating toggle:', error);
+                }
               }}
-              className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors"
+              className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors cursor-pointer"
             >
               <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
             </Switch.Root>
