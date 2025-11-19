@@ -484,9 +484,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
         // Regular ineligible case (not in whitelist)
         return (
-          <div className="text-center">
-            {/* Header section matching Join Beta lightbox */}
-            <div className="mb-6 sm:mb-8">
+          <>
+            {/* Header */}
+            <div className="text-center mb-6 sm:mb-8">
               <div className="mb-3">
                 <svg
                   className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-red-400"
@@ -508,7 +508,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
               </p>
             </div>
 
-            {/* Button matching Join Beta lightbox */}
+            {/* Button */}
             <div className="space-y-4 sm:space-y-6">
               <button
                 onClick={() => {
@@ -527,7 +527,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                 Join Beta
               </button>
             </div>
-          </div>
+          </>
         );
 
       case 'already_claimed':
