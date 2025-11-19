@@ -185,7 +185,7 @@ export default function LandingV2() {
 
   // Show pure black until mounted
   if (!mounted) {
-    return <div className="fixed inset-0 bg-black" />;
+    return <div className="fixed inset-0 bg-black" suppressHydrationWarning />;
   }
 
   return (
