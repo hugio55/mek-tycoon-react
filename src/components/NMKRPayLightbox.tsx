@@ -501,7 +501,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
             <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-6">
               We are sorry, you do not meet the prerequisites. Only Phase 1 beta testers prior to 11/20/2025 are eligible.
             </p>
-            <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-6">
+            <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-4">
               No worries - there will be another commemorative NFT at the end of Phase 2!
             </p>
             <button
@@ -509,9 +509,14 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                 // Close this lightbox and open beta signup lightbox
                 onClose();
                 // Trigger the beta signup lightbox via custom event
-                window.dispatchEvent(new CustomEvent('openLightbox', { detail: { type: 'beta-signup' } }));
+                window.dispatchEvent(new CustomEvent('openLightbox', { detail: { lightboxId: 'beta-signup' } }));
               }}
-              className="px-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
+              className="w-full py-3 sm:py-4 text-base sm:text-lg font-semibold tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl hover:from-yellow-300 hover:to-yellow-400 transition-all duration-300 touch-manipulation shadow-lg shadow-yellow-500/20 active:scale-[0.98]"
+              style={{
+                minHeight: '48px',
+                WebkitTapHighlightColor: 'transparent',
+                fontFamily: "'Inter', 'Arial', sans-serif",
+              }}
             >
               Join Beta
             </button>
