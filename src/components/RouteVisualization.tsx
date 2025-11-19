@@ -33,38 +33,11 @@ export default function RouteVisualization() {
       color: 'green'
     },
     {
-      url: '/home',
-      name: 'Game Interface',
-      description: 'Triangle, gold, Mek management',
+      url: '/home, /profile, /shop, /crafting, /essence, /achievements, etc.',
+      name: 'All Game Routes',
+      description: 'Game interface, profile, shop, crafting, and all other game pages',
       behavior: 'Protected by middleware → redirects to /',
-      component: 'home/page.tsx',
-      canAccess: false,
-      color: 'red'
-    },
-    {
-      url: '/profile',
-      name: 'Player Profile',
-      description: 'User profile and stats',
-      behavior: 'Protected by middleware → redirects to /',
-      component: 'profile/page.tsx',
-      canAccess: false,
-      color: 'red'
-    },
-    {
-      url: '/shop',
-      name: 'Shop',
-      description: 'Purchase items and upgrades',
-      behavior: 'Protected by middleware → redirects to /',
-      component: 'shop/page.tsx',
-      canAccess: false,
-      color: 'red'
-    },
-    {
-      url: '/crafting',
-      name: 'Crafting',
-      description: 'Craft new Mek variations',
-      behavior: 'Protected by middleware → redirects to /',
-      component: 'crafting/page.tsx',
+      component: 'Multiple game pages',
       canAccess: false,
       color: 'red'
     },
