@@ -297,10 +297,10 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
               >
                 {/* Honeycomb pattern overlay on hover */}
                 <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none rounded-lg"
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-lg"
                   style={{
                     backgroundImage: `url('/random-images/honey-png1.webp')`,
-                    backgroundSize: 'cover',
+                    backgroundSize: '125%',
                     backgroundPosition: 'center'
                   }}
                 />
