@@ -54,19 +54,11 @@ function WalletManagementAdminContent() {
     loadSession();
   }, []);
 
-  // Separate useEffect for mounted state (required for portal rendering)
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Database selection: Trout (dev) or Sturgeon (production READ ONLY)
-  // DEFAULT TO TROUT for safety - user must explicitly switch to production
-  const [selectedDatabase, setSelectedDatabase] = useState<'trout' | 'sturgeon'>('trout');
+  //Database selection comes from context now
   const [walletsData, setWalletsData] = useState<any>(null);
   const [isLoadingWallets, setIsLoadingWallets] = useState(false);
 
-  // Production mutation override - DANGEROUS, requires explicit enabling
-  const [productionMutationsEnabled, setProductionMutationsEnabled] = useState(false);
+  // Production mutation confirmation
   const [confirmationText, setConfirmationText] = useState('');
   const [showConfirmationPrompt, setShowConfirmationPrompt] = useState(false);
 
@@ -116,18 +108,6 @@ function WalletManagementAdminContent() {
     api.nftEligibility.batchCheckClaimStatus,
     walletsLoaded && stakeAddresses.length > 0 ? { stakeAddresses } : "skip"
   );
-
-  // Helper to get the correct client based on selected database
-  const getClient = () => {
-    if (!mounted) return null;
-    return selectedDatabase === 'sturgeon' ? sturgeonClient : window.convex;
-  };
-
-  // Helper to check if mutations are allowed
-  const canMutate = () => {
-    if (selectedDatabase === 'trout') return true; // Always allow on dev
-    return productionMutationsEnabled; // Require override for production
-  };
 
   // CRITICAL FIX: Replace useMutation hooks with direct client calls
   // This ensures mutations respect the selectedDatabase state
@@ -1948,6 +1928,13 @@ Check console for full timeline.
         </div>
       )}
       </div>
+  );
+}
+
+export default function WalletManagementAdmin() {
+  return (
+    <DatabaseProvider>
+      <WalletManagementAdminContent />
     </DatabaseProvider>
   );
 }
