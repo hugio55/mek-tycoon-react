@@ -21,6 +21,7 @@ import VariationsHub from '@/components/VariationsHub';
 import CommemorativeToken1Admin from '@/components/CommemorativeToken1Admin';
 import SourceKeyMigrationAdmin from '@/components/SourceKeyMigrationAdmin';
 import WhitelistManagerAdmin from '@/components/WhitelistManagerAdmin';
+import RouteVisualization from '@/components/RouteVisualization';
 import NMKRJSONGenerator from '@/components/admin/nft/NMKRJSONGenerator';
 import CampaignManager from '@/components/admin/campaign/CampaignManager';
 import EssenceMarketAdmin from '@/components/EssenceMarketAdmin';
@@ -115,6 +116,7 @@ const DATA_SYSTEMS = [
   { id: 'claude-manager', name: 'Claude Manager', icon: '🤖', implemented: true },
   { id: 'notification-system', name: 'Notification System', icon: '🔔', implemented: false },
   { id: 'nft-admin', name: 'NFT', icon: '🎨', implemented: true },
+  { id: 'route-config', name: 'Route Configuration', icon: '🗺️', implemented: true },
   { id: 'overlay-editor', name: 'Overlay Editor', icon: '🎯', implemented: true },
   { id: 'navigation-preview', name: 'Navigation', icon: '🧭', implemented: true },
   { id: 'components', name: 'Components', icon: '🧩', implemented: true }
@@ -3093,6 +3095,13 @@ export default function AdminMasterDataPage() {
                 {/* NFT Sub-Tabs */}
                 <NFTAdminTabs />
               </div>
+          </div>
+          )}
+
+          {/* Route Configuration */}
+          {activeTab === 'route-config' && (
+          <div id="section-route-config" className="bg-black/50 backdrop-blur border-2 border-cyan-500/30 rounded-lg shadow-lg shadow-black/50">
+            <RouteVisualization />
           </div>
           )}
 
