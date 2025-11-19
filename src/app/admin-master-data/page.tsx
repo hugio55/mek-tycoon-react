@@ -130,6 +130,7 @@ export default function AdminMasterDataPage() {
   const toggleLandingPage = useMutation(api.siteSettings.toggleLandingPage);
   const toggleLocalhostBypass = useMutation(api.siteSettings.toggleLocalhostBypass);
   const toggleMaintenanceMode = useMutation(api.siteSettings.toggleMaintenanceMode);
+  const cleanupOldLocalhostField = useMutation(api.siteSettings.cleanupOldLocalhostField);
 
   const [activeSystem, setActiveSystem] = useState<string | null>(null);
   // Initialize with static value to avoid hydration mismatch
@@ -870,6 +871,19 @@ export default function AdminMasterDataPage() {
             </span>
             <span className="text-xs text-gray-500">(OFF = localhost acts like production for testing)</span>
           </div>
+
+          {/* Migration Button - Remove after running once */}
+          {(siteSettings as any)?.ignoreLocalhostRule !== undefined && (
+            <button
+              onClick={async () => {
+                const result = await cleanupOldLocalhostField();
+                alert(result.message);
+              }}
+              className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-xs rounded border border-orange-500"
+            >
+              🔧 Fix Toggle (Remove Old Field)
+            </button>
+          )}
         </div>
 
         {/* 🚨 EMERGENCY MAINTENANCE MODE 🚨 */}
