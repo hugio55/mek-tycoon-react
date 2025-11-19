@@ -144,3 +144,23 @@ export const initializeSiteSettings = mutation({
     return { success: false, message: "Settings already exist" };
   },
 });
+
+// Migration: Remove old ignoreLocalhostRule field (one-time cleanup)
+export const cleanupOldLocalhostField = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const settings = await ctx.db
+      .query("siteSettings")
+      .first();
+
+    if (settings && (settings as any).ignoreLocalhostRule !== undefined) {
+      // Remove the old field by patching with undefined
+      await ctx.db.patch(settings._id, {
+        ignoreLocalhostRule: undefined,
+      } as any);
+      return { success: true, message: "Removed old ignoreLocalhostRule field" };
+    }
+
+    return { success: false, message: "No old field to remove" };
+  },
+});
