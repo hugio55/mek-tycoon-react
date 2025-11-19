@@ -295,7 +295,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
                   fontWeight: 500
                 }}
               >
-                <span className="transition-all duration-300 group-hover:[text-shadow:0_0_15px_rgba(255,255,255,0.8),0_0_25px_rgba(255,255,255,0.5)]">
+                <span className="transition-all duration-300 group-hover:[text-shadow:0_0_6px_rgba(255,255,255,0.9),0_0_12px_rgba(255,255,255,0.6)]">
                   Claim NFT
                 </span>
               </button>
