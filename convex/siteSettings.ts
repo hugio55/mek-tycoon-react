@@ -43,6 +43,17 @@ export const getSiteSettings = query({
   },
 });
 
+// Debug: Get all site settings records (to check for duplicates)
+export const getAllSiteSettings = query({
+  args: {},
+  handler: async (ctx) => {
+    const allSettings = await ctx.db
+      .query("siteSettings")
+      .collect();
+    return allSettings;
+  },
+});
+
 // Update the landing page toggle
 export const toggleLandingPage = mutation({
   args: {
