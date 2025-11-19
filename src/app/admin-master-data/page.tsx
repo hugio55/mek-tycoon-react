@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useConvex, useMutation, useQuery } from 'convex/react';
+import { ConvexHttpClient } from 'convex/browser';
 import { api } from '@/convex/_generated/api';
 import * as Switch from '@radix-ui/react-switch';
 import MasterRangeSystem from '@/components/MasterRangeSystem';
@@ -125,7 +126,55 @@ const DATA_SYSTEMS = [
 export default function AdminMasterDataPage() {
   const convex = useConvex();
 
-  // Site settings for landing page toggle
+  // Dual database clients
+  const [troutClient] = useState(() => new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!));
+  const [sturgeonClient] = useState(() => new ConvexHttpClient(process.env.NEXT_PUBLIC_STURGEON_URL!));
+
+  // Trout (dev) site settings
+  const [troutSettings, setTroutSettings] = useState<any>(null);
+  const [troutLoading, setTroutLoading] = useState(true);
+
+  // Sturgeon (production) site settings
+  const [sturgeonSettings, setSturgeonSettings] = useState<any>(null);
+  const [sturgeonLoading, setSturgeonLoading] = useState(true);
+
+  // Fetch settings from both databases
+  useEffect(() => {
+    async function fetchTroutSettings() {
+      try {
+        const settings = await troutClient.query(api.siteSettings.getSiteSettings);
+        setTroutSettings(settings);
+      } catch (error) {
+        console.error('[Trout] Error fetching settings:', error);
+      } finally {
+        setTroutLoading(false);
+      }
+    }
+
+    async function fetchSturgeonSettings() {
+      try {
+        const settings = await sturgeonClient.query(api.siteSettings.getSiteSettings);
+        setSturgeonSettings(settings);
+      } catch (error) {
+        console.error('[Sturgeon] Error fetching settings:', error);
+      } finally {
+        setSturgeonLoading(false);
+      }
+    }
+
+    fetchTroutSettings();
+    fetchSturgeonSettings();
+
+    // Poll for updates every 5 seconds
+    const interval = setInterval(() => {
+      fetchTroutSettings();
+      fetchSturgeonSettings();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [troutClient, sturgeonClient]);
+
+  // Site settings for current database (using default convex client)
   const siteSettings = useQuery(api.siteSettings.getSiteSettings);
   const toggleLandingPage = useMutation(api.siteSettings.toggleLandingPage);
   const toggleLocalhostBypass = useMutation(api.siteSettings.toggleLocalhostBypass);
@@ -825,41 +874,124 @@ export default function AdminMasterDataPage() {
         </h1>
         <p className="text-gray-400 mb-4">Centralized procedural generation and game balance control</p>
 
-        {/* Landing Page Toggles - Compact */}
-        <div className="mb-4 flex gap-4">
-          {/* Main Landing Page Toggle */}
-          <div className="inline-flex items-center gap-3 bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2">
-            <span className="text-sm font-semibold text-gray-300">Landing Page</span>
-            <Switch.Root
-              checked={siteSettings?.landingPageEnabled ?? false}
-              onCheckedChange={async (enabled) => {
-                await toggleLandingPage({ enabled });
-              }}
-              className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-yellow-500 transition-colors"
-            >
-              <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
-            </Switch.Root>
-            <span className={`text-xs font-bold ${siteSettings?.landingPageEnabled ? 'text-yellow-400' : 'text-gray-400'}`}>
-              {siteSettings?.landingPageEnabled ? 'ON' : 'OFF'}
-            </span>
+        {/* 🐟 DUAL DATABASE CONTROLS 🐟 */}
+        <div className="mb-4 grid grid-cols-2 gap-3">
+          {/* Trout (Dev Database) */}
+          <div className="p-3 bg-blue-900/20 border border-blue-600/50 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm font-bold text-blue-400">🐟 TROUT</span>
+              <span className="text-[10px] text-blue-300">(dev)</span>
+            </div>
+            {troutLoading ? (
+              <p className="text-gray-400 text-xs">Loading...</p>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-blue-300">Landing Page</span>
+                  <div className="flex items-center gap-2">
+                    <Switch.Root
+                      checked={troutSettings?.landingPageEnabled ?? false}
+                      onCheckedChange={async (enabled) => {
+                        await troutClient.mutation(api.siteSettings.toggleLandingPage, { enabled });
+                        const updated = await troutClient.query(api.siteSettings.getSiteSettings);
+                        setTroutSettings(updated);
+                      }}
+                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors cursor-pointer"
+                    >
+                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                    </Switch.Root>
+                    <span className={`text-[10px] font-bold w-6 ${troutSettings?.landingPageEnabled ? 'text-blue-400' : 'text-gray-500'}`}>
+                      {troutSettings?.landingPageEnabled ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-blue-300">Localhost Bypass</span>
+                  <div className="flex items-center gap-2">
+                    <Switch.Root
+                      checked={troutSettings?.localhostBypass ?? true}
+                      onCheckedChange={async (enabled) => {
+                        await troutClient.mutation(api.siteSettings.toggleLocalhostBypass, { enabled });
+                        const updated = await troutClient.query(api.siteSettings.getSiteSettings);
+                        setTroutSettings(updated);
+                      }}
+                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors cursor-pointer"
+                    >
+                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                    </Switch.Root>
+                    <span className={`text-[10px] font-bold w-6 ${troutSettings?.localhostBypass ? 'text-blue-400' : 'text-gray-500'}`}>
+                      {troutSettings?.localhostBypass ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Localhost Bypass Toggle */}
-          <div className="inline-flex items-center gap-3 bg-gray-900/50 border border-blue-700/50 rounded-lg px-4 py-2">
-            <span className="text-sm font-semibold text-blue-300">Localhost Bypass</span>
-            <Switch.Root
-              checked={siteSettings?.localhostBypass ?? true}
-              onCheckedChange={async (enabled) => {
-                await toggleLocalhostBypass({ enabled });
-              }}
-              className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors cursor-pointer"
-            >
-              <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
-            </Switch.Root>
-            <span className={`text-xs font-bold ${siteSettings?.localhostBypass ? 'text-blue-400' : 'text-gray-400'}`}>
-              {siteSettings?.localhostBypass ? 'ON' : 'OFF'}
-            </span>
-            <span className="text-xs text-gray-500">(OFF = localhost acts like production for testing)</span>
+          {/* Sturgeon (Production Database) */}
+          <div className="p-3 bg-red-900/20 border border-red-600/50 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm font-bold text-red-400">🐟 STURGEON</span>
+              <span className="text-[10px] text-red-300">(production)</span>
+            </div>
+            {sturgeonLoading ? (
+              <p className="text-gray-400 text-xs">Loading...</p>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-red-300">Landing Page</span>
+                  <div className="flex items-center gap-2">
+                    <Switch.Root
+                      checked={sturgeonSettings?.landingPageEnabled ?? false}
+                      onCheckedChange={async (enabled) => {
+                        const confirmed = window.confirm(
+                          '⚠️ PRODUCTION WARNING ⚠️\n\n' +
+                          `You are about to ${enabled ? 'ENABLE' : 'DISABLE'} the landing page on STURGEON (PRODUCTION).\n\n` +
+                          'This affects the LIVE WEBSITE with real users.\n\n' +
+                          'Are you sure?'
+                        );
+                        if (!confirmed) return;
+                        await sturgeonClient.mutation(api.siteSettings.toggleLandingPage, { enabled });
+                        const updated = await sturgeonClient.query(api.siteSettings.getSiteSettings);
+                        setSturgeonSettings(updated);
+                      }}
+                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-red-500 transition-colors cursor-pointer"
+                    >
+                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                    </Switch.Root>
+                    <span className={`text-[10px] font-bold w-6 ${sturgeonSettings?.landingPageEnabled ? 'text-red-400' : 'text-gray-500'}`}>
+                      {sturgeonSettings?.landingPageEnabled ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-red-300">Localhost Bypass</span>
+                  <div className="flex items-center gap-2">
+                    <Switch.Root
+                      checked={sturgeonSettings?.localhostBypass ?? true}
+                      onCheckedChange={async (enabled) => {
+                        const confirmed = window.confirm(
+                          '⚠️ PRODUCTION WARNING ⚠️\n\n' +
+                          `You are about to ${enabled ? 'ENABLE' : 'DISABLE'} localhost bypass on STURGEON (PRODUCTION).\n\n` +
+                          'This affects the LIVE WEBSITE behavior.\n\n' +
+                          'Are you sure?'
+                        );
+                        if (!confirmed) return;
+                        await sturgeonClient.mutation(api.siteSettings.toggleLocalhostBypass, { enabled });
+                        const updated = await sturgeonClient.query(api.siteSettings.getSiteSettings);
+                        setSturgeonSettings(updated);
+                      }}
+                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-red-500 transition-colors cursor-pointer"
+                    >
+                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                    </Switch.Root>
+                    <span className={`text-[10px] font-bold w-6 ${sturgeonSettings?.localhostBypass ? 'text-red-400' : 'text-gray-500'}`}>
+                      {sturgeonSettings?.localhostBypass ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
