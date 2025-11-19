@@ -484,7 +484,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
         // Regular ineligible case (not in whitelist)
         return (
-          <div className="text-center py-6 sm:py-8">
+          <div className="text-center p-6 sm:p-8">
             <div className="mb-4 sm:mb-6">
               <svg
                 className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-red-400"
