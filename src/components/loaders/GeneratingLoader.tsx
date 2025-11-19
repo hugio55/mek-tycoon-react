@@ -32,10 +32,11 @@ const GeneratingLoader = ({ text = 'Generating', colorScheme }: GeneratingLoader
           className={styles['loader-letter']}
           style={{
             animationDelay: `${index * 0.05}s`,
-            fontSize: '0.9em'
+            fontSize: '0.5em',
+            whiteSpace: 'pre'
           }}
         >
-          {letter}
+          {letter === ' ' ? '\u00A0' : letter}
         </span>
       ))}
       <div

@@ -88,7 +88,7 @@ export default function MaintenancePage() {
         {/* Generating Loader - 2x scale */}
         <div className="flex items-center justify-center" style={{ transform: 'scale(2)' }}>
           <GeneratingLoader
-            text="Mek Tycoon is being built"
+            text="Mek Tycoon is being built."
             colorScheme={selectedScheme}
           />
         </div>
