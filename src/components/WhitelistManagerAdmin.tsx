@@ -184,12 +184,12 @@ function WhitelistManagerAdminContent() {
     return await client.mutation(api.whitelists.createManualWhitelist, args);
   };
 
-  // Initialize default criteria on mount
+  // Initialize default criteria on mount (only if mutations are enabled and client exists)
   useEffect(() => {
-    if (allCriteria && allCriteria.length === 0) {
+    if (allCriteria && allCriteria.length === 0 && client && canMutate()) {
       initializeCriteria();
     }
-  }, [allCriteria]);
+  }, [allCriteria, client, canMutate]);
 
   const handleGenerateWhitelist = async (whitelistId: Id<"whitelists">) => {
     try {
