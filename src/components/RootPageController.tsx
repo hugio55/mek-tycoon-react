@@ -40,7 +40,9 @@ export default function RootPageController() {
     console.log('[🏠ROOT] Mounted, hostname:', hostname, 'isLocalhost:', isLocal);
   }, []);
 
-  // Redirect to /home if landing page is disabled OR if on localhost (unless ignoreLocalhostRule is true)
+  // ALWAYS show landing page - toggle disabled for safety until game is ready
+  // Original redirect logic commented out to prevent accidental exposure of /home page
+  /*
   useEffect(() => {
     if (mounted && siteSettings !== undefined) {
       const shouldBypassOnLocalhost = isLocalhost && !siteSettings.ignoreLocalhostRule;
@@ -62,6 +64,7 @@ export default function RootPageController() {
       }
     }
   }, [mounted, siteSettings, isLocalhost, router]);
+  */
 
   // Show loading state while checking settings
   if (!mounted || siteSettings === undefined) {
@@ -73,24 +76,7 @@ export default function RootPageController() {
     );
   }
 
-  // Show landing page if enabled AND (not on localhost OR ignoreLocalhostRule is true)
-  const shouldShowLanding = siteSettings.landingPageEnabled && (!isLocalhost || siteSettings.ignoreLocalhostRule);
-  console.log('[🏠ROOT] Render decision:', {
-    shouldShowLanding,
-    willShowLanding: shouldShowLanding,
-    willShowRedirectMessage: !shouldShowLanding,
-  });
-
-  if (shouldShowLanding) {
-    console.log('[🏠ROOT] Rendering LandingPage component');
-    return <LandingPage />;
-  }
-
-  // Show loading while redirecting to /home
-  console.log('[🏠ROOT] Showing redirect message');
-  return (
-    <div className="min-h-screen bg-black flex items-center justify-center z-50 relative">
-      <div className="text-yellow-400 text-xl">Redirecting to game...</div>
-    </div>
-  );
+  // ALWAYS show landing page - safety measure until game is ready
+  console.log('[🏠ROOT] Always rendering LandingPage component (toggle disabled for safety)');
+  return <LandingPage />;
 }
