@@ -625,6 +625,12 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                       )}
                     </div>
                   </div>
+
+                  <div className="mt-3 p-3 rounded-xl backdrop-blur-sm bg-yellow-500/10 border border-yellow-400/40">
+                    <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#fbbf24', lineHeight: '1.5' }}>
+                      ⚠️ Please note, you cannot change payment methods once you have selected one. You may cancel and restart the transaction if you need to change it, but you may lose your edition number.
+                    </div>
+                  </div>
                 </div>
               </div>
 
