@@ -105,21 +105,23 @@ export const checkClaimEligibility = query({
       };
     }
 
-    // Check if stake address is in snapshot
-    // Snapshots only contain stake addresses (no payment addresses)
-    const isInSnapshot = snapshot.eligibleUsers?.some((user: any) => {
-      return user.stakeAddress === args.walletAddress;
-    });
+    // FIRST: Check if this wallet already has an ACTIVE reservation in progress
+    // This handles the case where user closes lightbox and tries to claim again
+    const activeReservation = await ctx.db
+      .query("commemorativeNFTReservations")
+      .withIndex("by_reserved_by", (q) => q.eq("reservedBy", args.walletAddress))
+      .filter((q) => q.eq(q.field("status"), "active"))
+      .first();
 
-    if (!isInSnapshot) {
+    if (activeReservation) {
       return {
         eligible: false,
-        reason: "Stake address not in active snapshot",
+        reason: "You already have an NFT reservation in progress. Please complete your payment in the NMKR window. If you cannot find it, please wait 20 minutes and try again.",
+        hasActiveReservation: true,
       };
     }
 
-    // User is on whitelist, but check if they've already claimed
-    // Check old reservation system (commemorativeNFTReservations)
+    // SECOND: Check if they already completed a claim
     const completedReservation = await ctx.db
       .query("commemorativeNFTReservations")
       .withIndex("by_reserved_by", (q) => q.eq("reservedBy", args.walletAddress))
@@ -134,7 +136,20 @@ export const checkClaimEligibility = query({
       };
     }
 
-    // All checks passed - user is eligible
+    // THIRD: Check if stake address is in whitelist snapshot
+    // Snapshots only contain stake addresses (no payment addresses)
+    const isInSnapshot = snapshot.eligibleUsers?.some((user: any) => {
+      return user.stakeAddress === args.walletAddress;
+    });
+
+    if (!isInSnapshot) {
+      return {
+        eligible: false,
+        reason: "Stake address not in active snapshot",
+      };
+    }
+
+    // All checks passed - user is eligible and has no active reservation
     return {
       eligible: true,
       reason: "Stake address is in active snapshot and has not yet claimed",

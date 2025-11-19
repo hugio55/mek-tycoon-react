@@ -449,6 +449,40 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
         );
 
       case 'ineligible':
+        // Check if they have an active reservation (special case)
+        if ((eligibility as any)?.hasActiveReservation) {
+          return (
+            <div className="text-center py-6 sm:py-8">
+              <div className="mb-4 sm:mb-6">
+                <svg
+                  className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-yellow-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-light text-white tracking-wide mb-3">
+                Reservation In Progress
+              </h3>
+              <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-4">
+                You already have an NFT reservation in progress.
+              </p>
+              <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-6">
+                Please complete your payment in the NMKR window. If you cannot find it, please wait 20 minutes and try again.
+              </p>
+              <button
+                onClick={onClose}
+                className="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-2 rounded font-semibold transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          );
+        }
+
+        // Regular ineligible case (not in whitelist)
         return (
           <div className="text-center py-6 sm:py-8">
             <div className="mb-4 sm:mb-6">
