@@ -506,12 +506,14 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
             </p>
             <button
               onClick={() => {
-                // Close this lightbox so user can click Join Beta button on page
+                // Close this lightbox and open beta signup lightbox
                 onClose();
+                // Trigger the beta signup lightbox via custom event
+                window.dispatchEvent(new CustomEvent('openLightbox', { detail: { type: 'beta-signup' } }));
               }}
-              className="text-yellow-400 hover:text-yellow-300 transition-colors underline font-medium text-sm sm:text-base"
+              className="px-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
             >
-              Join Phase II Beta
+              Join Beta
             </button>
           </div>
         );
