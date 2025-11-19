@@ -163,6 +163,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
       if (!paymentUrl) {
         setErrorMessage('Payment URL not found. Please contact support.');
+        setState('error');
         return;
       }
 
@@ -173,13 +174,18 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
       );
 
       if (!popup) {
-        setErrorMessage('Failed to open payment window. Please allow popups for this site.');
-        setState('error');
+        // Popup was blocked - stay in reserved state and show helpful message
+        // Don't auto-error - user might allow it and try again
+        console.log('[💰PAY] Popup blocked - waiting for user to allow and retry');
+        setErrorMessage('Popup blocked. Please allow popups for this site, then click "Open Payment Window" again.');
+        // DON'T change state - stay in 'reserved' so user can try again
         return;
       }
 
+      // Popup opened successfully
       setPaymentWindow(popup);
       setState('payment');
+      setErrorMessage(''); // Clear any previous error messages
     } catch (error) {
       console.error('[💰PAY] Error opening payment:', error);
       setErrorMessage('Failed to open payment window');
