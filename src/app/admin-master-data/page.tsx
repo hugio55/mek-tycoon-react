@@ -869,10 +869,49 @@ export default function AdminMasterDataPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white p-8 relative z-10">
       {/* Header */}
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-yellow-500 mb-2 font-orbitron tracking-wider">
-          MASTER DATA SYSTEMS
-        </h1>
-        <p className="text-gray-400 mb-4">Centralized procedural generation and game balance control</p>
+        <div className="flex items-start justify-between mb-2">
+          <div>
+            <h1 className="text-4xl font-bold text-yellow-500 font-orbitron tracking-wider">
+              MASTER DATA SYSTEMS
+            </h1>
+            <p className="text-gray-400 mt-2">Centralized procedural generation and game balance control</p>
+          </div>
+
+          {/* Emergency Maintenance Mode - Compact */}
+          <div className="flex items-center gap-3 bg-red-900/20 border border-red-500 rounded-lg px-4 py-2">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🚨</span>
+              <span className="text-sm font-bold text-red-400 uppercase">Maintenance</span>
+            </div>
+            <Switch.Root
+              checked={siteSettings?.maintenanceMode ?? false}
+              onCheckedChange={async (enabled) => {
+                if (enabled) {
+                  const confirmed = window.confirm(
+                    '🚨 EMERGENCY MAINTENANCE MODE 🚨\n\n' +
+                    'This will IMMEDIATELY redirect ALL routes to the maintenance page.\n' +
+                    'Only admin panel will remain accessible.\n\n' +
+                    'Takes effect within 10 seconds.\n\n' +
+                    'Are you ABSOLUTELY SURE?'
+                  );
+                  if (!confirmed) return;
+                }
+                await toggleMaintenanceMode({ enabled });
+                if (enabled) {
+                  alert('⚠️ Maintenance mode activated! Takes effect within 10 seconds.');
+                } else {
+                  alert('✓ Maintenance mode deactivated! Site returning to normal.');
+                }
+              }}
+              className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-red-600 transition-colors cursor-pointer"
+            >
+              <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
+            </Switch.Root>
+            <span className={`text-xs font-bold ${siteSettings?.maintenanceMode ? 'text-red-400' : 'text-gray-500'}`}>
+              {siteSettings?.maintenanceMode ? 'ON' : 'OFF'}
+            </span>
+          </div>
+        </div>
 
         {/* 🐟 DUAL DATABASE CONTROLS 🐟 */}
         <div className="mb-4 grid grid-cols-2 gap-3">
@@ -995,58 +1034,6 @@ export default function AdminMasterDataPage() {
           </div>
         </div>
 
-        {/* 🚨 EMERGENCY MAINTENANCE MODE 🚨 */}
-        <div className="mb-6 p-6 bg-red-900/20 border-2 border-red-500 rounded-xl">
-          <div className="flex items-start gap-4">
-            <div className="text-3xl">🚨</div>
-            <div className="flex-1">
-              <h2 className="text-xl font-bold text-red-400 mb-2 uppercase tracking-wider">Emergency Maintenance Mode</h2>
-              <p className="text-red-300 text-sm mb-4">
-                <strong>NUCLEAR OPTION:</strong> Redirects ALL routes (including landing page) to maintenance page. Takes effect within 10 seconds.
-              </p>
-
-              <div className="flex items-center gap-4">
-                <Switch.Root
-                  checked={siteSettings?.maintenanceMode ?? false}
-                  onCheckedChange={async (enabled) => {
-                    if (enabled) {
-                      const confirmed = window.confirm(
-                        '🚨 EMERGENCY MAINTENANCE MODE 🚨\n\n' +
-                        'This will IMMEDIATELY redirect ALL routes to the maintenance page.\n' +
-                        'Only admin panel will remain accessible.\n\n' +
-                        'Takes effect within 10 seconds.\n\n' +
-                        'Are you ABSOLUTELY SURE?'
-                      );
-                      if (!confirmed) return;
-                    }
-                    await toggleMaintenanceMode({ enabled });
-                    if (enabled) {
-                      alert('⚠️ Maintenance mode activated! Takes effect within 10 seconds.');
-                    } else {
-                      alert('✓ Maintenance mode deactivated! Site returning to normal.');
-                    }
-                  }}
-                  className="w-14 h-7 bg-gray-700 rounded-full relative data-[state=checked]:bg-red-600 transition-colors"
-                >
-                  <Switch.Thumb className="block w-6 h-6 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[30px]" />
-                </Switch.Root>
-                <span className={`text-sm font-bold ${siteSettings?.maintenanceMode ? 'text-red-400' : 'text-gray-400'}`}>
-                  {siteSettings?.maintenanceMode ? '🚨 MAINTENANCE MODE ACTIVE' : 'OFF - Site Normal'}
-                </span>
-              </div>
-
-              {siteSettings?.maintenanceMode && (
-                <div className="mt-4 p-3 bg-red-950/50 border border-red-700 rounded text-red-300 text-xs">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="animate-pulse">⚠️</span>
-                    <strong>MAINTENANCE MODE IS CURRENTLY ACTIVE</strong>
-                  </div>
-                  <p>All users are seeing the maintenance page. Admin panel remains accessible.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
 
         {/* Message Display */}
         {message && (
@@ -1058,60 +1045,6 @@ export default function AdminMasterDataPage() {
             {message.text}
           </div>
         )}
-
-        {/* Quick Save & Commit Buttons */}
-        <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-yellow-400 mb-1">Quick Save & Commit</h2>
-              <p className="text-xs text-gray-400">Create backups and git commits of your code</p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className={`px-6 py-3 rounded-lg font-bold transition-all ${
-                  isSaving
-                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-black hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-yellow-500/30 hover:scale-105'
-                }`}
-              >
-                {isSaving ? (
-                  <span className="flex items-center gap-2">
-                    <span className="animate-spin">⚙️</span>
-                    Saving...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    💾 <span>SAVE NOW</span>
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={handleCommit}
-                disabled={isCommitting}
-                className={`px-6 py-3 rounded-lg font-bold transition-all ${
-                  isCommitting
-                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-green-500/30 hover:scale-105'
-                }`}
-              >
-                {isCommitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="animate-spin">⚙️</span>
-                    Committing...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    📝 <span>GIT COMMIT</span>
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
 
         {/* Page Loader Toggles - Separate for Localhost and Production */}
         <div className="flex gap-4 mb-6">

@@ -127,7 +127,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
         onClick={onToggle}
         disabled={isLocked}
         className={`
-          w-full text-left relative overflow-hidden
+          w-full text-left relative overflow-hidden group
           ${isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-[1.02] active:scale-[0.98]'}
         `}
         style={{
@@ -141,6 +141,19 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
+        {/* Honeycomb pattern overlay on hover */}
+        {!isLocked && (
+          <div
+            className="absolute inset-0 opacity-0 group-hover:opacity-[0.12] transition-opacity duration-300 pointer-events-none"
+            style={{
+              backgroundImage: `url('/random-images/honey-png-big.webp')`,
+              backgroundSize: '125%',
+              backgroundPosition: 'center',
+              borderRadius: '8px'
+            }}
+          />
+        )}
+
         {isPhaseTwo && (
           <div
             className="absolute inset-0 pointer-events-none"
