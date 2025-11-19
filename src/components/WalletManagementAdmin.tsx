@@ -1359,7 +1359,7 @@ Check console for full timeline.
           <tbody className="divide-y divide-gray-700">
             {!walletsLoaded ? (
               <tr>
-                <td colSpan={13} className="px-4 py-8 text-center">
+                <td colSpan={15} className="px-4 py-8 text-center">
                   <div className="text-gray-400">
                     <p className="text-lg mb-2">Wallet data not loaded</p>
                     <p className="text-sm text-gray-500">Click "Load Wallets" button above to view player data</p>
@@ -1368,7 +1368,7 @@ Check console for full timeline.
               </tr>
             ) : walletDisplay.length === 0 ? (
               <tr>
-                <td colSpan={13} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={15} className="px-4 py-8 text-center text-gray-500">
                   {searchTerm ? 'No wallets match your search' : 'No wallets connected yet'}
                 </td>
               </tr>
