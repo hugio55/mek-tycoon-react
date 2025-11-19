@@ -8,8 +8,9 @@ export default function RouteVisualization() {
 
   // Current routing configuration (hardcoded for now based on our setup)
   const routingConfig = {
-    landingToggleEnabled: false, // We disabled this in RootPageController
-    actualBehavior: 'Always show landing-v2',
+    landingToggleEnabled: true, // Hardcoded in middleware.ts
+    actualBehavior: 'Landing page enabled - all game routes redirect to /',
+    middlewareActive: true, // Global middleware protection is active
   };
 
   const routes = [
@@ -17,7 +18,7 @@ export default function RouteVisualization() {
       url: '/',
       name: 'Root',
       description: 'Main entry point',
-      behavior: 'Always shows landing-v2 (toggle disabled for safety)',
+      behavior: 'Shows landing-v2 (public)',
       component: 'RootPageController → landing-v2',
       canAccess: true,
       color: 'green'
@@ -26,7 +27,7 @@ export default function RouteVisualization() {
       url: '/landing-v2',
       name: 'Landing Page',
       description: 'Marketing/splash page',
-      behavior: 'Directly accessible',
+      behavior: 'Directly accessible (public)',
       component: 'landing-v2/page.tsx',
       canAccess: true,
       color: 'green'
@@ -35,19 +36,55 @@ export default function RouteVisualization() {
       url: '/home',
       name: 'Game Interface',
       description: 'Triangle, gold, Mek management',
-      behavior: 'CODE EXISTS but never linked/accessible (safe from accidental access)',
+      behavior: 'Protected by middleware → redirects to /',
       component: 'home/page.tsx',
       canAccess: false,
       color: 'red'
     },
     {
-      url: '/mech-rate-logging',
-      name: 'Legacy Route',
-      description: 'Old URL',
-      behavior: 'Redirects to root (/) → landing-v2',
-      component: 'Redirect',
+      url: '/profile',
+      name: 'Player Profile',
+      description: 'User profile and stats',
+      behavior: 'Protected by middleware → redirects to /',
+      component: 'profile/page.tsx',
+      canAccess: false,
+      color: 'red'
+    },
+    {
+      url: '/shop',
+      name: 'Shop',
+      description: 'Purchase items and upgrades',
+      behavior: 'Protected by middleware → redirects to /',
+      component: 'shop/page.tsx',
+      canAccess: false,
+      color: 'red'
+    },
+    {
+      url: '/crafting',
+      name: 'Crafting',
+      description: 'Craft new Mek variations',
+      behavior: 'Protected by middleware → redirects to /',
+      component: 'crafting/page.tsx',
+      canAccess: false,
+      color: 'red'
+    },
+    {
+      url: '/admin-*',
+      name: 'Admin Routes',
+      description: 'Admin control panel',
+      behavior: 'Always accessible (admin only)',
+      component: 'admin-*/page.tsx',
       canAccess: true,
-      color: 'yellow'
+      color: 'green'
+    },
+    {
+      url: '/api/*',
+      name: 'API Routes',
+      description: 'Backend endpoints',
+      behavior: 'Always accessible',
+      component: 'api/*',
+      canAccess: true,
+      color: 'green'
     },
   ];
 
@@ -67,11 +104,18 @@ export default function RouteVisualization() {
         <h3 className="text-lg font-bold text-blue-300 mb-3">Current Configuration</h3>
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2">
-            <span className="text-gray-400">Landing Page Toggle (in code):</span>
-            <span className="px-2 py-1 bg-red-900/30 text-red-400 border border-red-700 rounded text-xs font-bold">
-              DISABLED
+            <span className="text-gray-400">Middleware Protection:</span>
+            <span className="px-2 py-1 bg-green-900/30 text-green-400 border border-green-700 rounded text-xs font-bold">
+              ACTIVE
             </span>
-            <span className="text-gray-500 text-xs">(Hardcoded to always show landing)</span>
+            <span className="text-gray-500 text-xs">(Global route protection enabled)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400">Landing Page Toggle (middleware):</span>
+            <span className="px-2 py-1 bg-green-900/30 text-green-400 border border-green-700 rounded text-xs font-bold">
+              ENABLED
+            </span>
+            <span className="text-gray-500 text-xs">(Hardcoded in middleware.ts)</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-gray-400">Database Toggle Value:</span>
@@ -82,7 +126,7 @@ export default function RouteVisualization() {
             }`}>
               {siteSettings?.landingPageEnabled ? 'ENABLED' : 'DISABLED'}
             </span>
-            <span className="text-gray-500 text-xs">(Currently ignored by code)</span>
+            <span className="text-gray-500 text-xs">(Future: will control middleware)</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-gray-400">Actual Behavior:</span>
@@ -148,10 +192,25 @@ export default function RouteVisualization() {
             </div>
           </div>
 
-          {/* User visits mech-rate-logging */}
+          {/* User visits landing-v2 */}
           <div className="flex items-center gap-4">
             <div className="px-4 py-2 bg-blue-900/30 border border-blue-500 rounded text-blue-300 font-mono text-sm">
-              User visits: <span className="text-yellow-400">/mech-rate-logging</span>
+              User visits: <span className="text-yellow-400">/landing-v2</span>
+            </div>
+            <div className="text-gray-400">→</div>
+            <div className="px-4 py-2 bg-green-900/30 border border-green-500 rounded text-green-300 text-sm">
+              Shows: Landing-v2
+            </div>
+          </div>
+
+          {/* User visits game route */}
+          <div className="flex items-center gap-4">
+            <div className="px-4 py-2 bg-blue-900/30 border border-blue-500 rounded text-blue-300 font-mono text-sm">
+              User visits: <span className="text-yellow-400">/home</span>
+            </div>
+            <div className="text-gray-400">→</div>
+            <div className="px-4 py-2 bg-purple-900/30 border border-purple-500 rounded text-purple-300 text-sm">
+              Middleware intercepts
             </div>
             <div className="text-gray-400">→</div>
             <div className="px-4 py-2 bg-yellow-900/30 border border-yellow-500 rounded text-yellow-300 text-sm">
@@ -163,46 +222,52 @@ export default function RouteVisualization() {
             </div>
           </div>
 
-          {/* User visits home */}
+          {/* User visits any game route */}
           <div className="flex items-center gap-4">
             <div className="px-4 py-2 bg-blue-900/30 border border-blue-500 rounded text-blue-300 font-mono text-sm">
-              User visits: <span className="text-yellow-400">/home</span>
+              User visits: <span className="text-yellow-400">/profile, /shop, /crafting, etc.</span>
             </div>
             <div className="text-gray-400">→</div>
-            <div className="px-4 py-2 bg-green-900/30 border border-green-500 rounded text-green-300 text-sm">
-              Shows: Game Interface
+            <div className="px-4 py-2 bg-purple-900/30 border border-purple-500 rounded text-purple-300 text-sm">
+              Middleware intercepts
             </div>
-            <div className="px-3 py-1 bg-orange-900/30 border border-orange-500 rounded text-orange-300 text-xs">
-              ⚠️ ACCESSIBLE (no redirect)
-            </div>
-          </div>
-
-          {/* User visits landing-v2 */}
-          <div className="flex items-center gap-4">
-            <div className="px-4 py-2 bg-blue-900/30 border border-blue-500 rounded text-blue-300 font-mono text-sm">
-              User visits: <span className="text-yellow-400">/landing-v2</span>
+            <div className="text-gray-400">→</div>
+            <div className="px-4 py-2 bg-yellow-900/30 border border-yellow-500 rounded text-yellow-300 text-sm">
+              Redirects to: /
             </div>
             <div className="text-gray-400">→</div>
             <div className="px-4 py-2 bg-green-900/30 border border-green-500 rounded text-green-300 text-sm">
               Shows: Landing-v2
             </div>
           </div>
+
+          {/* User visits admin */}
+          <div className="flex items-center gap-4">
+            <div className="px-4 py-2 bg-blue-900/30 border border-blue-500 rounded text-blue-300 font-mono text-sm">
+              User visits: <span className="text-yellow-400">/admin-*</span>
+            </div>
+            <div className="text-gray-400">→</div>
+            <div className="px-4 py-2 bg-green-900/30 border border-green-500 rounded text-green-300 text-sm">
+              Allowed through (admin access)
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Warning */}
-      <div className="mt-6 p-4 bg-orange-900/30 border-2 border-orange-500 rounded-lg">
+      {/* Protection Status */}
+      <div className="mt-6 p-4 bg-green-900/30 border-2 border-green-500 rounded-lg">
         <div className="flex items-start gap-3">
-          <span className="text-2xl">⚠️</span>
+          <span className="text-2xl">✅</span>
           <div>
-            <div className="text-orange-400 font-bold text-lg mb-2">Current Protection Status</div>
-            <div className="text-orange-200 text-sm space-y-1">
-              <p>✓ Root (/) is safe - always shows landing-v2</p>
-              <p>✓ Landing page toggle is disabled in code</p>
-              <p>⚠️ <strong>/home is still accessible if someone types the URL directly</strong></p>
-              <p className="mt-2 text-xs text-orange-300/70">
-                Note: As long as you don't link to /home from anywhere, users won't find it.
-                If you need stronger protection, we can add a redirect to /home as well.
+            <div className="text-green-400 font-bold text-lg mb-2">Full Protection Active</div>
+            <div className="text-green-200 text-sm space-y-1">
+              <p>✓ <strong>Middleware protection active</strong> - All game routes are protected</p>
+              <p>✓ <strong>Landing page enabled</strong> - All non-admin routes redirect to /</p>
+              <p>✓ <strong>No game routes accessible</strong> - Typing URLs directly will redirect</p>
+              <p>✓ <strong>Admin routes protected</strong> - Only admin users can access /admin-*</p>
+              <p className="mt-2 text-xs text-green-300/70">
+                Middleware runs BEFORE every page load, intercepting all requests globally.
+                When you're ready to launch the game, change LANDING_PAGE_ENABLED to false in middleware.ts
               </p>
             </div>
           </div>

@@ -74,7 +74,7 @@ export const submitBetaSignup = mutation({
 
     if (existingAddress) {
       console.log('[🎮BETA-SERVER] Address already registered');
-      throw new Error('This address has already been submitted.');
+      throw new Error('Stake address has already been added to the Phase 2 beta. Be sure to join our Discord and keep an eye on the MekTycoon channels for more information going forward.');
     }
 
     // Check for existing signup from this IP address
