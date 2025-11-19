@@ -76,35 +76,46 @@ export const createCampaignReservation = mutation({
     // First, clean up any expired reservations for this campaign
     await cleanupExpiredCampaignReservations(ctx, args.campaignId, now);
 
-    // Check if user already has an active reservation in THIS campaign
-    const existingReservation = await ctx.db
-      .query("commemorativeNFTReservations")
+    // PHASE 2: Check inventory table for active reservation (NEW - single source of truth)
+    const existingInventoryReservation = await ctx.db
+      .query("commemorativeNFTInventory")
       .withIndex("by_campaign_and_wallet", (q) =>
         q.eq("campaignId", args.campaignId).eq("reservedBy", args.walletAddress)
       )
-      .filter((q) => q.eq(q.field("status"), "active"))
+      .filter((q) => q.eq(q.field("status"), "reserved"))
       .first();
 
-    if (existingReservation) {
-      console.log('[CAMPAIGN RESERVATION] User already has active reservation in this campaign:', existingReservation.nftNumber);
+    if (existingInventoryReservation) {
+      console.log('[CAMPAIGN RESERVATION] User already has active reservation in this campaign:', existingInventoryReservation.nftNumber);
 
-      // Return the existing reservation info
-      const existingNFT = await ctx.db.get(existingReservation.nftInventoryId);
       return {
         success: true,
-        reservation: existingReservation,
-        nft: existingNFT,
+        reservation: {
+          _id: existingInventoryReservation._id,
+          campaignId: args.campaignId,
+          nftInventoryId: existingInventoryReservation._id, // Same as reservation ID in new system
+          nftUid: existingInventoryReservation.nftUid,
+          nftNumber: existingInventoryReservation.nftNumber,
+          reservedBy: existingInventoryReservation.reservedBy!,
+          reservedAt: existingInventoryReservation.reservedAt!,
+          expiresAt: existingInventoryReservation.expiresAt!,
+          status: "active" as const,
+          paymentWindowOpenedAt: existingInventoryReservation.paymentWindowOpenedAt,
+          paymentWindowClosedAt: existingInventoryReservation.paymentWindowClosedAt,
+        },
+        nft: existingInventoryReservation,
         isExisting: true,
       };
     }
 
-    // Check if user has already completed a reservation in this campaign (one per user per campaign)
+    // PHASE 2: Check if user has already completed (sold NFT in inventory)
+    // In new system, completed reservations show as status="sold" in inventory
     const hasCompleted = await ctx.db
-      .query("commemorativeNFTReservations")
+      .query("commemorativeNFTInventory")
       .withIndex("by_campaign_and_wallet", (q) =>
         q.eq("campaignId", args.campaignId).eq("reservedBy", args.walletAddress)
       )
-      .filter((q) => q.eq(q.field("status"), "completed"))
+      .filter((q) => q.eq(q.field("status"), "sold"))
       .first();
 
     if (hasCompleted) {
@@ -133,8 +144,18 @@ export const createCampaignReservation = mutation({
 
     console.log('[CAMPAIGN RESERVATION] Found available NFT:', availableNFT.nftNumber, availableNFT.name);
 
-    // Create the reservation
+    // PHASE 2: Single atomic operation - update inventory with reservation data
     const expiresAt = now + RESERVATION_TIMEOUT;
+    await ctx.db.patch(availableNFT._id, {
+      status: "reserved",
+      reservedBy: args.walletAddress,
+      reservedAt: now,
+      expiresAt,
+      paymentWindowOpenedAt: undefined, // Reset payment window fields
+      paymentWindowClosedAt: undefined,
+    });
+
+    // PHASE 2: Dual-write to old table for safety (remove in Phase 3)
     const reservationId = await ctx.db.insert("commemorativeNFTReservations", {
       campaignId: args.campaignId,
       nftInventoryId: availableNFT._id,
@@ -146,11 +167,6 @@ export const createCampaignReservation = mutation({
       status: "active",
     });
 
-    // Update NFT inventory status to reserved
-    await ctx.db.patch(availableNFT._id, {
-      status: "reserved",
-    });
-
     // Update campaign counters
     await ctx.db.patch(args.campaignId, {
       availableNFTs: campaign.availableNFTs - 1,
@@ -158,12 +174,15 @@ export const createCampaignReservation = mutation({
       updatedAt: now,
     });
 
-    console.log('[CAMPAIGN RESERVATION] Created reservation:', reservationId, 'for NFT:', availableNFT.nftNumber, 'in campaign:', campaign.name);
+    console.log('[CAMPAIGN RESERVATION] Created reservation:', availableNFT._id, 'for NFT:', availableNFT.nftNumber, 'in campaign:', campaign.name);
+    console.log('[CAMPAIGN RESERVATION] (Phase 2: Dual-write legacy ID:', reservationId, ')');
 
+    // PHASE 2: Return inventory ID as primary reservation ID
+    // The inventory row IS the reservation now
     return {
       success: true,
       reservation: {
-        _id: reservationId,
+        _id: availableNFT._id, // Inventory ID is now the reservation ID
         campaignId: args.campaignId,
         nftInventoryId: availableNFT._id,
         nftUid: availableNFT.nftUid,
@@ -172,6 +191,7 @@ export const createCampaignReservation = mutation({
         reservedAt: now,
         expiresAt,
         status: "active" as const,
+        legacyReservationId: reservationId, // Keep old ID for dual-write compatibility
       },
       nft: availableNFT,
       campaign: {
