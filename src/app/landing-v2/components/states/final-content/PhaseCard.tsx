@@ -144,7 +144,9 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
         {/* Honeycomb pattern overlay on hover */}
         {!isLocked && (
           <div
-            className="absolute inset-0 opacity-0 group-hover:opacity-[0.05] transition-opacity duration-300 pointer-events-none"
+            className={`absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none ${
+              (isPhaseOne || isPhaseTwo) ? 'group-hover:opacity-[0.07]' : 'group-hover:opacity-[0.04]'
+            }`}
             style={{
               backgroundImage: `url('/random-images/honey-png-big.webp')`,
               backgroundSize: '100%',
