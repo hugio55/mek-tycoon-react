@@ -249,12 +249,13 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
       const now = Date.now();
       const isExpired = now >= activeReservation.expiresAt;
 
-      console.log('[⏰TIMER] Check', {
-        isExpired,
-        remainingMs: Math.max(0, activeReservation.expiresAt - now),
-        state,
-        hasInitiated: hasInitiatedTimeoutRelease.current,
-      });
+      // Removed console spam - only log on expiration
+      // console.log('[⏰TIMER] Check', {
+      //   isExpired,
+      //   remainingMs: Math.max(0, activeReservation.expiresAt - now),
+      //   state,
+      //   hasInitiated: hasInitiatedTimeoutRelease.current,
+      // });
 
       // INSTANT RELEASE when timer expires
       if (isExpired && !hasInitiatedTimeoutRelease.current) {
@@ -612,6 +613,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                       textShadow: '0 0 10px rgba(34, 211, 238, 0.6), 0 0 20px rgba(34, 211, 238, 0.4)'
                     }}>edition number {activeReservation.nftNumber}</span>. Click below to open the payment window and complete your purchase.
                   </p>
+                  <p style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', fontSize: '0.875rem', lineHeight: '1.5', fontWeight: 400, marginTop: '0.75rem' }}>
+                    You have 20 minutes to complete this transaction.
+                  </p>
 
                   <div className="mt-3 p-3 rounded-xl backdrop-blur-sm bg-cyan-500/20 border border-cyan-400/50">
                     <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#bae6fd', lineHeight: '1.5' }}>
@@ -637,6 +641,21 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                 }}
               >
                 Open Payment Window
+              </button>
+
+              <button
+                onClick={handleCancelReservation}
+                className="w-full mt-3 py-2 px-4 text-sm font-medium transition-all duration-200 hover:text-red-400"
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  color: '#bae6fd',
+                  background: 'transparent',
+                  border: 'none',
+                  letterSpacing: '0.01em',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
               </button>
 
               {errorMessage && (
