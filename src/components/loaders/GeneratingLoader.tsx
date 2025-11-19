@@ -26,7 +26,7 @@ const GeneratingLoader = ({ text = 'Generating', colorScheme }: GeneratingLoader
 
   return (
     <div className={styles['loader-wrapper']}>
-      <div style={{ transform: 'translateY(3px)' }}>
+      <div style={{ transform: 'translateY(1px)', letterSpacing: '0.5px' }}>
         {letters.map((letter, index) => (
           <span
             key={index}
