@@ -64,21 +64,44 @@ export const investigateAllData = query({
         createdAt: inv.createdAt,
         createdAtDate: new Date(inv.createdAt).toISOString(),
       })),
-      reservations: allReservations.map(res => ({
-        _id: res._id,
-        campaignId: res.campaignId,
-        nftInventoryId: res.nftInventoryId,
-        nftUid: res.nftUid,
-        nftNumber: res.nftNumber,
-        reservedBy: res.reservedBy,
-        reservedAt: res.reservedAt,
-        reservedAtDate: new Date(res.reservedAt).toISOString(),
-        expiresAt: res.expiresAt,
-        expiresAtDate: new Date(res.expiresAt).toISOString(),
-        status: res.status,
-        paymentWindowOpenedAt: res.paymentWindowOpenedAt,
-        paymentWindowClosedAt: res.paymentWindowClosedAt,
-      })),
+      reservations: allReservations.map(res => {
+        // Helper function to format date in EST with 12-hour time
+        const formatDateEST = (timestamp: number) => {
+          return new Date(timestamp).toLocaleString('en-US', {
+            timeZone: 'America/New_York',
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+          });
+        };
+
+        // Helper function to abbreviate stake address
+        const abbreviateAddress = (address: string) => {
+          if (!address || address.length < 20) return address;
+          return `${address.slice(0, 10)}...${address.slice(-8)}`;
+        };
+
+        return {
+          _id: res._id,
+          campaignId: res.campaignId,
+          nftInventoryId: res.nftInventoryId,
+          nftUid: res.nftUid,
+          nftNumber: res.nftNumber,
+          reservedBy: abbreviateAddress(res.reservedBy),
+          reservedByFull: res.reservedBy, // Keep full address for reference
+          reservedAt: res.reservedAt,
+          reservedAtDate: formatDateEST(res.reservedAt),
+          expiresAt: res.expiresAt,
+          expiresAtDate: formatDateEST(res.expiresAt),
+          status: res.status,
+          paymentWindowOpenedAt: res.paymentWindowOpenedAt,
+          paymentWindowClosedAt: res.paymentWindowClosedAt,
+        };
+      }),
       campaigns: allCampaigns.map(camp => ({
         _id: camp._id,
         name: camp.name,
