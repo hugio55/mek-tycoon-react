@@ -138,8 +138,9 @@ export const checkClaimEligibility = query({
 
     // THIRD: Check if stake address is in whitelist snapshot
     // Snapshots only contain stake addresses (no payment addresses)
+    // Check both stakeAddress (new) and walletAddress (legacy) fields
     const isInSnapshot = snapshot.eligibleUsers?.some((user: any) => {
-      return user.stakeAddress === args.walletAddress;
+      return user.stakeAddress === args.walletAddress || user.walletAddress === args.walletAddress;
     });
 
     if (!isInSnapshot) {
@@ -299,5 +300,51 @@ export const batchCheckClaimStatus = query({
     }
 
     return claimStatusMap;
+  },
+});
+
+/**
+ * Debug function to check why a specific stake address isn't matching
+ */
+export const debugStakeAddressMatch = query({
+  args: {
+    testStakeAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const config = await ctx.db.query("nftEligibilityConfig").first();
+    if (!config || !config.activeSnapshotId) {
+      return { error: "No active snapshot" };
+    }
+
+    const snapshot = await ctx.db.get(config.activeSnapshotId);
+    if (!snapshot) {
+      return { error: "Snapshot not found" };
+    }
+
+    // Get all stake addresses from snapshot
+    const snapshotAddresses = snapshot.eligibleUsers?.map((user: any) => ({
+      stakeAddress: user.stakeAddress,
+      walletAddress: user.walletAddress,
+      displayName: user.displayName,
+    })) || [];
+
+    // Check for exact match
+    const exactMatch = snapshot.eligibleUsers?.some((user: any) =>
+      user.stakeAddress === args.testStakeAddress
+    );
+
+    // Check for match with walletAddress field (legacy)
+    const legacyMatch = snapshot.eligibleUsers?.some((user: any) =>
+      user.walletAddress === args.testStakeAddress
+    );
+
+    return {
+      testAddress: args.testStakeAddress,
+      snapshotName: snapshot.snapshotName,
+      totalUsers: snapshot.eligibleUsers?.length || 0,
+      exactMatch,
+      legacyMatch,
+      sampleAddresses: snapshotAddresses.slice(0, 5), // First 5 for inspection
+    };
   },
 });
