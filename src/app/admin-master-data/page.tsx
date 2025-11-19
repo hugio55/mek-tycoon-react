@@ -848,24 +848,28 @@ export default function AdminMasterDataPage() {
           {/* Localhost Bypass Toggle */}
           <div className="inline-flex items-center gap-3 bg-gray-900/50 border border-blue-700/50 rounded-lg px-4 py-2">
             <span className="text-sm font-semibold text-blue-300">Localhost Bypass</span>
-            <Switch.Root
-              checked={siteSettings?.localhostBypass ?? true}
-              onCheckedChange={async (enabled) => {
-                console.log('[🔧LOCALHOST-BYPASS] Toggle clicked, new value:', enabled);
-                console.log('[🔧LOCALHOST-BYPASS] Current siteSettings:', siteSettings);
-                console.log('[🔧LOCALHOST-BYPASS] Current localhostBypass value:', siteSettings?.localhostBypass);
-                try {
-                  const result = await toggleLocalhostBypass({ enabled });
-                  console.log('[🔧LOCALHOST-BYPASS] Mutation result:', result);
-                  console.log('[🔧LOCALHOST-BYPASS] Toggle updated successfully');
-                } catch (error) {
-                  console.error('[🔧LOCALHOST-BYPASS] Error updating toggle:', error);
-                }
-              }}
-              className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors cursor-pointer"
-            >
-              <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
-            </Switch.Root>
+            <div className="flex flex-col gap-1">
+              <Switch.Root
+                checked={siteSettings?.localhostBypass ?? true}
+                onCheckedChange={async (enabled) => {
+                  console.log('[🔧LOCALHOST-BYPASS] Toggle clicked, new value:', enabled);
+                  console.log('[🔧LOCALHOST-BYPASS] Current siteSettings:', siteSettings);
+                  console.log('[🔧LOCALHOST-BYPASS] Current localhostBypass value:', siteSettings?.localhostBypass);
+                  console.log('[🔧LOCALHOST-BYPASS] Checked prop value:', siteSettings?.localhostBypass ?? true);
+                  try {
+                    const result = await toggleLocalhostBypass({ enabled });
+                    console.log('[🔧LOCALHOST-BYPASS] Mutation result:', result);
+                    console.log('[🔧LOCALHOST-BYPASS] Toggle updated successfully');
+                  } catch (error) {
+                    console.error('[🔧LOCALHOST-BYPASS] Error updating toggle:', error);
+                  }
+                }}
+                className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors cursor-pointer"
+              >
+                <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
+              </Switch.Root>
+              <span className="text-[8px] text-gray-600">DB: {String(siteSettings?.localhostBypass)}</span>
+            </div>
             <span className={`text-xs font-bold ${siteSettings?.localhostBypass ? 'text-blue-400' : 'text-gray-400'}`}>
               {siteSettings?.localhostBypass ? 'ON' : 'OFF'}
             </span>
