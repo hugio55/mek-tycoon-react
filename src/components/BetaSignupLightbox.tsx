@@ -114,7 +114,13 @@ export default function BetaSignupLightbox({
       }, 2000);
     } catch (error) {
       console.error('[🎮BETA] Signup error:', error);
-      setValidationError(error instanceof Error ? error.message : 'Failed to submit signup');
+      // Clean up error message - strip technical details
+      let errorMessage = error instanceof Error ? error.message : 'Failed to submit signup';
+      // Remove "Uncaught Error:" prefix if present
+      errorMessage = errorMessage.replace(/^Uncaught Error:\s*/i, '');
+      // Remove stack trace info (anything after " at ")
+      errorMessage = errorMessage.split(' at ')[0].trim();
+      setValidationError(errorMessage);
       setIsSubmitting(false);
     }
   };
