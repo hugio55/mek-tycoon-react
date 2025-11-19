@@ -3444,6 +3444,15 @@ export default defineSchema({
     paymentUrl: v.string(), // Pre-built NMKR payment URL
     imageUrl: v.optional(v.string()), // NFT image URL
     createdAt: v.number(),
+
+    // RESERVATION FIELDS (Phase 1: Single Source of Truth Migration)
+    // When status="reserved", these fields track the active reservation
+    // When status="available" or "sold", these fields are null/undefined
+    reservedBy: v.optional(v.string()), // Stake address of user who reserved this NFT
+    reservedAt: v.optional(v.number()), // Timestamp when reservation was created
+    expiresAt: v.optional(v.number()), // Timestamp when reservation expires
+    paymentWindowOpenedAt: v.optional(v.number()), // When NMKR payment window was opened
+    paymentWindowClosedAt: v.optional(v.number()), // When NMKR payment window was closed
   })
     .index("by_uid", ["nftUid"])
     .index("by_number", ["nftNumber"])
@@ -3451,7 +3460,12 @@ export default defineSchema({
     .index("by_status_and_number", ["status", "nftNumber"])
     .index("by_campaign", ["campaignId"])
     .index("by_campaign_and_status", ["campaignId", "status"])
-    .index("by_campaign_and_number", ["campaignId", "nftNumber"]),
+    .index("by_campaign_and_number", ["campaignId", "nftNumber"])
+    // NEW INDEXES for reservation queries
+    .index("by_reserved_by", ["reservedBy"]) // Lookup user's reservations
+    .index("by_expires_at", ["expiresAt"]) // Cleanup expired reservations
+    .index("by_campaign_and_wallet", ["campaignId", "reservedBy"]) // Campaign-scoped user lookup
+    .index("by_wallet_and_status", ["reservedBy", "status"]), // Active reservations for user
 
   // Commemorative NFT Reservations - Active reservations for claim process
   // Tracks who has reserved which NFT and for how long
@@ -3620,6 +3634,7 @@ export default defineSchema({
   siteSettings: defineTable({
     landingPageEnabled: v.boolean(), // Controls whether root (/) shows landing page or game
     localhostBypass: v.optional(v.boolean()), // When true, localhost bypasses protection (dev mode). When false, localhost acts like production (for testing)
+    ignoreLocalhostRule: v.optional(v.boolean()), // Legacy field, use localhostBypass instead
     maintenanceMode: v.optional(v.boolean()), // EMERGENCY: When true, ALL routes redirect to maintenance page (nuclear option)
   }),
 
