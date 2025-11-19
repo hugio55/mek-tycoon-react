@@ -79,9 +79,9 @@ export function Providers({ children }: { children: ReactNode }) {
   const isTalentBuilder = pathname === "/talent-builder";
   const isLandingPage = pathname === "/landing";
   const isLandingV2Page = pathname === "/landing-v2";
-  const isMaintenancePage = pathname === "/maintenance";
+  const isMaintenancePage = pathname === "/wen";
 
-  // Show unified header on all pages except welcome, talent-builder, landing, landing-v2, and maintenance
+  // Show unified header on all pages except welcome, talent-builder, landing, landing-v2, and wen
   const showHeader = !isWelcomePage && !isTalentBuilder && !isLandingPage && !isLandingV2Page && !isMaintenancePage;
 
   return (

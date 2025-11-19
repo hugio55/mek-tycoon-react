@@ -5,12 +5,12 @@ import type { NextRequest } from 'next/server';
  * Global Route Protection Middleware
  *
  * PRIORITY ORDER:
- * 1. MAINTENANCE MODE (highest) - Redirects EVERYTHING to /maintenance
+ * 1. MAINTENANCE MODE (highest) - Redirects EVERYTHING to /wen
  * 2. Localhost Bypass - Allows localhost to bypass protection (if enabled)
  * 3. Landing Page Protection - Redirects game routes to landing
  *
  * Controls access based on database settings:
- * - Maintenance Mode: Emergency nuclear option - redirects ALL routes to /maintenance
+ * - Maintenance Mode: Emergency nuclear option - redirects ALL routes to /wen
  * - Landing Page: When enabled, redirects all game routes to landing page (/)
  * - Localhost Bypass: When enabled, localhost can access all routes (for dev/testing)
  */
@@ -70,7 +70,7 @@ export async function middleware(request: NextRequest) {
                      hostname.includes('10.0.');
 
   // Define special paths that might need to bypass certain protections
-  const isMaintenancePage = pathname === '/maintenance';
+  const isMaintenancePage = pathname === '/wen';
   const isAdminRoute = pathname.startsWith('/admin');
   const isApiRoute = pathname.startsWith('/api');
   const isNextInternal = pathname.startsWith('/_next');
@@ -96,8 +96,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    console.log('[🗺️MIDDLEWARE] MAINTENANCE MODE - redirecting to /maintenance:', pathname);
-    return NextResponse.redirect(new URL('/maintenance', request.url));
+    console.log('[🗺️MIDDLEWARE] MAINTENANCE MODE - redirecting to /wen:', pathname);
+    return NextResponse.redirect(new URL('/wen', request.url));
   }
 
   // ⚙️ PRIORITY 2: LOCALHOST BYPASS (if enabled)

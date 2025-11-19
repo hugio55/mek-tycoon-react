@@ -23,10 +23,11 @@ export const investigateAllData = query({
       .query("commemorativeNFTInventory")
       .collect();
 
-    // Get all reservations
-    const allReservations = await ctx.db
-      .query("commemorativeNFTReservations")
-      .collect();
+    // PHASE 2: Get active reservations from inventory table (new system)
+    // Reservations are now stored directly in inventory rows with status="reserved"
+    const allReservations = allInventory.filter(inv =>
+      inv.status === "reserved" && inv.reservedBy && inv.reservedAt && inv.expiresAt
+    );
 
     // Get campaigns for context
     const allCampaigns = await ctx.db
@@ -64,7 +65,7 @@ export const investigateAllData = query({
         createdAt: inv.createdAt,
         createdAtDate: new Date(inv.createdAt).toISOString(),
       })),
-      reservations: allReservations.map(res => {
+      reservations: allReservations.map(inv => {
         // Helper function to format date in EST with 12-hour time
         const formatDateEST = (timestamp: number) => {
           return new Date(timestamp).toLocaleString('en-US', {
@@ -85,21 +86,26 @@ export const investigateAllData = query({
           return `${address.slice(0, 10)}...${address.slice(-8)}`;
         };
 
+        // PHASE 2: Inventory row IS the reservation now
+        // Check if expired for accurate status display
+        const now = Date.now();
+        const isExpired = inv.expiresAt! < now;
+
         return {
-          _id: res._id,
-          campaignId: res.campaignId,
-          nftInventoryId: res.nftInventoryId,
-          nftUid: res.nftUid,
-          nftNumber: res.nftNumber,
-          reservedBy: abbreviateAddress(res.reservedBy),
-          reservedByFull: res.reservedBy, // Keep full address for reference
-          reservedAt: res.reservedAt,
-          reservedAtDate: formatDateEST(res.reservedAt),
-          expiresAt: res.expiresAt,
-          expiresAtDate: formatDateEST(res.expiresAt),
-          status: res.status,
-          paymentWindowOpenedAt: res.paymentWindowOpenedAt,
-          paymentWindowClosedAt: res.paymentWindowClosedAt,
+          _id: inv._id,
+          campaignId: inv.campaignId,
+          nftInventoryId: inv._id, // Same as _id in new system
+          nftUid: inv.nftUid,
+          nftNumber: inv.nftNumber,
+          reservedBy: abbreviateAddress(inv.reservedBy!),
+          reservedByFull: inv.reservedBy, // Keep full address for reference
+          reservedAt: inv.reservedAt!,
+          reservedAtDate: formatDateEST(inv.reservedAt!),
+          expiresAt: inv.expiresAt!,
+          expiresAtDate: formatDateEST(inv.expiresAt!),
+          status: isExpired ? "expired" : "active", // Calculate real-time status
+          paymentWindowOpenedAt: inv.paymentWindowOpenedAt,
+          paymentWindowClosedAt: inv.paymentWindowClosedAt,
         };
       }),
       campaigns: allCampaigns.map(camp => ({
@@ -175,28 +181,42 @@ export const resetInventoryToAvailable = mutation({
 
 /**
  * CLEANUP MUTATION #3: Cancel/delete reservation
+ * PHASE 2: Updated to work with inventory IDs (new system)
  */
 export const cancelReservation = mutation({
   args: {
-    reservationId: v.id("commemorativeNFTReservations"),
+    reservationId: v.id("commemorativeNFTInventory"),
   },
   handler: async (ctx, args) => {
-    const reservation = await ctx.db.get(args.reservationId);
-    if (!reservation) {
-      throw new Error(`Reservation ${args.reservationId} not found`);
+    // PHASE 2: Reservation ID is now the inventory ID
+    const inventory = await ctx.db.get(args.reservationId);
+    if (!inventory) {
+      throw new Error(`Inventory item ${args.reservationId} not found`);
     }
 
-    // Delete reservation entirely (since it's based on false claim)
-    await ctx.db.delete(args.reservationId);
+    if (inventory.status !== "reserved") {
+      throw new Error(`Inventory item is not reserved (status: ${inventory.status})`);
+    }
+
+    // PHASE 2: Clear reservation fields and set back to available
+    // Don't delete the inventory item - just clear the reservation
+    await ctx.db.patch(args.reservationId, {
+      status: "available",
+      reservedBy: undefined,
+      reservedAt: undefined,
+      expiresAt: undefined,
+      paymentWindowOpenedAt: undefined,
+      paymentWindowClosedAt: undefined,
+    });
 
     return {
       success: true,
       deletedReservation: {
-        _id: reservation._id,
-        nftUid: reservation.nftUid,
-        nftNumber: reservation.nftNumber,
-        status: reservation.status,
-        reservedBy: reservation.reservedBy,
+        _id: inventory._id,
+        nftUid: inventory.nftUid,
+        nftNumber: inventory.nftNumber,
+        status: "available", // Now available again
+        reservedBy: inventory.reservedBy, // Old value
       },
     };
   },
