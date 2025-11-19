@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useQuery } from 'convex/react';
+import { ConvexReactClient } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 
 interface MekLevelsViewerProps {
   walletAddress: string;
+  client: ConvexReactClient | null;
+  selectedDatabase: 'trout' | 'sturgeon';
   onClose: () => void;
 }
 
@@ -17,16 +19,46 @@ interface MekWithTenure {
   isSlotted?: boolean;
 }
 
-export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsViewerProps) {
+export default function MekLevelsViewer({ walletAddress, client, selectedDatabase, onClose }: MekLevelsViewerProps) {
   const [mounted, setMounted] = useState(false);
   const [tenureData, setTenureData] = useState<Map<string, MekWithTenure>>(new Map());
   const [sortColumn, setSortColumn] = useState<string>('level');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [meksData, setMeksData] = useState<any[]>([]);
+  const [essenceState, setEssenceState] = useState<any>(null);
 
-  // CRITICAL FIX: Query meks table directly for all level + tenure data in one call
-  const meksData = useQuery(api.meks.getMeksWithLevelsAndTenure, { walletAddress });
-  const essenceState = useQuery(api.essence.getPlayerEssenceState, { walletAddress });
   const essenceSlots = essenceState?.slots;
+
+  // Query data from selected database
+  useEffect(() => {
+    if (!client) return;
+
+    let cancelled = false;
+
+    const fetchData = async () => {
+      try {
+        const [meks, essence] = await Promise.all([
+          client.query(api.meks.getMeksWithLevelsAndTenure, { walletAddress }),
+          client.query(api.essence.getPlayerEssenceState, { walletAddress })
+        ]);
+
+        if (!cancelled) {
+          setMeksData(meks);
+          setEssenceState(essence);
+        }
+      } catch (error) {
+        console.error('[MekLevelsViewer] Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 2000); // Refresh every 2 seconds
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [client, walletAddress]);
 
   // DEBUG: Log what the query returns
   useEffect(() => {
