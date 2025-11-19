@@ -20,16 +20,43 @@ type SortDirection = 'asc' | 'desc';
 function BuffBreakdownRow({
   variationId,
   walletAddress,
-  slots
+  slots,
+  client
 }: {
   variationId: number;
   walletAddress: string;
   slots: any[];
+  client: ConvexReactClient | null;
 }) {
-  const breakdown = useQuery(api.essence.getPlayerBuffBreakdown, {
-    walletAddress,
-    variationId,
-  });
+  const [breakdown, setBreakdown] = useState<any>(null);
+
+  useEffect(() => {
+    if (!client) return;
+
+    let cancelled = false;
+
+    const fetchBreakdown = async () => {
+      try {
+        const data = await client.query(api.essence.getPlayerBuffBreakdown, {
+          walletAddress,
+          variationId,
+        });
+        if (!cancelled) {
+          setBreakdown(data);
+        }
+      } catch (error) {
+        console.error('[BuffBreakdownRow] Error fetching breakdown:', error);
+      }
+    };
+
+    fetchBreakdown();
+    const interval = setInterval(fetchBreakdown, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [client, walletAddress, variationId]);
 
   // Find mechanisms that have this variation
   const mechanismSources = slots.filter(slot => {
@@ -298,7 +325,7 @@ function AnimatedEssenceAmount({
   );
 }
 
-export default function EssenceBalancesViewer({ onClose }: EssenceBalancesViewerProps) {
+export default function EssenceBalancesViewer({ client, selectedDatabase, onClose }: EssenceBalancesViewerProps) {
   const [mounted, setMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState<SortColumn>('amount');
@@ -618,6 +645,7 @@ export default function EssenceBalancesViewer({ onClose }: EssenceBalancesViewer
                         variationId={balance.variationId}
                         walletAddress={walletAddress}
                         slots={allSlots}
+                        client={client}
                       />
                     )}
                   </Fragment>

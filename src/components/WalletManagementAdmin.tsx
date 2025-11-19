@@ -1936,6 +1936,7 @@ Check console for full timeline.
         </div>
       )}
       </div>
+    </DatabaseProvider>
   );
 }
 
