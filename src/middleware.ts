@@ -2,33 +2,57 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Middleware for domain-based routing
- * Blocks access to all pages except root (/) on production
- * Allows localhost to access all pages for development
+ * Global Route Protection Middleware
+ *
+ * Controls access to all routes based on landing page toggle:
+ * - Landing Page ON (true): Redirect all game routes to landing page (/)
+ * - Landing Page OFF (false): Allow all routes to be accessed normally
+ *
+ * Always allows:
+ * - Landing pages (/, /landing-v2)
+ * - Admin routes (/admin*)
+ * - API routes (/api*)
+ * - Public files (images, videos, audio, etc.)
+ * - Localhost (development environment)
  */
+
+// HARDCODED FOR NOW - Will be replaced with database query in future
+const LANDING_PAGE_ENABLED = true;
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hostname = request.headers.get('host') || '';
 
-  // Allow localhost/development to access everything (includes LAN IPs like 192.168.x.x)
+  // Always allow localhost/development to access everything (includes LAN IPs)
   if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('192.168.') || hostname.includes('10.0.')) {
+    console.log('[🗺️MIDDLEWARE] Localhost detected, allowing all routes:', pathname);
     return NextResponse.next();
   }
 
-  // Game domain (play.mektycoon.com) - redirect / to /hub
-  if (hostname.includes('play.')) {
-    if (pathname === '/') {
-      return NextResponse.redirect(new URL('/hub', request.url));
-    }
+  // Define allowed paths that should always be accessible
+  const isLandingPath = pathname === '/' || pathname.startsWith('/landing-v2');
+  const isAdminRoute = pathname.startsWith('/admin');
+  const isApiRoute = pathname.startsWith('/api');
+  const isNextInternal = pathname.startsWith('/_next');
+  const isPublicMedia = pathname.startsWith('/mek-images') ||
+                        pathname.startsWith('/random-images') ||
+                        pathname.startsWith('/audio') ||
+                        pathname.startsWith('/sounds');
+
+  // Always allow these paths regardless of landing page toggle
+  if (isLandingPath || isAdminRoute || isApiRoute || isNextInternal || isPublicMedia) {
+    console.log('[🗺️MIDDLEWARE] Allowed path:', pathname);
     return NextResponse.next();
   }
 
-  // For all other domains (including Vercel default and mek.overexposed.io)
-  // Only allow root (/), mek-rate-logging page, corp pages, and media directories
-  if (pathname !== '/' && pathname !== '/mek-rate-logging' && !pathname.startsWith('/corp/') && !pathname.startsWith('/_next') && !pathname.startsWith('/api') && !pathname.startsWith('/mek-images') && !pathname.startsWith('/random-images') && !pathname.startsWith('/audio')) {
+  // If landing page is enabled, redirect all other routes to landing
+  if (LANDING_PAGE_ENABLED) {
+    console.log('[🗺️MIDDLEWARE] Landing page enabled, redirecting to /:', pathname);
     return NextResponse.redirect(new URL('/', request.url));
   }
 
+  // If landing page is disabled, allow all routes (future state)
+  console.log('[🗺️MIDDLEWARE] Landing page disabled, allowing route:', pathname);
   return NextResponse.next();
 }
 
