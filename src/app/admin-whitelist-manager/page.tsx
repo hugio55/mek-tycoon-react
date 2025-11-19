@@ -160,12 +160,26 @@ function AdminWhitelistManagerContent() {
             <h1 className="text-4xl font-bold text-cyan-400 mb-2">Whitelist Manager</h1>
             <p className="text-gray-400">Create and manage NFT whitelist eligibility rules</p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg font-bold transition-all"
-          >
-            + Create New Whitelist
-          </button>
+          <div className="flex gap-4 items-center">
+            {/* Database Selector */}
+            <div className="bg-gray-900 border border-cyan-500/30 rounded-lg p-3">
+              <div className="text-xs text-gray-400 mb-1">Database</div>
+              <select
+                value={selectedDatabase}
+                onChange={(e) => setSelectedDatabase(e.target.value as 'trout' | 'sturgeon')}
+                className="bg-black/50 border border-cyan-500/30 rounded px-3 py-1 text-white text-sm"
+              >
+                <option value="trout">Trout (Dev - localhost:3200)</option>
+                <option value="sturgeon">Sturgeon (Production - Live Site)</option>
+              </select>
+            </div>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg font-bold transition-all"
+            >
+              + Create New Whitelist
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -374,6 +388,8 @@ function AdminWhitelistManagerContent() {
         <WhitelistCreateModal
           allCriteria={allCriteria || []}
           editingWhitelist={editingWhitelist}
+          client={client}
+          canMutate={canMutate}
           onClose={() => {
             setShowCreateModal(false);
             setEditingWhitelist(null);
@@ -482,10 +498,14 @@ function AdminWhitelistManagerContent() {
 function WhitelistCreateModal({
   allCriteria,
   editingWhitelist,
+  client,
+  canMutate,
   onClose,
 }: {
   allCriteria: any[];
   editingWhitelist: any | null;
+  client: any;
+  canMutate: () => boolean;
   onClose: () => void;
 }) {
   const [name, setName] = useState(editingWhitelist?.name || '');
@@ -497,10 +517,18 @@ function WhitelistCreateModal({
     value: any;
   }>>(editingWhitelist?.rules || [{ criteriaField: '', operator: 'greater_than', value: '' }]);
 
-  const createWhitelist = useMutation(api.whitelists.createWhitelist);
-  const updateWhitelist = useMutation(api.whitelists.updateWhitelist);
-
   const [isSaving, setIsSaving] = useState(false);
+
+  // Mutation helpers
+  const createWhitelist = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.createWhitelist, args);
+  };
+
+  const updateWhitelist = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.updateWhitelist, args);
+  };
 
   const handleAddRule = () => {
     setRules([...rules, { criteriaField: '', operator: 'greater_than', value: '' }]);
@@ -711,5 +739,14 @@ function WhitelistCreateModal({
         </div>
       </div>
     </div>
+  );
+}
+
+// Outer wrapper component with DatabaseProvider
+export default function AdminWhitelistManager() {
+  return (
+    <DatabaseProvider>
+      <AdminWhitelistManagerContent />
+    </DatabaseProvider>
   );
 }
