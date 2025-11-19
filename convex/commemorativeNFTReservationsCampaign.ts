@@ -717,18 +717,39 @@ async function cleanupExpiredCampaignReservations(ctx: any, campaignId: Id<"comm
 
   console.log('[CLEANUP FUNCTION] Found', allReservedForCampaign.length, 'total reserved items for campaign');
 
-  // Log details about each reserved item
+  // Log details about each reserved item AND check for broken reservations
+  const brokenReservations = [];
   for (const item of allReservedForCampaign) {
     const isExpired = item.expiresAt && item.expiresAt < (now - GRACE_PERIOD);
+
+    // CRITICAL: Check for broken reservations with undefined expiresAt
+    if (!item.expiresAt) {
+      console.warn('[CLEANUP FUNCTION] ⚠️ BROKEN RESERVATION DETECTED:', {
+        nftNumber: item.nftNumber,
+        name: item.name,
+        reservedBy: item.reservedBy,
+        reservedAt: item.reservedAt,
+        expiresAt: 'undefined',
+        issue: 'Cannot auto-expire without expiresAt timestamp',
+        fix: 'Run investigateFalseClaim.fixBrokenReservations mutation',
+      });
+      brokenReservations.push(item);
+      continue;
+    }
+
     console.log('[CLEANUP FUNCTION] Reserved item:', {
       nftNumber: item.nftNumber,
       expiresAt: item.expiresAt,
-      expiresAtDate: item.expiresAt ? new Date(item.expiresAt).toISOString() : 'undefined',
+      expiresAtDate: new Date(item.expiresAt).toISOString(),
       now: new Date(now).toISOString(),
       threshold: new Date(now - GRACE_PERIOD).toISOString(),
       isExpired,
       hasExpiresAt: item.expiresAt !== undefined,
     });
+  }
+
+  if (brokenReservations.length > 0) {
+    console.warn('[CLEANUP FUNCTION] ⚠️ Found', brokenReservations.length, 'broken reservation(s) that need manual fixing');
   }
 
   // PHASE 2: Find expired reservations in inventory table
