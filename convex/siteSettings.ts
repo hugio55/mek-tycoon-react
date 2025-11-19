@@ -7,7 +7,8 @@ import { mutation, query } from "./_generated/server";
  * This table stores site-wide settings that control behavior across the application.
  * Currently supports:
  * - Landing Page Toggle: Controls whether root (/) shows landing page or game interface
- * - Ignore Localhost Rule: When true, localhost behaves like production (for testing landing page locally)
+ * - Localhost Bypass: When true, localhost bypasses protection. When false, localhost acts like production
+ * - Maintenance Mode: EMERGENCY nuclear option - redirects ALL routes to maintenance page
  */
 
 // Get the current site settings (or create default if none exist)
@@ -26,7 +27,8 @@ export const getSiteSettings = query({
     // Return default settings if none exist
     return {
       landingPageEnabled: true, // Default: show landing page
-      ignoreLocalhostRule: false, // Default: localhost bypasses landing page for dev convenience
+      localhostBypass: true, // Default: localhost bypasses protection for dev convenience
+      maintenanceMode: false, // Default: maintenance mode OFF
     };
   },
 });
@@ -57,8 +59,8 @@ export const toggleLandingPage = mutation({
   },
 });
 
-// Toggle the localhost rule (whether localhost acts like production)
-export const toggleIgnoreLocalhostRule = mutation({
+// Toggle localhost bypass (whether localhost can bypass protection for dev/testing)
+export const toggleLocalhostBypass = mutation({
   args: {
     enabled: v.boolean(),
   },
@@ -70,16 +72,44 @@ export const toggleIgnoreLocalhostRule = mutation({
     if (existingSettings) {
       // Update existing settings
       await ctx.db.patch(existingSettings._id, {
-        ignoreLocalhostRule: args.enabled,
+        localhostBypass: args.enabled,
       });
-      return { success: true, ignoreLocalhostRule: args.enabled };
+      return { success: true, localhostBypass: args.enabled };
     } else {
       // Create new settings document with default landing page setting
       await ctx.db.insert("siteSettings", {
         landingPageEnabled: true,
-        ignoreLocalhostRule: args.enabled,
+        localhostBypass: args.enabled,
       });
-      return { success: true, ignoreLocalhostRule: args.enabled };
+      return { success: true, localhostBypass: args.enabled };
+    }
+  },
+});
+
+// EMERGENCY: Toggle maintenance mode (nuclear option - redirects everything to maintenance page)
+export const toggleMaintenanceMode = mutation({
+  args: {
+    enabled: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const existingSettings = await ctx.db
+      .query("siteSettings")
+      .first();
+
+    if (existingSettings) {
+      // Update existing settings
+      await ctx.db.patch(existingSettings._id, {
+        maintenanceMode: args.enabled,
+      });
+      return { success: true, maintenanceMode: args.enabled };
+    } else {
+      // Create new settings document with defaults
+      await ctx.db.insert("siteSettings", {
+        landingPageEnabled: true,
+        localhostBypass: true,
+        maintenanceMode: args.enabled,
+      });
+      return { success: true, maintenanceMode: args.enabled };
     }
   },
 });
@@ -95,7 +125,8 @@ export const initializeSiteSettings = mutation({
     if (!existing) {
       await ctx.db.insert("siteSettings", {
         landingPageEnabled: true, // Default to landing page
-        ignoreLocalhostRule: false, // Default: localhost bypasses landing page
+        localhostBypass: true, // Default: localhost bypasses protection for dev
+        maintenanceMode: false, // Default: maintenance mode OFF
       });
       return { success: true, message: "Site settings initialized" };
     }

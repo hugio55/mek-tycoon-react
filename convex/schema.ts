@@ -3619,7 +3619,8 @@ export default defineSchema({
   // Global site-wide configuration
   siteSettings: defineTable({
     landingPageEnabled: v.boolean(), // Controls whether root (/) shows landing page or game
-    ignoreLocalhostRule: v.optional(v.boolean()), // When true, localhost acts like production (shows landing page when enabled)
+    localhostBypass: v.optional(v.boolean()), // When true, localhost bypasses protection (dev mode). When false, localhost acts like production (for testing)
+    maintenanceMode: v.optional(v.boolean()), // EMERGENCY: When true, ALL routes redirect to maintenance page (nuclear option)
   }),
 
   // ===== LANDING PAGE PHASE CARDS =====
