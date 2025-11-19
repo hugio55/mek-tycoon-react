@@ -127,10 +127,19 @@ export default function AdminMasterDataPage() {
 
   // Site settings for landing page toggle
   const siteSettings = useQuery(api.siteSettings.getSiteSettings);
+  const allSiteSettings = useQuery(api.siteSettings.getAllSiteSettings);
   const toggleLandingPage = useMutation(api.siteSettings.toggleLandingPage);
   const toggleLocalhostBypass = useMutation(api.siteSettings.toggleLocalhostBypass);
   const toggleMaintenanceMode = useMutation(api.siteSettings.toggleMaintenanceMode);
   const cleanupOldLocalhostField = useMutation(api.siteSettings.cleanupOldLocalhostField);
+
+  // Debug: Log all settings records
+  useEffect(() => {
+    if (allSiteSettings) {
+      console.log('[🔍DEBUG] All site settings records:', allSiteSettings);
+      console.log('[🔍DEBUG] Number of records:', allSiteSettings.length);
+    }
+  }, [allSiteSettings]);
 
   const [activeSystem, setActiveSystem] = useState<string | null>(null);
   // Initialize with static value to avoid hydration mismatch

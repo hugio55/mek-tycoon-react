@@ -22,10 +22,11 @@ export const getSiteSettings = query({
     // Return existing settings with backwards compatibility
     if (settings) {
       // Handle backwards compatibility: if old field exists but new one doesn't, migrate it
-      const localhostBypass = settings.localhostBypass ??
-                              (settings as any).ignoreLocalhostRule !== undefined
-                                ? !(settings as any).ignoreLocalhostRule // Invert: ignoreLocalhostRule=true meant bypass=false
-                                : true; // Default if neither exists
+      const localhostBypass = settings.localhostBypass !== undefined
+                                ? settings.localhostBypass  // Use new field if it exists (even if false)
+                                : (settings as any).ignoreLocalhostRule !== undefined
+                                  ? !(settings as any).ignoreLocalhostRule // Invert old field if new one doesn't exist
+                                  : true; // Default if neither exists
 
       return {
         ...settings,
