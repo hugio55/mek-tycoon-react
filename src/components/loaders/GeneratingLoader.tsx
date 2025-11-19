@@ -26,20 +26,13 @@ const GeneratingLoader = ({ text = 'Generating', colorScheme }: GeneratingLoader
 
   return (
     <div className={styles['loader-wrapper']}>
-      <div style={{ transform: 'translateY(1px)', letterSpacing: '0.5px' }}>
-        {letters.map((letter, index) => (
-          <span
-            key={index}
-            className={styles['loader-letter']}
-            style={{
-              animationDelay: `${index * 0.05}s`,
-              fontSize: '0.35em',
-              whiteSpace: 'pre'
-            }}
-          >
-            {letter === ' ' ? '\u00A0' : letter}
-          </span>
-        ))}
+      <div style={{
+        transform: 'translateY(1px)',
+        fontSize: '0.35em',
+        opacity: 0.7,
+        color: 'white'
+      }}>
+        {text}
       </div>
       <div
         className={styles.loader}
