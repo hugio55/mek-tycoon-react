@@ -705,6 +705,32 @@ export const markPaymentWindowClosed = mutation({
  * PHASE 2: Reads from inventory table (new system)
  */
 async function cleanupExpiredCampaignReservations(ctx: any, campaignId: Id<"commemorativeCampaigns">, now: number): Promise<number> {
+  console.log('[CLEANUP FUNCTION] Processing campaign:', campaignId, 'at', new Date(now).toISOString());
+
+  // PHASE 2: First, get ALL reserved items for this campaign (before expiration filter)
+  const allReservedForCampaign = await ctx.db
+    .query("commemorativeNFTInventory")
+    .withIndex("by_campaign_and_status", (q) =>
+      q.eq("campaignId", campaignId).eq("status", "reserved")
+    )
+    .collect();
+
+  console.log('[CLEANUP FUNCTION] Found', allReservedForCampaign.length, 'total reserved items for campaign');
+
+  // Log details about each reserved item
+  for (const item of allReservedForCampaign) {
+    const isExpired = item.expiresAt && item.expiresAt < (now - GRACE_PERIOD);
+    console.log('[CLEANUP FUNCTION] Reserved item:', {
+      nftNumber: item.nftNumber,
+      expiresAt: item.expiresAt,
+      expiresAtDate: item.expiresAt ? new Date(item.expiresAt).toISOString() : 'undefined',
+      now: new Date(now).toISOString(),
+      threshold: new Date(now - GRACE_PERIOD).toISOString(),
+      isExpired,
+      hasExpiresAt: item.expiresAt !== undefined,
+    });
+  }
+
   // PHASE 2: Find expired reservations in inventory table
   const expiredInventoryRows = await ctx.db
     .query("commemorativeNFTInventory")
@@ -718,6 +744,8 @@ async function cleanupExpiredCampaignReservations(ctx: any, campaignId: Id<"comm
       )
     )
     .collect();
+
+  console.log('[CLEANUP FUNCTION] Found', expiredInventoryRows.length, 'EXPIRED items to clean up');
 
   const campaign = await ctx.db.get(campaignId);
   let releasedCount = 0;
