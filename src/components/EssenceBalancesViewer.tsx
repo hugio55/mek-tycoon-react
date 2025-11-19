@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useRef, Fragment } from 'react';
 import { createPortal } from 'react-dom';
-import { useQuery } from 'convex/react';
+import { ConvexReactClient } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useEssence } from '@/contexts/EssenceContext';
 import { useDemoWallet } from '@/contexts/DemoWalletContext';
 
 interface EssenceBalancesViewerProps {
+  client: ConvexReactClient | null;
+  selectedDatabase: 'trout' | 'sturgeon';
   onClose: () => void;
 }
 

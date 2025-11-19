@@ -1721,6 +1721,8 @@ Check console for full timeline.
       {viewingMekLevels && (
         <MekLevelsViewer
           walletAddress={viewingMekLevels}
+          client={client}
+          selectedDatabase={selectedDatabase}
           onClose={() => setViewingMekLevels(null)}
         />
       )}
@@ -1728,6 +1730,8 @@ Check console for full timeline.
       {viewingEssence && (
         <EssenceProvider walletAddress={viewingEssence}>
           <EssenceBalancesViewer
+            client={client}
+            selectedDatabase={selectedDatabase}
             onClose={() => setViewingEssence(null)}
           />
         </EssenceProvider>
@@ -1736,6 +1740,8 @@ Check console for full timeline.
       {viewingBuffs && (
         <BuffManagement
           walletAddress={viewingBuffs}
+          client={client}
+          selectedDatabase={selectedDatabase}
           onClose={() => setViewingBuffs(null)}
         />
       )}
@@ -1743,6 +1749,8 @@ Check console for full timeline.
       {viewingActivityLog && (
         <ActivityLogViewer
           walletAddress={viewingActivityLog}
+          client={client}
+          selectedDatabase={selectedDatabase}
           onClose={() => setViewingActivityLog(null)}
         />
       )}
