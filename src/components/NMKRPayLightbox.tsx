@@ -566,15 +566,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
           );
         }
 
-        // Calculate remaining time client-side for real-time updates
-        const now = Date.now();
-        const remainingMs = Math.max(0, activeReservation.expiresAt - now);
-        const remainingMinutes = Math.floor(remainingMs / 60000);
-        const remainingSeconds = Math.floor((remainingMs % 60000) / 1000);
-        const GRACE_PERIOD = 30 * 1000;
-        const isInGracePeriod = remainingMs === 0 && (now - activeReservation.expiresAt) < GRACE_PERIOD;
-
-        // Modern (Sans) variation
+        // Modern (Sans) variation - NO COUNTDOWN (user will see timer in NMKR window)
         return (
             <div className="text-center">
               <div className="mb-4">
@@ -600,32 +592,20 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                     {activeReservation.nft?.name || "NFT"}
                   </h3>
                   <p style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', fontSize: '0.875rem', lineHeight: '1.5', fontWeight: 400 }}>
-                    You are currently reserving <span style={{
+                    You have reserved <span style={{
                       color: '#22d3ee',
                       fontWeight: 600,
                       textShadow: '0 0 10px rgba(34, 211, 238, 0.6), 0 0 20px rgba(34, 211, 238, 0.4)'
-                    }}>edition number {activeReservation.nftNumber}</span>. This will last for 5 minutes, and then that edition will be released.
+                    }}>edition number {activeReservation.nftNumber}</span>. Click below to open the payment window and complete your purchase.
                   </p>
 
-                  <div className={`mt-3 p-3 rounded-xl backdrop-blur-sm ${
-                    isInGracePeriod ? 'bg-red-500/20 border border-red-400/50' :
-                    activeReservation.isPaymentWindowOpen ? 'bg-blue-500/20 border border-blue-400/50' :
-                    'bg-cyan-500/20 border border-cyan-400/50'
-                  }`}>
-                    <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: '#d4d4d8', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                      {isInGracePeriod ? 'Grace Period' : 'Time Remaining'}
+                  <div className="mt-3 p-3 rounded-xl backdrop-blur-sm bg-cyan-500/20 border border-cyan-400/50">
+                    <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#bae6fd', lineHeight: '1.5' }}>
+                      Payment window will remain open. Complete payment when ready.
+                      {activeReservation.isPaymentWindowOpen && (
+                        <span className="block mt-2 text-blue-300">✓ Payment window is open</span>
+                      )}
                     </div>
-                    <div className={`font-mono text-3xl font-bold ${
-                      isInGracePeriod ? 'text-red-400 animate-pulse' : activeReservation.isPaymentWindowOpen ? 'text-blue-300' : 'text-cyan-300'
-                    }`}>
-                      {remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')}
-                    </div>
-                    {activeReservation.isPaymentWindowOpen && !isInGracePeriod && (
-                      <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#93c5fd', marginTop: '0.75rem' }}>Payment window open - timer continues</div>
-                    )}
-                    {isInGracePeriod && (
-                      <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#fca5a5', marginTop: '0.75rem' }}>⚠️ Final chance to complete payment</div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -644,6 +624,12 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
               >
                 Open Payment Window
               </button>
+
+              {errorMessage && (
+                <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-400/30 rounded-xl">
+                  <p className="text-sm text-yellow-300">{errorMessage}</p>
+                </div>
+              )}
             </div>
           );
 
