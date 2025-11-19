@@ -1,19 +1,26 @@
 import React from 'react';
 import styles from './GeneratingLoader.module.css';
 
-const GeneratingLoader = () => {
+interface GeneratingLoaderProps {
+  text?: string;
+}
+
+const GeneratingLoader = ({ text = 'Generating' }: GeneratingLoaderProps) => {
+  const letters = text.split('');
+
   return (
     <div className={styles['loader-wrapper']}>
-      <span className={styles['loader-letter']}>G</span>
-      <span className={styles['loader-letter']}>e</span>
-      <span className={styles['loader-letter']}>n</span>
-      <span className={styles['loader-letter']}>e</span>
-      <span className={styles['loader-letter']}>r</span>
-      <span className={styles['loader-letter']}>a</span>
-      <span className={styles['loader-letter']}>t</span>
-      <span className={styles['loader-letter']}>i</span>
-      <span className={styles['loader-letter']}>n</span>
-      <span className={styles['loader-letter']}>g</span>
+      {letters.map((letter, index) => (
+        <span
+          key={index}
+          className={styles['loader-letter']}
+          style={{
+            animationDelay: `${index * 0.1}s`
+          }}
+        >
+          {letter}
+        </span>
+      ))}
       <div className={styles.loader} />
     </div>
   );

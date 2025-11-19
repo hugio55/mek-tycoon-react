@@ -299,8 +299,8 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
                 <div
                   className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none rounded-lg"
                   style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='56' height='100' viewBox='0 0 56 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1'%3E%3Cpath d='M28 11l13 7.5v15l-13 7.5-13-7.5v-15l13-7.5z'/%3E%3Cpath d='M28 61l13 7.5v15l-13 7.5-13-7.5v-15l13-7.5z'/%3E%3Cpath d='M0 36l13 7.5v15l-13 7.5-13-7.5v-15l13-7.5z'/%3E%3Cpath d='M56 36l13 7.5v15l-13 7.5-13-7.5v-15l13-7.5z'/%3E%3C/g%3E%3C/svg%3E")`,
-                    backgroundSize: '42px 75px'
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='52' height='60' viewBox='0 0 52 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1'%3E%3Cpath d='M16 8l8 4.6v9.2l-8 4.6-8-4.6V12.6z'/%3E%3Cpath d='M42 8l8 4.6v9.2l-8 4.6-8-4.6V12.6z'/%3E%3Cpath d='M3 23l8 4.6v9.2l-8 4.6-8-4.6V27.6z'/%3E%3Cpath d='M29 23l8 4.6v9.2l-8 4.6-8-4.6V27.6z'/%3E%3Cpath d='M55 23l8 4.6v9.2l-8 4.6-8-4.6V27.6z'/%3E%3Cpath d='M16 38l8 4.6v9.2l-8 4.6-8-4.6V42.6z'/%3E%3Cpath d='M42 38l8 4.6v9.2l-8 4.6-8-4.6V42.6z'/%3E%3Cpath d='M3 53l8 4.6v9.2l-8 4.6-8-4.6V57.6z'/%3E%3Cpath d='M29 53l8 4.6v9.2l-8 4.6-8-4.6V57.6z'/%3E%3C/g%3E%3C/svg%3E")`,
+                    backgroundSize: '20px 23px'
                   }}
                 />
                 <span className="transition-all duration-300 group-hover:[text-shadow:0_0_6px_rgba(255,255,255,0.9),0_0_12px_rgba(255,255,255,0.6)]">

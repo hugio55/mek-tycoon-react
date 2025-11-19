@@ -127,19 +127,9 @@ export default function AdminMasterDataPage() {
 
   // Site settings for landing page toggle
   const siteSettings = useQuery(api.siteSettings.getSiteSettings);
-  const allSiteSettings = useQuery(api.siteSettings.getAllSiteSettings);
   const toggleLandingPage = useMutation(api.siteSettings.toggleLandingPage);
   const toggleLocalhostBypass = useMutation(api.siteSettings.toggleLocalhostBypass);
   const toggleMaintenanceMode = useMutation(api.siteSettings.toggleMaintenanceMode);
-  const cleanupOldLocalhostField = useMutation(api.siteSettings.cleanupOldLocalhostField);
-
-  // Debug: Log all settings records
-  useEffect(() => {
-    if (allSiteSettings) {
-      console.log('[🔍DEBUG] All site settings records:', allSiteSettings);
-      console.log('[🔍DEBUG] Number of records:', allSiteSettings.length);
-    }
-  }, [allSiteSettings]);
 
   const [activeSystem, setActiveSystem] = useState<string | null>(null);
   // Initialize with static value to avoid hydration mismatch
@@ -857,46 +847,20 @@ export default function AdminMasterDataPage() {
           {/* Localhost Bypass Toggle */}
           <div className="inline-flex items-center gap-3 bg-gray-900/50 border border-blue-700/50 rounded-lg px-4 py-2">
             <span className="text-sm font-semibold text-blue-300">Localhost Bypass</span>
-            <div className="flex flex-col gap-1">
-              <Switch.Root
-                checked={siteSettings?.localhostBypass ?? true}
-                onCheckedChange={async (enabled) => {
-                  console.log('[🔧LOCALHOST-BYPASS] Toggle clicked, new value:', enabled);
-                  console.log('[🔧LOCALHOST-BYPASS] Current siteSettings:', siteSettings);
-                  console.log('[🔧LOCALHOST-BYPASS] Current localhostBypass value:', siteSettings?.localhostBypass);
-                  console.log('[🔧LOCALHOST-BYPASS] Checked prop value:', siteSettings?.localhostBypass ?? true);
-                  try {
-                    const result = await toggleLocalhostBypass({ enabled });
-                    console.log('[🔧LOCALHOST-BYPASS] Mutation result:', result);
-                    console.log('[🔧LOCALHOST-BYPASS] Toggle updated successfully');
-                  } catch (error) {
-                    console.error('[🔧LOCALHOST-BYPASS] Error updating toggle:', error);
-                  }
-                }}
-                className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors cursor-pointer"
-              >
-                <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
-              </Switch.Root>
-              <span className="text-[8px] text-gray-600">DB: {String(siteSettings?.localhostBypass)}</span>
-            </div>
+            <Switch.Root
+              checked={siteSettings?.localhostBypass ?? true}
+              onCheckedChange={async (enabled) => {
+                await toggleLocalhostBypass({ enabled });
+              }}
+              className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors cursor-pointer"
+            >
+              <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
+            </Switch.Root>
             <span className={`text-xs font-bold ${siteSettings?.localhostBypass ? 'text-blue-400' : 'text-gray-400'}`}>
               {siteSettings?.localhostBypass ? 'ON' : 'OFF'}
             </span>
             <span className="text-xs text-gray-500">(OFF = localhost acts like production for testing)</span>
           </div>
-
-          {/* Migration Button - Remove after running once */}
-          {(siteSettings as any)?.ignoreLocalhostRule !== undefined && (
-            <button
-              onClick={async () => {
-                const result = await cleanupOldLocalhostField();
-                alert(result.message);
-              }}
-              className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-xs rounded border border-orange-500"
-            >
-              🔧 Fix Toggle (Remove Old Field)
-            </button>
-          )}
         </div>
 
         {/* 🚨 EMERGENCY MAINTENANCE MODE 🚨 */}
