@@ -154,63 +154,33 @@ export default function RouteVisualization() {
       <div className="mt-6 p-6 bg-gray-900/50 rounded-lg border border-gray-700">
         <h3 className="text-lg font-bold text-yellow-400 mb-4">User Flow Diagram</h3>
         <div className="space-y-4">
-          {/* User visits root */}
+          {/* User visits landing */}
           <div className="flex items-center gap-4">
             <div className="px-4 py-2 bg-blue-900/30 border border-blue-500 rounded text-blue-300 font-mono text-sm">
-              User visits: <span className="text-yellow-400">/</span>
+              User visits: <span className="text-yellow-400">/ or /landing-v2</span>
             </div>
             <div className="text-gray-400">→</div>
             <div className="px-4 py-2 bg-green-900/30 border border-green-500 rounded text-green-300 text-sm">
-              Shows: Landing-v2
-            </div>
-          </div>
-
-          {/* User visits landing-v2 */}
-          <div className="flex items-center gap-4">
-            <div className="px-4 py-2 bg-blue-900/30 border border-blue-500 rounded text-blue-300 font-mono text-sm">
-              User visits: <span className="text-yellow-400">/landing-v2</span>
-            </div>
-            <div className="text-gray-400">→</div>
-            <div className="px-4 py-2 bg-green-900/30 border border-green-500 rounded text-green-300 text-sm">
-              Shows: Landing-v2
-            </div>
-          </div>
-
-          {/* User visits game route */}
-          <div className="flex items-center gap-4">
-            <div className="px-4 py-2 bg-blue-900/30 border border-blue-500 rounded text-blue-300 font-mono text-sm">
-              User visits: <span className="text-yellow-400">/home</span>
-            </div>
-            <div className="text-gray-400">→</div>
-            <div className="px-4 py-2 bg-purple-900/30 border border-purple-500 rounded text-purple-300 text-sm">
-              Middleware intercepts
-            </div>
-            <div className="text-gray-400">→</div>
-            <div className="px-4 py-2 bg-yellow-900/30 border border-yellow-500 rounded text-yellow-300 text-sm">
-              Redirects to: /
-            </div>
-            <div className="text-gray-400">→</div>
-            <div className="px-4 py-2 bg-green-900/30 border border-green-500 rounded text-green-300 text-sm">
-              Shows: Landing-v2
+              ✓ Shows: Landing-v2
             </div>
           </div>
 
           {/* User visits any game route */}
           <div className="flex items-center gap-4">
             <div className="px-4 py-2 bg-blue-900/30 border border-blue-500 rounded text-blue-300 font-mono text-sm">
-              User visits: <span className="text-yellow-400">/profile, /shop, /crafting, etc.</span>
+              User visits: <span className="text-yellow-400">ANY game route</span>
             </div>
             <div className="text-gray-400">→</div>
             <div className="px-4 py-2 bg-purple-900/30 border border-purple-500 rounded text-purple-300 text-sm">
-              Middleware intercepts
+              🛡️ Middleware intercepts
             </div>
             <div className="text-gray-400">→</div>
             <div className="px-4 py-2 bg-yellow-900/30 border border-yellow-500 rounded text-yellow-300 text-sm">
-              Redirects to: /
+              ↪️ Redirects to: /
             </div>
             <div className="text-gray-400">→</div>
             <div className="px-4 py-2 bg-green-900/30 border border-green-500 rounded text-green-300 text-sm">
-              Shows: Landing-v2
+              ✓ Shows: Landing-v2
             </div>
           </div>
 
@@ -221,7 +191,7 @@ export default function RouteVisualization() {
             </div>
             <div className="text-gray-400">→</div>
             <div className="px-4 py-2 bg-green-900/30 border border-green-500 rounded text-green-300 text-sm">
-              Allowed through (admin access)
+              ✓ Allowed through (admin access)
             </div>
           </div>
         </div>
