@@ -59,6 +59,8 @@ function getPhaseStyles(index: number) {
 export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggle }: PhaseCardProps) {
   const [currentBackground, setCurrentBackground] = useState('');
   const [showClaimLightbox, setShowClaimLightbox] = useState(false);
+  const [buttonVariation, setButtonVariation] = useState<'clean' | 'sleek' | 'industrial' | 'professional'>('clean');
+  const [showButtonPicker, setShowButtonPicker] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const phaseLabel = `Phase ${PHASE_LABELS[index]}`;
   const styles = getPhaseStyles(index);
