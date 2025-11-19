@@ -2,17 +2,48 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useQuery } from 'convex/react';
+import { ConvexReactClient } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 
 interface ActivityLogViewerProps {
   walletAddress: string;
+  client: ConvexReactClient | null;
+  selectedDatabase: 'trout' | 'sturgeon';
   onClose: () => void;
 }
 
-export default function ActivityLogViewer({ walletAddress, onClose }: ActivityLogViewerProps) {
+export default function ActivityLogViewer({ walletAddress, client, selectedDatabase, onClose }: ActivityLogViewerProps) {
   const [mounted, setMounted] = useState(false);
-  const logs = useQuery(api.auditLogs.getWalletLogs, { stakeAddress: walletAddress, limit: 100 });
+  const [logs, setLogs] = useState<any[]>([]);
+
+  // Query logs from selected database
+  useEffect(() => {
+    if (!client) return;
+
+    let cancelled = false;
+
+    const fetchLogs = async () => {
+      try {
+        const data = await client.query(api.auditLogs.getWalletLogs, {
+          stakeAddress: walletAddress,
+          limit: 100
+        });
+        if (!cancelled) {
+          setLogs(data);
+        }
+      } catch (error) {
+        console.error('[ActivityLogViewer] Error fetching logs:', error);
+      }
+    };
+
+    fetchLogs();
+    const interval = setInterval(fetchLogs, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [client, walletAddress]);
 
   // Mount portal and lock body scroll
   useEffect(() => {
