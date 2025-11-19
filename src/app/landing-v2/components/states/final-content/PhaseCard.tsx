@@ -283,7 +283,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
                   console.log('[PhaseCard] Opening NFT claim lightbox');
                   setShowClaimLightbox(true);
                 }}
-                className="px-6 py-2.5 rounded-lg font-medium transition-all duration-300 hover:shadow-2xl hover:scale-[1.01] hover:border-white/50 hover:brightness-125"
+                className="px-6 py-2.5 rounded-lg font-medium transition-all duration-300 hover:shadow-2xl hover:scale-[1.01] hover:border-white/50 hover:brightness-125 group"
                 style={{
                   fontFamily: "'Play', sans-serif",
                   background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04))',
@@ -295,7 +295,9 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
                   fontWeight: 500
                 }}
               >
-                Claim NFT
+                <span className="transition-all duration-300 group-hover:[text-shadow:0_0_15px_rgba(255,255,255,0.8),0_0_25px_rgba(255,255,255,0.5)]">
+                  Claim NFT
+                </span>
               </button>
             </div>
           )}
