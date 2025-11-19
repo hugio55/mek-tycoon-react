@@ -181,12 +181,7 @@ export default function LandingV2() {
       ? (backgroundFadedIn ? 0.17 : 0)
       : 0.77
   );
-  const showSpeaker = isRevealing;
-
-  // Show pure black until mounted
-  if (!mounted) {
-    return <div className="fixed inset-0 bg-black" suppressHydrationWarning />;
-  }
+  const showSpeaker = isRevealing && mounted;
 
   return (
     <LandingContainer
@@ -194,7 +189,7 @@ export default function LandingV2() {
       showFooter={showFooter}
       transitionDuration={isState('SOUND_SELECTION') ? 1000 : 2000}
       allowScroll={true}
-      isLoading={isLoading}
+      isLoading={isLoading || !mounted}
     >
       <SoundSelectionState
         isActive={isState('SOUND_SELECTION')}
