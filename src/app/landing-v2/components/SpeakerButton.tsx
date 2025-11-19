@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { GeometricSpeakerIcon } from '@/components/SpeakerIcons';
 
 interface SpeakerButtonProps {
@@ -7,9 +9,15 @@ interface SpeakerButtonProps {
 }
 
 export default function SpeakerButton({ isPlaying, onClick, isVisible }: SpeakerButtonProps) {
-  if (!isVisible) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isVisible || !mounted) return null;
+
+  const button = (
     <button
       onClick={onClick}
       className={`
@@ -45,4 +53,6 @@ export default function SpeakerButton({ isPlaying, onClick, isVisible }: Speaker
       <GeometricSpeakerIcon size={37} isPlaying={isPlaying} />
     </button>
   );
+
+  return createPortal(button, document.body);
 }

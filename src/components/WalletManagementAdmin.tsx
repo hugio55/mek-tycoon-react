@@ -54,6 +54,11 @@ function WalletManagementAdminContent() {
     loadSession();
   }, []);
 
+  // Mount effect for portal rendering
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   //Database selection comes from context now
   const [walletsData, setWalletsData] = useState<any>(null);
   const [isLoadingWallets, setIsLoadingWallets] = useState(false);
