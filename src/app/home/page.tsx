@@ -9,7 +9,6 @@ import { restoreWalletSession } from '@/lib/walletSessionManager';
 import { getVariationInfoFromFullKey } from '@/lib/variationNameLookup';
 import MekNamingLightbox from '@/components/MekNamingLightbox';
 import MekManagementLightbox from '@/components/MekManagementLightbox';
-import AirdropClaimBanner from '@/components/AirdropClaimBanner';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { getMediaUrl } from '@/lib/media-url';
 
@@ -460,13 +459,6 @@ export default function HomePage() {
     <Tooltip.Provider delayDuration={200}>
       <div className="flex flex-col text-white relative" style={{ minHeight: '100vh' }}>
         <div className="flex-1 container mx-auto px-4 py-8">
-        {/* Commemorative NFT Claim Banner */}
-        <div className="mb-8">
-          <AirdropClaimBanner
-            userId={null}
-            walletAddress={userId}
-          />
-        </div>
 
         {/* Header with Triangle */}
         <div className="relative flex items-start justify-center mb-12">

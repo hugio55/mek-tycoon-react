@@ -5,6 +5,8 @@ import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import StarField from '@/components/StarField';
 import { getMediaUrl } from '@/lib/media-url';
+import { restoreWalletSession } from '@/lib/walletSessionManager';
+import AirdropClaimBanner from '@/components/AirdropClaimBanner';
 
 import { useLandingStateMachine, TIMINGS } from './hooks/useLandingStateMachine';
 import { useBackgroundAudio } from './hooks/useBackgroundAudio';
@@ -22,6 +24,19 @@ export default function LandingV2() {
   const { isLoading, registerCriticalAsset, markCriticalAssetLoaded } = useLoaderContext();
   const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'android' | 'other'>('other');
   const [mounted, setMounted] = useState(false);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+
+  // Restore wallet session for NFT claim eligibility
+  useEffect(() => {
+    const loadSession = async () => {
+      const session = await restoreWalletSession();
+      if (session?.stakeAddress) {
+        setWalletAddress(session.stakeAddress);
+        console.log('[Landing-v2] Wallet session restored:', session.stakeAddress.slice(0, 12) + '...');
+      }
+    };
+    loadSession();
+  }, []);
 
   // Debug: Log isLoading state to help user verify stars appear
   useEffect(() => {
@@ -279,6 +294,16 @@ export default function LandingV2() {
         phaseCards={phaseCards}
         startDelay={contentDelay}
       />
+
+      {/* NFT Claim Banner - only shows for eligible wallets */}
+      {isRevealing && (
+        <div className="w-full max-w-6xl mx-auto px-4 mt-8" style={{ position: 'relative', zIndex: 10 }}>
+          <AirdropClaimBanner
+            userId={null}
+            walletAddress={walletAddress}
+          />
+        </div>
+      )}
 
       <SpeakerButton
         isPlaying={audioPlaying}
