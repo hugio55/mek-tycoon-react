@@ -669,12 +669,6 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
       case 'payment':
         if (!activeReservation) return null;
 
-        // Calculate remaining time client-side for real-time updates
-        const paymentNow = Date.now();
-        const paymentRemainingMs = Math.max(0, activeReservation.expiresAt - paymentNow);
-        const paymentMinutes = Math.floor(paymentRemainingMs / 60000);
-        const paymentSeconds = Math.floor((paymentRemainingMs % 60000) / 1000);
-
         return (
           <div className="text-center">
             <div className="mb-6">
@@ -684,19 +678,6 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
               <p className="text-gray-400 mb-6">
                 Complete the payment in the NMKR window
               </p>
-
-              {/* Timer Display */}
-              <div className="p-4 bg-blue-500/20 border-2 border-blue-500/50 rounded backdrop-blur-sm mb-4">
-                <div className="text-xs uppercase tracking-wider text-gray-400 mb-1">
-                  Time Remaining
-                </div>
-                <div className="text-3xl font-bold font-mono text-blue-400">
-                  {paymentMinutes}:{paymentSeconds.toString().padStart(2, '0')}
-                </div>
-                <div className="text-xs text-blue-400 mt-2 uppercase tracking-wide">
-                  Timer continues while window is open
-                </div>
-              </div>
             </div>
 
             {/* Cancel Button */}
@@ -927,7 +908,11 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
               fontSize: '0.95rem',
               lineHeight: '1.6'
             }}>
-              Are you sure you want to cancel this transaction? Doing so will not guarantee the same edition number.
+              Are you sure you want to cancel this transaction? Doing so will not guarantee the <span style={{
+                color: '#10b981',
+                fontWeight: 600,
+                textShadow: '0 0 12px rgba(16, 185, 129, 0.8), 0 0 24px rgba(16, 185, 129, 0.5), 0 0 36px rgba(16, 185, 129, 0.3)'
+              }}>same edition number</span>.
             </p>
 
             {/* Action buttons */}
