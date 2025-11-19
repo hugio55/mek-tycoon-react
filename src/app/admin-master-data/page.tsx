@@ -128,7 +128,8 @@ export default function AdminMasterDataPage() {
   // Site settings for landing page toggle
   const siteSettings = useQuery(api.siteSettings.getSiteSettings);
   const toggleLandingPage = useMutation(api.siteSettings.toggleLandingPage);
-  const toggleIgnoreLocalhostRule = useMutation(api.siteSettings.toggleIgnoreLocalhostRule);
+  const toggleLocalhostBypass = useMutation(api.siteSettings.toggleLocalhostBypass);
+  const toggleMaintenanceMode = useMutation(api.siteSettings.toggleMaintenanceMode);
 
   const [activeSystem, setActiveSystem] = useState<string | null>(null);
   // Initialize with static value to avoid hydration mismatch
@@ -843,22 +844,75 @@ export default function AdminMasterDataPage() {
             </span>
           </div>
 
-          {/* Ignore Localhost Rule Toggle */}
+          {/* Localhost Bypass Toggle */}
           <div className="inline-flex items-center gap-3 bg-gray-900/50 border border-blue-700/50 rounded-lg px-4 py-2">
-            <span className="text-sm font-semibold text-blue-300">Ignore Localhost Rule</span>
+            <span className="text-sm font-semibold text-blue-300">Localhost Bypass</span>
             <Switch.Root
-              checked={siteSettings?.ignoreLocalhostRule ?? false}
+              checked={siteSettings?.localhostBypass ?? true}
               onCheckedChange={async (enabled) => {
-                await toggleIgnoreLocalhostRule({ enabled });
+                await toggleLocalhostBypass({ enabled });
               }}
               className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors"
             >
               <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
             </Switch.Root>
-            <span className={`text-xs font-bold ${siteSettings?.ignoreLocalhostRule ? 'text-blue-400' : 'text-gray-400'}`}>
-              {siteSettings?.ignoreLocalhostRule ? 'ON' : 'OFF'}
+            <span className={`text-xs font-bold ${siteSettings?.localhostBypass ? 'text-blue-400' : 'text-gray-400'}`}>
+              {siteSettings?.localhostBypass ? 'ON' : 'OFF'}
             </span>
-            <span className="text-xs text-gray-500">(force landing page on localhost)</span>
+            <span className="text-xs text-gray-500">(OFF = localhost acts like production for testing)</span>
+          </div>
+        </div>
+
+        {/* 🚨 EMERGENCY MAINTENANCE MODE 🚨 */}
+        <div className="mb-6 p-6 bg-red-900/20 border-2 border-red-500 rounded-xl">
+          <div className="flex items-start gap-4">
+            <div className="text-3xl">🚨</div>
+            <div className="flex-1">
+              <h2 className="text-xl font-bold text-red-400 mb-2 uppercase tracking-wider">Emergency Maintenance Mode</h2>
+              <p className="text-red-300 text-sm mb-4">
+                <strong>NUCLEAR OPTION:</strong> Redirects ALL routes (including landing page) to maintenance page. Takes effect within 10 seconds.
+              </p>
+
+              <div className="flex items-center gap-4">
+                <Switch.Root
+                  checked={siteSettings?.maintenanceMode ?? false}
+                  onCheckedChange={async (enabled) => {
+                    if (enabled) {
+                      const confirmed = window.confirm(
+                        '🚨 EMERGENCY MAINTENANCE MODE 🚨\n\n' +
+                        'This will IMMEDIATELY redirect ALL routes to the maintenance page.\n' +
+                        'Only admin panel will remain accessible.\n\n' +
+                        'Takes effect within 10 seconds.\n\n' +
+                        'Are you ABSOLUTELY SURE?'
+                      );
+                      if (!confirmed) return;
+                    }
+                    await toggleMaintenanceMode({ enabled });
+                    if (enabled) {
+                      alert('⚠️ Maintenance mode activated! Takes effect within 10 seconds.');
+                    } else {
+                      alert('✓ Maintenance mode deactivated! Site returning to normal.');
+                    }
+                  }}
+                  className="w-14 h-7 bg-gray-700 rounded-full relative data-[state=checked]:bg-red-600 transition-colors"
+                >
+                  <Switch.Thumb className="block w-6 h-6 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[30px]" />
+                </Switch.Root>
+                <span className={`text-sm font-bold ${siteSettings?.maintenanceMode ? 'text-red-400' : 'text-gray-400'}`}>
+                  {siteSettings?.maintenanceMode ? '🚨 MAINTENANCE MODE ACTIVE' : 'OFF - Site Normal'}
+                </span>
+              </div>
+
+              {siteSettings?.maintenanceMode && (
+                <div className="mt-4 p-3 bg-red-950/50 border border-red-700 rounded text-red-300 text-xs">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="animate-pulse">⚠️</span>
+                    <strong>MAINTENANCE MODE IS CURRENTLY ACTIVE</strong>
+                  </div>
+                  <p>All users are seeing the maintenance page. Admin panel remains accessible.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
