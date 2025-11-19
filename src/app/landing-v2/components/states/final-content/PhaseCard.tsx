@@ -58,7 +58,7 @@ function getPhaseStyles(index: number) {
 export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggle }: PhaseCardProps) {
   const [currentBackground, setCurrentBackground] = useState('');
   const [showClaimLightbox, setShowClaimLightbox] = useState(false);
-  const [buttonVariation, setButtonVariation] = useState<'clean' | 'sleek' | 'industrial' | 'professional'>('clean');
+  const [buttonVariation, setButtonVariation] = useState<'clean' | 'sleek' | 'industrial' | 'professional' | 'minimal-white' | 'ghost' | 'subtle'>('clean');
   const [showButtonPicker, setShowButtonPicker] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const phaseLabel = `Phase ${PHASE_LABELS[index]}`;
@@ -322,6 +322,31 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
                     >
                       Professional
                     </button>
+                    <div className="border-t border-gray-700 my-1"></div>
+                    <button
+                      onClick={() => setButtonVariation('minimal-white')}
+                      className={`block w-full text-left px-4 py-2 text-xs hover:bg-white/10 transition-colors ${
+                        buttonVariation === 'minimal-white' ? 'bg-white/20 text-white' : 'text-gray-300'
+                      }`}
+                    >
+                      Minimal White
+                    </button>
+                    <button
+                      onClick={() => setButtonVariation('ghost')}
+                      className={`block w-full text-left px-4 py-2 text-xs hover:bg-white/10 transition-colors ${
+                        buttonVariation === 'ghost' ? 'bg-white/20 text-white' : 'text-gray-300'
+                      }`}
+                    >
+                      Ghost
+                    </button>
+                    <button
+                      onClick={() => setButtonVariation('subtle')}
+                      className={`block w-full text-left px-4 py-2 text-xs hover:bg-white/10 transition-colors ${
+                        buttonVariation === 'subtle' ? 'bg-white/20 text-white' : 'text-gray-300'
+                      }`}
+                    >
+                      Subtle Modern
+                    </button>
                   </div>
                 )}
               </div>
@@ -412,6 +437,73 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
                       letterSpacing: '0.08em',
                       fontSize: '15px',
                       fontWeight: 600
+                    }}
+                  >
+                    Claim NFT
+                  </button>
+                )}
+
+                {/* Variation 5: Minimal White (Thin stroke, modern) */}
+                {buttonVariation === 'minimal-white' && (
+                  <button
+                    onClick={() => {
+                      console.log('[PhaseCard] Opening NFT claim lightbox');
+                      setShowClaimLightbox(true);
+                    }}
+                    className="px-6 py-2.5 rounded-md font-medium transition-all duration-200 hover:bg-white/5"
+                    style={{
+                      fontFamily: "'Inter', sans-serif",
+                      background: 'transparent',
+                      color: '#ffffff',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      letterSpacing: '0.05em',
+                      fontSize: '14px',
+                      fontWeight: 500
+                    }}
+                  >
+                    Claim NFT
+                  </button>
+                )}
+
+                {/* Variation 6: Ghost (Ultra minimal, barely there) */}
+                {buttonVariation === 'ghost' && (
+                  <button
+                    onClick={() => {
+                      console.log('[PhaseCard] Opening NFT claim lightbox');
+                      setShowClaimLightbox(true);
+                    }}
+                    className="px-5 py-2 rounded font-normal transition-all duration-200 hover:bg-white/10 hover:border-white/40"
+                    style={{
+                      fontFamily: "'Saira', sans-serif",
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      letterSpacing: '0.08em',
+                      fontSize: '13px',
+                      fontWeight: 400
+                    }}
+                  >
+                    CLAIM NFT
+                  </button>
+                )}
+
+                {/* Variation 7: Subtle Modern (Clean lines, understated) */}
+                {buttonVariation === 'subtle' && (
+                  <button
+                    onClick={() => {
+                      console.log('[PhaseCard] Opening NFT claim lightbox');
+                      setShowClaimLightbox(true);
+                    }}
+                    className="px-6 py-2.5 rounded-lg font-medium transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+                    style={{
+                      fontFamily: "'Play', sans-serif",
+                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04))',
+                      color: '#e0e0e0',
+                      border: '1px solid rgba(255, 255, 255, 0.25)',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                      letterSpacing: '0.06em',
+                      fontSize: '14px',
+                      fontWeight: 500
                     }}
                   >
                     Claim NFT

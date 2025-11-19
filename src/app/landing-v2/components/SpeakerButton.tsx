@@ -17,7 +17,7 @@ export default function SpeakerButton({ isPlaying, onClick, isVisible }: Speaker
         transition-all ease-out
         active:scale-95
         cursor-pointer
-        z-[100]
+        z-[99999]
         ${isPlaying ? 'text-white/60' : 'text-gray-700'}
       `}
       aria-label={isPlaying ? 'Mute audio' : 'Play audio'}
