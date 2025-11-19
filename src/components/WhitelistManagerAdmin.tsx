@@ -262,7 +262,19 @@ function WhitelistManagerAdminContent() {
         <div>
           <p className="text-gray-400">Create and manage NFT whitelist eligibility rules</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          {/* Database Selector */}
+          <div className="bg-gray-900 border border-cyan-500/30 rounded-lg p-3">
+            <div className="text-xs text-gray-400 mb-1">Database</div>
+            <select
+              value={selectedDatabase}
+              onChange={(e) => setSelectedDatabase(e.target.value as 'trout' | 'sturgeon')}
+              className="bg-black/50 border border-cyan-500/30 rounded px-3 py-1 text-white text-sm"
+            >
+              <option value="trout">Trout (Dev - localhost:3200)</option>
+              <option value="sturgeon">Sturgeon (Production - Live Site)</option>
+            </select>
+          </div>
           <button
             onClick={() => setShowManualModal(true)}
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold transition-all"
@@ -587,6 +599,8 @@ function WhitelistManagerAdminContent() {
         <WhitelistCreateModal
           allCriteria={allCriteria || []}
           editingWhitelist={editingWhitelist}
+          client={client}
+          canMutate={canMutate}
           onClose={() => {
             setShowCreateModal(false);
             setEditingWhitelist(null);
@@ -598,6 +612,7 @@ function WhitelistManagerAdminContent() {
       {viewingWhitelistTable && (
         <WhitelistTableModal
           whitelist={viewingWhitelistTable}
+          client={client}
           onClose={() => setViewingWhitelistTable(null)}
           onExportCSV={handleExportCSV}
           removeUserFromWhitelist={removeUserFromWhitelist}
@@ -675,14 +690,27 @@ function WhitelistManagerAdminContent() {
   );
 }
 
+// Outer wrapper component with DatabaseProvider
+export default function WhitelistManagerAdmin() {
+  return (
+    <DatabaseProvider>
+      <WhitelistManagerAdminContent />
+    </DatabaseProvider>
+  );
+}
+
 // Create/Edit Whitelist Modal Component
 function WhitelistCreateModal({
   allCriteria,
   editingWhitelist,
+  client,
+  canMutate,
   onClose,
 }: {
   allCriteria: any[];
   editingWhitelist: any | null;
+  client: any;
+  canMutate: () => boolean;
   onClose: () => void;
 }) {
   const [name, setName] = useState(editingWhitelist?.name || '');
@@ -694,10 +722,18 @@ function WhitelistCreateModal({
     value: any;
   }>>(editingWhitelist?.rules || [{ criteriaField: '', operator: 'greater_than', value: '' }]);
 
-  const createWhitelist = useMutation(api.whitelists.createWhitelist);
-  const updateWhitelist = useMutation(api.whitelists.updateWhitelist);
-
   const [isSaving, setIsSaving] = useState(false);
+
+  // Mutation helpers
+  const createWhitelist = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.createWhitelist, args);
+  };
+
+  const updateWhitelist = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.updateWhitelist, args);
+  };
 
   const handleAddRule = () => {
     setRules([...rules, { criteriaField: '', operator: 'greater_than', value: '' }]);
@@ -914,6 +950,7 @@ function WhitelistCreateModal({
 // Whitelist Table Modal with Add/Delete Functionality
 function WhitelistTableModal({
   whitelist,
+  client,
   onClose,
   onExportCSV,
   removeUserFromWhitelist,
@@ -921,6 +958,7 @@ function WhitelistTableModal({
   addUserToWhitelistByAddress,
 }: {
   whitelist: any;
+  client: any;
   onClose: () => void;
   onExportCSV: (whitelist: any) => void;
   removeUserFromWhitelist: any;
@@ -932,12 +970,36 @@ function WhitelistTableModal({
   const [manualDisplayNameInput, setManualDisplayNameInput] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
   // Search for matching company names
-  const searchResults = useQuery(
-    api.whitelists.searchCompanyNames,
-    companyNameInput.length >= 2 ? { searchTerm: companyNameInput } : "skip"
-  );
+  useEffect(() => {
+    if (!client || companyNameInput.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchSearchResults = async () => {
+      try {
+        const results = await client.query(api.whitelists.searchCompanyNames, {
+          searchTerm: companyNameInput
+        });
+        if (!cancelled) {
+          setSearchResults(results || []);
+        }
+      } catch (error) {
+        console.error('[WhitelistTable] Error searching company names:', error);
+      }
+    };
+
+    fetchSearchResults();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [client, companyNameInput]);
 
   const handleRemoveUser = async (stakeAddress: string, displayName?: string) => {
     if (!confirm(`Remove "${displayName || stakeAddress}" from this whitelist?`)) return;
