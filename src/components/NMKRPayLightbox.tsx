@@ -484,9 +484,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
         // Regular ineligible case (not in whitelist)
         return (
-          <div className="p-6 sm:p-8 md:p-10">
+          <div className="text-center">
             {/* Header section matching Join Beta lightbox */}
-            <div className="text-center mb-6 sm:mb-8">
+            <div className="mb-6 sm:mb-8">
               <div className="mb-3">
                 <svg
                   className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-red-400"
