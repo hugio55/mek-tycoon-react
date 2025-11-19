@@ -807,6 +807,13 @@ function WhitelistTableModal({
     companyNameInput.length >= 2 ? { searchTerm: companyNameInput } : "skip"
   );
 
+  // Batch check claim status for all users in whitelist
+  const stakeAddresses = whitelist.eligibleUsers?.map((u: any) => u.stakeAddress) || [];
+  const claimStatusData = useQuery(
+    api.nftEligibility.batchCheckClaimStatus,
+    stakeAddresses.length > 0 ? { stakeAddresses } : "skip"
+  );
+
   const handleRemoveUser = async (stakeAddress: string, displayName?: string) => {
     if (!confirm(`Remove "${displayName || stakeAddress}" from this whitelist?`)) return;
 
@@ -1019,32 +1026,61 @@ function WhitelistTableModal({
                   <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">#</th>
                   <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Stake Address</th>
                   <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Display Name</th>
+                  <th className="text-center py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Claimed Token</th>
+                  <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Claim Date</th>
                   <th className="text-right py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {whitelist.eligibleUsers.map((user: any, index: number) => (
-                  <tr
-                    key={index}
-                    className="border-b border-gray-700/30 hover:bg-cyan-900/10 transition-colors"
-                  >
-                    <td className="py-3 px-4 text-gray-400">{index + 1}</td>
-                    <td className="py-3 px-4 text-white font-mono text-xs">
-                      {user.stakeAddress}
-                    </td>
-                    <td className="py-3 px-4 text-gray-300">
-                      {user.displayName || <span className="text-gray-600 italic">No name</span>}
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => handleRemoveUser(user.stakeAddress, user.displayName)}
-                        className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1 rounded"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {whitelist.eligibleUsers.map((user: any, index: number) => {
+                  const claimStatus = claimStatusData?.[user.stakeAddress];
+                  const hasClaimed = claimStatus?.claimed || false;
+                  const claimDate = claimStatus?.claimedAt;
+
+                  return (
+                    <tr
+                      key={index}
+                      className="border-b border-gray-700/30 hover:bg-cyan-900/10 transition-colors"
+                    >
+                      <td className="py-3 px-4 text-gray-400">{index + 1}</td>
+                      <td className="py-3 px-4 text-white font-mono text-xs">
+                        {user.stakeAddress}
+                      </td>
+                      <td className="py-3 px-4 text-gray-300">
+                        {user.displayName || <span className="text-gray-600 italic">No name</span>}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        {hasClaimed ? (
+                          <span className="inline-block bg-green-600/20 text-green-400 border border-green-500/30 px-3 py-1 rounded text-xs font-bold">
+                            Yes
+                          </span>
+                        ) : (
+                          <span className="inline-block bg-gray-700/20 text-gray-400 border border-gray-600/30 px-3 py-1 rounded text-xs">
+                            No
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-gray-300">
+                        {claimDate ? (
+                          <div className="text-xs">
+                            <div>{new Date(claimDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                            <div className="text-gray-500">{new Date(claimDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-600 italic text-xs">—</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <button
+                          onClick={() => handleRemoveUser(user.stakeAddress, user.displayName)}
+                          className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1 rounded"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}

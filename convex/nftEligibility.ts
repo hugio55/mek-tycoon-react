@@ -249,3 +249,40 @@ export const debugEligibilityState = query({
     };
   },
 });
+
+/**
+ * Batch check claim status for multiple stake addresses
+ * Used by admin whitelist view to show who has claimed
+ */
+export const batchCheckClaimStatus = query({
+  args: {
+    stakeAddresses: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const claimStatusMap: Record<string, { claimed: boolean; claimedAt?: number }> = {};
+
+    // Check each stake address for completed reservations
+    for (const stakeAddress of args.stakeAddresses) {
+      const completedReservation = await ctx.db
+        .query("commemorativeNFTReservations")
+        .withIndex("by_reserved_by", (q) => q.eq("reservedBy", stakeAddress))
+        .filter((q) => q.eq(q.field("status"), "completed"))
+        .first();
+
+      if (completedReservation) {
+        // User has claimed - get the timestamp when reservation was completed
+        // Use reservedAt as proxy for claim time (when they started the claim process)
+        claimStatusMap[stakeAddress] = {
+          claimed: true,
+          claimedAt: completedReservation.reservedAt,
+        };
+      } else {
+        claimStatusMap[stakeAddress] = {
+          claimed: false,
+        };
+      }
+    }
+
+    return claimStatusMap;
+  },
+});
