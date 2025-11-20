@@ -863,6 +863,42 @@ export const cleanupAllExpiredReservations = mutation({
  *
  * Only logs when actual cleanup work is performed (silent when no expired reservations exist)
  */
+/**
+ * Toggle automatic reservation cleanup for a campaign
+ * When disabled, the cron job will skip this campaign
+ */
+export const toggleCampaignReservationCleanup = mutation({
+  args: {
+    campaignId: v.id("commemorativeCampaigns"),
+    enabled: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const campaign = await ctx.db.get(args.campaignId);
+
+    if (!campaign) {
+      throw new Error("Campaign not found");
+    }
+
+    await ctx.db.patch(args.campaignId, {
+      enableReservationCleanup: args.enabled,
+      updatedAt: Date.now(),
+    });
+
+    console.log(`[CAMPAIGN CLEANUP] Toggled cleanup for "${campaign.name}":`, args.enabled);
+
+    return { success: true, enabled: args.enabled };
+  },
+});
+
+// ============================================================================
+// CRON JOB: Cleanup Expired Reservations
+// ============================================================================
+
+/**
+ * Cron job that runs every 5 minutes to clean up expired reservations across all campaigns
+ * Skips campaigns where enableReservationCleanup is false
+ * Only logs when actual cleanup work is performed (silent when no expired reservations exist)
+ */
 export const internalCleanupExpiredReservations = internalMutation({
   handler: async (ctx) => {
     const now = Date.now();
@@ -895,16 +931,29 @@ export const internalCleanupExpiredReservations = internalMutation({
     }
 
     let totalExpiredReservations = 0;
+    let campaignsProcessed = 0;
+    let campaignsSkipped = 0;
+
     for (const campaign of campaigns) {
+      // Check if cleanup is enabled for this campaign (defaults to true if not set)
+      const cleanupEnabled = campaign.enableReservationCleanup !== false;
+
+      if (!cleanupEnabled) {
+        console.log(`[CRON CLEANUP] Skipping campaign "${campaign.name}" - cleanup disabled`);
+        campaignsSkipped++;
+        continue;
+      }
+
       const cleanedCount = await cleanupExpiredCampaignReservations(ctx, campaign._id, now);
       totalExpiredReservations += cleanedCount;
+      campaignsProcessed++;
     }
 
     // Only log when we actually found and cleaned up expired reservations
     if (totalExpiredReservations > 0) {
-      console.log('[CRON CLEANUP] Cleaned up', totalExpiredReservations, 'expired reservations across', campaigns.length, 'campaigns');
+      console.log('[CRON CLEANUP] Cleaned up', totalExpiredReservations, 'expired reservations across', campaignsProcessed, 'campaigns (', campaignsSkipped, 'skipped)');
     } else {
-      console.log('[CRON CLEANUP] No expired reservations found to clean up');
+      console.log('[CRON CLEANUP] No expired reservations found to clean up (', campaignsProcessed, 'campaigns checked,', campaignsSkipped, 'skipped)');
     }
 
     return { success: true, campaignsProcessed: campaigns.length, expiredReservationsCleaned: totalExpiredReservations };
