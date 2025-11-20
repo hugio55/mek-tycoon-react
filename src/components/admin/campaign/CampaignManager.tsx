@@ -64,6 +64,7 @@ export default function CampaignManager({
   const deleteCampaign = useMutation(api.campaigns.deleteCampaign);
   const populateInventory = useMutation(api.commemorativeCampaigns.populateCampaignInventory);
   const syncCounters = useMutation(api.commemorativeCampaigns.syncCampaignCounters);
+  const toggleCleanup = useMutation(api.commemorativeNFTReservationsCampaign.toggleCampaignReservationCleanup);
 
   const campaigns = useQuery(api.campaigns.getAllCampaigns);
 
