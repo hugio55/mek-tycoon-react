@@ -805,6 +805,26 @@ export default function CampaignManager({
                 >
                   🔄 Sync Counters
                 </button>
+
+                {/* Toggle Reservation Cleanup Button */}
+                <button
+                  onClick={async () => {
+                    try {
+                      const currentState = campaign.enableReservationCleanup !== false;
+                      await toggleCleanup({
+                        campaignId: campaign._id,
+                        enabled: !currentState
+                      });
+                      onCampaignUpdated?.();
+                    } catch (error) {
+                      console.error('Failed to toggle cleanup:', error);
+                    }
+                  }}
+                  className="mt-2 text-xs text-gray-400 hover:text-yellow-400 transition-colors underline"
+                  title="Toggle automatic cleanup of expired reservations"
+                >
+                  {campaign.enableReservationCleanup !== false ? '🗑️ Disable Cleanup' : '✅ Enable Cleanup'}
+                </button>
               </div>
 
               {/* NFT Inventory Table */}
