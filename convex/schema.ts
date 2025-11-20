@@ -3397,6 +3397,8 @@ export default defineSchema({
     availableNFTs: v.number(), // Currently available
     reservedNFTs: v.number(),  // Currently reserved
     soldNFTs: v.number(),      // Sold/completed
+    // Cron job control
+    enableReservationCleanup: v.optional(v.boolean()), // If false, cron skips cleanup for this campaign (defaults to true)
   })
     .index("by_name", ["name"])
     .index("by_status", ["status"])
