@@ -25,6 +25,7 @@ import WhitelistManagerAdmin from '@/components/WhitelistManagerAdmin';
 import RouteVisualization from '@/components/RouteVisualization';
 import NMKRJSONGenerator from '@/components/admin/nft/NMKRJSONGenerator';
 import CampaignManager from '@/components/admin/campaign/CampaignManager';
+import NFTInventoryTable from '@/components/admin/campaign/NFTInventoryTable';
 import EssenceMarketAdmin from '@/components/EssenceMarketAdmin';
 import OverlayEditor from '@/components/OverlayEditor';
 import CometLoader from '@/components/loaders/CometLoader';
@@ -4288,12 +4289,18 @@ export default function AdminMasterDataPage() {
 function CampaignManagerWithDatabase({
   campaignDatabase,
   campaigns,
-  onToggleCleanup
+  onToggleCleanup,
+  client
 }: {
   campaignDatabase: 'trout' | 'sturgeon';
   campaigns: any[];
   onToggleCleanup: (campaignId: string, enabled: boolean) => Promise<void>;
+  client: any;
 }) {
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>();
+
+  const selectedCampaign = campaigns.find(c => c._id === selectedCampaignId);
+
   return (
     <div className="space-y-6">
       {/* Campaign Cards */}
@@ -4306,60 +4313,87 @@ function CampaignManagerWithDatabase({
         </div>
       ) : (
         campaigns.map((campaign) => (
-          <div
-            key={campaign._id}
-            className="bg-black/30 border border-yellow-500/30 rounded-lg p-6"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-2xl font-bold text-yellow-400">{campaign.name}</h3>
-                <p className="text-gray-400 text-sm mt-1">{campaign.description || 'No description'}</p>
+          <div key={campaign._id}>
+            <div
+              className={`bg-black/30 border rounded-lg p-6 cursor-pointer transition-all ${
+                selectedCampaignId === campaign._id
+                  ? 'border-yellow-500 shadow-lg shadow-yellow-500/20'
+                  : 'border-yellow-500/30 hover:border-yellow-500/60'
+              }`}
+              onClick={() => setSelectedCampaignId(
+                selectedCampaignId === campaign._id ? undefined : campaign._id
+              )}
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-2xl font-bold text-yellow-400">{campaign.name}</h3>
+                  <p className="text-gray-400 text-sm mt-1">{campaign.description || 'No description'}</p>
+                </div>
+                <div className={`px-3 py-1 rounded text-xs font-bold ${
+                  campaign.status === 'active' ? 'bg-green-900/30 text-green-400' :
+                  campaign.status === 'paused' ? 'bg-yellow-900/30 text-yellow-400' :
+                  'bg-gray-900/30 text-gray-400'
+                }`}>
+                  {campaign.status.toUpperCase()}
+                </div>
               </div>
-              <div className={`px-3 py-1 rounded text-xs font-bold ${
-                campaign.status === 'active' ? 'bg-green-900/30 text-green-400' :
-                campaign.status === 'paused' ? 'bg-yellow-900/30 text-yellow-400' :
-                'bg-gray-900/30 text-gray-400'
-              }`}>
-                {campaign.status.toUpperCase()}
-              </div>
-            </div>
 
-            {/* Campaign Stats */}
-            <div className="grid grid-cols-4 gap-4 mb-4">
-              <div className="bg-black/50 rounded p-3">
-                <div className="text-xs text-gray-400">Total NFTs</div>
-                <div className="text-lg font-bold text-white">{campaign.totalNFTs}</div>
+              {/* Campaign Stats */}
+              <div className="grid grid-cols-4 gap-4 mb-4">
+                <div className="bg-black/50 rounded p-3">
+                  <div className="text-xs text-gray-400">Total NFTs</div>
+                  <div className="text-lg font-bold text-white">{campaign.totalNFTs}</div>
+                </div>
+                <div className="bg-black/50 rounded p-3">
+                  <div className="text-xs text-gray-400">Available</div>
+                  <div className="text-lg font-bold text-green-400">{campaign.availableNFTs}</div>
+                </div>
+                <div className="bg-black/50 rounded p-3">
+                  <div className="text-xs text-gray-400">Reserved</div>
+                  <div className="text-lg font-bold text-yellow-400">{campaign.reservedNFTs}</div>
+                </div>
+                <div className="bg-black/50 rounded p-3">
+                  <div className="text-xs text-gray-400">Sold</div>
+                  <div className="text-lg font-bold text-cyan-400">{campaign.soldNFTs}</div>
+                </div>
               </div>
-              <div className="bg-black/50 rounded p-3">
-                <div className="text-xs text-gray-400">Available</div>
-                <div className="text-lg font-bold text-green-400">{campaign.availableNFTs}</div>
-              </div>
-              <div className="bg-black/50 rounded p-3">
-                <div className="text-xs text-gray-400">Reserved</div>
-                <div className="text-lg font-bold text-yellow-400">{campaign.reservedNFTs}</div>
-              </div>
-              <div className="bg-black/50 rounded p-3">
-                <div className="text-xs text-gray-400">Sold</div>
-                <div className="text-lg font-bold text-cyan-400">{campaign.soldNFTs}</div>
-              </div>
-            </div>
 
-            {/* Cleanup Toggle Button */}
-            <div className="flex gap-3">
-              <button
-                onClick={() => onToggleCleanup(
-                  campaign._id,
-                  campaign.enableReservationCleanup === false
+              {/* Cleanup Toggle Button */}
+              <div className="flex gap-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleCleanup(
+                      campaign._id,
+                      campaign.enableReservationCleanup === false
+                    );
+                  }}
+                  className="text-xs text-gray-400 hover:text-yellow-400 transition-colors underline"
+                  title="Toggle automatic cleanup of expired reservations"
+                >
+                  {campaign.enableReservationCleanup !== false ? '🗑️ Disable Cleanup' : '✅ Enable Cleanup'}
+                </button>
+                <span className="text-xs text-gray-500">
+                  (Cleanup runs every 5 minutes)
+                </span>
+                {selectedCampaignId === campaign._id && (
+                  <span className="text-xs text-yellow-400 ml-auto">
+                    👇 View NFTs below
+                  </span>
                 )}
-                className="text-xs text-gray-400 hover:text-yellow-400 transition-colors underline"
-                title="Toggle automatic cleanup of expired reservations"
-              >
-                {campaign.enableReservationCleanup !== false ? '🗑️ Disable Cleanup' : '✅ Enable Cleanup'}
-              </button>
-              <span className="text-xs text-gray-500">
-                (Cleanup runs every 5 minutes)
-              </span>
+              </div>
             </div>
+
+            {/* NFT Inventory Table - shown when campaign is selected */}
+            {selectedCampaignId === campaign._id && selectedCampaign && (
+              <div className="mt-4 ml-8">
+                <NFTInventoryTable
+                  campaignId={campaign._id}
+                  campaignName={campaign.name}
+                  client={client}
+                />
+              </div>
+            )}
           </div>
         ))
       )}
@@ -4498,6 +4532,7 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
           campaignDatabase={campaignDatabase}
           campaigns={campaigns}
           onToggleCleanup={handleToggleCleanup}
+          client={campaignDatabase === 'trout' ? troutClient : sturgeonClient}
         />
       )}
     </div>
