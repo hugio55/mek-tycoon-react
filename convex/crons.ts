@@ -44,13 +44,14 @@ crons.interval(
 // Clean up expired NFT campaign reservations every 5 minutes
 // Releases reserved NFTs back to available pool after 10-minute timeout + 5-second grace
 // Reduced from 1 minute to 5 minutes to reduce log spam and unnecessary checks
-crons.interval(
-  "cleanup expired NFT reservations",
-  {
-    minutes: 5
-  },
-  internal.commemorativeNFTReservationsCampaign.internalCleanupExpiredReservations
-);
+// PAUSED: User on vacation, not needed until system goes live
+// crons.interval(
+//   "cleanup expired NFT reservations",
+//   {
+//     minutes: 5
+//   },
+//   internal.commemorativeNFTReservationsCampaign.internalCleanupExpiredReservations
+// );
 
 // Clean up expired rate limit lockouts every hour
 crons.interval(

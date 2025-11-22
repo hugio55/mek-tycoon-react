@@ -4410,25 +4410,7 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
       {nftSubTab === 'commemorative' && <CommemorativeToken1Admin />}
       {nftSubTab === 'whitelist-manager' && <WhitelistManagerAdmin />}
       {nftSubTab === 'json-generator' && <NMKRJSONGenerator />}
-      {nftSubTab === 'campaigns' && (
-        <>
-          {/* Warning for Production */}
-          {campaignDatabase === 'sturgeon' && (
-            <div className="bg-red-900/20 border border-red-500 rounded-lg p-4 mb-6">
-              <div className="flex items-center gap-3">
-                <div className="text-2xl">⚠️</div>
-                <div>
-                  <div className="font-bold text-red-400">VIEWING PRODUCTION DATABASE</div>
-                  <div className="text-sm text-gray-300">
-                    You are viewing campaigns from Sturgeon (Production). Any changes will affect the LIVE SITE!
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          <CampaignManager />
-        </>
-      )}
+      {nftSubTab === 'campaigns' && <CampaignManagerWithDatabase campaignDatabase={campaignDatabase} />}
     </div>
   );
 }
