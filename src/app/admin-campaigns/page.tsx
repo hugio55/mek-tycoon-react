@@ -174,19 +174,24 @@ function AdminCampaignsContent() {
                 </div>
 
                 {/* Cleanup Toggle Button */}
-                <div className="flex gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-gray-400">Auto-Cleanup:</span>
                   <button
                     onClick={() => handleToggleCleanup(
                       campaign._id,
                       campaign.enableReservationCleanup === false
                     )}
-                    className="text-xs text-gray-400 hover:text-yellow-400 transition-colors underline"
-                    title="Toggle automatic cleanup of expired reservations"
+                    className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
+                      campaign.enableReservationCleanup !== false
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30'
+                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/50 hover:bg-gray-500/30'
+                    }`}
+                    title="Click to toggle automatic cleanup of expired reservations"
                   >
-                    {campaign.enableReservationCleanup !== false ? '🗑️ Disable Cleanup' : '✅ Enable Cleanup'}
+                    {campaign.enableReservationCleanup !== false ? 'ON' : 'OFF'}
                   </button>
                   <span className="text-xs text-gray-500">
-                    (Cleanup runs every 5 minutes)
+                    (Runs every 5 minutes)
                   </span>
                 </div>
               </div>

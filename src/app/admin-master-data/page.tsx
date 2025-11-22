@@ -4299,6 +4299,13 @@ function CampaignManagerWithDatabase({
 }) {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>();
 
+  // Auto-select first campaign when campaigns load or change
+  useEffect(() => {
+    if (campaigns.length > 0 && !selectedCampaignId) {
+      setSelectedCampaignId(campaigns[0]._id);
+    }
+  }, [campaigns, selectedCampaignId]);
+
   const selectedCampaign = campaigns.find(c => c._id === selectedCampaignId);
 
   return (
