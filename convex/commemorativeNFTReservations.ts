@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query, internalMutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
 /**
@@ -232,6 +232,18 @@ export const completeReservation = mutation({
       return { success: false, error: "Reservation not found" };
     }
 
+    // Look up company name for historical tracking
+    const walletAddress = reservation.reservedBy;
+    let companyNameAtSale: string | undefined;
+
+    if (walletAddress) {
+      const goldMiningRecord = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+        .first();
+      companyNameAtSale = goldMiningRecord?.companyName || undefined;
+    }
+
     // Update reservation status
     await ctx.db.patch(args.reservationId, {
       status: "completed",
@@ -240,6 +252,9 @@ export const completeReservation = mutation({
     // Update NFT inventory to sold
     await ctx.db.patch(reservation.nftInventoryId, {
       status: "sold",
+      soldTo: walletAddress,
+      soldAt: Date.now(),
+      companyNameAtSale,
     });
 
     console.log('[RESERVATION] Completed reservation:', args.reservationId, 'for NFT:', reservation.nftNumber);
@@ -271,6 +286,14 @@ export const completeReservationByWallet = mutation({
 
     console.log('[RESERVATION] Found reservation:', reservation._id, 'NFT:', reservation.nftNumber);
 
+    // Look up company name for historical tracking
+    let companyNameAtSale: string | undefined;
+    const goldMiningRecord = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+    companyNameAtSale = goldMiningRecord?.companyName || undefined;
+
     // Update reservation status
     await ctx.db.patch(reservation._id, {
       status: "completed",
@@ -279,6 +302,9 @@ export const completeReservationByWallet = mutation({
     // Update NFT inventory to sold
     await ctx.db.patch(reservation.nftInventoryId, {
       status: "sold",
+      soldTo: args.walletAddress,
+      soldAt: Date.now(),
+      companyNameAtSale,
     });
 
     console.log('[RESERVATION] Completed reservation from webhook:', reservation._id, 'for NFT:', reservation.nftNumber);
@@ -407,20 +433,12 @@ async function cleanupExpiredReservations(ctx: any, now: number) {
   }
 }
 
-// Manual cleanup mutation (can be called from admin panel or cron job)
+// Manual cleanup mutation (can be called from admin panel)
+// Note: Scheduled cleanup is handled by commemorativeNFTReservationsCampaign.internalCleanupExpiredReservations
+// which cleans both campaign and legacy reservations hourly
 export const cleanupExpiredReservationsMutation = mutation({
   handler: async (ctx) => {
     const now = Date.now();
-    await cleanupExpiredReservations(ctx, now);
-    return { success: true };
-  },
-});
-
-// Internal mutation for cron job to call (prevents stale reservations from blocking users)
-export const internalCleanupExpiredReservations = internalMutation({
-  handler: async (ctx) => {
-    const now = Date.now();
-    console.log('[CRON] Running Phase1 NFT reservation cleanup at', new Date(now).toISOString());
     await cleanupExpiredReservations(ctx, now);
     return { success: true };
   },

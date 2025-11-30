@@ -75,7 +75,12 @@ export default function LandingContainer({
                 right: '17px',
                 bottom: 0,
                 backdropFilter: 'blur(12px)',
-                backgroundColor: 'rgba(255, 255, 255, 0.005)'
+                WebkitBackdropFilter: 'blur(12px)',
+                backgroundColor: 'rgba(255, 255, 255, 0.005)',
+                // iOS Safari backdrop-filter fix
+                transform: 'translate3d(0, 0, 0)',
+                WebkitTransform: 'translate3d(0, 0, 0)',
+                isolation: 'isolate',
               }}
             />
 

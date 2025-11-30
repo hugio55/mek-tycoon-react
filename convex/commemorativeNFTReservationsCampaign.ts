@@ -222,9 +222,24 @@ export const completeCampaignReservation = mutation({
     const inventoryRow = await ctx.db.get(args.reservationId as Id<"commemorativeNFTInventory">);
 
     if (inventoryRow && inventoryRow.status === "reserved") {
+      // Look up company name for historical tracking
+      const walletAddress = inventoryRow.reservedBy;
+      let companyNameAtSale: string | undefined;
+
+      if (walletAddress) {
+        const goldMiningRecord = await ctx.db
+          .query("goldMining")
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+          .first();
+        companyNameAtSale = goldMiningRecord?.companyName || undefined;
+      }
+
       // New system: Inventory row IS the reservation
       await ctx.db.patch(inventoryRow._id, {
         status: "sold",
+        soldTo: walletAddress,
+        soldAt: Date.now(),
+        companyNameAtSale,
         // Keep reservation fields for record-keeping
       });
 
@@ -263,6 +278,18 @@ export const completeCampaignReservation = mutation({
       return { success: false, error: "Reservation not found" };
     }
 
+    // Look up company name for historical tracking
+    const walletAddress = reservation.reservedBy;
+    let companyNameAtSale: string | undefined;
+
+    if (walletAddress) {
+      const goldMiningRecord = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+        .first();
+      companyNameAtSale = goldMiningRecord?.companyName || undefined;
+    }
+
     // Update reservation status
     await ctx.db.patch(args.reservationId as Id<"commemorativeNFTReservations">, {
       status: "completed",
@@ -271,6 +298,9 @@ export const completeCampaignReservation = mutation({
     // Update NFT inventory to sold
     await ctx.db.patch(reservation.nftInventoryId, {
       status: "sold",
+      soldTo: walletAddress,
+      soldAt: Date.now(),
+      companyNameAtSale,
     });
 
     // Update campaign counters
@@ -320,9 +350,20 @@ export const completeCampaignReservationByWallet = mutation({
 
     console.log('[CAMPAIGN RESERVATION] Found reservation:', inventoryRow._id, 'NFT:', inventoryRow.nftNumber);
 
+    // Look up company name for historical tracking
+    let companyNameAtSale: string | undefined;
+    const goldMiningRecord = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+    companyNameAtSale = goldMiningRecord?.companyName || undefined;
+
     // Update inventory to sold (keeping reservation fields for record)
     await ctx.db.patch(inventoryRow._id, {
       status: "sold",
+      soldTo: args.walletAddress,
+      soldAt: Date.now(),
+      companyNameAtSale,
     });
 
     // Update campaign counters
