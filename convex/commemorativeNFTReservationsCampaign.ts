@@ -949,13 +949,49 @@ export const internalCleanupExpiredReservations = internalMutation({
       campaignsProcessed++;
     }
 
+    // ALSO clean up legacy reservations (Phase 1 system without campaignId)
+    // These are created by NMKRPayLightbox.tsx using commemorativeNFTReservations.ts
+    const LEGACY_GRACE_PERIOD = 5 * 1000; // 5 seconds
+    const legacyExpiredReservations = await ctx.db
+      .query("commemorativeNFTReservations")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .filter((q) => q.lt(q.field("expiresAt"), now - LEGACY_GRACE_PERIOD))
+      .collect();
+
+    let legacyCleanedCount = 0;
+    for (const reservation of legacyExpiredReservations) {
+      // Skip if it has a campaignId (already handled above)
+      if (reservation.campaignId) continue;
+
+      // Skip if payment window is open (user actively paying)
+      if (reservation.paymentWindowOpenedAt && !reservation.paymentWindowClosedAt) {
+        console.log('[CRON CLEANUP] Skipping legacy reservation with open payment window:', reservation._id);
+        continue;
+      }
+
+      console.log('[CRON CLEANUP] Cleaning legacy reservation:', reservation._id, 'NFT:', reservation.nftNumber);
+
+      // Mark as expired
+      await ctx.db.patch(reservation._id, { status: "expired" });
+
+      // Return NFT to available pool
+      const nft = await ctx.db.get(reservation.nftInventoryId);
+      if (nft && nft.status === "reserved") {
+        await ctx.db.patch(reservation.nftInventoryId, { status: "available" });
+      }
+
+      legacyCleanedCount++;
+    }
+
+    totalExpiredReservations += legacyCleanedCount;
+
     // Only log when we actually found and cleaned up expired reservations
     if (totalExpiredReservations > 0) {
-      console.log('[CRON CLEANUP] Cleaned up', totalExpiredReservations, 'expired reservations across', campaignsProcessed, 'campaigns (', campaignsSkipped, 'skipped)');
+      console.log('[CRON CLEANUP] Cleaned up', totalExpiredReservations, 'expired reservations (', campaignsProcessed, 'campaigns,', legacyCleanedCount, 'legacy,', campaignsSkipped, 'skipped)');
     } else {
       console.log('[CRON CLEANUP] No expired reservations found to clean up (', campaignsProcessed, 'campaigns checked,', campaignsSkipped, 'skipped)');
     }
 
-    return { success: true, campaignsProcessed: campaigns.length, expiredReservationsCleaned: totalExpiredReservations };
+    return { success: true, campaignsProcessed: campaigns.length, expiredReservationsCleaned: totalExpiredReservations, legacyCleaned: legacyCleanedCount };
   },
 });
