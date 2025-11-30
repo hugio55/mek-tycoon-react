@@ -369,7 +369,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
         return (
           <div className="text-center">
             {/* Header - Match Join Beta */}
-            <div className="mb-6 sm:mb-8 pt-6">
+            <div className="mb-6 sm:mb-8">
               <h2 className="text-xl sm:text-2xl md:text-3xl font-light text-white tracking-wide mb-3 whitespace-nowrap">
                 Phase 1: Commemorative NFT
               </h2>
@@ -427,6 +427,18 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                 }}
               >
                 Continue
+              </button>
+
+              {/* Cancel Link */}
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full mt-3 text-sm text-white/40 hover:text-white/60 transition-colors"
+                style={{
+                  fontFamily: "'Inter', 'Arial', sans-serif",
+                }}
+              >
+                Cancel
               </button>
             </form>
           </div>
@@ -851,26 +863,6 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Close Button - Top Right - Match Join Beta */}
-          <button
-            onClick={attemptCancel}
-            className="absolute top-4 right-4 text-white/50 hover:text-white/80 transition-colors z-10 touch-manipulation"
-            style={{
-              minWidth: '44px',
-              minHeight: '44px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-            aria-label="Close"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-
           {/* Content */}
           <div className="p-6 sm:p-8 md:p-10">
             {renderContent()}
