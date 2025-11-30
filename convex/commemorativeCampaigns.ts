@@ -630,7 +630,7 @@ export const backfillSoldNFTData = mutation({
       // Try to find the completed reservation for this NFT
       // Check both legacy and campaign reservation tables
 
-      // First try campaign reservations
+      // First try to find completed reservations
       let reservation = await ctx.db
         .query("commemorativeNFTReservationsCampaign")
         .filter((q) =>
@@ -641,7 +641,7 @@ export const backfillSoldNFTData = mutation({
         )
         .first();
 
-      // If not found, try legacy reservations
+      // If not found, try legacy reservations with completed status
       if (!reservation) {
         reservation = await ctx.db
           .query("commemorativeNFTReservations")
@@ -651,6 +651,23 @@ export const backfillSoldNFTData = mutation({
               q.eq(q.field("status"), "completed")
             )
           )
+          .first();
+      }
+
+      // If still not found, try ANY reservation for this NFT (maybe sale was completed externally)
+      if (!reservation) {
+        reservation = await ctx.db
+          .query("commemorativeNFTReservations")
+          .filter((q) => q.eq(q.field("nftInventoryId"), nft._id))
+          .order("desc")
+          .first();
+      }
+
+      if (!reservation) {
+        reservation = await ctx.db
+          .query("commemorativeNFTReservationsCampaign")
+          .filter((q) => q.eq(q.field("nftInventoryId"), nft._id))
+          .order("desc")
           .first();
       }
 
@@ -687,6 +704,76 @@ export const backfillSoldNFTData = mutation({
       backfilled,
       notFound,
       total: soldNFTs.length,
+    };
+  },
+});
+
+/**
+ * Debug query to see all reservations
+ */
+export const debugReservations = query({
+  args: {},
+  handler: async (ctx) => {
+    const campaignRes = await ctx.db
+      .query("commemorativeNFTReservationsCampaign")
+      .collect();
+
+    const legacyRes = await ctx.db
+      .query("commemorativeNFTReservations")
+      .collect();
+
+    return {
+      campaign: campaignRes.map(r => ({
+        nftInventoryId: r.nftInventoryId,
+        nftNumber: r.nftNumber,
+        status: r.status,
+        reservedBy: r.reservedBy,
+      })),
+      legacy: legacyRes.map(r => ({
+        nftInventoryId: r.nftInventoryId,
+        nftNumber: r.nftNumber,
+        status: r.status,
+        reservedBy: r.reservedBy,
+      })),
+    };
+  },
+});
+
+/**
+ * Manually set soldTo for an NFT (admin use)
+ */
+export const manuallySetSoldTo = mutation({
+  args: {
+    nftId: v.id("commemorativeNFTInventory"),
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const nft = await ctx.db.get(args.nftId);
+    if (!nft) {
+      return { success: false, error: "NFT not found" };
+    }
+
+    // Look up company name
+    const goldMiningRecord = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    const companyNameAtSale = goldMiningRecord?.companyName || undefined;
+
+    await ctx.db.patch(args.nftId, {
+      soldTo: args.walletAddress,
+      soldAt: nft.soldAt || Date.now(),
+      companyNameAtSale,
+    });
+
+    console.log('[MANUAL] Set soldTo for', nft.name, 'to', args.walletAddress.substring(0, 12) + '...', '- corp:', companyNameAtSale || 'none');
+
+    return {
+      success: true,
+      nftName: nft.name,
+      walletAddress: args.walletAddress,
+      companyName: companyNameAtSale || null,
     };
   },
 });
