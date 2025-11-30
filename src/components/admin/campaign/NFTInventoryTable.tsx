@@ -302,11 +302,28 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
                           {nft.name}
                         </td>
                         <td className="px-3 py-2">
-                          <span
-                            className={`inline-block px-2 py-1 rounded text-xs font-semibold ${config.bg} ${config.color} border ${config.border}`}
-                          >
-                            {config.label}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`inline-block px-2 py-1 rounded text-xs font-semibold ${config.bg} ${config.color} border ${config.border}`}
+                            >
+                              {config.label}
+                            </span>
+                            {nft.status === 'reserved' && (() => {
+                              const countdown = formatCountdown(nft.expiresAt);
+                              return (
+                                <span
+                                  className={`text-xs font-mono ${
+                                    countdown.isExpired
+                                      ? 'text-red-400 font-bold animate-pulse'
+                                      : 'text-gray-400'
+                                  }`}
+                                  title={countdown.isMissing ? 'This reservation has no expiry time set - it may be stuck!' : `Expires at ${nft.expiresAt ? new Date(nft.expiresAt).toLocaleTimeString() : 'unknown'}`}
+                                >
+                                  {countdown.text}
+                                </span>
+                              );
+                            })()}
+                          </div>
                         </td>
                         <td className="px-3 py-2">
                           <div className="flex items-center gap-2">

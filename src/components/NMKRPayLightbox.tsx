@@ -22,6 +22,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [manualAddress, setManualAddress] = useState<string>('');
   const [addressError, setAddressError] = useState<string>('');
+  // Store eligibility result so it persists after query skips (fixes UI bug where "Not Eligible" shows instead of "Reservation In Progress")
+  const [storedEligibility, setStoredEligibility] = useState<{ hasActiveReservation?: boolean; alreadyClaimed?: boolean; eligible?: boolean; reason?: string } | null>(null);
 
   // Track if we've already initiated a timeout release to prevent multiple attempts
   const hasInitiatedTimeoutRelease = useRef(false);
@@ -98,6 +100,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     if (state !== 'checking_eligibility' || !eligibility) return;
 
     console.log('[🎟️ELIGIBILITY] Result:', eligibility);
+
+    // Store eligibility result so it persists after query skips
+    setStoredEligibility(eligibility);
 
     // Check if already claimed
     if (eligibility.alreadyClaimed) {
@@ -364,8 +369,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
         return (
           <div className="text-center">
             {/* Header - Match Join Beta */}
-            <div className="mb-6 sm:mb-8">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-light text-white tracking-wide mb-3">
+            <div className="mb-6 sm:mb-8 pt-6">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-light text-white tracking-wide mb-3 whitespace-nowrap">
                 Phase 1: Commemorative NFT
               </h2>
               <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed">
@@ -451,7 +456,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
       case 'ineligible':
         // Check if they have an active reservation (special case)
-        if ((eligibility as any)?.hasActiveReservation) {
+        // Use storedEligibility because the query skips once state changes
+        if (storedEligibility?.hasActiveReservation) {
           return (
             <div className="text-center py-6 sm:py-8">
               <div className="mb-4 sm:mb-6">
