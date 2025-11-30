@@ -277,12 +277,15 @@ export default function ProModeToggle({
           </div>
 
           {/* Guard overlay (shows when guard is down) - fully opaque for cross-browser compatibility */}
+          {/* translateZ(1px) fixes iPhone 14/14 Pro Max GPU compositor issue where knob peeks through */}
           {!guardOpen && (
             <div
               className="absolute top-5 left-0 w-full h-[calc(100%-20px)] opacity-100 rounded-[7px] pointer-events-none z-[5]"
               style={{
                 background: guardOverlayGradients[guardColor],
-                isolation: 'isolate'
+                isolation: 'isolate',
+                transform: 'translateZ(1px)',
+                WebkitTransform: 'translateZ(1px)'
               }}
             />
           )}
