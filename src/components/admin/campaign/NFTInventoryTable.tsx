@@ -437,8 +437,8 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
                               return <span className="text-xs text-gray-500 italic">No corporation</span>;
                             }
 
-                            const displayName = historicalName || currentName;
                             const hasChanged = historicalName && currentName && historicalName !== currentName;
+                            const isMissingHistorical = !historicalName && currentName;
 
                             if (hasChanged) {
                               return (
@@ -454,7 +454,18 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
                               );
                             }
 
-                            return <span className="text-xs text-white">{displayName}</span>;
+                            if (isMissingHistorical) {
+                              return (
+                                <span
+                                  className="text-xs text-gray-400 italic"
+                                  title="Historical name not recorded - showing current name"
+                                >
+                                  {currentName} (current)
+                                </span>
+                              );
+                            }
+
+                            return <span className="text-xs text-white">{historicalName || currentName}</span>;
                           })()}
                         </td>
                         <td className="px-3 py-2">
