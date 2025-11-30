@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -16,6 +16,7 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [now, setNow] = useState(Date.now());
+  const [copiedWallet, setCopiedWallet] = useState<string | null>(null);
 
   // Update "now" every second for countdown timers
   useEffect(() => {
@@ -27,6 +28,30 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
     api.commemorativeCampaigns.getCampaignInventory,
     { campaignId }
   );
+
+  // Collect unique wallet addresses from sold/reserved NFTs to look up current company names
+  const walletAddresses = useMemo(() => {
+    if (!inventory) return [];
+    const addresses = new Set<string>();
+    for (const nft of inventory) {
+      if (nft.soldTo) addresses.add(nft.soldTo);
+      if (nft.reservedBy && nft.status === 'reserved') addresses.add(nft.reservedBy);
+    }
+    return Array.from(addresses);
+  }, [inventory]);
+
+  // Query current company names for all wallet addresses
+  const currentCompanyNames = useQuery(
+    api.commemorativeCampaigns.getCompanyNamesForWallets,
+    walletAddresses.length > 0 ? { walletAddresses } : "skip"
+  );
+
+  // Copy wallet address to clipboard
+  const copyWallet = (address: string) => {
+    navigator.clipboard.writeText(address);
+    setCopiedWallet(address);
+    setTimeout(() => setCopiedWallet(null), 2000);
+  };
 
   // DEBUG: Log when inventory data changes
   useEffect(() => {
@@ -273,6 +298,12 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
                       NFT UID
                     </th>
                     <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Claimed By
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Corporation
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                       Image
                     </th>
                   </tr>
@@ -352,6 +383,79 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
                               </svg>
                             </button>
                           </div>
+                        </td>
+                        <td className="px-3 py-2">
+                          {(() => {
+                            const walletAddress = nft.soldTo || (nft.status === 'reserved' ? nft.reservedBy : null);
+                            if (!walletAddress) {
+                              return <span className="text-xs text-gray-500">-</span>;
+                            }
+                            const truncated = `${walletAddress.substring(0, 8)}...${walletAddress.substring(walletAddress.length - 6)}`;
+                            return (
+                              <div className="flex items-center gap-2">
+                                <code className="text-xs text-gray-400 font-mono bg-black/50 px-2 py-1 rounded">
+                                  {truncated}
+                                </code>
+                                <button
+                                  onClick={() => copyWallet(walletAddress)}
+                                  className="text-gray-500 hover:text-yellow-400 transition-colors"
+                                  title="Copy full address"
+                                >
+                                  {copiedWallet === walletAddress ? (
+                                    <span className="text-green-400 text-xs">Copied!</span>
+                                  ) : (
+                                    <svg
+                                      className="w-4 h-4"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                      />
+                                    </svg>
+                                  )}
+                                </button>
+                              </div>
+                            );
+                          })()}
+                        </td>
+                        <td className="px-3 py-2">
+                          {(() => {
+                            const walletAddress = nft.soldTo || (nft.status === 'reserved' ? nft.reservedBy : null);
+                            const historicalName = nft.companyNameAtSale;
+                            const currentName = walletAddress && currentCompanyNames ? currentCompanyNames[walletAddress] : null;
+
+                            if (!walletAddress) {
+                              return <span className="text-xs text-gray-500">-</span>;
+                            }
+
+                            if (!historicalName && !currentName) {
+                              return <span className="text-xs text-gray-500 italic">No corporation</span>;
+                            }
+
+                            const displayName = historicalName || currentName;
+                            const hasChanged = historicalName && currentName && historicalName !== currentName;
+
+                            if (hasChanged) {
+                              return (
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-xs text-white">{historicalName}</span>
+                                  <span
+                                    className="text-xs text-yellow-400 cursor-pointer hover:underline"
+                                    title={`Current name: ${currentName}`}
+                                  >
+                                    (now: {currentName})
+                                  </span>
+                                </div>
+                              );
+                            }
+
+                            return <span className="text-xs text-white">{displayName}</span>;
+                          })()}
                         </td>
                         <td className="px-3 py-2">
                           {nft.imageUrl ? (
