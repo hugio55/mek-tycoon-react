@@ -98,8 +98,9 @@ export default function GlobalBackground() {
     return null;
   }
 
-  // Don't render on root path if landing page is enabled (landing page has its own background)
-  if (pathname === '/' && siteSettings?.landingPageEnabled && !isLoading) {
+  // Don't render on root path - landing page has its own complete visual experience
+  // This is unconditional to prevent a flash of stars before siteSettings loads
+  if (pathname === '/') {
     return null;
   }
 

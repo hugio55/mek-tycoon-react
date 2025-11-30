@@ -17,6 +17,8 @@ function AdminCampaignsContent() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>();
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [campaignUpdateTrigger, setCampaignUpdateTrigger] = useState(0);
+  const [cleaningCampaignId, setCleaningCampaignId] = useState<string | null>(null);
+  const [syncingCampaignId, setSyncingCampaignId] = useState<string | null>(null);
 
   // Fetch campaigns from selected database
   useEffect(() => {
@@ -63,6 +65,50 @@ function AdminCampaignsContent() {
     } catch (error: any) {
       console.error('[AdminCampaigns] Error toggling cleanup:', error);
       alert(`Error: ${error.message}`);
+    }
+  };
+
+  const handleRunCleanup = async (campaignId: string) => {
+    if (!client || !canMutate()) {
+      alert('Mutations disabled for this database. Enable production mutations to make changes.');
+      return;
+    }
+
+    setCleaningCampaignId(campaignId);
+    try {
+      await client.mutation(api.commemorativeNFTReservationsCampaign.cleanupExpiredCampaignReservationsMutation, {
+        campaignId
+      });
+      // Also sync counters after cleanup
+      await client.mutation(api.commemorativeCampaigns.syncCampaignCounters, {
+        campaignId
+      });
+      handleCampaignUpdated();
+    } catch (error: any) {
+      console.error('[AdminCampaigns] Error running cleanup:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setCleaningCampaignId(null);
+    }
+  };
+
+  const handleSyncCounters = async (campaignId: string) => {
+    if (!client || !canMutate()) {
+      alert('Mutations disabled for this database. Enable production mutations to make changes.');
+      return;
+    }
+
+    setSyncingCampaignId(campaignId);
+    try {
+      await client.mutation(api.commemorativeCampaigns.syncCampaignCounters, {
+        campaignId
+      });
+      handleCampaignUpdated();
+    } catch (error: any) {
+      console.error('[AdminCampaigns] Error syncing counters:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setSyncingCampaignId(null);
     }
   };
 
@@ -174,7 +220,7 @@ function AdminCampaignsContent() {
                 </div>
 
                 {/* Cleanup Toggle Button */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <span className="text-xs text-gray-400">Auto-Cleanup:</span>
                   <button
                     onClick={() => handleToggleCleanup(
@@ -191,8 +237,30 @@ function AdminCampaignsContent() {
                     {campaign.enableReservationCleanup !== false ? 'ON' : 'OFF'}
                   </button>
                   <span className="text-xs text-gray-500">
-                    (Runs every 5 minutes)
+                    (Cron runs hourly)
                   </span>
+
+                  <span className="text-gray-600">|</span>
+
+                  {/* Run Cleanup Now Button */}
+                  <button
+                    onClick={() => handleRunCleanup(campaign._id)}
+                    disabled={cleaningCampaignId === campaign._id}
+                    className="px-3 py-1 rounded text-xs font-semibold transition-all bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 hover:bg-yellow-500/30 disabled:opacity-50"
+                    title="Manually run cleanup to release any expired reservations now"
+                  >
+                    {cleaningCampaignId === campaign._id ? '⏳ Cleaning...' : '🧹 Run Cleanup Now'}
+                  </button>
+
+                  {/* Sync Counters Button */}
+                  <button
+                    onClick={() => handleSyncCounters(campaign._id)}
+                    disabled={syncingCampaignId === campaign._id}
+                    className="px-3 py-1 rounded text-xs font-semibold transition-all bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 hover:bg-cyan-500/30 disabled:opacity-50"
+                    title="Recalculate counters from actual inventory (fixes mismatched counts)"
+                  >
+                    {syncingCampaignId === campaign._id ? '⏳ Syncing...' : '🔄 Sync Counters'}
+                  </button>
                 </div>
               </div>
             ))

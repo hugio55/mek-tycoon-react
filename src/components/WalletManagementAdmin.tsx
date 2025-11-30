@@ -1199,42 +1199,6 @@ Check console for full timeline.
           >
             👤 Load WrenCo
           </button>
-          <select
-            onChange={async (e) => {
-              const action = e.target.value;
-              e.target.value = ''; // Reset dropdown
-
-              switch(action) {
-                case 'run-snapshot':
-                  await handleRunSnapshot();
-                  break;
-                case 'reset-all':
-                  if (!confirm('⚠️ RESET ALL PROGRESS ⚠️\n\nThis will reset EVERYONE\'S progress:\n• All mechanisms → Level 1\n• All gold → 0\n• All cumulative gold → 0\n\nWallets stay verified and continue earning.\n\nAre you SURE?')) return;
-                  if (!confirm('FINAL WARNING: This will reset ALL players in the entire game. Type "RESET" in your mind to confirm.')) return;
-                  if (!confirm('Last chance to back out. This affects EVERYONE. Continue?')) return;
-                  try {
-                    setStatusMessage({ type: 'success', message: 'Resetting all progress...' });
-                    const result = await resetAllProgress({});
-                    setStatusMessage({
-                      type: 'success',
-                      message: result.message
-                    });
-                    setTimeout(() => setStatusMessage(null), 10000);
-                  } catch (error) {
-                    setStatusMessage({ type: 'error', message: 'Failed to reset progress: ' + String(error) });
-                    setTimeout(() => setStatusMessage(null), 5000);
-                  }
-                  break;
-              }
-            }}
-            disabled={isRunningSnapshot || (selectedDatabase === 'sturgeon' && !productionMutationsEnabled)}
-            className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Mutations disabled in READ ONLY mode' : ''}
-          >
-            <option value="">Admin Actions... {(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '(READ ONLY)' : ''}</option>
-            <option value="run-snapshot">▶ Run Snapshot</option>
-            <option value="reset-all">🔴 RESET ALL PROGRESS</option>
-          </select>
 
           <input
             type="text"

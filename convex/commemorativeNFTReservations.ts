@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
 /**
@@ -413,6 +413,16 @@ async function cleanupExpiredReservations(ctx: any, now: number) {
 export const cleanupExpiredReservationsMutation = mutation({
   handler: async (ctx) => {
     const now = Date.now();
+    await cleanupExpiredReservations(ctx, now);
+    return { success: true };
+  },
+});
+
+// Internal mutation for cron job to call (prevents stale reservations from blocking users)
+export const internalCleanupExpiredReservations = internalMutation({
+  handler: async (ctx) => {
+    const now = Date.now();
+    console.log('[CRON] Running Phase1 NFT reservation cleanup at', new Date(now).toISOString());
     await cleanupExpiredReservations(ctx, now);
     return { success: true };
   },
