@@ -353,9 +353,9 @@ export const getCampaignStats = query({
 
     const stats = {
       total: inventory.length,
-      available: inventory.filter((i) => i.status === "available").length,
-      reserved: inventory.filter((i) => i.status === "reserved").length,
-      sold: inventory.filter((i) => i.status === "sold").length,
+      available: inventory.filter((i) => i.status?.toLowerCase() === "available").length,
+      reserved: inventory.filter((i) => i.status?.toLowerCase() === "reserved").length,
+      sold: inventory.filter((i) => i.status?.toLowerCase() === "sold").length,
     };
 
     return {
@@ -860,9 +860,9 @@ export const syncCampaignCounters = mutation({
 
     const counters = {
       totalNFTs: inventory.length,
-      availableNFTs: inventory.filter((i) => i.status === "available").length,
-      reservedNFTs: inventory.filter((i) => i.status === "reserved").length,
-      soldNFTs: inventory.filter((i) => i.status === "sold").length,
+      availableNFTs: inventory.filter((i) => i.status?.toLowerCase() === "available").length,
+      reservedNFTs: inventory.filter((i) => i.status?.toLowerCase() === "reserved").length,
+      soldNFTs: inventory.filter((i) => i.status?.toLowerCase() === "sold").length,
       updatedAt: Date.now(),
     };
 
@@ -1249,9 +1249,9 @@ export const cleanupDuplicateNFTs = mutation({
 
       await ctx.db.patch(args.campaignId, {
         totalNFTs: remainingInventory.length,
-        availableNFTs: remainingInventory.filter((i) => i.status === "available").length,
-        reservedNFTs: remainingInventory.filter((i) => i.status === "reserved").length,
-        soldNFTs: remainingInventory.filter((i) => i.status === "sold").length,
+        availableNFTs: remainingInventory.filter((i) => i.status?.toLowerCase() === "available").length,
+        reservedNFTs: remainingInventory.filter((i) => i.status?.toLowerCase() === "reserved").length,
+        soldNFTs: remainingInventory.filter((i) => i.status?.toLowerCase() === "sold").length,
         updatedAt: Date.now(),
       });
     }
