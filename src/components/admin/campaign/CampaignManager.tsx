@@ -46,6 +46,10 @@ export default function CampaignManager({
   const [csvPreview, setCsvPreview] = useState<CSVImportPreview | null>(null);
   const [isImportingCSV, setIsImportingCSV] = useState(false);
 
+  // Manual cleanup state
+  const [cleaningCampaignId, setCleaningCampaignId] = useState<string | null>(null);
+  const [cleanupResult, setCleanupResult] = useState<{ campaignId: string; message: string } | null>(null);
+
   // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -65,6 +69,7 @@ export default function CampaignManager({
   const populateInventory = useMutation(api.commemorativeCampaigns.populateCampaignInventory);
   const syncCounters = useMutation(api.commemorativeCampaigns.syncCampaignCounters);
   const toggleCleanup = useMutation(api.commemorativeNFTReservationsCampaign.toggleCampaignReservationCleanup);
+  const manualCleanup = useMutation(api.commemorativeNFTReservationsCampaign.cleanupExpiredCampaignReservationsMutation);
 
   const campaigns = useQuery(api.campaigns.getAllCampaigns);
 
@@ -825,6 +830,46 @@ export default function CampaignManager({
                 >
                   {campaign.enableReservationCleanup !== false ? '🗑️ Disable Cleanup' : '✅ Enable Cleanup'}
                 </button>
+
+                {/* Manual Cleanup Button */}
+                <button
+                  onClick={async () => {
+                    setCleaningCampaignId(campaign._id);
+                    setCleanupResult(null);
+                    try {
+                      await manualCleanup({ campaignId: campaign._id });
+                      // Refresh counters after cleanup
+                      await syncCounters({ campaignId: campaign._id });
+                      setCleanupResult({
+                        campaignId: campaign._id,
+                        message: 'Cleanup complete! Expired reservations released.'
+                      });
+                      onCampaignUpdated?.();
+                    } catch (error) {
+                      console.error('Failed to run cleanup:', error);
+                      setCleanupResult({
+                        campaignId: campaign._id,
+                        message: 'Cleanup failed. Check console for details.'
+                      });
+                    } finally {
+                      setCleaningCampaignId(null);
+                      // Clear result after 3 seconds
+                      setTimeout(() => setCleanupResult(null), 3000);
+                    }
+                  }}
+                  disabled={cleaningCampaignId === campaign._id}
+                  className="mt-2 text-xs text-yellow-400 hover:text-yellow-300 transition-colors underline ml-3"
+                  title="Manually run cleanup to release any expired reservations now"
+                >
+                  {cleaningCampaignId === campaign._id ? '⏳ Cleaning...' : '🧹 Run Cleanup Now'}
+                </button>
+
+                {/* Cleanup Result Message */}
+                {cleanupResult && cleanupResult.campaignId === campaign._id && (
+                  <span className="ml-2 text-xs text-green-400">
+                    {cleanupResult.message}
+                  </span>
+                )}
               </div>
 
               {/* NFT Inventory Table */}

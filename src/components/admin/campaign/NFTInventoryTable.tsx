@@ -15,6 +15,13 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [now, setNow] = useState(Date.now());
+
+  // Update "now" every second for countdown timers
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const inventory = useQuery(
     api.commemorativeCampaigns.getCampaignInventory,
@@ -73,6 +80,28 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
       bg: "bg-red-500/10",
       border: "border-red-500/30",
     },
+  };
+
+  // Format countdown timer for reserved NFTs
+  const formatCountdown = (expiresAt: number | undefined): { text: string; isExpired: boolean; isMissing: boolean } => {
+    if (!expiresAt) {
+      return { text: "No expiry set!", isExpired: true, isMissing: true };
+    }
+
+    const remaining = expiresAt - now;
+
+    if (remaining <= 0) {
+      return { text: "EXPIRED", isExpired: true, isMissing: false };
+    }
+
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+
+    return {
+      text: `${minutes}:${seconds.toString().padStart(2, '0')}`,
+      isExpired: false,
+      isMissing: false
+    };
   };
 
   const handleSelectAll = (checked: boolean) => {

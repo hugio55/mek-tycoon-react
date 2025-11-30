@@ -41,16 +41,28 @@ crons.interval(
   internal.walletAuthentication.cleanupExpiredNonces
 );
 
-// Clean up expired NFT campaign reservations every 5 minutes
-// Releases reserved NFTs back to available pool after 10-minute timeout + 5-second grace
-// Reduced from 1 minute to 5 minutes to reduce log spam and unnecessary checks
+// Clean up expired NFT campaign reservations every hour
+// This is purely cosmetic for admin panel accuracy - user-facing functionality uses on-demand cleanup
+// When someone clicks "Claim NFT", cleanup runs first (line 77 of createCampaignReservation)
+// So users never experience stuck NFTs regardless of cron frequency
 // Use the "Enable/Disable Cleanup" toggle in Campaign Management to control per-campaign
 crons.interval(
   "cleanup expired NFT reservations",
   {
-    minutes: 5
+    hours: 1
   },
   internal.commemorativeNFTReservationsCampaign.internalCleanupExpiredReservations
+);
+
+// Clean up expired Phase 1 commemorative NFT reservations every 5 minutes
+// This prevents stale reservations from blocking users who timed out
+// Critical fix: Without this, users with expired reservations show "Not Eligible" indefinitely
+crons.interval(
+  "cleanup expired Phase1 NFT reservations",
+  {
+    minutes: 5
+  },
+  internal.commemorativeNFTReservations.internalCleanupExpiredReservations
 );
 
 // Clean up expired rate limit lockouts every hour

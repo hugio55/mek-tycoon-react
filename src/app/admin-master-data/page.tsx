@@ -4290,11 +4290,19 @@ function CampaignManagerWithDatabase({
   campaignDatabase,
   campaigns,
   onToggleCleanup,
+  onRunCleanup,
+  onSyncCounters,
+  cleaningCampaignId,
+  syncingCampaignId,
   client
 }: {
   campaignDatabase: 'trout' | 'sturgeon';
   campaigns: any[];
   onToggleCleanup: (campaignId: string, enabled: boolean) => Promise<void>;
+  onRunCleanup: (campaignId: string) => Promise<void>;
+  onSyncCounters: (campaignId: string) => Promise<void>;
+  cleaningCampaignId: string | null;
+  syncingCampaignId: string | null;
   client: any;
 }) {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>();
@@ -4381,8 +4389,31 @@ function CampaignManagerWithDatabase({
                   {campaign.enableReservationCleanup !== false ? '🗑️ Disable Cleanup' : '✅ Enable Cleanup'}
                 </button>
                 <span className="text-xs text-gray-500">
-                  (Cleanup runs every 5 minutes)
+                  (Cron runs hourly)
                 </span>
+                <span className="text-gray-600">|</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRunCleanup(campaign._id);
+                  }}
+                  disabled={cleaningCampaignId === campaign._id}
+                  className="text-xs text-yellow-400 hover:text-yellow-300 transition-colors underline disabled:opacity-50"
+                  title="Manually run cleanup to release any expired reservations now"
+                >
+                  {cleaningCampaignId === campaign._id ? '⏳ Cleaning...' : '🧹 Run Cleanup Now'}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSyncCounters(campaign._id);
+                  }}
+                  disabled={syncingCampaignId === campaign._id}
+                  className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors underline disabled:opacity-50"
+                  title="Recalculate counters from actual inventory (fixes mismatched counts)"
+                >
+                  {syncingCampaignId === campaign._id ? '⏳ Syncing...' : '🔄 Sync Counters'}
+                </button>
                 {selectedCampaignId === campaign._id && (
                   <span className="text-xs text-yellow-400 ml-auto">
                     👇 View NFTs below
@@ -4414,6 +4445,8 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
   const [campaignDatabase, setCampaignDatabase] = useState<'trout' | 'sturgeon'>('trout');
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [campaignUpdateTrigger, setCampaignUpdateTrigger] = useState(0);
+  const [cleaningCampaignId, setCleaningCampaignId] = useState<string | null>(null);
+  const [syncingCampaignId, setSyncingCampaignId] = useState<string | null>(null);
 
   // Fetch campaigns from selected database (only when campaigns tab is active)
   useEffect(() => {
@@ -4464,6 +4497,57 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
     } catch (error: any) {
       console.error('[NFTAdminTabs] Error toggling cleanup:', error);
       alert(`Error: ${error.message}`);
+    }
+  };
+
+  const handleRunCleanup = async (campaignId: string) => {
+    const client = campaignDatabase === 'trout' ? troutClient : sturgeonClient;
+    if (!client) return;
+
+    if (campaignDatabase === 'sturgeon') {
+      if (!confirm('⚠️ WARNING: You are modifying PRODUCTION (Sturgeon) database!\n\nThis affects the LIVE SITE. Are you sure?')) {
+        return;
+      }
+    }
+
+    setCleaningCampaignId(campaignId);
+    try {
+      await client.mutation(api.commemorativeNFTReservationsCampaign.cleanupExpiredCampaignReservationsMutation, {
+        campaignId
+      });
+      await client.mutation(api.commemorativeCampaigns.syncCampaignCounters, {
+        campaignId
+      });
+      setCampaignUpdateTrigger(prev => prev + 1);
+    } catch (error: any) {
+      console.error('[NFTAdminTabs] Error running cleanup:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setCleaningCampaignId(null);
+    }
+  };
+
+  const handleSyncCounters = async (campaignId: string) => {
+    const client = campaignDatabase === 'trout' ? troutClient : sturgeonClient;
+    if (!client) return;
+
+    if (campaignDatabase === 'sturgeon') {
+      if (!confirm('⚠️ WARNING: You are modifying PRODUCTION (Sturgeon) database!\n\nThis affects the LIVE SITE. Are you sure?')) {
+        return;
+      }
+    }
+
+    setSyncingCampaignId(campaignId);
+    try {
+      await client.mutation(api.commemorativeCampaigns.syncCampaignCounters, {
+        campaignId
+      });
+      setCampaignUpdateTrigger(prev => prev + 1);
+    } catch (error: any) {
+      console.error('[NFTAdminTabs] Error syncing counters:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setSyncingCampaignId(null);
     }
   };
 
@@ -4539,6 +4623,10 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
           campaignDatabase={campaignDatabase}
           campaigns={campaigns}
           onToggleCleanup={handleToggleCleanup}
+          onRunCleanup={handleRunCleanup}
+          onSyncCounters={handleSyncCounters}
+          cleaningCampaignId={cleaningCampaignId}
+          syncingCampaignId={syncingCampaignId}
           client={campaignDatabase === 'trout' ? troutClient : sturgeonClient}
         />
       )}
