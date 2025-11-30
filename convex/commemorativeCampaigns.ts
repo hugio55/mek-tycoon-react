@@ -538,6 +538,32 @@ export const getCampaignInventory = query({
 });
 
 /**
+ * Look up current company names for wallet addresses
+ * Used to compare with historical names to detect name changes
+ */
+export const getCompanyNamesForWallets = query({
+  args: {
+    walletAddresses: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const results: Record<string, string | null> = {};
+
+    for (const walletAddress of args.walletAddresses) {
+      if (!walletAddress) continue;
+
+      const goldMiningRecord = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+        .first();
+
+      results[walletAddress] = goldMiningRecord?.companyName || null;
+    }
+
+    return results;
+  },
+});
+
+/**
  * Batch update image URLs for multiple NFTs
  *
  * Allows assigning one image to multiple NFTs at once.

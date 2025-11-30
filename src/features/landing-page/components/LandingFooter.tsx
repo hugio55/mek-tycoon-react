@@ -59,6 +59,10 @@ export default function LandingFooter({
         left: 0,
         width: '100%',
         zIndex: 2,
+        // iOS Safari backdrop-filter fix
+        transform: 'translate3d(0, 0, 0)',
+        WebkitTransform: 'translate3d(0, 0, 0)',
+        isolation: 'isolate',
       }}
     >
       {/* OE Logo */}
