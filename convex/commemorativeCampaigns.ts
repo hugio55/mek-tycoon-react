@@ -600,6 +600,98 @@ export const batchUpdateNFTImages = mutation({
 });
 
 /**
+ * Backfill soldTo and companyNameAtSale for NFTs that were sold before these fields existed
+ *
+ * Looks up the completed reservation record to find the wallet address,
+ * then looks up the current company name for that wallet.
+ */
+export const backfillSoldNFTData = mutation({
+  args: {},
+  handler: async (ctx) => {
+    console.log('[BACKFILL] Starting backfill of sold NFT data...');
+
+    // Find all sold NFTs that are missing soldTo
+    const soldNFTs = await ctx.db
+      .query("commemorativeNFTInventory")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("status"), "sold"),
+          q.eq(q.field("soldTo"), undefined)
+        )
+      )
+      .collect();
+
+    console.log('[BACKFILL] Found', soldNFTs.length, 'sold NFTs missing soldTo');
+
+    let backfilled = 0;
+    let notFound = 0;
+
+    for (const nft of soldNFTs) {
+      // Try to find the completed reservation for this NFT
+      // Check both legacy and campaign reservation tables
+
+      // First try campaign reservations
+      let reservation = await ctx.db
+        .query("commemorativeNFTReservationsCampaign")
+        .filter((q) =>
+          q.and(
+            q.eq(q.field("nftInventoryId"), nft._id),
+            q.eq(q.field("status"), "completed")
+          )
+        )
+        .first();
+
+      // If not found, try legacy reservations
+      if (!reservation) {
+        reservation = await ctx.db
+          .query("commemorativeNFTReservations")
+          .filter((q) =>
+            q.and(
+              q.eq(q.field("nftInventoryId"), nft._id),
+              q.eq(q.field("status"), "completed")
+            )
+          )
+          .first();
+      }
+
+      if (reservation && reservation.reservedBy) {
+        const walletAddress = reservation.reservedBy;
+
+        // Look up company name
+        const goldMiningRecord = await ctx.db
+          .query("goldMining")
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+          .first();
+
+        const companyNameAtSale = goldMiningRecord?.companyName || undefined;
+
+        // Update the NFT with the backfilled data
+        await ctx.db.patch(nft._id, {
+          soldTo: walletAddress,
+          soldAt: reservation.completedAt || reservation.reservedAt || Date.now(),
+          companyNameAtSale,
+        });
+
+        console.log('[BACKFILL] Updated', nft.name, '- wallet:', walletAddress.substring(0, 12) + '...', '- corp:', companyNameAtSale || 'none');
+        backfilled++;
+      } else {
+        console.log('[BACKFILL] No reservation found for:', nft.name);
+        notFound++;
+      }
+    }
+
+    console.log('[BACKFILL] Complete:', backfilled, 'backfilled,', notFound, 'not found');
+
+    return {
+      success: true,
+      backfilled,
+      notFound,
+      total: soldNFTs.length,
+    };
+  },
+});
+
+/**
  * Update NFT status by UID (used by sync system)
  */
 export const updateNFTStatus = mutation({
