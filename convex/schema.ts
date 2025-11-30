@@ -3455,6 +3455,11 @@ export default defineSchema({
     expiresAt: v.optional(v.number()), // Timestamp when reservation expires
     paymentWindowOpenedAt: v.optional(v.number()), // When NMKR payment window was opened
     paymentWindowClosedAt: v.optional(v.number()), // When NMKR payment window was closed
+
+    // SALE TRACKING FIELDS (when status="sold")
+    soldTo: v.optional(v.string()), // Stake address of buyer (preserved after sale)
+    soldAt: v.optional(v.number()), // Timestamp when sale was completed
+    companyNameAtSale: v.optional(v.string()), // Corporation name at time of purchase (historical snapshot)
   })
     .index("by_uid", ["nftUid"])
     .index("by_number", ["nftNumber"])
