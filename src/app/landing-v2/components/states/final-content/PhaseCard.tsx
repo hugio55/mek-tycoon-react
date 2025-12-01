@@ -219,7 +219,6 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             opacity: isExpanded ? 1 : 0,
             transition: 'opacity 300ms ease-out',
             overflow: 'hidden',
-            borderBottom: '3px solid rgba(0, 0, 0, 0.5)',
           }}
         >
           <div>
@@ -307,7 +306,6 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
                   background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04))',
                   color: '#e0e0e0',
                   border: '1px solid rgba(255, 255, 255, 0.25)',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                   letterSpacing: '0.06em',
                   fontSize: '14px',
                   fontWeight: 500
