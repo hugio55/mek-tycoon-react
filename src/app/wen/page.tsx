@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import GeneratingLoader from '@/components/loaders/GeneratingLoader';
 
 const LIGHT_CYAN_SCHEME = {
@@ -11,36 +12,43 @@ const LIGHT_CYAN_SCHEME = {
 };
 
 export default function MaintenancePage() {
+  const [scale, setScale] = useState(2);
+  const [margin, setMargin] = useState(140);
+
+  useEffect(() => {
+    const updateScale = () => {
+      const isTouch = window.matchMedia('(any-pointer: coarse)').matches ||
+                      window.matchMedia('(hover: none)').matches ||
+                      navigator.maxTouchPoints > 0 ||
+                      'ontouchstart' in window;
+
+      const isNarrow = window.innerWidth < 380;
+
+      if (isTouch && isNarrow) {
+        setScale(1.3);
+        setMargin(70);
+      } else if (isTouch) {
+        setScale(1.5);
+        setMargin(80);
+      } else {
+        setScale(2);
+        setMargin(140);
+      }
+    };
+
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      {/* CSS variables for responsive scaling */}
-      <style>{`
-        .sphere-container {
-          --sphere-scale: 2;
-          --sphere-margin: 140px;
-        }
-        /* Touch devices (mobile/tablet) */
-        @media (any-pointer: coarse), (hover: none) {
-          .sphere-container {
-            --sphere-scale: 1.5;
-            --sphere-margin: 80px;
-          }
-        }
-        /* Narrower phones (under 380px) get smaller scale */
-        @media (any-pointer: coarse) and (max-width: 380px) {
-          .sphere-container {
-            --sphere-scale: 1.3;
-            --sphere-margin: 70px;
-          }
-        }
-      `}</style>
-
-      {/* Loader container with CSS-based responsive scaling */}
+      {/* Loader container */}
       <div
-        className="sphere-container flex items-center justify-center"
+        className="flex items-center justify-center"
         style={{
-          transform: 'scale(var(--sphere-scale))',
-          marginBottom: 'var(--sphere-margin)'
+          transform: `scale(${scale})`,
+          marginBottom: `${margin}px`
         }}
       >
         <GeneratingLoader
