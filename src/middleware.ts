@@ -96,8 +96,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    console.log('[🗺️MIDDLEWARE] MAINTENANCE MODE - redirecting to /wen:', pathname);
-    return NextResponse.redirect(new URL('/wen', request.url));
+    console.log('[🗺️MIDDLEWARE] MAINTENANCE MODE - serving maintenance page for:', pathname);
+    return NextResponse.rewrite(new URL('/wen', request.url));
   }
 
   // ⚙️ PRIORITY 2: LOCALHOST BYPASS (if enabled)
