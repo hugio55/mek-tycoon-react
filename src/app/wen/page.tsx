@@ -38,6 +38,15 @@ export default function MaintenancePage() {
             textScale={textScale}
           />
         </div>
+        {/* Discord link */}
+        <a
+          href="https://discord.com/channels/938648161810006119/1422726928934113340"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-white/40 text-sm hover:text-white/60 transition-colors duration-300"
+        >
+          Join the conversation
+        </a>
       </div>
     </div>
   );
