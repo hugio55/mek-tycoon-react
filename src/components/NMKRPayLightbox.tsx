@@ -80,6 +80,19 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
       : "skip"
   );
 
+  // Debug logging for activeReservation query
+  useEffect(() => {
+    if (state === 'reserved') {
+      console.log('[🔨RESERVE] State is "reserved", activeReservation query status:', {
+        reservationId,
+        effectiveWalletAddress,
+        activeCampaignId,
+        querySkipped: !(reservationId && effectiveWalletAddress && activeCampaignId),
+        activeReservation: activeReservation ? 'POPULATED ✓' : 'undefined (still loading...)',
+      });
+    }
+  }, [state, activeReservation, reservationId, effectiveWalletAddress, activeCampaignId]);
+
   // Query for payment completion
   const claimStatus = useQuery(
     api.commemorativeNFTClaims.checkClaimed,
@@ -147,7 +160,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
     if (!mounted || state !== 'creating' || !effectiveWalletAddress || !activeCampaignId) return;
 
     const createNewReservation = async () => {
-      console.log('[RESERVE] Creating campaign reservation for:', effectiveWalletAddress, 'campaign:', activeCampaignId);
+      console.log('[🔨RESERVE] Creating campaign reservation for:', effectiveWalletAddress, 'campaign:', activeCampaignId);
 
       try {
         const result = await createReservation({
@@ -156,18 +169,21 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
         });
 
         if (!result.success) {
-          console.error('[RESERVE] Failed to create reservation:', result.error);
+          console.error('[🔨RESERVE] Failed to create reservation:', result.error);
           setErrorMessage(result.message || result.error || 'Failed to reserve NFT');
           setState('error');
           return;
         }
 
-        console.log('[RESERVE] Reservation created:', result.reservation);
+        console.log('[🔨RESERVE] ✓ Reservation created successfully:', result.reservation);
+        console.log('[🔨RESERVE] Setting reservationId:', result.reservation._id);
         // Campaign system uses inventory ID as reservation ID
         setReservationId(result.reservation._id as Id<"commemorativeNFTInventory">);
+        console.log('[🔨RESERVE] Transitioning state from "creating" → "reserved"');
         setState('reserved');
+        console.log('[🔨RESERVE] State transition complete, waiting for activeReservation query to populate...');
       } catch (error) {
-        console.error('[RESERVE] Error creating reservation:', error);
+        console.error('[🔨RESERVE] Error creating reservation:', error);
         setErrorMessage('Failed to create reservation');
         setState('error');
       }
@@ -524,6 +540,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
       case 'reserved':
         if (!activeReservation) {
+          console.log('[🔨RESERVE] Rendering "reserved" state but activeReservation is undefined - showing loading spinner');
           return (
             <div className="text-center">
               <div className="mb-6">
@@ -533,6 +550,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
             </div>
           );
         }
+
+        console.log('[🔨RESERVE] Rendering "reserved" state with activeReservation:', activeReservation.nftNumber);
 
         return (
           <div className="text-center">
