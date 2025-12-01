@@ -7,7 +7,8 @@ import { api } from "@/convex/_generated/api";
 import "@/styles/global-design-system.css";
 import PowerSwitch from "@/components/controls/PowerSwitch";
 import CloseButton from "@/components/controls/CloseButton";
-import LevelProgress, { LevelProgressStyle } from "@/components/LevelProgress";
+import LevelProgress from "@/components/LevelProgress";
+import type { LevelProgressStyle } from "@/components/LevelProgress";
 import { DEFAULT_LEVEL_COLORS } from "@/components/MekCard/types";
 import AnimatedBorderButton from "@/components/loaders/AnimatedBorderButton";
 

@@ -281,12 +281,14 @@ export default function ProModeToggle({
           {/* Width matches guard's w-[50px], centered with left-1/2 -translate-x-1/2 */}
           {!guardOpen && (
             <div
-              className="absolute top-5 left-1/2 -translate-x-1/2 w-[46px] h-[calc(100%-20px)] opacity-100 rounded-[7px] pointer-events-none z-[5]"
+              className="absolute top-4 left-1/2 -translate-x-1/2 w-[46px] h-[calc(100%-20px)] opacity-100 rounded-[7px] pointer-events-none z-[5]"
               style={{
                 background: guardOverlayGradients[guardColor],
                 isolation: 'isolate',
                 transform: 'translateX(-50%) translateZ(10px)',
-                WebkitTransform: 'translateX(-50%) translateZ(10px)'
+                WebkitTransform: 'translateX(-50%) translateZ(10px)',
+                maskImage: 'linear-gradient(to bottom, transparent 0%, black 8px)',
+                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 8px)'
               }}
             />
           )}
