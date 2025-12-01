@@ -212,14 +212,10 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
         <div
           className="mt-2 px-6 py-4"
           style={{
-            background: 'rgba(0, 0, 0, 0.45)',
+            background: 'rgba(20, 30, 40, 0.85)',
             borderRadius: '8px',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
             opacity: isExpanded ? 1 : 0,
             transition: 'opacity 300ms ease-out',
-            transform: 'translateZ(0)',
-            boxShadow: '0 4px 0 rgba(0, 0, 0, 0.45)',
           }}
         >
           <div>
