@@ -207,15 +207,19 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           maxHeight: isExpanded ? '1000px' : '0',
           overflow: 'hidden',
           transition: 'max-height 300ms ease-out',
+          paddingBottom: isExpanded ? '4px' : '0',
         }}
       >
         <div
           className="mt-2 px-6 py-4"
           style={{
-            background: 'rgba(20, 30, 40, 0.85)',
+            background: 'rgba(0, 0, 0, 0.4)',
             borderRadius: '8px',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
             opacity: isExpanded ? 1 : 0,
             transition: 'opacity 300ms ease-out',
+            overflow: 'hidden',
           }}
         >
           <div>
