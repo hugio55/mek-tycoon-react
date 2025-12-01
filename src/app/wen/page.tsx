@@ -15,10 +15,25 @@ export default function MaintenancePage() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    // Detect touch device by pointer type (coarse = finger, fine = mouse)
+    const touchQuery = window.matchMedia('(pointer: coarse)');
+    const hoverQuery = window.matchMedia('(hover: none)');
+
+    // Device is mobile/tablet if it has coarse pointer OR can't hover
+    const checkDevice = () => {
+      setIsMobile(touchQuery.matches || hoverQuery.matches);
+    };
+
+    checkDevice();
+
+    // Listen for changes (e.g., connecting a mouse to tablet)
+    touchQuery.addEventListener('change', checkDevice);
+    hoverQuery.addEventListener('change', checkDevice);
+
+    return () => {
+      touchQuery.removeEventListener('change', checkDevice);
+      hoverQuery.removeEventListener('change', checkDevice);
+    };
   }, []);
 
   // Desktop: scale(2) for everything
