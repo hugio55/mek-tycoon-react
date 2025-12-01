@@ -214,11 +214,12 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           style={{
             background: 'rgba(0, 0, 0, 0.4)',
             borderRadius: '8px',
-            backdropFilter: isPhaseOne ? 'blur(8px)' : 'blur(16px)',
-            WebkitBackdropFilter: isPhaseOne ? 'blur(8px)' : 'blur(16px)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
             opacity: isExpanded ? 1 : 0,
             transition: 'opacity 300ms ease-out',
             overflow: 'hidden',
+            marginBottom: isPhaseOne ? '2px' : '0',
           }}
         >
           {/* DEBUG: Show empty content for Phase 1 to test if content causes the line */}
