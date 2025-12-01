@@ -29,6 +29,7 @@ import MutationConfirmDialog from '@/components/admin/MutationConfirmDialog';
 import NMKRJSONGenerator from '@/components/admin/nft/NMKRJSONGenerator';
 import CampaignManager from '@/components/admin/campaign/CampaignManager';
 import NFTInventoryTable from '@/components/admin/campaign/NFTInventoryTable';
+import NMKRSyncModal from '@/components/admin/campaign/NMKRSyncModal';
 import EssenceMarketAdmin from '@/components/EssenceMarketAdmin';
 import OverlayEditor from '@/components/OverlayEditor';
 import CometLoader from '@/components/loaders/CometLoader';
@@ -4533,6 +4534,13 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
   const [cleaningCampaignId, setCleaningCampaignId] = useState<string | null>(null);
   const [syncingCampaignId, setSyncingCampaignId] = useState<string | null>(null);
   const [mutationsEnabled, setMutationsEnabled] = useState(false);
+
+  // NMKR Sync modal state
+  const [nmkrSyncModalOpen, setNmkrSyncModalOpen] = useState(false);
+  const [nmkrSyncCampaign, setNmkrSyncCampaign] = useState<{ id: string; name: string; nmkrProjectUid?: string } | null>(null);
+  const [nmkrDiscrepancies, setNmkrDiscrepancies] = useState<any[]>([]);
+  const [nmkrSyncing, setNmkrSyncing] = useState(false);
+  const [nmkrVerifying, setNmkrVerifying] = useState<string | null>(null);
 
   // Mutation confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
