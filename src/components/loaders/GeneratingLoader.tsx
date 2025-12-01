@@ -11,9 +11,10 @@ interface ColorScheme {
 interface GeneratingLoaderProps {
   text?: string;
   colorScheme?: ColorScheme;
+  textScale?: number;
 }
 
-const GeneratingLoader = ({ text = 'Generating', colorScheme }: GeneratingLoaderProps) => {
+const GeneratingLoader = ({ text = 'Generating', colorScheme, textScale = 1 }: GeneratingLoaderProps) => {
   const letters = text.split('');
 
   // Default purple scheme if none provided
@@ -27,7 +28,7 @@ const GeneratingLoader = ({ text = 'Generating', colorScheme }: GeneratingLoader
   return (
     <div className={styles['loader-wrapper']}>
       <div style={{
-        transform: 'translateY(3px)',
+        transform: `translateY(3px) scale(${textScale})`,
         fontSize: '0.35em',
         opacity: 0.7,
         color: 'white'
