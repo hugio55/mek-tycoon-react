@@ -22,14 +22,6 @@ export default function RootPageController() {
   const [mounted, setMounted] = useState(false);
   const [isLocalhost, setIsLocalhost] = useState(false);
 
-  console.log('[🏠ROOT] RootPageController render:', {
-    mounted,
-    siteSettings: siteSettings !== undefined ? 'loaded' : 'undefined',
-    isLocalhost,
-    landingPageEnabled: siteSettings?.landingPageEnabled,
-    ignoreLocalhostRule: siteSettings?.ignoreLocalhostRule,
-  });
-
   // Handle client-side mounting and check if localhost
   useEffect(() => {
     setMounted(true);
@@ -72,6 +64,5 @@ export default function RootPageController() {
   }
 
   // ALWAYS show landing page - safety measure until game is ready
-  console.log('[🏠ROOT] Always rendering LandingPage component (toggle disabled for safety)');
   return <LandingPage />;
 }

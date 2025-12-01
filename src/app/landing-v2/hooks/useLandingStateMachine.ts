@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 
 export type LandingState =
   | 'SOUND_SELECTION'
@@ -22,13 +22,6 @@ export const TIMINGS = {
 
 export function useLandingStateMachine() {
   const [currentState, setCurrentState] = useState<LandingState>('SOUND_SELECTION');
-
-  useEffect(() => {
-    console.log('[🎭LANDING-STATE]', {
-      state: currentState,
-      timestamp: new Date().toISOString(),
-    });
-  }, [currentState]);
 
   const transitionTo = useCallback((state: LandingState) => {
     setCurrentState(state);
