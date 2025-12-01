@@ -63,6 +63,15 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hostname = request.headers.get('host') || '';
 
+  // Secret bypass for admin access during maintenance
+  const bypassParam = request.nextUrl.searchParams.get('bypass');
+  const BYPASS_SECRET = 'mektycoon2025';
+
+  if (bypassParam === BYPASS_SECRET) {
+    console.log('[🗺️MIDDLEWARE] Bypass authorized for:', pathname);
+    return NextResponse.next();
+  }
+
   // Check if this is localhost
   const isLocalhost = hostname.includes('localhost') ||
                      hostname.includes('127.0.0.1') ||
