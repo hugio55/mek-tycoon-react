@@ -97,7 +97,7 @@ const StarField = () => {
           const fadeInProgress = Math.min(star.age / fadeInDuration, 1);
           const opacity = fadeInProgress * 0.8;
 
-          const size = 0.5;
+          const size = 2;
 
           ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
           ctx.beginPath();

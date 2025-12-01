@@ -49,7 +49,7 @@ export const getInventoryDiscrepancies = query({
     // Get all inventory items for this campaign
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .filter((q) => q.eq(q.field("campaignId"), campaignId))
+      .withIndex("by_campaign", (q) => q.eq("campaignId", campaignId))
       .collect();
 
     const discrepancies: SyncDiscrepancy[] = [];
@@ -204,7 +204,7 @@ export const syncCampaignInventory = mutation({
     if (campaign) {
       const inventory = await ctx.db
         .query("commemorativeNFTInventory")
-        .filter((q) => q.eq(q.field("campaignId"), campaignId))
+        .withIndex("by_campaign", (q) => q.eq("campaignId", campaignId))
         .collect();
 
       const availableNFTs = inventory.filter((i) => i.status === "available").length;

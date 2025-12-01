@@ -5,6 +5,7 @@ import { DatabaseProvider, useDatabaseContext } from '@/contexts/DatabaseContext
 import { api } from '@/convex/_generated/api';
 import CampaignManager from '@/components/admin/campaign/CampaignManager';
 import NFTInventoryTable from '@/components/admin/campaign/NFTInventoryTable';
+import NMKRSyncModal from '@/components/admin/campaign/NMKRSyncModal';
 
 function AdminCampaignsContent() {
   const {
@@ -19,6 +20,13 @@ function AdminCampaignsContent() {
   const [campaignUpdateTrigger, setCampaignUpdateTrigger] = useState(0);
   const [cleaningCampaignId, setCleaningCampaignId] = useState<string | null>(null);
   const [syncingCampaignId, setSyncingCampaignId] = useState<string | null>(null);
+
+  // NMKR Sync states
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [syncCampaignId, setSyncCampaignId] = useState<string | null>(null);
+  const [syncDiscrepancies, setSyncDiscrepancies] = useState<any[]>([]);
+  const [isVerifyingNMKR, setIsVerifyingNMKR] = useState(false);
+  const [isSyncingNMKR, setIsSyncingNMKR] = useState(false);
 
   // Fetch campaigns from selected database
   useEffect(() => {
@@ -109,6 +117,154 @@ function AdminCampaignsContent() {
       alert(`Error: ${error.message}`);
     } finally {
       setSyncingCampaignId(null);
+    }
+  };
+
+  const handleVerifyWithNMKR = async (campaignId: string) => {
+    if (!client) {
+      alert('No database client available');
+      return;
+    }
+
+    const campaign = campaigns.find((c) => c._id === campaignId);
+    if (!campaign) {
+      alert('Campaign not found');
+      return;
+    }
+
+    setIsVerifyingNMKR(true);
+    setSyncCampaignId(campaignId);
+
+    try {
+      console.log('[NMKR Sync] Verifying campaign:', campaign.name);
+      console.log('[NMKR Sync] Project ID:', campaign.nmkrProjectId);
+
+      // Call our API route to fetch NMKR data
+      const response = await fetch('/api/nmkr/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectUid: campaign.nmkrProjectId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.details || error.error || 'Failed to fetch from NMKR');
+      }
+
+      const nmkrData = await response.json();
+      console.log('[NMKR Sync] NMKR Summary:', nmkrData.summary);
+
+      // Get discrepancies from Convex
+      const discrepancies = await client.query(api.nmkrSync.getInventoryDiscrepancies, {
+        campaignId,
+        nmkrStatuses: nmkrData.statuses,
+      });
+
+      console.log('[NMKR Sync] Found discrepancies:', discrepancies.length);
+
+      setSyncDiscrepancies(discrepancies);
+      setShowSyncModal(true);
+    } catch (error: any) {
+      console.error('[NMKR Sync] Error:', error);
+      alert(`Error verifying with NMKR: ${error.message}`);
+    } finally {
+      setIsVerifyingNMKR(false);
+    }
+  };
+
+  const handleSyncAllNFTs = async () => {
+    if (!client || !canMutate() || !syncCampaignId) {
+      alert('Mutations disabled or no campaign selected');
+      return;
+    }
+
+    setIsSyncingNMKR(true);
+    try {
+      const campaign = campaigns.find((c) => c._id === syncCampaignId);
+      if (!campaign) throw new Error('Campaign not found');
+
+      // Fetch fresh NMKR data
+      const response = await fetch('/api/nmkr/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectUid: campaign.nmkrProjectId }),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch from NMKR');
+      const nmkrData = await response.json();
+
+      // Sync all via Convex
+      const result = await client.mutation(api.nmkrSync.syncCampaignInventory, {
+        campaignId: syncCampaignId,
+        nmkrStatuses: nmkrData.statuses,
+      });
+
+      console.log('[NMKR Sync] Sync result:', result);
+
+      // Refresh discrepancies (should be empty now)
+      const newDiscrepancies = await client.query(api.nmkrSync.getInventoryDiscrepancies, {
+        campaignId: syncCampaignId,
+        nmkrStatuses: nmkrData.statuses,
+      });
+
+      setSyncDiscrepancies(newDiscrepancies);
+      handleCampaignUpdated();
+
+      if (result.errors && result.errors.length > 0) {
+        alert(`Sync completed with errors:\n${result.errors.join('\n')}`);
+      } else {
+        alert(`✅ Successfully synced ${result.syncedCount} NFT(s)`);
+      }
+    } catch (error: any) {
+      console.error('[NMKR Sync] Error syncing:', error);
+      alert(`Error syncing: ${error.message}`);
+    } finally {
+      setIsSyncingNMKR(false);
+    }
+  };
+
+  const handleSyncSingleNFT = async (nftUid: string) => {
+    if (!client || !canMutate() || !syncCampaignId) {
+      alert('Mutations disabled or no campaign selected');
+      return;
+    }
+
+    try {
+      const campaign = campaigns.find((c) => c._id === syncCampaignId);
+      if (!campaign) throw new Error('Campaign not found');
+
+      // Fetch fresh NMKR data
+      const response = await fetch('/api/nmkr/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectUid: campaign.nmkrProjectId }),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch from NMKR');
+      const nmkrData = await response.json();
+
+      // Find the specific NFT status
+      const nftStatus = nmkrData.statuses.find((s: any) => s.nftUid === nftUid);
+      if (!nftStatus) throw new Error('NFT not found in NMKR data');
+
+      // Sync single NFT
+      await client.mutation(api.nmkrSync.syncSingleNFT, {
+        nftUid,
+        nmkrStatus: nftStatus.nmkrStatus,
+        soldTo: nftStatus.soldTo,
+      });
+
+      // Refresh discrepancies
+      const newDiscrepancies = await client.query(api.nmkrSync.getInventoryDiscrepancies, {
+        campaignId: syncCampaignId,
+        nmkrStatuses: nmkrData.statuses,
+      });
+
+      setSyncDiscrepancies(newDiscrepancies);
+      handleCampaignUpdated();
+    } catch (error: any) {
+      console.error('[NMKR Sync] Error syncing single NFT:', error);
+      alert(`Error syncing NFT: ${error.message}`);
     }
   };
 
@@ -261,11 +417,42 @@ function AdminCampaignsContent() {
                   >
                     {syncingCampaignId === campaign._id ? '⏳ Syncing...' : '🔄 Sync Counters'}
                   </button>
+
+                  <span className="text-gray-600">|</span>
+
+                  {/* Verify with NMKR Button */}
+                  <button
+                    onClick={() => handleVerifyWithNMKR(campaign._id)}
+                    disabled={isVerifyingNMKR}
+                    className="px-3 py-1 rounded text-xs font-semibold transition-all bg-purple-500/20 text-purple-400 border border-purple-500/50 hover:bg-purple-500/30 disabled:opacity-50"
+                    title="Verify inventory status with NMKR (check for discrepancies)"
+                  >
+                    {isVerifyingNMKR && syncCampaignId === campaign._id ? '⏳ Verifying...' : '🔍 Verify with NMKR'}
+                  </button>
                 </div>
               </div>
             ))
           )}
         </div>
+
+        {/* NMKR Sync Modal */}
+        <NMKRSyncModal
+          isOpen={showSyncModal}
+          onClose={() => {
+            setShowSyncModal(false);
+            setSyncCampaignId(null);
+            setSyncDiscrepancies([]);
+          }}
+          campaignName={
+            syncCampaignId
+              ? campaigns.find((c) => c._id === syncCampaignId)?.name || 'Unknown Campaign'
+              : 'Unknown Campaign'
+          }
+          discrepancies={syncDiscrepancies}
+          onSyncAll={handleSyncAllNFTs}
+          onSyncSingle={handleSyncSingleNFT}
+          isSyncing={isSyncingNMKR}
+        />
       </div>
     </div>
   );
