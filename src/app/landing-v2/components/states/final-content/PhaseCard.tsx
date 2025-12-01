@@ -250,7 +250,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
 
           {card.description && (
             <>
-              {isPhaseOne ? (
+              {false && isPhaseOne ? (
                 // For Phase I, split description and italicize last sentence
                 (() => {
                   const lines = card.description.split('\n');
