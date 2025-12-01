@@ -221,6 +221,11 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             overflow: 'hidden',
           }}
         >
+          {/* DEBUG: Show empty content for Phase 1 to test if content causes the line */}
+          {isPhaseOne ? (
+            <div style={{ padding: '20px', color: 'white' }}>DEBUG: Empty Phase 1 content</div>
+          ) : (
+          <>
           <div>
             <h4
               className="text-yellow-400 uppercase tracking-wider font-medium"
@@ -325,6 +330,8 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
                 </span>
               </button>
             </div>
+          )}
+        </>
           )}
         </div>
       </div>
