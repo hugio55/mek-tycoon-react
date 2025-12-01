@@ -82,6 +82,7 @@ export const createReservation = mutation({
     }
 
     // Check if user has already completed a claim (CRITICAL: Prevent duplicate claims)
+    // Check 1: Look for completed reservations
     const completedReservation = await ctx.db
       .query("commemorativeNFTReservations")
       .withIndex("by_reserved_by", (q) => q.eq("reservedBy", args.walletAddress))
@@ -89,7 +90,22 @@ export const createReservation = mutation({
       .first();
 
     if (completedReservation) {
-      console.log('[RESERVATION] User has already claimed an NFT:', completedReservation.nftNumber);
+      console.log('[RESERVATION] User has already claimed an NFT (reservation):', completedReservation.nftNumber);
+      return {
+        success: false,
+        error: "You have already claimed your commemorative NFT. Only one NFT per wallet is allowed.",
+      };
+    }
+
+    // Check 2: Look for sold NFTs in inventory (soldTo field is the source of truth)
+    const soldNFT = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_status", (q) => q.eq("status", "sold"))
+      .filter((q) => q.eq(q.field("soldTo"), args.walletAddress))
+      .first();
+
+    if (soldNFT) {
+      console.log('[RESERVATION] User has already claimed an NFT (inventory):', soldNFT.nftNumber, soldNFT.name);
       return {
         success: false,
         error: "You have already claimed your commemorative NFT. Only one NFT per wallet is allowed.",

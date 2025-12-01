@@ -33,7 +33,7 @@ export default function MaintenancePage() {
         className="flex items-center justify-center"
         style={{
           transform: `scale(${containerScale})`,
-          marginBottom: isMobile ? '80px' : '110px'
+          marginBottom: isMobile ? '80px' : '140px'
         }}
       >
         <GeneratingLoader

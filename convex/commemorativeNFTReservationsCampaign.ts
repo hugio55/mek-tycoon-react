@@ -109,16 +109,18 @@ export const createCampaignReservation = mutation({
     }
 
     // PHASE 2: Check if user has already completed (sold NFT in inventory)
-    // In new system, completed reservations show as status="sold" in inventory
+    // CRITICAL FIX: Must check soldTo field, not reservedBy (reservedBy is cleared on sale)
+    // Since we don't have a by_campaign_and_soldTo index, we query by campaign+status then filter
     const hasCompleted = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign_and_wallet", (q) =>
-        q.eq("campaignId", args.campaignId).eq("reservedBy", args.walletAddress)
+      .withIndex("by_campaign_and_status", (q) =>
+        q.eq("campaignId", args.campaignId).eq("status", "sold")
       )
-      .filter((q) => q.eq(q.field("status"), "sold"))
+      .filter((q) => q.eq(q.field("soldTo"), args.walletAddress))
       .first();
 
     if (hasCompleted) {
+      console.log('[CAMPAIGN RESERVATION] User already claimed NFT:', hasCompleted.nftNumber, hasCompleted.name);
       return {
         success: false,
         error: `You have already claimed an NFT from the "${campaign.name}" campaign`,
