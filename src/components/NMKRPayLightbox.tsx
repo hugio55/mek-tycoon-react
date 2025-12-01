@@ -28,6 +28,12 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   const [activeCampaignId, setActiveCampaignId] = useState<Id<"commemorativeCampaigns"> | null>(propCampaignId || null);
   const [corporationName, setCorporationName] = useState<string | null>(null);
 
+  // Wallet verification state
+  const [availableWallets, setAvailableWallets] = useState<Array<{ name: string; icon: string; api: any }>>([]);
+  const [isConnectingWallet, setIsConnectingWallet] = useState(false);
+  const [walletVerificationError, setWalletVerificationError] = useState<string | null>(null);
+  const [isMobileBrowser, setIsMobileBrowser] = useState(false);
+
   const hasInitiatedTimeoutRelease = useRef(false);
 
   const effectiveWalletAddress = walletAddress || manualAddress;
@@ -204,7 +210,61 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
     createNewReservation();
   }, [mounted, state, effectiveWalletAddress, activeCampaignId, createReservation]);
 
+  // Detect available wallets and check if mobile browser
+  const detectWalletsAndMobile = () => {
+    // Check if mobile browser (no window.cardano)
+    const hasCardano = typeof window !== 'undefined' && window.cardano;
+
+    if (!hasCardano) {
+      console.log('[🔐VERIFY] No window.cardano - mobile browser detected');
+      setIsMobileBrowser(true);
+      setAvailableWallets([]);
+      return;
+    }
+
+    setIsMobileBrowser(false);
+    const cardano = window.cardano;
+    const wallets: Array<{ name: string; icon: string; api: any }> = [];
+
+    // List of known wallets to check for
+    const knownWallets = [
+      { name: 'Nami', icon: '/wallet-icons/nami.png' },
+      { name: 'Eternl', icon: '/wallet-icons/eternl.png' },
+      { name: 'Flint', icon: '/wallet-icons/flint.png' },
+      { name: 'Vespr', icon: '/wallet-icons/vespr.png' },
+      { name: 'Typhon', icon: '/wallet-icons/typhon.png' },
+      { name: 'NuFi', icon: '/wallet-icons/nufi.png' },
+      { name: 'Lace', icon: '/wallet-icons/lace.png' },
+      { name: 'Yoroi', icon: '/wallet-icons/yoroi.png' },
+    ];
+
+    knownWallets.forEach(wallet => {
+      const name = wallet.name.toLowerCase();
+      if (cardano[name]) {
+        wallets.push({
+          icon: wallet.icon,
+          name: wallet.name,
+          api: cardano[name]
+        });
+      }
+    });
+
+    console.log('[🔐VERIFY] Detected wallets:', wallets.map(w => w.name));
+    setAvailableWallets(wallets);
+  };
+
+  // Handle "Open Payment Window" click - go to verification first
   const handleOpenPayment = async () => {
+    if (!activeReservation || !reservationId) return;
+
+    console.log('[🔐VERIFY] User clicked Open Payment Window - starting verification');
+    setWalletVerificationError(null);
+    detectWalletsAndMobile();
+    setState('wallet_verification');
+  };
+
+  // Actually open the NMKR payment window (called after verification succeeds)
+  const openNMKRPayment = async () => {
     if (!activeReservation || !reservationId) return;
 
     console.log('[PAY] Opening payment window...');
@@ -230,6 +290,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
       if (!popup) {
         console.log('[PAY] Popup blocked - waiting for user to allow and retry');
         setErrorMessage('Popup blocked. Please allow popups for this site, then click "Open Payment Window" again.');
+        setState('reserved'); // Go back to reserved state
         return;
       }
 
@@ -240,6 +301,83 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
       console.error('[PAY] Error opening payment:', error);
       setErrorMessage('Failed to open payment window');
       setState('error');
+    }
+  };
+
+  // Connect to a wallet and verify stake address matches
+  const connectAndVerifyWallet = async (wallet: { name: string; icon: string; api: any }) => {
+    setIsConnectingWallet(true);
+    setWalletVerificationError(null);
+
+    try {
+      console.log(`[🔐VERIFY] Connecting to ${wallet.name}...`);
+
+      // Enable the wallet
+      const api = await Promise.race([
+        wallet.api.enable(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Wallet connection timeout after 30 seconds')), 30000)
+        )
+      ]) as any;
+
+      // Get stake addresses from connected wallet
+      console.log('[🔐VERIFY] Getting stake addresses...');
+      const stakeAddresses = await api.getRewardAddresses();
+
+      if (!stakeAddresses || stakeAddresses.length === 0) {
+        throw new Error('No stake addresses found in wallet');
+      }
+
+      const walletStakeRaw = stakeAddresses[0];
+      console.log('[🔐VERIFY] Wallet stake address (raw):', walletStakeRaw);
+
+      // Convert to bech32 if needed
+      let walletStakeAddress = walletStakeRaw;
+      if (!walletStakeRaw.startsWith('stake')) {
+        // It's hex, convert to bech32
+        try {
+          const { ensureBech32StakeAddress } = await import('@/lib/cardanoAddressConverter');
+          walletStakeAddress = ensureBech32StakeAddress(walletStakeRaw);
+          console.log('[🔐VERIFY] Converted to bech32:', walletStakeAddress);
+        } catch (convErr) {
+          console.error('[🔐VERIFY] Conversion failed, using raw:', convErr);
+        }
+      }
+
+      // Compare with entered stake address
+      const enteredStake = effectiveWalletAddress;
+      console.log('[🔐VERIFY] Comparing addresses:');
+      console.log('  Entered:', enteredStake);
+      console.log('  Wallet:', walletStakeAddress);
+
+      if (walletStakeAddress.toLowerCase() !== enteredStake.toLowerCase()) {
+        console.error('[🔐VERIFY] ❌ MISMATCH - wallet does not match entered stake address');
+        setWalletVerificationError(`The wallet you connected doesn't match the stake address you entered. Please connect the wallet for ${corporationName || 'your corporation'}.`);
+        setIsConnectingWallet(false);
+        return;
+      }
+
+      console.log('[🔐VERIFY] ✅ MATCH - proceeding to payment');
+      setIsConnectingWallet(false);
+
+      // Verification passed - open NMKR payment
+      await openNMKRPayment();
+
+    } catch (error: any) {
+      console.error('[🔐VERIFY] Error:', error);
+      setWalletVerificationError(error.message || 'Failed to connect wallet');
+      setIsConnectingWallet(false);
+    }
+  };
+
+  // Copy current URL to clipboard
+  const copyLinkToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      // Could add a toast notification here
+      console.log('[🔐VERIFY] Link copied to clipboard');
+    } catch (err) {
+      console.error('[🔐VERIFY] Failed to copy link:', err);
     }
   };
 
@@ -452,6 +590,49 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
             <p className="text-sm sm:text-base text-white/60 font-light">
               Verifying your participation
             </p>
+          </div>
+        );
+
+      case 'corporation_verified':
+        return (
+          <div className="text-center py-6 sm:py-8">
+            {/* Checkmark icon */}
+            <div className="mb-4 sm:mb-6">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center">
+                <svg className="w-8 h-8 sm:w-10 sm:h-10 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+
+            <h3 className="text-lg sm:text-xl text-white/60 font-light tracking-wide mb-4">
+              Corporation Verified
+            </h3>
+
+            {/* Big glowing blue corporation name */}
+            <h2
+              className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6"
+              style={{
+                fontFamily: "'Inter', 'Arial', sans-serif",
+                color: '#22d3ee',
+                textShadow: '0 0 20px rgba(34, 211, 238, 0.8), 0 0 40px rgba(34, 211, 238, 0.6), 0 0 60px rgba(34, 211, 238, 0.4)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              {corporationName || 'Your Corporation'}
+            </h2>
+
+            <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-8">
+              Your commemorative NFT is ready to be claimed.
+            </p>
+
+            <button
+              onClick={() => setState('creating')}
+              className="w-full py-3 sm:py-4 text-base sm:text-lg font-semibold tracking-wider text-black bg-gradient-to-r from-cyan-400 to-cyan-500 rounded-xl hover:from-cyan-300 hover:to-cyan-400 transition-all duration-300 touch-manipulation shadow-lg shadow-cyan-500/30 active:scale-[0.98]"
+              style={{ minHeight: '48px', WebkitTapHighlightColor: 'transparent', fontFamily: "'Inter', 'Arial', sans-serif" }}
+            >
+              Continue to Claim
+            </button>
           </div>
         );
 
