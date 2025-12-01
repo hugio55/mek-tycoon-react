@@ -1,7 +1,5 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useConvex, useMutation, useQuery } from 'convex/react';
