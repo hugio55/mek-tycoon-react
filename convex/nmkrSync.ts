@@ -162,7 +162,7 @@ export const syncCampaignInventory = mutation({
     nmkrStatuses: v.array(
       v.object({
         nftUid: v.string(),
-        nmkrStatus: v.union(v.literal("free"), v.literal("reserved"), v.literal("sold")),
+        nmkrStatus: v.string(), // 'free' | 'reserved' | 'sold' - simplified to avoid type depth issues
         soldTo: v.optional(v.string()),
       })
     ),
@@ -170,8 +170,37 @@ export const syncCampaignInventory = mutation({
   handler: async (ctx, args) => {
     const { campaignId, nmkrStatuses } = args;
 
-    // Get discrepancies first
-    const discrepancies = await getInventoryDiscrepancies(ctx, args);
+    // Get discrepancies first (call the query handler directly)
+    const inventory = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_campaign", (q) => q.eq("campaignId", campaignId))
+      .collect();
+
+    type NMKRStatusEntry = { nftUid: string; nmkrStatus: string; soldTo?: string };
+    const nmkrMap = new Map<string, NMKRStatusEntry>(
+      nmkrStatuses.map((status: NMKRStatusEntry) => [status.nftUid, status])
+    );
+
+    const discrepancies: SyncDiscrepancy[] = [];
+    for (const item of inventory) {
+      const nmkrData = nmkrMap.get(item.nftUid);
+      if (!nmkrData) continue;
+
+      const nmkrStatus = nmkrData.nmkrStatus as 'free' | 'reserved' | 'sold';
+      const expectedConvexStatus = nmkrStateToConvexStatus(nmkrStatus);
+
+      if (item.status !== expectedConvexStatus) {
+        discrepancies.push({
+          nftUid: item.nftUid,
+          nftNumber: item.nftNumber,
+          name: item.name,
+          nmkrStatus: nmkrStatus,
+          convexStatus: item.status as 'available' | 'reserved' | 'sold',
+          nmkrSoldTo: nmkrData.soldTo,
+          convexSoldTo: item.soldTo,
+        });
+      }
+    }
 
     if (discrepancies.length === 0) {
       return {
@@ -181,24 +210,51 @@ export const syncCampaignInventory = mutation({
       };
     }
 
-    // Sync each discrepancy
+    // Sync each discrepancy (inline the sync logic - can't call mutations from mutations)
     let syncedCount = 0;
     const errors: string[] = [];
 
     for (const discrepancy of discrepancies) {
       try {
-        const nmkrData = nmkrStatuses.find((s) => s.nftUid === discrepancy.nftUid);
+        const nmkrData = nmkrStatuses.find((s: NMKRStatusEntry) => s.nftUid === discrepancy.nftUid);
         if (!nmkrData) continue;
 
-        await syncSingleNFT(ctx, {
-          nftUid: discrepancy.nftUid,
-          nmkrStatus: nmkrData.nmkrStatus,
-          soldTo: nmkrData.soldTo,
-        });
+        // Find the NFT in inventory
+        const nft = await ctx.db
+          .query("commemorativeNFTInventory")
+          .withIndex("by_uid", (q) => q.eq("nftUid", discrepancy.nftUid))
+          .first();
 
+        if (!nft) {
+          errors.push(`${discrepancy.name}: NFT not found`);
+          continue;
+        }
+
+        const nmkrStatus = nmkrData.nmkrStatus as 'free' | 'reserved' | 'sold';
+        const newStatus = nmkrStateToConvexStatus(nmkrStatus);
+
+        // Build updates
+        const updates: Record<string, unknown> = {
+          status: newStatus,
+        };
+
+        if (newStatus === 'sold') {
+          updates.soldTo = nmkrData.soldTo || nft.soldTo;
+          updates.soldAt = Date.now();
+          updates.reservedBy = undefined;
+          updates.reservedAt = undefined;
+          updates.expiresAt = undefined;
+        } else if (newStatus === 'available') {
+          updates.reservedBy = undefined;
+          updates.reservedAt = undefined;
+          updates.expiresAt = undefined;
+        }
+
+        await ctx.db.patch(nft._id, updates);
         syncedCount++;
-      } catch (error: any) {
-        errors.push(`${discrepancy.name}: ${error.message}`);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        errors.push(`${discrepancy.name}: ${errorMessage}`);
       }
     }
 
