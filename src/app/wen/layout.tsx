@@ -15,7 +15,7 @@ export default function MaintenanceLayout({
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
-          opacity: 0.77,
+          opacity: 0.82, // +7% brightness boost
           zIndex: 0,
         }}
       />

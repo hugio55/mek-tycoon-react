@@ -21,7 +21,7 @@ export default function GlobalBackground() {
       left: `${rng.random() * 100}%`,
       top: `${rng.random() * 100}%`,
       size: rng.random() * 2 + 1, // Increased from 0.5 to 1 for better visibility
-      opacity: rng.random() * 0.6 + 0.6, // Increased minimum opacity from 0.4 to 0.6
+      opacity: (rng.random() * 0.6 + 0.6) * 1.15, // +15% brightness boost
       twinkle: rng.random() > 0.5,
       delay: rng.random() * 4, // Random delay between 0-4 seconds for each star
     }));
