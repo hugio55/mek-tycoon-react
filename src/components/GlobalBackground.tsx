@@ -118,7 +118,16 @@ export default function GlobalBackground() {
       />
 
       {/* Stationary twinkling stars */}
-      {backgroundStars.map((star) => {
+      {backgroundStars
+        .filter((star) => {
+          // On /wen page, only show stars in top 45% (above planet horizon)
+          if (pathname === '/wen') {
+            const topPercent = parseFloat(star.top);
+            return topPercent < 45;
+          }
+          return true;
+        })
+        .map((star) => {
         const finalOpacity = star.twinkle ? (mounted ? 0.3 : star.opacity) : star.opacity;
         return (
         <div
@@ -141,7 +150,16 @@ export default function GlobalBackground() {
       })}
 
       {/* Yellow particles drifting like space debris */}
-      {mounted && particles.map((particle) => (
+      {mounted && particles
+        .filter((particle) => {
+          // On /wen page, only show particles in top 45%
+          if (pathname === '/wen') {
+            const topPercent = parseFloat(particle.top);
+            return topPercent < 45;
+          }
+          return true;
+        })
+        .map((particle) => (
         <div
           key={particle.id}
           className="absolute bg-yellow-400 rounded-full pointer-events-none"
@@ -163,7 +181,17 @@ export default function GlobalBackground() {
       ))}
 
       {/* Satellites moving across screen */}
-      {mounted && satellites.map((satellite) => {
+      {mounted && satellites
+        .filter((satellite) => {
+          // On /wen page, only show satellites that stay in top 45%
+          if (pathname === '/wen') {
+            const startY = parseFloat(satellite.startY);
+            const endY = parseFloat(satellite.endY);
+            return startY < 45 && endY < 45;
+          }
+          return true;
+        })
+        .map((satellite) => {
         const startXNum = parseFloat(satellite.startX);
         const startYNum = parseFloat(satellite.startY);
         const endXNum = parseFloat(satellite.endX);
