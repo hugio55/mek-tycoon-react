@@ -3,8 +3,14 @@ import { api } from '@/convex/_generated/api';
 import { ConvexHttpClient } from 'convex/browser';
 import crypto from 'crypto';
 
-// Initialize Convex client
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+// Lazy initialization to avoid build-time errors
+let convex: ConvexHttpClient | null = null;
+function getConvex() {
+  if (!convex) {
+    convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+  }
+  return convex;
+}
 
 /**
  * NMKR Webhook Endpoint
@@ -98,7 +104,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
 
     // CRITICAL SECURITY FIX #1: Check for duplicate webhooks (idempotency)
     if (payload.TxHash) {
-      const existingWebhook = await convex.query(
+      const existingWebhook = await getConvex().query(
         api.webhooks.checkProcessedWebhook,
         { transactionHash: payload.TxHash }
       );
@@ -148,7 +154,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
 
       try {
         // Update purchase status to show payment received + minting
-        await convex.mutation(api.commemorative.updatePurchaseStatus, {
+        await getConvex().mutation(api.commemorative.updatePurchaseStatus, {
           transactionHash: txHash,
           status: 'completed', // Mark as completed since we don't have granular status in schema
           nftTokenId: undefined,
@@ -179,7 +185,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
 
     // Update purchase status in database
     try {
-      await convex.mutation(api.commemorative.updatePurchaseStatus, {
+      await getConvex().mutation(api.commemorative.updatePurchaseStatus, {
         transactionHash: txHash,
         status: 'completed',
         nftTokenId: NotificationSaleNfts?.[0]?.AssetId || undefined,
@@ -200,7 +206,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
       if (ReceiverStakeAddress && NotificationSaleNfts && NotificationSaleNfts.length > 0) {
         try {
           const nft = NotificationSaleNfts[0];
-          await convex.mutation(api.commemorativeNFTClaims.recordClaim, {
+          await getConvex().mutation(api.commemorativeNFTClaims.recordClaim, {
             walletAddress: ReceiverStakeAddress,
             transactionHash: txHash,
             nftName: nft.NftName || 'Bronze Token',
@@ -225,7 +231,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
       if (ReceiverStakeAddress) {
         // CRITICAL SECURITY FIX #2: Check if buyer is whitelisted
         try {
-          const eligibility = await convex.query(
+          const eligibility = await getConvex().query(
             api.nftEligibility.checkClaimEligibility,
             { walletAddress: ReceiverStakeAddress }
           );
@@ -246,7 +252,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
         }
 
         try {
-          const reservationResult = await convex.mutation(
+          const reservationResult = await getConvex().mutation(
             api.commemorativeNFTReservations.completeReservationByWallet,
             {
               walletAddress: ReceiverStakeAddress,
@@ -267,7 +273,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
               console.log('[🔨WEBHOOK] Attempting to mark inventory as sold by UID:', nftUid);
 
               // Update inventory directly by UID
-              const inventoryResult = await convex.mutation(
+              const inventoryResult = await getConvex().mutation(
                 api.commemorativeNFTInventorySetup.markInventoryAsSoldByUid,
                 {
                   nftUid: nftUid,
@@ -293,7 +299,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
         // CRITICAL SECURITY FIX #3: Record that this webhook was successfully processed
         if (txHash && NotificationSaleNfts?.[0]?.NftUid) {
           try {
-            await convex.mutation(api.webhooks.recordProcessedWebhook, {
+            await getConvex().mutation(api.webhooks.recordProcessedWebhook, {
               transactionHash: txHash,
               stakeAddress: ReceiverStakeAddress,
               nftUid: NotificationSaleNfts[0].NftUid,
