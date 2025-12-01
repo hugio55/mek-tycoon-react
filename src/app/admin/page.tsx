@@ -1,12 +1,29 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import PowerSwitchToggle from "@/components/controls/PowerSwitchToggle";
 
+const BYPASS_SECRET = 'mektycoon2025';
+const PRODUCTION_URL = 'https://mek.overexposed.io';
+
+const BYPASS_LINKS = [
+  { name: 'Landing Page', path: '/' },
+  { name: 'Home (Hub)', path: '/home' },
+  { name: 'Profile', path: '/profile' },
+  { name: 'Contracts', path: '/contracts' },
+  { name: 'NFT Phases', path: '/landing-v2' },
+  { name: 'Marketplace', path: '/marketplace' },
+  { name: 'Leaderboard', path: '/leaderboard' },
+  { name: 'Admin Panel', path: '/admin' },
+];
+
 export default function AdminPage() {
   const router = useRouter();
+  const [showBypassLinks, setShowBypassLinks] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   // Query site settings
   const siteSettings = useQuery(api.siteSettings.getSiteSettings);
@@ -104,14 +121,23 @@ export default function AdminPage() {
           <p className="text-gray-400 text-lg">System administration and development tools</p>
         </div>
         
-        {/* Back to Game Button */}
-        <button
-          onClick={() => router.push('/hub')}
-          className="mb-8 px-6 py-3 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600 hover:border-yellow-400 rounded-lg transition-all text-gray-400 hover:text-white group"
-        >
-          <span className="mr-2 group-hover:translate-x--1 inline-block transition-transform">←</span>
-          Back to Game
-        </button>
+        {/* Top Buttons Row */}
+        <div className="flex gap-4 mb-8">
+          <button
+            onClick={() => router.push('/hub')}
+            className="px-6 py-3 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600 hover:border-yellow-400 rounded-lg transition-all text-gray-400 hover:text-white group"
+          >
+            <span className="mr-2 group-hover:translate-x--1 inline-block transition-transform">←</span>
+            Back to Game
+          </button>
+
+          <button
+            onClick={() => setShowBypassLinks(true)}
+            className="px-6 py-3 bg-blue-900/50 hover:bg-blue-800/50 border border-blue-600 hover:border-blue-400 rounded-lg transition-all text-blue-300 hover:text-white"
+          >
+            🔗 Production Bypass Links
+          </button>
+        </div>
 
         {/* Landing Page Toggle Section */}
         <div className="mb-8 bg-gray-900/50 border-2 border-yellow-500/30 rounded-xl p-6">
