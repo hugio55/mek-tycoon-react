@@ -295,7 +295,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
 
           {/* Claim NFT Button for Phase I */}
           {isPhaseOne && (
-            <div className="mt-6 flex justify-start">
+            <div className="mt-6 mb-2 flex justify-start">
               <button
                 onClick={() => {
                   console.log('[PhaseCard] Opening NFT claim lightbox');
