@@ -1,39 +1,38 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { api } from '@/convex/_generated/api';
-import { useDatabaseContext, DatabaseProvider } from '@/contexts/DatabaseContext';
+import { ProductionDatabaseProvider, useProductionDatabase } from '@/contexts/ProductionDatabaseContext';
+import ProductionBanner from '@/components/admin/ProductionBanner';
+import MutationConfirmDialog from '@/components/admin/MutationConfirmDialog';
 
 function CommemorativeToken1AdminContent() {
-  const {
-    selectedDatabase,
-    setSelectedDatabase,
-    client,
-    canMutate,
-    productionMutationsEnabled,
-    setProductionMutationsEnabled
-  } = useDatabaseContext();
+  const { client, canMutate, mutationsEnabled } = useProductionDatabase();
 
   const [selectedSnapshotId, setSelectedSnapshotId] = useState<string>('');
   const [showDebug, setShowDebug] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   // Manual state management instead of useQuery
   const [config, setConfig] = useState<any>(null);
   const [allSnapshots, setAllSnapshots] = useState<any[]>([]);
   const [debugState, setDebugState] = useState<any>(null);
 
-  // Production mutation confirmation
-  const [confirmationText, setConfirmationText] = useState('');
-  const [showConfirmationPrompt, setShowConfirmationPrompt] = useState(false);
+  // Mutation confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+    isLoading: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    onConfirm: () => {},
+    isLoading: false,
+  });
 
-  // Mount effect for portal rendering
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Fetch data from selected database
+  // Fetch data from production database
   useEffect(() => {
     if (!client) return;
 
@@ -68,73 +67,68 @@ function CommemorativeToken1AdminContent() {
     return await client.mutation(api.nftEligibility.clearActiveSnapshot);
   };
 
-  const handleActivateSnapshot = async () => {
+  const handleActivateSnapshot = () => {
     if (!selectedSnapshotId) {
       alert('Please select a snapshot first');
       return;
     }
 
     if (!canMutate()) {
-      alert('Mutations are disabled. Enable production mutations first.');
+      alert('Mutations are disabled. Enable editing first using the banner above.');
       return;
     }
 
-    const confirmed = confirm(
-      'Activate this snapshot?\n\n' +
-      'Any corporation stake address in this snapshot will immediately see the "Claim NFT" button on the homepage.'
-    );
+    const snapshot = allSnapshots.find((s: any) => s._id === selectedSnapshotId);
 
-    if (!confirmed) return;
-
-    try {
-      const result = await setActiveSnapshotMutation({
-        snapshotId: selectedSnapshotId as any,
-      });
-      alert(`✅ Snapshot activated!\n\n${result.snapshotName} - ${result.eligibleWallets} wallets are now eligible`);
-      setSelectedSnapshotId(''); // Reset selection
-    } catch (error: any) {
-      console.error('Error activating snapshot:', error);
-      alert(`❌ Error: ${error.message}`);
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Activate Snapshot',
+      description: `This will activate "${snapshot?.snapshotName || 'selected snapshot'}" with ${snapshot?.eligibleUsers?.length || 0} eligible wallets. Any corporation in this snapshot will immediately see the "Claim NFT" button on the homepage.`,
+      isLoading: false,
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isLoading: true }));
+        try {
+          const result = await setActiveSnapshotMutation({
+            snapshotId: selectedSnapshotId as any,
+          });
+          alert(`Snapshot activated!\n\n${result.snapshotName} - ${result.eligibleWallets} wallets are now eligible`);
+          setSelectedSnapshotId('');
+          setConfirmDialog(prev => ({ ...prev, isOpen: false, isLoading: false }));
+        } catch (error: any) {
+          console.error('Error activating snapshot:', error);
+          alert(`Error: ${error.message}`);
+          setConfirmDialog(prev => ({ ...prev, isLoading: false }));
+        }
+      },
+    });
   };
 
-  const handleDeactivateSnapshot = async () => {
+  const handleDeactivateSnapshot = () => {
     if (!canMutate()) {
-      alert('Mutations are disabled. Enable production mutations first.');
+      alert('Mutations are disabled. Enable editing first using the banner above.');
       return;
     }
 
-    const confirmed = confirm(
-      '⚠️ Deactivate current snapshot?\n\n' +
-      'This will immediately remove the "Claim NFT" button from ALL users\' homepages.\n\n' +
-      'You can reactivate a snapshot at any time.'
-    );
-
-    if (!confirmed) return;
-
-    try {
-      const result = await clearActiveSnapshotMutation();
-      if (result.success) {
-        alert(`✅ Snapshot deactivated!\n\nNo wallets are now eligible to see the claim button.`);
-      }
-    } catch (error: any) {
-      console.error('Error deactivating snapshot:', error);
-      alert(`❌ Error: ${error.message}`);
-    }
-  };
-
-  const handleEnableMutations = () => {
-    setShowConfirmationPrompt(true);
-  };
-
-  const handleConfirmMutations = () => {
-    if (confirmationText === 'ENABLE MUTATIONS') {
-      setProductionMutationsEnabled(true);
-      setShowConfirmationPrompt(false);
-      setConfirmationText('');
-    } else {
-      alert('Please type exactly: ENABLE MUTATIONS');
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Deactivate Snapshot',
+      description: 'This will immediately remove the "Claim NFT" button from ALL users\' homepages. No wallets will be eligible until you activate another snapshot.',
+      isLoading: false,
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isLoading: true }));
+        try {
+          const result = await clearActiveSnapshotMutation();
+          if (result.success) {
+            alert('Snapshot deactivated!\n\nNo wallets are now eligible to see the claim button.');
+          }
+          setConfirmDialog(prev => ({ ...prev, isOpen: false, isLoading: false }));
+        } catch (error: any) {
+          console.error('Error deactivating snapshot:', error);
+          alert(`Error: ${error.message}`);
+          setConfirmDialog(prev => ({ ...prev, isLoading: false }));
+        }
+      },
+    });
   };
 
   // Find the selected snapshot details for preview
@@ -142,103 +136,18 @@ function CommemorativeToken1AdminContent() {
 
   return (
     <div className="p-6">
-      {/* Header with Database Selector */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-yellow-400 mb-2" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-            NFT Claim Eligibility
-          </h2>
-          <p className="text-gray-400 text-sm">
-            Control who sees the "Claim NFT" button on the homepage by selecting a snapshot
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <select
-            value={selectedDatabase}
-            onChange={(e) => setSelectedDatabase(e.target.value as 'trout' | 'sturgeon')}
-            className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-yellow-500"
-          >
-            <option value="trout">🐟 Trout (Dev)</option>
-            <option value="sturgeon">🐟 Sturgeon (Production)</option>
-          </select>
-        </div>
+      {/* Production Banner */}
+      <ProductionBanner title="NFT Eligibility - Production" />
+
+      {/* Header */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-yellow-400 mb-2" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+          NFT Claim Eligibility
+        </h2>
+        <p className="text-gray-400 text-sm">
+          Control who sees the "Claim NFT" button on the homepage by selecting a snapshot
+        </p>
       </div>
-
-      {/* Production Read-Only Warning */}
-      {selectedDatabase === 'sturgeon' && !productionMutationsEnabled && (
-        <div className="mb-4 p-4 bg-red-900/30 border-2 border-red-500 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🔒</span>
-              <div>
-                <div className="text-red-400 font-bold text-lg">READ ONLY MODE - Production Database</div>
-                <div className="text-red-300 text-sm">Viewing Sturgeon (production). Mutations are disabled for safety.</div>
-              </div>
-            </div>
-            <button
-              onClick={handleEnableMutations}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded transition-colors"
-            >
-              Enable Mutations
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Production Mutations Enabled Warning */}
-      {selectedDatabase === 'sturgeon' && productionMutationsEnabled && (
-        <div className="mb-4 p-4 bg-red-600/50 border-2 border-red-500 rounded-lg animate-pulse">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">⚠️</span>
-            <div>
-              <div className="text-white font-bold text-lg">PRODUCTION MUTATIONS ENABLED</div>
-              <div className="text-orange-200 text-sm">Changes will affect the LIVE database and REAL users!</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Production Mutation Confirmation Modal */}
-      {mounted && showConfirmationPrompt && createPortal(
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999]">
-          <div className="bg-gray-900 border-2 border-red-500 rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-red-400 mb-4">⚠️ Enable Production Mutations</h3>
-            <p className="text-gray-300 mb-4">
-              You are about to enable mutations on the PRODUCTION database (Sturgeon).
-              This will allow you to activate/deactivate snapshots that affect REAL users on the live site.
-            </p>
-            <p className="text-yellow-400 text-sm mb-4">
-              Type <strong>ENABLE MUTATIONS</strong> to confirm:
-            </p>
-            <input
-              type="text"
-              value={confirmationText}
-              onChange={(e) => setConfirmationText(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white mb-4"
-              placeholder="Type: ENABLE MUTATIONS"
-              autoFocus
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleConfirmMutations}
-                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded"
-              >
-                Confirm
-              </button>
-              <button
-                onClick={() => {
-                  setShowConfirmationPrompt(false);
-                  setConfirmationText('');
-                }}
-                className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
 
       {/* Current Active Snapshot Status */}
       <div className="mb-6 p-4 bg-black/40 border-2 border-yellow-500/50 rounded-lg">
@@ -249,7 +158,7 @@ function CommemorativeToken1AdminContent() {
         {config?.hasActiveSnapshot ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-green-400 text-2xl">✓</span>
+              <span className="text-green-400 text-2xl">Active</span>
               <span className="text-green-400 font-bold">ACTIVE</span>
             </div>
             <div className="text-lg text-white font-bold">
@@ -267,16 +176,17 @@ function CommemorativeToken1AdminContent() {
             {/* Deactivate Button */}
             <button
               onClick={handleDeactivateSnapshot}
-              className="w-full px-4 py-2 bg-red-900/30 hover:bg-red-900/50 border-2 border-red-500/70 hover:border-red-500 text-red-400 hover:text-red-300 font-bold rounded transition-all mt-3"
+              disabled={!mutationsEnabled}
+              className="w-full px-4 py-2 bg-red-900/30 hover:bg-red-900/50 disabled:bg-gray-800/30 border-2 border-red-500/70 hover:border-red-500 disabled:border-gray-600 text-red-400 hover:text-red-300 disabled:text-gray-500 font-bold rounded transition-all mt-3 disabled:cursor-not-allowed"
               style={{ fontFamily: "'Orbitron', sans-serif" }}
             >
-              🚫 DEACTIVATE SNAPSHOT
+              {mutationsEnabled ? 'DEACTIVATE SNAPSHOT' : 'Enable Editing to Deactivate'}
             </button>
           </div>
         ) : (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="text-orange-400 text-2xl">⚠</span>
+              <span className="text-orange-400 text-2xl">Warning</span>
               <span className="text-orange-400 font-bold">NO SNAPSHOT ACTIVE</span>
             </div>
             <div className="text-sm text-orange-300">
@@ -335,7 +245,7 @@ function CommemorativeToken1AdminContent() {
         {(!allSnapshots || allSnapshots.length === 0) && (
           <div className="mb-4 p-3 bg-orange-900/30 border border-orange-500/50 rounded">
             <div className="text-sm text-orange-300">
-              ⚠ No snapshots available yet. Go to <strong>Whitelist Manager</strong> tab to create a snapshot first.
+              Warning: No snapshots available yet. Go to <strong>Whitelist Manager</strong> tab to create a snapshot first.
             </div>
           </div>
         )}
@@ -343,11 +253,16 @@ function CommemorativeToken1AdminContent() {
         {/* Activate Button */}
         <button
           onClick={handleActivateSnapshot}
-          disabled={!selectedSnapshotId}
+          disabled={!selectedSnapshotId || !mutationsEnabled}
           className="w-full px-6 py-3 bg-yellow-500/20 hover:bg-yellow-500/30 disabled:bg-gray-700/20 border-2 border-yellow-500 disabled:border-gray-600 disabled:text-gray-500 text-yellow-400 font-bold rounded transition-all disabled:cursor-not-allowed"
           style={{ fontFamily: "'Orbitron', sans-serif" }}
         >
-          {selectedSnapshotId ? '🚀 ACTIVATE THIS SNAPSHOT' : '⚠ SELECT A SNAPSHOT FIRST'}
+          {!mutationsEnabled
+            ? 'Enable Editing to Activate'
+            : selectedSnapshotId
+              ? 'ACTIVATE THIS SNAPSHOT'
+              : 'SELECT A SNAPSHOT FIRST'
+          }
         </button>
       </div>
 
@@ -355,11 +270,11 @@ function CommemorativeToken1AdminContent() {
       <div className="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
         <h4 className="text-sm font-bold text-blue-300 mb-2">How This Works</h4>
         <ul className="text-xs text-gray-300 space-y-1">
-          <li>• <strong>Step 1:</strong> Go to Whitelist Manager tab to create a snapshot of eligible corporations</li>
-          <li>• <strong>Step 2:</strong> Return here and select that snapshot from the dropdown</li>
-          <li>• <strong>Step 3:</strong> Click "Activate This Snapshot" to enable eligibility</li>
-          <li>• <strong>Result:</strong> Any corporation stake address in the snapshot will see the "Claim NFT" button on the homepage</li>
-          <li>• <strong>NMKR handles everything else:</strong> Payment processing, minting, NFT delivery</li>
+          <li>1. Go to Whitelist Manager tab to create a snapshot of eligible corporations</li>
+          <li>2. Return here and select that snapshot from the dropdown</li>
+          <li>3. Enable editing using the banner above, then click "Activate This Snapshot"</li>
+          <li>4. Any corporation stake address in the snapshot will see the "Claim NFT" button on the homepage</li>
+          <li>5. NMKR handles everything else: Payment processing, minting, NFT delivery</li>
         </ul>
       </div>
 
@@ -369,8 +284,8 @@ function CommemorativeToken1AdminContent() {
           onClick={() => setShowDebug(!showDebug)}
           className="w-full text-left text-sm font-bold text-purple-300 mb-2 flex items-center justify-between"
         >
-          <span>🔍 Debug Database State</span>
-          <span className="text-xs">{showDebug ? '▼' : '▶'}</span>
+          <span>Debug Database State</span>
+          <span className="text-xs">{showDebug ? 'Hide' : 'Show'}</span>
         </button>
 
         {showDebug && (
@@ -381,15 +296,27 @@ function CommemorativeToken1AdminContent() {
           </div>
         )}
       </div>
+
+      {/* Mutation Confirmation Dialog */}
+      <MutationConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        description={confirmDialog.description}
+        dangerLevel="medium"
+        isLoading={confirmDialog.isLoading}
+        confirmButtonText="Confirm"
+      />
     </div>
   );
 }
 
-// Wrapper component that provides DatabaseContext
+// Wrapper component that provides ProductionDatabaseContext
 export default function CommemorativeToken1Admin() {
   return (
-    <DatabaseProvider>
+    <ProductionDatabaseProvider>
       <CommemorativeToken1AdminContent />
-    </DatabaseProvider>
+    </ProductionDatabaseProvider>
   );
 }

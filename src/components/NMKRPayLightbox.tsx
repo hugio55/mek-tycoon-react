@@ -24,7 +24,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [manualAddress, setManualAddress] = useState<string>('');
   const [addressError, setAddressError] = useState<string>('');
-  const [storedEligibility, setStoredEligibility] = useState<{ hasActiveReservation?: boolean; alreadyClaimed?: boolean; eligible?: boolean; reason?: string } | null>(null);
+  const [storedEligibility, setStoredEligibility] = useState<{ hasActiveReservation?: boolean; alreadyClaimed?: boolean; eligible?: boolean; reason?: string; claimedNFTDetails?: { name: string; editionNumber: number; imageUrl?: string; soldAt?: number } } | null>(null);
   const [activeCampaignId, setActiveCampaignId] = useState<Id<"commemorativeCampaigns"> | null>(propCampaignId || null);
 
   const hasInitiatedTimeoutRelease = useRef(false);
@@ -515,22 +515,76 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
         );
 
       case 'already_claimed':
+        const claimedNFT = storedEligibility?.claimedNFTDetails;
+        const mintDate = claimedNFT?.soldAt ? new Date(claimedNFT.soldAt) : null;
+        const formattedDate = mintDate ? mintDate.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }) : null;
+        const formattedTime = mintDate ? mintDate.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }) : null;
+
         return (
-          <div className="text-center py-6 sm:py-8">
+          <div className="text-center py-4 sm:py-6">
             <div className="mb-4 sm:mb-6">
-              <svg className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-light text-white tracking-wide mb-3">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-light text-white tracking-wide mb-4">
               Already Claimed
             </h3>
+
+            {claimedNFT && (
+              <div className="mb-6">
+                {/* NFT Image - animated if it's a video/gif */}
+                <div className="relative w-full max-w-[280px] mx-auto mb-4 rounded-2xl overflow-hidden bg-black/50 backdrop-blur-md border border-yellow-400/30 shadow-2xl shadow-yellow-500/20">
+                  <img
+                    src={claimedNFT.imageUrl || "/random-images/Lab%20Rat.jpg"}
+                    alt={claimedNFT.name || "Your NFT"}
+                    className="w-full h-auto"
+                    onError={(e) => { e.currentTarget.src = '/logo-big.png'; }}
+                  />
+                </div>
+
+                {/* NFT Details Card */}
+                <div className="p-4 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-400/20 rounded-2xl backdrop-blur-md">
+                  <h4 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Inter, sans-serif', color: '#fef3c7', letterSpacing: '-0.02em' }}>
+                    {claimedNFT.name}
+                  </h4>
+                  <p className="text-lg mb-3" style={{ fontFamily: 'Inter, sans-serif', color: '#fbbf24', fontWeight: 600 }}>
+                    Edition #{claimedNFT.editionNumber}
+                  </p>
+                  {mintDate && (
+                    <div className="text-sm text-white/60" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      <span>Minted on </span>
+                      <span className="text-yellow-300/80">{formattedDate}</span>
+                      <span> at </span>
+                      <span className="text-yellow-300/80">{formattedTime}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-4">
-              Thank you for being part of the community! You have already claimed your commemorative token.
+              Thank you for being part of the community!
             </p>
-            <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed">
+            <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-6">
               Stay tuned for future campaigns!
             </p>
+
+            <button
+              onClick={onClose}
+              className="px-8 py-3 text-base font-semibold tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl hover:from-yellow-300 hover:to-yellow-400 transition-all duration-300 shadow-lg shadow-yellow-500/20"
+              style={{ fontFamily: "'Inter', 'Arial', sans-serif" }}
+            >
+              Close
+            </button>
           </div>
         );
 

@@ -130,10 +130,22 @@ export const checkClaimEligibility = query({
       .first();
 
     if (completedReservation) {
+      // Try to find the NFT details from inventory using the reservation's inventoryId
+      let claimedNFT = null;
+      if (completedReservation.inventoryId) {
+        claimedNFT = await ctx.db.get(completedReservation.inventoryId);
+      }
+
       return {
         eligible: false,
         reason: "You have already claimed your commemorative NFT",
         alreadyClaimed: true,
+        claimedNFTDetails: claimedNFT ? {
+          name: claimedNFT.name,
+          editionNumber: claimedNFT.editionNumber,
+          imageUrl: claimedNFT.imageUrl,
+          soldAt: claimedNFT.soldAt,
+        } : null,
       };
     }
 
@@ -154,6 +166,12 @@ export const checkClaimEligibility = query({
         eligible: false,
         reason: "You have already claimed your commemorative NFT",
         alreadyClaimed: true,
+        claimedNFTDetails: {
+          name: soldNFT.name,
+          editionNumber: soldNFT.editionNumber,
+          imageUrl: soldNFT.imageUrl,
+          soldAt: soldNFT.soldAt,
+        },
       };
     }
 
