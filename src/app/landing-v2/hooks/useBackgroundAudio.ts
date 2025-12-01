@@ -16,6 +16,12 @@ export function useBackgroundAudio() {
     audioRef.current.loop = true;
     audioRef.current.volume = 0;
 
+    // Disable Edge's enhance/translate popup
+    audioRef.current.setAttribute('translate', 'no');
+    audioRef.current.setAttribute('data-edge-enhance', 'false');
+    audioRef.current.disableRemotePlayback = true;
+    (audioRef.current as any).controlsList = 'nodownload noremoteplayback';
+
     audioRef.current.addEventListener('error', (e) => {
       console.error('[🎵AUDIO-V2] Audio error:', e, 'src:', audioRef.current?.src);
     });

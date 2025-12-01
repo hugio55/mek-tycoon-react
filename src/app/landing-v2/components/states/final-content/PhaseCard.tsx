@@ -215,8 +215,13 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             background: 'rgba(0, 0, 0, 0.384)',
             borderRadius: '8px',
             backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
             opacity: isExpanded ? 1 : 0,
             transition: 'opacity 300ms ease-out',
+            transform: 'translateZ(0)',
+            WebkitBackfaceVisibility: 'hidden',
+            backfaceVisibility: 'hidden',
+            isolation: 'isolate',
           }}
         >
           <div>

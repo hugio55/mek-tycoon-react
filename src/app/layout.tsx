@@ -156,6 +156,9 @@ export const metadata: Metadata = {
   },
   other: {
     'build-timestamp': new Date().toISOString(),
+    // Disable Edge's translate/enhance popup for audio
+    'google': 'notranslate',
+    'microsoft': 'notranslate',
   },
 };
 
