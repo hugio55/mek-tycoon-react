@@ -38,17 +38,24 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   );
 
   // Auto-select first active campaign with available NFTs
+  // CRITICAL: Only run this effect ONCE on initial load, not on every campaign update
+  const [hasInitializedCampaign, setHasInitializedCampaign] = useState(false);
+
   useEffect(() => {
     if (propCampaignId) {
       setActiveCampaignId(propCampaignId);
       return;
     }
 
+    // Only run campaign selection logic once on initial load
+    if (hasInitializedCampaign) return;
+
     if (activeCampaigns === undefined) return; // Still loading
 
     if (!activeCampaigns || activeCampaigns.length === 0) {
       console.log('[CAMPAIGN] No active campaigns found');
       setState('no_campaign');
+      setHasInitializedCampaign(true);
       return;
     }
 
@@ -58,13 +65,15 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
       console.log('[CAMPAIGN] Auto-selected campaign:', campaignWithNFTs.name, campaignWithNFTs._id);
       setActiveCampaignId(campaignWithNFTs._id);
       setState(walletAddress ? 'creating' : 'address_entry');
+      setHasInitializedCampaign(true);
     } else {
       // All campaigns are sold out
       console.log('[CAMPAIGN] All campaigns sold out');
       setErrorMessage('All NFTs have been claimed. Check back later for new campaigns!');
       setState('error');
+      setHasInitializedCampaign(true);
     }
-  }, [activeCampaigns, propCampaignId, walletAddress]);
+  }, [activeCampaigns, propCampaignId, walletAddress, hasInitializedCampaign]);
 
   // Campaign-aware mutations
   const createReservation = useMutation(api.commemorativeNFTReservationsCampaign.createCampaignReservation);
