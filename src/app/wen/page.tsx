@@ -33,7 +33,7 @@ export default function MaintenancePage() {
         className="flex items-center justify-center"
         style={{
           transform: `scale(${containerScale})`,
-          marginBottom: isMobile ? '120px' : '160px'
+          marginBottom: isMobile ? '80px' : '110px'
         }}
       >
         <GeneratingLoader
@@ -42,12 +42,15 @@ export default function MaintenancePage() {
           textScale={textScale}
         />
       </div>
-      {/* Discord link - positioned below the visual circle */}
+      {/* Discord link - glowing text */}
       <a
         href="https://discord.com/channels/938648161810006119/1422726928934113340"
         target="_blank"
         rel="noopener noreferrer"
-        className="text-white/40 text-sm hover:text-white/60 transition-colors duration-300"
+        className="text-white/60 text-sm hover:text-white/80 transition-all duration-300"
+        style={{
+          textShadow: '0 0 8px rgba(0, 217, 255, 0.5), 0 0 16px rgba(0, 217, 255, 0.3)'
+        }}
       >
         Join the conversation
       </a>
