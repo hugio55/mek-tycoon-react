@@ -190,10 +190,19 @@ export const checkClaimEligibility = query({
     }
 
     // All checks passed - user is eligible and has no active reservation
+    // Now look up their corporation name from goldMining table
+    const goldMiningRecord = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    const corporationName = goldMiningRecord?.companyName || null;
+
     return {
       eligible: true,
       reason: "Stake address is in active snapshot and has not yet claimed",
       snapshotName: snapshot.snapshotName,
+      corporationName: corporationName,
     };
   },
 });
