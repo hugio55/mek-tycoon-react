@@ -207,7 +207,6 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           maxHeight: isExpanded ? '1000px' : '0',
           overflow: 'hidden',
           transition: 'max-height 300ms ease-out',
-          paddingBottom: isExpanded ? '4px' : '0',
         }}
       >
         <div
@@ -220,6 +219,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             opacity: isExpanded ? 1 : 0,
             transition: 'opacity 300ms ease-out',
             overflow: 'hidden',
+            borderBottom: '3px solid rgba(0, 0, 0, 0.5)',
           }}
         >
           <div>
