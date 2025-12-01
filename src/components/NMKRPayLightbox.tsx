@@ -184,7 +184,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
     try {
       await markPaymentWindowOpened({ reservationId });
 
-      const paymentUrl = activeReservation.paymentUrl;
+      const paymentUrl = activeReservation.nft?.paymentUrl;
       console.log('[PAY] Payment URL:', paymentUrl);
 
       if (!paymentUrl) {
@@ -543,8 +543,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
               <div className="relative w-full max-w-[300px] mx-auto mb-4 rounded-2xl overflow-hidden bg-black/50 backdrop-blur-md border border-cyan-400/30 shadow-2xl shadow-cyan-500/20">
                 <img
-                  src={activeReservation.imageUrl || "/random-images/Lab%20Rat.jpg"}
-                  alt={activeReservation.name || "NFT"}
+                  src={activeReservation.nft?.imageUrl || "/random-images/Lab%20Rat.jpg"}
+                  alt={activeReservation.nft?.name || "NFT"}
                   className="w-full h-auto"
                   onError={(e) => { e.currentTarget.src = '/logo-big.png'; }}
                 />
@@ -552,7 +552,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
               <div className="mb-4 p-4 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-400/20 rounded-2xl backdrop-blur-md">
                 <h3 className="text-3xl font-bold mb-2" style={{ fontFamily: 'Inter, sans-serif', color: '#e0f2fe', letterSpacing: '-0.02em' }}>
-                  {activeReservation.name || "NFT"}
+                  {activeReservation.nft?.name || "NFT"}
                 </h3>
                 <p style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', fontSize: '0.875rem', lineHeight: '1.5', fontWeight: 400 }}>
                   You have reserved <span style={{ color: '#22d3ee', fontWeight: 600, textShadow: '0 0 10px rgba(34, 211, 238, 0.6), 0 0 20px rgba(34, 211, 238, 0.4)' }}>edition number {activeReservation.nftNumber}</span>. Click below to open the payment window and complete your purchase.
