@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import { Id } from "../../../convex/_generated/dataModel";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
 import EssenceListingLightboxV6FullMarketMatch from "@/components/EssenceListingLightbox-V6-FullMarketMatch";
 import { renderHeaderButtons } from "@/lib/headerButtonVariations";

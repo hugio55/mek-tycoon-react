@@ -1,0 +1,307 @@
+================================================================================
+COMPLETE VARIATION SOURCE KEY MATCHING ANALYSIS
+================================================================================
+
+Total variations analyzed: 291
+  - Special numeric variations (unchanged): 30
+  - High confidence matches: 120
+  - Medium confidence (ambiguous): 29
+  - Low confidence (invalid current): 112
+  - No matches found: 0
+
+================================================================================
+HIGH CONFIDENCE MATCHES (Unique count match)
+================================================================================
+Fury                      (body ) count=  1  BW5    -> LZ2     [CHANGE]
+Ross                      (head ) count=  1  LZ2    -> BW5     [CHANGE]
+Magma                     (head ) count=  7  AA1    -> BW4     [CHANGE]
+Blood                     (body ) count= 11  CB3    -> AE3     [CHANGE]
+Bubblegum                 (head ) count= 12  CF3    -> BJ3     [CHANGE]
+Seafoam                   (body ) count= 12  DC1    -> BC6     [CHANGE]
+Ballerina                 (head ) count= 13  HB2    -> EV2     [CHANGE]
+Ocean                     (body ) count= 13  BF1    -> FN6     [CHANGE]
+Heatmap                   (head ) count= 14  BC1    -> IO3     [CHANGE]
+Acrylic                   (head ) count= 15  HB2    -> HP3     [CHANGE]
+Frosted                   (body ) count= 16  AA3    -> CL4     [CHANGE]
+Quilt                     (head ) count= 16  GQ2    -> AA4     [CHANGE]
+Ornament                  (head ) count= 17  AE1    -> BW3     [CHANGE]
+Sleet                     (head ) count= 18  HH1    -> FD4     [CHANGE]
+Sticky                    (body ) count= 18  BF1    -> FN4     [CHANGE]
+Vapor                     (body ) count= 19  BF3    -> CL3     [CHANGE]
+Hades                     (head ) count= 20  AE1    -> CU2     [CHANGE]
+Inner Rainbow             (body ) count= 20  DM1    -> CW3     [CHANGE]
+Drill                     (head ) count= 21  AM1    -> BW2     [CHANGE]
+Frostbit                  (body ) count= 21  AA2    -> BC5     [CHANGE]
+Denim                     (body ) count= 23  AA1    -> AA3     [CHANGE]
+Recon                     (head ) count= 28  HB1    -> AT1     [CHANGE]
+Soul                      (body ) count= 32  BF1    -> HT2     [CHANGE]
+Sun                       (head ) count= 32  AA2    -> BQ3     [CHANGE]
+Lizard                    (body ) count= 33  BF1    -> ED4     [CHANGE]
+Sterling                  (head ) count= 33  HH1    -> ER2     [CHANGE]
+Lich                      (head ) count= 34  HB2    -> CU1     [CHANGE]
+Plate                     (head ) count= 35  AA1    -> CX1     [CHANGE]
+Porcelain                 (head ) count= 37  AA1    -> DS2     [CHANGE]
+Cream                     (head ) count= 38  HB1    -> JG3     [CHANGE]
+Tangerine                 (body ) count= 38  BJ1    -> IY2     [CHANGE]
+Maple                     (body ) count= 42  AK1    -> CW1     [CHANGE]
+Ooze                      (body ) count= 43  BJ1    -> GQ2     [CHANGE]
+Liquid Lavender           (head ) count= 44  HB2    -> CB3     [CHANGE]
+Crystal Camo              (body ) count= 45  DH1    -> CL2     [CHANGE]
+Grass                     (head ) count= 46  HB3    -> ER1     [CHANGE]
+Black                     (body ) count= 50  BF1    -> HT1     [CHANGE]
+Ivory                     (head ) count= 50  HB3    -> IO2     [CHANGE]
+Dr.                       (body ) count= 52  BF1    -> IV1     [CHANGE]
+Boss                      (head ) count= 56  HH1    -> DS1     [CHANGE]
+Waves                     (body ) count= 57  FD1    -> AR2     [CHANGE]
+Plush                     (body ) count= 58  BJ1    -> GQ1     [CHANGE]
+Tickle                    (body ) count= 59  BL1    -> AM2     [CHANGE]
+Hacker                    (head ) count= 64  HB2    -> DH2     [CHANGE]
+Heart                     (body ) count= 64  BI1    -> BC2     [CHANGE]
+Mac & Cheese              (head ) count= 67  AA2    -> FD3     [CHANGE]
+Crimson                   (head ) count= 68  BC1    -> AA2     [CHANGE]
+Dazed Piggy               (head ) count= 69  HH1    -> BL2     [CHANGE]
+Sir                       (body ) count= 69  BJ1    -> KI1     [CHANGE]
+Mahogany                  (head ) count= 70  HB2    -> EE2     [CHANGE]
+Princess                  (body ) count= 70  BF1    -> HB3     [CHANGE]
+Chrome                    (body ) count= 73  AK1    -> BC1     [CHANGE]
+Rust                      (head ) count= 75  AM1    -> FD2     [CHANGE]
+Steam                     (body ) count= 76  BI1    -> AE2     [CHANGE]
+Business                  (head ) count= 77  AA2    -> HP1     [CHANGE]
+Goblin                    (body ) count= 78  BI1    -> HB2     [CHANGE]
+Neon Flamingo             (head ) count= 78  HB3    -> BI2     [CHANGE]
+Aztec                     (head ) count= 79  HH1    -> IO1     [CHANGE]
+Milk                      (head ) count= 80  AA1    -> GN2     [CHANGE]
+Aqua                      (head ) count= 81  HB3    -> AA1     [CHANGE]
+OE Dark                   (body ) count= 83  BF1    -> ED1     [CHANGE]
+desufnoC                  (head ) count= 85  AK1    -> BL1     [CHANGE]
+Bone                      (body ) count= 86  DH1    -> CF1     [CHANGE]
+Bark                      (head ) count= 89  AA1    -> AK1     [CHANGE]
+Abominable                (body ) count= 90  BF1    -> GG1     [CHANGE]
+Sky                       (body ) count= 93  BJ1    -> AM1     [CHANGE]
+Blush                     (body ) count= 94  BJ2    -> AA2     [CHANGE]
+Polished                  (head ) count= 94  AE1    -> JG1     [CHANGE]
+Lightning                 (head ) count= 96  AA2    -> BJ2     [CHANGE]
+Ol' Faithful              (head ) count= 98  HB2    -> FD1     [CHANGE]
+Classic                   (head ) count=101  AE1    -> BF1     [CHANGE]
+Noob                      (body ) count=104  BJ1    -> HB1     [CHANGE]
+Matte                     (body ) count=106  EE1    -> BO1     [CHANGE]
+Shamrock                  (head ) count=113  HB2    -> DM1     [CHANGE]
+Exposed                   (head ) count=117  HB1    -> BJ1     [CHANGE]
+Couch                     (body ) count=118  BI1    -> AA1     [CHANGE]
+Nuke                      (head ) count=119  AA2    -> DH1     [CHANGE]
+Kevlar                    (head ) count=125  HB2    -> GN1     [CHANGE]
+Log                       (head ) count=126  AA2    -> EE1     [CHANGE]
+Maps                      (body ) count=127  BJ1    -> HH1     [CHANGE]
+Grate                     (body ) count=130  BF1    -> AE1     [CHANGE]
+Taser                     (head ) count=132  AA1    -> BI1     [CHANGE]
+
+================================================================================
+HIGH CONFIDENCE (No change needed)
+================================================================================
+King Tut                  (trait) count=  1  AZ3    = AZ3     (already correct)
+Peacock                   (trait) count=  2  AZ4    = AZ4     (already correct)
+Palace                    (trait) count=  3  AZ2    = AZ2     (already correct)
+Screamo                   (trait) count=  5  KQ3    = KQ3     (already correct)
+Hydra                     (trait) count=  8  AP3    = AP3     (already correct)
+Carbonite                 (trait) count= 11  EY1    = EY1     (already correct)
+Iced                      (trait) count= 12  BR3    = BR3     (already correct)
+Holographic               (trait) count= 15  AS3    = AS3     (already correct)
+Ring Red                  (trait) count= 16  DA3    = DA3     (already correct)
+Tactical                  (trait) count= 19  DE3    = DE3     (already correct)
+Nuclear                   (trait) count= 21  HN3    = HN3     (already correct)
+Foil                      (trait) count= 22  AJ3    = AJ3     (already correct)
+Golden Guns               (trait) count= 23  CU2    = CU2     (already correct)
+Bling                     (trait) count= 26  MX1    = MX1     (already correct)
+R&B                       (trait) count= 27  KQ2    = KQ2     (already correct)
+Just Wren                 (trait) count= 30  EV1    = EV1     (already correct)
+Angler                    (trait) count= 31  AS2    = AS2     (already correct)
+Phoenix                   (trait) count= 34  AP2    = AP2     (already correct)
+Firebird                  (trait) count= 37  BR2    = BR2     (already correct)
+Heliotropium              (trait) count= 39  MO2    = MO2     (already correct)
+Black Parade              (trait) count= 49  CU1    = CU1     (already correct)
+Bonebox                   (trait) count= 53  GK2    = GK2     (already correct)
+Hefner                    (trait) count= 55  BR1    = BR1     (already correct)
+Fourzin                   (trait) count= 64  EH2    = EH2     (already correct)
+Molten Core               (trait) count= 68  HN2    = HN2     (already correct)
+Bumble Bird               (trait) count= 72  BC2    = BC2     (already correct)
+Albino                    (trait) count= 75  AJ2    = AJ2     (already correct)
+Scissors                  (trait) count= 77  AP1    = AP1     (already correct)
+Whiteout                  (trait) count= 80  DE2    = DE2     (already correct)
+Lumberjack                (trait) count= 81  LG2    = LG2     (already correct)
+Pawn Shop                 (trait) count= 92  GK1    = GK1     (already correct)
+Ring Blue                 (trait) count= 97  DA1    = DA1     (already correct)
+Concrete                  (trait) count=109  CD1    = CD1     (already correct)
+Paparazzi                 (trait) count=111  OF1    = OF1     (already correct)
+Near Space                (trait) count=125  FB1    = FB1     (already correct)
+Vampire                   (trait) count=129  AJ1    = AJ1     (already correct)
+Pyrex                     (trait) count=138  HN1    = HN1     (already correct)
+Nothing                   (trait) count=501  NM1    = NM1     (already correct)
+
+================================================================================
+MEDIUM CONFIDENCE (Multiple matches, current key is valid)
+================================================================================
+Drip                      (trait) count=  4  current=EY3     candidates=AW3, EY3
+Test Track                (trait) count=  4  current=AW3     candidates=AW3, EY3
+Blasters                  (trait) count=  6  current=CU3     candidates=EV3, CU3
+Spectrum                  (trait) count=  6  current=EV3     candidates=EV3, CU3
+2001                      (trait) count=  7  current=EY2     candidates=EY2, AZ1
+Crow                      (trait) count=  7  current=AZ1     candidates=EY2, AZ1
+Icon                      (trait) count= 13  current=EV2     candidates=EV2, GK3
+Splatter                  (trait) count= 13  current=GK3     candidates=EV2, GK3
+LV-426                    (trait) count= 25  current=AW2     candidates=AW2, BC3
+Sap                       (trait) count= 25  current=BC3     candidates=AW2, BC3
+Earth                     (trait) count= 28  current=AW1     candidates=AW1, EH3, MT2
+Jeff                      (trait) count= 28  current=EH3     candidates=AW1, EH3, MT2
+Purplex                   (trait) count= 28  current=MT2     candidates=AW1, EH3, MT2
+Hammerheat                (trait) count= 58  current=MT1     candidates=MT1, AS1
+Luna                      (trait) count= 58  current=AS1     candidates=MT1, AS1
+Pop                       (trait) count= 63  current=KQ1     candidates=DA2, KQ1
+Ring Green                (trait) count= 63  current=DA2     candidates=DA2, KQ1
+Deep Space                (trait) count= 73  current=FB2     candidates=OF2, FB2
+Night Vision              (trait) count= 73  current=OF2     candidates=OF2, FB2
+Black & White             (trait) count= 78  current=JI2     candidates=JI2, MO1
+Silver                    (trait) count= 78  current=MO1     candidates=JI2, MO1
+Chromium                  (trait) count= 91  current=CD2     candidates=IL2, CD2
+Rainbow Morpho            (trait) count= 91  current=IL2     candidates=IL2, CD2
+Moth                      (trait) count=117  current=IL1     candidates=EH1, IL1
+Who                       (trait) count=117  current=EH1     candidates=EH1, IL1
+Contractor                (trait) count=118  current=LG1     candidates=DE1, LG1
+Stock                     (trait) count=118  current=DE1     candidates=DE1, LG1
+101.1 FM                  (trait) count=121  current=BC1     candidates=JI1, BC1
+Technicolor               (trait) count=121  current=JI1     candidates=JI1, BC1
+
+================================================================================
+LOW CONFIDENCE (Multiple matches, current key NOT in candidates)
+================================================================================
+007                       (body ) count=  2  current=CX2     candidates=AM3, CL6, HH3, HT4, IY3, KU2, LZ1 [WARNING]
+Cartoon                   (body ) count=  2  current=AA5     candidates=AM3, CL6, HH3, HT4, IY3, KU2, LZ1 [WARNING]
+Heatwave                  (body ) count=  2  current=CX2     candidates=AM3, CL6, HH3, HT4, IY3, KU2, LZ1 [WARNING]
+Luxury                    (body ) count=  2  current=DS3     candidates=AM3, CL6, HH3, HT4, IY3, KU2, LZ1 [WARNING]
+Majesty                   (body ) count=  2  current=DC4     candidates=AM3, CL6, HH3, HT4, IY3, KU2, LZ1 [WARNING]
+Oil                       (body ) count=  2  current=BF5     candidates=AM3, CL6, HH3, HT4, IY3, KU2, LZ1 [WARNING]
+Seabiscuit                (body ) count=  2  current=KY4     candidates=AM3, CL6, HH3, HT4, IY3, KU2, LZ1 [WARNING]
+Acid                      (head ) count=  3  current=DP4     candidates=KY4, JG4 [WARNING]
+Gatsby                    (body ) count=  3  current=DC4     candidates=BC7, ED6, GQ5, KI4 [WARNING]
+Gold                      (head ) count=  3  current=IV1     candidates=KY4, JG4 [WARNING]
+Pearl                     (body ) count=  3  current=ER3     candidates=BC7, ED6, GQ5, KI4 [WARNING]
+Spaghetti                 (body ) count=  3  current=AA2     candidates=BC7, ED6, GQ5, KI4 [WARNING]
+Tarpie                    (body ) count=  3  current=DS1     candidates=BC7, ED6, GQ5, KI4 [WARNING]
+Cartoonichrome            (body ) count=  4  current=AA1     candidates=CW4, FN8, GG4 [WARNING]
+Granite                   (body ) count=  4  current=BQ1     candidates=CW4, FN8, GG4 [WARNING]
+Lazer                     (head ) count=  4  current=BC1     candidates=AT4, LZ1 [WARNING]
+Tie Dye                   (body ) count=  4  current=BJ3     candidates=CW4, FN8, GG4 [WARNING]
+Wires                     (head ) count=  4  current=FS1     candidates=AT4, LZ1 [WARNING]
+Burnt                     (body ) count=  5  current=DS2     candidates=BO3, CF5, FN7, JX3 [WARNING]
+Damascus                  (body ) count=  5  current=BW2     candidates=BO3, CF5, FN7, JX3 [WARNING]
+Giger                     (body ) count=  5  current=AA1     candidates=BO3, CF5, FN7, JX3 [WARNING]
+Maze                      (body ) count=  5  current=BJ1     candidates=BO3, CF5, FN7, JX3 [WARNING]
+Nightstalker              (head ) count=  5  current=AE1     candidates=BQ5, KY2, KY3, AA5, ER4 [WARNING]
+Nyan                      (head ) count=  5  current=AK3     candidates=BQ5, KY2, KY3, AA5, ER4 [WARNING]
+Paul                      (head ) count=  5  current=AA1     candidates=BQ5, KY2, KY3, AA5, ER4 [WARNING]
+Pizza                     (head ) count=  5  current=CF3     candidates=BQ5, KY2, KY3, AA5, ER4 [WARNING]
+Terminator                (head ) count=  5  current=AA1     candidates=BQ5, KY2, KY3, AA5, ER4 [WARNING]
+24K                       (head ) count=  6  current=AA1     candidates=EV3, BF5, GN3, CU3 [WARNING]
+Bag                       (body ) count=  6  current=DM1     candidates=AR3, FS3, GQ4 [WARNING]
+China                     (head ) count=  6  current=CF1     candidates=EV3, BF5, GN3, CU3 [WARNING]
+Nuggets                   (body ) count=  6  current=AK2     candidates=AR3, FS3, GQ4 [WARNING]
+Radiance                  (body ) count=  6  current=AA1     candidates=AR3, FS3, GQ4 [WARNING]
+Stained Glass             (head ) count=  6  current=CF1     candidates=EV3, BF5, GN3, CU3 [WARNING]
+The Lethal Dimension      (head ) count=  6  current=BC1     candidates=EV3, BF5, GN3, CU3 [WARNING]
+Jolly Rancher             (body ) count=  7  current=AA1     candidates=CL5, DJ4 [WARNING]
+Shipped                   (body ) count=  7  current=AK1     candidates=CL5, DJ4 [WARNING]
+???                       (head ) count=  8  current=AR1     candidates=BL5, DS3 [WARNING]
+Lord                      (body ) count=  8  current=AK3     candidates=DP4, HB4 [WARNING]
+Silicon                   (head ) count=  8  current=AK1     candidates=BL5, DS3 [WARNING]
+X Ray                     (body ) count=  8  current=BI1     candidates=DP4, HB4 [WARNING]
+Bone Daddy                (head ) count=  9  current=HB1     candidates=AK4, KY1, CB4 [WARNING]
+Bowling                   (head ) count=  9  current=CF2     candidates=AK4, KY1, CB4 [WARNING]
+OE Light                  (body ) count=  9  current=AA2     candidates=CF4, ED5 [WARNING]
+Peppermint                (body ) count=  9  current=CB3     candidates=CF4, ED5 [WARNING]
+Snow                      (head ) count=  9  current=GG1     candidates=AK4, KY1, CB4 [WARNING]
+The Ram                   (head ) count= 10  current=AE1     candidates=CX2, DC4 [WARNING]
+Whiskey                   (head ) count= 10  current=AK1     candidates=CX2, DC4 [WARNING]
+Arcade                    (head ) count= 11  current=HB2     candidates=AT3, BQ4 [WARNING]
+Mint                      (head ) count= 11  current=AE1     candidates=AT3, BQ4 [WARNING]
+Carving                   (body ) count= 15  current=FD2     candidates=AK3, FN5, IV3 [WARNING]
+Rug                       (body ) count= 15  current=BJ2     candidates=AK3, FN5, IV3 [WARNING]
+Trapped                   (body ) count= 15  current=AA3     candidates=AK3, FN5, IV3 [WARNING]
+Cotton Candy              (head ) count= 22  current=ED1     candidates=BF4, DM3, AT2 [WARNING]
+Mesh                      (head ) count= 22  current=BC3     candidates=BF4, DM3, AT2 [WARNING]
+Tron                      (head ) count= 22  current=CF3     candidates=BF4, DM3, AT2 [WARNING]
+Ace of Spades             (head ) count= 23  current=AE2     candidates=BW1, DH3 [WARNING]
+Mars Attacks              (head ) count= 23  current=HB2     candidates=BW1, DH3 [WARNING]
+Dualtone                  (head ) count= 24  current=BC4     candidates=BL4, EE3 [WARNING]
+Flaked                    (head ) count= 24  current=AA2     candidates=BL4, EE3 [WARNING]
+Stars                     (body ) count= 25  current=BJ2     candidates=FN3, HT3 [WARNING]
+White                     (body ) count= 25  current=BF1     candidates=FN3, HT3 [WARNING]
+Electrik                  (head ) count= 26  current=AA1     candidates=ER3, EV1 [WARNING]
+Hal                       (head ) count= 26  current=HB1     candidates=ER3, EV1 [WARNING]
+Doom                      (body ) count= 30  current=BJ1     candidates=DJ3, GQ3, HH2 [WARNING]
+Journey                   (body ) count= 30  current=AK1     candidates=DJ3, GQ3, HH2 [WARNING]
+Mercury                   (body ) count= 30  current=BF1     candidates=DJ3, GQ3, HH2 [WARNING]
+Stone                     (body ) count= 31  current=AK3     candidates=DP3, FN2 [WARNING]
+Tiles                     (body ) count= 31  current=BF1     candidates=DP3, FN2 [WARNING]
+Cheetah                   (body ) count= 34  current=BF1     candidates=GG3, KI3 [WARNING]
+Sunset                    (body ) count= 34  current=BI1     candidates=GG3, KI3 [WARNING]
+Rose                      (body ) count= 36  current=DH1     candidates=CW2, IV2 [WARNING]
+Tat                       (body ) count= 36  current=BF1     candidates=CW2, IV2 [WARNING]
+Baby                      (head ) count= 41  current=HH1     candidates=BQ2, HP2 [WARNING]
+Disco                     (head ) count= 41  current=HB1     candidates=BQ2, HP2 [WARNING]
+Eyes                      (body ) count= 41  current=BJ1     candidates=CF3, JX2 [WARNING]
+Happymeal                 (body ) count= 41  current=BJ2     candidates=CF3, JX2 [WARNING]
+Obsidian                  (body ) count= 44  current=BL1     candidates=AK2, BO2, KI2 [WARNING]
+Prickles                  (body ) count= 44  current=AA1     candidates=AK2, BO2, KI2 [WARNING]
+Prom                      (body ) count= 44  current=BJ1     candidates=AK2, BO2, KI2 [WARNING]
+Dragonfly                 (head ) count= 45  current=HB1     candidates=BQ1, DC3 [WARNING]
+Sahara                    (head ) count= 45  current=HH1     candidates=BQ1, DC3 [WARNING]
+Marble                    (body ) count= 46  current=BF1     candidates=ED3, FN1 [WARNING]
+Rattler                   (body ) count= 46  current=BF1     candidates=ED3, FN1 [WARNING]
+Forest                    (body ) count= 49  current=BJ2     candidates=BC3, FS2 [WARNING]
+Poker                     (body ) count= 49  current=BL1     candidates=BC3, FS2 [WARNING]
+Arctic                    (body ) count= 51  current=BF1     candidates=BC4, CF2, DJ2 [WARNING]
+Rust                      (body ) count= 51  current=BJ1     candidates=BC4, CF2, DJ2 [WARNING]
+Smurf                     (body ) count= 51  current=BJ2     candidates=BC4, CF2, DJ2 [WARNING]
+Aztec                     (body ) count= 54  current=AK1     candidates=DP2, ED2 [WARNING]
+Meat                      (body ) count= 54  current=FD1     candidates=DP2, ED2 [WARNING]
+1960's                    (head ) count= 55  current=AA2     candidates=AA3, BF3, BL3 [WARNING]
+Highlights                (body ) count= 55  current=EE2     candidates=GG2, JX1 [WARNING]
+Leeloo                    (body ) count= 55  current=BF1     candidates=GG2, JX1 [WARNING]
+Royal                     (head ) count= 55  current=BC1     candidates=AA3, BF3, BL3 [WARNING]
+Silent Film               (head ) count= 55  current=BC4     candidates=AA3, BF3, BL3 [WARNING]
+Butane                    (head ) count= 57  current=HB1     candidates=DC2, CB2 [WARNING]
+Coin                      (head ) count= 57  current=HB3     candidates=DC2, CB2 [WARNING]
+Mugged                    (body ) count= 60  current=BJ1     candidates=DJ1, IY1 [WARNING]
+Victoria                  (body ) count= 60  current=BF2     candidates=DJ1, IY1 [WARNING]
+Cubes                     (body ) count= 63  current=DM1     candidates=AR1, DP1 [WARNING]
+Sand                      (body ) count= 63  current=DM1     candidates=AR1, DP1 [WARNING]
+Bumblebee                 (head ) count= 65  current=BC4     candidates=AK3, BF2, DM2 [WARNING]
+Camo                      (head ) count= 65  current=CF1     candidates=AK3, BF2, DM2 [WARNING]
+Plastik                   (head ) count= 65  current=HB1     candidates=AK3, BF2, DM2 [WARNING]
+Carbon                    (body ) count= 68  current=BJ1     candidates=CL1, FS1 [WARNING]
+Crystal Clear             (body ) count= 68  current=BJ1     candidates=CL1, FS1 [WARNING]
+Big Brother               (head ) count= 73  current=HB2     candidates=CB1, DC1 [WARNING]
+Snapshot                  (head ) count= 73  current=AE1     candidates=CB1, DC1 [WARNING]
+Cadillac                  (head ) count= 74  current=BC2     candidates=AK2, JG2 [WARNING]
+Corroded                  (head ) count= 74  current=AA1     candidates=AK2, JG2 [WARNING]
+Iron                      (body ) count= 99  current=BJ1     candidates=AK1, KU1 [WARNING]
+James                     (body ) count= 99  current=BF1     candidates=AK1, KU1 [WARNING]
+
+================================================================================
+NO MATCHES FOUND (Count not found in frequency data)
+================================================================================
+
+================================================================================
+SPECIAL NUMERIC VARIATIONS (Keep unchanged)
+================================================================================
+Total special variations: 30
+(These use numeric sourceKeys like 000H, 111B, 999T and should not be changed)
+
+================================================================================
+SUMMARY
+================================================================================
+High confidence changes to apply: 82
+Ambiguous cases requiring review: 141
+Unmatched variations: 0
+Special variations (no action): 30
+
+Detailed analysis saved to: source_key_analysis.json

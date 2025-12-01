@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import HolographicButton from '@/components/ui/SciFiButtons/HolographicButton';
+import HolographicButton from '@/components/ui/IndustrialButtons/HolographicButton';
 
 export default function AirdropButtonTestPage() {
   return (

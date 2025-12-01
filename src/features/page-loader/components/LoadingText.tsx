@@ -27,14 +27,17 @@ export function LoadingText({ customMessages, currentStage }: LoadingTextProps) 
   }, [messages.length]);
 
   const displayText = currentStage || messages[messageIndex];
+  const isReady = displayText === 'READY';
 
   return (
     <div className="relative h-8 flex items-center justify-center">
       <div
-        className="text-yellow-400 text-sm uppercase tracking-widest font-mono transition-opacity duration-300"
+        className={`${isReady ? 'text-green-400' : 'text-yellow-400'} text-sm uppercase tracking-widest font-mono transition-opacity duration-300`}
         style={{
           opacity: isVisible ? 1 : 0,
-          textShadow: '0 0 10px rgba(250, 182, 23, 0.5)',
+          textShadow: isReady
+            ? '0 0 20px rgba(74, 222, 128, 0.8), 0 0 40px rgba(74, 222, 128, 0.4)'
+            : '0 0 10px rgba(250, 182, 23, 0.5)',
         }}
       >
         {displayText}

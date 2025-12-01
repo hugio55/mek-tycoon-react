@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import { Id } from "../../../convex/_generated/dataModel";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import Link from "next/link";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import UsernameModal from "@/components/UsernameModal";

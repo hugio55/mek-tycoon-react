@@ -6,11 +6,11 @@ export const FEATURE_FLAGS = {
 };
 
 export const TIMING = {
-  MIN_DISPLAY_TIME: 300,
+  MIN_DISPLAY_TIME: 800,
   TOTAL_TIMEOUT: 10000,
   QUERY_TIMEOUT: 8000,
   PROGRESS_UPDATE_INTERVAL: 100,
-  FADE_DURATION: 2000,
+  FADE_DURATION: 500,
 };
 
 export const PROGRESS_WEIGHTS = {
@@ -42,4 +42,9 @@ export const COMMON_MILESTONES = [
   { at: 100, label: 'READY' },
 ];
 
-export const BYPASS_STORAGE_KEY = 'disablePageLoader';
+// Legacy key - replaced with environment-specific keys
+export const BYPASS_STORAGE_KEY = 'disablePageLoader'; // DEPRECATED - Use environment-specific keys instead
+
+// Environment-specific storage keys
+export const BYPASS_STORAGE_KEY_LOCALHOST = 'disablePageLoaderLocalhost';
+export const BYPASS_STORAGE_KEY_PRODUCTION = 'disablePageLoaderProduction';

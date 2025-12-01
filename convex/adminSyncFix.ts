@@ -15,12 +15,12 @@ export const adminForceResync = action({
   args: {
     stakeAddress: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{ success: boolean; message: string; mekCount?: number; error?: string }> => {
     devLog.log(`[Admin] Force re-syncing wallet: ${args.stakeAddress}`);
 
     try {
       // STEP 1: Fetch from blockchain (no auth required)
-      const nftResult = await ctx.runAction(api.blockfrostNftFetcher.fetchNFTsByStakeAddress, {
+      const nftResult: any = await ctx.runAction(api.blockfrostNftFetcher.fetchNFTsByStakeAddress, {
         stakeAddress: args.stakeAddress,
         useCache: false,
       });
@@ -34,7 +34,7 @@ export const adminForceResync = action({
       // STEP 2: Enrich Mek data
       const { getMekDataByNumber, getMekImageUrl } = await import("../src/lib/mekNumberToVariation");
 
-      const enrichedMeks = [];
+      const enrichedMeks: any[] = [];
       for (const mek of nftResult.meks) {
         const mekData = getMekDataByNumber(mek.mekNumber);
 
@@ -71,13 +71,13 @@ export const adminForceResync = action({
       }
 
       // STEP 3: Fetch level boosts
-      const mekLevels = await ctx.runQuery(api.mekLeveling.getMekLevels, {
+      const mekLevels: Doc<"mekLevels">[] = await ctx.runQuery(api.mekLeveling.getMekLevels, {
         walletAddress: args.stakeAddress,
       });
 
       const levelMap = new Map(mekLevels.map((level: Doc<"mekLevels">) => [level.assetId, level]));
 
-      const meksWithLevelBoosts = enrichedMeks.map(m => {
+      const meksWithLevelBoosts: any[] = enrichedMeks.map(m => {
         const levelData = levelMap.get(m.assetId);
         const currentLevel = levelData?.currentLevel || 1;
         const boostPercent = levelData?.currentBoostPercent || 0;

@@ -1,29 +1,81 @@
 'use client';
 
-import { useState } from 'react';
-import { useQuery, useMutation } from 'convex/react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '@/convex/_generated/api';
+import { useDatabaseContext, DatabaseProvider } from '@/contexts/DatabaseContext';
 
-export default function CommemorativeToken1Admin() {
+function CommemorativeToken1AdminContent() {
+  const {
+    selectedDatabase,
+    setSelectedDatabase,
+    client,
+    canMutate,
+    productionMutationsEnabled,
+    setProductionMutationsEnabled
+  } = useDatabaseContext();
+
   const [selectedSnapshotId, setSelectedSnapshotId] = useState<string>('');
   const [showDebug, setShowDebug] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  // Query: Get current config (shows which snapshot is active)
-  const config = useQuery(api.nftEligibility.getConfig);
+  // Manual state management instead of useQuery
+  const [config, setConfig] = useState<any>(null);
+  const [allSnapshots, setAllSnapshots] = useState<any[]>([]);
+  const [debugState, setDebugState] = useState<any>(null);
 
-  // Query: Get all available snapshots from Whitelist Manager
-  const allSnapshots = useQuery(api.whitelists.getAllWhitelistSnapshots);
+  // Production mutation confirmation
+  const [confirmationText, setConfirmationText] = useState('');
+  const [showConfirmationPrompt, setShowConfirmationPrompt] = useState(false);
 
-  // Debug query to check raw database state
-  const debugState = useQuery(api.nftEligibility.debugEligibilityState);
+  // Mount effect for portal rendering
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  // Mutations
-  const setActiveSnapshot = useMutation(api.nftEligibility.setActiveSnapshot);
-  const clearActiveSnapshot = useMutation(api.nftEligibility.clearActiveSnapshot);
+  // Fetch data from selected database
+  useEffect(() => {
+    if (!client) return;
+
+    const fetchData = async () => {
+      try {
+        const [configData, snapshotsData, debugData] = await Promise.all([
+          client.query(api.nftEligibility.getConfig),
+          client.query(api.whitelists.getAllWhitelistSnapshots),
+          client.query(api.nftEligibility.debugEligibilityState)
+        ]);
+        setConfig(configData);
+        setAllSnapshots(snapshotsData || []);
+        setDebugState(debugData);
+      } catch (error) {
+        console.error('[Commemorative Admin] Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 3000);
+    return () => clearInterval(interval);
+  }, [client]);
+
+  // Mutation helpers
+  const setActiveSnapshotMutation = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.nftEligibility.setActiveSnapshot, args);
+  };
+
+  const clearActiveSnapshotMutation = async () => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.nftEligibility.clearActiveSnapshot);
+  };
 
   const handleActivateSnapshot = async () => {
     if (!selectedSnapshotId) {
       alert('Please select a snapshot first');
+      return;
+    }
+
+    if (!canMutate()) {
+      alert('Mutations are disabled. Enable production mutations first.');
       return;
     }
 
@@ -35,7 +87,7 @@ export default function CommemorativeToken1Admin() {
     if (!confirmed) return;
 
     try {
-      const result = await setActiveSnapshot({
+      const result = await setActiveSnapshotMutation({
         snapshotId: selectedSnapshotId as any,
       });
       alert(`✅ Snapshot activated!\n\n${result.snapshotName} - ${result.eligibleWallets} wallets are now eligible`);
@@ -47,6 +99,11 @@ export default function CommemorativeToken1Admin() {
   };
 
   const handleDeactivateSnapshot = async () => {
+    if (!canMutate()) {
+      alert('Mutations are disabled. Enable production mutations first.');
+      return;
+    }
+
     const confirmed = confirm(
       '⚠️ Deactivate current snapshot?\n\n' +
       'This will immediately remove the "Claim NFT" button from ALL users\' homepages.\n\n' +
@@ -56,7 +113,7 @@ export default function CommemorativeToken1Admin() {
     if (!confirmed) return;
 
     try {
-      const result = await clearActiveSnapshot();
+      const result = await clearActiveSnapshotMutation();
       if (result.success) {
         alert(`✅ Snapshot deactivated!\n\nNo wallets are now eligible to see the claim button.`);
       }
@@ -66,20 +123,122 @@ export default function CommemorativeToken1Admin() {
     }
   };
 
+  const handleEnableMutations = () => {
+    setShowConfirmationPrompt(true);
+  };
+
+  const handleConfirmMutations = () => {
+    if (confirmationText === 'ENABLE MUTATIONS') {
+      setProductionMutationsEnabled(true);
+      setShowConfirmationPrompt(false);
+      setConfirmationText('');
+    } else {
+      alert('Please type exactly: ENABLE MUTATIONS');
+    }
+  };
+
   // Find the selected snapshot details for preview
   const selectedSnapshot = allSnapshots?.find((s: any) => s._id === selectedSnapshotId);
 
   return (
     <div className="p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-yellow-400 mb-2" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-          NFT Claim Eligibility
-        </h2>
-        <p className="text-gray-400 text-sm">
-          Control who sees the "Claim NFT" button on the homepage by selecting a snapshot
-        </p>
+      {/* Header with Database Selector */}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-yellow-400 mb-2" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+            NFT Claim Eligibility
+          </h2>
+          <p className="text-gray-400 text-sm">
+            Control who sees the "Claim NFT" button on the homepage by selecting a snapshot
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <select
+            value={selectedDatabase}
+            onChange={(e) => setSelectedDatabase(e.target.value as 'trout' | 'sturgeon')}
+            className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-yellow-500"
+          >
+            <option value="trout">🐟 Trout (Dev)</option>
+            <option value="sturgeon">🐟 Sturgeon (Production)</option>
+          </select>
+        </div>
       </div>
+
+      {/* Production Read-Only Warning */}
+      {selectedDatabase === 'sturgeon' && !productionMutationsEnabled && (
+        <div className="mb-4 p-4 bg-red-900/30 border-2 border-red-500 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🔒</span>
+              <div>
+                <div className="text-red-400 font-bold text-lg">READ ONLY MODE - Production Database</div>
+                <div className="text-red-300 text-sm">Viewing Sturgeon (production). Mutations are disabled for safety.</div>
+              </div>
+            </div>
+            <button
+              onClick={handleEnableMutations}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded transition-colors"
+            >
+              Enable Mutations
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Production Mutations Enabled Warning */}
+      {selectedDatabase === 'sturgeon' && productionMutationsEnabled && (
+        <div className="mb-4 p-4 bg-red-600/50 border-2 border-red-500 rounded-lg animate-pulse">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div>
+              <div className="text-white font-bold text-lg">PRODUCTION MUTATIONS ENABLED</div>
+              <div className="text-orange-200 text-sm">Changes will affect the LIVE database and REAL users!</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Production Mutation Confirmation Modal */}
+      {mounted && showConfirmationPrompt && createPortal(
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999]">
+          <div className="bg-gray-900 border-2 border-red-500 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-red-400 mb-4">⚠️ Enable Production Mutations</h3>
+            <p className="text-gray-300 mb-4">
+              You are about to enable mutations on the PRODUCTION database (Sturgeon).
+              This will allow you to activate/deactivate snapshots that affect REAL users on the live site.
+            </p>
+            <p className="text-yellow-400 text-sm mb-4">
+              Type <strong>ENABLE MUTATIONS</strong> to confirm:
+            </p>
+            <input
+              type="text"
+              value={confirmationText}
+              onChange={(e) => setConfirmationText(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white mb-4"
+              placeholder="Type: ENABLE MUTATIONS"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleConfirmMutations}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => {
+                  setShowConfirmationPrompt(false);
+                  setConfirmationText('');
+                }}
+                className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Current Active Snapshot Status */}
       <div className="mb-6 p-4 bg-black/40 border-2 border-yellow-500/50 rounded-lg">
@@ -223,5 +382,14 @@ export default function CommemorativeToken1Admin() {
         )}
       </div>
     </div>
+  );
+}
+
+// Wrapper component that provides DatabaseContext
+export default function CommemorativeToken1Admin() {
+  return (
+    <DatabaseProvider>
+      <CommemorativeToken1AdminContent />
+    </DatabaseProvider>
   );
 }

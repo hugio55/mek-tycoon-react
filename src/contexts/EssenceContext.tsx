@@ -50,17 +50,6 @@ export function EssenceProvider({ children, walletAddress }: EssenceProviderProp
     walletAddress ? { walletAddress } : "skip"
   );
 
-  console.log('[EssenceContext] Provider rendering:', {
-    walletAddress,
-    hasData: !!playerEssenceState,
-    balanceCount: playerEssenceState?.balances?.length || 0,
-    lastCalculationTime: playerEssenceState?.lastCalculationTime
-      ? new Date(playerEssenceState.lastCalculationTime).toISOString()
-      : 'N/A',
-    essenceRates: playerEssenceState?.essenceRates || {},
-    sampleRates: playerEssenceState?.essenceRates ? Object.entries(playerEssenceState.essenceRates).slice(0, 5) : []
-  });
-
   const value: EssenceContextValue = {
     playerEssenceState,
     isLoading: playerEssenceState === undefined && walletAddress !== null

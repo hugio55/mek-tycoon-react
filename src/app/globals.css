@@ -18,6 +18,103 @@
     display: none;  /* Chrome, Safari, Opera */
   }
 
+  /* Landing page scrollbar */
+  .landing-scrollbar::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  .landing-scrollbar::-webkit-scrollbar-track {
+    background: #000000;
+  }
+
+  .landing-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 6px;
+  }
+
+  .landing-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.8);
+  }
+
+  .landing-scrollbar {
+    scrollbar-color: rgba(255, 255, 255, 0.5) #000000;
+  }
+
+  /* Overlay scrollbar - floats over content (no layout space) */
+  .scrollbar-overlay {
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(250, 182, 23, 0.5) transparent;
+  }
+
+  .scrollbar-overlay::-webkit-scrollbar {
+    width: 12px;
+    background: transparent;
+  }
+
+  .scrollbar-overlay::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-overlay::-webkit-scrollbar-thumb {
+    background: rgba(250, 182, 23, 0.5);
+    border-radius: 6px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .scrollbar-overlay::-webkit-scrollbar-thumb:hover {
+    background: rgba(250, 182, 23, 0.7);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  /* Alternative: Thin scrollbar that takes minimal space */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(250, 182, 23, 0.5) rgba(0, 0, 0, 0.3);
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(250, 182, 23, 0.5);
+    border-radius: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(250, 182, 23, 0.7);
+  }
+
+  /* Touch interactions - optimize for mobile */
+  .touch-pan-x {
+    touch-action: pan-x;
+  }
+
+  .touch-pan-y {
+    touch-action: pan-y;
+  }
+
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  .touch-auto {
+    touch-action: auto;
+  }
+
+  /* Minimum touch target size for accessibility (WCAG 2.1 Level AAA) */
+  .min-touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
   /* Target any dashed yellow border elements - add glow */
   [class*="border-dashed"][class*="border-yellow"],
   [class*="border-yellow"][class*="border-dashed"],
@@ -95,15 +192,133 @@
     text-shadow: 0 0 10px rgba(94, 234, 212, 0.9), 0 0 20px rgba(94, 234, 212, 0.6);
     animation: teal-glow 2s ease-in-out infinite;
   }
+
+  /* Power Switch Toggle animations */
+  @keyframes power-line {
+    0% { transform: translateY(0); }
+    10% { transform: translateY(10px); }
+    40% { transform: translateY(-25px); }
+    60% { transform: translateY(-25px); }
+    85% { transform: translateY(10px); }
+    100% { transform: translateY(0px); }
+  }
+  .animate-power-line {
+    animation: power-line 0.8s ease-in forwards;
+  }
+
+  @keyframes power-click {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+  }
+  .animate-power-click {
+    animation: power-click 0.3s ease forwards;
+  }
+
+  /* Continuous pulsating glow animation - mobile optimized */
+  @keyframes power-pulse {
+    0%, 100% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+  .animate-power-pulse {
+    animation: power-pulse 2s ease-in-out infinite;
+    will-change: opacity, transform;
+  }
+
+  /* Respect reduced motion preference for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-power-pulse {
+      animation: none;
+      opacity: 0.6;
+      transform: scale(1);
+    }
+  }
+
+  /* Quick flashing glow for power button */
+  @keyframes power-button-flash-glow {
+    0%, 100% {
+      filter: drop-shadow(0 0 8px rgba(250, 182, 23, 0.6)) drop-shadow(0 0 16px rgba(250, 182, 23, 0.4));
+    }
+    50% {
+      filter: drop-shadow(0 0 16px rgba(250, 182, 23, 1)) drop-shadow(0 0 32px rgba(250, 182, 23, 0.8));
+    }
+  }
+  .power-button-pulse {
+    animation: power-button-flash-glow 0.8s ease-in-out infinite;
+    will-change: filter;
+  }
+
+  /* Faster attention-grabbing flash glow for power button */
+  @keyframes power-button-rapid-flash {
+    0%, 100% {
+      filter: drop-shadow(0 0 10px rgba(250, 182, 23, 0.7)) drop-shadow(0 0 20px rgba(250, 182, 23, 0.5));
+    }
+    50% {
+      filter: drop-shadow(0 0 20px rgba(250, 182, 23, 1)) drop-shadow(0 0 40px rgba(250, 182, 23, 0.9));
+    }
+  }
+  .power-button-flash-glow {
+    animation: power-button-rapid-flash 0.6s ease-in-out infinite;
+    will-change: filter;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .power-button-pulse {
+      animation: none;
+      filter: drop-shadow(0 0 8px rgba(250, 182, 23, 0.6));
+    }
+    .power-button-flash-glow {
+      animation: none;
+      filter: drop-shadow(0 0 10px rgba(250, 182, 23, 0.7));
+    }
+  }
 }
 
-/* Global overflow prevention */
+/* Global overflow prevention - mobile-friendly */
 html, body {
   overflow-x: hidden;
-  max-width: 100%;
+  overflow-y: scroll !important; /* Force scrollbar to always appear */
   margin: 0;
   padding: 0;
   width: 100%;
+  /* Ensure scrolling works on mobile */
+  min-height: 100%;
+  /* Smooth momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Dark scrollbar to prevent bleed-through on landing page backdrop-blur */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  background: #000000;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* Firefox dark scrollbar */
+html,
+body {
+  scrollbar-color: rgba(255, 255, 255, 0.5) #000000;
 }
 
 /* Prevent scrollbars when modal is open */
@@ -115,6 +330,17 @@ body.modal-open {
 
 body {
   position: relative;
+}
+
+/* Mobile viewport fixes */
+@supports (-webkit-touch-callout: none) {
+  /* iOS-specific fixes */
+  html {
+    height: -webkit-fill-available;
+  }
+  body {
+    min-height: -webkit-fill-available;
+  }
 }
 
 /* Shimmer animation for holographic effects */
@@ -1092,6 +1318,19 @@ body {
   }
 }
 
+/* Zoom-in fade animation with linear start and smooth ease-out end */
+@keyframes zoomInFadeSmooth {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+    animation-timing-function: cubic-bezier(0.25, 0, 0.5, 1); /* Linear start, ease-out end */
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* Multicolor spinning glow effect */
 @keyframes spinGlow {
   0% {
@@ -2007,6 +2246,18 @@ body {
   }
   50% {
     opacity: 0.5;
+  }
+}
+
+/* Phase Carousel slide-up entrance animation */
+@keyframes slideUpEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

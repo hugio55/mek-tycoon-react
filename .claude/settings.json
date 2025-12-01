@@ -38,11 +38,6 @@
       "description": "Fixes React, TypeScript, and JSX syntax errors",
       "enabled": true
     },
-    "scifi-ui-designer": {
-      "name": "Sci-Fi UI Designer",
-      "description": "Designs interfaces with industrial sci-fi aesthetic",
-      "enabled": true
-    },
     "code-modularizer": {
       "name": "Code Modularizer",
       "description": "Refactors monolithic code into modular architecture",

@@ -59,6 +59,7 @@ export const populateInventoryManually = mutation({
         nftUid: v.string(),
         nftNumber: v.number(),
         name: v.string(),
+        paymentUrl: v.optional(v.string()), // Optional: use from CSV if provided
       })
     ),
   },
@@ -87,7 +88,18 @@ export const populateInventoryManually = mutation({
 
     // Insert all NFTs
     for (const nft of args.nfts) {
-      const paymentUrl = `${basePaymentUrl}/?p=${projectId}&n=${nft.nftUid}`;
+      // Use payment URL from CSV if provided, otherwise build it
+      let paymentUrl: string;
+      if (nft.paymentUrl) {
+        // PREFERRED: Use payment URL directly from CSV (already correct format)
+        paymentUrl = nft.paymentUrl;
+        console.log('[INVENTORY SETUP] Using payment URL from CSV for', nft.name);
+      } else {
+        // FALLBACK: Build payment URL (strip dashes from UUID - NMKR expects dashless format)
+        const dashlessUid = nft.nftUid.replace(/-/g, '');
+        paymentUrl = `${basePaymentUrl}/?p=${projectId}&n=${dashlessUid}`;
+        console.log('[INVENTORY SETUP] Built payment URL for', nft.name);
+      }
 
       await ctx.db.insert("commemorativeNFTInventory", {
         nftUid: nft.nftUid,
@@ -171,11 +183,32 @@ export const getInventoryStatus = mutation({
 // Get all inventory (query for frontend)
 export const getAllInventory = query({
   handler: async (ctx) => {
+    console.log('[📊GETALL] === getAllInventory query called ===');
+
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
       .collect();
 
-    return inventory.map((item) => ({
+    console.log('[📊GETALL] Total inventory items from DB:', inventory.length);
+
+    // Log status breakdown from raw database
+    const statusCounts = {
+      available: inventory.filter(item => item.status === "available").length,
+      reserved: inventory.filter(item => item.status === "reserved").length,
+      sold: inventory.filter(item => item.status === "sold").length,
+    };
+    console.log('[📊GETALL] Status breakdown (raw DB):', statusCounts);
+
+    // Log first few items to see actual status values
+    const sample = inventory.slice(0, 3);
+    console.log('[📊GETALL] Sample items:', sample.map(nft => ({
+      name: nft.name,
+      nftUid: nft.nftUid,
+      status: nft.status,
+      _creationTime: nft._creationTime,
+    })));
+
+    const mapped = inventory.map((item) => ({
       _id: item._id,
       nftUid: item.nftUid,
       nftNumber: item.nftNumber,
@@ -183,6 +216,11 @@ export const getAllInventory = query({
       status: item.status,
       isAvailable: item.status === "available",
     }));
+
+    console.log('[📊GETALL] Returning', mapped.length, 'mapped items');
+    console.log('[📊GETALL] === Query execution complete ===');
+
+    return mapped;
   },
 });
 
@@ -195,6 +233,121 @@ export const getAvailableCount = query({
       .collect();
 
     return inventory.length;
+  },
+});
+
+// FIX: Repair malformed payment URLs in existing inventory
+// This fixes the bug where projectId was empty in payment URLs
+export const repairPaymentUrls = mutation({
+  args: {
+    campaignId: v.optional(v.id("commemorativeCampaigns")),
+  },
+  handler: async (ctx, args) => {
+    console.log('[🔧FIX] Starting payment URL repair...');
+
+    // Get all inventory items (optionally filter by campaign)
+    let inventoryQuery = ctx.db.query("commemorativeNFTInventory");
+
+    if (args.campaignId) {
+      inventoryQuery = inventoryQuery.withIndex("by_campaign", (q) =>
+        q.eq("campaignId", args.campaignId)
+      );
+    }
+
+    const inventory = await inventoryQuery.collect();
+
+    console.log('[🔧FIX] Found', inventory.length, 'inventory items to check');
+
+    const NMKR_NETWORK = process.env.NEXT_PUBLIC_NMKR_NETWORK || "mainnet";
+    const basePaymentUrl = NMKR_NETWORK === "mainnet"
+      ? "https://pay.nmkr.io"
+      : "https://pay.preprod.nmkr.io";
+
+    // Get project ID from environment variable as fallback
+    const fallbackProjectId = process.env.NMKR_PROJECT_ID || "";
+
+    let repairedCount = 0;
+    let skippedCount = 0;
+    let errorCount = 0;
+
+    for (const item of inventory) {
+      try {
+        // CRITICAL: Extract project ID from existing URL to compare
+        const urlMatch = item.paymentUrl.match(/[?&]p=([a-f0-9]+)/);
+        const existingProjectId = urlMatch ? urlMatch[1] : '';
+
+        // CRITICAL FIX: Always use fallback (env var) as source of truth
+        // Don't trust database projectId field - it may be corrupted
+        const correctProjectId = fallbackProjectId;
+        const correctProjectIdDashless = correctProjectId.replace(/-/g, '');
+
+        // Check if URL is malformed:
+        // 1. Missing project ID
+        // 2. Has dashes in UID
+        // 3. Project ID doesn't match expected
+        const isMalformed = item.paymentUrl.includes('/?p=&n=') ||
+                           item.paymentUrl.includes('?p=&n=') ||
+                           (item.paymentUrl.includes('&n=') && /&n=[a-f0-9-]{36}/.test(item.paymentUrl)) ||
+                           (existingProjectId !== correctProjectIdDashless);
+
+        if (!isMalformed) {
+          console.log('[🔧FIX] Skipping (already correct):', item.name);
+          skippedCount++;
+          continue;
+        }
+
+        // Log why it's being fixed
+        if (existingProjectId !== correctProjectIdDashless) {
+          console.log('[🔧FIX] ⚠️ WRONG PROJECT ID detected in URL for:', item.name);
+          console.log('[🔧FIX]    Existing:', existingProjectId);
+          console.log('[🔧FIX]    Expected:', correctProjectIdDashless);
+        }
+
+        console.log('[🔧FIX] 🔍 Attempting to fix:', item.name);
+        console.log('[🔧FIX]    Current projectId in record:', item.projectId || '(empty)');
+        console.log('[🔧FIX]    Correct projectId from env:', correctProjectId);
+
+        // Use the correctProjectId we already determined from environment variable
+        const projectId = correctProjectId;
+
+        // Construct correct payment URL
+        // CRITICAL FIX: Strip dashes from UUID - NMKR expects dashless format
+        const dashlessUid = item.nftUid.replace(/-/g, '');
+        const dashlessProjectId = projectId.replace(/-/g, '');
+        const correctPaymentUrl = `${basePaymentUrl}/?p=${dashlessProjectId}&n=${dashlessUid}`;
+
+        console.log('[🔧FIX]    Building correct URL with project ID:', projectId);
+
+        // Update the item
+        await ctx.db.patch(item._id, {
+          paymentUrl: correctPaymentUrl,
+          projectId: projectId, // Also update projectId if it was missing
+        });
+
+        console.log('[🔧FIX] ✅ Repaired:', item.name);
+        console.log('[🔧FIX]    Old URL:', item.paymentUrl);
+        console.log('[🔧FIX]    New URL:', correctPaymentUrl);
+        repairedCount++;
+      } catch (error) {
+        console.error('[🔧FIX] ❌ Error fixing', item.name, ':', error);
+        console.error('[🔧FIX]    Error details:', error instanceof Error ? error.message : String(error));
+        errorCount++;
+      }
+    }
+
+    console.log('[🔧FIX] === Repair Complete ===');
+    console.log('[🔧FIX] Total items:', inventory.length);
+    console.log('[🔧FIX] Repaired:', repairedCount);
+    console.log('[🔧FIX] Already correct:', skippedCount);
+    console.log('[🔧FIX] Errors:', errorCount);
+
+    return {
+      success: true,
+      totalItems: inventory.length,
+      repairedCount,
+      skippedCount,
+      errorCount,
+    };
   },
 });
 
@@ -227,6 +380,14 @@ export const initializeFromCSV = action({
       const displayname = values[headers.indexOf('displayname')]?.trim() || '';
       const state = values[headers.indexOf('state')]?.trim()?.toLowerCase() || '';
 
+      // CRITICAL FIX: Extract payment URL from CSV if available
+      // Check multiple possible column names for payment URL
+      const paymentUrlFromCSV =
+        values[headers.indexOf('paymenturl')]?.trim() ||
+        values[headers.indexOf('iagonlink')]?.trim() ||
+        values[headers.indexOf('assetlink')]?.trim() ||
+        '';
+
       // Use tokenname first, fall back to displayname
       const name = tokenname || displayname;
 
@@ -250,12 +411,19 @@ export const initializeFromCSV = action({
       }
 
       if (nftNumber > 0) {
-        nfts.push({
+        const nftData: any = {
           nftUid: uid,
           name: name,
           nftNumber: nftNumber,
-        });
-        console.log('[CSV INIT] Parsed NFT:', { uid, name, nftNumber, state });
+        };
+
+        // Include payment URL if found in CSV (preferred!)
+        if (paymentUrlFromCSV) {
+          nftData.paymentUrl = paymentUrlFromCSV;
+        }
+
+        nfts.push(nftData);
+        console.log('[CSV INIT] Parsed NFT:', { uid, name, nftNumber, state, hasPaymentUrl: !!paymentUrlFromCSV });
       }
     }
 
@@ -429,6 +597,34 @@ export const markInventoryAsSoldByName = mutation({
       nftUid: inventory.nftUid,
       alreadySold: false,
     };
+  },
+});
+
+// DEBUG: Query to inspect Lab Rat NFT records
+export const debugLabRatRecords = query({
+  handler: async (ctx) => {
+    const labRats = await ctx.db
+      .query("commemorativeNFTInventory")
+      .filter((q) => q.or(
+        q.eq(q.field("name"), "Lab Rat #1"),
+        q.eq(q.field("name"), "Lab Rat #2"),
+        q.eq(q.field("name"), "Lab Rat #3")
+      ))
+      .collect();
+
+    const results = labRats.map((nft) => ({
+      name: nft.name,
+      nftNumber: nft.nftNumber,
+      nftUid: nft.nftUid,
+      projectId: nft.projectId || "(empty/undefined)",
+      paymentUrl: nft.paymentUrl,
+      status: nft.status,
+      createdAt: nft.createdAt,
+      _id: nft._id,
+    }));
+
+    console.log('[🔍DEBUG] Lab Rat Records:', results);
+    return results;
   },
 });
 

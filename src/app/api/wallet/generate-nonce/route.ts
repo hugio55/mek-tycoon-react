@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { api } from '@/convex/_generated/api';
 import { ConvexHttpClient } from 'convex/browser';
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+// Lazy initialization to avoid build-time errors
+let convex: ConvexHttpClient | null = null;
+function getConvex() {
+  if (!convex) {
+    convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+  }
+  return convex;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,7 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate nonce using Convex
-    const result = await convex.mutation(api.walletAuthentication.generateNonce, {
+    const result = await getConvex().mutation(api.walletAuthentication.generateNonce, {
       stakeAddress,
       walletName
     });

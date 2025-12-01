@@ -2,9 +2,10 @@
 
 import { useState, lazy, Suspense, useMemo, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useQuery, useMutation, useAction } from 'convex/react';
+import { useQuery, ConvexProvider } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { restoreWalletSession } from '@/lib/walletSessionManager';
+import { sturgeonClient } from '@/lib/sturgeonClient';
 import StorageMonitoringDashboard from '@/components/StorageMonitoringDashboard';
 import SystemMonitoringDashboard from '@/components/SystemMonitoringDashboard';
 import ProductionLaunchCleaner from '@/components/ProductionLaunchCleaner';
@@ -15,15 +16,30 @@ import SnapshotHealthDashboard from '@/components/SnapshotHealthDashboard';
 import DuplicateWalletDetector from '@/components/DuplicateWalletDetector';
 import EssenceBalancesViewer from '@/components/EssenceBalancesViewer';
 import BuffManagement from '@/components/BuffManagement';
+import BetaSignupsViewer from '@/components/BetaSignupsViewer';
+import VariationSpreadViewer from '@/components/VariationSpreadViewer';
+import ResetTimelineChecker from '@/components/ResetTimelineChecker';
 import { EssenceProvider } from '@/contexts/EssenceContext';
+import { DatabaseProvider, useDatabaseContext } from '@/contexts/DatabaseContext';
 
 // Lazy load heavy components
 const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryViewer'));
 
-type SubMenu = 'wallet-list' | 'storage-monitoring' | 'snapshot-history' | 'snapshot-health' | 'duplicate-detection' | 'production-launch-cleaner' | 'gold-repair';
+type SubMenu = 'wallet-list' | 'storage-monitoring' | 'snapshot-history' | 'snapshot-health' | 'duplicate-detection' | 'production-launch-cleaner' | 'gold-repair' | 'variation-spread' | 'beta-signups' | 'reset-timeline';
 type SnapshotHealthTab = 'health' | 'logging';
 
-export default function WalletManagementAdmin() {
+function WalletManagementAdminContent() {
+  // Get database context
+  const {
+    selectedDatabase,
+    setSelectedDatabase,
+    client,
+    canMutate,
+    productionMutationsEnabled,
+    setProductionMutationsEnabled
+  } = useDatabaseContext();
+
+  const getClient = () => client;
   // Restore wallet session for authentication
   const [stakeAddress, setStakeAddress] = useState<string | null>(null);
 
@@ -38,36 +54,186 @@ export default function WalletManagementAdmin() {
     loadSession();
   }, []);
 
-  // Separate useEffect for mounted state (required for portal rendering)
+  // Mount effect for portal rendering
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  //Database selection comes from context now
+  const [walletsData, setWalletsData] = useState<any>(null);
+  const [isLoadingWallets, setIsLoadingWallets] = useState(false);
+
+  // Production mutation confirmation
+  const [confirmationText, setConfirmationText] = useState('');
+  const [showConfirmationPrompt, setShowConfirmationPrompt] = useState(false);
+
   // BANDWIDTH OPTIMIZATION: Only load wallets when user clicks "Load Wallets" button
   const [walletsLoaded, setWalletsLoaded] = useState(false);
   const [showOnlyWrenCo, setShowOnlyWrenCo] = useState(false);
-  const wallets = useQuery(
-    api.adminVerificationReset.getAllWallets,
-    walletsLoaded ? undefined : "skip"
+
+  // Load wallets from selected database
+  useEffect(() => {
+    if (!walletsLoaded) {
+      setWalletsData(null);
+      return;
+    }
+
+    // Auto-switch to Trout if Sturgeon selected but not configured
+    if (selectedDatabase === 'sturgeon' && !sturgeonClient) {
+      console.warn('[Player Management] Sturgeon not configured, switching to Trout');
+      setSelectedDatabase('trout');
+      return;
+    }
+
+    setIsLoadingWallets(true);
+    const client = selectedDatabase === 'sturgeon' ? sturgeonClient : window.convex;
+
+    if (!client) {
+      console.error('[Player Management] Convex client not initialized');
+      setIsLoadingWallets(false);
+      return;
+    }
+
+    client.query(api.adminVerificationReset.getAllWallets)
+      .then((data: any) => {
+        setWalletsData(data);
+        setIsLoadingWallets(false);
+      })
+      .catch((error: Error) => {
+        console.error(`[Player Management] Error loading from ${selectedDatabase}:`, error);
+        setIsLoadingWallets(false);
+      });
+  }, [walletsLoaded, selectedDatabase]);
+
+  const wallets = walletsData;
+
+  // Batch check claim status for all wallets
+  const stakeAddresses = wallets?.map((w: any) => w.walletAddress) || [];
+  const claimStatusData = useQuery(
+    api.nftEligibility.batchCheckClaimStatus,
+    walletsLoaded && stakeAddresses.length > 0 ? { stakeAddresses } : "skip"
   );
 
-  const resetVerification = useMutation(api.adminVerificationReset.resetVerificationStatus);
-  const deleteWallet = useMutation(api.adminVerificationReset.deleteWallet);
-  const mergeDuplicates = useMutation(api.adminVerificationReset.mergeDuplicateWallets);
-  const autoMergeAll = useMutation(api.adminVerificationReset.autoMergeDuplicates);
-  const manualMergeBySuffix = useMutation(api.manualWalletMerge.manualMergeWalletsBySuffix);
-  const triggerSnapshot = useAction(api.goldMiningSnapshot.triggerSnapshot);
-  const manualSetMeks = useMutation(api.fixWalletSnapshot.manualSetMekOwnership);
-  const updateWalletGold = useMutation(api.adminVerificationReset.updateWalletGold);
-  const resetAllGoldToZero = useMutation(api.adminVerificationReset.resetAllGoldToZero);
-  const fixCumulativeGold = useMutation(api.adminVerificationReset.fixCumulativeGold);
-  const reconstructCumulativeFromSnapshots = useMutation(api.adminVerificationReset.reconstructCumulativeFromSnapshots);
-  const reconstructCumulativeGoldExact = useMutation(api.adminVerificationReset.reconstructCumulativeGoldExact);
-  const cleanupDuplicates = useMutation(api.finalDuplicateCleanup.removeAllNonStakeWallets);
-  const resetAllMekLevels = useMutation(api.mekLeveling.resetAllMekLevels);
-  const findCorruptedGoldRecords = useMutation(api.diagnosticCorruptedGold.findCorruptedGoldRecords);
-  const fixCorruptedCumulativeGold = useMutation(api.fixCorruptedGold.fixCorruptedCumulativeGold);
-  const resetAllProgress = useMutation(api.adminResetAllProgress.resetAllProgress);
+  // CRITICAL FIX: Replace useMutation hooks with direct client calls
+  // This ensures mutations respect the selectedDatabase state
+  const resetVerification = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.resetVerificationStatus, args);
+  };
+
+  const deleteWallet = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.deleteWallet, args);
+  };
+
+  const mergeDuplicates = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.mergeDuplicateWallets, args);
+  };
+
+  const autoMergeAll = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.autoMergeDuplicates, args);
+  };
+
+  const manualMergeBySuffix = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.manualWalletMerge.manualMergeWalletsBySuffix, args);
+  };
+
+  const triggerSnapshot = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.action(api.goldMiningSnapshot.triggerSnapshot, args);
+  };
+
+  const manualSetMeks = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.fixWalletSnapshot.manualSetMekOwnership, args);
+  };
+
+  const updateWalletGold = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.updateWalletGold, args);
+  };
+
+  const resetAllGoldToZero = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.resetAllGoldToZero, args);
+  };
+
+  const fixCumulativeGold = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.fixCumulativeGold, args);
+  };
+
+  const reconstructCumulativeFromSnapshots = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.reconstructCumulativeFromSnapshots, args);
+  };
+
+  const reconstructCumulativeGoldExact = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminVerificationReset.reconstructCumulativeGoldExact, args);
+  };
+
+  const cleanupDuplicates = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.finalDuplicateCleanup.removeAllNonStakeWallets, args);
+  };
+
+  const resetAllMekLevels = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.mekLeveling.resetAllMekLevels, args);
+  };
+
+  const findCorruptedGoldRecords = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.diagnosticCorruptedGold.findCorruptedGoldRecords, args);
+  };
+
+  const fixCorruptedCumulativeGold = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.fixCorruptedGold.fixCorruptedCumulativeGold, args);
+  };
+
+  const resetAllProgress = async (args: any) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminResetAllProgress.resetAllProgress, args);
+  };
 
   const [activeSubmenu, setActiveSubmenu] = useState<SubMenu>('wallet-list');
   const [snapshotHealthTab, setSnapshotHealthTab] = useState<SnapshotHealthTab>('health');
@@ -565,8 +731,9 @@ Check console for full timeline.
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3 mb-6 border-b border-gray-700 pb-2">
+    <DatabaseProvider>
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 mb-6 border-b border-gray-700 pb-2">
         <button
           onClick={() => setActiveSubmenu('wallet-list')}
           className={`px-4 py-2 text-sm font-semibold transition-colors ${
@@ -639,6 +806,39 @@ Check console for full timeline.
           }`}
         >
           🔧 Gold Repair
+        </button>
+
+        <button
+          onClick={() => setActiveSubmenu('variation-spread')}
+          className={`px-4 py-2 text-sm font-semibold transition-colors ${
+            activeSubmenu === 'variation-spread'
+              ? 'text-yellow-400 border-b-2 border-yellow-400'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          📊 Variation Spread
+        </button>
+
+        <button
+          onClick={() => setActiveSubmenu('beta-signups')}
+          className={`px-4 py-2 text-sm font-semibold transition-colors ${
+            activeSubmenu === 'beta-signups'
+              ? 'text-yellow-400 border-b-2 border-yellow-400'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          🎮 Beta Signups
+        </button>
+
+        <button
+          onClick={() => setActiveSubmenu('reset-timeline')}
+          className={`px-4 py-2 text-sm font-semibold transition-colors ${
+            activeSubmenu === 'reset-timeline'
+              ? 'text-yellow-400 border-b-2 border-yellow-400'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          🕐 Reset Timeline
         </button>
       </div>
 
@@ -809,20 +1009,173 @@ Check console for full timeline.
             </div>
           </div>
         </div>
+      ) : activeSubmenu === 'variation-spread' ? (
+        <VariationSpreadViewer />
+      ) : activeSubmenu === 'beta-signups' ? (
+        <BetaSignupsViewer />
+      ) : activeSubmenu === 'reset-timeline' ? (
+        <ResetTimelineChecker />
       ) : (
         <>
+          {/* Database Selection Warning Banner */}
+          {selectedDatabase === 'sturgeon' && !productionMutationsEnabled && (
+            <div className="mb-4 p-4 bg-red-900/30 border-2 border-red-500/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">⚠️</span>
+                <div className="flex-1">
+                  <h4 className="text-lg font-bold text-red-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                    VIEWING PRODUCTION DATA - READ ONLY MODE
+                  </h4>
+                  <p className="text-sm text-red-300 mt-1">
+                    You are viewing real production player data from Sturgeon database. All mutation buttons are disabled.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowConfirmationPrompt(true)}
+                  className="px-4 py-2 bg-orange-600 hover:bg-orange-500 border border-orange-500 rounded-lg text-white font-bold transition-colors whitespace-nowrap"
+                  style={{ fontFamily: "'Orbitron', sans-serif" }}
+                >
+                  🔓 Enable Mutations
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Production Mutations Enabled Warning */}
+          {selectedDatabase === 'sturgeon' && productionMutationsEnabled && (
+            <div className="mb-4 p-4 bg-red-600/50 border-4 border-red-500 rounded-lg animate-pulse">
+              <div className="flex items-center gap-3">
+                <span className="text-4xl">🔥</span>
+                <div className="flex-1">
+                  <h4 className="text-xl font-bold text-red-100" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                    ⚠️ DANGER: PRODUCTION MUTATIONS ENABLED ⚠️
+                  </h4>
+                  <p className="text-sm text-red-200 mt-1 font-bold">
+                    You can now modify REAL PRODUCTION DATA. All changes affect live players immediately. Use extreme caution!
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setProductionMutationsEnabled(false);
+                    setConfirmationText('');
+                  }}
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg text-white font-bold transition-colors whitespace-nowrap"
+                  style={{ fontFamily: "'Orbitron', sans-serif" }}
+                >
+                  🔒 Disable Mutations
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Confirmation Prompt Modal */}
+          {showConfirmationPrompt && mounted && createPortal(
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[99999]">
+              <div className="bg-gray-900 border-4 border-red-500 rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 className="text-2xl font-bold text-red-400 mb-4" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                  ⚠️ ENABLE PRODUCTION MUTATIONS?
+                </h3>
+                <div className="space-y-4 text-sm text-gray-300 mb-6">
+                  <p className="font-bold text-red-300">
+                    You are about to enable mutations on the PRODUCTION database (Sturgeon).
+                  </p>
+                  <p>This will allow you to:</p>
+                  <ul className="list-disc list-inside space-y-1 text-red-200">
+                    <li>Delete real player accounts</li>
+                    <li>Modify gold balances for live users</li>
+                    <li>Reset player progress</li>
+                    <li>Make irreversible changes to production data</li>
+                  </ul>
+                  <p className="font-bold text-yellow-300">
+                    All changes affect REAL PLAYERS immediately!
+                  </p>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-red-400 mb-2">
+                    Type "ENABLE MUTATIONS" to confirm:
+                  </label>
+                  <input
+                    type="text"
+                    value={confirmationText}
+                    onChange={(e) => setConfirmationText(e.target.value)}
+                    className="w-full px-4 py-2 bg-gray-800 border-2 border-red-500 rounded-lg text-white focus:outline-none focus:border-red-400"
+                    placeholder="ENABLE MUTATIONS"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowConfirmationPrompt(false);
+                      setConfirmationText('');
+                    }}
+                    className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg text-white font-bold transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirmationText === 'ENABLE MUTATIONS') {
+                        setProductionMutationsEnabled(true);
+                        setShowConfirmationPrompt(false);
+                        setConfirmationText('');
+                      }
+                    }}
+                    disabled={confirmationText !== 'ENABLE MUTATIONS'}
+                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-500 border border-red-500 rounded-lg text-white font-bold transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    Enable Mutations
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )}
+
           <div className="flex items-center justify-between gap-4">
-            <div>
-              <h3 className="text-xl font-bold text-yellow-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                Player Management
-              </h3>
-              <p className="text-sm text-gray-400 mt-1">
-                {walletsLoaded && wallets ? (
-                  <>{wallets.length} connected wallets • {verifiedCount} verified</>
-                ) : (
-                  <>Click "Load Wallets" to view player data</>
+            <div className="flex items-center gap-4">
+              <div>
+                <h3 className="text-xl font-bold text-yellow-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                  Player Management
+                </h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  {walletsLoaded && wallets ? (
+                    <>{wallets.length} connected wallets • {verifiedCount} verified</>
+                  ) : (
+                    <>Click "Load Wallets" to view player data</>
+                  )}
+                </p>
+              </div>
+
+              {/* Database Selector */}
+              <div className="flex items-center gap-2 px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg">
+                <span className="text-sm text-gray-400">Database:</span>
+                <select
+                  value={selectedDatabase}
+                  onChange={(e) => {
+                    setSelectedDatabase(e.target.value as 'trout' | 'sturgeon');
+                    setWalletsLoaded(false); // Reset to require reload
+                  }}
+                  className="bg-gray-800 border border-gray-600 rounded px-3 py-1 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  style={{ fontFamily: "'Orbitron', sans-serif" }}
+                >
+                  <option
+                    value="sturgeon"
+                    className="bg-gray-800"
+                    disabled={!sturgeonClient}
+                  >
+                    🔴 Sturgeon (Production - READ ONLY){!sturgeonClient ? ' - Not Configured' : ''}
+                  </option>
+                  <option value="trout" className="bg-gray-800">🔹 Trout (Development)</option>
+                </select>
+                {!sturgeonClient && (
+                  <span className="text-xs text-gray-500" title="Add NEXT_PUBLIC_STURGEON_URL to .env.local to enable production monitoring">
+                    ⓘ
+                  </span>
                 )}
-              </p>
+              </div>
             </div>
 
         <div className="flex items-center gap-3">
@@ -846,41 +1199,6 @@ Check console for full timeline.
           >
             👤 Load WrenCo
           </button>
-          <select
-            onChange={async (e) => {
-              const action = e.target.value;
-              e.target.value = ''; // Reset dropdown
-
-              switch(action) {
-                case 'run-snapshot':
-                  await handleRunSnapshot();
-                  break;
-                case 'reset-all':
-                  if (!confirm('⚠️ RESET ALL PROGRESS ⚠️\n\nThis will reset EVERYONE\'S progress:\n• All mechanisms → Level 1\n• All gold → 0\n• All cumulative gold → 0\n\nWallets stay verified and continue earning.\n\nAre you SURE?')) return;
-                  if (!confirm('FINAL WARNING: This will reset ALL players in the entire game. Type "RESET" in your mind to confirm.')) return;
-                  if (!confirm('Last chance to back out. This affects EVERYONE. Continue?')) return;
-                  try {
-                    setStatusMessage({ type: 'success', message: 'Resetting all progress...' });
-                    const result = await resetAllProgress({});
-                    setStatusMessage({
-                      type: 'success',
-                      message: result.message
-                    });
-                    setTimeout(() => setStatusMessage(null), 10000);
-                  } catch (error) {
-                    setStatusMessage({ type: 'error', message: 'Failed to reset progress: ' + String(error) });
-                    setTimeout(() => setStatusMessage(null), 5000);
-                  }
-                  break;
-              }
-            }}
-            disabled={isRunningSnapshot}
-            className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <option value="">Admin Actions...</option>
-            <option value="run-snapshot">▶ Run Snapshot</option>
-            <option value="reset-all">🔴 RESET ALL PROGRESS</option>
-          </select>
 
           <input
             type="text"
@@ -968,6 +1286,12 @@ Check console for full timeline.
               >
                 Gold Spent {sortColumn === 'goldSpent' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
+              <th className="px-2 py-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Claimed Token
+              </th>
+              <th className="px-2 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Claim Date
+              </th>
               <th
                 onClick={() => handleSort('firstConnected')}
                 className="px-2 py-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
@@ -997,7 +1321,7 @@ Check console for full timeline.
           <tbody className="divide-y divide-gray-700">
             {!walletsLoaded ? (
               <tr>
-                <td colSpan={13} className="px-4 py-8 text-center">
+                <td colSpan={15} className="px-4 py-8 text-center">
                   <div className="text-gray-400">
                     <p className="text-lg mb-2">Wallet data not loaded</p>
                     <p className="text-sm text-gray-500">Click "Load Wallets" button above to view player data</p>
@@ -1006,7 +1330,7 @@ Check console for full timeline.
               </tr>
             ) : walletDisplay.length === 0 ? (
               <tr>
-                <td colSpan={13} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={15} className="px-4 py-8 text-center text-gray-500">
                   {searchTerm ? 'No wallets match your search' : 'No wallets connected yet'}
                 </td>
               </tr>
@@ -1084,48 +1408,64 @@ Check console for full timeline.
                                 setDropdownPosition(null);
                               }}
                             >
+                              {selectedDatabase === 'sturgeon' && !productionMutationsEnabled && (
+                                <div className="px-3 py-2 text-xs text-red-400 bg-red-900/30 border-b border-red-700">
+                                  🔒 READ ONLY MODE - Mutations Disabled
+                                </div>
+                              )}
+                              {selectedDatabase === 'sturgeon' && productionMutationsEnabled && (
+                                <div className="px-3 py-2 text-xs text-orange-300 bg-red-600/50 border-b border-red-500 font-bold animate-pulse">
+                                  ⚠️ PRODUCTION MUTATIONS ENABLED
+                                </div>
+                              )}
                               <button
-                                onClick={() => { handleDeleteWallet(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-red-900/50 text-red-400 transition-colors"
-                                title="Delete wallet permanently"
+                                onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleDeleteWallet(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                disabled={selectedDatabase === 'sturgeon' && !productionMutationsEnabled}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-red-900/50 text-red-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Delete wallet permanently'}
                               >
                                 Delete
                               </button>
                               <div className="border-t border-gray-700 my-1"></div>
                               <button
-                                onClick={() => { handleResetAllGold(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-purple-900/50 text-purple-400 transition-colors"
-                                title="Reset all gold (spendable + cumulative) to zero"
+                                onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleResetAllGold(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                disabled={selectedDatabase === 'sturgeon' && !productionMutationsEnabled}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-purple-900/50 text-purple-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Reset all gold (spendable + cumulative) to zero'}
                               >
                                 Reset All Gold
                               </button>
                               <button
-                                onClick={() => { handleResetMekLevels(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-yellow-900/50 text-yellow-400 transition-colors"
-                                title="Reset all Mek levels to Level 1"
+                                onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleResetMekLevels(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                disabled={selectedDatabase === 'sturgeon' && !productionMutationsEnabled}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-yellow-900/50 text-yellow-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Reset all Mek levels to Level 1'}
                               >
                                 Reset Levels
                               </button>
                               <button
-                                onClick={() => { handleReconstructExact(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-cyan-900/50 text-cyan-300 transition-colors"
-                                title="100% ACCURATE reconstruction using snapshot history + upgrade tracking with minute-by-minute timeline"
+                                onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleReconstructExact(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                disabled={selectedDatabase === 'sturgeon' && !productionMutationsEnabled}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-cyan-900/50 text-cyan-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : '100% ACCURATE reconstruction using snapshot history + upgrade tracking with minute-by-minute timeline'}
                               >
                                 🎯 Exact Recon.
                               </button>
                               {wallet.totalCumulativeGold < wallet.currentGold && (
                                 <>
                                   <button
-                                    onClick={() => { handleReconstructFromSnapshots(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                    className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-blue-900/50 text-blue-400 transition-colors animate-pulse"
-                                    title="Reconstruct from Snapshots"
+                                    onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleReconstructFromSnapshots(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                    disabled={selectedDatabase === 'sturgeon'}
+                                    className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-blue-900/50 text-blue-400 transition-colors animate-pulse disabled:opacity-30 disabled:cursor-not-allowed"
+                                    title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Reconstruct from Snapshots'}
                                   >
                                     📸 Reconstruct
                                   </button>
                                   <button
-                                    onClick={() => { handleFixCumulativeGold(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                    className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors animate-pulse"
-                                    title="Fix corrupted cumulative gold (cumulative cannot be less than current!)"
+                                    onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleFixCumulativeGold(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                    disabled={selectedDatabase === 'sturgeon'}
+                                    className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors animate-pulse disabled:opacity-30 disabled:cursor-not-allowed"
+                                    title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Fix corrupted cumulative gold (cumulative cannot be less than current!)'}
                                   >
                                     🔧 Fix Cumul.
                                   </button>
@@ -1133,27 +1473,29 @@ Check console for full timeline.
                               )}
                               {wallet.totalGoldPerHour === 0 && wallet.walletAddress.endsWith('fe6012f1') && (
                                 <button
-                                  onClick={() => { manualSetMeks({ walletAddress: wallet.walletAddress, mekCount: 45, totalGoldPerHour: 176.56 }); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                  className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors"
-                                  title="Manually fix MEK ownership"
+                                  onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { manualSetMeks({ walletAddress: wallet.walletAddress, mekCount: 45, totalGoldPerHour: 176.56 }); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                  disabled={selectedDatabase === 'sturgeon'}
+                                  className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                  title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Manually fix MEK ownership'}
                                 >
                                   Fix MEKs
                                 </button>
                               )}
                               {wallet.isVerified && (
                                 <button
-                                  onClick={() => { handleResetVerification(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                  className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-orange-900/50 text-orange-400 transition-colors"
-                                  title="Reset verification (for testing)"
+                                  onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleResetVerification(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                  disabled={selectedDatabase === 'sturgeon'}
+                                  className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-orange-900/50 text-orange-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                  title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Reset verification (for testing)'}
                                 >
                                   Reset Verify
                                 </button>
                               )}
                               <button
-                                onClick={() => { handleSingleWalletSnapshot(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                disabled={isRunningSnapshot}
-                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-indigo-900/50 text-indigo-400 transition-colors disabled:opacity-50"
-                                title="Run blockchain snapshot for this wallet (with debug logging)"
+                                onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleSingleWalletSnapshot(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
+                                disabled={isRunningSnapshot || (selectedDatabase === 'sturgeon' && !productionMutationsEnabled)}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-indigo-900/50 text-indigo-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Run blockchain snapshot for this wallet (with debug logging)'}
                               >
                                 📸 Snapshot
                               </button>
@@ -1173,8 +1515,9 @@ Check console for full timeline.
                               </button>
                               <button
                                 onClick={() => { setViewingBuffs(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-yellow-900/50 text-yellow-400 transition-colors"
-                                title="Manage essence buffs (generation rate & max cap)"
+                                disabled={selectedDatabase === 'sturgeon' && !productionMutationsEnabled}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-yellow-900/50 text-yellow-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Manage essence buffs (generation rate & max cap)'}
                               >
                                 ⚡ Buffs
                               </button>
@@ -1269,6 +1612,35 @@ Check console for full timeline.
                         </span>
                       </td>
                       <td className="px-2 py-2 text-center">
+                        {(() => {
+                          const claimStatus = claimStatusData?.[wallet.walletAddress];
+                          const hasClaimed = claimStatus?.claimed || false;
+                          return hasClaimed ? (
+                            <span className="inline-block bg-green-600/20 text-green-400 border border-green-500/30 px-2.5 py-0.5 rounded text-xs font-bold">
+                              Yes
+                            </span>
+                          ) : (
+                            <span className="inline-block bg-gray-700/20 text-gray-400 border border-gray-600/30 px-2.5 py-0.5 rounded text-xs">
+                              No
+                            </span>
+                          );
+                        })()}
+                      </td>
+                      <td className="px-2 py-2">
+                        {(() => {
+                          const claimStatus = claimStatusData?.[wallet.walletAddress];
+                          const claimDate = claimStatus?.claimedAt;
+                          return claimDate ? (
+                            <div className="text-xs text-gray-300">
+                              <div>{new Date(claimDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                              <div className="text-gray-500">{new Date(claimDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</div>
+                            </div>
+                          ) : (
+                            <span className="text-gray-600 italic text-xs">—</span>
+                          );
+                        })()}
+                      </td>
+                      <td className="px-2 py-2 text-center">
                         <span className="text-xs text-gray-400">
                           {wallet.createdAt ? new Date(wallet.createdAt).toLocaleString() : 'N/A'}
                         </span>
@@ -1318,6 +1690,8 @@ Check console for full timeline.
       {viewingMekLevels && (
         <MekLevelsViewer
           walletAddress={viewingMekLevels}
+          client={client}
+          selectedDatabase={selectedDatabase}
           onClose={() => setViewingMekLevels(null)}
         />
       )}
@@ -1325,6 +1699,8 @@ Check console for full timeline.
       {viewingEssence && (
         <EssenceProvider walletAddress={viewingEssence}>
           <EssenceBalancesViewer
+            client={client}
+            selectedDatabase={selectedDatabase}
             onClose={() => setViewingEssence(null)}
           />
         </EssenceProvider>
@@ -1333,6 +1709,8 @@ Check console for full timeline.
       {viewingBuffs && (
         <BuffManagement
           walletAddress={viewingBuffs}
+          client={client}
+          selectedDatabase={selectedDatabase}
           onClose={() => setViewingBuffs(null)}
         />
       )}
@@ -1340,6 +1718,8 @@ Check console for full timeline.
       {viewingActivityLog && (
         <ActivityLogViewer
           walletAddress={viewingActivityLog}
+          client={client}
+          selectedDatabase={selectedDatabase}
           onClose={() => setViewingActivityLog(null)}
         />
       )}
@@ -1524,6 +1904,15 @@ Check console for full timeline.
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </DatabaseProvider>
+  );
+}
+
+export default function WalletManagementAdmin() {
+  return (
+    <DatabaseProvider>
+      <WalletManagementAdminContent />
+    </DatabaseProvider>
   );
 }

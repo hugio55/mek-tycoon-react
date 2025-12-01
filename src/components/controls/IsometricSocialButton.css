@@ -1,0 +1,85 @@
+/* EXACT CSS TRANSPLANTATION FROM SCSS - Preserving all original values including typos */
+
+/* Compiled SCSS variables to CSS values:
+   $font-size: 30pt;
+   $font-color: rgba(256, 256, 256, 1);
+   $button-color: rgba(0, 0, 0, 1);
+   $button-color-border: rgba(0, 0, 0, 0.7);
+   $button-color-shadow: rgba(0, 0, 0, 0.5);
+   $bg: rgba(20, 120, 150, 1);
+*/
+
+.isometric-social {
+  display: inline-block;
+  margin: 30px;
+  cursor: pointer;
+}
+
+.isometric-social a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 1);
+  width: 80px;
+  height: 80px;
+  position: relative;
+  transform: perspective(1000px) rotate(-30deg) skew(25deg) translate(0,0);
+  box-shadow: -20px 20px 10px rgba(0, 0, 0, 0.5);
+  transition: all 0.5s ease-in-out;
+}
+
+.isometric-social a::before {
+  dislpay: block;
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 100%;
+  left: -20px;
+  top: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  transform: rotate(0deg) skewY(-45deg);
+}
+
+.isometric-social a::after {
+  dislpay: block;
+  content: "";
+  position: absolute;
+  bottom: -20px;
+  left: -10px;
+  height: 20px;
+  width: 100%;
+  transform: rotate(0deg) skewX(-45deg);
+  background: rgba(0, 0, 0, 0.7);
+  transform: rotate(45deg) scewY(-45deg);
+}
+
+.isometric-social a:hover {
+  transform: perspective(1000px) rotate(-30deg) skew(25deg) translate(20px, -20px);
+  box-shadow: -50px 50px 30px rgba(0, 0, 0, 0.5);
+}
+
+.isometric-social a i {
+  color: rgba(256, 256, 256, 1);
+  font-size: 30pt;
+}
+
+.isometric-social .mek-image-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.isometric-social .mek-image {
+  display: block;
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}

@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
-import { Id } from "../../../../convex/_generated/dataModel";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import Link from "next/link";
 import MekImage from "@/components/MekImage";
 import BackgroundEffects from "@/components/BackgroundEffects";

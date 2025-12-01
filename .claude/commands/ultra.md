@@ -23,7 +23,6 @@ Use the Task tool to launch the project-lead agent with the following prompt:
 - syntax-error-fixer - Fix syntax errors, bracket mismatches, parsing errors
 
 **UI & Design Team:**
-- scifi-ui-designer - Apply industrial sci-fi aesthetic and design systems
 - ui-layout-debugger - Debug layout issues, positioning, responsive design
 - visual-test - Verify visual changes in browser, check console errors
 - mobile-responsive-optimizer - Transform desktop UI to mobile-responsive design

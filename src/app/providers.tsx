@@ -1,7 +1,7 @@
 "use client";
 
 import { ConvexReactClient } from "convex/react";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import UnifiedHeader from "@/components/UnifiedHeader";
 import { SoundProvider } from "@/contexts/SoundContext";
@@ -13,6 +13,17 @@ import { TIMING } from "@/features/page-loader/config/constants";
 import { ConvexProviderWithLoader } from "@/providers/ConvexProviderWithLoader";
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+// Component that exposes Convex client to window (client-side only)
+function ConvexWindowBridge() {
+  useEffect(() => {
+    // Expose Convex client to window for admin components that need direct access
+    (window as any).convex = convex;
+    console.log('[Convex] Client exposed to window.convex');
+  }, []);
+
+  return null;
+}
 
 // Inner component that uses the wallet context to provide essence context
 function EssenceProviderWrapper({ children }: { children: ReactNode }) {
@@ -28,13 +39,31 @@ function EssenceProviderWrapper({ children }: { children: ReactNode }) {
 // Component that wraps content and handles loading visibility
 function ContentWithLoadingState({ children }: { children: ReactNode }) {
   const { isLoading } = useLoaderContext();
+  const [isBypassed, setIsBypassed] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  // Check if loader is bypassed based on environment (client-only, after hydration)
+  useEffect(() => {
+    setHasMounted(true);
+
+    const isLocalhost = window.location.hostname === 'localhost' ||
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname.includes('localhost');
+
+    const settingKey = isLocalhost ? 'disablePageLoaderLocalhost' : 'disablePageLoaderProduction';
+    setIsBypassed(localStorage.getItem(settingKey) === 'true');
+  }, []);
+
+  // CRITICAL: Always render with wrapper to prevent FOUC
+  // Start with opacity 0 and only show after mounting and checking bypass
+  const shouldShow = hasMounted && (isBypassed || !isLoading);
 
   return (
     <div
       style={{
-        opacity: isLoading ? 0 : 1,
-        transition: `opacity ${TIMING.FADE_DURATION}ms ease-out`,
-        pointerEvents: isLoading ? 'none' : 'auto',
+        opacity: shouldShow ? 1 : 0,
+        transition: hasMounted && !isBypassed ? `opacity ${TIMING.FADE_DURATION}ms ease-out` : 'none',
+        pointerEvents: shouldShow ? 'auto' : 'none',
       }}
     >
       {children}
@@ -48,19 +77,23 @@ export function Providers({ children }: { children: ReactNode }) {
   // Pages that should NOT have the header
   const isWelcomePage = pathname === "/";
   const isTalentBuilder = pathname === "/talent-builder";
+  const isLandingPage = pathname === "/landing";
+  const isLandingV2Page = pathname === "/landing-v2";
+  const isMaintenancePage = pathname === "/wen";
 
-  // Show unified header on all pages except welcome and talent-builder
-  const showHeader = !isWelcomePage && !isTalentBuilder;
+  // Show unified header on all pages except welcome, talent-builder, landing, landing-v2, and wen
+  const showHeader = !isWelcomePage && !isTalentBuilder && !isLandingPage && !isLandingV2Page && !isMaintenancePage;
 
   return (
     <LoaderProvider>
       <ConvexProviderWithLoader client={convex}>
+        <ConvexWindowBridge />
         <DemoWalletProvider>
           <UserProvider>
             <EssenceProviderWrapper>
               <SoundProvider>
                 <ContentWithLoadingState>
-                  <div className="min-h-screen relative">
+                  <div className={showHeader ? "min-h-screen relative" : "min-h-screen relative w-full"} style={!showHeader ? { margin: 0, padding: 0, width: '100vw', maxWidth: '100vw' } : undefined}>
                     {showHeader ? (
                       // Pages with header - wrapped in centered container
                       <div className="max-w-7xl mx-auto relative px-4 sm:px-8">
@@ -70,8 +103,8 @@ export function Providers({ children }: { children: ReactNode }) {
                         </div>
                       </div>
                     ) : (
-                      // Pages without header - no wrapper
-                      <div className="relative z-10">
+                      // Pages without header - no wrapper, full viewport
+                      <div className="relative z-10 w-full" style={{ margin: 0, padding: 0, width: '100vw', maxWidth: '100vw' }}>
                         {children}
                       </div>
                     )}

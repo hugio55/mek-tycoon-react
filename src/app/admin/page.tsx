@@ -1,9 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import PowerSwitchToggle from "@/components/controls/PowerSwitchToggle";
 
 export default function AdminPage() {
   const router = useRouter();
+
+  // Query site settings
+  const siteSettings = useQuery(api.siteSettings.getSiteSettings);
+  const toggleLandingPage = useMutation(api.siteSettings.toggleLandingPage);
+  const toggleIgnoreLocalhostRule = useMutation(api.siteSettings.toggleIgnoreLocalhostRule);
   
   const adminTools = [
     {
@@ -53,6 +61,14 @@ export default function AdminPage() {
       icon: '🌳',
       route: '/admin-story-tree',
       color: 'from-amber-500 to-orange-600'
+    },
+    {
+      id: 'components',
+      title: 'Component Showcase',
+      description: 'Interactive UI components and toggle switches',
+      icon: '🎨',
+      route: '/admin-components-showcase',
+      color: 'from-yellow-500 to-yellow-600'
     }
   ];
   
@@ -96,6 +112,61 @@ export default function AdminPage() {
           <span className="mr-2 group-hover:translate-x--1 inline-block transition-transform">←</span>
           Back to Game
         </button>
+
+        {/* Landing Page Toggle Section */}
+        <div className="mb-8 bg-gray-900/50 border-2 border-yellow-500/30 rounded-xl p-6">
+          <div className="flex items-center justify-between gap-8">
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold text-yellow-400 mb-2">
+                Landing Page Toggle
+              </h3>
+              <p className="text-gray-400 text-sm mb-1">
+                Control what visitors see at the root domain (/)
+              </p>
+              <div className="text-xs text-gray-500">
+                <span className="font-semibold text-gray-400">OFF:</span> Shows game interface (redirects to /home)<br />
+                <span className="font-semibold text-gray-400">ON:</span> Shows marketing landing page<br />
+                <span className="font-semibold text-yellow-400">Note:</span> Localhost bypasses landing page by default (use toggle below to override)
+              </div>
+
+              {/* Localhost Override Toggle */}
+              <div className="mt-4 pt-4 border-t border-gray-700">
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-semibold text-blue-300">Ignore Localhost Rule</label>
+                  <input
+                    type="checkbox"
+                    checked={siteSettings?.ignoreLocalhostRule ?? false}
+                    onChange={async (e) => {
+                      await toggleIgnoreLocalhostRule({ enabled: e.target.checked });
+                    }}
+                    className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-blue-500 focus:ring-blue-500"
+                  />
+                  <span className={`text-xs font-bold ${siteSettings?.ignoreLocalhostRule ? 'text-blue-400' : 'text-gray-500'}`}>
+                    {siteSettings?.ignoreLocalhostRule ? 'ENABLED' : 'DISABLED'}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1 ml-1">
+                  When enabled, localhost will show landing page (for testing)
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <PowerSwitchToggle
+                checked={siteSettings?.landingPageEnabled ?? false}
+                onChange={async (enabled) => {
+                  await toggleLandingPage({ enabled });
+                }}
+                className="w-32 h-32"
+              />
+              <div className="text-center">
+                <div className="text-xs text-gray-500 uppercase tracking-wider">Status</div>
+                <div className={`text-sm font-bold ${siteSettings?.landingPageEnabled ? 'text-yellow-400' : 'text-gray-400'}`}>
+                  {siteSettings?.landingPageEnabled ? 'LANDING PAGE' : 'GAME INTERFACE'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         
         {/* Admin Tools Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

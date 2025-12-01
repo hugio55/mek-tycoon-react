@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { useWallet } from "@/contexts/WalletContext";
 import { buildCommemorativeMetadata } from "@/lib/cardano/metadata";
 import { mintNFT } from "@/lib/cardano/mintingTx";

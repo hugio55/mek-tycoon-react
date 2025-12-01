@@ -50,7 +50,6 @@ export default function OverlayEditor() {
   const [imagePath, setImagePath] = useState("");
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
-  const [recentBasePaths, setRecentBasePaths] = useState<string[]>([]);
 
   // Editor mode
   const [editorMode, setEditorMode] = useState<EditorMode>(() => {
@@ -68,6 +67,7 @@ export default function OverlayEditor() {
 
   // Zone drawing
   const [zoneType, setZoneType] = useState("mechanism-slot");
+  const [aspectRatio, setAspectRatio] = useState<"free" | "1:1">("free");
   const [dragState, setDragState] = useState<DragState>({
     isDrawing: false,
     isDraggingSprite: false,
@@ -182,13 +182,8 @@ export default function OverlayEditor() {
     }
   }, [overlayData]);
 
-  // Load recent paths from localStorage
+  // Load overlay palette and panel states from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem("overlay-editor-recent-paths");
-    if (stored) {
-      const paths = JSON.parse(stored);
-      setRecentBasePaths(paths);
-    }
     const storedPalette = localStorage.getItem("overlay-editor-palette");
     if (storedPalette) {
       setOverlayPalette(JSON.parse(storedPalette));
@@ -309,22 +304,6 @@ export default function OverlayEditor() {
 
     // Return as-is if nothing matches
     return cleanInput;
-  };
-
-  // Delete a recent base path
-  const deleteRecentBasePath = (pathToDelete: string) => {
-    const updated = recentBasePaths.filter(p => p !== pathToDelete);
-    setRecentBasePaths(updated);
-    localStorage.setItem("overlay-editor-recent-paths", JSON.stringify(updated));
-  };
-
-  // Save recent path when base image path changes
-  const addRecentBasePath = (path: string) => {
-    if (!path) return;
-    const webPath = extractWebPath(path);
-    const updated = [webPath, ...recentBasePaths.filter(p => p !== webPath)].slice(0, 10);
-    setRecentBasePaths(updated);
-    localStorage.setItem("overlay-editor-recent-paths", JSON.stringify(updated));
   };
 
   // Add overlay to palette
@@ -487,8 +466,16 @@ export default function OverlayEditor() {
     const currentX = (e.clientX - rect.left) / scale;
     const currentY = (e.clientY - rect.top) / scale;
 
-    const width = Math.abs(currentX - dragState.startX);
-    const height = Math.abs(currentY - dragState.startY);
+    let width = Math.abs(currentX - dragState.startX);
+    let height = Math.abs(currentY - dragState.startY);
+
+    // Apply aspect ratio constraint
+    if (aspectRatio === "1:1") {
+      const size = Math.min(width, height);
+      width = size;
+      height = size;
+    }
+
     const x = Math.min(dragState.startX, currentX);
     const y = Math.min(dragState.startY, currentY);
 
@@ -974,43 +961,12 @@ export default function OverlayEditor() {
                   placeholder="Paste full Windows path here (auto-converts)"
                 />
                 <button
-                  onClick={() => addRecentBasePath(imagePath)}
+                  onClick={() => {/* Image loads automatically via imagePath state */}}
                   className="px-4 py-2 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30 whitespace-nowrap"
                 >
                   Load
                 </button>
               </div>
-              {recentBasePaths.length > 0 && (
-                <div className="mt-2">
-                  <div className="text-xs text-gray-400 mb-1">Recent:</div>
-                  <div className="flex flex-wrap gap-1">
-                    {recentBasePaths.map((path, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-1 bg-black/50 border border-yellow-500/30 rounded hover:border-yellow-500/50"
-                      >
-                        <button
-                          onClick={() => setImagePath(path)}
-                          className="px-2 py-1 text-xs text-yellow-400"
-                          title={path}
-                        >
-                          {path.split('/').pop() || path}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteRecentBasePath(path);
-                          }}
-                          className="px-1 text-xs text-red-400 hover:text-red-300"
-                          title="Delete"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -1420,6 +1376,31 @@ export default function OverlayEditor() {
                   <option value="display">Display Zone</option>
                   <option value="custom">Custom</option>
                 </select>
+              </div>
+              <div>
+                <label className="mek-label-uppercase block mb-2">Aspect Ratio</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setAspectRatio("free")}
+                    className={`flex-1 px-3 py-2 rounded border transition-colors ${
+                      aspectRatio === "free"
+                        ? "bg-yellow-500/30 border-yellow-500 text-yellow-400"
+                        : "bg-black/50 border-yellow-500/30 text-gray-400 hover:bg-yellow-500/10"
+                    }`}
+                  >
+                    Free
+                  </button>
+                  <button
+                    onClick={() => setAspectRatio("1:1")}
+                    className={`flex-1 px-3 py-2 rounded border transition-colors ${
+                      aspectRatio === "1:1"
+                        ? "bg-yellow-500/30 border-yellow-500 text-yellow-400"
+                        : "bg-black/50 border-yellow-500/30 text-gray-400 hover:bg-yellow-500/10"
+                    }`}
+                  >
+                    1:1 Square
+                  </button>
+                </div>
               </div>
               <div className="text-sm text-gray-400">
                 Click and drag on the canvas to create a rectangular zone.

@@ -1,0 +1,184 @@
+'use client';
+
+import { useState, useRef } from 'react';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+
+interface PhaseAccordionProps {
+  phaseHeaderFont?: string;
+  phaseHeaderFontSize?: number;
+  phaseDescriptionFont?: string;
+  phaseDescriptionFontSize?: number;
+}
+
+export default function PhaseAccordion({
+  phaseHeaderFont = 'Orbitron',
+  phaseHeaderFontSize = 20,
+  phaseDescriptionFont = 'Inter',
+  phaseDescriptionFontSize = 15,
+}: PhaseAccordionProps) {
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
+
+  const handleToggle = (index: number, isLocked: boolean) => {
+    if (isLocked) return;
+    setExpandedIndex(prev => prev === index ? null : index);
+  };
+
+  const formatDescription = (text: string) => {
+    return text
+      .split('\n')
+      .map(line => {
+        if (line.trim().startsWith('- ')) {
+          line = '• ' + line.trim().substring(2);
+        }
+        line = line.replace(/\*([^*]+)\*/g, '<strong>$1</strong>');
+        return line;
+      })
+      .join('<br/>');
+  };
+
+  if (!phaseCards || phaseCards.length === 0) {
+    return (
+      <div className="flex flex-col gap-3 px-4 py-6">
+        <div className="text-center text-gray-400">Loading phases...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3 px-4 py-6">
+      {phaseCards.map((card, index) => {
+        const isExpanded = expandedIndex === index;
+        const isLocked = card.locked;
+
+        return (
+          <div key={card._id} className="relative">
+            <button
+              onClick={() => handleToggle(index, isLocked)}
+              disabled={isLocked}
+              className={`
+                w-full text-left
+                relative
+                ${isLocked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:brightness-110'}
+              `}
+              style={{
+                height: '52px',
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'transparent',
+                transition: 'all 250ms ease-out',
+              }}
+            >
+              <div
+                style={{
+                  height: '100%',
+                  background: 'rgba(0, 0, 0, 0.7)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  borderRadius: isExpanded ? '10px 10px 0 0' : '10px',
+                  padding: '0 20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  boxShadow: isExpanded
+                    ? '0 8px 32px rgba(0, 0, 0, 0.5)'
+                    : '0 4px 16px rgba(0, 0, 0, 0.3)',
+                  transition: 'all 250ms ease-out',
+                }}
+              >
+                <h3
+                  style={{
+                    fontFamily: phaseHeaderFont,
+                    fontSize: `${phaseHeaderFontSize}px`,
+                    fontWeight: '600',
+                    color: '#fab617',
+                    letterSpacing: '0.5px',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {card.header || card.title}
+                </h3>
+
+                <div
+                  style={{
+                    transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 250ms ease-out',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  {isLocked ? (
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M10 2C7.79 2 6 3.79 6 6V8H5C3.9 8 3 8.9 3 10V16C3 17.1 3.9 18 5 18H15C16.1 18 17 17.1 17 16V10C17 8.9 16.1 8 15 8H14V6C14 3.79 12.21 2 10 2ZM10 4C11.13 4 12 4.87 12 6V8H8V6C8 4.87 8.87 4 10 4ZM10 12C10.55 12 11 12.45 11 13C11 13.55 10.55 14 10 14C9.45 14 9 13.55 9 13C9 12.45 9.45 12 10 12Z"
+                        fill="rgba(250, 182, 23, 0.6)"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M5 8L10 13L15 8"
+                        stroke="rgba(250, 182, 23, 0.9)"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            </button>
+
+            <div
+              ref={(el) => (contentRefs.current[index] = el)}
+              style={{
+                display: 'grid',
+                gridTemplateRows: isExpanded ? '1fr' : '0fr',
+                transition: 'grid-template-rows 300ms ease-out',
+              }}
+            >
+              <div style={{ overflow: 'hidden' }}>
+                <div
+                  style={{
+                    background: 'rgba(0, 0, 0, 0.8)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    borderRadius: '0 0 10px 10px',
+                    padding: '24px',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+                  }}
+                >
+                  {card.description && (
+                    <div
+                      style={{
+                        fontFamily: phaseDescriptionFont,
+                        fontSize: `${phaseDescriptionFontSize}px`,
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        lineHeight: '1.7',
+                      }}
+                      dangerouslySetInnerHTML={{ __html: formatDescription(card.description) }}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

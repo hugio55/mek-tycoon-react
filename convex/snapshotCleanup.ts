@@ -19,31 +19,53 @@ export const cleanupOldSnapshots = internalMutation({
     const cutoffTime = now - (daysToKeep * 24 * 60 * 60 * 1000);
 
     try {
-      console.log(`Starting snapshot cleanup: removing snapshots older than ${new Date(cutoffTime).toLocaleString()}`);
+      console.log(`[SNAPSHOT-FIX] Starting snapshot cleanup: removing snapshots older than ${new Date(cutoffTime).toLocaleString()}`);
 
-      // Find old snapshots to delete
-      const oldSnapshots = await ctx.db
-        .query("mekOwnershipHistory")
-        .filter((q) => q.lt(q.field("snapshotTime"), cutoffTime))
-        .collect();
-
-      console.log(`Found ${oldSnapshots.length} old snapshots to delete`);
-
+      // CRITICAL FIX: Use the new index and paginate instead of .collect()
+      // This prevents the 16 MB read limit error from full table scans
+      const BATCH_SIZE = 50; // Process 50 snapshots at a time
       let deletedCount = 0;
       let totalMeksRemoved = 0;
+      let batchNumber = 0;
 
-      // Delete old snapshots in batches
-      for (const snapshot of oldSnapshots) {
-        try {
-          totalMeksRemoved += snapshot.meks.length;
-          await ctx.db.delete(snapshot._id);
-          deletedCount++;
-        } catch (error) {
-          console.error(`Failed to delete snapshot ${snapshot._id}:`, error);
+      while (true) {
+        batchNumber++;
+        console.log(`[SNAPSHOT-FIX] Processing batch ${batchNumber}...`);
+
+        // Use the new by_snapshotTime index for efficient filtering
+        const oldSnapshots = await ctx.db
+          .query("mekOwnershipHistory")
+          .withIndex("by_snapshotTime", (q) => q.lt("snapshotTime", cutoffTime))
+          .take(BATCH_SIZE);
+
+        if (oldSnapshots.length === 0) {
+          console.log(`[SNAPSHOT-FIX] No more old snapshots found, cleanup complete`);
+          break;
+        }
+
+        console.log(`[SNAPSHOT-FIX] Found ${oldSnapshots.length} old snapshots in this batch`);
+
+        // Delete snapshots in this batch
+        for (const snapshot of oldSnapshots) {
+          try {
+            totalMeksRemoved += snapshot.meks.length;
+            await ctx.db.delete(snapshot._id);
+            deletedCount++;
+          } catch (error) {
+            console.error(`[SNAPSHOT-FIX] Failed to delete snapshot ${snapshot._id}:`, error);
+          }
+        }
+
+        console.log(`[SNAPSHOT-FIX] Batch ${batchNumber} complete: ${oldSnapshots.length} snapshots deleted`);
+
+        // If we got less than BATCH_SIZE, we're done
+        if (oldSnapshots.length < BATCH_SIZE) {
+          console.log(`[SNAPSHOT-FIX] Reached end of old snapshots`);
+          break;
         }
       }
 
-      console.log(`Snapshot cleanup completed: ${deletedCount} snapshots deleted, ${totalMeksRemoved} Mek records removed`);
+      console.log(`[SNAPSHOT-FIX] Snapshot cleanup completed: ${deletedCount} snapshots deleted across ${batchNumber} batches, ${totalMeksRemoved} Mek records removed`);
 
       return {
         success: true,
@@ -51,10 +73,11 @@ export const cleanupOldSnapshots = internalMutation({
         totalMeksRemoved,
         cutoffDate: new Date(cutoffTime).toLocaleString(),
         daysRetained: daysToKeep,
+        batchesProcessed: batchNumber,
       };
 
     } catch (error) {
-      console.error("Snapshot cleanup failed:", error);
+      console.error("[SNAPSHOT-FIX] Snapshot cleanup failed:", error);
       return {
         success: false,
         error: error.toString(),

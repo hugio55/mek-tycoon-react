@@ -52,7 +52,7 @@ export function ProgressBar({ percentage, showPercentage = true }: ProgressBarPr
         {showPercentage && (
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-sm font-bold text-white drop-shadow-lg">
-              {percentage}%
+              {Math.round(percentage)}%
             </span>
           </div>
         )}

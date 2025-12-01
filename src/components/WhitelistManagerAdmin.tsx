@@ -1,11 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation } from 'convex/react';
+import { createPortal } from 'react-dom';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
+import { DatabaseProvider, useDatabaseContext } from '@/contexts/DatabaseContext';
 
-export default function WhitelistManagerAdmin() {
+function WhitelistManagerAdminContent() {
+  // Get database context
+  const {
+    selectedDatabase,
+    setSelectedDatabase,
+    client,
+    canMutate,
+    productionMutationsEnabled,
+    setProductionMutationsEnabled
+  } = useDatabaseContext();
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
   const [editingWhitelist, setEditingWhitelist] = useState<any | null>(null);
@@ -15,36 +26,170 @@ export default function WhitelistManagerAdmin() {
   const [snapshotName, setSnapshotName] = useState('');
   const [snapshotDescription, setSnapshotDescription] = useState('');
 
-  // Queries
-  const allWhitelists = useQuery(api.whitelists.getAllWhitelists);
-  const allCriteria = useQuery(api.whitelists.getAllCriteria);
-  const allSnapshots = useQuery(api.whitelists.getAllWhitelistSnapshots);
-  const selectedWhitelistData = useQuery(
-    api.whitelists.getWhitelistById,
-    selectedWhitelist ? { whitelistId: selectedWhitelist } : "skip"
-  );
-  const snapshots = useQuery(
-    api.whitelists.getSnapshotsByWhitelist,
-    selectedWhitelist ? { whitelistId: selectedWhitelist } : "skip"
-  );
+  // Production mutation confirmation
+  const [confirmationText, setConfirmationText] = useState('');
+  const [showConfirmationPrompt, setShowConfirmationPrompt] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  // Mutations
-  const initializeCriteria = useMutation(api.whitelists.initializeDefaultCriteria);
-  const deleteWhitelist = useMutation(api.whitelists.deleteWhitelist);
-  const generateWhitelist = useMutation(api.whitelists.generateWhitelist);
-  const removeUserFromWhitelist = useMutation(api.whitelists.removeUserFromWhitelist);
-  const addUserToWhitelistByCompanyName = useMutation(api.whitelists.addUserToWhitelistByCompanyName);
-  const addUserToWhitelistByAddress = useMutation(api.whitelists.addUserToWhitelistByAddress);
-  const createSnapshot = useMutation(api.whitelists.createSnapshot);
-  const deleteSnapshot = useMutation(api.whitelists.deleteSnapshot);
-  const createManualWhitelist = useMutation(api.whitelists.createManualWhitelist);
-
-  // Initialize default criteria on mount
+  // Mount portal
   useEffect(() => {
-    if (allCriteria && allCriteria.length === 0) {
-      initializeCriteria({});
+    setMounted(true);
+  }, []);
+
+  // State for data
+  const [allWhitelists, setAllWhitelists] = useState<any[]>([]);
+  const [allCriteria, setAllCriteria] = useState<any[]>([]);
+  const [allSnapshots, setAllSnapshots] = useState<any[]>([]);
+  const [selectedWhitelistData, setSelectedWhitelistData] = useState<any>(null);
+  const [snapshots, setSnapshots] = useState<any[]>([]);
+
+  // Query data from selected database
+  useEffect(() => {
+    if (!client) return;
+
+    let cancelled = false;
+
+    const fetchData = async () => {
+      try {
+        const [whitelists, criteria, snaps] = await Promise.all([
+          client.query(api.whitelists.getAllWhitelists),
+          client.query(api.whitelists.getAllCriteria),
+          client.query(api.whitelists.getAllWhitelistSnapshots)
+        ]);
+
+        if (!cancelled) {
+          setAllWhitelists(whitelists);
+          setAllCriteria(criteria);
+          setAllSnapshots(snaps);
+        }
+      } catch (error) {
+        console.error('[WhitelistManager] Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [client, selectedDatabase]);
+
+  // Query selected whitelist details
+  useEffect(() => {
+    if (!client || !selectedWhitelist) {
+      setSelectedWhitelistData(null);
+      return;
     }
-  }, [allCriteria, initializeCriteria]);
+
+    let cancelled = false;
+
+    const fetchWhitelist = async () => {
+      try {
+        const data = await client.query(api.whitelists.getWhitelistById, {
+          whitelistId: selectedWhitelist
+        });
+        if (!cancelled) {
+          setSelectedWhitelistData(data);
+        }
+      } catch (error) {
+        console.error('[WhitelistManager] Error fetching whitelist:', error);
+      }
+    };
+
+    fetchWhitelist();
+    const interval = setInterval(fetchWhitelist, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [client, selectedWhitelist]);
+
+  // Query snapshots for selected whitelist
+  useEffect(() => {
+    if (!client || !selectedWhitelist) {
+      setSnapshots([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchSnapshots = async () => {
+      try {
+        const data = await client.query(api.whitelists.getSnapshotsByWhitelist, {
+          whitelistId: selectedWhitelist
+        });
+        if (!cancelled) {
+          setSnapshots(data);
+        }
+      } catch (error) {
+        console.error('[WhitelistManager] Error fetching snapshots:', error);
+      }
+    };
+
+    fetchSnapshots();
+    const interval = setInterval(fetchSnapshots, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [client, selectedWhitelist]);
+
+  // Mutation helpers using client
+  const initializeCriteria = async () => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.initializeDefaultCriteria, {});
+  };
+
+  const deleteWhitelist = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.deleteWhitelist, args);
+  };
+
+  const generateWhitelist = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.generateWhitelist, args);
+  };
+
+  const removeUserFromWhitelist = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.removeUserFromWhitelist, args);
+  };
+
+  const addUserToWhitelistByCompanyName = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.addUserToWhitelistByCompanyName, args);
+  };
+
+  const addUserToWhitelistByAddress = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.addUserToWhitelistByAddress, args);
+  };
+
+  const createSnapshot = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.createSnapshot, args);
+  };
+
+  const deleteSnapshot = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.deleteSnapshot, args);
+  };
+
+  const createManualWhitelist = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.createManualWhitelist, args);
+  };
+
+  // Initialize default criteria on mount (only if mutations are enabled and client exists)
+  useEffect(() => {
+    if (allCriteria && allCriteria.length === 0 && client && canMutate()) {
+      initializeCriteria();
+    }
+  }, [allCriteria, client, canMutate]);
 
   const handleGenerateWhitelist = async (whitelistId: Id<"whitelists">) => {
     try {
@@ -74,9 +219,9 @@ export default function WhitelistManagerAdmin() {
     }
 
     const csv = [
-      ['Wallet Address', 'Display Name'],
+      ['Stake Address', 'Display Name'],
       ...whitelist.eligibleUsers.map((u: any) => [
-        u.walletAddress,
+        u.stakeAddress,
         u.displayName || 'N/A'
       ])
     ].map(row => row.join(',')).join('\n');
@@ -125,12 +270,141 @@ export default function WhitelistManagerAdmin() {
 
   return (
     <div>
+      {/* Production Read-Only Warning Banner */}
+      {selectedDatabase === 'sturgeon' && !productionMutationsEnabled && (
+        <div className="mb-4 p-4 bg-red-900/30 border-2 border-red-500/50 rounded-lg">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">⚠️</span>
+            <div className="flex-1">
+              <h4 className="text-lg font-bold text-red-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                VIEWING PRODUCTION DATA - READ ONLY MODE
+              </h4>
+              <p className="text-sm text-red-300 mt-1">
+                You are viewing real production whitelist data from Sturgeon database. All mutation buttons are disabled.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowConfirmationPrompt(true)}
+              className="px-4 py-2 bg-orange-600 hover:bg-orange-500 border border-orange-500 rounded-lg text-white font-bold transition-colors whitespace-nowrap"
+              style={{ fontFamily: "'Orbitron', sans-serif" }}
+            >
+              🔓 Enable Mutations
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Production Mutations Enabled Warning */}
+      {selectedDatabase === 'sturgeon' && productionMutationsEnabled && (
+        <div className="mb-4 p-4 bg-red-600/50 border-4 border-red-500 rounded-lg animate-pulse">
+          <div className="flex items-center gap-3">
+            <span className="text-4xl">🔥</span>
+            <div className="flex-1">
+              <h4 className="text-xl font-bold text-red-100" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                ⚠️ DANGER: PRODUCTION MUTATIONS ENABLED ⚠️
+              </h4>
+              <p className="text-sm text-red-200 mt-1 font-bold">
+                You can now modify REAL PRODUCTION whitelists. All changes affect live NFT sales immediately. Use extreme caution!
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setProductionMutationsEnabled(false);
+                setConfirmationText('');
+              }}
+              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg text-white font-bold transition-colors whitespace-nowrap"
+              style={{ fontFamily: "'Orbitron', sans-serif" }}
+            >
+              🔒 Disable Mutations
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Production Mutations Confirmation Modal */}
+      {showConfirmationPrompt && mounted && createPortal(
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[99999]">
+          <div className="bg-gray-900 border-4 border-red-500 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-2xl font-bold text-red-400 mb-4" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              ⚠️ ENABLE PRODUCTION MUTATIONS?
+            </h3>
+            <div className="space-y-4 text-sm text-gray-300 mb-6">
+              <p className="font-bold text-red-300">
+                You are about to enable mutations on the PRODUCTION database (Sturgeon).
+              </p>
+              <p>This will allow you to:</p>
+              <ul className="list-disc list-inside space-y-1 text-red-200">
+                <li>Create/delete production whitelists</li>
+                <li>Modify eligibility rules for live NFT sales</li>
+                <li>Add/remove users from active whitelists</li>
+                <li>Make irreversible changes to production data</li>
+              </ul>
+              <p className="font-bold text-yellow-300">
+                All changes affect REAL NFT SALES immediately!
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-bold text-red-400 mb-2">
+                Type "ENABLE MUTATIONS" to confirm:
+              </label>
+              <input
+                type="text"
+                value={confirmationText}
+                onChange={(e) => setConfirmationText(e.target.value)}
+                className="w-full px-4 py-2 bg-gray-800 border-2 border-red-500 rounded-lg text-white focus:outline-none focus:border-red-400"
+                placeholder="ENABLE MUTATIONS"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowConfirmationPrompt(false);
+                  setConfirmationText('');
+                }}
+                className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg text-white font-bold transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmationText === 'ENABLE MUTATIONS') {
+                    setProductionMutationsEnabled(true);
+                    setShowConfirmationPrompt(false);
+                    setConfirmationText('');
+                  }
+                }}
+                disabled={confirmationText !== 'ENABLE MUTATIONS'}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-500 border border-red-500 rounded-lg text-white font-bold transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                Enable Mutations
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <p className="text-gray-400">Create and manage NFT whitelist eligibility rules</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          {/* Database Selector */}
+          <div className="bg-gray-900 border border-cyan-500/30 rounded-lg p-3">
+            <div className="text-xs text-gray-400 mb-1">Database</div>
+            <select
+              value={selectedDatabase}
+              onChange={(e) => setSelectedDatabase(e.target.value as 'trout' | 'sturgeon')}
+              className="bg-black/50 border border-cyan-500/30 rounded px-3 py-1 text-white text-sm"
+            >
+              <option value="trout">Trout (Dev - localhost:3200)</option>
+              <option value="sturgeon">Sturgeon (Production - Live Site)</option>
+            </select>
+          </div>
           <button
             onClick={() => setShowManualModal(true)}
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold transition-all"
@@ -387,7 +661,7 @@ export default function WhitelistManagerAdmin() {
                           className="bg-black/30 rounded p-3 text-sm"
                         >
                           <div className="text-white font-mono text-xs truncate">
-                            {user.walletAddress}
+                            {user.stakeAddress}
                           </div>
                           {user.displayName && (
                             <div className="text-gray-400 text-xs mt-1">{user.displayName}</div>
@@ -455,6 +729,8 @@ export default function WhitelistManagerAdmin() {
         <WhitelistCreateModal
           allCriteria={allCriteria || []}
           editingWhitelist={editingWhitelist}
+          client={client}
+          canMutate={canMutate}
           onClose={() => {
             setShowCreateModal(false);
             setEditingWhitelist(null);
@@ -466,6 +742,7 @@ export default function WhitelistManagerAdmin() {
       {viewingWhitelistTable && (
         <WhitelistTableModal
           whitelist={viewingWhitelistTable}
+          client={client}
           onClose={() => setViewingWhitelistTable(null)}
           onExportCSV={handleExportCSV}
           removeUserFromWhitelist={removeUserFromWhitelist}
@@ -543,14 +820,27 @@ export default function WhitelistManagerAdmin() {
   );
 }
 
+// Outer wrapper component with DatabaseProvider
+export default function WhitelistManagerAdmin() {
+  return (
+    <DatabaseProvider>
+      <WhitelistManagerAdminContent />
+    </DatabaseProvider>
+  );
+}
+
 // Create/Edit Whitelist Modal Component
 function WhitelistCreateModal({
   allCriteria,
   editingWhitelist,
+  client,
+  canMutate,
   onClose,
 }: {
   allCriteria: any[];
   editingWhitelist: any | null;
+  client: any;
+  canMutate: () => boolean;
   onClose: () => void;
 }) {
   const [name, setName] = useState(editingWhitelist?.name || '');
@@ -562,10 +852,18 @@ function WhitelistCreateModal({
     value: any;
   }>>(editingWhitelist?.rules || [{ criteriaField: '', operator: 'greater_than', value: '' }]);
 
-  const createWhitelist = useMutation(api.whitelists.createWhitelist);
-  const updateWhitelist = useMutation(api.whitelists.updateWhitelist);
-
   const [isSaving, setIsSaving] = useState(false);
+
+  // Mutation helpers
+  const createWhitelist = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.createWhitelist, args);
+  };
+
+  const updateWhitelist = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.updateWhitelist, args);
+  };
 
   const handleAddRule = () => {
     setRules([...rules, { criteriaField: '', operator: 'greater_than', value: '' }]);
@@ -782,6 +1080,7 @@ function WhitelistCreateModal({
 // Whitelist Table Modal with Add/Delete Functionality
 function WhitelistTableModal({
   whitelist,
+  client,
   onClose,
   onExportCSV,
   removeUserFromWhitelist,
@@ -789,6 +1088,7 @@ function WhitelistTableModal({
   addUserToWhitelistByAddress,
 }: {
   whitelist: any;
+  client: any;
   onClose: () => void;
   onExportCSV: (whitelist: any) => void;
   removeUserFromWhitelist: any;
@@ -800,20 +1100,44 @@ function WhitelistTableModal({
   const [manualDisplayNameInput, setManualDisplayNameInput] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
   // Search for matching company names
-  const searchResults = useQuery(
-    api.whitelists.searchCompanyNames,
-    companyNameInput.length >= 2 ? { searchTerm: companyNameInput } : "skip"
-  );
+  useEffect(() => {
+    if (!client || companyNameInput.length < 2) {
+      setSearchResults([]);
+      return;
+    }
 
-  const handleRemoveUser = async (walletAddress: string, displayName?: string) => {
-    if (!confirm(`Remove "${displayName || walletAddress}" from this whitelist?`)) return;
+    let cancelled = false;
+
+    const fetchSearchResults = async () => {
+      try {
+        const results = await client.query(api.whitelists.searchCompanyNames, {
+          searchTerm: companyNameInput
+        });
+        if (!cancelled) {
+          setSearchResults(results || []);
+        }
+      } catch (error) {
+        console.error('[WhitelistTable] Error searching company names:', error);
+      }
+    };
+
+    fetchSearchResults();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [client, companyNameInput]);
+
+  const handleRemoveUser = async (stakeAddress: string, displayName?: string) => {
+    if (!confirm(`Remove "${displayName || stakeAddress}" from this whitelist?`)) return;
 
     try {
       await removeUserFromWhitelist({
         whitelistId: whitelist._id,
-        walletAddress,
+        stakeAddress,
       });
       alert('User removed successfully!');
     } catch (error: any) {
@@ -827,14 +1151,14 @@ function WhitelistTableModal({
   };
 
   const handleAddUser = async () => {
-    // Check if using manual wallet address or company name lookup
+    // Check if using manual stake address or company name lookup
     if (manualWalletInput.trim()) {
-      // Adding by manual wallet address
+      // Adding by manual stake address
       setIsAdding(true);
       try {
         await addUserToWhitelistByAddress({
           whitelistId: whitelist._id,
-          walletAddress: manualWalletInput.trim(),
+          stakeAddress: manualWalletInput.trim(),
           displayName: manualDisplayNameInput.trim() || undefined,
         });
         alert(`User added successfully!`);
@@ -862,7 +1186,7 @@ function WhitelistTableModal({
         setIsAdding(false);
       }
     } else {
-      alert('Please enter either a corporation name or wallet address');
+      alert('Please enter either a corporation name or stake address');
     }
   };
 
@@ -961,9 +1285,9 @@ function WhitelistTableModal({
             <div className="flex-1 border-t border-gray-700"></div>
           </div>
 
-          {/* Option 2: Manual Wallet Address */}
+          {/* Option 2: Manual Stake Address */}
           <div className="mb-4">
-            <label className="block text-xs text-gray-400 mb-2">Option 2: Enter Wallet Address Directly</label>
+            <label className="block text-xs text-gray-400 mb-2">Option 2: Enter Stake Address Directly</label>
             <div className="flex gap-3 mb-2">
               <div className="flex-1">
                 <input
@@ -973,7 +1297,7 @@ function WhitelistTableModal({
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') handleAddUser();
                   }}
-                  placeholder="addr1... or addr_test1..."
+                  placeholder="stake1... or stake_test1..."
                   className="w-full bg-black/50 border border-cyan-500/30 rounded px-3 py-2 text-white font-mono text-sm placeholder-gray-600"
                   disabled={isAdding || !!companyNameInput.trim()}
                 />
@@ -1017,7 +1341,7 @@ function WhitelistTableModal({
               <thead className="sticky top-0 bg-gray-900">
                 <tr className="border-b-2 border-cyan-500/30">
                   <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">#</th>
-                  <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Wallet Address</th>
+                  <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Stake Address</th>
                   <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Display Name</th>
                   <th className="text-right py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Actions</th>
                 </tr>
@@ -1030,14 +1354,14 @@ function WhitelistTableModal({
                   >
                     <td className="py-3 px-4 text-gray-400">{index + 1}</td>
                     <td className="py-3 px-4 text-white font-mono text-xs">
-                      {user.walletAddress}
+                      {user.stakeAddress}
                     </td>
                     <td className="py-3 px-4 text-gray-300">
                       {user.displayName || <span className="text-gray-600 italic">No name</span>}
                     </td>
                     <td className="py-3 px-4 text-right">
                       <button
-                        onClick={() => handleRemoveUser(user.walletAddress, user.displayName)}
+                        onClick={() => handleRemoveUser(user.stakeAddress, user.displayName)}
                         className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1 rounded"
                       >
                         Delete
@@ -1102,7 +1426,7 @@ function ManualWhitelistModal({
       const trimmed = line.trim();
       if (!trimmed) continue; // Skip empty lines
 
-      if (trimmed.startsWith('addr1') || trimmed.startsWith('addr_test1')) {
+      if (trimmed.startsWith('stake1') || trimmed.startsWith('stake_test1')) {
         valid++;
       } else {
         invalid++;
@@ -1128,7 +1452,7 @@ function ManualWhitelistModal({
       .filter(line => line.length > 0);
 
     if (addresses.length === 0) {
-      alert('Please paste at least one payment address');
+      alert('Please paste at least one stake address');
       return;
     }
 
@@ -1139,7 +1463,7 @@ function ManualWhitelistModal({
         description: description.trim() || undefined,
         addresses,
       });
-      alert(`Manual whitelist created! ${result.userCount} payment addresses added.`);
+      alert(`Manual whitelist created! ${result.userCount} stake addresses added.`);
       onClose();
     } catch (error: any) {
       alert(`Error: ${error.message}`);
@@ -1158,10 +1482,12 @@ function ManualWhitelistModal({
 
         {/* Info Banner */}
         <div className="bg-yellow-900/20 border border-yellow-500/30 rounded p-4 mb-6 text-sm">
-          <div className="font-bold text-yellow-400 mb-2">⚠️ IMPORTANT: Payment Addresses Only</div>
+          <div className="font-bold text-yellow-400 mb-2">⚠️ IMPORTANT: Stake Addresses Only</div>
           <div className="text-gray-300">
-            <div>• Only paste <span className="font-mono text-green-400">payment addresses</span> (addr1... or addr_test1...)</div>
-            <div>• <span className="font-mono text-red-400">Stake addresses</span> (stake1...) <span className="font-bold">CANNOT</span> receive NFTs and will be rejected</div>
+            <div>• Only paste <span className="font-mono text-green-400">stake addresses</span> (stake1... or stake_test1...)</div>
+            <div>• <span className="font-mono text-red-400">Payment addresses</span> (addr1...) will be <span className="font-bold">REJECTED</span></div>
+            <div>• Stake addresses define eligibility (who can see the claim button)</div>
+            <div>• NMKR collects payment addresses during checkout for NFT delivery</div>
             <div>• One address per line</div>
             <div>• Empty lines will be skipped</div>
           </div>
@@ -1175,7 +1501,7 @@ function ManualWhitelistModal({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g., Test Whitelist - Oct 25"
-            className="w-full bg-black/50 border border-green-500/30 rounded px-3 py-2 text-white"
+            className="w-full bg-black/50 border border-green-500/30 px-3 py-2 text-white focus:border-green-500/60 focus:outline-none transition-colors"
           />
         </div>
 
@@ -1186,14 +1512,14 @@ function ManualWhitelistModal({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Notes about this whitelist..."
-            className="w-full bg-black/50 border border-green-500/30 rounded px-3 py-2 text-white h-20"
+            className="w-full bg-black/50 border border-green-500/30 px-3 py-2 text-white h-20 focus:border-green-500/60 focus:outline-none transition-colors"
           />
         </div>
 
         {/* Addresses Textarea */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
-            <label className="block text-sm text-green-300">Payment Addresses</label>
+            <label className="block text-sm text-green-300">Stake Addresses</label>
             <button
               onClick={handleValidate}
               className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded"
@@ -1207,8 +1533,8 @@ function ManualWhitelistModal({
               setAddressesText(e.target.value);
               setValidationResult(null); // Clear validation on edit
             }}
-            placeholder="Paste payment addresses here (one per line)&#10;addr_test1qz04lcdw53xuhq89lw93m293e6tk82xtwzplyl66p7ajxgsaqtsv4ju9gl6rducnhv5u83ke4fxpwmtun2yh0melw28qzm7v40&#10;addr_test1qpq3w8lqspr0vxa89n64kpq5urqvfuwvazggkvgulumgxssaqtsv4ju9gl6rducnhv5u83ke4fxpwmtun2yh0melw28qgntca8k"
-            className="w-full bg-black/50 border border-green-500/30 rounded px-3 py-2 text-white h-64 font-mono text-xs"
+            placeholder="Paste stake addresses here (one per line)&#10;stake_test1uzpq2pktgvn7n6qd3vd23jyy5ekgt4mhpggngz52cxw7zyclhw28g&#10;stake_test1uqx5w8r4km2eshaa4w09v74ruw5dpfnkz7qx8mnkj7pqnwcz4nfr2"
+            className="w-full bg-black/50 border border-green-500/30 px-3 py-2 text-white h-64 font-mono text-xs focus:border-green-500/60 focus:outline-none transition-colors"
           />
         </div>
 
@@ -1222,7 +1548,7 @@ function ManualWhitelistModal({
             </div>
             <div className="text-sm space-y-1">
               <div>• Total addresses: <span className="font-bold">{validationResult.total}</span></div>
-              <div className="text-green-400">• Valid payment addresses: <span className="font-bold">{validationResult.valid}</span></div>
+              <div className="text-green-400">• Valid stake addresses: <span className="font-bold">{validationResult.valid}</span></div>
               {validationResult.invalid > 0 && (
                 <div className="text-red-400">• Invalid addresses: <span className="font-bold">{validationResult.invalid}</span></div>
               )}
@@ -1230,6 +1556,8 @@ function ManualWhitelistModal({
             {validationResult.invalid > 0 && (
               <div className="mt-3 text-xs text-red-300">
                 Invalid addresses will be rejected when you create the whitelist. Please remove or fix them.
+                <br/>
+                <span className="font-bold">Remember: Only stake addresses (stake1... or stake_test1...) are allowed.</span>
               </div>
             )}
           </div>

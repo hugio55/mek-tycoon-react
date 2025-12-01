@@ -23,15 +23,6 @@ export interface SessionData {
  * @returns Promise that resolves when encryption is complete
  */
 export async function saveWalletSession(data: SessionData): Promise<void> {
-  console.log('[TRACE-SAVE-1] saveWalletSession called with data:', {
-    walletName: data.walletName,
-    stakeAddress: data.stakeAddress?.slice(0, 12) + '...',
-    paymentAddress: data.paymentAddress?.slice(0, 12) + '...',
-    hasNonce: !!data.nonce,
-    hasSessionId: !!data.sessionId,
-    timestamp: new Date().toISOString()
-  });
-
   const platform = detectPlatform();
   const deviceId = generateDeviceId();
 
@@ -47,19 +38,11 @@ export async function saveWalletSession(data: SessionData): Promise<void> {
     paymentAddress: data.paymentAddress, // Store separately for blockchain verification
     sessionId: data.sessionId,
     nonce: data.nonce,
-    walletType: data.walletName.toLowerCase(),
-    walletName: data.walletName,
+    walletType: (data.walletName || 'unknown').toLowerCase(),
+    walletName: data.walletName || 'unknown',
     platform,
     deviceId,
   };
-
-  console.log('[TRACE-SAVE-2] Session object constructed:', {
-    walletAddress: session.walletAddress?.slice(0, 12) + '...',
-    stakeAddress: session.stakeAddress?.slice(0, 12) + '...',
-    walletAddressIsUndefined: session.walletAddress === undefined,
-    stakeAddressIsUndefined: session.stakeAddress === undefined,
-    timestamp: new Date().toISOString()
-  });
 
   // Save encrypted session (this is now async due to encryption)
   await saveSession(session);
@@ -98,12 +81,14 @@ export async function restoreWalletSession(): Promise<WalletSession | null> {
       return null;
     }
 
-    console.log('[Session Manager] Restored encrypted session:', {
-      walletAddress: session.walletAddress.slice(0, 12) + '...',
-      platform: session.platform,
-      walletName: session.walletName,
-      age: Math.floor((Date.now() - session.createdAt) / 1000 / 60) + ' minutes',
-    });
+    if (typeof window !== 'undefined' && (window as any).DEBUG_SECURITY) {
+      console.log('[Session Manager] Restored encrypted session:', {
+        walletAddress: session.walletAddress.slice(0, 12) + '...',
+        platform: session.platform,
+        walletName: session.walletName,
+        age: Math.floor((Date.now() - session.createdAt) / 1000 / 60) + ' minutes',
+      });
+    }
 
     return session;
   } catch (error) {
@@ -114,23 +99,41 @@ export async function restoreWalletSession(): Promise<WalletSession | null> {
 
 /**
  * Clear all wallet session data
+ * Removes session and all cached data to force full reconnection
+ * Creates disconnect nonce to require signature verification on next login
  */
 export function clearWalletSession(): void {
+  console.log('[🔓DISCONNECT] === Starting Wallet Disconnect Process ===');
+  console.log('[🔓DISCONNECT] Step 1: Clearing encrypted session...');
   clearSession();
 
-  // Also clear cache and additional wallet keys
+  // Generate and store disconnect nonce for signature verification
+  // This prevents someone from reconnecting without proving wallet ownership
+  console.log('[🔓DISCONNECT] Step 2: Generating disconnect nonce...');
+  const disconnectNonce = crypto.randomUUID();
+  console.log('[🔓DISCONNECT] Step 3: Storing disconnect nonce:', disconnectNonce.slice(0, 8) + '...');
+  localStorage.setItem('mek_disconnect_nonce', disconnectNonce);
+
+  // Verify nonce was stored
+  const nonceVerify = localStorage.getItem('mek_disconnect_nonce');
+  console.log('[🔓DISCONNECT] Step 4: Verifying nonce storage:', nonceVerify ? `✅ SUCCESS (${nonceVerify.slice(0, 8)}...)` : '❌ FAILED');
+
+  // Clear all wallet-related data
   try {
-    localStorage.removeItem('mek_cached_meks'); // New cache key
-    localStorage.removeItem('mek_wallet_session'); // Legacy key (may still exist)
+    console.log('[🔓DISCONNECT] Step 5: Clearing all wallet-related localStorage items...');
+    localStorage.removeItem('mek_cached_meks');
+    localStorage.removeItem('mek_wallet_session');
     localStorage.removeItem('goldMiningWallet');
     localStorage.removeItem('goldMiningWalletType');
-    localStorage.removeItem('walletAddress'); // Clear payment address
-    localStorage.removeItem('stakeAddress'); // Clear stake address
-    localStorage.removeItem('paymentAddress'); // Clear payment address (alt key)
-    localStorage.removeItem('mek_migration_status'); // CRITICAL: Clear failed migration tracker
-    console.log('[Session Manager] Cleared all session data and caches');
+    localStorage.removeItem('walletAddress');
+    localStorage.removeItem('stakeAddress');
+    localStorage.removeItem('paymentAddress');
+    localStorage.removeItem('mek_migration_status');
+    console.log('[🔓DISCONNECT] ✅ Cleared all session data');
+    console.log('[🔓DISCONNECT] === Disconnect Complete ===');
+    console.log('[🔓DISCONNECT] User MUST reconnect wallet and sign verification message to access site');
   } catch (error) {
-    console.error('[Session Manager] Error clearing session data:', error);
+    console.error('[🔓DISCONNECT] ❌ Error clearing session data:', error);
   }
 }
 
@@ -143,16 +146,8 @@ export function clearWalletSession(): void {
  */
 export function getCachedMeks(walletAddress?: string): any[] | null {
   try {
-    // Try new cache key first
-    let cacheData = localStorage.getItem('mek_cached_meks');
-
-    // Fall back to legacy key for backwards compatibility
-    if (!cacheData) {
-      cacheData = localStorage.getItem('mek_wallet_session');
-      if (cacheData) {
-        console.log('[Session Manager] Found legacy cache, will migrate on next save');
-      }
-    }
+    // Get cache data from dedicated cache key
+    const cacheData = localStorage.getItem('mek_cached_meks');
 
     if (!cacheData) return null;
 

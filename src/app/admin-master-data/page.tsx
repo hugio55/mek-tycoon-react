@@ -3,7 +3,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useConvex, useMutation, useQuery } from 'convex/react';
+import { ConvexHttpClient } from 'convex/browser';
 import { api } from '@/convex/_generated/api';
+import * as Switch from '@radix-ui/react-switch';
 import MasterRangeSystem from '@/components/MasterRangeSystem';
 import GameDataLightbox from '@/components/GameDataLightbox';
 import StoryClimbConfig from '@/components/StoryClimbConfig';
@@ -16,14 +18,43 @@ import MekDetailViewer from '@/components/MekDetailViewer';
 import GoldBackupAdmin from '@/components/GoldBackupAdmin';
 import WalletManagementAdmin from '@/components/WalletManagementAdmin';
 import NftPurchasePlanner from '@/components/NftPurchasePlanner';
-import VariationSearchTable from '@/components/VariationSearchTable';
+import VariationsHub from '@/components/VariationsHub';
 import CommemorativeToken1Admin from '@/components/CommemorativeToken1Admin';
 import SourceKeyMigrationAdmin from '@/components/SourceKeyMigrationAdmin';
 import WhitelistManagerAdmin from '@/components/WhitelistManagerAdmin';
+import RouteVisualization from '@/components/RouteVisualization';
 import NMKRJSONGenerator from '@/components/admin/nft/NMKRJSONGenerator';
 import CampaignManager from '@/components/admin/campaign/CampaignManager';
+import NFTInventoryTable from '@/components/admin/campaign/NFTInventoryTable';
 import EssenceMarketAdmin from '@/components/EssenceMarketAdmin';
 import OverlayEditor from '@/components/OverlayEditor';
+import CometLoader from '@/components/loaders/CometLoader';
+import TriangleKaleidoscope from '@/components/loaders/TriangleKaleidoscope';
+import PreLoader from '@/components/loaders/PreLoader';
+import AnimatedBorderButton from '@/components/loaders/AnimatedBorderButton';
+import ProModeToggle from '@/components/controls/ProModeToggle';
+import PowerSwitch from '@/components/controls/PowerSwitch';
+import PowerSwitchToggle from '@/components/controls/PowerSwitchToggle';
+import NebulaCheckbox from '@/components/controls/NebulaCheckbox';
+import PowerButtonSwitch from '@/components/controls/PowerButtonSwitch';
+import ColorToggleSwitch from '@/components/controls/ColorToggleSwitch';
+import DottedToggleSwitch from '@/components/controls/DottedToggleSwitch';
+import MechanicalToggle from '@/components/controls/MechanicalToggle';
+import GlowToggle from '@/components/controls/GlowToggle';
+import GlassButton from '@/components/controls/GlassButton';
+import GlassButtonSharp from '@/components/controls/GlassButtonSharp';
+import IsometricSocialButton from '@/components/controls/IsometricSocialButton';
+import RadialSwitch from '@/components/RadialSwitch';
+import CloseButton from '@/components/controls/CloseButton';
+import DiscordButton from '@/components/controls/DiscordButton';
+import GeneratingLoader from '@/components/loaders/GeneratingLoader';
+import TextSwitch from '@/components/controls/TextSwitch';
+import HoverTooltip from '@/components/controls/HoverTooltip';
+import FillTextButton from '@/components/controls/FillTextButton';
+import FloatingLabelInput from '@/components/controls/FloatingLabelInput';
+import IndustrialFlipCard from '@/components/controls/IndustrialFlipCard';
+import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
+import PortMonitor from '@/components/PortMonitor';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
 import { getVariationTrueRank, VARIATION_MEK_RANKS } from '@/lib/variationRarityMekRanks';
@@ -82,15 +113,74 @@ const DATA_SYSTEMS = [
   { id: 'slots-system', name: 'Slots', icon: '📦', implemented: true },
   { id: 'gold-backup-system', name: 'Gold Backup System', icon: '💾', implemented: true },
   { id: 'wallet-management', name: 'Player Management', icon: '👥', implemented: true },
+  { id: 'port-monitor', name: 'Port Monitor', icon: '🔌', implemented: true },
   { id: 'sourcekey-migration', name: 'SourceKey Migration', icon: '🔧', implemented: true },
+  { id: 'claude-manager', name: 'Claude Manager', icon: '🤖', implemented: true },
   { id: 'notification-system', name: 'Notification System', icon: '🔔', implemented: false },
   { id: 'nft-admin', name: 'NFT', icon: '🎨', implemented: true },
+  { id: 'route-config', name: 'Route Configuration', icon: '🗺️', implemented: true },
   { id: 'overlay-editor', name: 'Overlay Editor', icon: '🎯', implemented: true },
-  { id: 'navigation-preview', name: 'Navigation', icon: '🧭', implemented: true }
+  { id: 'navigation-preview', name: 'Navigation', icon: '🧭', implemented: true },
+  { id: 'components', name: 'Components', icon: '🧩', implemented: true }
 ];
 
 export default function AdminMasterDataPage() {
   const convex = useConvex();
+
+  // Dual database clients
+  const [troutClient] = useState(() => new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!));
+  const [sturgeonClient] = useState(() => new ConvexHttpClient(process.env.NEXT_PUBLIC_STURGEON_URL!));
+
+  // Trout (dev) site settings
+  const [troutSettings, setTroutSettings] = useState<any>(null);
+  const [troutLoading, setTroutLoading] = useState(true);
+
+  // Sturgeon (production) site settings
+  const [sturgeonSettings, setSturgeonSettings] = useState<any>(null);
+  const [sturgeonLoading, setSturgeonLoading] = useState(true);
+
+  // Fetch settings from both databases
+  useEffect(() => {
+    async function fetchTroutSettings() {
+      try {
+        const settings = await troutClient.query(api.siteSettings.getSiteSettings);
+        setTroutSettings(settings);
+      } catch (error) {
+        console.error('[Trout] Error fetching settings:', error);
+      } finally {
+        setTroutLoading(false);
+      }
+    }
+
+    async function fetchSturgeonSettings() {
+      try {
+        const settings = await sturgeonClient.query(api.siteSettings.getSiteSettings);
+        setSturgeonSettings(settings);
+      } catch (error) {
+        console.error('[Sturgeon] Error fetching settings:', error);
+      } finally {
+        setSturgeonLoading(false);
+      }
+    }
+
+    fetchTroutSettings();
+    fetchSturgeonSettings();
+
+    // Poll for updates every 5 seconds
+    const interval = setInterval(() => {
+      fetchTroutSettings();
+      fetchSturgeonSettings();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [troutClient, sturgeonClient]);
+
+  // Site settings for current database (using default convex client)
+  const siteSettings = useQuery(api.siteSettings.getSiteSettings);
+  const toggleLandingPage = useMutation(api.siteSettings.toggleLandingPage);
+  const toggleLocalhostBypass = useMutation(api.siteSettings.toggleLocalhostBypass);
+  const toggleMaintenanceMode = useMutation(api.siteSettings.toggleMaintenanceMode);
+
   const [activeSystem, setActiveSystem] = useState<string | null>(null);
   // Initialize with static value to avoid hydration mismatch
   // Load from localStorage after mount (client-side only)
@@ -185,6 +275,11 @@ export default function AdminMasterDataPage() {
   const [saveName, setSaveName] = useState('');
   const [mounted, setMounted] = useState(false);
 
+  // Component demo states
+  const [mechanicalToggleChecked, setMechanicalToggleChecked] = useState(false);
+  const [powerSwitchToggleChecked, setPowerSwitchToggleChecked] = useState(false);
+  const [radialSwitchIndex, setRadialSwitchIndex] = useState(0);
+
   // Query saved slot configurations
   const savedConfigurations = useQuery(api.slotConfigurations.listSlotConfigurations);
 
@@ -193,9 +288,22 @@ export default function AdminMasterDataPage() {
   const loadConfiguration = useMutation(api.slotConfigurations.loadSlotConfiguration);
   const deleteConfiguration = useMutation(api.slotConfigurations.deleteSlotConfiguration);
 
+  // Page Loader Toggle State - Separate for Localhost and Production
+  const [pageLoaderDisabledLocalhost, setPageLoaderDisabledLocalhost] = useState(false);
+  const [pageLoaderDisabledProduction, setPageLoaderDisabledProduction] = useState(false);
+  const [loaderStatusMessage, setLoaderStatusMessage] = useState<{ type: 'success' | 'info', text: string } | null>(null);
+
   // Client-side mounting check for portal
   useEffect(() => {
     setMounted(true);
+
+    // Load page loader preferences from localStorage
+    if (typeof window !== 'undefined') {
+      const storedLocalhost = localStorage.getItem('disablePageLoaderLocalhost');
+      const storedProduction = localStorage.getItem('disablePageLoaderProduction');
+      setPageLoaderDisabledLocalhost(storedLocalhost === 'true');
+      setPageLoaderDisabledProduction(storedProduction === 'true');
+    }
   }, []);
 
   // Interpolate slot values between first and last
@@ -713,15 +821,236 @@ export default function AdminMasterDataPage() {
     });
   };
 
+  const handleTogglePageLoaderLocalhost = () => {
+    const newValue = !pageLoaderDisabledLocalhost;
+    setPageLoaderDisabledLocalhost(newValue);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('disablePageLoaderLocalhost', newValue.toString());
+      console.log('[🎯LOADER] Localhost Toggle Changed:', { newValue, valueInLocalStorage: localStorage.getItem('disablePageLoaderLocalhost'), hostname: window.location.hostname });
+    }
+
+    setLoaderStatusMessage({
+      type: 'success',
+      text: newValue
+        ? 'Page loader DISABLED for localhost. Refresh the page to see the change.'
+        : 'Page loader ENABLED for localhost. Refresh the page to see the change.'
+    });
+
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      setLoaderStatusMessage(null);
+    }, 5000);
+  };
+
+  const handleTogglePageLoaderProduction = () => {
+    const newValue = !pageLoaderDisabledProduction;
+    setPageLoaderDisabledProduction(newValue);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('disablePageLoaderProduction', newValue.toString());
+      console.log('[🎯LOADER] Production Toggle Changed:', { newValue, valueInLocalStorage: localStorage.getItem('disablePageLoaderProduction'), hostname: window.location.hostname });
+    }
+
+    setLoaderStatusMessage({
+      type: 'success',
+      text: newValue
+        ? 'Page loader DISABLED for production. Refresh the page to see the change.'
+        : 'Page loader ENABLED for production. Refresh the page to see the change.'
+    });
+
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      setLoaderStatusMessage(null);
+    }, 5000);
+  };
+
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white p-8 relative z-10">
       {/* Header */}
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-yellow-500 mb-2 font-orbitron tracking-wider">
           MASTER DATA SYSTEMS
         </h1>
         <p className="text-gray-400 mb-4">Centralized procedural generation and game balance control</p>
+
+        {/* 🐟 DUAL DATABASE CONTROLS 🐟 */}
+        <div className="mb-4 grid grid-cols-2 gap-3">
+          {/* Trout (Dev Database) */}
+          <div className="p-3 bg-blue-900/20 border border-blue-600/50 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm font-bold text-blue-400">🐟 TROUT</span>
+              <span className="text-[10px] text-blue-300">(dev)</span>
+            </div>
+            {troutLoading ? (
+              <p className="text-gray-400 text-xs">Loading...</p>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-blue-300">Landing Page</span>
+                  <div className="flex items-center gap-2">
+                    <Switch.Root
+                      checked={troutSettings?.landingPageEnabled ?? false}
+                      onCheckedChange={async (enabled) => {
+                        await troutClient.mutation(api.siteSettings.toggleLandingPage, { enabled });
+                        const updated = await troutClient.query(api.siteSettings.getSiteSettings);
+                        setTroutSettings(updated);
+                      }}
+                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors cursor-pointer"
+                    >
+                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                    </Switch.Root>
+                    <span className={`text-[10px] font-bold w-6 ${troutSettings?.landingPageEnabled ? 'text-blue-400' : 'text-gray-500'}`}>
+                      {troutSettings?.landingPageEnabled ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-blue-300">Localhost Bypass</span>
+                  <div className="flex items-center gap-2">
+                    <Switch.Root
+                      checked={troutSettings?.localhostBypass ?? true}
+                      onCheckedChange={async (enabled) => {
+                        await troutClient.mutation(api.siteSettings.toggleLocalhostBypass, { enabled });
+                        const updated = await troutClient.query(api.siteSettings.getSiteSettings);
+                        setTroutSettings(updated);
+                      }}
+                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors cursor-pointer"
+                    >
+                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                    </Switch.Root>
+                    <span className={`text-[10px] font-bold w-6 ${troutSettings?.localhostBypass ? 'text-blue-400' : 'text-gray-500'}`}>
+                      {troutSettings?.localhostBypass ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between border-t border-blue-900/50 pt-2">
+                  <span className="text-xs text-blue-300 flex items-center gap-1">
+                    <span className="text-[10px]">🚨</span> Maintenance
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Switch.Root
+                      checked={troutSettings?.maintenanceMode ?? false}
+                      onCheckedChange={async (enabled) => {
+                        await troutClient.mutation(api.siteSettings.toggleMaintenanceMode, { enabled });
+                        const updated = await troutClient.query(api.siteSettings.getSiteSettings);
+                        setTroutSettings(updated);
+                      }}
+                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-orange-500 transition-colors cursor-pointer"
+                    >
+                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                    </Switch.Root>
+                    <span className={`text-[10px] font-bold w-6 ${troutSettings?.maintenanceMode ? 'text-orange-400' : 'text-gray-500'}`}>
+                      {troutSettings?.maintenanceMode ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sturgeon (Production Database) */}
+          <div className="p-3 bg-red-900/20 border border-red-600/50 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm font-bold text-red-400">🐟 STURGEON</span>
+              <span className="text-[10px] text-red-300">(production)</span>
+            </div>
+            {sturgeonLoading ? (
+              <p className="text-gray-400 text-xs">Loading...</p>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-red-300">Landing Page</span>
+                  <div className="flex items-center gap-2">
+                    <Switch.Root
+                      checked={sturgeonSettings?.landingPageEnabled ?? false}
+                      onCheckedChange={async (enabled) => {
+                        const confirmed = window.confirm(
+                          '⚠️ PRODUCTION WARNING ⚠️\n\n' +
+                          `You are about to ${enabled ? 'ENABLE' : 'DISABLE'} the landing page on STURGEON (PRODUCTION).\n\n` +
+                          'This affects the LIVE WEBSITE with real users.\n\n' +
+                          'Are you sure?'
+                        );
+                        if (!confirmed) return;
+                        await sturgeonClient.mutation(api.siteSettings.toggleLandingPage, { enabled });
+                        const updated = await sturgeonClient.query(api.siteSettings.getSiteSettings);
+                        setSturgeonSettings(updated);
+                      }}
+                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-red-500 transition-colors cursor-pointer"
+                    >
+                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                    </Switch.Root>
+                    <span className={`text-[10px] font-bold w-6 ${sturgeonSettings?.landingPageEnabled ? 'text-red-400' : 'text-gray-500'}`}>
+                      {sturgeonSettings?.landingPageEnabled ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-red-300">Localhost Bypass</span>
+                  <div className="flex items-center gap-2">
+                    <Switch.Root
+                      checked={sturgeonSettings?.localhostBypass ?? true}
+                      onCheckedChange={async (enabled) => {
+                        const confirmed = window.confirm(
+                          '⚠️ PRODUCTION WARNING ⚠️\n\n' +
+                          `You are about to ${enabled ? 'ENABLE' : 'DISABLE'} localhost bypass on STURGEON (PRODUCTION).\n\n` +
+                          'This affects the LIVE WEBSITE behavior.\n\n' +
+                          'Are you sure?'
+                        );
+                        if (!confirmed) return;
+                        await sturgeonClient.mutation(api.siteSettings.toggleLocalhostBypass, { enabled });
+                        const updated = await sturgeonClient.query(api.siteSettings.getSiteSettings);
+                        setSturgeonSettings(updated);
+                      }}
+                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-red-500 transition-colors cursor-pointer"
+                    >
+                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                    </Switch.Root>
+                    <span className={`text-[10px] font-bold w-6 ${sturgeonSettings?.localhostBypass ? 'text-red-400' : 'text-gray-500'}`}>
+                      {sturgeonSettings?.localhostBypass ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between border-t border-red-900/50 pt-2">
+                  <span className="text-xs text-red-300 flex items-center gap-1">
+                    <span className="text-[10px]">🚨</span> Maintenance
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Switch.Root
+                      checked={sturgeonSettings?.maintenanceMode ?? false}
+                      onCheckedChange={async (enabled) => {
+                        const confirmed = window.confirm(
+                          '🚨 EMERGENCY: PRODUCTION MAINTENANCE MODE 🚨\n\n' +
+                          `You are about to ${enabled ? 'ENABLE' : 'DISABLE'} maintenance mode on STURGEON (PRODUCTION).\n\n` +
+                          'This will IMMEDIATELY redirect ALL routes on the LIVE WEBSITE to the maintenance page.\n' +
+                          'Real users will see the maintenance page within 10 seconds.\n\n' +
+                          'Are you ABSOLUTELY SURE?'
+                        );
+                        if (!confirmed) return;
+                        await sturgeonClient.mutation(api.siteSettings.toggleMaintenanceMode, { enabled });
+                        const updated = await sturgeonClient.query(api.siteSettings.getSiteSettings);
+                        setSturgeonSettings(updated);
+                        if (enabled) {
+                          alert('🚨 PRODUCTION MAINTENANCE MODE ACTIVATED!\n\nLive site will show maintenance page within 10 seconds.');
+                        } else {
+                          alert('✓ Production maintenance mode deactivated.\n\nLive site returning to normal.');
+                        }
+                      }}
+                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-orange-500 transition-colors cursor-pointer"
+                    >
+                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                    </Switch.Root>
+                    <span className={`text-[10px] font-bold w-6 ${sturgeonSettings?.maintenanceMode ? 'text-orange-400' : 'text-gray-500'}`}>
+                      {sturgeonSettings?.maintenanceMode ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
 
         {/* Message Display */}
         {message && (
@@ -734,57 +1063,42 @@ export default function AdminMasterDataPage() {
           </div>
         )}
 
-        {/* Quick Save & Commit Buttons */}
-        <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-yellow-400 mb-1">Quick Save & Commit</h2>
-              <p className="text-xs text-gray-400">Create backups and git commits of your code</p>
-            </div>
+        {/* Page Loader Toggles - Separate for Localhost and Production */}
+        <div className="flex gap-4 mb-6">
+          {/* Localhost Toggle */}
+          <div className="bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-2 inline-flex items-center gap-3">
+            <label htmlFor="page-loader-localhost" className="text-sm font-bold text-blue-400 cursor-pointer">
+              Page Loader (Localhost)
+            </label>
+            <Switch.Root
+              id="page-loader-localhost"
+              checked={!pageLoaderDisabledLocalhost}
+              onCheckedChange={handleTogglePageLoaderLocalhost}
+              className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-green-600 transition-colors"
+            >
+              <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
+            </Switch.Root>
+            <span className={`text-xs font-bold ${pageLoaderDisabledLocalhost ? 'text-red-400' : 'text-green-400'}`}>
+              {pageLoaderDisabledLocalhost ? 'OFF' : 'ON'}
+            </span>
+          </div>
 
-            <div className="flex gap-3">
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className={`px-6 py-3 rounded-lg font-bold transition-all ${
-                  isSaving
-                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-black hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-yellow-500/30 hover:scale-105'
-                }`}
-              >
-                {isSaving ? (
-                  <span className="flex items-center gap-2">
-                    <span className="animate-spin">⚙️</span>
-                    Saving...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    💾 <span>SAVE NOW</span>
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={handleCommit}
-                disabled={isCommitting}
-                className={`px-6 py-3 rounded-lg font-bold transition-all ${
-                  isCommitting
-                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-green-500/30 hover:scale-105'
-                }`}
-              >
-                {isCommitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="animate-spin">⚙️</span>
-                    Committing...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    📝 <span>GIT COMMIT</span>
-                  </span>
-                )}
-              </button>
-            </div>
+          {/* Production Toggle */}
+          <div className="bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-2 inline-flex items-center gap-3">
+            <label htmlFor="page-loader-production" className="text-sm font-bold text-blue-400 cursor-pointer">
+              Page Loader (Production)
+            </label>
+            <Switch.Root
+              id="page-loader-production"
+              checked={!pageLoaderDisabledProduction}
+              onCheckedChange={handleTogglePageLoaderProduction}
+              className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-green-600 transition-colors"
+            >
+              <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
+            </Switch.Root>
+            <span className={`text-xs font-bold ${pageLoaderDisabledProduction ? 'text-red-400' : 'text-green-400'}`}>
+              {pageLoaderDisabledProduction ? 'OFF' : 'ON'}
+            </span>
           </div>
         </div>
 
@@ -2044,9 +2358,9 @@ export default function AdminMasterDataPage() {
                   {expandedSections.has('variations-search') && (
                     <div className="p-4 border-t border-cyan-500/20">
                       <p className="text-sm text-gray-400 mb-4">
-                        Search and filter all 291 variations by name, style, or group. Click on any style or group to filter results.
+                        Search and filter all 291 variations by name, style, or group. Track image progress for heads, bodies, and traits.
                       </p>
-                      <VariationSearchTable />
+                      <VariationsHub />
                     </div>
                   )}
                 </div>
@@ -2839,6 +3153,19 @@ export default function AdminMasterDataPage() {
           </div>
           )}
 
+          {/* Port Monitor */}
+          {activeTab === 'port-monitor' && (
+          <div id="section-port-monitor" className="bg-black/50 backdrop-blur border-2 border-yellow-500/30 rounded-lg shadow-lg shadow-black/50">
+            <div className="p-4">
+                <p className="text-gray-400 mb-4">
+                  Monitor which processes are using dev server ports. Quickly identify and kill zombie processes that cause "EADDRINUSE" errors.
+                </p>
+
+                <PortMonitor />
+              </div>
+          </div>
+          )}
+
           {/* SourceKey Migration */}
           {activeTab === 'sourcekey-migration' && (
           <div id="section-sourcekey-migration" className="bg-black/50 backdrop-blur border-2 border-yellow-500/30 rounded-lg shadow-lg shadow-black/50">
@@ -2848,6 +3175,19 @@ export default function AdminMasterDataPage() {
                 </p>
 
                 <SourceKeyMigrationAdmin />
+              </div>
+          </div>
+          )}
+
+          {/* Claude Manager */}
+          {activeTab === 'claude-manager' && (
+          <div id="section-claude-manager" className="bg-black/50 backdrop-blur border-2 border-purple-500/30 rounded-lg shadow-lg shadow-black/50">
+            <div className="p-4">
+                <p className="text-gray-400 mb-4">
+                  View and manage Claude Code agents, slash commands, and markdown documents. See both project-specific and computer-wide Claude files.
+                </p>
+
+                <ClaudeManagerAdmin />
               </div>
           </div>
           )}
@@ -2889,8 +3229,15 @@ export default function AdminMasterDataPage() {
                 </p>
 
                 {/* NFT Sub-Tabs */}
-                <NFTAdminTabs />
+                <NFTAdminTabs troutClient={troutClient} sturgeonClient={sturgeonClient} />
               </div>
+          </div>
+          )}
+
+          {/* Route Configuration */}
+          {activeTab === 'route-config' && (
+          <div id="section-route-config" className="bg-black/50 backdrop-blur border-2 border-cyan-500/30 rounded-lg shadow-lg shadow-black/50">
+            <RouteVisualization />
           </div>
           )}
 
@@ -3159,6 +3506,724 @@ export default function AdminMasterDataPage() {
           </div>
           )}
 
+          {/* Components */}
+          {activeTab === 'components' && (
+          <div id="section-components" className="mek-card-industrial mek-border-sharp-gold rounded-lg shadow-lg shadow-black/50">
+            <div className="p-6 space-y-8">
+                <p className="text-zinc-300 mb-6">
+                  Transformed UI components from external libraries (CodePen, shadcn, v0.dev) converted to Mek Tycoon's industrial design system using expert transformation documents.
+                </p>
+
+                {/* Component Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                  {/* Comet Loader */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Comet Loader
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Loader
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <CometLoader />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External CSS</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> Gold & Lime</div>
+                    </div>
+                  </div>
+
+                  {/* Triangle Kaleidoscope */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Triangle Kaleidoscope
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Loader
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black rounded-lg flex items-center justify-center min-h-[400px] overflow-hidden">
+                      <div className="w-full h-[400px]">
+                        <TriangleKaleidoscope />
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Pug/SCSS/Compass</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript</div>
+                      <div><span className="text-zinc-500">Features:</span> Polygon clip-path, screen blend mode</div>
+                    </div>
+                  </div>
+
+                  {/* PreLoader */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        PreLoader
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Loader
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="relative bg-black rounded-lg flex items-center justify-center min-h-[300px] overflow-hidden" style={{ transform: 'translateZ(0)' }}>
+                      <div className="w-full h-[300px]">
+                        <PreLoader />
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> HTML/CSS</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
+                      <div><span className="text-zinc-500">Features:</span> Ripple animation, SVG logo, backdrop blur</div>
+                    </div>
+                  </div>
+
+                  {/* Animated Border Button */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Animated Border Button
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Button
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <AnimatedBorderButton>
+                        Click Me
+                      </AnimatedBorderButton>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External HTML/CSS</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> Blue → Gold (#fab617)</div>
+                      <div><span className="text-zinc-500">Features:</span> Sequential border animations with staggered delays</div>
+                    </div>
+                  </div>
+
+                  {/* Industrial Flip Card */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Industrial Flip Card
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Card
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <IndustrialFlipCard
+                        title="TACTICAL"
+                        badge="ELITE"
+                        footer="UNIT READY"
+                        icon="⚙️"
+                        backText="HOVER ME"
+                      />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External React/styled-components</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind + CSS</div>
+                      <div><span className="text-zinc-500">Colors:</span> Yellow/gold theme with glass-morphism</div>
+                      <div><span className="text-zinc-500">Features:</span> 3D flip animation, rotating border glow, blur circles, scan line effect</div>
+                    </div>
+                  </div>
+
+                  {/* Discord Button */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Discord Button
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Button
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <DiscordButton />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External React/styled-components</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> Indigo gradient with glass-morphism</div>
+                      <div><span className="text-zinc-500">Features:</span> Backdrop blur, hover animations, Discord icon, social button</div>
+                    </div>
+                  </div>
+
+                  {/* Generating Loader */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Generating Loader
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Loader
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <GeneratingLoader />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External styled-components</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS Modules</div>
+                      <div><span className="text-zinc-500">Colors:</span> Purple/pink gradient ring with white text</div>
+                      <div><span className="text-zinc-500">Features:</span> Rotating gradient ring, letter-by-letter animation, staggered delays</div>
+                    </div>
+                  </div>
+
+                  {/* Text Switch */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Text Switch
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <TextSwitch />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External styled-components</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> Dark background with yellow (#ffb500) checked state</div>
+                      <div><span className="text-zinc-500">Features:</span> Text label transitions, sliding thumb, opacity/transform animations</div>
+                    </div>
+                  </div>
+
+                  {/* Hover Tooltip */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Hover Tooltip
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <HoverTooltip />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External styled-components</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> White with pink border (#ffe4e4)</div>
+                      <div><span className="text-zinc-500">Features:</span> Hover reveal, animated lines, pulse background, diagonal line transform</div>
+                    </div>
+                  </div>
+
+                  {/* Fill Text Button */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Fill Text Button
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Button
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <FillTextButton />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External styled-components</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind + inline styles</div>
+                      <div><span className="text-zinc-500">Colors:</span> Green (#37FF8B) fill with stroke outline</div>
+                      <div><span className="text-zinc-500">Features:</span> Text stroke effect, left-to-right fill animation, drop-shadow glow, webkit-text-stroke</div>
+                    </div>
+                  </div>
+
+                  {/* Floating Label Input */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Floating Label Input
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Input
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <FloatingLabelInput />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External styled-components</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind + CSS Modules</div>
+                      <div><span className="text-zinc-500">Colors:</span> Blue (#5264AE) focus state with gray border</div>
+                      <div><span className="text-zinc-500">Features:</span> Material Design floating label, center-expand bar animation, highlight flash, peer utility</div>
+                    </div>
+                  </div>
+
+                  {/* Pro Mode Toggle */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Pro Mode Toggle
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <ProModeToggle />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External CSS</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Features:</span> Safety guard, 3D transforms, hazard stripes</div>
+                    </div>
+                  </div>
+
+                  {/* Power Switch */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Power Switch
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <PowerSwitch />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External CSS</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Features:</span> 3D lever, rotating halves, glowing indicator</div>
+                    </div>
+                  </div>
+
+                  {/* Nebula Checkbox */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Nebula Checkbox
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <NebulaCheckbox />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External CSS (Uiverse)</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Features:</span> Square→Star transform, nebula glow, sparkles</div>
+                    </div>
+                  </div>
+
+                  {/* Power Button Switch */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Power Button Switch
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <PowerButtonSwitch enableVibration={true} />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External CSS (by @oguzyagizkara)</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Features:</span> Sliding button, icon transitions, haptic feedback</div>
+                    </div>
+                  </div>
+
+                  {/* Color Toggle Switch */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Color Toggle Switch
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex flex-col items-center justify-center gap-3 min-h-[300px] text-[2em]">
+                      <ColorToggleSwitch color="red" />
+                      <ColorToggleSwitch color="yellow" />
+                      <ColorToggleSwitch color="blue" />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External CSS (SCSS)</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Features:</span> 3D ball, radial gradients, 3 color variants</div>
+                    </div>
+                  </div>
+
+                  {/* Dotted Toggle Switch */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Dotted Toggle Switch
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-[#e8e1d6] rounded-lg p-8 flex flex-col items-center justify-center gap-2 min-h-[300px] text-[3em]">
+                      <DottedToggleSwitch />
+                      <DottedToggleSwitch checked={true} />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External CSS</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Features:</span> 12-dot grip pattern, 3D shadows, beige theme</div>
+                    </div>
+                  </div>
+
+                  {/* Mechanical Toggle Switch */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Mechanical Toggle
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="relative rounded-lg p-8 flex flex-col items-center justify-center min-h-[300px] overflow-hidden">
+                      {/* Industrial textured background */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900"></div>
+                      <div className="absolute inset-0 opacity-10" style={{
+                        backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(250, 182, 23, 0.1) 2px, rgba(250, 182, 23, 0.1) 4px), repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(250, 182, 23, 0.1) 2px, rgba(250, 182, 23, 0.1) 4px)'
+                      }}></div>
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(250,182,23,0.05),transparent_50%)]"></div>
+
+                      {/* Toggle component with relative positioning */}
+                      <div className="relative z-10">
+                        <MechanicalToggle
+                          checked={mechanicalToggleChecked}
+                          onChange={setMechanicalToggleChecked}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External HTML/CSS (SCSS)</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS Module</div>
+                      <div><span className="text-zinc-500">Features:</span> Red knob rotation, metallic handle, gray→green base, gold accents</div>
+                    </div>
+                  </div>
+
+                  {/* Power Switch Toggle */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Power Switch Toggle
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview - Interactive toggle */}
+                    <div className="bg-black/60 rounded-lg p-8">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="text-xs text-zinc-500 uppercase tracking-wider">Click to Toggle</div>
+                        <PowerSwitchToggle
+                          checked={powerSwitchToggleChecked}
+                          onChange={setPowerSwitchToggleChecked}
+                        />
+                        <div className="text-xs text-yellow-400">
+                          Status: {powerSwitchToggleChecked ? 'ON (Glowing)' : 'OFF (Dim)'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External HTML/CSS/SVG</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind v3</div>
+                      <div><span className="text-zinc-500">Features:</span> Click animation, line bounce, circle rotation (partial→full), radial glow when ON</div>
+                      <div><span className="text-zinc-500">Colors:</span> White → Gold (#fab617)</div>
+                    </div>
+                  </div>
+
+                  {/* Glow Toggle */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Glow Toggle
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex flex-col items-center justify-center min-h-[400px]">
+                      <div style={{ transform: 'scale(0.3)' }}>
+                        <GlowToggle />
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External HTML/CSS (exact transplant)</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
+                      <div><span className="text-zinc-500">Features:</span> Sliding cyan/gray gradient track, ||| thumb with cyan radial glow when ON, gray background when OFF, 3s demo animation on load</div>
+                    </div>
+                  </div>
+
+                  {/* Radial Switch */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Radial Switch
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="relative rounded-lg p-8 flex flex-col items-center justify-center min-h-[300px] overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
+                      <RadialSwitch
+                        options={['off', 'on']}
+                        defaultIndex={radialSwitchIndex}
+                        onChange={(index) => setRadialSwitchIndex(index)}
+                      />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Pug/SASS (CodePen)</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
+                      <div><span className="text-zinc-500">Features:</span> Circular rotating switch, gradient ring, animated handle</div>
+                    </div>
+                  </div>
+
+                  {/* Glass Button */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Glass Button
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div
+                      className="rounded-lg p-8 flex flex-col items-center justify-center min-h-[300px]"
+                      style={{
+                        background: 'repeating-linear-gradient(45deg, #27272a 0px, #27272a 20px, #fab617 20px, #fab617 40px)'
+                      }}
+                    >
+                      <GlassButton
+                        text="Generate"
+                        onClick={() => console.log('Glass button clicked')}
+                      />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External HTML/CSS</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
+                      <div><span className="text-zinc-500">Features:</span> Glassmorphism with backdrop blur, rotating conic gradient border (hover: -75deg → -125deg), linear gradient shine on ::after, 3D rotation on active, shadow glow effect</div>
+                    </div>
+                  </div>
+
+                  {/* Glass Button Sharp */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Glass Button Sharp
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div
+                      className="rounded-lg p-8 flex flex-col items-center justify-center min-h-[300px]"
+                      style={{
+                        background: 'repeating-linear-gradient(45deg, #27272a 0px, #27272a 20px, #fab617 20px, #fab617 40px)'
+                      }}
+                    >
+                      <GlassButtonSharp
+                        text="Generate"
+                        onClick={() => console.log('Glass button sharp clicked')}
+                      />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External HTML/CSS</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
+                      <div><span className="text-zinc-500">Features:</span> Sharp edges (border-radius: 0), glassmorphism with backdrop blur, rotating conic gradient border, linear gradient shine, 3D rotation on active</div>
+                    </div>
+                  </div>
+
+                  {/* Isometric Social Button */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Isometric Social Button
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div
+                      className="rounded-lg p-8 flex flex-wrap items-center justify-center gap-4 min-h-[400px]"
+                      style={{
+                        background: 'repeating-linear-gradient(45deg, #1e293b 0px, #1e293b 20px, #0f172a 20px, #0f172a 40px)'
+                      }}
+                    >
+                      <IsometricSocialButton
+                        iconClass="fab fa-facebook"
+                        label="Facebook"
+                        onClick={() => console.log('Facebook clicked')}
+                        mekImage="/mek-images/500px/ht2-bi1-lg2.webp"
+                      />
+                      <IsometricSocialButton
+                        iconClass="fab fa-twitter"
+                        label="Twitter"
+                        onClick={() => console.log('Twitter clicked')}
+                        mekImage="/mek-images/500px/cl3-jg1-nm1.webp"
+                      />
+                      <IsometricSocialButton
+                        iconClass="fab fa-instagram"
+                        label="Instagram"
+                        onClick={() => console.log('Instagram clicked')}
+                        mekImage="/mek-images/500px/ki3-cb1-ji1.webp"
+                      />
+                      <IsometricSocialButton
+                        iconClass="fab fa-youtube"
+                        label="Youtube"
+                        onClick={() => console.log('Youtube clicked')}
+                        mekImage="/mek-images/500px/ed3-dc1-il1.webp"
+                      />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Pug/SCSS (exact transplant)</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
+                      <div><span className="text-zinc-500">Features:</span> 3D isometric transform (perspective 1000px, rotate -30deg, skew 25deg), ::before creates left cube face (skewY -45deg), ::after creates bottom face (skewX -45deg), hover lifts button with translate(20px, -20px) and extends shadow from -20px to -50px</div>
+                      <div><span className="text-zinc-500">Note:</span> Preserves original typos: "dislpay" (display) and "scewY" (skewY) in CSS</div>
+                    </div>
+                  </div>
+
+                  {/* Close Button */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Close Button
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div
+                      className="rounded-lg p-8 flex items-center justify-center min-h-[300px]"
+                      style={{
+                        background: '#1E272D'
+                      }}
+                    >
+                      <CloseButton onClick={() => console.log('Close button clicked')} />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> HTML/SCSS (exact CSS transplant)</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
+                      <div><span className="text-zinc-500">Features:</span> X made from two 4px × 50px bars rotated 45deg/-45deg, hover rotates bars in opposite direction (-45deg/45deg), color changes from soft orange (#F4A259) to tomato red (#F25C66), "close" label fades in (opacity 0→1), all transitions 300ms ease-in</div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+          </div>
+          )}
+
         </div>
       </div>
 
@@ -3220,9 +4285,271 @@ export default function AdminMasterDataPage() {
   );
 }
 
+// Campaign Manager Component with Database Awareness
+function CampaignManagerWithDatabase({
+  campaignDatabase,
+  campaigns,
+  onToggleCleanup,
+  onRunCleanup,
+  onSyncCounters,
+  cleaningCampaignId,
+  syncingCampaignId,
+  client
+}: {
+  campaignDatabase: 'trout' | 'sturgeon';
+  campaigns: any[];
+  onToggleCleanup: (campaignId: string, enabled: boolean) => Promise<void>;
+  onRunCleanup: (campaignId: string) => Promise<void>;
+  onSyncCounters: (campaignId: string) => Promise<void>;
+  cleaningCampaignId: string | null;
+  syncingCampaignId: string | null;
+  client: any;
+}) {
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>();
+
+  // Auto-select first campaign when campaigns load or change
+  useEffect(() => {
+    if (campaigns.length > 0 && !selectedCampaignId) {
+      setSelectedCampaignId(campaigns[0]._id);
+    }
+  }, [campaigns, selectedCampaignId]);
+
+  const selectedCampaign = campaigns.find(c => c._id === selectedCampaignId);
+
+  return (
+    <div className="space-y-6">
+      {/* Campaign Cards */}
+      {campaigns.length === 0 ? (
+        <div className="bg-black/30 border border-yellow-500/30 rounded-lg p-12 text-center">
+          <div className="text-4xl mb-3">📋</div>
+          <div className="text-gray-400">
+            No campaigns found in {campaignDatabase === 'trout' ? 'Trout (Dev)' : 'Sturgeon (Production)'}.
+          </div>
+        </div>
+      ) : (
+        campaigns.map((campaign) => (
+          <div key={campaign._id}>
+            <div
+              className={`bg-black/30 border rounded-lg p-6 cursor-pointer transition-all ${
+                selectedCampaignId === campaign._id
+                  ? 'border-yellow-500 shadow-lg shadow-yellow-500/20'
+                  : 'border-yellow-500/30 hover:border-yellow-500/60'
+              }`}
+              onClick={() => setSelectedCampaignId(
+                selectedCampaignId === campaign._id ? undefined : campaign._id
+              )}
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-2xl font-bold text-yellow-400">{campaign.name}</h3>
+                  <p className="text-gray-400 text-sm mt-1">{campaign.description || 'No description'}</p>
+                </div>
+                <div className={`px-3 py-1 rounded text-xs font-bold ${
+                  campaign.status === 'active' ? 'bg-green-900/30 text-green-400' :
+                  campaign.status === 'paused' ? 'bg-yellow-900/30 text-yellow-400' :
+                  'bg-gray-900/30 text-gray-400'
+                }`}>
+                  {campaign.status.toUpperCase()}
+                </div>
+              </div>
+
+              {/* Campaign Stats */}
+              <div className="grid grid-cols-4 gap-4 mb-4">
+                <div className="bg-black/50 rounded p-3">
+                  <div className="text-xs text-gray-400">Total NFTs</div>
+                  <div className="text-lg font-bold text-white">{campaign.totalNFTs}</div>
+                </div>
+                <div className="bg-black/50 rounded p-3">
+                  <div className="text-xs text-gray-400">Available</div>
+                  <div className="text-lg font-bold text-green-400">{campaign.availableNFTs}</div>
+                </div>
+                <div className="bg-black/50 rounded p-3">
+                  <div className="text-xs text-gray-400">Reserved</div>
+                  <div className="text-lg font-bold text-yellow-400">{campaign.reservedNFTs}</div>
+                </div>
+                <div className="bg-black/50 rounded p-3">
+                  <div className="text-xs text-gray-400">Sold</div>
+                  <div className="text-lg font-bold text-cyan-400">{campaign.soldNFTs}</div>
+                </div>
+              </div>
+
+              {/* Cleanup Toggle Button */}
+              <div className="flex gap-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleCleanup(
+                      campaign._id,
+                      campaign.enableReservationCleanup === false
+                    );
+                  }}
+                  className="text-xs text-gray-400 hover:text-yellow-400 transition-colors underline"
+                  title="Toggle automatic cleanup of expired reservations"
+                >
+                  {campaign.enableReservationCleanup !== false ? '🗑️ Disable Cleanup' : '✅ Enable Cleanup'}
+                </button>
+                <span className="text-xs text-gray-500">
+                  (Cron runs hourly)
+                </span>
+                <span className="text-gray-600">|</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRunCleanup(campaign._id);
+                  }}
+                  disabled={cleaningCampaignId === campaign._id}
+                  className="text-xs text-yellow-400 hover:text-yellow-300 transition-colors underline disabled:opacity-50"
+                  title="Manually run cleanup to release any expired reservations now"
+                >
+                  {cleaningCampaignId === campaign._id ? '⏳ Cleaning...' : '🧹 Run Cleanup Now'}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSyncCounters(campaign._id);
+                  }}
+                  disabled={syncingCampaignId === campaign._id}
+                  className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors underline disabled:opacity-50"
+                  title="Recalculate counters from actual inventory (fixes mismatched counts)"
+                >
+                  {syncingCampaignId === campaign._id ? '⏳ Syncing...' : '🔄 Sync Counters'}
+                </button>
+                {selectedCampaignId === campaign._id && (
+                  <span className="text-xs text-yellow-400 ml-auto">
+                    👇 View NFTs below
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* NFT Inventory Table - shown when campaign is selected */}
+            {selectedCampaignId === campaign._id && selectedCampaign && (
+              <div className="mt-4 ml-8">
+                <NFTInventoryTable
+                  campaignId={campaign._id}
+                  campaignName={campaign.name}
+                  client={client}
+                />
+              </div>
+            )}
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
 // NFT Admin Sub-Tabs Component
-function NFTAdminTabs() {
+function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturgeonClient: any }) {
   const [nftSubTab, setNftSubTab] = useState<'commemorative' | 'whitelist-manager' | 'json-generator' | 'campaigns'>('json-generator');
+  const [campaignDatabase, setCampaignDatabase] = useState<'trout' | 'sturgeon'>('trout');
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [campaignUpdateTrigger, setCampaignUpdateTrigger] = useState(0);
+  const [cleaningCampaignId, setCleaningCampaignId] = useState<string | null>(null);
+  const [syncingCampaignId, setSyncingCampaignId] = useState<string | null>(null);
+
+  // Fetch campaigns from selected database (only when campaigns tab is active)
+  useEffect(() => {
+    if (nftSubTab !== 'campaigns') return;
+
+    const client = campaignDatabase === 'trout' ? troutClient : sturgeonClient;
+    if (!client) return;
+
+    let cancelled = false;
+
+    const fetchCampaigns = async () => {
+      try {
+        const data = await client.query(api.campaigns.getAllCampaigns, {});
+        if (!cancelled) {
+          setCampaigns(data || []);
+        }
+      } catch (error) {
+        console.error('[NFTAdminTabs] Error fetching campaigns:', error);
+      }
+    };
+
+    fetchCampaigns();
+    const interval = setInterval(fetchCampaigns, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [nftSubTab, campaignDatabase, troutClient, sturgeonClient, campaignUpdateTrigger]);
+
+  const handleToggleCleanup = async (campaignId: string, enabled: boolean) => {
+    const client = campaignDatabase === 'trout' ? troutClient : sturgeonClient;
+    if (!client) return;
+
+    // Warn if trying to modify production
+    if (campaignDatabase === 'sturgeon') {
+      if (!confirm('⚠️ WARNING: You are modifying PRODUCTION (Sturgeon) database!\n\nThis affects the LIVE SITE. Are you sure?')) {
+        return;
+      }
+    }
+
+    try {
+      await client.mutation(api.commemorativeNFTReservationsCampaign.toggleCampaignReservationCleanup, {
+        campaignId,
+        enabled
+      });
+      setCampaignUpdateTrigger(prev => prev + 1);
+    } catch (error: any) {
+      console.error('[NFTAdminTabs] Error toggling cleanup:', error);
+      alert(`Error: ${error.message}`);
+    }
+  };
+
+  const handleRunCleanup = async (campaignId: string) => {
+    const client = campaignDatabase === 'trout' ? troutClient : sturgeonClient;
+    if (!client) return;
+
+    if (campaignDatabase === 'sturgeon') {
+      if (!confirm('⚠️ WARNING: You are modifying PRODUCTION (Sturgeon) database!\n\nThis affects the LIVE SITE. Are you sure?')) {
+        return;
+      }
+    }
+
+    setCleaningCampaignId(campaignId);
+    try {
+      await client.mutation(api.commemorativeNFTReservationsCampaign.cleanupExpiredCampaignReservationsMutation, {
+        campaignId
+      });
+      await client.mutation(api.commemorativeCampaigns.syncCampaignCounters, {
+        campaignId
+      });
+      setCampaignUpdateTrigger(prev => prev + 1);
+    } catch (error: any) {
+      console.error('[NFTAdminTabs] Error running cleanup:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setCleaningCampaignId(null);
+    }
+  };
+
+  const handleSyncCounters = async (campaignId: string) => {
+    const client = campaignDatabase === 'trout' ? troutClient : sturgeonClient;
+    if (!client) return;
+
+    if (campaignDatabase === 'sturgeon') {
+      if (!confirm('⚠️ WARNING: You are modifying PRODUCTION (Sturgeon) database!\n\nThis affects the LIVE SITE. Are you sure?')) {
+        return;
+      }
+    }
+
+    setSyncingCampaignId(campaignId);
+    try {
+      await client.mutation(api.commemorativeCampaigns.syncCampaignCounters, {
+        campaignId
+      });
+      setCampaignUpdateTrigger(prev => prev + 1);
+    } catch (error: any) {
+      console.error('[NFTAdminTabs] Error syncing counters:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setSyncingCampaignId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -3270,11 +4597,39 @@ function NFTAdminTabs() {
         </button>
       </div>
 
+      {/* Database Selector (only show for Campaigns tab) */}
+      {nftSubTab === 'campaigns' && (
+        <div className="flex justify-end mb-4">
+          <div className="bg-gray-900 border border-yellow-500/30 rounded-lg p-3">
+            <div className="text-xs text-gray-400 mb-1">Database</div>
+            <select
+              value={campaignDatabase}
+              onChange={(e) => setCampaignDatabase(e.target.value as 'trout' | 'sturgeon')}
+              className="bg-black/50 border border-yellow-500/30 rounded px-3 py-1 text-white text-sm"
+            >
+              <option value="trout">🐟 Trout (Dev - localhost:3200)</option>
+              <option value="sturgeon">🐟 Sturgeon (Production - Live Site)</option>
+            </select>
+          </div>
+        </div>
+      )}
+
       {/* Tab Content */}
       {nftSubTab === 'commemorative' && <CommemorativeToken1Admin />}
       {nftSubTab === 'whitelist-manager' && <WhitelistManagerAdmin />}
       {nftSubTab === 'json-generator' && <NMKRJSONGenerator />}
-      {nftSubTab === 'campaigns' && <CampaignManager />}
+      {nftSubTab === 'campaigns' && (
+        <CampaignManagerWithDatabase
+          campaignDatabase={campaignDatabase}
+          campaigns={campaigns}
+          onToggleCleanup={handleToggleCleanup}
+          onRunCleanup={handleRunCleanup}
+          onSyncCounters={handleSyncCounters}
+          cleaningCampaignId={cleaningCampaignId}
+          syncingCampaignId={syncingCampaignId}
+          client={campaignDatabase === 'trout' ? troutClient : sturgeonClient}
+        />
+      )}
     </div>
   );
 }

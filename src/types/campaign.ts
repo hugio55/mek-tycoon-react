@@ -5,7 +5,7 @@
  * and reservation systems.
  */
 
-import { Id } from "../../../convex/_generated/dataModel";
+import { Id } from "@/convex/_generated/dataModel";
 
 // NFT Status States
 export type NFTStatus = "available" | "reserved" | "sold";

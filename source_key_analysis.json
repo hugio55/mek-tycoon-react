@@ -1,0 +1,3402 @@
+{
+  "summary": {
+    "total": 291,
+    "high_confidence_changes": 82,
+    "high_confidence_unchanged": 38,
+    "medium_confidence": 29,
+    "low_confidence": 112,
+    "no_match": 0,
+    "special_numeric": 30
+  },
+  "matches": {
+    "high_confidence": [
+      {
+        "id": 108,
+        "name": "Fury",
+        "type": "body",
+        "count": 1,
+        "current_key": "BW5",
+        "proposed_key": "LZ2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 217,
+        "name": "King Tut",
+        "type": "trait",
+        "count": 1,
+        "current_key": "AZ3",
+        "proposed_key": "AZ3",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 11,
+        "name": "Ross",
+        "type": "head",
+        "count": 1,
+        "current_key": "LZ2",
+        "proposed_key": "BW5",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 223,
+        "name": "Peacock",
+        "type": "trait",
+        "count": 2,
+        "current_key": "AZ4",
+        "proposed_key": "AZ4",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 224,
+        "name": "Palace",
+        "type": "trait",
+        "count": 3,
+        "current_key": "AZ2",
+        "proposed_key": "AZ2",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 227,
+        "name": "Screamo",
+        "type": "trait",
+        "count": 5,
+        "current_key": "KQ3",
+        "proposed_key": "KQ3",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 25,
+        "name": "Magma",
+        "type": "head",
+        "count": 7,
+        "current_key": "AA1",
+        "proposed_key": "BW4",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 232,
+        "name": "Hydra",
+        "type": "trait",
+        "count": 8,
+        "current_key": "AP3",
+        "proposed_key": "AP3",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 141,
+        "name": "Blood",
+        "type": "body",
+        "count": 11,
+        "current_key": "CB3",
+        "proposed_key": "AE3",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 233,
+        "name": "Carbonite",
+        "type": "trait",
+        "count": 11,
+        "current_key": "EY1",
+        "proposed_key": "EY1",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 35,
+        "name": "Bubblegum",
+        "type": "head",
+        "count": 12,
+        "current_key": "CF3",
+        "proposed_key": "BJ3",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 234,
+        "name": "Iced",
+        "type": "trait",
+        "count": 12,
+        "current_key": "BR3",
+        "proposed_key": "BR3",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 142,
+        "name": "Seafoam",
+        "type": "body",
+        "count": 12,
+        "current_key": "DC1",
+        "proposed_key": "BC6",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 36,
+        "name": "Ballerina",
+        "type": "head",
+        "count": 13,
+        "current_key": "HB2",
+        "proposed_key": "EV2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 143,
+        "name": "Ocean",
+        "type": "body",
+        "count": 13,
+        "current_key": "BF1",
+        "proposed_key": "FN6",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 37,
+        "name": "Heatmap",
+        "type": "head",
+        "count": 14,
+        "current_key": "BC1",
+        "proposed_key": "IO3",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 38,
+        "name": "Acrylic",
+        "type": "head",
+        "count": 15,
+        "current_key": "HB2",
+        "proposed_key": "HP3",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 237,
+        "name": "Holographic",
+        "type": "trait",
+        "count": 15,
+        "current_key": "AS3",
+        "proposed_key": "AS3",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 147,
+        "name": "Frosted",
+        "type": "body",
+        "count": 16,
+        "current_key": "AA3",
+        "proposed_key": "CL4",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 39,
+        "name": "Quilt",
+        "type": "head",
+        "count": 16,
+        "current_key": "GQ2",
+        "proposed_key": "AA4",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 238,
+        "name": "Ring Red",
+        "type": "trait",
+        "count": 16,
+        "current_key": "DA3",
+        "proposed_key": "DA3",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 40,
+        "name": "Ornament",
+        "type": "head",
+        "count": 17,
+        "current_key": "AE1",
+        "proposed_key": "BW3",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 41,
+        "name": "Sleet",
+        "type": "head",
+        "count": 18,
+        "current_key": "HH1",
+        "proposed_key": "FD4",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 148,
+        "name": "Sticky",
+        "type": "body",
+        "count": 18,
+        "current_key": "BF1",
+        "proposed_key": "FN4",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 239,
+        "name": "Tactical",
+        "type": "trait",
+        "count": 19,
+        "current_key": "DE3",
+        "proposed_key": "DE3",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 149,
+        "name": "Vapor",
+        "type": "body",
+        "count": 19,
+        "current_key": "BF3",
+        "proposed_key": "CL3",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 42,
+        "name": "Hades",
+        "type": "head",
+        "count": 20,
+        "current_key": "AE1",
+        "proposed_key": "CU2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 150,
+        "name": "Inner Rainbow",
+        "type": "body",
+        "count": 20,
+        "current_key": "DM1",
+        "proposed_key": "CW3",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 43,
+        "name": "Drill",
+        "type": "head",
+        "count": 21,
+        "current_key": "AM1",
+        "proposed_key": "BW2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 151,
+        "name": "Frostbit",
+        "type": "body",
+        "count": 21,
+        "current_key": "AA2",
+        "proposed_key": "BC5",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 240,
+        "name": "Nuclear",
+        "type": "trait",
+        "count": 21,
+        "current_key": "HN3",
+        "proposed_key": "HN3",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 241,
+        "name": "Foil",
+        "type": "trait",
+        "count": 22,
+        "current_key": "AJ3",
+        "proposed_key": "AJ3",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 152,
+        "name": "Denim",
+        "type": "body",
+        "count": 23,
+        "current_key": "AA1",
+        "proposed_key": "AA3",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 242,
+        "name": "Golden Guns",
+        "type": "trait",
+        "count": 23,
+        "current_key": "CU2",
+        "proposed_key": "CU2",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 245,
+        "name": "Bling",
+        "type": "trait",
+        "count": 26,
+        "current_key": "MX1",
+        "proposed_key": "MX1",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 246,
+        "name": "R&B",
+        "type": "trait",
+        "count": 27,
+        "current_key": "KQ2",
+        "proposed_key": "KQ2",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 53,
+        "name": "Recon",
+        "type": "head",
+        "count": 28,
+        "current_key": "HB1",
+        "proposed_key": "AT1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 250,
+        "name": "Just Wren",
+        "type": "trait",
+        "count": 30,
+        "current_key": "EV1",
+        "proposed_key": "EV1",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 251,
+        "name": "Angler",
+        "type": "trait",
+        "count": 31,
+        "current_key": "AS2",
+        "proposed_key": "AS2",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 160,
+        "name": "Soul",
+        "type": "body",
+        "count": 32,
+        "current_key": "BF1",
+        "proposed_key": "HT2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 54,
+        "name": "Sun",
+        "type": "head",
+        "count": 32,
+        "current_key": "AA2",
+        "proposed_key": "BQ3",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 161,
+        "name": "Lizard",
+        "type": "body",
+        "count": 33,
+        "current_key": "BF1",
+        "proposed_key": "ED4",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 55,
+        "name": "Sterling",
+        "type": "head",
+        "count": 33,
+        "current_key": "HH1",
+        "proposed_key": "ER2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 56,
+        "name": "Lich",
+        "type": "head",
+        "count": 34,
+        "current_key": "HB2",
+        "proposed_key": "CU1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 252,
+        "name": "Phoenix",
+        "type": "trait",
+        "count": 34,
+        "current_key": "AP2",
+        "proposed_key": "AP2",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 57,
+        "name": "Plate",
+        "type": "head",
+        "count": 35,
+        "current_key": "AA1",
+        "proposed_key": "CX1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 253,
+        "name": "Firebird",
+        "type": "trait",
+        "count": 37,
+        "current_key": "BR2",
+        "proposed_key": "BR2",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 58,
+        "name": "Porcelain",
+        "type": "head",
+        "count": 37,
+        "current_key": "AA1",
+        "proposed_key": "DS2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 59,
+        "name": "Cream",
+        "type": "head",
+        "count": 38,
+        "current_key": "HB1",
+        "proposed_key": "JG3",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 166,
+        "name": "Tangerine",
+        "type": "body",
+        "count": 38,
+        "current_key": "BJ1",
+        "proposed_key": "IY2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 254,
+        "name": "Heliotropium",
+        "type": "trait",
+        "count": 39,
+        "current_key": "MO2",
+        "proposed_key": "MO2",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 169,
+        "name": "Maple",
+        "type": "body",
+        "count": 42,
+        "current_key": "AK1",
+        "proposed_key": "CW1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 170,
+        "name": "Ooze",
+        "type": "body",
+        "count": 43,
+        "current_key": "BJ1",
+        "proposed_key": "GQ2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 62,
+        "name": "Liquid Lavender",
+        "type": "head",
+        "count": 44,
+        "current_key": "HB2",
+        "proposed_key": "CB3",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 174,
+        "name": "Crystal Camo",
+        "type": "body",
+        "count": 45,
+        "current_key": "DH1",
+        "proposed_key": "CL2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 65,
+        "name": "Grass",
+        "type": "head",
+        "count": 46,
+        "current_key": "HB3",
+        "proposed_key": "ER1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 255,
+        "name": "Black Parade",
+        "type": "trait",
+        "count": 49,
+        "current_key": "CU1",
+        "proposed_key": "CU1",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 179,
+        "name": "Black",
+        "type": "body",
+        "count": 50,
+        "current_key": "BF1",
+        "proposed_key": "HT1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 66,
+        "name": "Ivory",
+        "type": "head",
+        "count": 50,
+        "current_key": "HB3",
+        "proposed_key": "IO2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 183,
+        "name": "Dr.",
+        "type": "body",
+        "count": 52,
+        "current_key": "BF1",
+        "proposed_key": "IV1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 256,
+        "name": "Bonebox",
+        "type": "trait",
+        "count": 53,
+        "current_key": "GK2",
+        "proposed_key": "GK2",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 257,
+        "name": "Hefner",
+        "type": "trait",
+        "count": 55,
+        "current_key": "BR1",
+        "proposed_key": "BR1",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 70,
+        "name": "Boss",
+        "type": "head",
+        "count": 56,
+        "current_key": "HH1",
+        "proposed_key": "DS1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 188,
+        "name": "Waves",
+        "type": "body",
+        "count": 57,
+        "current_key": "FD1",
+        "proposed_key": "AR2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 189,
+        "name": "Plush",
+        "type": "body",
+        "count": 58,
+        "current_key": "BJ1",
+        "proposed_key": "GQ1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 190,
+        "name": "Tickle",
+        "type": "body",
+        "count": 59,
+        "current_key": "BL1",
+        "proposed_key": "AM2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 262,
+        "name": "Fourzin",
+        "type": "trait",
+        "count": 64,
+        "current_key": "EH2",
+        "proposed_key": "EH2",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 73,
+        "name": "Hacker",
+        "type": "head",
+        "count": 64,
+        "current_key": "HB2",
+        "proposed_key": "DH2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 195,
+        "name": "Heart",
+        "type": "body",
+        "count": 64,
+        "current_key": "BI1",
+        "proposed_key": "BC2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 77,
+        "name": "Mac & Cheese",
+        "type": "head",
+        "count": 67,
+        "current_key": "AA2",
+        "proposed_key": "FD3",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 78,
+        "name": "Crimson",
+        "type": "head",
+        "count": 68,
+        "current_key": "BC1",
+        "proposed_key": "AA2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 263,
+        "name": "Molten Core",
+        "type": "trait",
+        "count": 68,
+        "current_key": "HN2",
+        "proposed_key": "HN2",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 79,
+        "name": "Dazed Piggy",
+        "type": "head",
+        "count": 69,
+        "current_key": "HH1",
+        "proposed_key": "BL2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 198,
+        "name": "Sir",
+        "type": "body",
+        "count": 69,
+        "current_key": "BJ1",
+        "proposed_key": "KI1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 80,
+        "name": "Mahogany",
+        "type": "head",
+        "count": 70,
+        "current_key": "HB2",
+        "proposed_key": "EE2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 199,
+        "name": "Princess",
+        "type": "body",
+        "count": 70,
+        "current_key": "BF1",
+        "proposed_key": "HB3",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 264,
+        "name": "Bumble Bird",
+        "type": "trait",
+        "count": 72,
+        "current_key": "BC2",
+        "proposed_key": "BC2",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 200,
+        "name": "Chrome",
+        "type": "body",
+        "count": 73,
+        "current_key": "AK1",
+        "proposed_key": "BC1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 267,
+        "name": "Albino",
+        "type": "trait",
+        "count": 75,
+        "current_key": "AJ2",
+        "proposed_key": "AJ2",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 181,
+        "name": "Rust",
+        "type": "head",
+        "count": 75,
+        "current_key": "AM1",
+        "proposed_key": "FD2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 201,
+        "name": "Steam",
+        "type": "body",
+        "count": 76,
+        "current_key": "BI1",
+        "proposed_key": "AE2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 86,
+        "name": "Business",
+        "type": "head",
+        "count": 77,
+        "current_key": "AA2",
+        "proposed_key": "HP1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 268,
+        "name": "Scissors",
+        "type": "trait",
+        "count": 77,
+        "current_key": "AP1",
+        "proposed_key": "AP1",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 202,
+        "name": "Goblin",
+        "type": "body",
+        "count": 78,
+        "current_key": "BI1",
+        "proposed_key": "HB2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 87,
+        "name": "Neon Flamingo",
+        "type": "head",
+        "count": 78,
+        "current_key": "HB3",
+        "proposed_key": "BI2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 184,
+        "name": "Aztec",
+        "type": "head",
+        "count": 79,
+        "current_key": "HH1",
+        "proposed_key": "IO1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 89,
+        "name": "Milk",
+        "type": "head",
+        "count": 80,
+        "current_key": "AA1",
+        "proposed_key": "GN2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 271,
+        "name": "Whiteout",
+        "type": "trait",
+        "count": 80,
+        "current_key": "DE2",
+        "proposed_key": "DE2",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 90,
+        "name": "Aqua",
+        "type": "head",
+        "count": 81,
+        "current_key": "HB3",
+        "proposed_key": "AA1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 272,
+        "name": "Lumberjack",
+        "type": "trait",
+        "count": 81,
+        "current_key": "LG2",
+        "proposed_key": "LG2",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 203,
+        "name": "OE Dark",
+        "type": "body",
+        "count": 83,
+        "current_key": "BF1",
+        "proposed_key": "ED1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 91,
+        "name": "desufnoC",
+        "type": "head",
+        "count": 85,
+        "current_key": "AK1",
+        "proposed_key": "BL1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 204,
+        "name": "Bone",
+        "type": "body",
+        "count": 86,
+        "current_key": "DH1",
+        "proposed_key": "CF1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 92,
+        "name": "Bark",
+        "type": "head",
+        "count": 89,
+        "current_key": "AA1",
+        "proposed_key": "AK1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 205,
+        "name": "Abominable",
+        "type": "body",
+        "count": 90,
+        "current_key": "BF1",
+        "proposed_key": "GG1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 275,
+        "name": "Pawn Shop",
+        "type": "trait",
+        "count": 92,
+        "current_key": "GK1",
+        "proposed_key": "GK1",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 206,
+        "name": "Sky",
+        "type": "body",
+        "count": 93,
+        "current_key": "BJ1",
+        "proposed_key": "AM1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 207,
+        "name": "Blush",
+        "type": "body",
+        "count": 94,
+        "current_key": "BJ2",
+        "proposed_key": "AA2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 93,
+        "name": "Polished",
+        "type": "head",
+        "count": 94,
+        "current_key": "AE1",
+        "proposed_key": "JG1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 94,
+        "name": "Lightning",
+        "type": "head",
+        "count": 96,
+        "current_key": "AA2",
+        "proposed_key": "BJ2",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 276,
+        "name": "Ring Blue",
+        "type": "trait",
+        "count": 97,
+        "current_key": "DA1",
+        "proposed_key": "DA1",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 293,
+        "name": "Ol' Faithful",
+        "type": "head",
+        "count": 98,
+        "current_key": "HB2",
+        "proposed_key": "FD1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 96,
+        "name": "Classic",
+        "type": "head",
+        "count": 101,
+        "current_key": "AE1",
+        "proposed_key": "BF1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 210,
+        "name": "Noob",
+        "type": "body",
+        "count": 104,
+        "current_key": "BJ1",
+        "proposed_key": "HB1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 211,
+        "name": "Matte",
+        "type": "body",
+        "count": 106,
+        "current_key": "EE1",
+        "proposed_key": "BO1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 277,
+        "name": "Concrete",
+        "type": "trait",
+        "count": 109,
+        "current_key": "CD1",
+        "proposed_key": "CD1",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 278,
+        "name": "Paparazzi",
+        "type": "trait",
+        "count": 111,
+        "current_key": "OF1",
+        "proposed_key": "OF1",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 97,
+        "name": "Shamrock",
+        "type": "head",
+        "count": 113,
+        "current_key": "HB2",
+        "proposed_key": "DM1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 98,
+        "name": "Exposed",
+        "type": "head",
+        "count": 117,
+        "current_key": "HB1",
+        "proposed_key": "BJ1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 212,
+        "name": "Couch",
+        "type": "body",
+        "count": 118,
+        "current_key": "BI1",
+        "proposed_key": "AA1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 99,
+        "name": "Nuke",
+        "type": "head",
+        "count": 119,
+        "current_key": "AA2",
+        "proposed_key": "DH1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 100,
+        "name": "Kevlar",
+        "type": "head",
+        "count": 125,
+        "current_key": "HB2",
+        "proposed_key": "GN1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 285,
+        "name": "Near Space",
+        "type": "trait",
+        "count": 125,
+        "current_key": "FB1",
+        "proposed_key": "FB1",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 101,
+        "name": "Log",
+        "type": "head",
+        "count": 126,
+        "current_key": "AA2",
+        "proposed_key": "EE1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 213,
+        "name": "Maps",
+        "type": "body",
+        "count": 127,
+        "current_key": "BJ1",
+        "proposed_key": "HH1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 286,
+        "name": "Vampire",
+        "type": "trait",
+        "count": 129,
+        "current_key": "AJ1",
+        "proposed_key": "AJ1",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 214,
+        "name": "Grate",
+        "type": "body",
+        "count": 130,
+        "current_key": "BF1",
+        "proposed_key": "AE1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 102,
+        "name": "Taser",
+        "type": "head",
+        "count": 132,
+        "current_key": "AA1",
+        "proposed_key": "BI1",
+        "confidence": "HIGH",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 287,
+        "name": "Pyrex",
+        "type": "trait",
+        "count": 138,
+        "current_key": "HN1",
+        "proposed_key": "HN1",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      },
+      {
+        "id": 288,
+        "name": "Nothing",
+        "type": "trait",
+        "count": 501,
+        "current_key": "NM1",
+        "proposed_key": "NM1",
+        "confidence": "HIGH_UNCHANGED",
+        "match_type": "unique_count_match"
+      }
+    ],
+    "medium_confidence": [
+      {
+        "id": 225,
+        "name": "Drip",
+        "type": "trait",
+        "count": 4,
+        "current_key": "EY3",
+        "candidates": [
+          "AW3",
+          "EY3"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 226,
+        "name": "Test Track",
+        "type": "trait",
+        "count": 4,
+        "current_key": "AW3",
+        "candidates": [
+          "AW3",
+          "EY3"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 228,
+        "name": "Blasters",
+        "type": "trait",
+        "count": 6,
+        "current_key": "CU3",
+        "candidates": [
+          "EV3",
+          "CU3"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 229,
+        "name": "Spectrum",
+        "type": "trait",
+        "count": 6,
+        "current_key": "EV3",
+        "candidates": [
+          "EV3",
+          "CU3"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 230,
+        "name": "2001",
+        "type": "trait",
+        "count": 7,
+        "current_key": "EY2",
+        "candidates": [
+          "EY2",
+          "AZ1"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 231,
+        "name": "Crow",
+        "type": "trait",
+        "count": 7,
+        "current_key": "AZ1",
+        "candidates": [
+          "EY2",
+          "AZ1"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 235,
+        "name": "Icon",
+        "type": "trait",
+        "count": 13,
+        "current_key": "EV2",
+        "candidates": [
+          "EV2",
+          "GK3"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 236,
+        "name": "Splatter",
+        "type": "trait",
+        "count": 13,
+        "current_key": "GK3",
+        "candidates": [
+          "EV2",
+          "GK3"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 243,
+        "name": "LV-426",
+        "type": "trait",
+        "count": 25,
+        "current_key": "AW2",
+        "candidates": [
+          "AW2",
+          "BC3"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 244,
+        "name": "Sap",
+        "type": "trait",
+        "count": 25,
+        "current_key": "BC3",
+        "candidates": [
+          "AW2",
+          "BC3"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 247,
+        "name": "Earth",
+        "type": "trait",
+        "count": 28,
+        "current_key": "AW1",
+        "candidates": [
+          "AW1",
+          "EH3",
+          "MT2"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 248,
+        "name": "Jeff",
+        "type": "trait",
+        "count": 28,
+        "current_key": "EH3",
+        "candidates": [
+          "AW1",
+          "EH3",
+          "MT2"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 249,
+        "name": "Purplex",
+        "type": "trait",
+        "count": 28,
+        "current_key": "MT2",
+        "candidates": [
+          "AW1",
+          "EH3",
+          "MT2"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 258,
+        "name": "Hammerheat",
+        "type": "trait",
+        "count": 58,
+        "current_key": "MT1",
+        "candidates": [
+          "MT1",
+          "AS1"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 259,
+        "name": "Luna",
+        "type": "trait",
+        "count": 58,
+        "current_key": "AS1",
+        "candidates": [
+          "MT1",
+          "AS1"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 260,
+        "name": "Pop",
+        "type": "trait",
+        "count": 63,
+        "current_key": "KQ1",
+        "candidates": [
+          "DA2",
+          "KQ1"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 261,
+        "name": "Ring Green",
+        "type": "trait",
+        "count": 63,
+        "current_key": "DA2",
+        "candidates": [
+          "DA2",
+          "KQ1"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 265,
+        "name": "Deep Space",
+        "type": "trait",
+        "count": 73,
+        "current_key": "FB2",
+        "candidates": [
+          "OF2",
+          "FB2"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 266,
+        "name": "Night Vision",
+        "type": "trait",
+        "count": 73,
+        "current_key": "OF2",
+        "candidates": [
+          "OF2",
+          "FB2"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 269,
+        "name": "Black & White",
+        "type": "trait",
+        "count": 78,
+        "current_key": "JI2",
+        "candidates": [
+          "JI2",
+          "MO1"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 270,
+        "name": "Silver",
+        "type": "trait",
+        "count": 78,
+        "current_key": "MO1",
+        "candidates": [
+          "JI2",
+          "MO1"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 273,
+        "name": "Chromium",
+        "type": "trait",
+        "count": 91,
+        "current_key": "CD2",
+        "candidates": [
+          "IL2",
+          "CD2"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 274,
+        "name": "Rainbow Morpho",
+        "type": "trait",
+        "count": 91,
+        "current_key": "IL2",
+        "candidates": [
+          "IL2",
+          "CD2"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 279,
+        "name": "Moth",
+        "type": "trait",
+        "count": 117,
+        "current_key": "IL1",
+        "candidates": [
+          "EH1",
+          "IL1"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 280,
+        "name": "Who",
+        "type": "trait",
+        "count": 117,
+        "current_key": "EH1",
+        "candidates": [
+          "EH1",
+          "IL1"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 281,
+        "name": "Contractor",
+        "type": "trait",
+        "count": 118,
+        "current_key": "LG1",
+        "candidates": [
+          "DE1",
+          "LG1"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 282,
+        "name": "Stock",
+        "type": "trait",
+        "count": 118,
+        "current_key": "DE1",
+        "candidates": [
+          "DE1",
+          "LG1"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 283,
+        "name": "101.1 FM",
+        "type": "trait",
+        "count": 121,
+        "current_key": "BC1",
+        "candidates": [
+          "JI1",
+          "BC1"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      },
+      {
+        "id": 284,
+        "name": "Technicolor",
+        "type": "trait",
+        "count": 121,
+        "current_key": "JI1",
+        "candidates": [
+          "JI1",
+          "BC1"
+        ],
+        "confidence": "MEDIUM",
+        "match_type": "ambiguous_current_valid"
+      }
+    ],
+    "low_confidence": [
+      {
+        "id": 114,
+        "name": "007",
+        "type": "body",
+        "count": 2,
+        "current_key": "CX2",
+        "candidates": [
+          "AM3",
+          "CL6",
+          "HH3",
+          "HT4",
+          "IY3",
+          "KU2",
+          "LZ1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 115,
+        "name": "Cartoon",
+        "type": "body",
+        "count": 2,
+        "current_key": "AA5",
+        "candidates": [
+          "AM3",
+          "CL6",
+          "HH3",
+          "HT4",
+          "IY3",
+          "KU2",
+          "LZ1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 116,
+        "name": "Heatwave",
+        "type": "body",
+        "count": 2,
+        "current_key": "CX2",
+        "candidates": [
+          "AM3",
+          "CL6",
+          "HH3",
+          "HT4",
+          "IY3",
+          "KU2",
+          "LZ1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 117,
+        "name": "Luxury",
+        "type": "body",
+        "count": 2,
+        "current_key": "DS3",
+        "candidates": [
+          "AM3",
+          "CL6",
+          "HH3",
+          "HT4",
+          "IY3",
+          "KU2",
+          "LZ1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 118,
+        "name": "Majesty",
+        "type": "body",
+        "count": 2,
+        "current_key": "DC4",
+        "candidates": [
+          "AM3",
+          "CL6",
+          "HH3",
+          "HT4",
+          "IY3",
+          "KU2",
+          "LZ1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 119,
+        "name": "Oil",
+        "type": "body",
+        "count": 2,
+        "current_key": "BF5",
+        "candidates": [
+          "AM3",
+          "CL6",
+          "HH3",
+          "HT4",
+          "IY3",
+          "KU2",
+          "LZ1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 120,
+        "name": "Seabiscuit",
+        "type": "body",
+        "count": 2,
+        "current_key": "KY4",
+        "candidates": [
+          "AM3",
+          "CL6",
+          "HH3",
+          "HT4",
+          "IY3",
+          "KU2",
+          "LZ1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 12,
+        "name": "Acid",
+        "type": "head",
+        "count": 3,
+        "current_key": "DP4",
+        "candidates": [
+          "KY4",
+          "JG4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 121,
+        "name": "Gatsby",
+        "type": "body",
+        "count": 3,
+        "current_key": "DC4",
+        "candidates": [
+          "BC7",
+          "ED6",
+          "GQ5",
+          "KI4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 13,
+        "name": "Gold",
+        "type": "head",
+        "count": 3,
+        "current_key": "IV1",
+        "candidates": [
+          "KY4",
+          "JG4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 122,
+        "name": "Pearl",
+        "type": "body",
+        "count": 3,
+        "current_key": "ER3",
+        "candidates": [
+          "BC7",
+          "ED6",
+          "GQ5",
+          "KI4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 123,
+        "name": "Spaghetti",
+        "type": "body",
+        "count": 3,
+        "current_key": "AA2",
+        "candidates": [
+          "BC7",
+          "ED6",
+          "GQ5",
+          "KI4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 124,
+        "name": "Tarpie",
+        "type": "body",
+        "count": 3,
+        "current_key": "DS1",
+        "candidates": [
+          "BC7",
+          "ED6",
+          "GQ5",
+          "KI4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 125,
+        "name": "Cartoonichrome",
+        "type": "body",
+        "count": 4,
+        "current_key": "AA1",
+        "candidates": [
+          "CW4",
+          "FN8",
+          "GG4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 126,
+        "name": "Granite",
+        "type": "body",
+        "count": 4,
+        "current_key": "BQ1",
+        "candidates": [
+          "CW4",
+          "FN8",
+          "GG4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 14,
+        "name": "Lazer",
+        "type": "head",
+        "count": 4,
+        "current_key": "BC1",
+        "candidates": [
+          "AT4",
+          "LZ1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 127,
+        "name": "Tie Dye",
+        "type": "body",
+        "count": 4,
+        "current_key": "BJ3",
+        "candidates": [
+          "CW4",
+          "FN8",
+          "GG4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 15,
+        "name": "Wires",
+        "type": "head",
+        "count": 4,
+        "current_key": "FS1",
+        "candidates": [
+          "AT4",
+          "LZ1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 128,
+        "name": "Burnt",
+        "type": "body",
+        "count": 5,
+        "current_key": "DS2",
+        "candidates": [
+          "BO3",
+          "CF5",
+          "FN7",
+          "JX3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 129,
+        "name": "Damascus",
+        "type": "body",
+        "count": 5,
+        "current_key": "BW2",
+        "candidates": [
+          "BO3",
+          "CF5",
+          "FN7",
+          "JX3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 130,
+        "name": "Giger",
+        "type": "body",
+        "count": 5,
+        "current_key": "AA1",
+        "candidates": [
+          "BO3",
+          "CF5",
+          "FN7",
+          "JX3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 131,
+        "name": "Maze",
+        "type": "body",
+        "count": 5,
+        "current_key": "BJ1",
+        "candidates": [
+          "BO3",
+          "CF5",
+          "FN7",
+          "JX3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 16,
+        "name": "Nightstalker",
+        "type": "head",
+        "count": 5,
+        "current_key": "AE1",
+        "candidates": [
+          "BQ5",
+          "KY2",
+          "KY3",
+          "AA5",
+          "ER4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 17,
+        "name": "Nyan",
+        "type": "head",
+        "count": 5,
+        "current_key": "AK3",
+        "candidates": [
+          "BQ5",
+          "KY2",
+          "KY3",
+          "AA5",
+          "ER4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 18,
+        "name": "Paul",
+        "type": "head",
+        "count": 5,
+        "current_key": "AA1",
+        "candidates": [
+          "BQ5",
+          "KY2",
+          "KY3",
+          "AA5",
+          "ER4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 19,
+        "name": "Pizza",
+        "type": "head",
+        "count": 5,
+        "current_key": "CF3",
+        "candidates": [
+          "BQ5",
+          "KY2",
+          "KY3",
+          "AA5",
+          "ER4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 20,
+        "name": "Terminator",
+        "type": "head",
+        "count": 5,
+        "current_key": "AA1",
+        "candidates": [
+          "BQ5",
+          "KY2",
+          "KY3",
+          "AA5",
+          "ER4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 21,
+        "name": "24K",
+        "type": "head",
+        "count": 6,
+        "current_key": "AA1",
+        "candidates": [
+          "EV3",
+          "BF5",
+          "GN3",
+          "CU3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 132,
+        "name": "Bag",
+        "type": "body",
+        "count": 6,
+        "current_key": "DM1",
+        "candidates": [
+          "AR3",
+          "FS3",
+          "GQ4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 22,
+        "name": "China",
+        "type": "head",
+        "count": 6,
+        "current_key": "CF1",
+        "candidates": [
+          "EV3",
+          "BF5",
+          "GN3",
+          "CU3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 133,
+        "name": "Nuggets",
+        "type": "body",
+        "count": 6,
+        "current_key": "AK2",
+        "candidates": [
+          "AR3",
+          "FS3",
+          "GQ4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 134,
+        "name": "Radiance",
+        "type": "body",
+        "count": 6,
+        "current_key": "AA1",
+        "candidates": [
+          "AR3",
+          "FS3",
+          "GQ4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 23,
+        "name": "Stained Glass",
+        "type": "head",
+        "count": 6,
+        "current_key": "CF1",
+        "candidates": [
+          "EV3",
+          "BF5",
+          "GN3",
+          "CU3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 24,
+        "name": "The Lethal Dimension",
+        "type": "head",
+        "count": 6,
+        "current_key": "BC1",
+        "candidates": [
+          "EV3",
+          "BF5",
+          "GN3",
+          "CU3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 135,
+        "name": "Jolly Rancher",
+        "type": "body",
+        "count": 7,
+        "current_key": "AA1",
+        "candidates": [
+          "CL5",
+          "DJ4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 136,
+        "name": "Shipped",
+        "type": "body",
+        "count": 7,
+        "current_key": "AK1",
+        "candidates": [
+          "CL5",
+          "DJ4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 26,
+        "name": "???",
+        "type": "head",
+        "count": 8,
+        "current_key": "AR1",
+        "candidates": [
+          "BL5",
+          "DS3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 137,
+        "name": "Lord",
+        "type": "body",
+        "count": 8,
+        "current_key": "AK3",
+        "candidates": [
+          "DP4",
+          "HB4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 27,
+        "name": "Silicon",
+        "type": "head",
+        "count": 8,
+        "current_key": "AK1",
+        "candidates": [
+          "BL5",
+          "DS3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 138,
+        "name": "X Ray",
+        "type": "body",
+        "count": 8,
+        "current_key": "BI1",
+        "candidates": [
+          "DP4",
+          "HB4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 28,
+        "name": "Bone Daddy",
+        "type": "head",
+        "count": 9,
+        "current_key": "HB1",
+        "candidates": [
+          "AK4",
+          "KY1",
+          "CB4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 29,
+        "name": "Bowling",
+        "type": "head",
+        "count": 9,
+        "current_key": "CF2",
+        "candidates": [
+          "AK4",
+          "KY1",
+          "CB4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 139,
+        "name": "OE Light",
+        "type": "body",
+        "count": 9,
+        "current_key": "AA2",
+        "candidates": [
+          "CF4",
+          "ED5"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 140,
+        "name": "Peppermint",
+        "type": "body",
+        "count": 9,
+        "current_key": "CB3",
+        "candidates": [
+          "CF4",
+          "ED5"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 30,
+        "name": "Snow",
+        "type": "head",
+        "count": 9,
+        "current_key": "GG1",
+        "candidates": [
+          "AK4",
+          "KY1",
+          "CB4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 31,
+        "name": "The Ram",
+        "type": "head",
+        "count": 10,
+        "current_key": "AE1",
+        "candidates": [
+          "CX2",
+          "DC4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 32,
+        "name": "Whiskey",
+        "type": "head",
+        "count": 10,
+        "current_key": "AK1",
+        "candidates": [
+          "CX2",
+          "DC4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 33,
+        "name": "Arcade",
+        "type": "head",
+        "count": 11,
+        "current_key": "HB2",
+        "candidates": [
+          "AT3",
+          "BQ4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 34,
+        "name": "Mint",
+        "type": "head",
+        "count": 11,
+        "current_key": "AE1",
+        "candidates": [
+          "AT3",
+          "BQ4"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 144,
+        "name": "Carving",
+        "type": "body",
+        "count": 15,
+        "current_key": "FD2",
+        "candidates": [
+          "AK3",
+          "FN5",
+          "IV3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 145,
+        "name": "Rug",
+        "type": "body",
+        "count": 15,
+        "current_key": "BJ2",
+        "candidates": [
+          "AK3",
+          "FN5",
+          "IV3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 146,
+        "name": "Trapped",
+        "type": "body",
+        "count": 15,
+        "current_key": "AA3",
+        "candidates": [
+          "AK3",
+          "FN5",
+          "IV3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 44,
+        "name": "Cotton Candy",
+        "type": "head",
+        "count": 22,
+        "current_key": "ED1",
+        "candidates": [
+          "BF4",
+          "DM3",
+          "AT2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 45,
+        "name": "Mesh",
+        "type": "head",
+        "count": 22,
+        "current_key": "BC3",
+        "candidates": [
+          "BF4",
+          "DM3",
+          "AT2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 46,
+        "name": "Tron",
+        "type": "head",
+        "count": 22,
+        "current_key": "CF3",
+        "candidates": [
+          "BF4",
+          "DM3",
+          "AT2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 47,
+        "name": "Ace of Spades",
+        "type": "head",
+        "count": 23,
+        "current_key": "AE2",
+        "candidates": [
+          "BW1",
+          "DH3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 48,
+        "name": "Mars Attacks",
+        "type": "head",
+        "count": 23,
+        "current_key": "HB2",
+        "candidates": [
+          "BW1",
+          "DH3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 49,
+        "name": "Dualtone",
+        "type": "head",
+        "count": 24,
+        "current_key": "BC4",
+        "candidates": [
+          "BL4",
+          "EE3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 50,
+        "name": "Flaked",
+        "type": "head",
+        "count": 24,
+        "current_key": "AA2",
+        "candidates": [
+          "BL4",
+          "EE3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 153,
+        "name": "Stars",
+        "type": "body",
+        "count": 25,
+        "current_key": "BJ2",
+        "candidates": [
+          "FN3",
+          "HT3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 154,
+        "name": "White",
+        "type": "body",
+        "count": 25,
+        "current_key": "BF1",
+        "candidates": [
+          "FN3",
+          "HT3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 51,
+        "name": "Electrik",
+        "type": "head",
+        "count": 26,
+        "current_key": "AA1",
+        "candidates": [
+          "ER3",
+          "EV1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 52,
+        "name": "Hal",
+        "type": "head",
+        "count": 26,
+        "current_key": "HB1",
+        "candidates": [
+          "ER3",
+          "EV1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 155,
+        "name": "Doom",
+        "type": "body",
+        "count": 30,
+        "current_key": "BJ1",
+        "candidates": [
+          "DJ3",
+          "GQ3",
+          "HH2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 156,
+        "name": "Journey",
+        "type": "body",
+        "count": 30,
+        "current_key": "AK1",
+        "candidates": [
+          "DJ3",
+          "GQ3",
+          "HH2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 157,
+        "name": "Mercury",
+        "type": "body",
+        "count": 30,
+        "current_key": "BF1",
+        "candidates": [
+          "DJ3",
+          "GQ3",
+          "HH2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 158,
+        "name": "Stone",
+        "type": "body",
+        "count": 31,
+        "current_key": "AK3",
+        "candidates": [
+          "DP3",
+          "FN2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 159,
+        "name": "Tiles",
+        "type": "body",
+        "count": 31,
+        "current_key": "BF1",
+        "candidates": [
+          "DP3",
+          "FN2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 162,
+        "name": "Cheetah",
+        "type": "body",
+        "count": 34,
+        "current_key": "BF1",
+        "candidates": [
+          "GG3",
+          "KI3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 163,
+        "name": "Sunset",
+        "type": "body",
+        "count": 34,
+        "current_key": "BI1",
+        "candidates": [
+          "GG3",
+          "KI3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 164,
+        "name": "Rose",
+        "type": "body",
+        "count": 36,
+        "current_key": "DH1",
+        "candidates": [
+          "CW2",
+          "IV2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 165,
+        "name": "Tat",
+        "type": "body",
+        "count": 36,
+        "current_key": "BF1",
+        "candidates": [
+          "CW2",
+          "IV2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 60,
+        "name": "Baby",
+        "type": "head",
+        "count": 41,
+        "current_key": "HH1",
+        "candidates": [
+          "BQ2",
+          "HP2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 61,
+        "name": "Disco",
+        "type": "head",
+        "count": 41,
+        "current_key": "HB1",
+        "candidates": [
+          "BQ2",
+          "HP2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 167,
+        "name": "Eyes",
+        "type": "body",
+        "count": 41,
+        "current_key": "BJ1",
+        "candidates": [
+          "CF3",
+          "JX2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 168,
+        "name": "Happymeal",
+        "type": "body",
+        "count": 41,
+        "current_key": "BJ2",
+        "candidates": [
+          "CF3",
+          "JX2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 171,
+        "name": "Obsidian",
+        "type": "body",
+        "count": 44,
+        "current_key": "BL1",
+        "candidates": [
+          "AK2",
+          "BO2",
+          "KI2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 172,
+        "name": "Prickles",
+        "type": "body",
+        "count": 44,
+        "current_key": "AA1",
+        "candidates": [
+          "AK2",
+          "BO2",
+          "KI2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 173,
+        "name": "Prom",
+        "type": "body",
+        "count": 44,
+        "current_key": "BJ1",
+        "candidates": [
+          "AK2",
+          "BO2",
+          "KI2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 63,
+        "name": "Dragonfly",
+        "type": "head",
+        "count": 45,
+        "current_key": "HB1",
+        "candidates": [
+          "BQ1",
+          "DC3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 64,
+        "name": "Sahara",
+        "type": "head",
+        "count": 45,
+        "current_key": "HH1",
+        "candidates": [
+          "BQ1",
+          "DC3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 175,
+        "name": "Marble",
+        "type": "body",
+        "count": 46,
+        "current_key": "BF1",
+        "candidates": [
+          "ED3",
+          "FN1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 176,
+        "name": "Rattler",
+        "type": "body",
+        "count": 46,
+        "current_key": "BF1",
+        "candidates": [
+          "ED3",
+          "FN1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 177,
+        "name": "Forest",
+        "type": "body",
+        "count": 49,
+        "current_key": "BJ2",
+        "candidates": [
+          "BC3",
+          "FS2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 178,
+        "name": "Poker",
+        "type": "body",
+        "count": 49,
+        "current_key": "BL1",
+        "candidates": [
+          "BC3",
+          "FS2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 180,
+        "name": "Arctic",
+        "type": "body",
+        "count": 51,
+        "current_key": "BF1",
+        "candidates": [
+          "BC4",
+          "CF2",
+          "DJ2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 181,
+        "name": "Rust",
+        "type": "body",
+        "count": 51,
+        "current_key": "BJ1",
+        "candidates": [
+          "BC4",
+          "CF2",
+          "DJ2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 182,
+        "name": "Smurf",
+        "type": "body",
+        "count": 51,
+        "current_key": "BJ2",
+        "candidates": [
+          "BC4",
+          "CF2",
+          "DJ2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 184,
+        "name": "Aztec",
+        "type": "body",
+        "count": 54,
+        "current_key": "AK1",
+        "candidates": [
+          "DP2",
+          "ED2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 185,
+        "name": "Meat",
+        "type": "body",
+        "count": 54,
+        "current_key": "FD1",
+        "candidates": [
+          "DP2",
+          "ED2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 292,
+        "name": "1960's",
+        "type": "head",
+        "count": 55,
+        "current_key": "AA2",
+        "candidates": [
+          "AA3",
+          "BF3",
+          "BL3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 186,
+        "name": "Highlights",
+        "type": "body",
+        "count": 55,
+        "current_key": "EE2",
+        "candidates": [
+          "GG2",
+          "JX1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 187,
+        "name": "Leeloo",
+        "type": "body",
+        "count": 55,
+        "current_key": "BF1",
+        "candidates": [
+          "GG2",
+          "JX1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 68,
+        "name": "Royal",
+        "type": "head",
+        "count": 55,
+        "current_key": "BC1",
+        "candidates": [
+          "AA3",
+          "BF3",
+          "BL3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 69,
+        "name": "Silent Film",
+        "type": "head",
+        "count": 55,
+        "current_key": "BC4",
+        "candidates": [
+          "AA3",
+          "BF3",
+          "BL3"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 71,
+        "name": "Butane",
+        "type": "head",
+        "count": 57,
+        "current_key": "HB1",
+        "candidates": [
+          "DC2",
+          "CB2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 72,
+        "name": "Coin",
+        "type": "head",
+        "count": 57,
+        "current_key": "HB3",
+        "candidates": [
+          "DC2",
+          "CB2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 191,
+        "name": "Mugged",
+        "type": "body",
+        "count": 60,
+        "current_key": "BJ1",
+        "candidates": [
+          "DJ1",
+          "IY1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 192,
+        "name": "Victoria",
+        "type": "body",
+        "count": 60,
+        "current_key": "BF2",
+        "candidates": [
+          "DJ1",
+          "IY1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 193,
+        "name": "Cubes",
+        "type": "body",
+        "count": 63,
+        "current_key": "DM1",
+        "candidates": [
+          "AR1",
+          "DP1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 194,
+        "name": "Sand",
+        "type": "body",
+        "count": 63,
+        "current_key": "DM1",
+        "candidates": [
+          "AR1",
+          "DP1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 74,
+        "name": "Bumblebee",
+        "type": "head",
+        "count": 65,
+        "current_key": "BC4",
+        "candidates": [
+          "AK3",
+          "BF2",
+          "DM2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 75,
+        "name": "Camo",
+        "type": "head",
+        "count": 65,
+        "current_key": "CF1",
+        "candidates": [
+          "AK3",
+          "BF2",
+          "DM2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 76,
+        "name": "Plastik",
+        "type": "head",
+        "count": 65,
+        "current_key": "HB1",
+        "candidates": [
+          "AK3",
+          "BF2",
+          "DM2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 196,
+        "name": "Carbon",
+        "type": "body",
+        "count": 68,
+        "current_key": "BJ1",
+        "candidates": [
+          "CL1",
+          "FS1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 197,
+        "name": "Crystal Clear",
+        "type": "body",
+        "count": 68,
+        "current_key": "BJ1",
+        "candidates": [
+          "CL1",
+          "FS1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 81,
+        "name": "Big Brother",
+        "type": "head",
+        "count": 73,
+        "current_key": "HB2",
+        "candidates": [
+          "CB1",
+          "DC1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 82,
+        "name": "Snapshot",
+        "type": "head",
+        "count": 73,
+        "current_key": "AE1",
+        "candidates": [
+          "CB1",
+          "DC1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 83,
+        "name": "Cadillac",
+        "type": "head",
+        "count": 74,
+        "current_key": "BC2",
+        "candidates": [
+          "AK2",
+          "JG2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 84,
+        "name": "Corroded",
+        "type": "head",
+        "count": 74,
+        "current_key": "AA1",
+        "candidates": [
+          "AK2",
+          "JG2"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 208,
+        "name": "Iron",
+        "type": "body",
+        "count": 99,
+        "current_key": "BJ1",
+        "candidates": [
+          "AK1",
+          "KU1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      },
+      {
+        "id": 209,
+        "name": "James",
+        "type": "body",
+        "count": 99,
+        "current_key": "BF1",
+        "candidates": [
+          "AK1",
+          "KU1"
+        ],
+        "confidence": "LOW",
+        "match_type": "ambiguous_current_invalid"
+      }
+    ],
+    "no_match": [],
+    "special_numeric": [
+      {
+        "id": 2,
+        "name": "Derelict",
+        "type": "head",
+        "count": 1,
+        "current_key": "000H",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 109,
+        "name": "Gatsby Ultimate",
+        "type": "body",
+        "count": 1,
+        "current_key": "000B",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 221,
+        "name": "Stolen",
+        "type": "trait",
+        "count": 1,
+        "current_key": "000T",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 7,
+        "name": "Obliterator",
+        "type": "head",
+        "count": 1,
+        "current_key": "999H",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 111,
+        "name": "Luxury Ultimate",
+        "type": "body",
+        "count": 1,
+        "current_key": "999B",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 215,
+        "name": "Golden Guns Ultimate",
+        "type": "trait",
+        "count": 1,
+        "current_key": "999T",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 4,
+        "name": "Ellie Mesh",
+        "type": "head",
+        "count": 1,
+        "current_key": "888H",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 105,
+        "name": "Chrome Ultimate",
+        "type": "body",
+        "count": 1,
+        "current_key": "888B",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 222,
+        "name": "Vanished",
+        "type": "trait",
+        "count": 1,
+        "current_key": "888T",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 10,
+        "name": "Projectionist",
+        "type": "head",
+        "count": 1,
+        "current_key": "777H",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 106,
+        "name": "Cousin Itt",
+        "type": "body",
+        "count": 1,
+        "current_key": "777B",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 216,
+        "name": "Gone",
+        "type": "trait",
+        "count": 1,
+        "current_key": "777T",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 9,
+        "name": "Pie",
+        "type": "head",
+        "count": 1,
+        "current_key": "666H",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 104,
+        "name": "Carving Ultimate",
+        "type": "body",
+        "count": 1,
+        "current_key": "666B",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 219,
+        "name": "Oompah",
+        "type": "trait",
+        "count": 1,
+        "current_key": "666T",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 5,
+        "name": "Frost King",
+        "type": "head",
+        "count": 1,
+        "current_key": "555H",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 107,
+        "name": "Frost Cage",
+        "type": "body",
+        "count": 1,
+        "current_key": "555B",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 289,
+        "name": "Nil",
+        "type": "trait",
+        "count": 1,
+        "current_key": "555T",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 8,
+        "name": "Paul Ultimate",
+        "type": "head",
+        "count": 1,
+        "current_key": "444H",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 103,
+        "name": "Burnt Ultimate",
+        "type": "body",
+        "count": 1,
+        "current_key": "444B",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 290,
+        "name": "Null",
+        "type": "trait",
+        "count": 1,
+        "current_key": "444T",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 3,
+        "name": "Discomania",
+        "type": "head",
+        "count": 1,
+        "current_key": "333H",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 113,
+        "name": "X Ray Ultimate",
+        "type": "body",
+        "count": 1,
+        "current_key": "333B",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 291,
+        "name": "None",
+        "type": "trait",
+        "count": 1,
+        "current_key": "333T",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 1,
+        "name": "Ace of Spades Ultimate",
+        "type": "head",
+        "count": 1,
+        "current_key": "222H",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 112,
+        "name": "Plush Ultimate",
+        "type": "body",
+        "count": 1,
+        "current_key": "222B",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 218,
+        "name": "Linkinator 3000",
+        "type": "trait",
+        "count": 1,
+        "current_key": "222T",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 6,
+        "name": "Nyan Ultimate",
+        "type": "head",
+        "count": 1,
+        "current_key": "111H",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 110,
+        "name": "Heatwave Ultimate",
+        "type": "body",
+        "count": 1,
+        "current_key": "111B",
+        "action": "KEEP_UNCHANGED"
+      },
+      {
+        "id": 220,
+        "name": "Peacock Ultimate",
+        "type": "trait",
+        "count": 1,
+        "current_key": "111T",
+        "action": "KEEP_UNCHANGED"
+      }
+    ]
+  }
+}

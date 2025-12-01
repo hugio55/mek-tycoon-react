@@ -445,7 +445,6 @@ export const updateWalletGold = mutation({
 });
 
 // Admin query to get all wallets with full details
-// BANDWIDTH OPTIMIZATION: Now cached with 30-second TTL to reduce repeated calls
 export const getAllWallets = query({
   args: {},
   handler: async (ctx) => {

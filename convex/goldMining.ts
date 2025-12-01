@@ -362,6 +362,7 @@ export const getGoldMiningData = query({
 export const updateGoldCheckpoint = mutation({
   args: {
     walletAddress: v.string(),
+    skipIfRecentUpdate: v.optional(v.boolean()), // CRITICAL FIX: Debounce checkpoints
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -373,6 +374,24 @@ export const updateGoldCheckpoint = mutation({
 
     if (!existing) {
       throw new Error("Gold mining data not found for wallet");
+    }
+
+    // CRITICAL FIX: Skip update if last update was less than 30 seconds ago
+    // This reduces transaction throughput pressure from frequent checkpoints
+    if (args.skipIfRecentUpdate) {
+      const timeSinceLastUpdate = now - (existing.updatedAt || 0);
+      const DEBOUNCE_THRESHOLD = 30 * 1000; // 30 seconds
+
+      if (timeSinceLastUpdate < DEBOUNCE_THRESHOLD) {
+        const secondsRemaining = Math.ceil((DEBOUNCE_THRESHOLD - timeSinceLastUpdate) / 1000);
+        console.log(`[GOLD-CHECKPOINT-FIX] Skipping checkpoint - last update was ${Math.floor(timeSinceLastUpdate / 1000)}s ago (debounce: ${secondsRemaining}s remaining)`);
+        return {
+          success: true,
+          skipped: true,
+          accumulatedGold: existing.accumulatedGold || 0,
+          reason: `Checkpoint debounced - last update was ${Math.floor(timeSinceLastUpdate / 1000)}s ago`,
+        };
+      }
     }
 
     // VERIFICATION CHECK: Only accumulate gold if verified
@@ -404,22 +423,23 @@ export const updateGoldCheckpoint = mutation({
         newTotalCumulativeGold
       });
 
-      // LOG: Significant gold accumulation (only if > 10 gold to reduce noise)
-      if (goldEarnedThisUpdate > 10) {
-        await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
-          eventType: "info",
-          category: "gold",
-          message: `Gold accumulated: +${goldEarnedThisUpdate.toFixed(2)} gold`,
-          severity: "low",
-          functionName: "updateGoldCheckpoint",
-          walletAddress: args.walletAddress,
-          details: {
-            goldEarned: goldEarnedThisUpdate,
-            newTotal: newAccumulatedGold,
-            rate: existing.totalGoldPerHour,
-          },
-        });
-      }
+      // LOG: Significant gold accumulation - DISABLED for bandwidth optimization (77.5 MB on Prod)
+      // Normal gold accumulation doesn't need monitoring logs, only errors/race conditions
+      // if (goldEarnedThisUpdate > 10) {
+      //   await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
+      //     eventType: "info",
+      //     category: "gold",
+      //     message: `Gold accumulated: +${goldEarnedThisUpdate.toFixed(2)} gold`,
+      //     severity: "low",
+      //     functionName: "updateGoldCheckpoint",
+      //     walletAddress: args.walletAddress,
+      //     details: {
+      //       goldEarned: goldEarnedThisUpdate,
+      //       newTotal: newAccumulatedGold,
+      //       rate: existing.totalGoldPerHour,
+      //     },
+      //   });
+      // }
     } else {
       // If not verified, keep existing values (no new accumulation)
       newAccumulatedGold = existing.accumulatedGold || 0;

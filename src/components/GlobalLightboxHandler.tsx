@@ -10,6 +10,7 @@ import EssenceBalancesViewer from '@/components/EssenceBalancesViewer';
 import BuffManagement from '@/components/BuffManagement';
 import MechanismGridLightbox from '@/components/MechanismGridLightbox';
 import MeksTriangleLightbox from '@/components/MeksTriangleLightbox';
+import BetaSignupLightbox from '@/components/BetaSignupLightbox';
 import { restoreWalletSession } from '@/lib/walletSessionManager';
 import { EssenceProvider } from '@/contexts/EssenceContext';
 
@@ -24,6 +25,7 @@ export default function GlobalLightboxHandler() {
   const [showEssenceBalances, setShowEssenceBalances] = useState(false);
   const [showEssenceBuffs, setShowEssenceBuffs] = useState(false);
   const [showMeksTriangle, setShowMeksTriangle] = useState(false);
+  const [showBetaSignup, setShowBetaSignup] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string>('');
 
   // Get owned Meks data for triangle lightbox
@@ -99,6 +101,10 @@ export default function GlobalLightboxHandler() {
             setShowMeksTriangle(true);
           })();
           break;
+        case 'beta-signup':
+          console.log('[GlobalLightboxHandler] Opening Beta Signup lightbox');
+          setShowBetaSignup(true);
+          break;
         default:
           console.warn('[GlobalLightboxHandler] Unknown lightbox ID:', lightboxId);
       }
@@ -163,6 +169,14 @@ export default function GlobalLightboxHandler() {
         <MeksTriangleLightbox
           onClose={() => setShowMeksTriangle(false)}
           ownedMeks={goldMiningData.ownedMeks || []}
+        />
+      )}
+
+      {/* Beta Signup Lightbox */}
+      {showBetaSignup && (
+        <BetaSignupLightbox
+          isVisible={true}
+          onClose={() => setShowBetaSignup(false)}
         />
       )}
     </EssenceProvider>

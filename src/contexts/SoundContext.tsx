@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import { getMediaUrl } from '@/lib/media-url';
 
 interface SoundContextType {
   soundEnabled: boolean;
@@ -26,8 +27,8 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     const loadSound = async () => {
       try {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        
-        const response = await fetch('/sounds/main_click.wav');
+
+        const response = await fetch(getMediaUrl('/sounds/main_click.wav'));
         const arrayBuffer = await response.arrayBuffer();
         audioBufferRef.current = await audioContextRef.current.decodeAudioData(arrayBuffer);
       } catch (error) {

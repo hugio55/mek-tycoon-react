@@ -727,6 +727,25 @@
   animation: shimmer 2s linear infinite;
 }
 
+/* Power Button Pulsating Glow Animation */
+@keyframes power-button-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(250, 182, 23, 0.4))
+            drop-shadow(0 0 20px rgba(250, 182, 23, 0.3));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 25px rgba(250, 182, 23, 0.8))
+            drop-shadow(0 0 40px rgba(250, 182, 23, 0.6))
+            drop-shadow(0 0 60px rgba(250, 182, 23, 0.4));
+    transform: scale(1.05);
+  }
+}
+
+.power-button-pulse {
+  animation: power-button-pulse 2s ease-in-out infinite;
+}
+
 /* ===========================
    ESSENCE DONUT PAGE STYLES
    =========================== */
@@ -737,6 +756,15 @@
   }
   100% {
     transform: translateY(calc(100vh + 100%));
+  }
+}
+
+@keyframes scanline {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100%);
   }
 }
 
@@ -770,4 +798,281 @@
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(250, 182, 23, 0.8) rgba(0, 0, 0, 0.5);
+}
+
+/* ===========================
+   NEON EDGE DESIGN SYSTEM
+   =========================== */
+
+/* NEON EDGE Card Base */
+.neon-edge-card {
+  @apply relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden;
+}
+
+/* NEON EDGE Border Layer */
+.neon-edge-border {
+  @apply absolute inset-0 border-2 pointer-events-none;
+  filter: blur(0.5px);
+}
+
+.neon-edge-border-yellow {
+  @apply border-yellow-400/50;
+  box-shadow:
+    0 0 30px rgba(250, 182, 23, 0.3),
+    inset 0 0 30px rgba(250, 182, 23, 0.1);
+}
+
+.neon-edge-border-cyan {
+  @apply border-cyan-400/50;
+  box-shadow:
+    0 0 30px rgba(0, 212, 255, 0.3),
+    inset 0 0 30px rgba(0, 212, 255, 0.1);
+}
+
+/* NEON EDGE Gradient Overlay */
+.neon-edge-gradient-yellow {
+  @apply absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none;
+  background: linear-gradient(180deg, rgba(250, 182, 23, 0.4) 0%, transparent 100%);
+}
+
+.neon-edge-gradient-cyan {
+  @apply absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none;
+  background: linear-gradient(180deg, rgba(0, 212, 255, 0.4) 0%, transparent 100%);
+}
+
+/* NEON EDGE Hero Rank Text */
+.neon-edge-hero-rank-yellow {
+  @apply text-yellow-400 text-6xl leading-none;
+  font-family: 'Saira Condensed', sans-serif;
+  font-weight: 200;
+  letter-spacing: 0.1em;
+  text-shadow:
+    0 0 20px rgba(250, 182, 23, 1),
+    0 0 40px rgba(250, 182, 23, 0.5);
+}
+
+.neon-edge-hero-rank-cyan {
+  @apply text-cyan-400 text-6xl leading-none;
+  font-family: 'Saira Condensed', sans-serif;
+  font-weight: 200;
+  letter-spacing: 0.1em;
+  text-shadow:
+    0 0 20px rgba(0, 212, 255, 1),
+    0 0 40px rgba(0, 212, 255, 0.5);
+}
+
+/* NEON EDGE Label Text */
+.neon-edge-label {
+  @apply text-white/40 uppercase;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+}
+
+.neon-edge-label-xs {
+  @apply text-[9px];
+  letter-spacing: 0.3em;
+}
+
+.neon-edge-label-sm {
+  @apply text-[10px];
+  letter-spacing: 0.2em;
+}
+
+/* NEON EDGE Data Text */
+.neon-edge-data {
+  @apply text-white;
+  font-family: 'Saira Condensed', sans-serif;
+  font-weight: 300;
+}
+
+/* NEON EDGE Divider Line */
+.neon-edge-divider-yellow {
+  @apply absolute inset-0 bg-gradient-to-r from-transparent via-yellow-400 to-transparent;
+  filter: blur(1px);
+}
+
+.neon-edge-divider-cyan {
+  @apply absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent;
+  filter: blur(1px);
+}
+
+/* NEON EDGE Badge/Pill Container */
+.neon-edge-badge {
+  @apply inline-flex items-center gap-2 px-4 py-2 bg-black/60 rounded-sm;
+}
+
+.neon-edge-badge-yellow {
+  @apply border border-yellow-400/50;
+}
+
+.neon-edge-badge-cyan {
+  @apply border border-cyan-400/50;
+}
+
+/* ===========================
+   POWER BUTTON PULSATING EFFECT
+   =========================== */
+
+@keyframes mek-power-button-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(250, 182, 23, 0.4));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(250, 182, 23, 0.8))
+            drop-shadow(0 0 40px rgba(250, 182, 23, 0.4));
+    transform: scale(1.05);
+  }
+}
+
+@keyframes mek-power-button-glow-ring {
+  0%, 100% {
+    box-shadow:
+      0 0 15px rgba(250, 182, 23, 0.3),
+      0 0 30px rgba(250, 182, 23, 0.2),
+      inset 0 0 10px rgba(250, 182, 23, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 30px rgba(250, 182, 23, 0.6),
+      0 0 60px rgba(250, 182, 23, 0.4),
+      0 0 90px rgba(250, 182, 23, 0.2),
+      inset 0 0 20px rgba(250, 182, 23, 0.2);
+  }
+}
+
+.mek-power-button-container {
+  animation: mek-power-button-pulse 2.5s ease-in-out infinite;
+}
+
+.mek-power-button-glow {
+  position: relative;
+}
+
+.mek-power-button-glow::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  animation: mek-power-button-glow-ring 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Subtle variant - less intense */
+@keyframes mek-power-button-pulse-subtle {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px rgba(250, 182, 23, 0.3));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(250, 182, 23, 0.5));
+    transform: scale(1.02);
+  }
+}
+
+.mek-power-button-container-subtle {
+  animation: mek-power-button-pulse-subtle 3s ease-in-out infinite;
+}
+
+/* ===========================
+   ANIMATED BORDER BUTTON
+   =========================== */
+
+.mek-animated-border-button {
+  @apply relative px-8 py-3 font-bold text-yellow-400
+         bg-black/60 backdrop-blur-sm
+         transition-all duration-300 uppercase tracking-wider;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.mek-animated-border-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid #fab617;
+  opacity: 0;
+  animation: border-sequence-top 4s linear infinite;
+}
+
+.mek-animated-border-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid #fab617;
+  opacity: 0;
+  animation: border-sequence-bottom 4s linear infinite;
+  animation-delay: 2s;
+}
+
+@keyframes border-sequence-top {
+  0% {
+    border-color: transparent;
+    border-top-color: #fab617;
+    opacity: 1;
+  }
+  12.5% {
+    border-color: transparent;
+    border-top-color: #fab617;
+    border-right-color: #fab617;
+    opacity: 1;
+  }
+  25% {
+    border-color: transparent;
+    border-right-color: #fab617;
+    opacity: 1;
+  }
+  37.5% {
+    border-color: transparent;
+    opacity: 0;
+  }
+  100% {
+    border-color: transparent;
+    opacity: 0;
+  }
+}
+
+@keyframes border-sequence-bottom {
+  0% {
+    border-color: transparent;
+    border-bottom-color: #fab617;
+    opacity: 1;
+  }
+  12.5% {
+    border-color: transparent;
+    border-bottom-color: #fab617;
+    border-left-color: #fab617;
+    opacity: 1;
+  }
+  25% {
+    border-color: transparent;
+    border-left-color: #fab617;
+    opacity: 1;
+  }
+  37.5% {
+    border-color: transparent;
+    opacity: 0;
+  }
+  100% {
+    border-color: transparent;
+    opacity: 0;
+  }
+}
+
+.mek-animated-border-button:hover {
+  @apply bg-yellow-400/10;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(250, 182, 23, 0.3);
+}
+
+.mek-animated-border-button span {
+  position: relative;
+  z-index: 1;
 }

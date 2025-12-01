@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { useMutation, useQuery } from 'convex/react';
-import { api } from '../../convex/_generated/api';
+import { api } from '@/convex/_generated/api';
 
 interface CompanyNameModalProps {
   isOpen: boolean;
@@ -88,9 +88,12 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log('[CompanyNameModal] handleSubmit called');
+
     const trimmedName = companyName.trim();
 
     if (!trimmedName) {
+      console.log('[CompanyNameModal] Error: Corporation name is empty');
       setError('Corporation name is required');
       return;
     }
@@ -192,6 +195,24 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
   const isChecking = isDemoMode ? false : (companyName.trim().length >= 2 && checkAvailability === undefined);
   const showAvailabilityStatus = isDemoMode ? false : (companyName.trim().length >= 2 && !error && !isTyping);
 
+  // Debug: log button state
+  const buttonDisabled = isSubmitting ||
+    !companyName.trim() ||
+    companyName.trim().length < 2 ||
+    (!isDemoMode && checkAvailability && !checkAvailability.available) ||
+    isChecking;
+
+  console.log('[CompanyNameModal] Button state:', {
+    disabled: buttonDisabled,
+    isSubmitting,
+    hasCompanyName: !!companyName.trim(),
+    nameLength: companyName.trim().length,
+    isDemoMode,
+    checkAvailability,
+    isAvailable,
+    isChecking
+  });
+
   return (
     <Modal
       isOpen={isOpen}
@@ -282,13 +303,8 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
             <Button
               type="submit"
               className="flex-1 mek-button-primary"
-              disabled={
-                isSubmitting ||
-                !companyName.trim() ||
-                companyName.trim().length < 2 ||
-                (!isDemoMode && checkAvailability && !checkAvailability.available) ||
-                isChecking
-              }
+              disabled={buttonDisabled}
+              onClick={() => console.log('[CompanyNameModal] Create button clicked')}
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">

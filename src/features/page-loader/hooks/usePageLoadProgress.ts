@@ -10,7 +10,7 @@ import {
   snapToMilestone,
   getStageMessage,
 } from '../utils/progressCalculator';
-import { TIMING, BYPASS_STORAGE_KEY } from '../config/constants';
+import { TIMING } from '../config/constants';
 import type { LoadingProgress, LoaderConfig } from '../types';
 
 export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
@@ -18,6 +18,7 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
     getLoadedCount,
     getTotalCount,
     isWalletLoaded,
+    areCriticalAssetsLoaded,
     startTime,
   } = useLoaderContext();
 
@@ -27,6 +28,7 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
   const hasShownLoader = useRef(false);
   const completeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasTriggeredCompletion = useRef(false);
+  const minimumProgressTime = useRef(2200); // Minimum time to show progress animation (ms)
 
   const minDisplayTime = config?.minDisplayTime ?? TIMING.MIN_DISPLAY_TIME;
   const totalTimeout = config?.totalTimeout ?? TIMING.TOTAL_TIMEOUT;
@@ -40,9 +42,14 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
       return;
     }
 
-    // Check bypass flag
+    // Check bypass flag based on environment
     if (typeof window !== 'undefined') {
-      const bypass = localStorage.getItem(BYPASS_STORAGE_KEY);
+      const isLocalhost = window.location.hostname === 'localhost' ||
+                         window.location.hostname === '127.0.0.1' ||
+                         window.location.hostname.includes('localhost');
+
+      const settingKey = isLocalhost ? 'disablePageLoaderLocalhost' : 'disablePageLoaderProduction';
+      const bypass = localStorage.getItem(settingKey);
       if (bypass === 'true') {
         setIsComplete(true);
         setCanShow(false);
@@ -70,12 +77,15 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
       const loadedCount = getLoadedCount();
       const totalCount = getTotalCount();
 
+      const criticalAssetsLoaded = areCriticalAssetsLoaded();
+
       const queryProgress = calculateQueryProgress(loadedCount, totalCount);
       const timeProgress = calculateTimeBasedProgress(elapsed);
       const milestoneProgress = calculateMilestoneProgress(
         isWalletLoaded,
         loadedCount > 0,
-        loadedCount === totalCount && totalCount > 0
+        loadedCount === totalCount && totalCount > 0,
+        criticalAssetsLoaded
       );
 
       const combined = combineStrategies({
@@ -86,14 +96,53 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
 
       const snapped = snapToMilestone(combined);
 
-      setProgress(snapped);
+      // CRITICAL: Enforce minimum progress time to ensure visible animation
+      // Even if everything loads instantly, pace the progress over minimum time
+      const minimumTimeProgress = Math.min(
+        (elapsed / minimumProgressTime.current) * 90,
+        90
+      );
+
+      // Don't allow progress to exceed minimum time-based progress until minimum time has elapsed
+      let cappedProgress = elapsed < minimumProgressTime.current
+        ? Math.min(snapped, minimumTimeProgress)
+        : snapped;
+
+      // CRITICAL: Don't let progress reach 100% until critical assets are actually loaded
+      // This prevents showing 100% while still downloading logo video, images, etc.
+      if (!criticalAssetsLoaded && cappedProgress >= 90) {
+        // Allow slow creep from 90% → 98% while waiting for assets
+        const elapsedSinceNinety = Math.max(0, elapsed - 1200);
+        const slowCreep = 90 + Math.min(8, elapsedSinceNinety / 500); // +1% every 500ms, cap at 98%
+        cappedProgress = Math.min(cappedProgress, slowCreep);
+      }
+
+      setProgress(cappedProgress);
 
       const allQueriesLoaded = totalCount > 0 && loadedCount === totalCount;
       const noQueriesTracked = totalCount === 0 && elapsed >= 800;
       const minTimeElapsed = elapsed >= minDisplayTime;
+      const minimumAnimationTimeElapsed = elapsed >= minimumProgressTime.current;
       const timedOut = elapsed >= totalTimeout;
 
-      if ((allQueriesLoaded && minTimeElapsed) || noQueriesTracked || timedOut) {
+      // Debug logging every 2 seconds to track what's blocking completion (only if DEBUG_LOADER is enabled)
+      if (elapsed % 2000 < 100 && typeof window !== 'undefined' && (window as any).DEBUG_LOADER) {
+        console.log('[🎯LOADER] Completion Check:', {
+          elapsed: `${elapsed}ms`,
+          progress: `${cappedProgress.toFixed(1)}%`,
+          allQueriesLoaded,
+          noQueriesTracked,
+          minTimeElapsed,
+          minimumAnimationTimeElapsed,
+          criticalAssetsLoaded,
+          timedOut,
+          loadedCount,
+          totalCount,
+        });
+      }
+
+      // Only allow completion if minimum animation time has elapsed AND critical assets loaded
+      if (((allQueriesLoaded || noQueriesTracked) && minTimeElapsed && minimumAnimationTimeElapsed && criticalAssetsLoaded) || timedOut) {
         setProgress(100);
 
         if (!completeTimeoutRef.current && !hasTriggeredCompletion.current) {
@@ -104,9 +153,10 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
             clearInterval(intervalRef);
           }
 
+          // Wait for CSS animation to complete (800ms) plus small buffer
           completeTimeoutRef.current = setTimeout(() => {
             setIsComplete(true);
-          }, 300);
+          }, 900);
         }
       }
     };
@@ -150,7 +200,8 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
   }, [startTime, minDisplayTime]);
 
 
-  const stage = getStageMessage(progress, config?.messages);
+  // Only show "READY" when BOTH complete AND progress bar at 100%
+  const stage = (isComplete && progress >= 100) ? 'READY' : getStageMessage(progress, config?.messages);
 
   return {
     percentage: progress,
