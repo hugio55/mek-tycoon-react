@@ -11,12 +11,19 @@ import { api } from '@/convex/_generated/api';
  * - Maintenance mode enabled/disabled
  */
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+// Lazy initialization to avoid build-time errors
+let convex: ConvexHttpClient | null = null;
+function getConvex() {
+  if (!convex) {
+    convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+  }
+  return convex;
+}
 
 export async function GET() {
   try {
     // Query site settings from Convex
-    const settings = await convex.query(api.siteSettings.getSiteSettings);
+    const settings = await getConvex().query(api.siteSettings.getSiteSettings);
 
     return NextResponse.json({
       success: true,

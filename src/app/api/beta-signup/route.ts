@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '@/convex/_generated/api';
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+// Lazy initialization to avoid build-time errors
+let convex: ConvexHttpClient | null = null;
+function getConvex() {
+  if (!convex) {
+    convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+  }
+  return convex;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,7 +35,7 @@ export async function POST(request: NextRequest) {
     console.log('[🎮BETA-API] Received signup from IP:', ipAddress);
 
     // Call Convex mutation with IP address
-    const result = await convex.mutation(api.betaSignups.submitBetaSignup, {
+    const result = await getConvex().mutation(api.betaSignups.submitBetaSignup, {
       stakeAddress,
       ipAddress,
     });
