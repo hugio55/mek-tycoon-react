@@ -38,14 +38,17 @@ const crons = cronJobs();
 //   internal.leaderboardUpdater.updateGoldLeaderboard
 // );
 
+// PAUSED (Dec 1, 2025): No wallet logins during maintenance - cleanup not needed
+// One-time cleanup ran: 0 expired nonces found
+// Re-enable when wallet connections are live again
 // Clean up expired wallet authentication nonces every 15 minutes
-crons.interval(
-  "cleanup expired nonces",
-  {
-    minutes: 15
-  },
-  internal.walletAuthentication.cleanupExpiredNonces
-);
+// crons.interval(
+//   "cleanup expired nonces",
+//   {
+//     minutes: 15
+//   },
+//   internal.walletAuthentication.cleanupExpiredNonces
+// );
 
 // Clean up expired NFT reservations every hour (both campaign-based and legacy Phase 1)
 // Handles: campaign reservations (with campaignId) AND legacy reservations (without campaignId)
@@ -58,14 +61,17 @@ crons.interval(
   internal.commemorativeNFTReservationsCampaign.internalCleanupExpiredReservations
 );
 
+// PAUSED (Dec 1, 2025): No wallet logins during maintenance - cleanup not needed
+// One-time cleanup ran: 0 expired lockouts found
+// Re-enable when wallet connections are live again
 // Clean up expired rate limit lockouts every hour
-crons.interval(
-  "cleanup expired lockouts",
-  {
-    hours: 1
-  },
-  internal.walletAuthentication.cleanupExpiredLockouts
-);
+// crons.interval(
+//   "cleanup expired lockouts",
+//   {
+//     hours: 1
+//   },
+//   internal.walletAuthentication.cleanupExpiredLockouts
+// );
 
 // PAUSED (Dec 1, 2025): Anti-cheat not needed during maintenance - no active users
 // Re-enable when wallet verification is needed again

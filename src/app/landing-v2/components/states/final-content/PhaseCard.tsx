@@ -232,7 +232,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
               {card.title}
             </h4>
 
-            {isPhaseOne && (
+            {false && isPhaseOne && (
               <div
                 className="uppercase font-bold mt-1 mb-3"
                 style={{
@@ -292,8 +292,8 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             </>
           )}
 
-          {/* Claim NFT Button for Phase I */}
-          {isPhaseOne && (
+          {/* Claim NFT Button for Phase I - TEMPORARILY DISABLED FOR DEBUGGING */}
+          {false && isPhaseOne && (
             <div className="mt-6 mb-2 flex justify-start">
               <button
                 onClick={() => {
