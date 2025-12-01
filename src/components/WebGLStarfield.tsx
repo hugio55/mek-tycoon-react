@@ -1,0 +1,883 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
+import * as THREE from 'three';
+
+interface WebGLStarfieldProps {
+  // Master toggle
+  enabled: boolean;
+
+  // Layer enable/disable
+  bgStarEnabled: boolean;
+  layer1Enabled: boolean;
+  layer2Enabled: boolean;
+  layer3Enabled: boolean;
+
+  // Layer 1: Moving dots
+  starScale: number;
+  starSpeed: number;
+  starFrequency: number;
+  twinkleAmount: number;
+  twinkleSpeed: number;
+  twinkleSpeedRandomness: number;
+  sizeRandomness: number;
+
+  // Layer 2: Moving dots (faster)
+  starScale2: number;
+  starSpeed2: number;
+  starFrequency2: number;
+  twinkleAmount2: number;
+  twinkleSpeed2: number;
+  twinkleSpeedRandomness2: number;
+  sizeRandomness2: number;
+
+  // Layer 3: Streaks
+  starScale3: number;
+  starSpeed3: number;
+  starFrequency3: number;
+  lineLength3: number;
+  brightness3: number;
+  twinkleAmount3: number;
+  twinkleSpeed3: number;
+  twinkleSpeedRandomness3: number;
+  sizeRandomness3: number;
+
+  // Background stars
+  bgStarCount: number;
+  bgStarSize: number;
+  bgStarTwinkleAmount: number;
+  bgStarTwinkleSpeed: number;
+  bgStarTwinkleSpeedRandomness: number;
+  bgStarSizeRandomness: number;
+  bgStarMinBrightness: number;
+  bgStarMaxBrightness: number;
+
+  // Global
+  starFadePosition: number;
+  starFadeFeatherSize: number;
+
+  // Animation stage control
+  animationStage: 'initial' | 'stars' | 'logo';
+}
+
+// Vertex shader for static background stars
+const bgStarVertexShader = `
+  attribute float size;
+  attribute float twinkleOffset;
+  attribute float twinkleSpeed;
+  attribute float brightness;
+
+  uniform float time;
+  uniform float twinkleAmount;
+  uniform float twinkleSpeedGlobal;
+  uniform float bgStarSize;
+
+  varying float vOpacity;
+
+  void main() {
+    // Calculate twinkle (sin wave oscillation)
+    float twinkle = sin(time * twinkleSpeedGlobal * twinkleSpeed + twinkleOffset);
+    float twinkleEffect = twinkle * twinkleAmount;
+
+    // Standard projection
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
+
+    // Background stars are at fixed depth - don't apply depth scaling
+    // This keeps star sizes consistent regardless of Z position
+    // Apply base size and twinkle to size
+    float finalSize = size * bgStarSize * (1.0 + twinkleEffect);
+
+    // Apply twinkle to opacity
+    vOpacity = brightness * (1.0 + twinkleEffect * 0.5);
+
+    gl_PointSize = max(finalSize, 1.0);
+  }
+`;
+
+// Fragment shader for background stars
+const bgStarFragmentShader = `
+  varying float vOpacity;
+
+  void main() {
+    // Draw circular star (not square)
+    vec2 center = gl_PointCoord - vec2(0.5);
+    float dist = length(center);
+    if (dist > 0.5) discard;
+
+    // Soft edge falloff
+    float alpha = smoothstep(0.5, 0.3, dist) * vOpacity;
+
+    gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
+  }
+`;
+
+// Vertex shader for moving stars with 3D depth projection
+const movingStarVertexShader = `
+  attribute float size;
+  attribute float twinkleOffset;
+  attribute float twinkleSpeed;
+
+  uniform float time;
+  uniform float twinkleAmount;
+  uniform float twinkleSpeedGlobal;
+  uniform float starScale;
+  uniform vec2 resolution;
+  uniform float fadePosition;
+  uniform float fadeFeather;
+
+  varying float vOpacity;
+  varying vec2 vScreenPosition;
+
+  void main() {
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+
+    // 3D projection scaling (like Canvas: scale = 1000 / z)
+    // Closer stars (higher z) appear larger - THIS IS THE KEY EFFECT
+    float depth = abs(mvPosition.z);
+    float depthScale = 1000.0 / max(depth, 100.0); // Prevent divide by zero
+
+    // Calculate twinkle
+    float twinkle = sin(time * twinkleSpeedGlobal * twinkleSpeed + twinkleOffset);
+    float twinkleEffect = twinkle * twinkleAmount;
+
+    // Apply depth scaling + twinkle + user scale
+    float finalSize = size * depthScale * starScale * (1.0 + twinkleEffect);
+
+    // Opacity based on depth (fade distant stars) and twinkle
+    float maxDepth = 2000.0;
+    float depthFade = clamp(1.0 - (depth / maxDepth), 0.0, 1.0);
+    vOpacity = depthFade * (1.0 + twinkleEffect * 0.5);
+
+    // Calculate screen position for edge fading
+    vec4 screenPos = projectionMatrix * mvPosition;
+    vScreenPosition = (screenPos.xy / screenPos.w) * 0.5 + 0.5;
+
+    gl_Position = projectionMatrix * mvPosition;
+    gl_PointSize = max(finalSize, 1.0); // Minimum size of 1px
+  }
+`;
+
+// Fragment shader for moving stars with edge fading
+const movingStarFragmentShader = `
+  uniform float fadePosition;
+  uniform float fadeFeather;
+
+  varying float vOpacity;
+  varying vec2 vScreenPosition;
+
+  void main() {
+    // Draw circular star
+    vec2 center = gl_PointCoord - vec2(0.5);
+    float dist = length(center);
+    if (dist > 0.5) discard;
+
+    // Soft edge falloff for star shape
+    float shapeAlpha = smoothstep(0.5, 0.3, dist);
+
+    // Calculate distance from screen center for edge fading
+    vec2 centerDist = abs(vScreenPosition - 0.5) * 2.0;
+    float edgeDist = max(centerDist.x, centerDist.y);
+
+    // Apply edge fade
+    float fadeStart = fadePosition / 100.0;
+    float fadeEnd = fadeStart + (fadeFeather / 100.0);
+    float edgeFade = 1.0 - smoothstep(fadeStart, fadeEnd, edgeDist);
+
+    // Combine all alpha factors
+    float finalAlpha = shapeAlpha * vOpacity * edgeFade;
+
+    gl_FragColor = vec4(1.0, 1.0, 1.0, finalAlpha);
+  }
+`;
+
+export default function WebGLStarfield(props: WebGLStarfieldProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const animationIdRef = useRef<number>(0);
+
+  // Particle system refs
+  const bgStarsRef = useRef<THREE.Points | null>(null);
+  const layer1StarsRef = useRef<THREE.Points | null>(null);
+  const layer2StarsRef = useRef<THREE.Points | null>(null);
+  const layer3StarsRef = useRef<THREE.InstancedMesh | null>(null);
+
+  // Initialize THREE.js scene
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    console.log('[⭐WEBGL] Initializing WebGL scene');
+
+    // Create scene
+    const scene = new THREE.Scene();
+    sceneRef.current = scene;
+
+    // Create camera
+    const camera = new THREE.PerspectiveCamera(
+      75, // FOV
+      window.innerWidth / window.innerHeight, // Aspect ratio
+      1, // Near clipping
+      3000 // Far clipping
+    );
+    camera.position.z = 1000;
+    cameraRef.current = camera;
+
+    // Create renderer
+    const renderer = new THREE.WebGLRenderer({
+      alpha: true, // Transparent background
+      antialias: false, // Disable for performance
+      powerPreference: 'high-performance',
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Cap at 2x for performance
+    containerRef.current.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
+
+    // Handle window resize
+    const handleResize = () => {
+      if (!camera || !renderer) return;
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (animationIdRef.current) {
+        cancelAnimationFrame(animationIdRef.current);
+      }
+      if (renderer) {
+        containerRef.current?.removeChild(renderer.domElement);
+        renderer.dispose();
+      }
+    };
+  }, []);
+
+  // Create/update background stars
+  useEffect(() => {
+    if (!sceneRef.current || !props.enabled || !props.bgStarEnabled) {
+      // Remove if disabled
+      if (bgStarsRef.current && sceneRef.current) {
+        sceneRef.current.remove(bgStarsRef.current);
+        bgStarsRef.current = null;
+      }
+      return;
+    }
+
+    const scene = sceneRef.current;
+    const particleCount = props.bgStarCount;
+
+    // Remove old system if exists
+    if (bgStarsRef.current) {
+      scene.remove(bgStarsRef.current);
+      bgStarsRef.current.geometry.dispose();
+      (bgStarsRef.current.material as THREE.Material).dispose();
+    }
+
+    if (particleCount === 0) return;
+
+    // Generate particle data
+    const positions = new Float32Array(particleCount * 3);
+    const sizes = new Float32Array(particleCount);
+    const twinkleOffsets = new Float32Array(particleCount);
+    const twinkleSpeeds = new Float32Array(particleCount);
+    const brightnesses = new Float32Array(particleCount);
+
+    const sizeRandomness = props.bgStarSizeRandomness / 100;
+    const speedRandomness = props.bgStarTwinkleSpeedRandomness / 100;
+
+    for (let i = 0; i < particleCount; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 2000;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 2000;
+      positions[i * 3 + 2] = -1500; // Fixed depth for background
+
+      sizes[i] = 1.0 + Math.random() * sizeRandomness;
+      twinkleOffsets[i] = Math.random() * Math.PI * 2;
+      twinkleSpeeds[i] = 1.0 + (Math.random() * 2 - 1) * speedRandomness;
+
+      const minBright = props.bgStarMinBrightness / 100;
+      const maxBright = props.bgStarMaxBrightness / 100;
+      brightnesses[i] = minBright + Math.random() * (maxBright - minBright);
+    }
+
+    // Debug logging for first 3 stars
+    const minFinalSize = 1.0 * props.bgStarSize;
+    const maxFinalSize = (1.0 + sizeRandomness) * props.bgStarSize;
+    const twinkleMultiplier = 1.0 + (props.bgStarTwinkleAmount / 100);
+
+    console.log('[⭐BG-STARS] Sample star data:', {
+      star0: { size: sizes[0], brightness: brightnesses[0], z: positions[2] },
+      star1: { size: sizes[1], brightness: brightnesses[1], z: positions[5] },
+      star2: { size: sizes[2], brightness: brightnesses[2], z: positions[8] },
+      sizeRange: `${1.0}-${1.0 + sizeRandomness}`,
+      bgStarSizeUniform: props.bgStarSize,
+      brightnessRange: `${(props.bgStarMinBrightness/100).toFixed(2)}-${(props.bgStarMaxBrightness/100).toFixed(2)}`,
+      estimatedFinalSize: `${minFinalSize.toFixed(2)}-${maxFinalSize.toFixed(2)} px (before twinkle)`,
+      withMaxTwinkle: `${(maxFinalSize * twinkleMultiplier).toFixed(2)} px`,
+      note: 'No depth scaling applied to background stars (fixed depth)'
+    });
+
+    // Create geometry
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    geometry.setAttribute('twinkleOffset', new THREE.BufferAttribute(twinkleOffsets, 1));
+    geometry.setAttribute('twinkleSpeed', new THREE.BufferAttribute(twinkleSpeeds, 1));
+    geometry.setAttribute('brightness', new THREE.BufferAttribute(brightnesses, 1));
+
+    // Create material
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        time: { value: 0 },
+        twinkleAmount: { value: props.bgStarTwinkleAmount / 100 },
+        twinkleSpeedGlobal: { value: props.bgStarTwinkleSpeed },
+        bgStarSize: { value: props.bgStarSize },
+      },
+      vertexShader: bgStarVertexShader,
+      fragmentShader: bgStarFragmentShader,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+    bgStarsRef.current = points;
+
+    console.log('[⭐WEBGL] Background stars created:', {
+      count: particleCount,
+      zPosition: -1500,
+      pointsAdded: true,
+      sceneChildren: scene.children.length,
+      materialUniforms: {
+        twinkleAmount: material.uniforms.twinkleAmount.value,
+        twinkleSpeedGlobal: material.uniforms.twinkleSpeedGlobal.value
+      }
+    });
+
+  }, [
+    props.enabled,
+    props.bgStarEnabled,
+    props.bgStarCount,
+    props.bgStarSize,
+    props.bgStarTwinkleAmount,
+    props.bgStarTwinkleSpeed,
+    props.bgStarTwinkleSpeedRandomness,
+    props.bgStarSizeRandomness,
+    props.bgStarMinBrightness,
+    props.bgStarMaxBrightness,
+  ]);
+
+  // Create/update Layer 1 moving stars
+  useEffect(() => {
+    if (!sceneRef.current || !props.enabled || !props.layer1Enabled) {
+      // Remove if disabled
+      if (layer1StarsRef.current && sceneRef.current) {
+        sceneRef.current.remove(layer1StarsRef.current);
+        layer1StarsRef.current.geometry.dispose();
+        (layer1StarsRef.current.material as THREE.Material).dispose();
+        layer1StarsRef.current = null;
+      }
+      return;
+    }
+
+    const scene = sceneRef.current;
+    const particleCount = props.starFrequency;
+
+    // Remove old system
+    if (layer1StarsRef.current) {
+      scene.remove(layer1StarsRef.current);
+      layer1StarsRef.current.geometry.dispose();
+      (layer1StarsRef.current.material as THREE.Material).dispose();
+    }
+
+    if (particleCount === 0) return;
+
+    // Generate particle data
+    const positions = new Float32Array(particleCount * 3);
+    const sizes = new Float32Array(particleCount);
+    const twinkleOffsets = new Float32Array(particleCount);
+    const twinkleSpeeds = new Float32Array(particleCount);
+
+    const sizeRandomness = props.sizeRandomness / 100;
+    const speedRandomness = props.twinkleSpeedRandomness / 100;
+    // Stars spawn between -500 and -2500 (far behind camera at z=1000)
+    const minZ = -500;
+    const maxZ = -2500;
+
+    for (let i = 0; i < particleCount; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 2000;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 2000;
+      // Spawn far away: between -2500 and -500
+      positions[i * 3 + 2] = minZ + Math.random() * (maxZ - minZ);
+
+      sizes[i] = 1.0 + Math.random() * sizeRandomness;
+      twinkleOffsets[i] = Math.random() * Math.PI * 2;
+      twinkleSpeeds[i] = 1.0 + (Math.random() * 2 - 1) * speedRandomness;
+    }
+
+    // Create geometry
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    geometry.setAttribute('twinkleOffset', new THREE.BufferAttribute(twinkleOffsets, 1));
+    geometry.setAttribute('twinkleSpeed', new THREE.BufferAttribute(twinkleSpeeds, 1));
+
+    // Create material
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        time: { value: 0 },
+        twinkleAmount: { value: props.twinkleAmount / 100 },
+        twinkleSpeedGlobal: { value: props.twinkleSpeed },
+        starScale: { value: props.starScale },
+        resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+        fadePosition: { value: props.starFadePosition },
+        fadeFeather: { value: props.starFadeFeatherSize },
+      },
+      vertexShader: movingStarVertexShader,
+      fragmentShader: movingStarFragmentShader,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+    layer1StarsRef.current = points;
+
+  }, [
+    props.enabled,
+    props.layer1Enabled,
+    props.starFrequency,
+    props.starScale,
+    props.twinkleAmount,
+    props.twinkleSpeed,
+    props.twinkleSpeedRandomness,
+    props.sizeRandomness,
+    props.starFadePosition,
+    props.starFadeFeatherSize,
+  ]);
+
+  // Create/update Layer 2 moving stars
+  useEffect(() => {
+    if (!sceneRef.current || !props.enabled || !props.layer2Enabled) {
+      // Remove if disabled
+      if (layer2StarsRef.current && sceneRef.current) {
+        sceneRef.current.remove(layer2StarsRef.current);
+        layer2StarsRef.current.geometry.dispose();
+        (layer2StarsRef.current.material as THREE.Material).dispose();
+        layer2StarsRef.current = null;
+      }
+      return;
+    }
+
+    const scene = sceneRef.current;
+    const particleCount = props.starFrequency2;
+
+    // Remove old system
+    if (layer2StarsRef.current) {
+      scene.remove(layer2StarsRef.current);
+      layer2StarsRef.current.geometry.dispose();
+      (layer2StarsRef.current.material as THREE.Material).dispose();
+    }
+
+    if (particleCount === 0) return;
+
+    // Generate particle data
+    const positions = new Float32Array(particleCount * 3);
+    const sizes = new Float32Array(particleCount);
+    const twinkleOffsets = new Float32Array(particleCount);
+    const twinkleSpeeds = new Float32Array(particleCount);
+
+    const sizeRandomness = props.sizeRandomness2 / 100;
+    const speedRandomness = props.twinkleSpeedRandomness2 / 100;
+    // Stars spawn between -500 and -2500 (far behind camera at z=1000)
+    const minZ = -500;
+    const maxZ = -2500;
+
+    for (let i = 0; i < particleCount; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 2000;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 2000;
+      // Spawn far away: between -2500 and -500
+      positions[i * 3 + 2] = minZ + Math.random() * (maxZ - minZ);
+
+      sizes[i] = 1.0 + Math.random() * sizeRandomness;
+      twinkleOffsets[i] = Math.random() * Math.PI * 2;
+      twinkleSpeeds[i] = 1.0 + (Math.random() * 2 - 1) * speedRandomness;
+    }
+
+    // Create geometry
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    geometry.setAttribute('twinkleOffset', new THREE.BufferAttribute(twinkleOffsets, 1));
+    geometry.setAttribute('twinkleSpeed', new THREE.BufferAttribute(twinkleSpeeds, 1));
+
+    // Create material
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        time: { value: 0 },
+        twinkleAmount: { value: props.twinkleAmount2 / 100 },
+        twinkleSpeedGlobal: { value: props.twinkleSpeed2 },
+        starScale: { value: props.starScale2 },
+        resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+        fadePosition: { value: props.starFadePosition },
+        fadeFeather: { value: props.starFadeFeatherSize },
+      },
+      vertexShader: movingStarVertexShader,
+      fragmentShader: movingStarFragmentShader,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+    layer2StarsRef.current = points;
+
+  }, [
+    props.enabled,
+    props.layer2Enabled,
+    props.starFrequency2,
+    props.starScale2,
+    props.twinkleAmount2,
+    props.twinkleSpeed2,
+    props.twinkleSpeedRandomness2,
+    props.sizeRandomness2,
+    props.starFadePosition,
+    props.starFadeFeatherSize,
+  ]);
+
+  // Create/update Layer 3 streak stars (using quads instead of lines for proper width control)
+  useEffect(() => {
+    if (!sceneRef.current || !props.enabled || !props.layer3Enabled) {
+      // Remove if disabled
+      if (layer3StarsRef.current && sceneRef.current) {
+        sceneRef.current.remove(layer3StarsRef.current);
+        layer3StarsRef.current.geometry.dispose();
+        (layer3StarsRef.current.material as THREE.Material).dispose();
+        layer3StarsRef.current = null;
+      }
+      return;
+    }
+
+    const scene = sceneRef.current;
+    const particleCount = props.starFrequency3;
+
+    // Remove old system
+    if (layer3StarsRef.current) {
+      scene.remove(layer3StarsRef.current);
+      layer3StarsRef.current.geometry.dispose();
+      (layer3StarsRef.current.material as THREE.Material).dispose();
+    }
+
+    if (particleCount === 0) return;
+
+    // Use instanced mesh for efficient rendering of many identical quads
+    // Each streak is a quad (2 triangles = 6 vertices)
+    const lineLength = props.lineLength3 * 50; // Scale up to make visible (2 * 50 = 100 units)
+    const lineWidth = 4; // Width of streak in units (increased from 2 for better visibility)
+    // Stars spawn between -500 and -2500 (far behind camera at z=1000)
+    const minZ = -500;
+    const maxZ = -2500;
+
+    // Create a single quad geometry (will be instanced)
+    const quadGeometry = new THREE.PlaneGeometry(lineWidth, lineLength);
+
+    // Store position and rotation data for each instance
+    const positions = [];
+    const rotations = [];
+
+    for (let i = 0; i < particleCount; i++) {
+      const x = (Math.random() - 0.5) * 2000;
+      const y = (Math.random() - 0.5) * 2000;
+      // Spawn far away: between -2500 and -500
+      const z = minZ + Math.random() * (maxZ - minZ);
+
+      positions.push({ x, y, z });
+      rotations.push(0); // Will rotate to face camera
+    }
+
+    // Create material with additive blending
+    const material = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: props.brightness3,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+
+    // Create instanced mesh
+    const instancedMesh = new THREE.InstancedMesh(quadGeometry, material, particleCount);
+
+    // Set initial transforms for each instance
+    const matrix = new THREE.Matrix4();
+    const quaternion = new THREE.Quaternion();
+    // Rotate 90° around X-axis so plane faces camera (perpendicular to Z-axis)
+    quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+
+    for (let i = 0; i < particleCount; i++) {
+      const pos = positions[i];
+      // Position the quad at the streak location
+      // Offset by half lineLength so it extends forward from position
+      matrix.compose(
+        new THREE.Vector3(pos.x, pos.y, pos.z + lineLength / 2),
+        quaternion,
+        new THREE.Vector3(1, 1, 1)
+      );
+      instancedMesh.setMatrixAt(i, matrix);
+    }
+
+    instancedMesh.instanceMatrix.needsUpdate = true;
+
+    // Store positions array on the mesh for animation updates
+    (instancedMesh as any).streakPositions = positions;
+    (instancedMesh as any).lineLength = lineLength;
+
+    scene.add(instancedMesh);
+    layer3StarsRef.current = instancedMesh as any;
+
+    console.log('[⭐LAYER3] Streak stars created:', {
+      count: particleCount,
+      lineLength,
+      lineWidth,
+      sliderValue: props.lineLength3,
+      multiplier: 50,
+      actualLength: lineLength,
+      usingQuads: true,
+      rotation: '90° around X-axis to face camera',
+      note: 'Quads now perpendicular to Z-axis for visibility'
+    });
+
+  }, [
+    props.enabled,
+    props.layer3Enabled,
+    props.starFrequency3,
+    props.lineLength3,
+    props.brightness3,
+  ]);
+
+  // Animation loop
+  useEffect(() => {
+    if (!props.enabled || !sceneRef.current || !cameraRef.current || !rendererRef.current) {
+      console.log('[⭐WEBGL] Animation loop blocked:', {
+        enabled: props.enabled,
+        hasScene: !!sceneRef.current,
+        hasCamera: !!cameraRef.current,
+        hasRenderer: !!rendererRef.current
+      });
+      return;
+    }
+
+    console.log('[⭐WEBGL] Starting animation loop, stage:', props.animationStage);
+    console.log('[⭐BG-STARS] Animation loop refs:', {
+      hasBgStars: !!bgStarsRef.current,
+      hasLayer1: !!layer1StarsRef.current,
+      hasLayer2: !!layer2StarsRef.current,
+      hasLayer3: !!layer3StarsRef.current
+    });
+
+    // Animate during ALL stages (will be hidden by opacity during 'initial')
+    // Removed early return for 'initial' stage to ensure animation loop starts
+
+    const scene = sceneRef.current;
+    const camera = cameraRef.current;
+    const renderer = rendererRef.current;
+
+    let lastTime = performance.now();
+    let frameCount = 0;
+
+    const animate = (currentTime: number) => {
+      const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
+      lastTime = currentTime;
+
+      // Update background stars twinkle
+      if (bgStarsRef.current) {
+        const material = bgStarsRef.current.material as THREE.ShaderMaterial;
+        material.uniforms.time.value = currentTime * 0.001;
+        material.uniforms.twinkleAmount.value = props.bgStarTwinkleAmount / 100;
+        material.uniforms.twinkleSpeedGlobal.value = props.bgStarTwinkleSpeed;
+        material.uniforms.bgStarSize.value = props.bgStarSize;
+
+        // Log every 60 frames (~1 second)
+        frameCount++;
+        if (frameCount % 60 === 0) {
+          console.log('[⭐BG-STARS] Animation frame:', {
+            time: material.uniforms.time.value.toFixed(2),
+            twinkleAmount: material.uniforms.twinkleAmount.value,
+            twinkleSpeed: material.uniforms.twinkleSpeedGlobal.value,
+            bgStarSize: material.uniforms.bgStarSize.value,
+            visible: bgStarsRef.current.visible,
+            particleCount: bgStarsRef.current.geometry.attributes.position.count
+          });
+        }
+      }
+
+      // Update Layer 1 moving stars
+      if (layer1StarsRef.current) {
+        const geometry = layer1StarsRef.current.geometry;
+        const positions = geometry.attributes.position.array as Float32Array;
+        const particleCount = props.starFrequency;
+
+        for (let i = 0; i < particleCount; i++) {
+          const idx = i * 3;
+
+          // Move star toward viewer
+          positions[idx + 2] += props.starSpeed * deltaTime;
+
+          // Reset if star passed camera or went too far forward
+          // Camera is at z=1000, so reset when star reaches z=1100 (past viewer)
+          if (positions[idx + 2] > 1100) {
+            positions[idx] = (Math.random() - 0.5) * 2000;
+            positions[idx + 1] = (Math.random() - 0.5) * 2000;
+            // Respawn far away: between -2500 and -500
+            positions[idx + 2] = -500 + Math.random() * -2000;
+          }
+        }
+
+        geometry.attributes.position.needsUpdate = true;
+
+        // Update shader uniforms
+        const material = layer1StarsRef.current.material as THREE.ShaderMaterial;
+        material.uniforms.time.value = currentTime * 0.001;
+        material.uniforms.twinkleAmount.value = props.twinkleAmount / 100;
+        material.uniforms.twinkleSpeedGlobal.value = props.twinkleSpeed;
+        material.uniforms.starScale.value = props.starScale;
+        material.uniforms.fadePosition.value = props.starFadePosition;
+        material.uniforms.fadeFeather.value = props.starFadeFeatherSize;
+      }
+
+      // Update Layer 2 moving stars
+      if (layer2StarsRef.current) {
+        const geometry = layer2StarsRef.current.geometry;
+        const positions = geometry.attributes.position.array as Float32Array;
+        const particleCount = props.starFrequency2;
+
+        for (let i = 0; i < particleCount; i++) {
+          const idx = i * 3;
+
+          // Move star toward viewer
+          positions[idx + 2] += props.starSpeed2 * deltaTime;
+
+          // Reset if star passed camera or went too far forward
+          // Camera is at z=1000, so reset when star reaches z=1100 (past viewer)
+          if (positions[idx + 2] > 1100) {
+            positions[idx] = (Math.random() - 0.5) * 2000;
+            positions[idx + 1] = (Math.random() - 0.5) * 2000;
+            // Respawn far away: between -2500 and -500
+            positions[idx + 2] = -500 + Math.random() * -2000;
+          }
+        }
+
+        geometry.attributes.position.needsUpdate = true;
+
+        // Update shader uniforms
+        const material = layer2StarsRef.current.material as THREE.ShaderMaterial;
+        material.uniforms.time.value = currentTime * 0.001;
+        material.uniforms.twinkleAmount.value = props.twinkleAmount2 / 100;
+        material.uniforms.twinkleSpeedGlobal.value = props.twinkleSpeed2;
+        material.uniforms.starScale.value = props.starScale2;
+        material.uniforms.fadePosition.value = props.starFadePosition;
+        material.uniforms.fadeFeather.value = props.starFadeFeatherSize;
+      }
+
+      // Update Layer 3 streak stars (quad-based)
+      if (layer3StarsRef.current) {
+        const instancedMesh = layer3StarsRef.current as THREE.InstancedMesh;
+        const positions = (instancedMesh as any).streakPositions;
+        const lineLength = (instancedMesh as any).lineLength;
+        const particleCount = props.starFrequency3;
+        const matrix = new THREE.Matrix4();
+        const quaternion = new THREE.Quaternion();
+        // Fixed rotation: 90° around X-axis to face camera
+        quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+
+        // Update material opacity (brightness)
+        const material = instancedMesh.material as THREE.MeshBasicMaterial;
+        material.opacity = props.brightness3;
+
+        for (let i = 0; i < particleCount; i++) {
+          const pos = positions[i];
+
+          // Move streak toward camera
+          pos.z += props.starSpeed3 * deltaTime;
+
+          // Reset if star passed camera or went too far forward
+          // Camera is at z=1000, so reset when star reaches z=1100 (past viewer)
+          if (pos.z > 1100) {
+            pos.x = (Math.random() - 0.5) * 2000;
+            pos.y = (Math.random() - 0.5) * 2000;
+            // Respawn far away: between -2500 and -500
+            pos.z = -500 + Math.random() * -2000;
+          }
+
+          // Build transformation matrix: rotation + position
+          // (quaternion already set above loop for efficiency)
+          matrix.compose(
+            new THREE.Vector3(pos.x, pos.y, pos.z + lineLength / 2),
+            quaternion,
+            new THREE.Vector3(1, 1, 1)
+          );
+
+          instancedMesh.setMatrixAt(i, matrix);
+        }
+
+        instancedMesh.instanceMatrix.needsUpdate = true;
+      }
+
+      // Render scene
+      renderer.render(scene, camera);
+
+      animationIdRef.current = requestAnimationFrame(animate);
+    };
+
+    animate(performance.now());
+
+    return () => {
+      if (animationIdRef.current) {
+        cancelAnimationFrame(animationIdRef.current);
+      }
+    };
+
+  }, [
+    props.enabled,
+    props.animationStage,
+    props.starSpeed,
+    props.starSpeed2,
+    props.starSpeed3,
+    props.starFrequency,
+    props.starFrequency2,
+    props.starFrequency3,
+    props.lineLength3,
+    props.starScale,
+    props.starScale2,
+    props.twinkleAmount,
+    props.twinkleAmount2,
+    props.twinkleSpeed,
+    props.twinkleSpeed2,
+    props.bgStarSize,
+    props.bgStarTwinkleAmount,
+    props.bgStarTwinkleSpeed,
+    props.starFadePosition,
+    props.starFadeFeatherSize,
+  ]);
+
+  if (!props.enabled) return null;
+
+  return (
+    <div
+      ref={containerRef}
+      className="fixed inset-0 w-full h-full z-[1] pointer-events-none"
+      style={{
+        opacity: props.animationStage === 'initial' ? 0 : 1,
+        transition: 'opacity 1500ms ease-out',
+      }}
+    />
+  );
+}

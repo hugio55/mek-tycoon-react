@@ -2,11 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { HexagonalSpinner } from './HexagonalSpinner';
-import { ProgressBar } from './ProgressBar';
-import { LoadingText } from './LoadingText';
+import { TriangleKaleidoscope } from './TriangleKaleidoscope';
+import { PercentageDisplay } from './PercentageDisplay';
 import { TIMING } from '../config/constants';
 import { useLoaderContext } from '../context/LoaderContext';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 
 interface LoadingOverlayProps {
   percentage: number;
@@ -25,6 +26,17 @@ export function LoadingOverlay({
   const [mounted, setMounted] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
 
+  // Load settings from database
+  const savedSettings = useQuery(api.loaderSettings.getLoaderSettings);
+
+  // Use saved settings or defaults
+  const fontSize = savedSettings?.fontSize ?? 15;
+  const spacing = savedSettings?.spacing ?? 8;
+  const horizontalOffset = savedSettings?.horizontalOffset ?? 0;
+  const fontFamily = savedSettings?.fontFamily ?? 'Saira';
+  const chromaticOffset = savedSettings?.chromaticOffset ?? 0;
+  const triangleSize = savedSettings?.triangleSize ?? 0.75;
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -33,14 +45,9 @@ export function LoadingOverlay({
     if (isComplete && !isFadingOut) {
       setIsFadingOut(true);
 
-      // Delay setting isLoading = false until fade-out is nearly complete (75% done)
-      // This prevents page content from fading in while loading overlay is still visible
-      const contentFadeDelay = TIMING.FADE_DURATION * 0.75; // 1500ms of 2000ms
+      // Wait for loader to completely fade out before showing page content
       setTimeout(() => {
         setIsLoading(false);
-      }, contentFadeDelay);
-
-      setTimeout(() => {
         if (onComplete) {
           onComplete();
         }
@@ -48,30 +55,39 @@ export function LoadingOverlay({
     }
   }, [isComplete, isFadingOut, onComplete, setIsLoading]);
 
-  if (!mounted) return null;
+  // Don't render until both mounted AND settings have loaded
+  if (!mounted || savedSettings === undefined) return null;
 
   const overlayContent = (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center"
+      className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none"
       style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.1)',
         opacity: isFadingOut ? 0 : 1,
         transition: `opacity ${TIMING.FADE_DURATION}ms ease-out`,
+        background: 'transparent',
       }}
     >
 
       {/* Center Content Container */}
-      <div className="relative z-10 flex flex-col items-center gap-8 w-full max-w-xl px-4">
-        {/* Hexagonal Spinner */}
-        <HexagonalSpinner />
-
-        {/* Progress Bar */}
-        <div className="w-full">
-          <ProgressBar percentage={percentage} showPercentage={true} />
+      <div className="relative z-10 flex flex-col items-center gap-0 w-full max-w-xl px-4">
+        {/* Triangle Kaleidoscope Spinner */}
+        <div
+          className="w-40 h-40 md:w-52 md:h-52"
+          style={{
+            transform: `scale(${triangleSize})`,
+          }}
+        >
+          <TriangleKaleidoscope chromaticOffset={chromaticOffset} scale={triangleSize} />
         </div>
 
-        {/* Loading Text */}
-        <LoadingText currentStage={stage} />
+        {/* Percentage Display */}
+        <PercentageDisplay
+          percentage={percentage}
+          fontSize={fontSize}
+          spacing={spacing}
+          horizontalOffset={horizontalOffset}
+          fontFamily={fontFamily}
+        />
       </div>
     </div>
   );

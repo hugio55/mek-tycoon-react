@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import MekProfileLightbox, { DesignationCardStyle, StatusCardStyle } from "@/components/MekProfileLightbox";
 
 // Mock data for demonstration
 const mockMekData = {
@@ -61,6 +62,47 @@ function MekManagementConcept1({ onClose }: { onClose: () => void }) {
                   e.currentTarget.style.display = 'none';
                 }}
               />
+            </div>
+
+            {/* Level Bar - 10 segments with label beneath current level */}
+            <div className="bg-black/40 rounded-lg p-4 mb-4 border border-yellow-500/20">
+              <div className="flex gap-1.5 h-10">
+                {Array.from({ length: 10 }, (_, i) => {
+                  const level = i + 1;
+                  const currentLevel = 4; // TODO: Get from actual Mek data
+                  const isActive = level <= currentLevel;
+                  const isCurrent = level === currentLevel;
+
+                  return (
+                    <div key={level} className="flex-1 flex flex-col items-center gap-1">
+                      <div
+                        className="w-full flex-1 transition-all duration-500 rounded-sm"
+                        style={{
+                          backgroundColor: isActive ? '#a855f7' : '#1a1a1a',
+                          backgroundImage: isActive
+                            ? 'none'
+                            : 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(102, 102, 102, 0.1) 2px, rgba(102, 102, 102, 0.1) 4px)',
+                          border: isActive
+                            ? '1px solid #a855f7'
+                            : '1px solid #666',
+                          boxShadow: isActive
+                            ? '0 0 12px #a855f780, inset 0 -4px 8px rgba(0,0,0,0.4)'
+                            : 'inset 0 2px 4px rgba(0,0,0,0.8)',
+                          opacity: isActive ? 1 : 0.5,
+                        }}
+                      />
+                      {isCurrent && (
+                        <div
+                          className="text-[9px] font-bold uppercase tracking-wider"
+                          style={{ color: '#a855f7' }}
+                        >
+                          LVL{level}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Name Section */}
@@ -185,89 +227,17 @@ function MekManagementConcept2({ onClose }: { onClose: () => void }) {
 
 // CONCEPT 3: Centered Minimalism (User's Current Favorite - IMPROVED)
 // Clean, centered, balanced design with medium transparency
-function MekManagementConcept3({ onClose }: { onClose: () => void }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, []);
-
-  const modalContent = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center" onClick={onClose}>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/75 backdrop-blur-sm" />
-
-      {/* Lightbox Card - Clean centered design */}
-      <div
-        className="relative z-10 w-full max-w-md mx-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="bg-black/80 backdrop-blur-md border-2 border-yellow-500/50 rounded-xl shadow-2xl shadow-black/50">
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform z-20"
-          >
-            <span className="text-yellow-400 text-3xl font-bold" style={{ textShadow: '0 0 10px rgba(250, 182, 23, 0.5)' }}>×</span>
-          </button>
-
-          {/* Content - perfectly centered and balanced */}
-          <div className="p-8">
-            {/* Header */}
-            <div className="text-center mb-6">
-              <h2 className="text-yellow-400 text-2xl font-bold uppercase tracking-wider" style={{ textShadow: '0 0 20px rgba(250, 182, 23, 0.3)' }}>
-                MEK MANAGEMENT
-              </h2>
-            </div>
-
-            {/* Mek Image - centered with even padding */}
-            <div className="bg-black/60 rounded-lg p-6 mb-6 border border-yellow-500/30">
-              <img
-                src={`/mek-images/500px/${mockMekData.sourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`}
-                alt={mockMekData.assetName}
-                className="w-full h-auto max-w-[384px] mx-auto"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            </div>
-
-            {/* Name Section - centered */}
-            <div className="text-center mb-6">
-              <div className="text-[10px] text-gray-400 uppercase tracking-[0.2em] mb-2">Mek Name</div>
-              <div className="text-white text-2xl font-bold mb-3">{mockMekData.customName || "UNNAMED"}</div>
-              <button className="text-cyan-400 text-sm hover:text-cyan-300 transition-colors">
-                ✏️ Edit Name
-              </button>
-            </div>
-
-            {/* Slot Info - centered */}
-            <div className="text-center mb-6">
-              <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Slot</div>
-              <div className="text-yellow-400 text-lg font-bold">SLOT {mockMekData.slotNumber}</div>
-            </div>
-
-            {/* Action Buttons - centered, full width */}
-            <div className="space-y-3">
-              <button className="w-full px-6 py-3 bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 text-sm font-bold uppercase tracking-wider rounded-lg hover:bg-yellow-500/30 hover:border-yellow-500/70 transition-all">
-                Swap Mek
-              </button>
-              <button className="w-full px-6 py-3 bg-red-500/20 border border-red-500/50 text-red-400 text-sm font-bold uppercase tracking-wider rounded-lg hover:bg-red-500/30 hover:border-red-500/70 transition-all">
-                Terminate Slot
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+// Now uses MekProfileLightbox with designation card style selection
+function MekManagementConcept3({ onClose, designationCardStyle, statusCardStyle }: { onClose: () => void; designationCardStyle?: DesignationCardStyle; statusCardStyle?: StatusCardStyle }) {
+  return (
+    <MekProfileLightbox
+      isOpen={true}
+      onClose={onClose}
+      designationCardStyle={designationCardStyle || 'corner-brackets'}
+      statusCardStyle={statusCardStyle || 'compact-minimal'}
+      onStatusCardStyleChange={() => {}}
+    />
   );
-
-  if (!mounted) return null;
-  return createPortal(modalContent, document.body);
 }
 
 // CONCEPT 4: Ultra Bright Glass (Essence Market Style)
@@ -476,6 +446,226 @@ function MekManagementConcept5({ onClose }: { onClose: () => void }) {
   return createPortal(modalContent, document.body);
 }
 
+// CONCEPT 7: Compact Designation Cards
+// Multiple creative single-card layouts combining all 4 fields
+function MekManagementConcept7({ onClose }: { onClose: () => void }) {
+  const [mounted, setMounted] = useState(false);
+  const [cardVariant, setCardVariant] = useState<1 | 2 | 3 | 4>(1);
+
+  useEffect(() => {
+    setMounted(true);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center" onClick={onClose}>
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+
+      {/* Modal Card */}
+      <div
+        className="relative z-10 w-full max-w-4xl mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="bg-black/80 backdrop-blur-md border-2 border-yellow-500/50 rounded-xl shadow-2xl p-8">
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform z-20"
+          >
+            <span className="text-yellow-400 text-3xl font-bold">×</span>
+          </button>
+
+          {/* Header */}
+          <h2 className="text-center text-yellow-400 text-2xl font-bold uppercase tracking-wider mb-6">
+            DESIGNATION CARD CONCEPTS
+          </h2>
+
+          {/* Variant Selector */}
+          <div className="flex justify-center gap-2 mb-6">
+            {[1, 2, 3, 4].map((v) => (
+              <button
+                key={v}
+                onClick={() => setCardVariant(v as 1 | 2 | 3 | 4)}
+                className={`px-4 py-2 text-sm font-bold uppercase rounded transition-all ${
+                  cardVariant === v
+                    ? 'bg-yellow-500 text-black'
+                    : 'bg-black/60 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/20'
+                }`}
+              >
+                Layout {v}
+              </button>
+            ))}
+          </div>
+
+          {/* Card Variants Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* LAYOUT 1: Split Hero - Rank dominant on left */}
+            {cardVariant === 1 && (
+              <div className="bg-black/60 border-2 border-yellow-500/40 rounded-lg p-6">
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-4 text-center">Layout 1: Split Hero</div>
+                <div className="grid grid-cols-[auto_1fr] gap-4">
+                  {/* Left: Giant Rank */}
+                  <div className="flex flex-col items-center justify-center bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-l-4 border-yellow-500 rounded-lg px-6 py-4">
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Rank</div>
+                    <div className="text-yellow-400 text-5xl font-bold leading-none">2985</div>
+                  </div>
+                  {/* Right: Other 3 fields stacked */}
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-[9px] text-gray-400 uppercase tracking-wider">Mekanism</div>
+                      <div className="text-white text-lg font-bold">#1234</div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] text-gray-400 uppercase tracking-wider">Corporation</div>
+                      <div className="text-cyan-400 text-sm">Apex Industries</div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] text-gray-400 uppercase tracking-wider">Employee ID</div>
+                      <div className="text-yellow-400 text-sm">Golden Striker</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* LAYOUT 2: Badge Cluster - Small compact badges */}
+            {cardVariant === 2 && (
+              <div className="bg-black/60 border-2 border-yellow-500/40 rounded-lg p-6">
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-4 text-center">Layout 2: Badge Cluster</div>
+                <div className="space-y-2">
+                  {/* Rank - Full width highlight */}
+                  <div className="bg-gradient-to-r from-yellow-500/30 via-yellow-500/20 to-transparent border-l-4 border-yellow-500 px-4 py-3 rounded">
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider mr-3">Rank</span>
+                    <span className="text-yellow-400 text-2xl font-bold">2985</span>
+                  </div>
+                  {/* Other fields as inline badges */}
+                  <div className="flex flex-wrap gap-2">
+                    <div className="bg-black/60 border border-gray-600/50 rounded px-3 py-2">
+                      <span className="text-[9px] text-gray-400 uppercase tracking-wider mr-2">Mek</span>
+                      <span className="text-white font-bold">#1234</span>
+                    </div>
+                    <div className="bg-cyan-500/10 border border-cyan-500/30 rounded px-3 py-2">
+                      <span className="text-[9px] text-cyan-400 uppercase tracking-wider mr-2">Corp</span>
+                      <span className="text-cyan-400 font-bold">Apex Industries</span>
+                    </div>
+                    <div className="bg-yellow-500/10 border border-yellow-500/30 rounded px-3 py-2">
+                      <span className="text-[9px] text-yellow-400 uppercase tracking-wider mr-2">ID</span>
+                      <span className="text-yellow-400 font-bold">Golden Striker</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* LAYOUT 3: 2x2 Grid - Rank takes upper-left, others fill remaining */}
+            {cardVariant === 3 && (
+              <div className="bg-black/60 border-2 border-yellow-500/40 rounded-lg p-6">
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-4 text-center">Layout 3: 2×2 Grid</div>
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Top-left: Rank (larger) */}
+                  <div className="row-span-2 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/50 rounded-lg flex flex-col items-center justify-center p-4">
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-2">Rank</div>
+                    <div className="text-yellow-400 text-6xl font-bold leading-none">2985</div>
+                  </div>
+                  {/* Top-right: Mek # */}
+                  <div className="bg-black/60 border border-gray-600/50 rounded-lg p-3">
+                    <div className="text-[9px] text-gray-400 uppercase tracking-wider">Mekanism</div>
+                    <div className="text-white text-xl font-bold">#1234</div>
+                  </div>
+                  {/* Bottom-right: Corp + ID stacked */}
+                  <div className="bg-black/60 border border-gray-600/50 rounded-lg p-3 space-y-2">
+                    <div>
+                      <div className="text-[8px] text-gray-400 uppercase tracking-wider">Corp</div>
+                      <div className="text-cyan-400 text-xs font-bold">Apex Ind.</div>
+                    </div>
+                    <div>
+                      <div className="text-[8px] text-gray-400 uppercase tracking-wider">ID</div>
+                      <div className="text-yellow-400 text-xs font-bold">G. Striker</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* LAYOUT 4: Horizontal Strip - Yellow label strip with data below */}
+            {cardVariant === 4 && (
+              <div className="bg-black/60 border-2 border-yellow-500/40 rounded-lg overflow-hidden">
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-0 text-center p-2 bg-black/40">Layout 4: Label Strip</div>
+                {/* Yellow label strip */}
+                <div className="bg-gradient-to-r from-yellow-500/30 via-yellow-500/20 to-yellow-500/30 border-y-2 border-yellow-500/40 py-2 px-4 flex items-center justify-between">
+                  <span className="text-[10px] text-yellow-400 uppercase tracking-wider font-bold">RANK</span>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">MEKANISM</span>
+                  <span className="text-[10px] text-cyan-400 uppercase tracking-wider font-bold">CORPORATION</span>
+                  <span className="text-[10px] text-yellow-400 uppercase tracking-wider font-bold">EMPLOYEE</span>
+                </div>
+                {/* Data row */}
+                <div className="py-4 px-4 flex items-center justify-between">
+                  <div className="text-yellow-400 text-3xl font-bold">2985</div>
+                  <div className="text-white text-xl font-bold">#1234</div>
+                  <div className="text-cyan-400 text-sm font-bold">Apex Ind.</div>
+                  <div className="text-yellow-400 text-sm font-bold">G. Striker</div>
+                </div>
+              </div>
+            )}
+
+            {/* Right side: Implementation example */}
+            <div className="bg-gray-900/60 border border-gray-700/50 rounded-lg p-6">
+              <div className="text-xs text-gray-400 uppercase tracking-wider mb-4">Tailwind Classes Used</div>
+              <div className="text-[11px] font-mono text-gray-300 space-y-3">
+                {cardVariant === 1 && (
+                  <>
+                    <div><span className="text-yellow-400">Container:</span> grid grid-cols-[auto_1fr] gap-4</div>
+                    <div><span className="text-yellow-400">Rank Box:</span> bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-l-4 border-yellow-500</div>
+                    <div><span className="text-yellow-400">Right Column:</span> space-y-3</div>
+                  </>
+                )}
+                {cardVariant === 2 && (
+                  <>
+                    <div><span className="text-yellow-400">Rank Bar:</span> bg-gradient-to-r from-yellow-500/30 via-yellow-500/20 to-transparent border-l-4 border-yellow-500</div>
+                    <div><span className="text-yellow-400">Badge Row:</span> flex flex-wrap gap-2</div>
+                    <div><span className="text-yellow-400">Badge:</span> bg-black/60 border border-gray-600/50 rounded px-3 py-2</div>
+                  </>
+                )}
+                {cardVariant === 3 && (
+                  <>
+                    <div><span className="text-yellow-400">Container:</span> grid grid-cols-2 gap-3</div>
+                    <div><span className="text-yellow-400">Rank Cell:</span> row-span-2 (spans 2 rows)</div>
+                    <div><span className="text-yellow-400">Other Cells:</span> Single row spans</div>
+                  </>
+                )}
+                {cardVariant === 4 && (
+                  <>
+                    <div><span className="text-yellow-400">Label Strip:</span> bg-gradient-to-r from-yellow-500/30 via-yellow-500/20 to-yellow-500/30 border-y-2</div>
+                    <div><span className="text-yellow-400">Data Row:</span> flex items-center justify-between</div>
+                    <div><span className="text-yellow-400">Typography:</span> Different sizes for visual hierarchy</div>
+                  </>
+                )}
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-gray-700/50">
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">Design Notes</div>
+                <div className="text-xs text-gray-400 leading-relaxed">
+                  {cardVariant === 1 && "Split layout emphasizes Rank with a dominant left panel. Creates strong visual hierarchy with the most important data (Rank) taking center stage."}
+                  {cardVariant === 2 && "Badge cluster uses small, compact components. Rank gets highlight bar treatment while other fields become inline badges. Very space-efficient."}
+                  {cardVariant === 3 && "2×2 grid gives Rank prominent position (upper-left, double height). Other fields fill remaining cells. Balanced and symmetrical."}
+                  {cardVariant === 4 && "Horizontal strip uses label row above data row. All fields get equal visual weight. Clean and organized like a data table."}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (!mounted) return null;
+  return createPortal(modalContent, document.body);
+}
+
 // CONCEPT 6: Neon Holographic (Cyan/Magenta Theme)
 // Futuristic holographic aesthetic with neon glows, scan lines, and animated effects
 function MekManagementConcept6({ onClose }: { onClose: () => void }) {
@@ -660,7 +850,9 @@ function MekManagementConcept6({ onClose }: { onClose: () => void }) {
 // Main component with toggle controls
 export default function MekManagementLightboxConcepts() {
   const [showConcepts, setShowConcepts] = useState(false);
-  const [activeConcept, setActiveConcept] = useState<1 | 2 | 3 | 4 | 5 | 6>(3);
+  const [activeConcept, setActiveConcept] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(3);
+  const [designationCardStyle, setDesignationCardStyle] = useState<'corner-brackets' | 'split-hud' | 'data-terminal'>('corner-brackets');
+  const [statusCardStyle, setStatusCardStyle] = useState<StatusCardStyle>('compact-minimal');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -746,6 +938,50 @@ export default function MekManagementLightboxConcepts() {
             >
               Concept 6: Neon
             </button>
+            <button
+              onClick={() => setActiveConcept(7)}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all ${
+                activeConcept === 7
+                  ? 'bg-orange-500 text-black border-2 border-orange-400'
+                  : 'bg-black/80 text-orange-400 border-2 border-orange-500/50 hover:bg-orange-500/20'
+              }`}
+            >
+              Concept 7: Cards
+            </button>
+
+            {/* Designation Card Style Selector */}
+            <div className="mt-4 pt-4 border-t border-gray-600/50">
+              <div className="text-[9px] text-gray-400 uppercase tracking-wider mb-2 px-2">
+                Designation Card Style
+              </div>
+              <select
+                value={designationCardStyle}
+                onChange={(e) => setDesignationCardStyle(e.target.value as 'corner-brackets' | 'split-hud' | 'data-terminal')}
+                className="w-full px-3 py-2 text-xs font-bold uppercase bg-black/80 text-cyan-400 border-2 border-cyan-500/50 rounded hover:border-cyan-400 transition-all cursor-pointer"
+              >
+                <option value="corner-brackets">Corner Brackets</option>
+                <option value="split-hud">Split HUD</option>
+                <option value="data-terminal">Data Terminal</option>
+              </select>
+            </div>
+
+            {/* Status Card Style Selector */}
+            <div className="mt-4 pt-4 border-t border-gray-600/50">
+              <div className="text-[9px] text-gray-400 uppercase tracking-wider mb-2 px-2">
+                Status Card Style
+              </div>
+              <select
+                value={statusCardStyle}
+                onChange={(e) => setStatusCardStyle(e.target.value as StatusCardStyle)}
+                className="w-full px-3 py-2 text-xs font-bold uppercase bg-black/80 text-purple-400 border-2 border-purple-500/50 rounded hover:border-purple-400 transition-all cursor-pointer"
+              >
+                <option value="compact-minimal">Compact Minimal</option>
+                <option value="wide-badge">Wide Badge</option>
+                <option value="vertical-stack">Vertical Stack</option>
+                <option value="tech-panel">Tech Panel</option>
+                <option value="holographic-glow">Holographic Glow</option>
+              </select>
+            </div>
           </div>
         )}
       </div>
@@ -764,10 +1000,11 @@ export default function MekManagementLightboxConcepts() {
         <>
           {activeConcept === 1 && <MekManagementConcept1 onClose={() => setShowConcepts(false)} />}
           {activeConcept === 2 && <MekManagementConcept2 onClose={() => setShowConcepts(false)} />}
-          {activeConcept === 3 && <MekManagementConcept3 onClose={() => setShowConcepts(false)} />}
+          {activeConcept === 3 && <MekManagementConcept3 onClose={() => setShowConcepts(false)} designationCardStyle={designationCardStyle} statusCardStyle={statusCardStyle} />}
           {activeConcept === 4 && <MekManagementConcept4 onClose={() => setShowConcepts(false)} />}
           {activeConcept === 5 && <MekManagementConcept5 onClose={() => setShowConcepts(false)} />}
           {activeConcept === 6 && <MekManagementConcept6 onClose={() => setShowConcepts(false)} />}
+          {activeConcept === 7 && <MekManagementConcept7 onClose={() => setShowConcepts(false)} />}
         </>
       )}
     </>

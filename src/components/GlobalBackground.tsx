@@ -1,17 +1,27 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import { SeededRandom } from "@/lib/seeded-random";
+import { useLoaderContext } from "@/features/page-loader";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 export default function GlobalBackground() {
+  const pathname = usePathname();
+  const { isLoading } = useLoaderContext();
+  const siteSettings = useQuery(api.siteSettings.getSiteSettings);
+  const [mounted, setMounted] = useState(false);
+
+  // ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
   const backgroundStars = useMemo(() => {
     const rng = new SeededRandom(67890); // Seed for stationary stars
     return [...Array(200)].map((_, i) => ({
       id: i,
       left: `${rng.random() * 100}%`,
       top: `${rng.random() * 100}%`,
-      size: rng.random() * 2 + 0.5,
-      opacity: rng.random() * 0.8 + 0.4,
+      size: rng.random() * 2 + 1, // Increased from 0.5 to 1 for better visibility
+      opacity: (rng.random() * 0.6 + 0.6) * 1.15, // +15% brightness boost
       twinkle: rng.random() > 0.5,
       delay: rng.random() * 4, // Random delay between 0-4 seconds for each star
     }));
@@ -27,7 +37,7 @@ export default function GlobalBackground() {
         top: `${rng.random() * 100}%`,
         delay: `${rng.random() * 30}s`,
         duration: `${20 + rng.random() * 15}s`,
-        size: 0.8 + rng.random() * 0.8,
+        size: 1.5 + rng.random() * 1.5, // Increased from 0.8-1.6 to 1.5-3.0 for better visibility
         driftAngle: driftAngle,
       };
     });
@@ -73,27 +83,53 @@ export default function GlobalBackground() {
     });
   }, []);
 
-  const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Background visibility check - AFTER all hooks are called
+  // On landing-v2: only show during loader, then hide
+  if (pathname === '/landing-v2' && !isLoading) {
+    return null;
+  }
+
+  // Don't render background on original landing page (has its own custom background)
+  if (pathname === '/landing') {
+    return null;
+  }
+
+  // Don't render on root path - landing page has its own complete visual experience
+  // This is unconditional to prevent a flash of stars before siteSettings loads
+  if (pathname === '/') {
+    return null;
+  }
+
   return (
-    <>
-      {/* Deep space background gradient from root page */}
-      <div className="fixed inset-0 bg-gradient-to-b from-black via-gray-950 to-black" style={{ transform: 'translateZ(0)', willChange: 'auto' }} />
+    <div className="fixed inset-0 overflow-hidden" style={{ zIndex: -1 }}>
+      {/* Deep space background gradient - enhanced for visibility */}
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950" style={{ transform: 'translateZ(0)', willChange: 'auto' }} />
 
       {/* Industrial grid overlay */}
       <div
-        className="fixed inset-0 pointer-events-none opacity-10"
+        className="absolute inset-0 pointer-events-none opacity-10"
         style={{
           backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(250, 182, 23, 0.1) 49px, rgba(250, 182, 23, 0.1) 50px), repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(250, 182, 23, 0.1) 49px, rgba(250, 182, 23, 0.1) 50px)',
         }}
       />
 
       {/* Stationary twinkling stars */}
-      {backgroundStars.map((star) => (
+      {backgroundStars
+        .filter((star) => {
+          // On /wen page, only show stars in top 45% (above planet horizon)
+          if (pathname === '/wen') {
+            const topPercent = parseFloat(star.top);
+            return topPercent < 45;
+          }
+          return true;
+        })
+        .map((star) => {
+        const finalOpacity = star.twinkle ? (mounted ? 0.3 : star.opacity) : star.opacity;
+        return (
         <div
           key={star.id}
           className="absolute rounded-full bg-white pointer-events-none"
@@ -102,7 +138,7 @@ export default function GlobalBackground() {
             top: star.top,
             width: `${star.size}px`,
             height: `${star.size}px`,
-            opacity: star.twinkle ? (mounted ? 0.3 : star.opacity) : star.opacity,
+            opacity: finalOpacity,
             animationName: mounted && star.twinkle ? 'starTwinkle' : 'none',
             animationDuration: '2s',
             animationTimingFunction: 'ease-in-out',
@@ -110,10 +146,20 @@ export default function GlobalBackground() {
             animationDelay: `${star.delay}s`,
           }}
         />
-      ))}
+        );
+      })}
 
       {/* Yellow particles drifting like space debris */}
-      {mounted && particles.map((particle) => (
+      {mounted && particles
+        .filter((particle) => {
+          // On /wen page, only show particles in top 45%
+          if (pathname === '/wen') {
+            const topPercent = parseFloat(particle.top);
+            return topPercent < 45;
+          }
+          return true;
+        })
+        .map((particle) => (
         <div
           key={particle.id}
           className="absolute bg-yellow-400 rounded-full pointer-events-none"
@@ -135,7 +181,17 @@ export default function GlobalBackground() {
       ))}
 
       {/* Satellites moving across screen */}
-      {mounted && satellites.map((satellite) => {
+      {mounted && satellites
+        .filter((satellite) => {
+          // On /wen page, only show satellites that stay in top 45%
+          if (pathname === '/wen') {
+            const startY = parseFloat(satellite.startY);
+            const endY = parseFloat(satellite.endY);
+            return startY < 45 && endY < 45;
+          }
+          return true;
+        })
+        .map((satellite) => {
         const startXNum = parseFloat(satellite.startX);
         const startYNum = parseFloat(satellite.startY);
         const endXNum = parseFloat(satellite.endX);
@@ -147,7 +203,7 @@ export default function GlobalBackground() {
         return (
           <div
             key={satellite.id}
-            className="absolute w-[2px] h-[2px] bg-white rounded-full pointer-events-none"
+            className="absolute w-[3px] h-[3px] bg-white rounded-full pointer-events-none"
             style={{
               left: satellite.startX,
               top: satellite.startY,
@@ -163,6 +219,6 @@ export default function GlobalBackground() {
           />
         );
       })}
-    </>
+    </div>
   );
 }

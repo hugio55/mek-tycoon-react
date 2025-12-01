@@ -15,13 +15,15 @@ export function calculateTimeBasedProgress(elapsedMs: number): number {
 export function calculateMilestoneProgress(
   walletLoaded: boolean,
   criticalDataLoaded: boolean,
-  pageDataLoaded: boolean
+  pageDataLoaded: boolean,
+  windowLoaded: boolean
 ): number {
   let progress = 0;
 
-  if (walletLoaded) progress += 25;
-  if (criticalDataLoaded) progress += 25;
-  if (pageDataLoaded) progress += 40;
+  if (walletLoaded) progress += 20;
+  if (criticalDataLoaded) progress += 20;
+  if (pageDataLoaded) progress += 30;
+  if (windowLoaded) progress += 30; // Critical assets: logo video, hero images, etc.
 
   return progress;
 }
@@ -58,6 +60,6 @@ export function getStageMessage(progress: number, customMessages?: string[]): st
   if (progress < 25) return messages[0];
   if (progress < 50) return messages[1] || messages[0];
   if (progress < 75) return messages[2] || messages[1] || messages[0];
-  if (progress < 100) return messages[3] || messages[2] || messages[0];
-  return 'READY';
+  // Stay at "ALMOST READY..." even at 100% - "READY" is handled separately
+  return messages[3] || messages[2] || messages[0];
 }

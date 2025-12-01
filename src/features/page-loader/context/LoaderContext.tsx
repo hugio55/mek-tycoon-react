@@ -12,6 +12,12 @@ interface LoaderContextValue {
   getTotalCount: () => number;
   isWalletLoaded: boolean;
   setWalletLoaded: (loaded: boolean) => void;
+  isWindowLoaded: boolean;
+  setWindowLoaded: (loaded: boolean) => void;
+  criticalAssets: Set<string>;
+  registerCriticalAsset: (id: string) => void;
+  markCriticalAssetLoaded: (id: string) => void;
+  areCriticalAssetsLoaded: () => boolean;
   startTime: number;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
@@ -20,10 +26,64 @@ interface LoaderContextValue {
 const LoaderContext = createContext<LoaderContextValue | null>(null);
 
 export function LoaderProvider({ children }: { children: React.ReactNode }) {
+  // Detect environment and check appropriate loader setting
+  const isBypassed = typeof window !== 'undefined' && (() => {
+    const hostname = window.location.hostname;
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlParam = searchParams.get('noloader');
+
+    // Consider it localhost if it's:
+    // - localhost or 127.0.0.1
+    // - Any local IP address (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+    const isLocalhost = hostname === 'localhost' ||
+                       hostname === '127.0.0.1' ||
+                       hostname.includes('localhost') ||
+                       hostname.startsWith('192.168.') ||
+                       hostname.startsWith('10.') ||
+                       /^172\.(1[6-9]|2\d|3[01])\./.test(hostname);
+
+    // Check environment-specific setting
+    const settingKey = isLocalhost ? 'disablePageLoaderLocalhost' : 'disablePageLoaderProduction';
+
+    // URL parameter takes priority and also saves to localStorage
+    if (urlParam !== null) {
+      const shouldDisable = urlParam === 'true' || urlParam === '';
+      localStorage.setItem(settingKey, shouldDisable.toString());
+      return shouldDisable;
+    }
+
+    // Otherwise check localStorage
+    const settingValue = localStorage.getItem(settingKey);
+    return settingValue === 'true';
+  })();
+
   const [queries, setQueries] = useState<Map<string, QueryState>>(new Map());
   const [isWalletLoaded, setWalletLoaded] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isWindowLoaded, setWindowLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(!isBypassed); // Start with false if bypassed
   const startTimeRef = useRef(Date.now());
+
+  // Track critical assets (logo video, background images, etc.)
+  const [criticalAssets, setCriticalAssets] = useState<Set<string>>(new Set());
+  const [loadedAssets, setLoadedAssets] = useState<Set<string>>(new Set());
+
+  // Track when all page assets (images, videos, etc.) have loaded
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Check if window is already loaded
+    if (document.readyState === 'complete') {
+      setWindowLoaded(true);
+      return;
+    }
+
+    const handleLoad = () => {
+      setWindowLoaded(true);
+    };
+
+    window.addEventListener('load', handleLoad);
+    return () => window.removeEventListener('load', handleLoad);
+  }, []);
 
   const registerQuery = useCallback((id: string) => {
     setQueries((prev) => {
@@ -83,6 +143,31 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
     return queries.size;
   }, [queries]);
 
+  const registerCriticalAsset = useCallback((id: string) => {
+    setCriticalAssets((prev) => {
+      if (prev.has(id)) return prev;
+      const newSet = new Set(prev);
+      newSet.add(id);
+      return newSet;
+    });
+  }, []);
+
+  const markCriticalAssetLoaded = useCallback((id: string) => {
+    setLoadedAssets((prev) => {
+      if (prev.has(id)) return prev;
+      const newSet = new Set(prev);
+      newSet.add(id);
+      return newSet;
+    });
+  }, []);
+
+  const areCriticalAssetsLoaded = useCallback(() => {
+    // If no critical assets registered, consider them loaded
+    if (criticalAssets.size === 0) return true;
+    // Check if all registered assets are loaded
+    return Array.from(criticalAssets).every((id) => loadedAssets.has(id));
+  }, [criticalAssets, loadedAssets]);
+
   useEffect(() => {
     return () => {
       queries.forEach((query) => {
@@ -101,6 +186,12 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
     getTotalCount,
     isWalletLoaded,
     setWalletLoaded,
+    isWindowLoaded,
+    setWindowLoaded,
+    criticalAssets,
+    registerCriticalAsset,
+    markCriticalAssetLoaded,
+    areCriticalAssetsLoaded,
     startTime: startTimeRef.current,
     isLoading,
     setIsLoading,

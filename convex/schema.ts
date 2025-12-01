@@ -1529,7 +1529,8 @@ export default defineSchema({
     updatedCount: v.number(), // Number successfully updated
     errorCount: v.number(), // Number of errors encountered
     status: v.string(), // "completed", "failed", "triggered_manually", etc.
-  }),
+  })
+    .index("by_timestamp", ["timestamp"]),
 
   // Snapshot Sessions - tracks ongoing batched snapshot processing
   snapshotSessions: defineTable({
@@ -1643,7 +1644,8 @@ export default defineSchema({
   })
     .index("by_wallet", ["walletAddress"])
     .index("by_wallet_and_time", ["walletAddress", "snapshotTime"])
-    .index("by_status", ["verificationStatus"]),
+    .index("by_status", ["verificationStatus"])
+    .index("by_snapshotTime", ["snapshotTime"]), // CRITICAL FIX: Index for efficient cleanup
 
   // Node Fee Configuration for Story Climb
   nodeFeeConfig: defineTable({
@@ -2933,6 +2935,7 @@ export default defineSchema({
 
     createdAt: v.number(),
     updatedAt: v.number(),
+    version: v.optional(v.number()), // CRITICAL FIX: Optimistic concurrency control
   })
     .index("by_imageKey", ["imageKey"]),
 
@@ -3316,9 +3319,12 @@ export default defineSchema({
     ),
 
     // Cached eligible users (regenerated when rules change)
+    // IMPORTANT: Uses stake addresses ONLY (stake1... or stake_test1...)
+    // NMKR collects payment addresses during checkout for NFT delivery
     eligibleUsers: v.array(v.object({
       userId: v.optional(v.id("players")), // Reference to player
-      walletAddress: v.string(), // Cardano wallet address
+      stakeAddress: v.optional(v.string()), // Cardano stake address (stake1... or stake_test1...)
+      walletAddress: v.optional(v.string()), // Legacy field name, use stakeAddress for new data
       displayName: v.optional(v.string()), // User's name if available
     })),
     userCount: v.number(), // Quick count without loading array
@@ -3344,8 +3350,11 @@ export default defineSchema({
     description: v.optional(v.string()), // Optional notes about this snapshot
 
     // Frozen eligibility list (never changes after creation)
+    // IMPORTANT: Uses stake addresses ONLY (stake1... or stake_test1...)
+    // NMKR collects payment addresses during checkout for NFT delivery
     eligibleUsers: v.array(v.object({
-      walletAddress: v.string(),
+      stakeAddress: v.optional(v.string()), // Cardano stake address (stake1... or stake_test1...)
+      walletAddress: v.optional(v.string()), // Legacy field name, use stakeAddress for new data
       displayName: v.optional(v.string()),
     })),
     userCount: v.number(), // Count of eligible users
@@ -3373,6 +3382,7 @@ export default defineSchema({
     name: v.string(), // Display name (e.g., "Lab Rat", "Pilot Program")
     description: v.string(), // Campaign description for users
     nmkrProjectId: v.string(), // NMKR project ID for this campaign
+    policyId: v.optional(v.string()), // Cardano policy ID for blockchain verification
     status: v.union(
       v.literal("active"),    // Currently claimable
       v.literal("inactive")   // Not yet active or closed
@@ -3387,6 +3397,8 @@ export default defineSchema({
     availableNFTs: v.number(), // Currently available
     reservedNFTs: v.number(),  // Currently reserved
     soldNFTs: v.number(),      // Sold/completed
+    // Cron job control
+    enableReservationCleanup: v.optional(v.boolean()), // If false, cron skips cleanup for this campaign (defaults to true)
   })
     .index("by_name", ["name"])
     .index("by_status", ["status"])
@@ -3434,6 +3446,20 @@ export default defineSchema({
     paymentUrl: v.string(), // Pre-built NMKR payment URL
     imageUrl: v.optional(v.string()), // NFT image URL
     createdAt: v.number(),
+
+    // RESERVATION FIELDS (Phase 1: Single Source of Truth Migration)
+    // When status="reserved", these fields track the active reservation
+    // When status="available" or "sold", these fields are null/undefined
+    reservedBy: v.optional(v.string()), // Stake address of user who reserved this NFT
+    reservedAt: v.optional(v.number()), // Timestamp when reservation was created
+    expiresAt: v.optional(v.number()), // Timestamp when reservation expires
+    paymentWindowOpenedAt: v.optional(v.number()), // When NMKR payment window was opened
+    paymentWindowClosedAt: v.optional(v.number()), // When NMKR payment window was closed
+
+    // SALE TRACKING FIELDS (when status="sold")
+    soldTo: v.optional(v.string()), // Stake address of buyer (preserved after sale)
+    soldAt: v.optional(v.number()), // Timestamp when sale was completed
+    companyNameAtSale: v.optional(v.string()), // Corporation name at time of purchase (historical snapshot)
   })
     .index("by_uid", ["nftUid"])
     .index("by_number", ["nftNumber"])
@@ -3441,7 +3467,12 @@ export default defineSchema({
     .index("by_status_and_number", ["status", "nftNumber"])
     .index("by_campaign", ["campaignId"])
     .index("by_campaign_and_status", ["campaignId", "status"])
-    .index("by_campaign_and_number", ["campaignId", "nftNumber"]),
+    .index("by_campaign_and_number", ["campaignId", "nftNumber"])
+    // NEW INDEXES for reservation queries
+    .index("by_reserved_by", ["reservedBy"]) // Lookup user's reservations
+    .index("by_expires_at", ["expiresAt"]) // Cleanup expired reservations
+    .index("by_campaign_and_wallet", ["campaignId", "reservedBy"]) // Campaign-scoped user lookup
+    .index("by_wallet_and_status", ["reservedBy", "status"]), // Active reservations for user
 
   // Commemorative NFT Reservations - Active reservations for claim process
   // Tracks who has reserved which NFT and for how long
@@ -3471,6 +3502,20 @@ export default defineSchema({
     .index("by_campaign_and_wallet", ["campaignId", "reservedBy"])
     .index("by_wallet_and_status", ["reservedBy", "status"]),
 
+  // Webhook Processing Tracking - Prevents duplicate webhook processing
+  // Records all processed webhooks to ensure idempotency
+  processedWebhooks: defineTable({
+    transactionHash: v.string(), // Blockchain transaction hash (unique per webhook)
+    stakeAddress: v.string(), // Buyer's stake address
+    nftUid: v.string(), // NFT UID from NMKR
+    reservationId: v.optional(v.id("commemorativeNFTReservations")), // Link to reservation if exists
+    processedAt: v.number(), // When webhook was processed
+    eventType: v.optional(v.string()), // transactionconfirmed, transactionfinished, etc.
+  })
+    .index("by_tx_hash", ["transactionHash"])
+    .index("by_stake_address", ["stakeAddress"])
+    .index("by_processed_at", ["processedAt"]),
+
   // ===== SIMPLE NFT ELIGIBILITY SYSTEM (NMKR) =====
   // Replaces the complex custom minting system above
   // Just stores which snapshot controls who sees the "Claim NFT" button
@@ -3484,6 +3529,28 @@ export default defineSchema({
   // Configuration for tenure system (base rates, multipliers, etc.)
   tenureConfig: defineTable({
     key: v.string(), // Unique config key (e.g., "baseRate", "maxLevel")
+    value: v.union(v.number(), v.string(), v.boolean()), // Config value
+    description: v.optional(v.string()), // What this config controls
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_key", ["key"]),
+
+  // ===== GOLD SYSTEM =====
+  // Configuration for gold system (base rates, multipliers, etc.)
+  goldConfig: defineTable({
+    key: v.string(), // Unique config key (e.g., "baseGoldPerHour")
+    value: v.union(v.number(), v.string(), v.boolean()), // Config value
+    description: v.optional(v.string()), // What this config controls
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_key", ["key"]),
+
+  // ===== ESSENCE BUFF SYSTEM =====
+  // Configuration for essence buff system (base rates, multipliers, etc.)
+  essenceBuffConfig: defineTable({
+    key: v.string(), // Unique config key (e.g., "baseEssencePerHour")
     value: v.union(v.number(), v.string(), v.boolean()), // Config value
     description: v.optional(v.string()), // What this config controls
     createdAt: v.number(),
@@ -3527,4 +3594,160 @@ export default defineSchema({
     .index("by_scope", ["scope"])
     .index("by_mek", ["mekId"])
     .index("by_active", ["active"]),
+
+  // Transformed UI components (conversational workflow)
+  transformedComponents: defineTable({
+    name: v.string(), // Component name (e.g., "IndustrialButton", "MekCard")
+    code: v.string(), // Full React/TypeScript component code
+    props: v.optional(v.string()), // TypeScript interface for props
+    tags: v.array(v.string()), // Searchable tags: ["button", "industrial", "interactive"]
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_tags", ["tags"]),
+
+  // Design preferences learned from transformations
+  designPreferences: defineTable({
+    key: v.string(), // Preference key (e.g., "primary-yellow", "button-style")
+    value: v.string(), // The value (e.g., "#fab617", "mek-button-primary")
+    context: v.optional(v.string()), // Where/why it's used
+    confidence: v.number(), // 0-1, how confident we are this is correct
+    category: v.optional(v.string()), // "color", "typography", "spacing", "pattern"
+    lastUsed: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_key", ["key"])
+    .index("by_category", ["category"])
+    .index("by_confidence", ["confidence"]),
+
+  // Transformation rules (patterns to auto-apply)
+  transformationRules: defineTable({
+    name: v.string(), // Rule name (e.g., "Generic button to industrial")
+    pattern: v.string(), // What to look for (e.g., "bg-blue-500 text-white px-4 py-2")
+    replacement: v.string(), // What to replace with (e.g., "mek-button-primary")
+    autoApply: v.boolean(), // Should this be applied automatically
+    confidence: v.number(), // 0-1, how reliable this rule is
+    timesApplied: v.number(), // Usage counter
+    lastApplied: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_autoApply", ["autoApply"])
+    .index("by_confidence", ["confidence"]),
+
+  // ===== SITE SETTINGS =====
+  // Global site-wide configuration
+  siteSettings: defineTable({
+    landingPageEnabled: v.boolean(), // Controls whether root (/) shows landing page or game
+    localhostBypass: v.optional(v.boolean()), // When true, localhost bypasses protection (dev mode). When false, localhost acts like production (for testing)
+    ignoreLocalhostRule: v.optional(v.boolean()), // Legacy field, use localhostBypass instead
+    maintenanceMode: v.optional(v.boolean()), // EMERGENCY: When true, ALL routes redirect to maintenance page (nuclear option)
+  }),
+
+  // ===== LANDING PAGE PHASE CARDS =====
+  // Phase cards displayed on landing page carousel
+  phaseCards: defineTable({
+    header: v.optional(v.string()), // Phase label in center when idle (e.g., "Phase I", "Phase II")
+    subtitle: v.optional(v.string()), // Italic header text above title (e.g., "The Beginning")
+    title: v.string(), // Phase title (e.g., "Foundation", "Initialization")
+    description: v.optional(v.string()), // Phase description text
+    fullDescription: v.optional(v.string()), // Full description shown in Read More lightbox
+    imageUrl: v.optional(v.string()), // Image URL for the phase card background
+    locked: v.boolean(), // Whether the phase is locked/coming soon
+    order: v.number(), // Display order (lower number = earlier in carousel)
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_order", ["order"]),
+
+  // ===== LANDING PAGE DEBUG SETTINGS =====
+  // Visual debug settings for landing page (single record, global settings)
+  // Stored as flexible config object to prevent schema breaking when adding new fields
+  landingDebugSettings: defineTable({
+    config: v.any(), // Full config object with all ~70 visual settings
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }),
+
+  // MOBILE landing page debug settings (separate from desktop to prevent conflicts)
+  landingDebugSettingsMobile: defineTable({
+    config: v.any(), // Full config object with all ~70 visual settings
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }),
+
+  // ===== PAGE LOADER SETTINGS =====
+  // Global settings for page loader animation (single record)
+  loaderSettings: defineTable({
+    fontSize: v.number(),
+    spacing: v.number(),
+    horizontalOffset: v.number(),
+    fontFamily: v.string(),
+    chromaticOffset: v.number(),
+    triangleSize: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }),
+
+  // DESKTOP landing page debug settings HISTORY (automatic backups before each save)
+  // Keeps last 50 versions with timestamps for recovery
+  landingDebugSettingsHistory: defineTable({
+    config: v.any(), // Full config object snapshot
+    timestamp: v.number(), // When this backup was created
+    description: v.optional(v.string()), // Optional description (e.g., "Before reset", "Auto-backup")
+  })
+    .index("by_timestamp", ["timestamp"]),
+
+  // MOBILE landing page debug settings HISTORY (automatic backups before each save)
+  landingDebugSettingsMobileHistory: defineTable({
+    config: v.any(), // Full config object snapshot
+    timestamp: v.number(), // When this backup was created
+    description: v.optional(v.string()), // Optional description
+  })
+    .index("by_timestamp", ["timestamp"]),
+
+  // UNIFIED landing page debug settings (desktop + mobile + shared in one table)
+  // Responsive design approach: CSS media queries determine which config subset to apply
+  landingDebugUnified: defineTable({
+    desktop: v.any(), // Desktop-specific settings (≥1024px)
+    mobile: v.any(), // Mobile-specific settings (<1024px)
+    shared: v.any(), // Settings that apply to both viewports
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }),
+
+  // UNIFIED landing page debug settings HISTORY (automatic backups before each save)
+  // Keeps last 200 versions with timestamps for recovery (rolling window)
+  landingDebugUnifiedHistory: defineTable({
+    desktop: v.any(), // Desktop config snapshot
+    mobile: v.any(), // Mobile config snapshot
+    shared: v.any(), // Shared config snapshot
+    timestamp: v.number(), // When this backup was created
+    description: v.optional(v.string()), // Optional description (e.g., "Auto-backup before save")
+  })
+    .index("by_timestamp", ["timestamp"]),
+
+  // PERMANENT landing page debug settings snapshots (never deleted)
+  // Every 20th backup + manual snapshots saved here forever
+  landingDebugUnifiedPermanentSnapshots: defineTable({
+    desktop: v.any(), // Desktop config snapshot
+    mobile: v.any(), // Mobile config snapshot
+    shared: v.any(), // Shared config snapshot
+    timestamp: v.number(), // When this snapshot was created
+    description: v.string(), // Description (e.g., "Auto-snapshot #20", "Manual backup")
+    snapshotType: v.union(v.literal("auto"), v.literal("manual")), // auto = every 20th, manual = user-created
+  })
+    .index("by_timestamp", ["timestamp"])
+    .index("by_type", ["snapshotType"]),
+
+  // ===== BETA SIGNUPS =====
+  // Beta signup stake addresses for rewarding early participants
+  betaSignups: defineTable({
+    stakeAddress: v.string(), // Mainnet stake address (stake1...)
+    submittedAt: v.number(), // Timestamp when signup was submitted
+    ipAddress: v.union(v.string(), v.null()), // Optional IP tracking
+  })
+    .index("by_stakeAddress", ["stakeAddress"]) // For duplicate prevention and lookups
+    .index("by_ipAddress", ["ipAddress"]), // For IP duplicate prevention
 });

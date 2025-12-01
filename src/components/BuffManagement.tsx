@@ -2,25 +2,29 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useQuery, useMutation } from "convex/react";
+import { ConvexReactClient } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
 import { Id } from "@/convex/_generated/dataModel";
 
 interface BuffManagementProps {
   walletAddress: string;
+  client: ConvexReactClient | null;
+  selectedDatabase: 'trout' | 'sturgeon';
   onClose: () => void;
 }
 
 type BuffCategory = "gold-rate" | "essence-cap" | "essence-generation";
 
-export default function BuffManagement({ walletAddress, onClose }: BuffManagementProps) {
+export default function BuffManagement({ walletAddress, client, selectedDatabase, onClose }: BuffManagementProps) {
   const [mounted, setMounted] = useState(false);
   const [activeCategory, setActiveCategory] = useState<BuffCategory>("gold-rate");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
   const [buffValueInput, setBuffValueInput] = useState("0");
   const [statusMessage, setStatusMessage] = useState<{type: 'success' | 'error', message: string} | null>(null);
+  const [existingBuffs, setExistingBuffs] = useState<any>(null);
+  const [companyData, setCompanyData] = useState<any>(null);
 
   // Mount portal and lock body scroll
   useEffect(() => {
@@ -31,22 +35,52 @@ export default function BuffManagement({ walletAddress, onClose }: BuffManagemen
     };
   }, []);
 
-  // Query existing buffs for this wallet
-  const existingBuffs = useQuery(
-    api.essence.getPlayerBuffs,
-    { walletAddress }
-  );
+  // Query data from selected database
+  useEffect(() => {
+    if (!client) return;
 
-  // Query corporation name
-  const companyData = useQuery(
-    api.goldMining.getCompanyName,
-    { walletAddress }
-  );
+    let cancelled = false;
 
-  // Mutations
-  const addCapBuff = useMutation(api.essence.addCapBuff);
-  const addGlobalCapBuff = useMutation(api.essence.addGlobalCapBuff);
-  const removeCapBuff = useMutation(api.essence.removeCapBuff);
+    const fetchData = async () => {
+      try {
+        const [buffs, company] = await Promise.all([
+          client.query(api.essence.getPlayerBuffs, { walletAddress }),
+          client.query(api.goldMining.getCompanyName, { walletAddress })
+        ]);
+
+        if (!cancelled) {
+          setExistingBuffs(buffs);
+          setCompanyData(company);
+        }
+      } catch (error) {
+        console.error('[BuffManagement] Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [client, walletAddress]);
+
+  // Mutation helpers using client
+  const addCapBuff = async (args: any) => {
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.essence.addCapBuff, args);
+  };
+
+  const addGlobalCapBuff = async (args: any) => {
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.essence.addGlobalCapBuff, args);
+  };
+
+  const removeCapBuff = async (args: any) => {
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.essence.removeCapBuff, args);
+  };
 
   // Search through all 291 variations
   const searchResults = useMemo(() => {

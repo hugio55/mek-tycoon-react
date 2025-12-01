@@ -508,7 +508,7 @@ export const upgradeMekLevel = mutation({
         });
       }
 
-      // LOG: Activity log for upgrade purchase
+      // LOG: Activity log for upgrade purchase (lean version - bandwidth optimization)
       await ctx.db.insert("auditLogs", {
         type: "mekUpgrade",
         timestamp: now,
@@ -519,16 +519,9 @@ export const upgradeMekLevel = mutation({
         oldLevel: mekLevel.currentLevel,
         newLevel: newLevel,
         upgradeCost: upgradeCost,
-        goldBefore: currentGold,
-        goldAfter: goldDecrease.newAccumulatedGold,
-        cumulativeGoldBefore: goldMiningData.totalCumulativeGold,
-        cumulativeGoldAfter: goldDecrease.newTotalCumulativeGold,
-        totalGoldPerHourBefore: goldMiningData.totalGoldPerHour,
-        totalGoldPerHour: totalGoldPerHour,
-        newGoldPerHour: newBoostAmount,
+        // Removed redundant fields: goldBefore, goldAfter, cumulativeGoldBefore/After,
+        // totalGoldPerHourBefore (can be recalculated if needed, not worth bandwidth)
         boostAmount: newBoostAmount,
-        upgradedBy: args.walletAddress,
-        mekOwner: args.walletAddress,
       });
 
       // LOG: Returning result to frontend

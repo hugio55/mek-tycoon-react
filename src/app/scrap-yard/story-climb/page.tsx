@@ -15,7 +15,7 @@ import { DifficultyLevel, DifficultyConfig, calculateRewards, calculateMekSlots 
 import { StoryModeTitleCard } from '@/components/StoryModeTitleCards';
 import '@/styles/story-title-cards.css';
 import SuccessMeterV2 from '@/components/SuccessMeterV2';
-import HolographicButton from '@/components/ui/SciFiButtons/HolographicButton';
+import HolographicButton from '@/components/ui/IndustrialButtons/HolographicButton';
 import { createPortal } from 'react-dom';
 import MissionCountdown from '@/components/MissionCountdown';
 import CancelMissionLightbox from '@/components/CancelMissionLightbox';
@@ -197,7 +197,10 @@ export default function StoryClimbPage() {
   const [lockDifficultyPanelMinimized, setLockDifficultyPanelMinimized] = useState(true); // State for lock difficulty panel
   // Success Meter Card Layout - how title, bar, and status are combined
   const [successMeterCardLayout, setSuccessMeterCardLayout] = useState<1 | 2 | 3 | 4 | 5>(1); // 1 = current design (unchanged)
-  const colorScheme = 'circuit' as const; // Locked to Holographic Circuit
+  // Title Card Style Carousel - cycles through 5 variations
+  const [colorScheme, setColorScheme] = useState<'hazard' | 'carbon' | 'circuit' | 'military' | 'cinematic'>('circuit');
+  const titleCardStyles: Array<'hazard' | 'carbon' | 'circuit' | 'military' | 'cinematic'> = ['hazard', 'carbon', 'circuit', 'military', 'cinematic'];
+  const currentStyleIndex = titleCardStyles.indexOf(colorScheme);
   // Duration & Deploy Layout - 4 different arrangements
   const [durationDeployLayout, setDurationDeployLayout] = useState<1 | 2 | 3 | 4>(1); // 1 = current, 2 = horizontal, 3 = deploy above, 4 = compact
 
@@ -216,6 +219,9 @@ export default function StoryClimbPage() {
   const [testSuccessRate, setTestSuccessRate] = useState(50);
   const [animationTick, setAnimationTick] = useState(0); // Minimal state for animation redraws
   const animationIdRef = useRef<number | null>(null); // Track animation ID for cleanup
+
+  // Phase Column Vertical Position Control
+  const [phaseColumnVerticalOffset, setPhaseColumnVerticalOffset] = useState(0);
 
   // Event Node Completion State Debug
   const [eventCompletionState, setEventCompletionState] = useState<'incomplete' | 'complete' | 'nft-owned'>('incomplete');
@@ -4807,12 +4813,73 @@ export default function StoryClimbPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-y-auto">
       {/* Story Mode Title Card with Style Selector */}
       <StoryModeTitleCard
         chapter={previewMode ? `CHAPTER ${previewChapter}` : "CHAPTER 1"}
         colorScheme={colorScheme}
       />
+
+      {/* Title Card Style Carousel Controls - Mobile Responsive */}
+      <div className="sticky top-24 z-[60] bg-black/80 backdrop-blur-sm border-b border-yellow-500/30">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-5 py-2">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
+            {/* Previous Button - Mobile Optimized */}
+            <button
+              onClick={() => {
+                const prevIndex = currentStyleIndex === 0 ? titleCardStyles.length - 1 : currentStyleIndex - 1;
+                setColorScheme(titleCardStyles[prevIndex]);
+              }}
+              className="flex items-center justify-center gap-1 sm:gap-2 bg-yellow-500/10 hover:bg-yellow-500/20 active:bg-yellow-500/30 border border-yellow-500/40 hover:border-yellow-400/60 text-yellow-400 px-3 sm:px-4 py-2 rounded transition-all min-w-[44px] min-h-[44px] touch-manipulation"
+              aria-label="Previous title card style"
+            >
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="text-xs sm:text-sm font-medium hidden xs:inline">PREV</span>
+            </button>
+
+            {/* Style Indicator with Name - Mobile Responsive */}
+            <div className="flex-1 flex flex-col items-center gap-1">
+              <div className="text-yellow-400 font-orbitron uppercase tracking-wider text-xs sm:text-sm font-bold">
+                Title Card Style
+              </div>
+              <div className="flex items-center gap-1 sm:gap-2">
+                {titleCardStyles.map((style, index) => (
+                  <button
+                    key={style}
+                    onClick={() => setColorScheme(style)}
+                    className={`h-1.5 sm:h-2 rounded-full transition-all ${
+                      index === currentStyleIndex
+                        ? 'w-6 sm:w-8 bg-yellow-400 shadow-[0_0_10px_rgba(250,182,23,0.8)]'
+                        : 'w-1.5 sm:w-2 bg-yellow-600/40 hover:bg-yellow-500/60'
+                    }`}
+                    aria-label={`Switch to ${style} style`}
+                  />
+                ))}
+              </div>
+              <div className="text-yellow-300/80 font-orbitron uppercase tracking-widest text-[10px] sm:text-xs">
+                {colorScheme}
+              </div>
+            </div>
+
+            {/* Next Button - Mobile Optimized */}
+            <button
+              onClick={() => {
+                const nextIndex = (currentStyleIndex + 1) % titleCardStyles.length;
+                setColorScheme(titleCardStyles[nextIndex]);
+              }}
+              className="flex items-center justify-center gap-1 sm:gap-2 bg-yellow-500/10 hover:bg-yellow-500/20 active:bg-yellow-500/30 border border-yellow-500/40 hover:border-yellow-400/60 text-yellow-400 px-3 sm:px-4 py-2 rounded transition-all min-w-[44px] min-h-[44px] touch-manipulation"
+              aria-label="Next title card style"
+            >
+              <span className="text-xs sm:text-sm font-medium hidden xs:inline">NEXT</span>
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Contract Slots Bar - Wrapped in same container as main content */}
       <div className="max-w-[1600px] mx-auto pl-5 pb-2 relative z-50">
@@ -5083,17 +5150,15 @@ export default function StoryClimbPage() {
           {/* Left Column - Tree Canvas - fixed width */}
           <div ref={containerRef} className="flex-shrink-0 overflow-hidden" style={{ width: '503px' }}>
             {/* Canvas Container with Style Q background */}
-            <div 
-              className="relative rounded-lg" 
-              style={{ 
+            <div
+              className="relative rounded-lg"
+              style={{
                 width: `${canvasSize.width}px`,
                 height: `${canvasSize.height}px`,
                 background: 'rgba(255, 255, 255, 0.005)',
                 backdropFilter: 'blur(1px)',
                 border: '1px solid rgba(255, 255, 255, 0.015)',
-                boxShadow: '0 0 25px rgba(0, 0, 0, 0.3) inset',
-                touchAction: 'none',  // Prevent touch scrolling
-                overscrollBehavior: 'none'  // Prevent scroll chaining
+                boxShadow: '0 0 25px rgba(0, 0, 0, 0.3) inset'
               }}
               onWheel={handleWheel}
             >
@@ -5994,7 +6059,14 @@ export default function StoryClimbPage() {
           </div>
 
           {/* Right Column - Mission Card Details */}
-          <div className="flex-grow pr-5">
+          <div
+            className="flex-grow pr-0 relative"
+            style={{ minHeight: `calc(100vh + ${phaseColumnVerticalOffset}px + 800px)` }}
+          >
+            <div
+              className="absolute left-0 right-0"
+              style={{ top: `calc(100vh - 800px + ${phaseColumnVerticalOffset}px)` }}
+            >
             {/* Show card for selected node */}
             {selectedNode ? (() => {
               const activeMission = activeMissions?.find(m => m.nodeId === selectedNode.id);
@@ -6260,6 +6332,7 @@ export default function StoryClimbPage() {
                 </button>
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
@@ -6353,6 +6426,54 @@ export default function StoryClimbPage() {
               >
                 100%
               </button>
+            </div>
+
+            {/* Column Vertical Position Control - Added below success meter */}
+            <div className="mt-3 pt-3 border-t border-purple-500/30">
+              <div className="text-xs text-purple-300 uppercase tracking-wider mb-2">
+                📐 Column Vertical Position
+              </div>
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-2xl font-bold text-cyan-400">{phaseColumnVerticalOffset}px</span>
+                <div className="flex-1 text-xs text-gray-300">
+                  Move phase cards up/down
+                </div>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="1500"
+                step="10"
+                value={phaseColumnVerticalOffset}
+                onChange={(e) => setPhaseColumnVerticalOffset(Number(e.target.value))}
+                className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer mb-2"
+              />
+              <div className="grid grid-cols-4 gap-1 text-xs">
+                <button
+                  onClick={() => setPhaseColumnVerticalOffset(0)}
+                  className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-white"
+                >
+                  0px
+                </button>
+                <button
+                  onClick={() => setPhaseColumnVerticalOffset(500)}
+                  className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-white"
+                >
+                  500px
+                </button>
+                <button
+                  onClick={() => setPhaseColumnVerticalOffset(1000)}
+                  className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-white"
+                >
+                  1000px
+                </button>
+                <button
+                  onClick={() => setPhaseColumnVerticalOffset(1500)}
+                  className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-white"
+                >
+                  1500px
+                </button>
+              </div>
             </div>
           </div>
         )}

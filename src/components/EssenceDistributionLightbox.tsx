@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { api } from "@/convex/_generated/api";
 import EssenceDonutChart from "@/components/essence-donut-chart";
 import "@/styles/global-design-system.css";
 import { useEssence } from "@/contexts/EssenceContext";
@@ -569,8 +569,8 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
   };
 
   const getBackdropBlurStyle = () => {
-    if (backdropBlur === 0) return {};
-    return { backdropFilter: `blur(${backdropBlur}px)` };
+    // Backdrop blur removed to prevent blocking debug panel visibility
+    return {};
   };
 
   const getCardDarknessClass = () => {

@@ -3,8 +3,14 @@ import { api } from '@/convex/_generated/api';
 import { ConvexHttpClient } from 'convex/browser';
 import crypto from 'crypto';
 
-// Initialize Convex client
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+// Lazy initialization to avoid build-time errors
+let convex: ConvexHttpClient | null = null;
+function getConvex() {
+  if (!convex) {
+    convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+  }
+  return convex;
+}
 
 /**
  * NMKR Webhook Endpoint
@@ -63,7 +69,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: string | null) {
-  console.log('NMKR Webhook POST received');
+  console.log('[🔨WEBHOOK] NMKR Webhook POST received');
 
   try {
     // Get raw body for HMAC verification
@@ -71,13 +77,13 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
     try {
       bodyText = await request.text();
     } catch (error) {
-      console.log('Could not read request body');
+      console.log('[🔨WEBHOOK] Could not read request body');
       return;
     }
 
     // Handle empty body (NMKR test webhook)
     if (!bodyText || bodyText.trim() === '') {
-      console.log('Empty webhook received (likely NMKR test)');
+      console.log('[🔨WEBHOOK] Empty webhook received (likely NMKR test)');
       return;
     }
 
@@ -85,16 +91,29 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
     try {
       payload = JSON.parse(bodyText);
     } catch (parseError) {
-      console.log('Invalid JSON:', bodyText.substring(0, 100));
+      console.log('[🔨WEBHOOK] Invalid JSON:', bodyText.substring(0, 100));
       return;
     }
 
-    console.log('NMKR Webhook payload:', {
+    console.log('[🔨WEBHOOK] Webhook payload:', {
       eventType: payload.EventType,
       projectUid: payload.ProjectUid,
       txHash: payload.TxHash,
       hasHash: !!payloadHash,
     });
+
+    // CRITICAL SECURITY FIX #1: Check for duplicate webhooks (idempotency)
+    if (payload.TxHash) {
+      const existingWebhook = await getConvex().query(
+        api.webhooks.checkProcessedWebhook,
+        { transactionHash: payload.TxHash }
+      );
+
+      if (existingWebhook) {
+        console.log('[🛡️WEBHOOK-SECURITY] ✓ Duplicate webhook detected, already processed:', payload.TxHash);
+        return; // Already processed, skip
+      }
+    }
 
     // Verify HMAC signature (skip for test webhooks)
     if (payloadHash && process.env.NMKR_WEBHOOK_SECRET) {
@@ -113,19 +132,17 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
       console.warn('NMKR webhook received without HMAC signature');
     }
 
-    // Extract data from NMKR payload
-    const {
-      EventType,
-      ProjectUid,
-      TxHash,
-      NotificationSaleNfts,
-      Price,
-      ReceiverStakeAddress,
-      ReceiverAddress,
-    } = payload;
+    // Extract data from NMKR payload (avoid destructuring to prevent webpack loader conflicts)
+    const EventType = payload.EventType;
+    const ProjectUid = payload.ProjectUid;
+    const txHash = payload.TxHash;
+    const NotificationSaleNfts = payload.NotificationSaleNfts;
+    const Price = payload.Price;
+    const ReceiverStakeAddress = payload.ReceiverStakeAddress;
+    const ReceiverAddress = payload.ReceiverAddress;
 
     // Validate required fields
-    if (!TxHash || !ProjectUid) {
+    if (!txHash || !ProjectUid) {
       console.log('Test webhook or missing required fields');
       return;
     }
@@ -133,12 +150,12 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
     // Handle different transaction events
     if (EventType === 'transactionconfirmed') {
       // Payment received, transaction confirmed on blockchain, minting started
-      console.log(`✓ Payment confirmed for tx: ${TxHash}`);
+      console.log(`✓ Payment confirmed for tx: ${txHash}`);
 
       try {
         // Update purchase status to show payment received + minting
-        await convex.mutation(api.commemorative.updatePurchaseStatus, {
-          transactionHash: TxHash,
+        await getConvex().mutation(api.commemorative.updatePurchaseStatus, {
+          transactionHash: txHash,
           status: 'completed', // Mark as completed since we don't have granular status in schema
           nftTokenId: undefined,
           paymentAmount: Price ? Price.toString() : undefined,
@@ -152,7 +169,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
           }
         });
 
-        console.log(`✓ Payment confirmation recorded for tx: ${TxHash}`);
+        console.log(`✓ Payment confirmation recorded for tx: ${txHash}`);
       } catch (error) {
         console.error('Failed to record payment confirmation:', error);
       }
@@ -168,8 +185,8 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
 
     // Update purchase status in database
     try {
-      await convex.mutation(api.commemorative.updatePurchaseStatus, {
-        transactionHash: TxHash,
+      await getConvex().mutation(api.commemorative.updatePurchaseStatus, {
+        transactionHash: txHash,
         status: 'completed',
         nftTokenId: NotificationSaleNfts?.[0]?.AssetId || undefined,
         paymentAmount: Price ? Price.toString() : undefined,
@@ -183,15 +200,15 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
         }
       });
 
-      console.log(`✓ Successfully updated purchase status for tx: ${TxHash}`);
+      console.log(`✓ Successfully updated purchase status for tx: ${txHash}`);
 
       // Record NFT claim in claims table
       if (ReceiverStakeAddress && NotificationSaleNfts && NotificationSaleNfts.length > 0) {
         try {
           const nft = NotificationSaleNfts[0];
-          await convex.mutation(api.commemorativeNFTClaims.recordClaim, {
+          await getConvex().mutation(api.commemorativeNFTClaims.recordClaim, {
             walletAddress: ReceiverStakeAddress,
-            transactionHash: TxHash,
+            transactionHash: txHash,
             nftName: nft.NftName || 'Bronze Token',
             nftAssetId: nft.AssetId || '',
             metadata: {
@@ -212,12 +229,34 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
 
       // NEW: Complete reservation if one exists, otherwise mark inventory as sold directly
       if (ReceiverStakeAddress) {
+        // CRITICAL SECURITY FIX #2: Check if buyer is whitelisted
         try {
-          const reservationResult = await convex.mutation(
+          const eligibility = await getConvex().query(
+            api.nftEligibility.checkClaimEligibility,
+            { walletAddress: ReceiverStakeAddress }
+          );
+
+          if (!eligibility.eligible) {
+            console.error('[🛡️WEBHOOK-SECURITY] ❌ Purchase from non-whitelisted address:', ReceiverStakeAddress);
+            console.error('[🛡️WEBHOOK-SECURITY] Transaction hash:', txHash);
+            console.error('[🛡️WEBHOOK-SECURITY] This requires manual review - blockchain transaction already completed');
+
+            // Log for manual review (still complete the sale since blockchain tx succeeded)
+            // In future, could implement automated refund mechanism here
+          } else {
+            console.log('[🛡️WEBHOOK-SECURITY] ✓ Whitelisted buyer confirmed:', ReceiverStakeAddress);
+          }
+        } catch (eligibilityError) {
+          console.error('[🛡️WEBHOOK-SECURITY] Error checking eligibility:', eligibilityError);
+          // Continue processing - don't block legitimate sales due to eligibility check errors
+        }
+
+        try {
+          const reservationResult = await getConvex().mutation(
             api.commemorativeNFTReservations.completeReservationByWallet,
             {
               walletAddress: ReceiverStakeAddress,
-              transactionHash: TxHash,
+              transactionHash: txHash,
             }
           );
 
@@ -234,11 +273,11 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
               console.log('[🔨WEBHOOK] Attempting to mark inventory as sold by UID:', nftUid);
 
               // Update inventory directly by UID
-              const inventoryResult = await convex.mutation(
+              const inventoryResult = await getConvex().mutation(
                 api.commemorativeNFTInventorySetup.markInventoryAsSoldByUid,
                 {
                   nftUid: nftUid,
-                  transactionHash: TxHash,
+                  transactionHash: txHash,
                 }
               );
 
@@ -255,6 +294,22 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
         } catch (error) {
           console.error('[🔨WEBHOOK] Error processing sale:', error);
           // Don't fail the webhook - transaction already succeeded on blockchain
+        }
+
+        // CRITICAL SECURITY FIX #3: Record that this webhook was successfully processed
+        if (txHash && NotificationSaleNfts?.[0]?.NftUid) {
+          try {
+            await getConvex().mutation(api.webhooks.recordProcessedWebhook, {
+              transactionHash: txHash,
+              stakeAddress: ReceiverStakeAddress,
+              nftUid: NotificationSaleNfts[0].NftUid,
+              reservationId: undefined, // We don't have this at this level
+              eventType: EventType,
+            });
+            console.log('[🛡️WEBHOOK-SECURITY] ✓ Webhook processing recorded:', txHash);
+          } catch (recordError) {
+            console.error('[🛡️WEBHOOK-SECURITY] Failed to record webhook (non-critical):', recordError);
+          }
         }
       }
     } catch (dbError) {

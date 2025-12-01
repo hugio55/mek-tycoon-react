@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import React, { useState, useEffect, useMemo } from "react";
+import { useMutation, useQuery, useAction } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import type { Campaign, CampaignStatus } from "@/types/campaign";
-import type { Id } from "../../../../convex/_generated/dataModel";
+import type { Id } from "@/convex/_generated/dataModel";
 import NFTInventoryTable from "./NFTInventoryTable";
 
 interface CampaignManagerProps {
@@ -46,10 +46,15 @@ export default function CampaignManager({
   const [csvPreview, setCsvPreview] = useState<CSVImportPreview | null>(null);
   const [isImportingCSV, setIsImportingCSV] = useState(false);
 
+  // Manual cleanup state
+  const [cleaningCampaignId, setCleaningCampaignId] = useState<string | null>(null);
+  const [cleanupResult, setCleanupResult] = useState<{ campaignId: string; message: string } | null>(null);
+
   // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [nmkrProjectId, setNmkrProjectId] = useState("");
+  const [policyId, setPolicyId] = useState("");
   const [maxNFTs, setMaxNFTs] = useState("");
   const [status, setStatus] = useState<CampaignStatus>("inactive");
 
@@ -63,8 +68,56 @@ export default function CampaignManager({
   const deleteCampaign = useMutation(api.campaigns.deleteCampaign);
   const populateInventory = useMutation(api.commemorativeCampaigns.populateCampaignInventory);
   const syncCounters = useMutation(api.commemorativeCampaigns.syncCampaignCounters);
+  const toggleCleanup = useMutation(api.commemorativeNFTReservationsCampaign.toggleCampaignReservationCleanup);
+  const manualCleanup = useMutation(api.commemorativeNFTReservationsCampaign.cleanupExpiredCampaignReservationsMutation);
 
   const campaigns = useQuery(api.campaigns.getAllCampaigns);
+
+  // Query all inventory to calculate accurate counts
+  const allInventory = useQuery(api.commemorativeCampaigns.getAllInventoryForDiagnostics);
+
+  // Calculate accurate counts per campaign from inventory
+  const campaignCounts = useMemo(() => {
+    if (!allInventory) return new Map();
+
+    const counts = new Map<string, { available: number; reserved: number; sold: number; total: number }>();
+
+    for (const item of allInventory) {
+      const campaignId = item.campaignId;
+      if (!counts.has(campaignId)) {
+        counts.set(campaignId, { available: 0, reserved: 0, sold: 0, total: 0 });
+      }
+
+      const count = counts.get(campaignId)!;
+      count.total++;
+      if (item.status === 'available') count.available++;
+      if (item.status === 'reserved') count.reserved++;
+      if (item.status === 'sold') count.sold++;
+    }
+
+    return counts;
+  }, [allInventory]);
+
+  // DEBUG: Log when campaign data changes
+  useEffect(() => {
+    if (campaigns && selectedCampaignId) {
+      const selectedCampaign = campaigns.find(c => c._id === selectedCampaignId);
+      const counts = campaignCounts.get(selectedCampaignId);
+      if (selectedCampaign) {
+        const timestamp = new Date().toISOString().split('T')[1].slice(0, -1);
+        console.log(`[🔄CAMPAIGN-UI ${timestamp}] Campaign data received:`, {
+          name: selectedCampaign.name,
+          cachedStats: {
+            total: selectedCampaign.totalNFTs,
+            available: selectedCampaign.availableNFTs,
+            reserved: selectedCampaign.reservedNFTs,
+            sold: selectedCampaign.soldNFTs,
+          },
+          actualCounts: counts || 'No inventory found'
+        });
+      }
+    }
+  }, [campaigns, selectedCampaignId, campaignCounts]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,6 +142,7 @@ export default function CampaignManager({
         name: name.trim(),
         description: description.trim(),
         nmkrProjectId: nmkrProjectId.trim(),
+        policyId: policyId.trim() || undefined,
         maxNFTs: maxNFTsNum,
         status,
       });
@@ -138,6 +192,7 @@ export default function CampaignManager({
     setName(campaign.name);
     setDescription(campaign.description);
     setNmkrProjectId(campaign.nmkrProjectId);
+    setPolicyId(campaign.policyId || "");
     setMaxNFTs(campaign.maxNFTs.toString());
     setStatus(campaign.status);
     setShowCreateForm(false);
@@ -167,6 +222,7 @@ export default function CampaignManager({
         name: name.trim(),
         description: description.trim(),
         nmkrProjectId: nmkrProjectId.trim(),
+        policyId: policyId.trim() || undefined,
         maxNFTs: maxNFTsNum,
         status,
       });
@@ -191,6 +247,7 @@ export default function CampaignManager({
     setName("");
     setDescription("");
     setNmkrProjectId("");
+    setPolicyId("");
     setMaxNFTs("");
     setStatus("inactive");
   };
@@ -466,7 +523,21 @@ export default function CampaignManager({
                 value={nmkrProjectId}
                 onChange={(e) => setNmkrProjectId(e.target.value)}
                 className="w-full bg-black/50 border border-gray-700 rounded p-2 font-mono text-sm"
-                placeholder="c68dc0e9b2ca4e0eb9c4a57ef85a794d"
+                placeholder="c68dc0e9-b2ca-4e0e-b9c4-a57ef85a794d"
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">
+                Cardano Policy ID <span className="text-gray-500">(optional - enables blockchain verification)</span>
+              </label>
+              <input
+                type="text"
+                value={policyId}
+                onChange={(e) => setPolicyId(e.target.value)}
+                className="w-full bg-black/50 border border-gray-700 rounded p-2 font-mono text-sm"
+                placeholder="e.g., 9c8e9da...f4e5d6c (56 characters)"
                 disabled={isSubmitting}
               />
             </div>
@@ -592,6 +663,20 @@ export default function CampaignManager({
 
                   <div>
                     <label className="block text-sm text-gray-400 mb-1">
+                      Cardano Policy ID <span className="text-gray-500">(optional - enables blockchain verification)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={policyId}
+                      onChange={(e) => setPolicyId(e.target.value)}
+                      className="w-full bg-black/50 border border-gray-700 rounded p-2 font-mono text-sm"
+                      placeholder="e.g., 9c8e9da...f4e5d6c (56 characters)"
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">
                       Max NFTs <span className="text-red-400">*</span>
                     </label>
                     <input
@@ -662,37 +747,129 @@ export default function CampaignManager({
                     </span>
                   </div>
 
-              <div className="grid grid-cols-5 gap-2 mb-3">
-                <div className="bg-black/50 p-2 rounded">
-                  <p className="text-xs text-gray-400">Max</p>
-                  <p className="text-lg font-bold text-white">
-                    {campaign.maxNFTs}
-                  </p>
+              <div className="mb-3">
+                <div className="grid grid-cols-5 gap-2">
+                  {(() => {
+                    // Get accurate counts from inventory
+                    const counts = campaignCounts.get(campaign._id) || {
+                      available: 0,
+                      reserved: 0,
+                      sold: 0,
+                      total: 0
+                    };
+
+                    return (
+                      <>
+                        <div className="bg-black/50 p-2 rounded">
+                          <p className="text-xs text-gray-400">Max</p>
+                          <p className="text-lg font-bold text-white">
+                            {campaign.maxNFTs}
+                          </p>
+                        </div>
+                        <div className="bg-black/50 p-2 rounded">
+                          <p className="text-xs text-gray-400">Total</p>
+                          <p className="text-lg font-bold text-white">
+                            {counts.total}
+                          </p>
+                        </div>
+                        <div className="bg-black/50 p-2 rounded border border-green-500/30">
+                          <p className="text-xs text-gray-400">Available</p>
+                          <p className="text-lg font-bold text-green-400">
+                            {counts.available}
+                          </p>
+                        </div>
+                        <div className="bg-black/50 p-2 rounded border border-yellow-500/30">
+                          <p className="text-xs text-gray-400">Reserved</p>
+                          <p className="text-lg font-bold text-yellow-400">
+                            {counts.reserved}
+                          </p>
+                        </div>
+                        <div className="bg-black/50 p-2 rounded border border-red-500/30">
+                          <p className="text-xs text-gray-400">Sold</p>
+                          <p className="text-lg font-bold text-red-400">
+                            {counts.sold}
+                          </p>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
-                <div className="bg-black/50 p-2 rounded">
-                  <p className="text-xs text-gray-400">Total</p>
-                  <p className="text-lg font-bold text-white">
-                    {campaign.totalNFTs}
-                  </p>
-                </div>
-                <div className="bg-black/50 p-2 rounded border border-green-500/30">
-                  <p className="text-xs text-gray-400">Available</p>
-                  <p className="text-lg font-bold text-green-400">
-                    {campaign.availableNFTs}
-                  </p>
-                </div>
-                <div className="bg-black/50 p-2 rounded border border-yellow-500/30">
-                  <p className="text-xs text-gray-400">Reserved</p>
-                  <p className="text-lg font-bold text-yellow-400">
-                    {campaign.reservedNFTs}
-                  </p>
-                </div>
-                <div className="bg-black/50 p-2 rounded border border-red-500/30">
-                  <p className="text-xs text-gray-400">Sold</p>
-                  <p className="text-lg font-bold text-red-400">
-                    {campaign.soldNFTs}
-                  </p>
-                </div>
+
+                {/* Sync Counters Button */}
+                <button
+                  onClick={async () => {
+                    try {
+                      await syncCounters({ campaignId: campaign._id });
+                      onCampaignUpdated?.();
+                    } catch (error) {
+                      console.error('Failed to sync counters:', error);
+                    }
+                  }}
+                  className="mt-2 text-xs text-gray-400 hover:text-yellow-400 transition-colors underline"
+                  title="Recalculate counters from actual inventory"
+                >
+                  🔄 Sync Counters
+                </button>
+
+                {/* Toggle Reservation Cleanup Button */}
+                <button
+                  onClick={async () => {
+                    try {
+                      const currentState = campaign.enableReservationCleanup !== false;
+                      await toggleCleanup({
+                        campaignId: campaign._id,
+                        enabled: !currentState
+                      });
+                      onCampaignUpdated?.();
+                    } catch (error) {
+                      console.error('Failed to toggle cleanup:', error);
+                    }
+                  }}
+                  className="mt-2 text-xs text-gray-400 hover:text-yellow-400 transition-colors underline"
+                  title="Toggle automatic cleanup of expired reservations"
+                >
+                  {campaign.enableReservationCleanup !== false ? '🗑️ Disable Cleanup' : '✅ Enable Cleanup'}
+                </button>
+
+                {/* Manual Cleanup Button */}
+                <button
+                  onClick={async () => {
+                    setCleaningCampaignId(campaign._id);
+                    setCleanupResult(null);
+                    try {
+                      await manualCleanup({ campaignId: campaign._id });
+                      // Refresh counters after cleanup
+                      await syncCounters({ campaignId: campaign._id });
+                      setCleanupResult({
+                        campaignId: campaign._id,
+                        message: 'Cleanup complete! Expired reservations released.'
+                      });
+                      onCampaignUpdated?.();
+                    } catch (error) {
+                      console.error('Failed to run cleanup:', error);
+                      setCleanupResult({
+                        campaignId: campaign._id,
+                        message: 'Cleanup failed. Check console for details.'
+                      });
+                    } finally {
+                      setCleaningCampaignId(null);
+                      // Clear result after 3 seconds
+                      setTimeout(() => setCleanupResult(null), 3000);
+                    }
+                  }}
+                  disabled={cleaningCampaignId === campaign._id}
+                  className="mt-2 text-xs text-yellow-400 hover:text-yellow-300 transition-colors underline ml-3"
+                  title="Manually run cleanup to release any expired reservations now"
+                >
+                  {cleaningCampaignId === campaign._id ? '⏳ Cleaning...' : '🧹 Run Cleanup Now'}
+                </button>
+
+                {/* Cleanup Result Message */}
+                {cleanupResult && cleanupResult.campaignId === campaign._id && (
+                  <span className="ml-2 text-xs text-green-400">
+                    {cleanupResult.message}
+                  </span>
+                )}
               </div>
 
               {/* NFT Inventory Table */}

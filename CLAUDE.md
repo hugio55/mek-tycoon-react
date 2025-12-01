@@ -1,396 +1,341 @@
 # Mek Tycoon - Project Instructions
+<!-- Character count: ~31,500 (down from ~66,000) -->
 
-## Quick Start Command
-**CRITICAL: We are ONLY working in the STAGING directory now.**
+## 🎯 PRIMARY WORKING DIRECTORY
+**THIS IS THE MAIN DIRECTORY FOR ALL WORK - NOT A "STAGING" OR "SECONDARY" ENVIRONMENT**
 
-When user says "start it up" or similar, run:
+The directory `mek-tycoon-react-staging` is the PRIMARY and MAIN working directory for this project. When referring to "the main directory" or "the project directory", this is what we mean:
+
+- **Primary Directory**: `C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react-staging`
+- **Do NOT use**: The `mek-tycoon-react` directory exists but is NOT used for current work
+- **Database**: `wry-trout-962.convex.cloud` (isolated staging database)
+- **Port**: localhost:3200
+
+**Naming note**: Despite the word "staging" in the directory name, this is our primary development environment where ALL current work happens.
+
+## Dev Server Management
+**CRITICAL: User starts their own dev servers. DO NOT automatically run background dev server tasks.**
+
+### When user explicitly says "start it up" or similar:
 ```bash
 npm run dev:all
 ```
 This starts both Next.js (port 3200) and Convex in one terminal.
 
-**Current Working Directory**: `C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react-staging`
-**Database**: `wry-trout-962.convex.cloud` (staging database - isolated from production)
-**Port**: localhost:3200
-**DO NOT use the main `mek-tycoon-react` directory - ONLY use staging!**
+### IMPORTANT RULES:
+- **NEVER start `npm run dev`, `npm run dev:all`, or similar as background tasks**
+- User manages their own dev servers and terminals
+- Only start dev server if user explicitly asks you to
+- If user says "the server is running" or "localhost is up" - believe them, don't verify or restart
+- Focus on code changes, not server management
 
-## 🚨🚨🚨 CRITICAL: GIT CHECKOUT DESTROYS UNCOMMITTED WORK 🚨🚨🚨
-**NEVER EVER RUN `git checkout <filename>` UNLESS EXPLICITLY APPROVED BY USER**
+### 🚨 Fixing "Internal Server Error"
 
-### THE MOST DANGEROUS GIT COMMAND
+**When user reports "Internal Server Error" in browser:**
+
+**Root Cause:** Dev server crashed/was killed, leaving a zombie process still bound to port 3200.
+
+**The Fix (follow these exact steps):**
+1. Find the zombie process: `netstat -ano | findstr :3200`
+2. Note the PID from the output (rightmost number)
+3. Kill that specific PID: `Stop-Process -Id <PID> -Force`
+4. Restart dev server: `npm run dev:all`
+
+**Example:**
 ```bash
-git checkout src/components/SomeFile.tsx  # ❌❌❌ DESTROYS UNCOMMITTED WORK PERMANENTLY
+# Step 1: Find process
+netstat -ano | findstr :3200
+# Output shows: TCP 0.0.0.0:3200 ... LISTENING 59060
+
+# Step 2: Kill that specific PID
+Stop-Process -Id 59060 -Force
+
+# Step 3: Restart
+npm run dev:all
 ```
 
-**What this command does:**
-- **PERMANENTLY DELETES** all uncommitted changes in the specified file
-- Restores file to last committed version
-- **NO UNDO** - changes are gone forever
-- **NO WARNING** - Git doesn't ask for confirmation
-- **NO BACKUP** - Uncommitted work has zero protection
-
-**Real incident that happened in this project:**
-- Previous Claude session: User spent hours making UI improvements to EssenceDistributionLightbox
-- Changes included: removing debug panels, resizing elements, fixing positioning (~250 lines of work)
-- Those changes were never committed (still just in working file)
-- Current session: File had syntax error, I ran `git checkout` to "fix" it
-- **RESULT**: All uncommitted work from hours ago was PERMANENTLY DELETED
-- User had to re-do all the work by reading session logs and manually re-implementing
-
-### ABSOLUTE RULES FOR GIT CHECKOUT:
-1. **NEVER use `git checkout <file>` to fix errors** - Use Edit tool instead
-2. **NEVER use it as a "reset" or "undo"** - Fix issues directly
-3. **ALWAYS ask user first** if you think checkout is needed
-4. **WARN user TWICE** about what will be lost
-5. **Check `git status`** first to see if there are uncommitted changes
-6. **If there ARE uncommitted changes**: STOP and ask user to commit them first
-
-### Safe Alternatives:
-- **To fix syntax errors**: Use Edit tool to fix the specific lines
-- **To undo recent changes**: Ask user if they want to lose uncommitted work first
-- **To see differences**: Use `git diff <file>` (safe, read-only)
-- **To create backup**: Ask user to commit their work first
-
-### The Only Time It's Safe:
-- User explicitly says "discard my uncommitted changes"
-- User confirms they don't care about losing work
-- You've warned them TWICE about what will be lost
-- `git status` shows the file has changes and user approves deletion
-
-### Red Flag Scenarios (DO NOT USE CHECKOUT):
-- ❌ File has syntax errors → Fix with Edit tool
-- ❌ File seems corrupted → Ask user, don't checkout
-- ❌ Want to "reset" to clean state → Ask user first
-- ❌ Testing if old version works → Ask user to commit first
-- ❌ Any uncertainty about uncommitted work → DON'T RISK IT
-
-**REMEMBER**: This project has had HOURS of work destroyed by this command. Treat `git checkout <file>` like `rm -rf /` - assume it will destroy important work unless proven otherwise.
+**Key Point:** Always kill by PID (process ID), never by process name. This is the only reliable fix.
 
 ---
 
-## 🚨🚨🚨 CRITICAL: BRANCH SWITCHING PROTECTION 🚨🚨🚨
-**NEVER SWITCH BRANCHES WITHOUT EXPLICIT USER APPROVAL - MULTIPLE TIMES**
+## 🚨 CRITICAL: PRODUCTION DEPLOYMENT PROTECTION 🚨
+**NEVER DEPLOY TO PRODUCTION WITHOUT EXPLICIT USER INSTRUCTION AND TRIPLE CONFIRMATION**
 
-### The Danger of Working on Wrong Branch
-**Working on the wrong branch is the user's BIGGEST NIGHTMARE.** This has caused MULTIPLE incidents of lost work in this project.
+### Database Architecture
 
-### What Happens When You Work on Wrong Branch:
-1. User is on old branch from 9 days ago
-2. Makes hours of changes thinking they're on current branch
-3. Switches back to current branch
-4. **ALL UNCOMMITTED WORK FROM OLD BRANCH IS LOST FOREVER**
-5. User has to re-do everything manually
+**This project has TWO completely separate Convex databases:**
 
-### Real Incident - November 1, 2025:
-**What happened:**
-- User asked: "Could you please look into the Essence System work tree branch?"
-- I ran `git checkout essence-system-worktree` (branch from Oct 23, 9 days old)
-- Dev server reloaded with old code from 9 days ago
-- User saw old UI and thought "days and days of work" was lost
-- User panicked - this had happened before and they lost real work
-- Had to switch back to custom-minting-system to recover current work
+**Trout (wry-trout-962.convex.cloud)** = **DEVELOPMENT DATABASE**
+- Used for localhost:3200 development and testing
+- Connected via `.env.local` configuration
+- Safe to break, test, and experiment
+- Where ALL daily work happens
 
-**Why this was dangerous:**
-- User didn't realize branch had switched
-- If they had made changes while on old branch, those would be lost when switching back
-- They've lost work this way before - hours of effort gone forever
+**Sturgeon (fabulous-sturgeon-691.convex.cloud)** = **PRODUCTION DATABASE**
+- Used by the live website (mek.overexposed.io)
+- Contains REAL user data and 36+ active players
+- Changes immediately affect live users
+- **EXTREMELY DANGEROUS - Requires explicit user permission**
 
-### MANDATORY BRANCH PROTECTION RULES:
+**CRITICAL**: These are COMPLETELY SEPARATE databases. Changes to one do NOT affect the other. Cron jobs run independently on each.
 
-#### 1. CHECK BRANCH BEFORE ANY WORK
-**BEFORE starting ANY task, ALWAYS run:**
-```bash
-git branch --show-current
+---
+
+### 🛑 ABSOLUTE RULE: ALWAYS ASSUME DEV (TROUT) UNLESS EXPLICITLY TOLD OTHERWISE
+
+**Default Assumption for ALL Operations:**
+- Target: **Trout (dev database)**
+- Environment: **localhost:3200**
+- Purpose: **Testing and development**
+- Risk Level: **Low - safe to experiment**
+
+**🎯 DEPLOYMENT DEFAULT: ALWAYS TROUT**
+- **ALL deployments target Trout (dev) unless user explicitly says otherwise**
+- If user says "deploy", "push changes", or similar → ASSUME TROUT
+- User will ALWAYS explicitly say "production" or "Sturgeon" when needed
+- When in doubt → ASK, but default assumption is ALWAYS Trout
+
+**User will ALWAYS explicitly say when to deploy to production. Never assume production.**
+
+---
+
+### Production Deployment Protocol (THREE CONFIRMATIONS REQUIRED)
+
+**Before running ANY command that deploys to backend (npx convex deploy, etc.):**
+
+#### Step 1: ASK TARGET ENVIRONMENT
+```
+"Should I deploy these changes to:
+A) Trout (dev - localhost:3200)
+B) Sturgeon (production - live site with real users)?"
 ```
 
-**If NOT on `custom-minting-system` branch:**
-- ⚠️ **STOP IMMEDIATELY**
-- Warn user: "⚠️ WARNING: You are currently on branch '[branch-name]', not 'custom-minting-system'. This may be an old branch. Should we switch to custom-minting-system first?"
-- Wait for explicit approval before proceeding
+**Wait for explicit answer. Do NOT proceed without user response.**
 
-#### 2. ANNOUNCE BRANCH AT SESSION START
-**At the beginning of EVERY session, immediately check and announce:**
-```bash
-git branch --show-current
+#### Step 2: IF USER SAYS PRODUCTION - First Warning
 ```
-Tell user: "Currently on branch: [branch-name]"
+⚠️ WARNING: You selected PRODUCTION deployment (Sturgeon - fabulous-sturgeon-691)
 
-If not on custom-minting-system, add warning: "⚠️ This is not your main working branch. Should we switch to custom-minting-system?"
+This will immediately affect:
+- Live website (mek.overexposed.io)
+- 36+ active players
+- Real user data and gold balances
+- Production cron jobs and background systems
 
-#### 3. NEVER SWITCH BRANCHES WITHOUT TRIPLE CONFIRMATION
+Changes being deployed:
+[List specific changes - cron frequencies, schema changes, function updates, etc.]
 
-**Before ANY `git checkout <branch>` command:**
+Do you want to proceed with PRODUCTION deployment? (yes/no)
+```
 
-**First Warning:**
-- "⚠️ WARNING: Switching to branch '[target-branch]' will replace ALL files in your working directory with that branch's versions."
-- "Your localhost:3200 will immediately show different code."
-- "Do you want to proceed?"
+#### Step 3: IF USER SAYS YES - Second Warning
+```
+⚠️ SECOND WARNING: Production Deployment Confirmation
 
-**Wait for user response. If yes, give Second Warning:**
-- "⚠️ SECOND WARNING: If you make any changes while on '[target-branch]' and don't commit them, those changes will be LOST when you switch back."
-- "Are you ABSOLUTELY SURE you want to switch branches?"
+You are about to deploy to LIVE PRODUCTION:
+- Database: fabulous-sturgeon-691 (Sturgeon)
+- Affects: Real users and live data
+- Cannot be undone without another deployment
 
-**Wait for user response. If yes, give Third Warning:**
-- "⚠️ FINAL WARNING: I'm about to run `git checkout [target-branch]`. Your dev server will reload with code from that branch."
-- "Type 'YES' to confirm."
+Are you ABSOLUTELY SURE you want to deploy to production? (yes/no)
+```
 
-**Only proceed after THREE explicit confirmations.**
+#### Step 4: IF USER SAYS YES - Final Confirmation
+```
+⚠️ FINAL CONFIRMATION: Production Deployment
 
-#### 4. COMMIT WORK BEFORE SWITCHING
+To proceed with production deployment, type exactly: DEPLOY TO PRODUCTION
 
-**Before switching branches, ALWAYS:**
-1. Run `git status` to check for uncommitted changes
-2. If there ARE uncommitted changes:
-   - "You have uncommitted changes. Should I commit them before switching branches?"
-   - If user says yes: Create a commit with descriptive message
-   - If user says no: "⚠️ WARNING: These uncommitted changes will be LOST when switching branches. Proceed anyway?"
-3. Only switch after work is safely committed
+[Wait for user to type exact phrase]
+```
 
-#### 5. IMMEDIATE WARNING AFTER ACCIDENTAL SWITCH
+#### Step 5: Only After THREE Confirmations
+```
+Deploying to PRODUCTION (Sturgeon - fabulous-sturgeon-691)...
+[Execute deployment]
+✓ Deployed successfully to production
+```
 
-**If user seems unaware branch was switched:**
-- "🚨 IMPORTANT: The dev server is now showing code from the '[branch-name]' branch (last changed [date])."
-- "Any changes you make now are on THIS branch, not your main branch."
-- "Would you like to switch back to custom-minting-system?"
+---
 
-#### 6. PERIODIC BRANCH REMINDERS
+### Dev Deployment Protocol (ONE QUESTION ONLY)
 
-**Every 10 messages or so, briefly remind:**
-- "Currently on branch: [branch-name]" (if not on custom-minting-system)
+**If user says deploy without specifying target:**
 
-### The Correct Branch
-**For this project, the user's main working branch is:**
-- **`custom-minting-system`** - This is where current work happens
+```
+"Deploying to Trout (dev - localhost:3200)? Or did you want Sturgeon (production)?"
+```
 
-**Other branches are historical/exploratory:**
-- `essence-system-worktree` - Old work from Oct 23 (9 days old)
-- `master` - May be outdated
-- `backup-multi-wallet-[date]` - Backup branches
+**If Trout (dev) confirmed:**
+- Proceed immediately (low risk)
+- No additional warnings needed
+- Just execute and confirm completion
 
-**Default assumption:** User should be on `custom-minting-system` unless they explicitly say otherwise.
+---
 
-### Why Git Branches Are Dangerous
+### Environmental Context Checks
 
-**Key concept the user needs to understand:**
-- Git branches are NOT separate folders
-- There is ONE physical directory on the computer
-- `git checkout` physically REPLACES all files in that directory
-- The dev server serves whatever files are currently in the directory
-- When you switch branches, localhost immediately shows different code
+**Before ANY deployment, check these signals:**
 
-**Think of it like:**
-- Your working directory is a stage
-- Git branches are different scenes
-- `git checkout` swaps out ALL the actors and props
-- The audience (dev server) sees whatever's currently on stage
+**Indicators This is DEV Context (assume Trout):**
+- ✅ `.env.local` points to `wry-trout-962.convex.cloud`
+- ✅ Dev server running on localhost:3200
+- ✅ User hasn't mentioned "production" or "Sturgeon" or "live site"
+- ✅ User is testing or developing features
+- ✅ User said "right now" or "urgently" (urgency ≠ production!)
 
-### Commands That Switch Branches (NEVER use without approval):
-- `git checkout <branch-name>` - Switches to different branch
-- `git switch <branch-name>` - Modern alternative to checkout
-- `git checkout -b <new-branch>` - Creates and switches to new branch
-- Any `git` command that changes HEAD to different branch
+**Indicators This is PRODUCTION Context (require confirmation):**
+- 🚨 User explicitly said "production" or "Sturgeon" or "live site"
+- 🚨 User said "deploy to production" or "push to live"
+- 🚨 User mentioned "real users" or "live players"
+- 🚨 User said "make this live" or "go live with this"
 
-### Safe Git Commands (Read-Only):
-- `git branch` - List branches (safe)
-- `git branch --show-current` - Show current branch (safe)
-- `git log` - View commit history (safe)
-- `git diff <branch>` - Compare branches without switching (safe)
-- `git status` - Check working directory status (safe)
+**If ALL signals point to dev → Deploy to dev (Trout) after single confirmation**
+**If ANY signal suggests production → Apply FULL triple confirmation protocol**
 
-### Quick Reference Checklist for Branch Safety
+---
 
-**Before EVERY work session:**
-- [ ] Check current branch: `git branch --show-current`
-- [ ] Announce branch to user
-- [ ] If not on custom-minting-system, ask to switch
-- [ ] Never assume current branch is correct
+### Red Flags That ALWAYS Require Questions
 
-**Before ANY branch switch:**
-- [ ] Warn user THREE times
-- [ ] Check for uncommitted changes (`git status`)
-- [ ] Commit or stash any uncommitted work
-- [ ] Get explicit "YES" confirmation
-- [ ] After switch, remind user they're on different branch
+**STOP and ASK before executing if:**
+- ❌ Running `npx convex deploy` or any deployment command
+- ❌ Command affects backend systems, databases, or cron jobs
+- ❌ User hasn't explicitly named target environment
+- ❌ Changes could impact live users or data
+- ❌ "Deploy" instruction without specifying dev or production
+- ❌ Ambiguity about which database is the target
+- ❌ Any uncertainty whatsoever about dev vs production
 
-**During work:**
-- [ ] If user seems confused about code state, check branch
-- [ ] Periodically remind if on non-standard branch
-- [ ] Before any git operation, verify branch is correct
+**When in doubt, ASK. Better to ask unnecessarily than destroy production.**
 
-### Emergency Recovery
+---
 
-**If user accidentally made changes on wrong branch:**
-1. DON'T PANIC - changes are still in working directory
-2. Immediately commit changes on current branch: `git commit -am "Emergency save from wrong branch"`
-3. Note the commit hash
-4. Switch to correct branch
-5. Cherry-pick the commit: `git cherry-pick <hash>`
-6. Work is now safely on correct branch
+### Key Principles
 
-**This only works if changes are committed BEFORE switching branches!**
+1. **Default to Dev**: All work targets Trout unless explicitly told otherwise
+2. **User Controls Production**: Only deploy to production when user explicitly says so
+3. **Urgency ≠ Production**: "Right now" means do it now, NOT push to production
+4. **Triple Confirm Production**: Production requires THREE separate confirmations
+5. **One Question for Dev**: Dev deployments need only one confirmation
+6. **When in Doubt, Ask**: Better to ask unnecessarily than break production
+7. **Environmental Context**: `.env.local` = Trout, localhost = dev, no mention of production = dev
+8. **User Will Tell You**: User will ALWAYS explicitly say when it's time for production
+
+**Real Incident Note (Nov 4, 2025)**: Previously deployed to production by assuming "right now" meant production. User's `.env.local` pointed to Trout, was working on localhost, never mentioned production - all signals pointed to dev. Lesson: NEVER assume production from urgency. Always ask target environment first.
+
+**REMEMBER**: Production deployments affect REAL USERS with REAL DATA. Treat them with extreme caution and ceremony. Never rush. Never assume. Always confirm.
+
+---
+
+## 🚨 CRITICAL: GIT PROTECTION 🚨
+
+### Git Checkout: THE MOST DANGEROUS COMMAND
+**NEVER EVER RUN `git checkout <filename>` UNLESS EXPLICITLY APPROVED BY USER**
+
+```bash
+git checkout src/components/SomeFile.tsx  # ❌ DESTROYS UNCOMMITTED WORK PERMANENTLY
+```
+
+**What it does**: Permanently deletes all uncommitted changes, restores to last commit, NO UNDO, NO WARNING, NO BACKUP.
+
+**Real incident**: User spent hours on UI improvements (250+ lines). File had syntax error, I ran `git checkout` to "fix" it. All uncommitted work PERMANENTLY DELETED. User had to re-do everything manually.
+
+**ABSOLUTE RULES**:
+1. **NEVER use `git checkout <file>` to fix errors** - Use Edit tool instead
+2. **NEVER use it as a "reset"** - Fix issues directly
+3. **ALWAYS ask user first** if you think checkout is needed
+4. **WARN user TWICE** about what will be lost
+5. **Check `git status`** first - if uncommitted changes exist, STOP and ask user to commit first
+
+**Safe Alternatives**:
+- Fix syntax errors: Use Edit tool
+- See differences: `git diff <file>` (read-only)
+- Create backup: Ask user to commit work first
+
+**Only safe when**: User explicitly says "discard my uncommitted changes" AND confirms TWICE AND `git status` shows changes AND user approves deletion.
+
+---
+
+### Branch Switching Protection
+**NEVER SWITCH BRANCHES WITHOUT EXPLICIT USER APPROVAL (3 TIMES)**
+
+Working on wrong branch has caused MULTIPLE lost work incidents. When you work on old branch and switch back, ALL UNCOMMITTED WORK IS LOST FOREVER.
+
+**MANDATORY RULES**:
+
+1. **Check branch before ANY work**: Run `git branch --show-current`
+   - If NOT on `custom-minting-system` → STOP, warn user, wait for approval
+
+2. **Announce at session start**: Check and tell user current branch
+   - If not on custom-minting-system, ask to switch
+
+3. **Triple confirmation before switching**:
+   - First: "Switching replaces ALL files. localhost will show different code. Proceed?"
+   - Second: "Changes on this branch will be LOST when you switch back. SURE?"
+   - Third: "Type 'YES' to confirm git checkout [branch]"
+
+4. **Commit work before switching**: Always run `git status`, commit any changes first
+
+5. **Periodic reminders**: Every 10 messages, remind if on non-standard branch
+
+**Correct branch**: `custom-minting-system` (main working branch)
+
+**Emergency recovery**: If changes made on wrong branch, commit immediately, note hash, switch to correct branch, cherry-pick commit.
 
 ---
 
 ## 🚨 CRITICAL: SESSION PROTECTION 🚨
 **NEVER DO ANYTHING THAT WILL TERMINATE THE CLAUDE CODE SESSION**
 
-Claude Code sessions can suddenly terminate, losing all context and interrupting work. **Before executing ANY command, check this list:**
+Claude Code sessions can terminate, losing all context. Before ANY command, check:
 
-### Commands That WILL Kill Claude Code Session
-**NEVER run these commands:**
-- `exit` - Exits the shell/terminal
-- `logout` - Logs out of the session
-- `quit` - Quits interactive programs
-- `shutdown` - Shuts down the system
-- `restart` - Restarts the system
-- `reboot` - Reboots the system
-- `taskkill /F /IM claude*` - Kills Claude process on Windows
-- `taskkill /F /IM node.exe` - **KILLS ALL NODE PROCESSES INCLUDING CLAUDE** ⚠️
-- `Stop-Process -Name claude*` - PowerShell command to kill Claude
-- `Stop-Process -Name node -Force` - **KILLS ALL NODE PROCESSES INCLUDING CLAUDE** ⚠️
-- `pkill claude` - Kills Claude on Unix/Linux
-- `pkill node` - **KILLS ALL NODE PROCESSES INCLUDING CLAUDE** ⚠️
-- `killall claude` - Kills all Claude processes
-- `killall node` - **KILLS ALL NODE PROCESSES INCLUDING CLAUDE** ⚠️
-- Closing the terminal window manually
-- Ctrl+D (EOF signal that can exit shells)
-- Any command that terminates the parent terminal/console
+### Commands That KILL Session (NEVER RUN):
+- `exit`, `logout`, `quit` - Exits shell
+- `shutdown`, `restart`, `reboot` - System operations
+- `taskkill /F /IM claude*` or `/IM node.exe` - **KILLS ALL NODE PROCESSES INCLUDING CLAUDE**
+- `Stop-Process -Name claude*` or `-Name node` - PowerShell kill commands
+- `pkill claude`, `pkill node`, `killall node` - Unix/Linux kill commands
+- Ctrl+D (EOF signal)
 
-### 🚨🚨🚨 REAL INCIDENT: PORT CONFLICT COMMANDS THAT KILLED ALL SESSIONS 🚨🚨🚨
-**Date: October 24, 2025**
+### Port Conflict Handling (NEVER KILL NODE PROCESSES)
+**Real Incident (Oct 24, 2025)**: When port 3200 was in use, I ran `taskkill /F /IM node.exe` which killed ALL Claude sessions on the computer plus dev servers and Convex backend.
 
-**What I Did Wrong:**
-When I saw "port 3200 is already in use", I ran these commands:
-```bash
-taskkill /F /IM node.exe
-powershell -Command "Get-Process node | Stop-Process -Force"
-```
+**CORRECT approach for "Port in use"**:
+1. Find specific PID: `netstat -ano | findstr :3200`
+2. Kill ONLY that PID: `taskkill /PID <number> /F`
+3. OR ask user to close it manually
+4. OR use different port (3201, 3202)
+5. OR use existing server
 
-**What These Commands Do:**
-- Kill **EVERY SINGLE NODE.JS PROCESS** on the entire computer
-- This includes: dev servers, Convex backend, **Claude Code itself**, and ALL npm tools
-- No exceptions, no targeting - just destroys everything Node-related
+**Golden Rule**: NEVER use `taskkill /F /IM node.exe` or `Stop-Process -Name node` - ALWAYS target specific PIDs.
 
-**The Result:**
-- Terminated ALL Claude Code sessions on the computer (not just this one)
-- Killed the dev server (intended target)
-- Killed the Convex backend server
-- Destroyed all context and work in progress
-- User had to restart everything from scratch
+### Operations That CAN Kill Session:
+- Package installation (conflicts with Claude dependencies)
+- File system operations (deleting Claude files, permission changes)
+- Network issues (VPN disconnect, adapter reset)
+- System resources (out of memory, CPU freeze)
+- Windows Updates forcing restarts
 
-**Why This Was Wrong:**
-- Used a nuclear bomb to kill one mosquito
-- Claude Code runs on Node.js - killing all Node processes kills Claude
-- No targeting, no precision - just blind destruction
-- Should have killed the specific process by PID or port
-
-**The CORRECT Way to Handle "Port Already in Use":**
-
-**Option 1: Find and kill specific process using that port**
-```bash
-# Find the PID using the port
-netstat -ano | findstr :3200
-
-# Kill ONLY that specific PID
-taskkill /PID <specific-number> /F
-```
-
-**Option 2: Just ask the user**
-- "Port 3200 is in use. Should I kill that process, or would you like to close it manually?"
-- User can close the terminal themselves (safest option)
-
-**Option 3: Use a different port**
-- Switch to port 3201, 3202, etc. instead of killing anything
-
-**Option 4: Use the existing server**
-- If port is in use, the server is probably already running
-- Just use it instead of trying to start a new one
-
-**The Golden Rule:**
-- **NEVER** use `taskkill /F /IM node.exe` or `Stop-Process -Name node`
-- **ALWAYS** target specific PIDs, not process names
-- **WHEN IN DOUBT**, ask the user before killing anything
+### If Risky Operation Needed:
+1. STOP immediately
+2. Warn user: "This might terminate Claude Code session. Proceed?"
+3. Suggest safer alternatives
+4. Get explicit confirmation
+5. Document current context for resume
 
 ---
 
-## 🚨 CRITICAL: THIRD-PARTY PLATFORM CAUTION 🚨
+## 🚨 CRITICAL: TAILWIND CSS VERSION 🚨
+**This project uses Tailwind CSS v3, NOT v4**
 
-**NEVER be overconfident about undocumented third-party platform behavior, especially financial/pricing systems.**
+**If styles broken (plain text appearance)**:
+1. Check package.json (must be ^3.x.x, NOT ^4.x.x)
+2. Fix: `npm uninstall tailwindcss @tailwindcss/postcss && npm install -D tailwindcss@^3 postcss autoprefixer && rm -rf .next && npm run dev:all`
 
-### Key Rules:
-1. **If lacking documentation, say so explicitly** - Don't guess about pricing fields, payment flows, or billing configs
-2. **Red flags = STOP** - If math doesn't add up (0 revenue, excessive fees), your interpretation is likely wrong
-3. **Trust user intuition** - When user says "that doesn't seem right," take it seriously
-4. **Test with minimal risk first** - Use test amounts/counts before committing to production values
-5. **Agents can be wrong** - Don't treat specialist agent output as infallible truth
-
-**Applies to**: NMKR Studio, Stripe, PayPal, AWS billing, ad platforms, any financial third-party APIs
+**NEVER USE**: `npm update`, `tailwindcss@latest`, v4-only syntax (`@import "tailwindcss"`, `@theme inline`, `@tailwindcss/postcss`)
+**ALWAYS USE**: `npm ci`, check CRITICAL_DEPENDENCIES.md if issues
 
 ---
-
-### Operations That CAN Kill Claude Code Session
-**Be extremely careful with:**
-1. **Package Installation**:
-   - Installing packages that conflict with Claude's dependencies
-   - Running `npm install` on packages that modify global state
-   - Upgrading Node.js or npm while Claude is running
-
-2. **File System Operations**:
-   - Deleting files in Claude's working directory
-   - Modifying permissions that lock Claude out
-   - Running out of disk space
-
-3. **Network Issues**:
-   - VPN disconnections
-   - Network adapter resets
-   - Firewall changes blocking Claude's connection
-   - Internet connectivity loss
-
-4. **System Resource Issues**:
-   - Running out of memory
-   - CPU-intensive operations that freeze the system
-   - Disk I/O errors
-
-5. **Process Management**:
-   - Task Manager force-close of Claude process
-   - Windows Updates forcing restarts
-   - Antivirus quarantining Claude files
-   - System sleep/hibernate (sometimes)
-
-### Safe Alternatives
-**Instead of session-ending commands, use:**
-- Instead of `exit`: Just leave Claude running and switch tasks
-- Instead of `taskkill`: Ask user before terminating anything
-- Instead of `shutdown`: Warn user to save Claude context first
-- Instead of risky package installs: Check package.json and ask user first
-- Instead of system-wide changes: Make project-local changes only
-
-### When Things Go Wrong
-**If you anticipate something might kill the session:**
-1. **STOP immediately**
-2. **Warn the user**: "This command might terminate the Claude Code session. Should I proceed?"
-3. **Suggest alternatives**: Provide safer options
-4. **Get explicit confirmation**: Wait for user approval
-5. **Document context**: If session must end, tell user what to resume with
-
-### Red Flags to Watch For
-**Always double-check before running:**
-- Any command with `kill`, `stop`, `exit`, `quit`, `shutdown`, `restart`
-- Commands that modify system-level configurations
-- Package installations that aren't in current package.json
-- Terminal control sequences (Ctrl+C, Ctrl+D, Ctrl+Z)
-- Batch files or scripts that might contain exit commands
-- Commands that open new shells (might close current one)
-
-### Working Around Session Constraints
-**If you need to do something that might end the session:**
-1. Complete all current tasks first
-2. Summarize all work done in the session
-3. Provide clear "resume instructions" for next session
-4. Get user's explicit permission
-5. Document any in-progress work in files (not just context)
-
-**Remember**: Losing session context is extremely disruptive. When in doubt, ask the user before executing anything that might terminate Claude Code.
 
 ## Project Overview
 Mek Tycoon is a web-based idle/tycoon game featuring collectible Mek NFTs. The game combines resource management, crafting, and collection mechanics with a sleek, futuristic UI.
@@ -416,37 +361,6 @@ Mek Tycoon is a web-based idle/tycoon game featuring collectible Mek NFTs. The g
 - **Styling**: Tailwind CSS v3 (NOT v4!) with custom glass-morphism effects
 - **Database**: Convex (real-time backend)
 - **Blockchain**: Cardano (wallet integration via MeshSDK - currently disabled)
-
-## CRITICAL: Tailwind CSS Version Management
-**⚠️ ALWAYS CHECK FIRST: This project uses Tailwind CSS v3, NOT v4!**
-
-### If styles appear broken (plain text appearance):
-1. **IMMEDIATELY CHECK** package.json for Tailwind version (must be ^3.x.x, NOT ^4.x.x)
-2. **FIX IMMEDIATELY** if wrong:
-   ```bash
-   npm uninstall tailwindcss @tailwindcss/postcss
-   npm install -D tailwindcss@^3 postcss autoprefixer
-   rm -rf .next
-   npm run dev:all
-   ```
-
-### Required Config Files (DO NOT DELETE):
-- `tailwind.config.ts` - v3 configuration
-- `postcss.config.mjs` - Must use `{tailwindcss: {}, autoprefixer: {}}`
-- `src/app/globals.css` - Must use `@tailwind base/components/utilities`
-
-### NEVER USE:
-- `npm update` (can break version locks)
-- `npm install tailwindcss@latest` (installs v4)
-- `@import "tailwindcss"` syntax (v4 only)
-- `@theme inline` directive (v4 only)
-- `@tailwindcss/postcss` package (v4 only)
-- **Browser default alerts/confirms** - `window.alert()`, `window.confirm()`, `window.prompt()` - ALWAYS use custom lightbox modals instead
-
-### ALWAYS USE:
-- `npm ci` when possible (respects lock file)
-- `npm install` without version specifier (respects package.json)
-- Check CRITICAL_DEPENDENCIES.md if issues arise
 
 ## Visual Testing with Playwright
 
@@ -666,9 +580,8 @@ npx tsc --noEmit   # TypeScript type checking
 ## Slash Commands
 
 ### `/ui-team` - Activate all UI agents
-When user types `/ui-team`, activate these three agents together:
+When user types `/ui-team`, activate these two agents together:
 - `@ui-layout-debugger` - Debug layout issues
-- `@scifi-ui-designer` - Apply sci-fi aesthetic
 - `@visual-test` - Test visual changes
 
 ### `/ultra` - Multi-agent coordination with guaranteed specialist activation
@@ -766,6 +679,35 @@ Example transformation:
 
 **When to Apply**: Any time a modal/lightbox appears in the wrong position relative to the viewport, or when user reports having to scroll to find a modal.
 
+### Wallet Connection System - Lessons Learned
+**Date Fixed**: November 2025
+
+**Critical Issues Discovered:**
+
+1. **Duplicate Modal Instances** - Multiple components rendering the same modal/lightbox
+   - **Problem**: NavigationBar, UnifiedHeader, and HomePage all rendered WalletConnectLightbox
+   - **Symptom**: Lightbox stayed visible after connection (one instance closed, others remained)
+   - **Fix**: Only ONE component should own a modal. Use event-driven architecture if multiple places need to trigger it
+   - **Rule**: High-level components (like UnifiedHeader) should own shared modals, not page-specific components
+
+2. **Signature Verification After Disconnect** - Security feature for shared computers
+   - **Problem**: Wallet extensions cache permissions, so disconnecting didn't force re-authentication
+   - **Fix**: Implement challenge-response with `wallet.api.signData(address, hexMessage)`
+   - **Pattern**: Manual disconnect → create nonce → on reconnect → detect nonce → require signature → clear nonce
+   - **CIP-30 Detail**: ALL wallets expect hex-encoded message payloads, not plain text
+
+3. **Console Log Spam** - Debug logs in render loops cause browser freezing
+   - **Problem**: Logs inside components that re-render frequently = millions of logs per second
+   - **Symptom**: Browser freezes, unusable console, performance degradation
+   - **Fix**: Remove logs from render paths. Use searchable tags for debugging ([🔐TAG] format)
+   - **Rule**: Log state changes, not every render. Remove debug logs when done
+
+**Key Takeaways for Future Work:**
+- Single instance rule: One component owns each modal/lightbox
+- State management: Parent controls visibility, child calls `onClose()` to notify
+- Security: Explicit logout requires re-auth, passive session restore allows auto-reconnect
+- Performance: Be mindful of logs in frequently-called code (renders, animations, polling)
+
 ## Notes for Claude
 - **FIRST THING TO CHECK**: If styles look broken, verify Tailwind is v3 not v4 in package.json
 - Always check existing file conventions before making changes
@@ -781,7 +723,7 @@ Example transformation:
 ## 🚨 CRITICAL SAVE SYSTEM PROTECTION 🚨
 **NEVER modify these files without asking the user TWICE:**
 - `/src/app/admin-save/*` - Save system interface
-- `/api/save/*`, `/api/restore/*`, `/api/delete-save/*` - Backend operations  
+- `/api/save/*`, `/api/restore/*`, `/api/delete-save/*` - Backend operations
 - `/convex/saves.ts` - Database schema
 - `/saves/` directory - Actual backup files
 - See `CRITICAL_DO_NOT_MODIFY.md` for full protection rules
@@ -806,44 +748,16 @@ Example transformation:
 - **MINIMIZE CODE OUTPUT**: User is not a coder - avoid showing raw code snippets, diffs, or technical readouts unless specifically requested. Instead, describe changes made in simple terms like "I updated the file to fix X" or "I added feature Y to the page"
 - **NEVER ask "how is Claude doing" or similar questions**: User does not want to be asked about Claude Code's performance or experience
 
-## Understanding This User's Communication Style (Learned From Experience)
-*This section was written based on actual working experience with this user - for future Claude iterations*
+## Understanding This User's Communication Style
+*Based on actual working experience - for future Claude iterations*
 
-### Key Patterns for Success
-1. **Visual References Are Critical**
-   - User often provides screenshots/mockups to explain desired outcomes
-   - When they say "like in X page" - immediately check that page for visual/functional reference
-   - They think visually and spatially - understanding their mental model is crucial
-
-2. **Iterative Clarification Is Normal**
-   - User corrects misunderstandings patiently but expects learning from corrections
-   - "No, not X, I meant Y" = they're training you on their terminology
-   - Pay close attention to repeated clarifications - these reveal fundamental misunderstandings
-
-3. **Context Switching Awareness**
-   - User frequently jumps between related systems (story-climb vs cirutree vs admin pages)
-   - When confused about which system, carefully check recent context and file names
-   - They expect you to maintain awareness of the broader system architecture
-
-4. **Implementation Over Theory**
-   - User prefers working code over discussions
-   - They describe behavior through examples: "when X happens, Y should occur"
-   - Spatial/mathematical descriptions are precise: "lower third" = exactly 67% from top
-
-5. **Protective of Existing Work**
-   - User is VERY protective of data they've created (e.g., "V1 story tree")
-   - Always implement non-destructive changes
-   - When uncertain, ask before modifying/deleting
-
-6. **Active Testing & Feedback**
-   - User tests implementations immediately and provides specific feedback
-   - Debug logging is appreciated for understanding behavior
-   - Visual verification is important - they want to SEE things work
-
-7. **Direct Communication Valued**
-   - "Thinking through" problems aloud is appreciated
-   - Honest assessment preferred: "I see the problem..." vs sugar-coating
-   - They train through correction - each mistake is a learning opportunity
+- **Visual references critical**: User provides screenshots/mockups, thinks visually/spatially
+- **Iterative clarification normal**: User trains through corrections, expects learning from mistakes
+- **Context switching frequent**: Maintain awareness of broader system architecture
+- **Implementation over theory**: Describe behavior through examples, spatial/math descriptions are precise
+- **Protective of existing work**: Always non-destructive, ask before modifying/deleting
+- **Active testing & feedback**: User tests immediately, appreciates debug logging, wants to SEE results
+- **Direct communication valued**: Think aloud, honest assessment over sugar-coating
 
 ## Task Completion Rules
 - **ALWAYS finish current tasks completely**: When the user adds new prompts while you're working on something, complete ALL aspects of the current task before moving to the next one
@@ -860,4 +774,3 @@ Example transformation:
 - Open to better solutions and alternative approaches
 - **BRIEF TASK COMPLETION SUMMARIES**: Keep explanations 35% shorter - just bullet points of what was done. User will ask for details if needed
 - **NO CODE DUMPS**: User does not understand raw code snippets, code blocks, diffs, or technical syntax examples. Describe changes conversationally instead of showing code. Example: Say "I updated the slider to go from 5% to 100%" instead of showing the code block
-

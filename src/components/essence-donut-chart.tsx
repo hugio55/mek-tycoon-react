@@ -34,18 +34,38 @@ interface DonutChartProps {
   essenceConfig?: any;
 }
 
-// Industrial color palette for essence types
+// Industrial color palette for essence types - Expanded to 30 unique colors
 const ESSENCE_COLORS = [
-  '#fab617', // Primary yellow
-  '#ff8c00', // Orange
-  '#22d3ee', // Cyan
-  '#8b5cf6', // Purple
-  '#10b981', // Green
-  '#ef4444', // Red
-  '#3b82f6', // Blue
-  '#f59e0b', // Amber
-  '#ec4899', // Pink
-  '#14b8a6', // Teal
+  '#fab617', // 1. Primary yellow
+  '#ff8c00', // 2. Orange
+  '#22d3ee', // 3. Cyan
+  '#8b5cf6', // 4. Purple
+  '#10b981', // 5. Green
+  '#ef4444', // 6. Red
+  '#3b82f6', // 7. Blue
+  '#f59e0b', // 8. Amber
+  '#ec4899', // 9. Pink
+  '#14b8a6', // 10. Teal
+  '#fbbf24', // 11. Gold
+  '#fb923c', // 12. Bright Orange
+  '#38bdf8', // 13. Sky Blue
+  '#a78bfa', // 14. Light Purple
+  '#4ade80', // 15. Lime Green
+  '#f87171', // 16. Coral Red
+  '#60a5fa', // 17. Light Blue
+  '#fcd34d', // 18. Sunny Yellow
+  '#f472b6', // 19. Hot Pink
+  '#2dd4bf', // 20. Turquoise
+  '#fdba74', // 21. Peach
+  '#06b6d4', // 22. Cyan Blue
+  '#c084fc', // 23. Lavender
+  '#34d399', // 24. Mint Green
+  '#fb7185', // 25. Rose
+  '#818cf8', // 26. Indigo
+  '#fde047', // 27. Lemon Yellow
+  '#f9a8d4', // 28. Light Pink
+  '#5eead4', // 29. Aqua
+  '#f97316', // 30. Deep Orange
 ];
 
 

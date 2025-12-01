@@ -342,11 +342,11 @@ export const batchVerifyWallets = action({
       }))
     }))
   },
-  handler: async (ctx, args) => {
-    const results = [];
+  handler: async (ctx, args): Promise<{ success: boolean; verifications: any[]; totalWallets: number; verifiedCount: number }> => {
+    const results: any[] = [];
 
     for (const wallet of args.wallets) {
-      const result = await ctx.runAction(api.blockchainVerification.verifyNFTOwnership, {
+      const result: any = await ctx.runAction(api.blockchainVerification.verifyNFTOwnership, {
         stakeAddress: wallet.stakeAddress,
         walletReportedMeks: wallet.meks
       });
@@ -440,7 +440,7 @@ export const getVerificationStatus = action({
   args: {
     stakeAddress: v.string()
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{ hasRecentVerification: boolean; lastVerified: number | null; verified: boolean; source: string | null }> => {
     // Check if we have a recent verification
     const cacheKey = `verify_${args.stakeAddress}`;
     const cached = verificationCache.get(cacheKey);
@@ -455,7 +455,7 @@ export const getVerificationStatus = action({
     }
 
     // Check database for last verification
-    const lastVerification = await ctx.runQuery(api.auditLogs.getLastVerification, {
+    const lastVerification: any = await ctx.runQuery(api.auditLogs.getLastVerification, {
       stakeAddress: args.stakeAddress
     });
 

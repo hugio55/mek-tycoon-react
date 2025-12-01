@@ -1,0 +1,340 @@
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
+
+// Default configuration values matching landing page
+const DEFAULT_CONFIG = {
+  starScale: 1,
+  starSpeed: 3,
+  starFrequency: 200,
+  twinkleAmount: 0,
+  twinkleSpeed: 1,
+  twinkleSpeedRandomness: 50,
+  sizeRandomness: 50,
+  starScale2: 1,
+  starSpeed2: 10,
+  starFrequency2: 100,
+  lineLength2: 2,
+  twinkleAmount2: 0,
+  twinkleSpeed2: 1,
+  twinkleSpeedRandomness2: 50,
+  sizeRandomness2: 50,
+  starScale3: 1,
+  starSpeed3: 10,
+  starFrequency3: 100,
+  lineLength3: 2,
+  spawnDelay3: 50,
+  twinkleAmount3: 0,
+  twinkleSpeed3: 1,
+  twinkleSpeedRandomness3: 50,
+  sizeRandomness3: 50,
+  bgStarTwinkleAmount: 30,
+  bgStarTwinkleSpeed: 0.5,
+  bgStarTwinkleSpeedRandomness: 50,
+  bgStarSizeRandomness: 50,
+  bgStarCount: 800,
+  bgStarMinBrightness: 0.1,
+  bgStarMaxBrightness: 0.4,
+  starFadePosition: 60,
+  starFadeFeatherSize: 200,
+  logoSize: 600,
+  logoYPosition: 0,
+  selectedFont: 'Orbitron',
+  descriptionFontSize: 18,
+  descriptionText: 'A futuristic idle tycoon game featuring collectible Mek NFTs. Build your empire through resource management, strategic crafting, and automated gold generation.',
+  descriptionXOffset: 0,
+  descriptionYOffset: 0,
+  bgYPosition: 0,
+  motionBlurEnabled: true,
+  blurIntensity: 50,
+  motionBlurEnabled2: true,
+  blurIntensity2: 50,
+  descriptionColor: 'text-yellow-400/90',
+  designVariation: 'modern' as 'modern' | 'industrial' | 'neon',
+  phaseHeaderFont: 'Orbitron',
+  phaseHeaderFontSize: 48,
+  phaseHeaderColor: 'text-white/70',
+  phaseDescriptionFont: 'Arial',
+  phaseDescriptionFontSize: 16,
+  soundLabelFont: 'Orbitron',
+  soundLabelSize: 16,
+  soundLabelColor: 'text-yellow-400/90',
+  soundLabelVerticalOffset: 0,
+  soundLabelHorizontalOffset: 0,
+  powerButtonScale: 1,
+  powerButtonVerticalOffset: 0,
+  powerButtonHorizontalOffset: 0,
+  powerButtonGlowEnabled: true,
+  speakerIconStyle: 'minimal' as 'minimal' | 'geometric' | 'bars' | 'hologram' | 'pulse',
+  phaseImageDarkening: 30,
+  phaseBlurAmount: 20,
+  phaseBlurAmountSelected: 5,
+  phaseColumnHeight: 288,
+  phaseFadePosition: 50,
+  phaseImage1: '',
+  phaseImage2: '',
+  phaseImage3: '',
+  phaseImage4: '',
+  phaseImageBlendMode: 'normal' as 'normal' | 'screen' | 'lighten' | 'lighter',
+  phaseHoverDarkeningIntensity: 90,
+  phaseIdleBackdropBlur: 0,
+  phaseImageIdleOpacity: 100,
+  phaseColumnYOffset: 0,
+  descriptionCardBlur: 40,
+  descriptionCardDarkness: 40,
+  descriptionCardBorder: true,
+  logoFadeDuration: 1000,
+  lightboxBackdropDarkness: 95,
+  audioToggleSize: 96,
+  joinBetaFont: 'Orbitron',
+  joinBetaFontSize: 32,
+  joinBetaColor: 'text-white',
+  joinBetaHorizontalOffset: 0,
+  joinBetaVerticalOffset: 0,
+};
+
+// Get the current landing debug settings (returns default if not found)
+export const getLandingDebugSettings = query({
+  args: {},
+  handler: async (ctx) => {
+    // There should only be one settings document
+    const settings = await ctx.db
+      .query("landingDebugSettings")
+      .first();
+
+    if (!settings) {
+      return DEFAULT_CONFIG;
+    }
+
+    // Merge with defaults to ensure all fields exist
+    return { ...DEFAULT_CONFIG, ...settings.config };
+  },
+});
+
+// Update landing debug settings (creates if not exists)
+export const updateLandingDebugSettings = mutation({
+  args: {
+    config: v.any(), // Full config object
+  },
+  handler: async (ctx, args) => {
+    // Check if settings document exists
+    const existing = await ctx.db
+      .query("landingDebugSettings")
+      .first();
+
+    if (existing) {
+      // Update existing settings
+      await ctx.db.patch(existing._id, {
+        config: args.config,
+        updatedAt: Date.now(),
+      });
+      return existing._id;
+    } else {
+      // Create new settings document
+      const id = await ctx.db.insert("landingDebugSettings", {
+        config: args.config,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      return id;
+    }
+  },
+});
+
+// Reset settings to defaults
+export const resetLandingDebugSettings = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const existing = await ctx.db
+      .query("landingDebugSettings")
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        config: DEFAULT_CONFIG,
+        updatedAt: Date.now(),
+      });
+    } else {
+      await ctx.db.insert("landingDebugSettings", {
+        config: DEFAULT_CONFIG,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
+  },
+});
+
+// Partial update (only update specific fields)
+export const partialUpdateLandingDebugSettings = mutation({
+  args: {
+    updates: v.any(), // Partial config object
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("landingDebugSettings")
+      .first();
+
+    if (existing) {
+      // Merge updates with existing config
+      const updatedConfig = { ...existing.config, ...args.updates };
+      await ctx.db.patch(existing._id, {
+        config: updatedConfig,
+        updatedAt: Date.now(),
+      });
+      return existing._id;
+    } else {
+      // Create new settings with defaults + updates
+      const newConfig = { ...DEFAULT_CONFIG, ...args.updates };
+      const id = await ctx.db.insert("landingDebugSettings", {
+        config: newConfig,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      return id;
+    }
+  },
+});
+
+// Get defaults (useful for reset button)
+export const getDefaultConfig = query({
+  args: {},
+  handler: async () => {
+    return DEFAULT_CONFIG;
+  },
+});
+
+// Get RAW database record with timestamps (for debugging)
+export const getRawLandingDebugSettings = query({
+  args: {},
+  handler: async (ctx) => {
+    const settings = await ctx.db
+      .query("landingDebugSettings")
+      .first();
+
+    if (!settings) {
+      return null;
+    }
+
+    return {
+      _id: settings._id,
+      _creationTime: settings._creationTime,
+      createdAt: settings.createdAt,
+      updatedAt: settings.updatedAt,
+      config: settings.config,
+      // Show sample config values for quick diagnosis
+      sampleValues: {
+        logoSize: settings.config.logoSize,
+        starScale: settings.config.starScale,
+        bgStarCount: settings.config.bgStarCount,
+        selectedFont: settings.config.selectedFont,
+        descriptionFontSize: settings.config.descriptionFontSize,
+      }
+    };
+  },
+});
+
+// BACKUP: Create a backup of current settings before updating
+export const createBackup = mutation({
+  args: {
+    config: v.any(), // Config to backup
+    description: v.optional(v.string()), // Optional description
+  },
+  handler: async (ctx, args) => {
+    // Insert backup into history table
+    const backupId = await ctx.db.insert("landingDebugSettingsHistory", {
+      config: args.config,
+      timestamp: Date.now(),
+      description: args.description,
+    });
+
+    // Keep only last 50 backups - delete oldest ones
+    const allBackups = await ctx.db
+      .query("landingDebugSettingsHistory")
+      .withIndex("by_timestamp")
+      .order("desc")
+      .collect();
+
+    // Delete backups beyond 50
+    if (allBackups.length > 50) {
+      const backupsToDelete = allBackups.slice(50);
+      for (const backup of backupsToDelete) {
+        await ctx.db.delete(backup._id);
+      }
+    }
+
+    return backupId;
+  },
+});
+
+// Get backup history (last 50 backups)
+export const getBackupHistory = query({
+  args: {},
+  handler: async (ctx) => {
+    const backups = await ctx.db
+      .query("landingDebugSettingsHistory")
+      .withIndex("by_timestamp")
+      .order("desc")
+      .take(50);
+
+    return backups.map(backup => ({
+      _id: backup._id,
+      timestamp: backup.timestamp,
+      description: backup.description,
+      // Sample values for preview
+      sampleValues: {
+        logoSize: backup.config.logoSize,
+        starScale: backup.config.starScale,
+        bgStarCount: backup.config.bgStarCount,
+        selectedFont: backup.config.selectedFont,
+      }
+    }));
+  },
+});
+
+// Restore from a specific backup (with merge strategy for schema evolution)
+export const restoreFromBackup = mutation({
+  args: {
+    backupId: v.id("landingDebugSettingsHistory"),
+  },
+  handler: async (ctx, args) => {
+    // Get the backup
+    const backup = await ctx.db.get(args.backupId);
+    if (!backup) {
+      throw new Error("Backup not found");
+    }
+
+    // Create a backup of current state before restoring (meta-backup!)
+    const currentSettings = await ctx.db
+      .query("landingDebugSettings")
+      .first();
+
+    if (currentSettings) {
+      await ctx.db.insert("landingDebugSettingsHistory", {
+        config: currentSettings.config,
+        timestamp: Date.now(),
+        description: "Auto-backup before restore",
+      });
+    }
+
+    // MERGE STRATEGY: Apply backup values to current schema
+    // 1. Start with current defaults (includes any new sliders)
+    // 2. Overlay backup values (preserves tuned settings)
+    // 3. Orphaned values in backup are ignored (removed sliders)
+    const mergedConfig = { ...DEFAULT_CONFIG, ...backup.config };
+
+    // Update current settings with merged backup data
+    if (currentSettings) {
+      await ctx.db.patch(currentSettings._id, {
+        config: mergedConfig,
+        updatedAt: Date.now(),
+      });
+    } else {
+      await ctx.db.insert("landingDebugSettings", {
+        config: mergedConfig,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
+
+    return { success: true, restoredFrom: backup.timestamp };
+  },
+});

@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
 /**
@@ -15,8 +15,8 @@ import { Id } from "./_generated/dataModel";
  * - Uses campaign-scoped inventory queries
  */
 
-const RESERVATION_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
-const GRACE_PERIOD = 30 * 1000; // 30 seconds
+const RESERVATION_TIMEOUT = 25 * 60 * 1000; // 25 minutes in milliseconds (5-min buffer beyond NMKR's 20-min window)
+const GRACE_PERIOD = 5 * 1000; // 5 seconds (minimal grace for network delays)
 
 // ============================================================================
 // CAMPAIGN-SCOPED RESERVATION MUTATIONS
@@ -76,38 +76,51 @@ export const createCampaignReservation = mutation({
     // First, clean up any expired reservations for this campaign
     await cleanupExpiredCampaignReservations(ctx, args.campaignId, now);
 
-    // Check if user already has an active reservation in THIS campaign
-    const existingReservation = await ctx.db
-      .query("commemorativeNFTReservations")
+    // PHASE 2: Check inventory table for active reservation (NEW - single source of truth)
+    const existingInventoryReservation = await ctx.db
+      .query("commemorativeNFTInventory")
       .withIndex("by_campaign_and_wallet", (q) =>
         q.eq("campaignId", args.campaignId).eq("reservedBy", args.walletAddress)
       )
-      .filter((q) => q.eq(q.field("status"), "active"))
+      .filter((q) => q.eq(q.field("status"), "reserved"))
       .first();
 
-    if (existingReservation) {
-      console.log('[CAMPAIGN RESERVATION] User already has active reservation in this campaign:', existingReservation.nftNumber);
+    if (existingInventoryReservation) {
+      console.log('[CAMPAIGN RESERVATION] User already has active reservation in this campaign:', existingInventoryReservation.nftNumber);
 
-      // Return the existing reservation info
-      const existingNFT = await ctx.db.get(existingReservation.nftInventoryId);
       return {
         success: true,
-        reservation: existingReservation,
-        nft: existingNFT,
+        reservation: {
+          _id: existingInventoryReservation._id,
+          campaignId: args.campaignId,
+          nftInventoryId: existingInventoryReservation._id, // Same as reservation ID in new system
+          nftUid: existingInventoryReservation.nftUid,
+          nftNumber: existingInventoryReservation.nftNumber,
+          reservedBy: existingInventoryReservation.reservedBy!,
+          reservedAt: existingInventoryReservation.reservedAt!,
+          expiresAt: existingInventoryReservation.expiresAt!,
+          status: "active" as const,
+          paymentWindowOpenedAt: existingInventoryReservation.paymentWindowOpenedAt,
+          paymentWindowClosedAt: existingInventoryReservation.paymentWindowClosedAt,
+        },
+        nft: existingInventoryReservation,
         isExisting: true,
       };
     }
 
-    // Check if user has already completed a reservation in this campaign (one per user per campaign)
+    // PHASE 2: Check if user has already completed (sold NFT in inventory)
+    // CRITICAL FIX: Must check soldTo field, not reservedBy (reservedBy is cleared on sale)
+    // Since we don't have a by_campaign_and_soldTo index, we query by campaign+status then filter
     const hasCompleted = await ctx.db
-      .query("commemorativeNFTReservations")
-      .withIndex("by_campaign_and_wallet", (q) =>
-        q.eq("campaignId", args.campaignId).eq("reservedBy", args.walletAddress)
+      .query("commemorativeNFTInventory")
+      .withIndex("by_campaign_and_status", (q) =>
+        q.eq("campaignId", args.campaignId).eq("status", "sold")
       )
-      .filter((q) => q.eq(q.field("status"), "completed"))
+      .filter((q) => q.eq(q.field("soldTo"), args.walletAddress))
       .first();
 
     if (hasCompleted) {
+      console.log('[CAMPAIGN RESERVATION] User already claimed NFT:', hasCompleted.nftNumber, hasCompleted.name);
       return {
         success: false,
         error: `You have already claimed an NFT from the "${campaign.name}" campaign`,
@@ -133,8 +146,18 @@ export const createCampaignReservation = mutation({
 
     console.log('[CAMPAIGN RESERVATION] Found available NFT:', availableNFT.nftNumber, availableNFT.name);
 
-    // Create the reservation
+    // PHASE 2: Single atomic operation - update inventory with reservation data
     const expiresAt = now + RESERVATION_TIMEOUT;
+    await ctx.db.patch(availableNFT._id, {
+      status: "reserved",
+      reservedBy: args.walletAddress,
+      reservedAt: now,
+      expiresAt,
+      paymentWindowOpenedAt: undefined, // Reset payment window fields
+      paymentWindowClosedAt: undefined,
+    });
+
+    // PHASE 2: Dual-write to old table for safety (remove in Phase 3)
     const reservationId = await ctx.db.insert("commemorativeNFTReservations", {
       campaignId: args.campaignId,
       nftInventoryId: availableNFT._id,
@@ -146,11 +169,6 @@ export const createCampaignReservation = mutation({
       status: "active",
     });
 
-    // Update NFT inventory status to reserved
-    await ctx.db.patch(availableNFT._id, {
-      status: "reserved",
-    });
-
     // Update campaign counters
     await ctx.db.patch(args.campaignId, {
       availableNFTs: campaign.availableNFTs - 1,
@@ -158,12 +176,15 @@ export const createCampaignReservation = mutation({
       updatedAt: now,
     });
 
-    console.log('[CAMPAIGN RESERVATION] Created reservation:', reservationId, 'for NFT:', availableNFT.nftNumber, 'in campaign:', campaign.name);
+    console.log('[CAMPAIGN RESERVATION] Created reservation:', availableNFT._id, 'for NFT:', availableNFT.nftNumber, 'in campaign:', campaign.name);
+    console.log('[CAMPAIGN RESERVATION] (Phase 2: Dual-write legacy ID:', reservationId, ')');
 
+    // PHASE 2: Return inventory ID as primary reservation ID
+    // The inventory row IS the reservation now
     return {
       success: true,
       reservation: {
-        _id: reservationId,
+        _id: availableNFT._id, // Inventory ID is now the reservation ID
         campaignId: args.campaignId,
         nftInventoryId: availableNFT._id,
         nftUid: availableNFT.nftUid,
@@ -172,6 +193,7 @@ export const createCampaignReservation = mutation({
         reservedAt: now,
         expiresAt,
         status: "active" as const,
+        legacyReservationId: reservationId, // Keep old ID for dual-write compatibility
       },
       nft: availableNFT,
       campaign: {
@@ -186,30 +208,104 @@ export const createCampaignReservation = mutation({
 /**
  * Complete a reservation (user successfully paid)
  *
- * Campaign-aware version that updates campaign counters
+ * PHASE 2: Now accepts inventory IDs (new system) or legacy reservation IDs
+ * Tries inventory table first, falls back to old table for compatibility
  */
 export const completeCampaignReservation = mutation({
   args: {
-    reservationId: v.id("commemorativeNFTReservations"),
+    reservationId: v.union(
+      v.id("commemorativeNFTInventory"),
+      v.id("commemorativeNFTReservations")
+    ),
     transactionHash: v.string(),
   },
   handler: async (ctx, args) => {
-    const reservation = await ctx.db.get(args.reservationId);
+    // PHASE 2: Try inventory table first (new system)
+    const inventoryRow = await ctx.db.get(args.reservationId as Id<"commemorativeNFTInventory">);
+
+    if (inventoryRow && inventoryRow.status === "reserved") {
+      // Look up company name for historical tracking
+      const walletAddress = inventoryRow.reservedBy;
+      let companyNameAtSale: string | undefined;
+
+      if (walletAddress) {
+        const goldMiningRecord = await ctx.db
+          .query("goldMining")
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+          .first();
+        companyNameAtSale = goldMiningRecord?.companyName || undefined;
+      }
+
+      // New system: Inventory row IS the reservation
+      await ctx.db.patch(inventoryRow._id, {
+        status: "sold",
+        soldTo: walletAddress,
+        soldAt: Date.now(),
+        companyNameAtSale,
+        // Keep reservation fields for record-keeping
+      });
+
+      // Update campaign counters
+      if (inventoryRow.campaignId) {
+        const campaign = await ctx.db.get(inventoryRow.campaignId);
+        if (campaign) {
+          await ctx.db.patch(inventoryRow.campaignId, {
+            reservedNFTs: Math.max(0, campaign.reservedNFTs - 1),
+            soldNFTs: campaign.soldNFTs + 1,
+            updatedAt: Date.now(),
+          });
+        }
+      }
+
+      // PHASE 2: Dual-write to old table if exists
+      const legacyReservation = await ctx.db
+        .query("commemorativeNFTReservations")
+        .withIndex("by_inventory_id", (q) => q.eq("nftInventoryId", inventoryRow._id))
+        .filter((q) => q.eq(q.field("status"), "active"))
+        .first();
+
+      if (legacyReservation) {
+        await ctx.db.patch(legacyReservation._id, {
+          status: "completed",
+        });
+      }
+
+      console.log('[CAMPAIGN RESERVATION] Completed reservation (inventory ID):', inventoryRow._id, 'for NFT:', inventoryRow.nftNumber);
+      return { success: true };
+    }
+
+    // Fallback: Legacy reservation system
+    const reservation = await ctx.db.get(args.reservationId as Id<"commemorativeNFTReservations">);
     if (!reservation) {
       return { success: false, error: "Reservation not found" };
     }
 
+    // Look up company name for historical tracking
+    const walletAddress = reservation.reservedBy;
+    let companyNameAtSale: string | undefined;
+
+    if (walletAddress) {
+      const goldMiningRecord = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+        .first();
+      companyNameAtSale = goldMiningRecord?.companyName || undefined;
+    }
+
     // Update reservation status
-    await ctx.db.patch(args.reservationId, {
+    await ctx.db.patch(args.reservationId as Id<"commemorativeNFTReservations">, {
       status: "completed",
     });
 
     // Update NFT inventory to sold
     await ctx.db.patch(reservation.nftInventoryId, {
       status: "sold",
+      soldTo: walletAddress,
+      soldAt: Date.now(),
+      companyNameAtSale,
     });
 
-    // Update campaign counters if this is a campaign-scoped reservation
+    // Update campaign counters
     if (reservation.campaignId) {
       const campaign = await ctx.db.get(reservation.campaignId);
       if (campaign) {
@@ -221,8 +317,7 @@ export const completeCampaignReservation = mutation({
       }
     }
 
-    console.log('[CAMPAIGN RESERVATION] Completed reservation:', args.reservationId, 'for NFT:', reservation.nftNumber);
-
+    console.log('[CAMPAIGN RESERVATION] Completed reservation (legacy ID):', args.reservationId, 'for NFT:', reservation.nftNumber);
     return { success: true };
   },
 });
@@ -230,7 +325,7 @@ export const completeCampaignReservation = mutation({
 /**
  * Complete reservation by wallet address (called by webhook)
  *
- * Campaign-aware version that finds reservation within specific campaign
+ * PHASE 2: Reads from inventory table (new system)
  */
 export const completeCampaignReservationByWallet = mutation({
   args: {
@@ -241,30 +336,36 @@ export const completeCampaignReservationByWallet = mutation({
   handler: async (ctx, args) => {
     console.log('[CAMPAIGN RESERVATION] Webhook attempting to complete reservation for wallet:', args.walletAddress, 'in campaign:', args.campaignId);
 
-    // Find active reservation for this wallet in this campaign
-    const reservation = await ctx.db
-      .query("commemorativeNFTReservations")
+    // PHASE 2: Find active reservation in inventory table
+    const inventoryRow = await ctx.db
+      .query("commemorativeNFTInventory")
       .withIndex("by_campaign_and_wallet", (q) =>
         q.eq("campaignId", args.campaignId).eq("reservedBy", args.walletAddress)
       )
-      .filter((q) => q.eq(q.field("status"), "active"))
+      .filter((q) => q.eq(q.field("status"), "reserved"))
       .first();
 
-    if (!reservation) {
+    if (!inventoryRow) {
       console.log('[CAMPAIGN RESERVATION] No active reservation found for wallet:', args.walletAddress, 'in campaign:', args.campaignId);
       return { success: false, error: "No active reservation found" };
     }
 
-    console.log('[CAMPAIGN RESERVATION] Found reservation:', reservation._id, 'NFT:', reservation.nftNumber);
+    console.log('[CAMPAIGN RESERVATION] Found reservation:', inventoryRow._id, 'NFT:', inventoryRow.nftNumber);
 
-    // Update reservation status
-    await ctx.db.patch(reservation._id, {
-      status: "completed",
-    });
+    // Look up company name for historical tracking
+    let companyNameAtSale: string | undefined;
+    const goldMiningRecord = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+    companyNameAtSale = goldMiningRecord?.companyName || undefined;
 
-    // Update NFT inventory to sold
-    await ctx.db.patch(reservation.nftInventoryId, {
+    // Update inventory to sold (keeping reservation fields for record)
+    await ctx.db.patch(inventoryRow._id, {
       status: "sold",
+      soldTo: args.walletAddress,
+      soldAt: Date.now(),
+      companyNameAtSale,
     });
 
     // Update campaign counters
@@ -277,24 +378,88 @@ export const completeCampaignReservationByWallet = mutation({
       });
     }
 
-    console.log('[CAMPAIGN RESERVATION] Completed reservation from webhook:', reservation._id, 'for NFT:', reservation.nftNumber);
+    // PHASE 2: Dual-write to old table if exists
+    const legacyReservation = await ctx.db
+      .query("commemorativeNFTReservations")
+      .withIndex("by_campaign_and_wallet", (q) =>
+        q.eq("campaignId", args.campaignId).eq("reservedBy", args.walletAddress)
+      )
+      .filter((q) => q.eq(q.field("status"), "active"))
+      .first();
 
-    return { success: true, reservationId: reservation._id, nftNumber: reservation.nftNumber };
+    if (legacyReservation) {
+      await ctx.db.patch(legacyReservation._id, {
+        status: "completed",
+      });
+    }
+
+    console.log('[CAMPAIGN RESERVATION] Completed reservation from webhook:', inventoryRow._id, 'for NFT:', inventoryRow.nftNumber);
+
+    return { success: true, reservationId: inventoryRow._id, nftNumber: inventoryRow.nftNumber };
   },
 });
 
 /**
  * Release a reservation (user cancelled or expired)
  *
- * Campaign-aware version that updates campaign counters
+ * PHASE 2: Now accepts inventory IDs (new system) or legacy reservation IDs
+ * Clears reservation fields and returns NFT to available pool
  */
 export const releaseCampaignReservation = mutation({
   args: {
-    reservationId: v.id("commemorativeNFTReservations"),
+    reservationId: v.union(
+      v.id("commemorativeNFTInventory"),
+      v.id("commemorativeNFTReservations")
+    ),
     reason: v.optional(v.union(v.literal("cancelled"), v.literal("expired"))),
   },
   handler: async (ctx, args) => {
-    const reservation = await ctx.db.get(args.reservationId);
+    // PHASE 2: Try inventory table first (new system)
+    const inventoryRow = await ctx.db.get(args.reservationId as Id<"commemorativeNFTInventory">);
+
+    if (inventoryRow && inventoryRow.status === "reserved") {
+      // New system: Clear reservation fields and set status to available
+      await ctx.db.patch(inventoryRow._id, {
+        status: "available",
+        reservedBy: undefined,
+        reservedAt: undefined,
+        expiresAt: undefined,
+        paymentWindowOpenedAt: undefined,
+        paymentWindowClosedAt: undefined,
+      });
+
+      // Update campaign counters
+      if (inventoryRow.campaignId) {
+        const campaign = await ctx.db.get(inventoryRow.campaignId);
+        if (campaign) {
+          await ctx.db.patch(inventoryRow.campaignId, {
+            availableNFTs: campaign.availableNFTs + 1,
+            reservedNFTs: Math.max(0, campaign.reservedNFTs - 1),
+            updatedAt: Date.now(),
+          });
+        }
+      }
+
+      // PHASE 2: Dual-write to old table if exists
+      const legacyReservation = await ctx.db
+        .query("commemorativeNFTReservations")
+        .withIndex("by_inventory_id", (q) => q.eq("nftInventoryId", inventoryRow._id))
+        .filter((q) => q.eq(q.field("status"), "active"))
+        .first();
+
+      if (legacyReservation) {
+        const newStatus = args.reason === "expired" ? "expired" : "cancelled";
+        await ctx.db.patch(legacyReservation._id, {
+          status: newStatus,
+        });
+      }
+
+      console.log('[CAMPAIGN RESERVATION] Released reservation (inventory ID):', inventoryRow._id, 'NFT:', inventoryRow.nftNumber, 'reason:', args.reason);
+      return { success: true };
+    }
+
+    // Fallback: Legacy reservation system
+    const reservation = await ctx.db.get(args.reservationId as Id<"commemorativeNFTReservations">);
     if (!reservation) {
       return { success: false, error: "Reservation not found" };
     }
@@ -302,18 +467,18 @@ export const releaseCampaignReservation = mutation({
     const newStatus = args.reason === "expired" ? "expired" : "cancelled";
 
     // Update reservation status
-    await ctx.db.patch(args.reservationId, {
+    await ctx.db.patch(args.reservationId as Id<"commemorativeNFTReservations">, {
       status: newStatus,
     });
 
-    // Return NFT to available pool (unless it's already sold somehow)
+    // Return NFT to available pool
     const nft = await ctx.db.get(reservation.nftInventoryId);
     if (nft && nft.status === "reserved") {
       await ctx.db.patch(reservation.nftInventoryId, {
         status: "available",
       });
 
-      // Update campaign counters if this is a campaign-scoped reservation
+      // Update campaign counters
       if (reservation.campaignId) {
         const campaign = await ctx.db.get(reservation.campaignId);
         if (campaign) {
@@ -325,11 +490,10 @@ export const releaseCampaignReservation = mutation({
         }
       }
 
-      console.log('[CAMPAIGN RESERVATION] Released NFT back to pool:', reservation.nftNumber);
+      console.log('[CAMPAIGN RESERVATION] Released NFT back to pool (legacy):', reservation.nftNumber);
     }
 
-    console.log('[CAMPAIGN RESERVATION] Released reservation:', args.reservationId, 'reason:', newStatus);
-
+    console.log('[CAMPAIGN RESERVATION] Released reservation (legacy ID):', args.reservationId, 'reason:', newStatus);
     return { success: true };
   },
 });
@@ -340,6 +504,8 @@ export const releaseCampaignReservation = mutation({
 
 /**
  * Get active reservation for a user in a specific campaign
+ *
+ * PHASE 2: Reads from inventory table (new system)
  */
 export const getActiveCampaignReservation = query({
   args: {
@@ -349,41 +515,62 @@ export const getActiveCampaignReservation = query({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    // Find active reservation for this user in this campaign
-    const reservation = await ctx.db
-      .query("commemorativeNFTReservations")
+    // PHASE 2: Find active reservation in inventory table
+    const inventoryRow = await ctx.db
+      .query("commemorativeNFTInventory")
       .withIndex("by_campaign_and_wallet", (q) =>
         q.eq("campaignId", args.campaignId).eq("reservedBy", args.walletAddress)
       )
-      .filter((q) => q.eq(q.field("status"), "active"))
+      .filter((q) => q.eq(q.field("status"), "reserved"))
       .first();
 
-    if (!reservation) {
+    if (!inventoryRow || !inventoryRow.expiresAt) {
       return null;
     }
 
     // Check if expired
-    if (reservation.expiresAt < now) {
-      console.log('[CAMPAIGN RESERVATION] Reservation expired:', reservation._id);
+    if (inventoryRow.expiresAt < now) {
+      console.log('[CAMPAIGN RESERVATION] Reservation expired:', inventoryRow._id);
       return {
-        ...reservation,
+        _id: inventoryRow._id,
+        campaignId: args.campaignId,
+        nftInventoryId: inventoryRow._id,
+        nftUid: inventoryRow.nftUid,
+        nftNumber: inventoryRow.nftNumber,
+        reservedBy: inventoryRow.reservedBy!,
+        reservedAt: inventoryRow.reservedAt!,
+        expiresAt: inventoryRow.expiresAt,
+        status: "active" as const,
+        paymentWindowOpenedAt: inventoryRow.paymentWindowOpenedAt,
+        paymentWindowClosedAt: inventoryRow.paymentWindowClosedAt,
+        nft: inventoryRow,
+        campaign: null,
         isExpired: true,
+        remainingMs: 0,
+        isPaymentWindowOpen: false,
       };
     }
-
-    // Get the NFT details
-    const nft = await ctx.db.get(reservation.nftInventoryId);
 
     // Get campaign details
     const campaign = await ctx.db.get(args.campaignId);
 
     // Calculate remaining time
-    const remainingMs = Math.max(0, reservation.expiresAt - now);
-    const isPaymentWindowOpen = !!reservation.paymentWindowOpenedAt && !reservation.paymentWindowClosedAt;
+    const remainingMs = Math.max(0, inventoryRow.expiresAt - now);
+    const isPaymentWindowOpen = !!inventoryRow.paymentWindowOpenedAt && !inventoryRow.paymentWindowClosedAt;
 
     return {
-      ...reservation,
-      nft,
+      _id: inventoryRow._id,
+      campaignId: args.campaignId,
+      nftInventoryId: inventoryRow._id,
+      nftUid: inventoryRow.nftUid,
+      nftNumber: inventoryRow.nftNumber,
+      reservedBy: inventoryRow.reservedBy!,
+      reservedAt: inventoryRow.reservedAt!,
+      expiresAt: inventoryRow.expiresAt,
+      status: "active" as const,
+      paymentWindowOpenedAt: inventoryRow.paymentWindowOpenedAt,
+      paymentWindowClosedAt: inventoryRow.paymentWindowClosedAt,
+      nft: inventoryRow,
       campaign: campaign ? {
         name: campaign.name,
         description: campaign.description,
@@ -428,14 +615,49 @@ export const getCampaignReservations = query({
 // PAYMENT WINDOW TRACKING (Same as original)
 // ============================================================================
 
+/**
+ * Mark payment window opened
+ *
+ * PHASE 2: Accepts inventory IDs (new system) or legacy reservation IDs
+ */
 export const markPaymentWindowOpened = mutation({
   args: {
-    reservationId: v.id("commemorativeNFTReservations"),
+    reservationId: v.union(
+      v.id("commemorativeNFTInventory"),
+      v.id("commemorativeNFTReservations")
+    ),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    const reservation = await ctx.db.get(args.reservationId);
+    // PHASE 2: Try inventory table first (new system)
+    const inventoryRow = await ctx.db.get(args.reservationId as Id<"commemorativeNFTInventory">);
+
+    if (inventoryRow && inventoryRow.status === "reserved") {
+      // Update inventory row
+      await ctx.db.patch(inventoryRow._id, {
+        paymentWindowOpenedAt: now,
+      });
+
+      // PHASE 2: Dual-write to old table if exists
+      const legacyReservation = await ctx.db
+        .query("commemorativeNFTReservations")
+        .withIndex("by_inventory_id", (q) => q.eq("nftInventoryId", inventoryRow._id))
+        .filter((q) => q.eq(q.field("status"), "active"))
+        .first();
+
+      if (legacyReservation) {
+        await ctx.db.patch(legacyReservation._id, {
+          paymentWindowOpenedAt: now,
+        });
+      }
+
+      console.log('[CAMPAIGN RESERVATION] Payment window opened (inventory ID):', inventoryRow._id);
+      return { success: true };
+    }
+
+    // Fallback: Legacy reservation system
+    const reservation = await ctx.db.get(args.reservationId as Id<"commemorativeNFTReservations">);
     if (!reservation) {
       console.log('[CAMPAIGN RESERVATION] Reservation not found:', args.reservationId);
       return { success: false, error: "Reservation not found" };
@@ -446,24 +668,58 @@ export const markPaymentWindowOpened = mutation({
       return { success: false, error: "Reservation not active" };
     }
 
-    await ctx.db.patch(args.reservationId, {
+    await ctx.db.patch(args.reservationId as Id<"commemorativeNFTReservations">, {
       paymentWindowOpenedAt: now,
     });
 
-    console.log('[CAMPAIGN RESERVATION] Payment window opened for reservation:', args.reservationId);
-
+    console.log('[CAMPAIGN RESERVATION] Payment window opened (legacy ID):', args.reservationId);
     return { success: true };
   },
 });
 
+/**
+ * Mark payment window closed
+ *
+ * PHASE 2: Accepts inventory IDs (new system) or legacy reservation IDs
+ */
 export const markPaymentWindowClosed = mutation({
   args: {
-    reservationId: v.id("commemorativeNFTReservations"),
+    reservationId: v.union(
+      v.id("commemorativeNFTInventory"),
+      v.id("commemorativeNFTReservations")
+    ),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    const reservation = await ctx.db.get(args.reservationId);
+    // PHASE 2: Try inventory table first (new system)
+    const inventoryRow = await ctx.db.get(args.reservationId as Id<"commemorativeNFTInventory">);
+
+    if (inventoryRow && inventoryRow.status === "reserved") {
+      // Update inventory row
+      await ctx.db.patch(inventoryRow._id, {
+        paymentWindowClosedAt: now,
+      });
+
+      // PHASE 2: Dual-write to old table if exists
+      const legacyReservation = await ctx.db
+        .query("commemorativeNFTReservations")
+        .withIndex("by_inventory_id", (q) => q.eq("nftInventoryId", inventoryRow._id))
+        .filter((q) => q.eq(q.field("status"), "active"))
+        .first();
+
+      if (legacyReservation) {
+        await ctx.db.patch(legacyReservation._id, {
+          paymentWindowClosedAt: now,
+        });
+      }
+
+      console.log('[CAMPAIGN RESERVATION] Payment window closed (inventory ID):', inventoryRow._id);
+      return { success: true };
+    }
+
+    // Fallback: Legacy reservation system
+    const reservation = await ctx.db.get(args.reservationId as Id<"commemorativeNFTReservations">);
     if (!reservation) {
       return { success: false, error: "Reservation not found" };
     }
@@ -472,12 +728,11 @@ export const markPaymentWindowClosed = mutation({
       return { success: false, error: "Reservation not active" };
     }
 
-    await ctx.db.patch(args.reservationId, {
+    await ctx.db.patch(args.reservationId as Id<"commemorativeNFTReservations">, {
       paymentWindowClosedAt: now,
     });
 
-    console.log('[CAMPAIGN RESERVATION] Payment window closed for reservation:', args.reservationId);
-
+    console.log('[CAMPAIGN RESERVATION] Payment window closed (legacy ID):', args.reservationId);
     return { success: true };
   },
 });
@@ -488,37 +743,103 @@ export const markPaymentWindowClosed = mutation({
 
 /**
  * Cleanup expired reservations for a specific campaign
+ * Returns the number of expired reservations actually cleaned up
+ *
+ * PHASE 2: Reads from inventory table (new system)
  */
-async function cleanupExpiredCampaignReservations(ctx: any, campaignId: Id<"commemorativeCampaigns">, now: number) {
-  const expiredReservations = await ctx.db
-    .query("commemorativeNFTReservations")
-    .withIndex("by_campaign", (q) => q.eq("campaignId", campaignId))
+async function cleanupExpiredCampaignReservations(ctx: any, campaignId: Id<"commemorativeCampaigns">, now: number): Promise<number> {
+  console.log('[CLEANUP FUNCTION] Processing campaign:', campaignId, 'at', new Date(now).toISOString());
+
+  // PHASE 2: First, get ALL reserved items for this campaign (before expiration filter)
+  const allReservedForCampaign = await ctx.db
+    .query("commemorativeNFTInventory")
+    .withIndex("by_campaign_and_status", (q) =>
+      q.eq("campaignId", campaignId).eq("status", "reserved")
+    )
+    .collect();
+
+  console.log('[CLEANUP FUNCTION] Found', allReservedForCampaign.length, 'total reserved items for campaign');
+
+  // Log details about each reserved item AND check for broken reservations
+  const brokenReservations = [];
+  for (const item of allReservedForCampaign) {
+    const isExpired = item.expiresAt && item.expiresAt < (now - GRACE_PERIOD);
+
+    // CRITICAL: Check for broken reservations with undefined expiresAt
+    if (!item.expiresAt) {
+      console.warn('[CLEANUP FUNCTION] ⚠️ BROKEN RESERVATION DETECTED:', {
+        nftNumber: item.nftNumber,
+        name: item.name,
+        reservedBy: item.reservedBy,
+        reservedAt: item.reservedAt,
+        expiresAt: 'undefined',
+        issue: 'Cannot auto-expire without expiresAt timestamp',
+        fix: 'Run investigateFalseClaim.fixBrokenReservations mutation',
+      });
+      brokenReservations.push(item);
+      continue;
+    }
+
+    console.log('[CLEANUP FUNCTION] Reserved item:', {
+      nftNumber: item.nftNumber,
+      expiresAt: item.expiresAt,
+      expiresAtDate: new Date(item.expiresAt).toISOString(),
+      now: new Date(now).toISOString(),
+      threshold: new Date(now - GRACE_PERIOD).toISOString(),
+      isExpired,
+      hasExpiresAt: item.expiresAt !== undefined,
+    });
+  }
+
+  if (brokenReservations.length > 0) {
+    console.warn('[CLEANUP FUNCTION] ⚠️ Found', brokenReservations.length, 'broken reservation(s) that need manual fixing');
+  }
+
+  // PHASE 2: Find expired reservations in inventory table
+  const expiredInventoryRows = await ctx.db
+    .query("commemorativeNFTInventory")
+    .withIndex("by_campaign_and_status", (q) =>
+      q.eq("campaignId", campaignId).eq("status", "reserved")
+    )
     .filter((q: any) =>
       q.and(
-        q.eq(q.field("status"), "active"),
+        q.neq(q.field("expiresAt"), undefined),
         q.lt(q.field("expiresAt"), now - GRACE_PERIOD)
       )
     )
     .collect();
 
+  console.log('[CLEANUP FUNCTION] Found', expiredInventoryRows.length, 'EXPIRED items to clean up');
+
   const campaign = await ctx.db.get(campaignId);
   let releasedCount = 0;
 
-  for (const reservation of expiredReservations) {
-    console.log('[CAMPAIGN RESERVATION] Auto-expiring reservation:', reservation._id, 'NFT:', reservation.nftNumber);
+  for (const inventoryRow of expiredInventoryRows) {
+    console.log('[CAMPAIGN RESERVATION] Auto-expiring reservation:', inventoryRow._id, 'NFT:', inventoryRow.nftNumber);
 
-    // Mark as expired
-    await ctx.db.patch(reservation._id, {
-      status: "expired",
+    // Clear reservation fields and return to available
+    await ctx.db.patch(inventoryRow._id, {
+      status: "available",
+      reservedBy: undefined,
+      reservedAt: undefined,
+      expiresAt: undefined,
+      paymentWindowOpenedAt: undefined,
+      paymentWindowClosedAt: undefined,
     });
 
-    // Return NFT to available pool
-    const nft = await ctx.db.get(reservation.nftInventoryId);
-    if (nft && nft.status === "reserved") {
-      await ctx.db.patch(reservation.nftInventoryId, {
-        status: "available",
+    releasedCount++;
+
+    // PHASE 2: Dual-write to old table if exists
+    const legacyReservation = await ctx.db
+      .query("commemorativeNFTReservations")
+      .withIndex("by_inventory_id", (q) => q.eq("nftInventoryId", inventoryRow._id))
+      .filter((q: any) => q.eq(q.field("status"), "active"))
+      .first();
+
+    if (legacyReservation) {
+      await ctx.db.patch(legacyReservation._id, {
+        status: "expired",
       });
-      releasedCount++;
     }
   }
 
@@ -531,9 +852,11 @@ async function cleanupExpiredCampaignReservations(ctx: any, campaignId: Id<"comm
     });
   }
 
-  if (expiredReservations.length > 0) {
-    console.log('[CAMPAIGN RESERVATION] Cleaned up', expiredReservations.length, 'expired reservations for campaign:', campaignId);
+  if (expiredInventoryRows.length > 0) {
+    console.log('[CAMPAIGN RESERVATION] Cleaned up', expiredInventoryRows.length, 'expired reservations for campaign:', campaignId);
   }
+
+  return expiredInventoryRows.length;
 }
 
 /**
@@ -560,14 +883,158 @@ export const cleanupAllExpiredReservations = mutation({
     // Get all campaigns
     const campaigns = await ctx.db.query("commemorativeCampaigns").collect();
 
-    let totalCleaned = 0;
+    let totalExpiredReservations = 0;
     for (const campaign of campaigns) {
-      await cleanupExpiredCampaignReservations(ctx, campaign._id, now);
-      totalCleaned++;
+      const cleanedCount = await cleanupExpiredCampaignReservations(ctx, campaign._id, now);
+      totalExpiredReservations += cleanedCount;
     }
 
-    console.log('[CAMPAIGN RESERVATION] Cleaned up expired reservations for', totalCleaned, 'campaigns');
+    // Only log if we actually cleaned up expired reservations
+    if (totalExpiredReservations > 0) {
+      console.log('[CAMPAIGN RESERVATION] Cleaned up', totalExpiredReservations, 'expired reservations across', campaigns.length, 'campaigns');
+    }
 
-    return { success: true, campaignsProcessed: totalCleaned };
+    return { success: true, campaignsProcessed: campaigns.length, expiredReservationsCleaned: totalExpiredReservations };
+  },
+});
+
+/**
+ * INTERNAL: Cleanup ALL expired reservations (called by cron job)
+ *
+ * Runs every minute via cron to automatically expire reservations
+ * that have passed their 10-minute timeout window
+ *
+ * Only logs when actual cleanup work is performed (silent when no expired reservations exist)
+ */
+/**
+ * Toggle automatic reservation cleanup for a campaign
+ * When disabled, the cron job will skip this campaign
+ */
+export const toggleCampaignReservationCleanup = mutation({
+  args: {
+    campaignId: v.id("commemorativeCampaigns"),
+    enabled: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const campaign = await ctx.db.get(args.campaignId);
+
+    if (!campaign) {
+      throw new Error("Campaign not found");
+    }
+
+    await ctx.db.patch(args.campaignId, {
+      enableReservationCleanup: args.enabled,
+      updatedAt: Date.now(),
+    });
+
+    console.log(`[CAMPAIGN CLEANUP] Toggled cleanup for "${campaign.name}":`, args.enabled);
+
+    return { success: true, enabled: args.enabled };
+  },
+});
+
+// ============================================================================
+// CRON JOB: Cleanup Expired Reservations
+// ============================================================================
+
+/**
+ * Cron job that runs every 5 minutes to clean up expired reservations across all campaigns
+ * Skips campaigns where enableReservationCleanup is false
+ * Only logs when actual cleanup work is performed (silent when no expired reservations exist)
+ */
+export const internalCleanupExpiredReservations = internalMutation({
+  handler: async (ctx) => {
+    const now = Date.now();
+
+    console.log('[CRON CLEANUP] Starting cleanup check at:', new Date(now).toISOString());
+
+    // Get all campaigns
+    const campaigns = await ctx.db.query("commemorativeCampaigns").collect();
+    console.log('[CRON CLEANUP] Found', campaigns.length, 'campaigns to check');
+
+    // ALSO check inventory items without campaignId (might be orphaned)
+    const allReservedInventory = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_status", (q) => q.eq("status", "reserved"))
+      .collect();
+
+    console.log('[CRON CLEANUP] Found', allReservedInventory.length, 'total reserved inventory items');
+
+    // Log details about each reserved item
+    for (const item of allReservedInventory) {
+      const isExpired = item.expiresAt && item.expiresAt < now;
+      console.log('[CRON CLEANUP] Reserved item:', {
+        nftNumber: item.nftNumber,
+        campaignId: item.campaignId,
+        expiresAt: item.expiresAt,
+        expiresAtDate: item.expiresAt ? new Date(item.expiresAt).toISOString() : 'undefined',
+        isExpired,
+        now: new Date(now).toISOString(),
+      });
+    }
+
+    let totalExpiredReservations = 0;
+    let campaignsProcessed = 0;
+    let campaignsSkipped = 0;
+
+    for (const campaign of campaigns) {
+      // Check if cleanup is enabled for this campaign (defaults to true if not set)
+      const cleanupEnabled = campaign.enableReservationCleanup !== false;
+
+      if (!cleanupEnabled) {
+        console.log(`[CRON CLEANUP] Skipping campaign "${campaign.name}" - cleanup disabled`);
+        campaignsSkipped++;
+        continue;
+      }
+
+      const cleanedCount = await cleanupExpiredCampaignReservations(ctx, campaign._id, now);
+      totalExpiredReservations += cleanedCount;
+      campaignsProcessed++;
+    }
+
+    // ALSO clean up legacy reservations (Phase 1 system without campaignId)
+    // These are created by NMKRPayLightbox.tsx using commemorativeNFTReservations.ts
+    const LEGACY_GRACE_PERIOD = 5 * 1000; // 5 seconds
+    const legacyExpiredReservations = await ctx.db
+      .query("commemorativeNFTReservations")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .filter((q) => q.lt(q.field("expiresAt"), now - LEGACY_GRACE_PERIOD))
+      .collect();
+
+    let legacyCleanedCount = 0;
+    for (const reservation of legacyExpiredReservations) {
+      // Skip if it has a campaignId (already handled above)
+      if (reservation.campaignId) continue;
+
+      // Skip if payment window is open (user actively paying)
+      if (reservation.paymentWindowOpenedAt && !reservation.paymentWindowClosedAt) {
+        console.log('[CRON CLEANUP] Skipping legacy reservation with open payment window:', reservation._id);
+        continue;
+      }
+
+      console.log('[CRON CLEANUP] Cleaning legacy reservation:', reservation._id, 'NFT:', reservation.nftNumber);
+
+      // Mark as expired
+      await ctx.db.patch(reservation._id, { status: "expired" });
+
+      // Return NFT to available pool
+      const nft = await ctx.db.get(reservation.nftInventoryId);
+      if (nft && nft.status === "reserved") {
+        await ctx.db.patch(reservation.nftInventoryId, { status: "available" });
+      }
+
+      legacyCleanedCount++;
+    }
+
+    totalExpiredReservations += legacyCleanedCount;
+
+    // Only log when we actually found and cleaned up expired reservations
+    if (totalExpiredReservations > 0) {
+      console.log('[CRON CLEANUP] Cleaned up', totalExpiredReservations, 'expired reservations (', campaignsProcessed, 'campaigns,', legacyCleanedCount, 'legacy,', campaignsSkipped, 'skipped)');
+    } else {
+      console.log('[CRON CLEANUP] No expired reservations found to clean up (', campaignsProcessed, 'campaigns checked,', campaignsSkipped, 'skipped)');
+    }
+
+    return { success: true, campaignsProcessed: campaigns.length, expiredReservationsCleaned: totalExpiredReservations, legacyCleaned: legacyCleanedCount };
   },
 });

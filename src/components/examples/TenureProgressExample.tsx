@@ -19,8 +19,8 @@ import React from 'react';
 import TenureProgressBar from '@/components/ui/TenureProgressBar';
 import { useTenureProgress, formatTimeToLevelUp } from '@/hooks/useTenureProgress';
 import { useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
-import { Id } from '../../../convex/_generated/dataModel';
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 interface TenureProgressExampleProps {
   slotId: Id<"slots">;

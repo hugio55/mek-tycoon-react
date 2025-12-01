@@ -1,0 +1,95 @@
+/* Industrial Flip Card Styles */
+
+.industrial-flip-card-container {
+  width: 190px;
+  height: 254px;
+  perspective: 1000px;
+}
+
+.industrial-flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.industrial-flip-card-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.industrial-flip-card-front,
+.industrial-flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.industrial-flip-card-back {
+  transform: rotateY(180deg);
+}
+
+/* Hazard stripes overlay for front card */
+.hazard-stripes-overlay {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(250, 182, 23, 0.1),
+    rgba(250, 182, 23, 0.1) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+/* Rotating border glow effect for back side */
+.rotating-border-glow {
+  position: absolute;
+  inset: -4px;
+  border-radius: 8px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(250, 182, 23, 0.8) 30deg,
+    rgba(250, 182, 23, 1) 60deg,
+    rgba(255, 255, 255, 0.5) 90deg,
+    rgba(250, 182, 23, 1) 120deg,
+    rgba(250, 182, 23, 0.8) 150deg,
+    transparent 180deg,
+    transparent 360deg
+  );
+  animation: rotate-border 3s linear infinite;
+  filter: blur(8px);
+}
+
+@keyframes rotate-border {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Scan line effect for back side */
+.scan-line {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(250, 182, 23, 0.8),
+    transparent);
+  animation: scan-down 3s linear infinite;
+}
+
+@keyframes scan-down {
+  0% {
+    top: -100%;
+  }
+  100% {
+    top: 100%;
+  }
+}

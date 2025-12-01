@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
-import type { Id } from "../../../../convex/_generated/dataModel";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 
 interface NFTInventoryTableProps {
   campaignId: Id<"commemorativeCampaigns">;
@@ -15,11 +15,62 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [now, setNow] = useState(Date.now());
+  const [copiedWallet, setCopiedWallet] = useState<string | null>(null);
+
+  // Update "now" every second for countdown timers
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const inventory = useQuery(
     api.commemorativeCampaigns.getCampaignInventory,
     { campaignId }
   );
+
+  // Collect unique wallet addresses from sold/reserved NFTs to look up current company names
+  const walletAddresses = useMemo(() => {
+    if (!inventory) return [];
+    const addresses = new Set<string>();
+    for (const nft of inventory) {
+      if (nft.soldTo) addresses.add(nft.soldTo);
+      if (nft.reservedBy && nft.status === 'reserved') addresses.add(nft.reservedBy);
+    }
+    return Array.from(addresses);
+  }, [inventory]);
+
+  // Query current company names for all wallet addresses
+  const currentCompanyNames = useQuery(
+    api.commemorativeCampaigns.getCompanyNamesForWallets,
+    walletAddresses.length > 0 ? { walletAddresses } : "skip"
+  );
+
+  // Copy wallet address to clipboard
+  const copyWallet = (address: string) => {
+    navigator.clipboard.writeText(address);
+    setCopiedWallet(address);
+    setTimeout(() => setCopiedWallet(null), 2000);
+  };
+
+  // DEBUG: Log when inventory data changes
+  useEffect(() => {
+    if (inventory) {
+      const timestamp = new Date().toISOString().split('T')[1].slice(0, -1);
+      console.log(`[🔄INVENTORY-UI ${timestamp}] Inventory data received:`, {
+        total: inventory.length,
+        statuses: {
+          available: inventory.filter(n => n.status === 'available').length,
+          reserved: inventory.filter(n => n.status === 'reserved').length,
+          sold: inventory.filter(n => n.status === 'sold').length,
+        },
+        sample: inventory.slice(0, 3).map(n => ({
+          name: n.name,
+          status: n.status,
+        }))
+      });
+    }
+  }, [inventory]);
 
   const batchUpdateImages = useMutation(api.commemorativeCampaigns.batchUpdateNFTImages);
 
@@ -54,6 +105,28 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
       bg: "bg-red-500/10",
       border: "border-red-500/30",
     },
+  };
+
+  // Format countdown timer for reserved NFTs
+  const formatCountdown = (expiresAt: number | undefined): { text: string; isExpired: boolean; isMissing: boolean } => {
+    if (!expiresAt) {
+      return { text: "No expiry set!", isExpired: true, isMissing: true };
+    }
+
+    const remaining = expiresAt - now;
+
+    if (remaining <= 0) {
+      return { text: "EXPIRED", isExpired: true, isMissing: false };
+    }
+
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+
+    return {
+      text: `${minutes}:${seconds.toString().padStart(2, '0')}`,
+      isExpired: false,
+      isMissing: false
+    };
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -225,10 +298,13 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
                       NFT UID
                     </th>
                     <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Image
+                      Claimed By
                     </th>
                     <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Actions
+                      Corporation
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Image
                     </th>
                   </tr>
                 </thead>
@@ -257,11 +333,28 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
                           {nft.name}
                         </td>
                         <td className="px-3 py-2">
-                          <span
-                            className={`inline-block px-2 py-1 rounded text-xs font-semibold ${config.bg} ${config.color} border ${config.border}`}
-                          >
-                            {config.label}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`inline-block px-2 py-1 rounded text-xs font-semibold ${config.bg} ${config.color} border ${config.border}`}
+                            >
+                              {config.label}
+                            </span>
+                            {nft.status === 'reserved' && (() => {
+                              const countdown = formatCountdown(nft.expiresAt);
+                              return (
+                                <span
+                                  className={`text-xs font-mono ${
+                                    countdown.isExpired
+                                      ? 'text-red-400 font-bold animate-pulse'
+                                      : 'text-gray-400'
+                                  }`}
+                                  title={countdown.isMissing ? 'This reservation has no expiry time set - it may be stuck!' : `Expires at ${nft.expiresAt ? new Date(nft.expiresAt).toLocaleTimeString() : 'unknown'}`}
+                                >
+                                  {countdown.text}
+                                </span>
+                              );
+                            })()}
+                          </div>
                         </td>
                         <td className="px-3 py-2">
                           <div className="flex items-center gap-2">
@@ -292,6 +385,90 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
                           </div>
                         </td>
                         <td className="px-3 py-2">
+                          {(() => {
+                            const walletAddress = nft.soldTo || (nft.status === 'reserved' ? nft.reservedBy : null);
+                            if (!walletAddress) {
+                              return <span className="text-xs text-gray-500">-</span>;
+                            }
+                            const truncated = `${walletAddress.substring(0, 8)}...${walletAddress.substring(walletAddress.length - 6)}`;
+                            return (
+                              <div className="flex items-center gap-2">
+                                <code className="text-xs text-gray-400 font-mono bg-black/50 px-2 py-1 rounded">
+                                  {truncated}
+                                </code>
+                                <button
+                                  onClick={() => copyWallet(walletAddress)}
+                                  className="text-gray-500 hover:text-yellow-400 transition-colors"
+                                  title="Copy full address"
+                                >
+                                  {copiedWallet === walletAddress ? (
+                                    <span className="text-green-400 text-xs">Copied!</span>
+                                  ) : (
+                                    <svg
+                                      className="w-4 h-4"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                      />
+                                    </svg>
+                                  )}
+                                </button>
+                              </div>
+                            );
+                          })()}
+                        </td>
+                        <td className="px-3 py-2">
+                          {(() => {
+                            const walletAddress = nft.soldTo || (nft.status === 'reserved' ? nft.reservedBy : null);
+                            const historicalName = nft.companyNameAtSale;
+                            const currentName = walletAddress && currentCompanyNames ? currentCompanyNames[walletAddress] : null;
+
+                            if (!walletAddress) {
+                              return <span className="text-xs text-gray-500">-</span>;
+                            }
+
+                            if (!historicalName && !currentName) {
+                              return <span className="text-xs text-gray-500 italic">No corporation</span>;
+                            }
+
+                            const hasChanged = historicalName && currentName && historicalName !== currentName;
+                            const isMissingHistorical = !historicalName && currentName;
+
+                            if (hasChanged) {
+                              return (
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-xs text-white">{historicalName}</span>
+                                  <span
+                                    className="text-xs text-yellow-400 cursor-pointer hover:underline"
+                                    title={`Current name: ${currentName}`}
+                                  >
+                                    (now: {currentName})
+                                  </span>
+                                </div>
+                              );
+                            }
+
+                            if (isMissingHistorical) {
+                              return (
+                                <span
+                                  className="text-xs text-gray-400 italic"
+                                  title="Historical name not recorded - showing current name"
+                                >
+                                  {currentName} (current)
+                                </span>
+                              );
+                            }
+
+                            return <span className="text-xs text-white">{historicalName || currentName}</span>;
+                          })()}
+                        </td>
+                        <td className="px-3 py-2">
                           {nft.imageUrl ? (
                             <div className="flex items-center gap-2">
                               <img
@@ -307,16 +484,6 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
                           ) : (
                             <span className="text-xs text-gray-500">No image</span>
                           )}
-                        </td>
-                        <td className="px-3 py-2">
-                          <a
-                            href={nft.paymentUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-block px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
-                          >
-                            View Payment
-                          </a>
                         </td>
                       </tr>
                     );

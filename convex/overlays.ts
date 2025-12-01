@@ -35,6 +35,7 @@ export const saveOverlay = mutation({
     imageWidth: v.number(),
     imageHeight: v.number(),
     zones: v.array(zoneValidator),
+    expectedVersion: v.optional(v.number()), // CRITICAL FIX: Optimistic locking
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -45,15 +46,29 @@ export const saveOverlay = mutation({
     const now = Date.now();
 
     if (existing) {
+      // CRITICAL FIX: Check version before updating to prevent concurrent write conflicts
+      const currentVersion = existing.version || 0;
+
+      if (args.expectedVersion !== undefined && args.expectedVersion !== currentVersion) {
+        console.error(`[OVERLAY-FIX] Concurrent modification detected for ${args.imageKey}: expected v${args.expectedVersion}, found v${currentVersion}`);
+        throw new Error(
+          `Concurrent modification detected. Expected version ${args.expectedVersion} but found ${currentVersion}. Please refresh and try again.`
+        );
+      }
+
+      console.log(`[OVERLAY-FIX] Updating overlay ${args.imageKey} from v${currentVersion} to v${currentVersion + 1}`);
+
       await ctx.db.patch(existing._id, {
         imagePath: args.imagePath,
         imageWidth: args.imageWidth,
         imageHeight: args.imageHeight,
         zones: args.zones,
         updatedAt: now,
+        version: currentVersion + 1, // Increment version
       });
       return existing._id;
     } else {
+      console.log(`[OVERLAY-FIX] Creating new overlay ${args.imageKey} at v1`);
       return await ctx.db.insert("overlays", {
         imageKey: args.imageKey,
         imagePath: args.imagePath,
@@ -62,6 +77,7 @@ export const saveOverlay = mutation({
         zones: args.zones,
         createdAt: now,
         updatedAt: now,
+        version: 1, // Initialize version
       });
     }
   },

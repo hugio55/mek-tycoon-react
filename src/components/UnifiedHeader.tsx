@@ -5,6 +5,8 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { restoreWalletSession, clearWalletSession } from "@/lib/walletSessionManager";
 import { CompanyNameModal } from "@/components/CompanyNameModal";
+import WalletConnectLightbox from "@/components/WalletConnectLightbox";
+import { getMediaUrl } from "@/lib/media-url";
 
 // Session Timer Component - Shows countdown to session expiration
 function SessionTimer({ expiresAt }: { expiresAt: number }) {
@@ -70,10 +72,36 @@ export default function UnifiedHeader() {
   const [sessionExpiresAt, setSessionExpiresAt] = useState<number | null>(null);
   const [showCompanyNameModal, setShowCompanyNameModal] = useState(false);
   const [companyNameModalMode, setCompanyNameModalMode] = useState<'initial' | 'edit'>('initial');
+  const [showWalletConnect, setShowWalletConnect] = useState(false);
+
+  // Track showWalletConnect state changes
+  useEffect(() => {
+    console.log('[🔍PARENT-STATE] UnifiedHeader showWalletConnect changed:', {
+      showWalletConnect,
+      timestamp: Date.now()
+    });
+  }, [showWalletConnect]);
+
 
   // Get wallet address from encrypted session storage
   useEffect(() => {
-    const checkWalletAddress = async () => {
+    // Check for disconnect nonce on page load
+    const nonceCheck = localStorage.getItem('mek_disconnect_nonce');
+    console.log('[🔐PAGE-LOAD] UnifiedHeader mounted - disconnect nonce check:', nonceCheck ? `✅ FOUND: ${nonceCheck.slice(0, 8)}...` : '❌ NOT FOUND');
+
+    let pollCount = 0;
+    let actualStateChanges = 0;
+    let storageEventCount = 0;
+    let lastAddress: string | null = null;
+    let lastExpires: number | null = null;
+
+    const checkWalletAddress = async (source: 'initial' | 'polling' | 'storage') => {
+      if (source === 'polling') pollCount++;
+      if (source === 'storage') storageEventCount++;
+
+      // COMMENTED OUT: Excessive logging that floods console
+      // console.log(`[🔄SYNC] checkWalletAddress called from: ${source}`);
+
       try {
         const session = await restoreWalletSession();
 
@@ -81,30 +109,107 @@ export default function UnifiedHeader() {
           const address = session.stakeAddress || session.walletAddress;
           const expiresAt = session.expiresAt || null;
 
+          // Track what changed
+          const addressChanged = lastAddress !== address;
+          const expiresChanged = lastExpires !== expiresAt;
+
+          if (addressChanged || expiresChanged) {
+            actualStateChanges++;
+            console.log(`[🔄SYNC] STATE CHANGE DETECTED from ${source}:`, {
+              addressChanged,
+              expiresChanged,
+              oldAddress: lastAddress,
+              newAddress: address,
+              oldExpires: lastExpires,
+              newExpires: expiresAt,
+              pollCount,
+              actualStateChanges,
+              storageEventCount,
+              changeRate: pollCount > 0 ? `${(actualStateChanges / pollCount * 100).toFixed(2)}%` : 'N/A'
+            });
+
+            lastAddress = address;
+            lastExpires = expiresAt;
+          }
+          // COMMENTED OUT: Excessive logging when no changes
+          // else {
+          //   console.log(`[🔄SYNC] No change from ${source} (poll ${pollCount}, changes ${actualStateChanges})`);
+          // }
+
           // CRITICAL FIX: Only update state if values actually changed
           // This prevents unnecessary re-renders and query re-executions
-          setWalletAddress(prevAddress => prevAddress !== address ? address : prevAddress);
-          setSessionExpiresAt(prevExpires => prevExpires !== expiresAt ? expiresAt : prevExpires);
-        } else {
-          // Only clear if not already cleared
+          setWalletAddress(prevAddress => {
+            if (prevAddress !== address) {
+              console.log('[🔄SYNC] setWalletAddress called:', { prev: prevAddress, new: address });
+              return address;
+            }
+            return prevAddress;
+          });
+          setSessionExpiresAt(prevExpires => {
+            if (prevExpires !== expiresAt) {
+              console.log('[🔄SYNC] setSessionExpiresAt called:', { prev: prevExpires, new: expiresAt });
+              return expiresAt;
+            }
+            return prevExpires;
+          });
+        }
+        // COMMENTED OUT: Excessive "no session" logging
+        // else {
+        //   console.log(`[🔄SYNC] No session from ${source}`);
+        //   // Only clear if not already cleared
+        //   setWalletAddress(prev => prev !== null ? null : prev);
+        //   setSessionExpiresAt(prev => prev !== null ? null : prev);
+        // }
+        else {
+          // Only clear if not already cleared (silent)
           setWalletAddress(prev => prev !== null ? null : prev);
           setSessionExpiresAt(prev => prev !== null ? null : prev);
         }
       } catch (error) {
-        console.error('[UnifiedHeader] Error restoring session:', error);
+        console.error('[🔄SYNC] Error restoring session:', error);
         setWalletAddress(prev => prev !== null ? null : prev);
         setSessionExpiresAt(prev => prev !== null ? null : prev);
       }
     };
 
-    checkWalletAddress();
-    window.addEventListener('storage', checkWalletAddress);
-    const interval = setInterval(checkWalletAddress, 5000); // Check every 5 seconds
+    // Log polling statistics every 30 seconds
+    const statsInterval = setInterval(() => {
+      console.log('[🔄SYNC] POLLING STATISTICS:', {
+        totalPolls: pollCount,
+        actualChanges: actualStateChanges,
+        storageEvents: storageEventCount,
+        changeRate: pollCount > 0 ? `${(actualStateChanges / pollCount * 100).toFixed(2)}%` : 'N/A',
+        efficiency: actualStateChanges > 0
+          ? `${storageEventCount} storage events vs ${actualStateChanges} total changes = ${((storageEventCount / actualStateChanges) * 100).toFixed(0)}% event coverage`
+          : 'No changes detected yet'
+      });
+    }, 30000);
+
+    checkWalletAddress('initial');
+    window.addEventListener('storage', () => checkWalletAddress('storage'));
+    const interval = setInterval(() => checkWalletAddress('polling'), 5000); // Check every 5 seconds
 
     return () => {
-      window.removeEventListener('storage', checkWalletAddress);
+      window.removeEventListener('storage', () => checkWalletAddress('storage'));
       clearInterval(interval);
+      clearInterval(statsInterval);
+      console.log('[🔄SYNC] FINAL STATISTICS:', {
+        totalPolls: pollCount,
+        actualChanges: actualStateChanges,
+        storageEvents: storageEventCount,
+        changeRate: pollCount > 0 ? `${(actualStateChanges / pollCount * 100).toFixed(2)}%` : 'N/A'
+      });
     };
+  }, []);
+
+  // Listen for wallet connect event
+  useEffect(() => {
+    const handleOpenWalletConnect = () => {
+      setShowWalletConnect(true);
+    };
+
+    window.addEventListener('openWalletConnect', handleOpenWalletConnect);
+    return () => window.removeEventListener('openWalletConnect', handleOpenWalletConnect);
   }, []);
 
   // Get company name for current wallet
@@ -142,11 +247,30 @@ export default function UnifiedHeader() {
 
   // Handle disconnect
   const handleDisconnect = async () => {
-    if (window.confirm('Are you sure you want to disconnect your wallet?')) {
+    console.log('[🔓DISCONNECT] Disconnect button clicked');
+
+    const confirmed = window.confirm(
+      'Disconnect wallet?\n\n' +
+      'This will log you out and you\'ll need to reconnect your wallet to access Mek Tycoon again.'
+    );
+
+    if (confirmed) {
+      console.log('[🔓DISCONNECT] User confirmed disconnect');
+      console.log('[🔓DISCONNECT] Calling clearWalletSession()...');
+
+      // Clear session storage and invalidate session
       await clearWalletSession();
+
+      console.log('[🔓DISCONNECT] Session cleared, checking localStorage for nonce...');
+      const nonceCheck = localStorage.getItem('mek_disconnect_nonce');
+      console.log('[🔓DISCONNECT] Nonce after clearWalletSession:', nonceCheck ? (nonceCheck.slice(0, 8) + '...') : 'NOT FOUND');
+
       setWalletAddress(null);
       setSessionExpiresAt(null);
       setWalletDropdownOpen(false);
+
+      console.log('[🔓DISCONNECT] Reloading page...');
+      // Reload to reset all state
       window.location.reload();
     }
   };
@@ -228,19 +352,34 @@ export default function UnifiedHeader() {
                 </div>
               )}
 
-              {/* 5. Disconnect button */}
+              {/* 5. Connect Wallet button (if not connected) */}
+              {!walletAddress && (
+                <div className="px-4 py-4 border-b border-yellow-500/20">
+                  <button
+                    onClick={() => {
+                      setWalletDropdownOpen(false);
+                      window.dispatchEvent(new Event('openWalletConnect'));
+                    }}
+                    className="w-full px-4 py-3 bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 border-2 border-yellow-500 rounded transition-colors font-['Orbitron'] uppercase tracking-wider text-sm font-bold min-h-[48px] touch-manipulation"
+                  >
+                    Connect Wallet
+                  </button>
+                </div>
+              )}
+
+              {/* 6. Disconnect button */}
               {walletAddress && !isDemoMode && (
                 <div className="px-4 py-4">
                   <button
                     onClick={handleDisconnect}
-                    className="w-full px-4 py-2 bg-red-600/20 border border-red-500/50 rounded text-red-400 hover:bg-red-600/30 transition-colors text-sm font-bold"
+                    className="w-full px-4 py-2 bg-red-600/20 border border-red-500/50 rounded text-red-400 hover:bg-red-600/30 transition-colors text-sm font-bold min-h-[48px] touch-manipulation"
                   >
                     Disconnect Wallet
                   </button>
                 </div>
               )}
 
-              {/* 6. Demo Mode Indicator (if applicable) */}
+              {/* 7. Demo Mode Indicator (if applicable) */}
               {isDemoMode && (
                 <div className="px-4 py-4">
                   <div className="text-gray-500 text-sm italic">
@@ -285,7 +424,7 @@ export default function UnifiedHeader() {
           rel="noopener noreferrer"
         >
           <img
-            src="/random-images/OE logo.png"
+            src={getMediaUrl('/random-images/OE logo.png')}
             alt="OE Logo"
             className="h-10 sm:h-16 w-auto opacity-90 hover:opacity-100 transition-opacity cursor-pointer"
           />
@@ -302,6 +441,23 @@ export default function UnifiedHeader() {
           currentName={companyNameData?.companyName}
         />
       )}
+
+      {/* Wallet Connect Lightbox */}
+      <WalletConnectLightbox
+        isOpen={showWalletConnect}
+        onClose={() => {
+          setShowWalletConnect(false);
+        }}
+        onConnected={async (address) => {
+          setWalletAddress(address);
+          setShowWalletConnect(false);
+          // Refresh session data
+          const session = await restoreWalletSession();
+          if (session) {
+            setSessionExpiresAt(session.expiresAt || null);
+          }
+        }}
+      />
     </>
   );
 }

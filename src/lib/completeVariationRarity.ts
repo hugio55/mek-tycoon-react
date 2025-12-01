@@ -11,6 +11,11 @@
 //   - "Nothing" (rank 291, common, 501 copies)
 // These should NEVER be filtered out or ignored - they are real variations
 // that appear in actual Mek data and must be preserved across all systems.
+//
+// SOURCE KEYS UPDATED: 2025-11-12
+// - Ranks 1-30: Manually configured (000H, 111B, etc.) - PRESERVED
+// - Ranks 31-291: Updated from CardanoScan metadata snapshot
+// - All source keys now match actual on-chain NFT metadata
 
 export type VariationType = 'head' | 'body' | 'trait';
 
@@ -303,7 +308,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 1,
     percentage: "0.03",
     rank: 31,
-    sourceKey: "BW5"
+    sourceKey: "LZ2"
   },
   {
     id: 217,
@@ -321,7 +326,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 1,
     percentage: "0.03",
     rank: 33,
-    sourceKey: "LZ2"
+    sourceKey: "BW5"
   },
   {
     id: 114,
@@ -330,7 +335,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 2,
     percentage: "0.05",
     rank: 34,
-    sourceKey: "CX2"
+    sourceKey: "KU2"
   },
   {
     id: 115,
@@ -339,7 +344,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 2,
     percentage: "0.05",
     rank: 35,
-    sourceKey: "AA5"
+    sourceKey: "HH3"
   },
   {
     id: 116,
@@ -348,7 +353,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 2,
     percentage: "0.05",
     rank: 36,
-    sourceKey: "CX2"
+    sourceKey: "AM3"
   },
   {
     id: 117,
@@ -357,7 +362,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 2,
     percentage: "0.05",
     rank: 37,
-    sourceKey: "DS3"
+    sourceKey: "IY3"
   },
   {
     id: 118,
@@ -366,7 +371,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 2,
     percentage: "0.05",
     rank: 38,
-    sourceKey: "DC4"
+    sourceKey: "HT4"
   },
   {
     id: 119,
@@ -375,7 +380,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 2,
     percentage: "0.05",
     rank: 39,
-    sourceKey: "BF5"
+    sourceKey: "CL6"
   },
   {
     id: 223,
@@ -393,7 +398,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 2,
     percentage: "0.05",
     rank: 41,
-    sourceKey: "KY4"
+    sourceKey: "LZ1"
   },
   {
     id: 12,
@@ -402,7 +407,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 3,
     percentage: "0.07",
     rank: 42,
-    sourceKey: "DP4"
+    sourceKey: "KY4"
   },
   {
     id: 121,
@@ -411,7 +416,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 3,
     percentage: "0.07",
     rank: 43,
-    sourceKey: "DC4"
+    sourceKey: "KI4"
   },
   {
     id: 13,
@@ -420,7 +425,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 3,
     percentage: "0.07",
     rank: 44,
-    sourceKey: "IV1"
+    sourceKey: "JG4"
   },
   {
     id: 224,
@@ -438,7 +443,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 3,
     percentage: "0.07",
     rank: 46,
-    sourceKey: "ER3"
+    sourceKey: "GQ5"
   },
   {
     id: 123,
@@ -447,7 +452,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 3,
     percentage: "0.07",
     rank: 47,
-    sourceKey: "AA2"
+    sourceKey: "BC7"
   },
   {
     id: 124,
@@ -456,7 +461,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 3,
     percentage: "0.07",
     rank: 48,
-    sourceKey: "DS1"
+    sourceKey: "ED6"
   },
   {
     id: 125,
@@ -465,7 +470,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 4,
     percentage: "0.10",
     rank: 49,
-    sourceKey: "AA1"
+    sourceKey: "CW4"
   },
   {
     id: 225,
@@ -483,7 +488,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 4,
     percentage: "0.10",
     rank: 51,
-    sourceKey: "BQ1"
+    sourceKey: "FN8"
   },
   {
     id: 14,
@@ -492,7 +497,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 4,
     percentage: "0.10",
     rank: 52,
-    sourceKey: "BC1"
+    sourceKey: "LZ1"
   },
   {
     id: 226,
@@ -510,7 +515,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 4,
     percentage: "0.10",
     rank: 54,
-    sourceKey: "BJ3"
+    sourceKey: "GG4"
   },
   {
     id: 15,
@@ -519,7 +524,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 4,
     percentage: "0.10",
     rank: 55,
-    sourceKey: "FS1"
+    sourceKey: "AT4"
   },
   {
     id: 128,
@@ -528,7 +533,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     rank: 56,
-    sourceKey: "DS2"
+    sourceKey: "CF5"
   },
   {
     id: 129,
@@ -537,7 +542,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     rank: 57,
-    sourceKey: "BW2"
+    sourceKey: "BO3"
   },
   {
     id: 130,
@@ -546,7 +551,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     rank: 58,
-    sourceKey: "AA1"
+    sourceKey: "JX3"
   },
   {
     id: 131,
@@ -555,7 +560,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     rank: 59,
-    sourceKey: "BJ1"
+    sourceKey: "FN7"
   },
   {
     id: 16,
@@ -564,7 +569,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     rank: 60,
-    sourceKey: "AE1"
+    sourceKey: "BQ5"
   },
   {
     id: 17,
@@ -573,7 +578,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     rank: 61,
-    sourceKey: "AK3"
+    sourceKey: "AA5"
   },
   {
     id: 18,
@@ -582,7 +587,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     rank: 62,
-    sourceKey: "AA1"
+    sourceKey: "KY3"
   },
   {
     id: 19,
@@ -591,7 +596,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     rank: 63,
-    sourceKey: "CF3"
+    sourceKey: "ER4"
   },
   {
     id: 227,
@@ -609,7 +614,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     rank: 65,
-    sourceKey: "AA1"
+    sourceKey: "KY2"
   },
   {
     id: 21,
@@ -618,7 +623,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 6,
     percentage: "0.15",
     rank: 66,
-    sourceKey: "AA1"
+    sourceKey: "EV3"
   },
   {
     id: 132,
@@ -627,7 +632,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 6,
     percentage: "0.15",
     rank: 67,
-    sourceKey: "DM1"
+    sourceKey: "FS3"
   },
   {
     id: 228,
@@ -645,7 +650,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 6,
     percentage: "0.15",
     rank: 69,
-    sourceKey: "CF1"
+    sourceKey: "GN3"
   },
   {
     id: 133,
@@ -654,7 +659,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 6,
     percentage: "0.15",
     rank: 70,
-    sourceKey: "AK2"
+    sourceKey: "GQ4"
   },
   {
     id: 134,
@@ -663,7 +668,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 6,
     percentage: "0.15",
     rank: 71,
-    sourceKey: "AA1"
+    sourceKey: "AR3"
   },
   {
     id: 229,
@@ -681,7 +686,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 6,
     percentage: "0.15",
     rank: 73,
-    sourceKey: "CF1"
+    sourceKey: "BF5"
   },
   {
     id: 24,
@@ -690,7 +695,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 6,
     percentage: "0.15",
     rank: 74,
-    sourceKey: "BC1"
+    sourceKey: "CU3"
   },
   {
     id: 230,
@@ -717,7 +722,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 7,
     percentage: "0.18",
     rank: 77,
-    sourceKey: "AA1"
+    sourceKey: "CL5"
   },
   {
     id: 25,
@@ -726,7 +731,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 7,
     percentage: "0.18",
     rank: 78,
-    sourceKey: "AA1"
+    sourceKey: "BW4"
   },
   {
     id: 136,
@@ -735,7 +740,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 7,
     percentage: "0.18",
     rank: 79,
-    sourceKey: "AK1"
+    sourceKey: "DJ4"
   },
   {
     id: 26,
@@ -744,7 +749,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 8,
     percentage: "0.20",
     rank: 80,
-    sourceKey: "AR1"
+    sourceKey: "BL5"
   },
   {
     id: 232,
@@ -762,7 +767,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 8,
     percentage: "0.20",
     rank: 82,
-    sourceKey: "AK3"
+    sourceKey: "HB4"
   },
   {
     id: 27,
@@ -771,7 +776,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 8,
     percentage: "0.20",
     rank: 83,
-    sourceKey: "AK1"
+    sourceKey: "DS3"
   },
   {
     id: 138,
@@ -780,7 +785,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 8,
     percentage: "0.20",
     rank: 84,
-    sourceKey: "BI1"
+    sourceKey: "DP4"
   },
   {
     id: 28,
@@ -789,7 +794,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 9,
     percentage: "0.22",
     rank: 85,
-    sourceKey: "HB1"
+    sourceKey: "KY1"
   },
   {
     id: 29,
@@ -798,7 +803,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 9,
     percentage: "0.22",
     rank: 86,
-    sourceKey: "CF2"
+    sourceKey: "CB4"
   },
   {
     id: 139,
@@ -807,7 +812,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 9,
     percentage: "0.22",
     rank: 87,
-    sourceKey: "AA2"
+    sourceKey: "ED5"
   },
   {
     id: 140,
@@ -816,7 +821,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 9,
     percentage: "0.22",
     rank: 88,
-    sourceKey: "CB3"
+    sourceKey: "CF4"
   },
   {
     id: 30,
@@ -825,7 +830,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 9,
     percentage: "0.22",
     rank: 89,
-    sourceKey: "GG1"
+    sourceKey: "AK4"
   },
   {
     id: 31,
@@ -834,7 +839,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 10,
     percentage: "0.25",
     rank: 90,
-    sourceKey: "AE1"
+    sourceKey: "CX2"
   },
   {
     id: 32,
@@ -843,7 +848,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 10,
     percentage: "0.25",
     rank: 91,
-    sourceKey: "AK1"
+    sourceKey: "DC4"
   },
   {
     id: 33,
@@ -852,7 +857,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 11,
     percentage: "0.27",
     rank: 92,
-    sourceKey: "HB2"
+    sourceKey: "BQ4"
   },
   {
     id: 141,
@@ -861,7 +866,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 11,
     percentage: "0.27",
     rank: 93,
-    sourceKey: "CB3"
+    sourceKey: "AE3"
   },
   {
     id: 233,
@@ -879,7 +884,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 11,
     percentage: "0.27",
     rank: 95,
-    sourceKey: "AE1"
+    sourceKey: "AT3"
   },
   {
     id: 35,
@@ -888,7 +893,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 12,
     percentage: "0.30",
     rank: 96,
-    sourceKey: "CF3"
+    sourceKey: "BJ3"
   },
   {
     id: 234,
@@ -906,7 +911,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 12,
     percentage: "0.30",
     rank: 98,
-    sourceKey: "DC1"
+    sourceKey: "BC6"
   },
   {
     id: 36,
@@ -915,7 +920,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 13,
     percentage: "0.33",
     rank: 99,
-    sourceKey: "HB2"
+    sourceKey: "EV2"
   },
   {
     id: 235,
@@ -933,7 +938,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 13,
     percentage: "0.33",
     rank: 101,
-    sourceKey: "BF1"
+    sourceKey: "FN6"
   },
   {
     id: 236,
@@ -951,7 +956,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 14,
     percentage: "0.35",
     rank: 103,
-    sourceKey: "BC1"
+    sourceKey: "IO3"
   },
   {
     id: 38,
@@ -960,7 +965,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 15,
     percentage: "0.38",
     rank: 104,
-    sourceKey: "HB2"
+    sourceKey: "HP3"
   },
   {
     id: 144,
@@ -969,7 +974,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 15,
     percentage: "0.38",
     rank: 105,
-    sourceKey: "FD2"
+    sourceKey: "FN5"
   },
   {
     id: 237,
@@ -987,7 +992,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 15,
     percentage: "0.38",
     rank: 107,
-    sourceKey: "BJ2"
+    sourceKey: "IV3"
   },
   {
     id: 146,
@@ -996,7 +1001,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 15,
     percentage: "0.38",
     rank: 108,
-    sourceKey: "AA3"
+    sourceKey: "AK3"
   },
   {
     id: 147,
@@ -1005,7 +1010,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 16,
     percentage: "0.40",
     rank: 109,
-    sourceKey: "AA3"
+    sourceKey: "CL4"
   },
   {
     id: 39,
@@ -1014,7 +1019,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 16,
     percentage: "0.40",
     rank: 110,
-    sourceKey: "GQ2"
+    sourceKey: "AA4"
   },
   {
     id: 238,
@@ -1032,7 +1037,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 17,
     percentage: "0.43",
     rank: 112,
-    sourceKey: "AE1"
+    sourceKey: "BW3"
   },
   {
     id: 41,
@@ -1041,7 +1046,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 18,
     percentage: "0.45",
     rank: 113,
-    sourceKey: "HH1"
+    sourceKey: "FD4"
   },
   {
     id: 148,
@@ -1050,7 +1055,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 18,
     percentage: "0.45",
     rank: 114,
-    sourceKey: "BF1"
+    sourceKey: "FN4"
   },
   {
     id: 239,
@@ -1068,7 +1073,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 19,
     percentage: "0.47",
     rank: 116,
-    sourceKey: "BF3"
+    sourceKey: "CL3"
   },
   {
     id: 42,
@@ -1077,7 +1082,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 20,
     percentage: "0.50",
     rank: 117,
-    sourceKey: "AE1"
+    sourceKey: "CU2"
   },
   {
     id: 150,
@@ -1086,7 +1091,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 20,
     percentage: "0.50",
     rank: 118,
-    sourceKey: "DM1"
+    sourceKey: "CW3"
   },
   {
     id: 43,
@@ -1095,7 +1100,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 21,
     percentage: "0.53",
     rank: 119,
-    sourceKey: "AM1"
+    sourceKey: "BW2"
   },
   {
     id: 151,
@@ -1104,7 +1109,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 21,
     percentage: "0.53",
     rank: 120,
-    sourceKey: "AA2"
+    sourceKey: "BC5"
   },
   {
     id: 240,
@@ -1122,7 +1127,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 22,
     percentage: "0.55",
     rank: 122,
-    sourceKey: "ED1"
+    sourceKey: "BF4"
   },
   {
     id: 241,
@@ -1140,7 +1145,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 22,
     percentage: "0.55",
     rank: 124,
-    sourceKey: "BC3"
+    sourceKey: "AT2"
   },
   {
     id: 46,
@@ -1149,7 +1154,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 22,
     percentage: "0.55",
     rank: 125,
-    sourceKey: "CF3"
+    sourceKey: "DM3"
   },
   {
     id: 47,
@@ -1158,7 +1163,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 23,
     percentage: "0.57",
     rank: 126,
-    sourceKey: "AE2"
+    sourceKey: "DH3"
   },
   {
     id: 152,
@@ -1167,7 +1172,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 23,
     percentage: "0.57",
     rank: 127,
-    sourceKey: "AA1"
+    sourceKey: "AA3"
   },
   {
     id: 242,
@@ -1185,7 +1190,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 23,
     percentage: "0.57",
     rank: 129,
-    sourceKey: "HB2"
+    sourceKey: "BW1"
   },
   {
     id: 49,
@@ -1194,7 +1199,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 24,
     percentage: "0.60",
     rank: 130,
-    sourceKey: "BC4"
+    sourceKey: "BL4"
   },
   {
     id: 50,
@@ -1203,7 +1208,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 24,
     percentage: "0.60",
     rank: 131,
-    sourceKey: "AA2"
+    sourceKey: "EE3"
   },
   {
     id: 243,
@@ -1230,7 +1235,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 25,
     percentage: "0.63",
     rank: 134,
-    sourceKey: "BJ2"
+    sourceKey: "FN3"
   },
   {
     id: 154,
@@ -1239,7 +1244,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 25,
     percentage: "0.63",
     rank: 135,
-    sourceKey: "BF1"
+    sourceKey: "HT3"
   },
   {
     id: 245,
@@ -1257,7 +1262,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 26,
     percentage: "0.65",
     rank: 137,
-    sourceKey: "AA1"
+    sourceKey: "ER3"
   },
   {
     id: 52,
@@ -1266,7 +1271,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 26,
     percentage: "0.65",
     rank: 138,
-    sourceKey: "HB1"
+    sourceKey: "EV1"
   },
   {
     id: 246,
@@ -1311,7 +1316,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 28,
     percentage: "0.70",
     rank: 143,
-    sourceKey: "HB1"
+    sourceKey: "AT1"
   },
   {
     id: 155,
@@ -1320,7 +1325,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 30,
     percentage: "0.75",
     rank: 144,
-    sourceKey: "BJ1"
+    sourceKey: "HH2"
   },
   {
     id: 156,
@@ -1329,7 +1334,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 30,
     percentage: "0.75",
     rank: 145,
-    sourceKey: "AK1"
+    sourceKey: "DJ3"
   },
   {
     id: 250,
@@ -1347,7 +1352,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 30,
     percentage: "0.75",
     rank: 147,
-    sourceKey: "BF1"
+    sourceKey: "GQ3"
   },
   {
     id: 251,
@@ -1365,7 +1370,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 31,
     percentage: "0.78",
     rank: 149,
-    sourceKey: "AK3"
+    sourceKey: "DP3"
   },
   {
     id: 159,
@@ -1374,7 +1379,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 31,
     percentage: "0.78",
     rank: 150,
-    sourceKey: "BF1"
+    sourceKey: "FN2"
   },
   {
     id: 160,
@@ -1383,7 +1388,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 32,
     percentage: "0.80",
     rank: 151,
-    sourceKey: "BF1"
+    sourceKey: "HT2"
   },
   {
     id: 54,
@@ -1392,7 +1397,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 32,
     percentage: "0.80",
     rank: 152,
-    sourceKey: "AA2"
+    sourceKey: "BQ3"
   },
   {
     id: 161,
@@ -1401,7 +1406,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 33,
     percentage: "0.83",
     rank: 153,
-    sourceKey: "BF1"
+    sourceKey: "ED4"
   },
   {
     id: 55,
@@ -1410,7 +1415,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 33,
     percentage: "0.83",
     rank: 154,
-    sourceKey: "HH1"
+    sourceKey: "ER2"
   },
   {
     id: 162,
@@ -1419,7 +1424,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 34,
     percentage: "0.85",
     rank: 155,
-    sourceKey: "BF1"
+    sourceKey: "KI3"
   },
   {
     id: 56,
@@ -1428,7 +1433,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 34,
     percentage: "0.85",
     rank: 156,
-    sourceKey: "HB2"
+    sourceKey: "CU1"
   },
   {
     id: 252,
@@ -1446,7 +1451,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 34,
     percentage: "0.85",
     rank: 158,
-    sourceKey: "BI1"
+    sourceKey: "GG3"
   },
   {
     id: 57,
@@ -1455,7 +1460,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 35,
     percentage: "0.88",
     rank: 159,
-    sourceKey: "AA1"
+    sourceKey: "CX1"
   },
   {
     id: 164,
@@ -1464,7 +1469,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 36,
     percentage: "0.90",
     rank: 160,
-    sourceKey: "DH1"
+    sourceKey: "CW2"
   },
   {
     id: 165,
@@ -1473,7 +1478,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 36,
     percentage: "0.90",
     rank: 161,
-    sourceKey: "BF1"
+    sourceKey: "IV2"
   },
   {
     id: 253,
@@ -1491,7 +1496,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 37,
     percentage: "0.92",
     rank: 163,
-    sourceKey: "AA1"
+    sourceKey: "DS2"
   },
   {
     id: 59,
@@ -1500,7 +1505,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 38,
     percentage: "0.95",
     rank: 164,
-    sourceKey: "HB1"
+    sourceKey: "JG3"
   },
   {
     id: 166,
@@ -1509,7 +1514,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 38,
     percentage: "0.95",
     rank: 165,
-    sourceKey: "BJ1"
+    sourceKey: "IY2"
   },
   {
     id: 254,
@@ -1527,7 +1532,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 41,
     percentage: "1.03",
     rank: 167,
-    sourceKey: "HH1"
+    sourceKey: "HP2"
   },
   {
     id: 61,
@@ -1536,7 +1541,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 41,
     percentage: "1.03",
     rank: 168,
-    sourceKey: "HB1"
+    sourceKey: "BQ2"
   },
   {
     id: 167,
@@ -1545,7 +1550,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 41,
     percentage: "1.03",
     rank: 169,
-    sourceKey: "BJ1"
+    sourceKey: "JX2"
   },
   {
     id: 168,
@@ -1554,7 +1559,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 41,
     percentage: "1.03",
     rank: 170,
-    sourceKey: "BJ2"
+    sourceKey: "CF3"
   },
   {
     id: 169,
@@ -1563,7 +1568,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 42,
     percentage: "1.05",
     rank: 171,
-    sourceKey: "AK1"
+    sourceKey: "CW1"
   },
   {
     id: 170,
@@ -1572,7 +1577,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 43,
     percentage: "1.07",
     rank: 172,
-    sourceKey: "BJ1"
+    sourceKey: "GQ2"
   },
   {
     id: 62,
@@ -1581,7 +1586,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 44,
     percentage: "1.10",
     rank: 173,
-    sourceKey: "HB2"
+    sourceKey: "CB3"
   },
   {
     id: 171,
@@ -1590,7 +1595,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 44,
     percentage: "1.10",
     rank: 174,
-    sourceKey: "BL1"
+    sourceKey: "BO2"
   },
   {
     id: 172,
@@ -1599,7 +1604,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 44,
     percentage: "1.10",
     rank: 175,
-    sourceKey: "AA1"
+    sourceKey: "AK2"
   },
   {
     id: 173,
@@ -1608,7 +1613,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 44,
     percentage: "1.10",
     rank: 176,
-    sourceKey: "BJ1"
+    sourceKey: "KI2"
   },
   {
     id: 174,
@@ -1617,7 +1622,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 45,
     percentage: "1.13",
     rank: 177,
-    sourceKey: "DH1"
+    sourceKey: "CL2"
   },
   {
     id: 63,
@@ -1626,7 +1631,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 45,
     percentage: "1.13",
     rank: 178,
-    sourceKey: "HB1"
+    sourceKey: "BQ1"
   },
   {
     id: 64,
@@ -1635,7 +1640,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 45,
     percentage: "1.13",
     rank: 179,
-    sourceKey: "HH1"
+    sourceKey: "DC3"
   },
   {
     id: 65,
@@ -1644,7 +1649,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 46,
     percentage: "1.15",
     rank: 180,
-    sourceKey: "HB3"
+    sourceKey: "ER1"
   },
   {
     id: 175,
@@ -1653,7 +1658,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 46,
     percentage: "1.15",
     rank: 181,
-    sourceKey: "BF1"
+    sourceKey: "FN1"
   },
   {
     id: 176,
@@ -1662,7 +1667,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 46,
     percentage: "1.15",
     rank: 182,
-    sourceKey: "BF1"
+    sourceKey: "ED3"
   },
   {
     id: 255,
@@ -1680,7 +1685,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 49,
     percentage: "1.23",
     rank: 184,
-    sourceKey: "BJ2"
+    sourceKey: "BC3"
   },
   {
     id: 178,
@@ -1689,7 +1694,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 49,
     percentage: "1.23",
     rank: 185,
-    sourceKey: "BL1"
+    sourceKey: "FS2"
   },
   {
     id: 179,
@@ -1698,7 +1703,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 50,
     percentage: "1.25",
     rank: 186,
-    sourceKey: "BF1"
+    sourceKey: "HT1"
   },
   {
     id: 66,
@@ -1707,7 +1712,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 50,
     percentage: "1.25",
     rank: 187,
-    sourceKey: "HB3"
+    sourceKey: "IO2"
   },
   {
     id: 180,
@@ -1716,7 +1721,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 51,
     percentage: "1.27",
     rank: 188,
-    sourceKey: "BF1"
+    sourceKey: "CF2"
   },
   {
     id: 181,
@@ -1725,7 +1730,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 51,
     percentage: "1.27",
     rank: 189,
-    sourceKey: "BJ1"
+    sourceKey: "BC4"
   },
   {
     id: 182,
@@ -1734,7 +1739,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 51,
     percentage: "1.27",
     rank: 190,
-    sourceKey: "BJ2"
+    sourceKey: "DJ2"
   },
   {
     id: 183,
@@ -1743,7 +1748,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 52,
     percentage: "1.30",
     rank: 191,
-    sourceKey: "BF1"
+    sourceKey: "IV1"
   },
   {
     id: 256,
@@ -1761,7 +1766,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 54,
     percentage: "1.35",
     rank: 193,
-    sourceKey: "AK1"
+    sourceKey: "ED2"
   },
   {
     id: 185,
@@ -1770,7 +1775,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 54,
     percentage: "1.35",
     rank: 194,
-    sourceKey: "FD1"
+    sourceKey: "DP2"
   },
   {
     id: 292,
@@ -1779,7 +1784,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 55,
     percentage: "1.38",
     rank: 195,
-    sourceKey: "AA2"
+    sourceKey: "BF3"
   },
   {
     id: 257,
@@ -1797,7 +1802,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 55,
     percentage: "1.38",
     rank: 197,
-    sourceKey: "EE2"
+    sourceKey: "GG2"
   },
   {
     id: 187,
@@ -1806,7 +1811,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 55,
     percentage: "1.38",
     rank: 198,
-    sourceKey: "BF1"
+    sourceKey: "JX1"
   },
   {
     id: 68,
@@ -1815,7 +1820,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 55,
     percentage: "1.38",
     rank: 199,
-    sourceKey: "BC1"
+    sourceKey: "AA3"
   },
   {
     id: 69,
@@ -1824,7 +1829,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 55,
     percentage: "1.38",
     rank: 200,
-    sourceKey: "BC4"
+    sourceKey: "BL3"
   },
   {
     id: 70,
@@ -1833,7 +1838,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 56,
     percentage: "1.40",
     rank: 201,
-    sourceKey: "HH1"
+    sourceKey: "DS1"
   },
   {
     id: 71,
@@ -1842,7 +1847,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 57,
     percentage: "1.43",
     rank: 202,
-    sourceKey: "HB1"
+    sourceKey: "DC2"
   },
   {
     id: 72,
@@ -1851,7 +1856,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 57,
     percentage: "1.43",
     rank: 203,
-    sourceKey: "HB3"
+    sourceKey: "CB2"
   },
   {
     id: 188,
@@ -1860,7 +1865,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 57,
     percentage: "1.43",
     rank: 204,
-    sourceKey: "FD1"
+    sourceKey: "AR2"
   },
   {
     id: 258,
@@ -1887,7 +1892,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 58,
     percentage: "1.45",
     rank: 207,
-    sourceKey: "BJ1"
+    sourceKey: "GQ1"
   },
   {
     id: 190,
@@ -1896,7 +1901,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 59,
     percentage: "1.47",
     rank: 208,
-    sourceKey: "BL1"
+    sourceKey: "AM2"
   },
   {
     id: 191,
@@ -1905,7 +1910,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 60,
     percentage: "1.50",
     rank: 209,
-    sourceKey: "BJ1"
+    sourceKey: "IY1"
   },
   {
     id: 192,
@@ -1914,7 +1919,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 60,
     percentage: "1.50",
     rank: 210,
-    sourceKey: "BF2"
+    sourceKey: "DJ1"
   },
   {
     id: 193,
@@ -1923,7 +1928,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 63,
     percentage: "1.57",
     rank: 211,
-    sourceKey: "DM1"
+    sourceKey: "AR1"
   },
   {
     id: 260,
@@ -1950,7 +1955,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 63,
     percentage: "1.57",
     rank: 214,
-    sourceKey: "DM1"
+    sourceKey: "DP1"
   },
   {
     id: 262,
@@ -1968,7 +1973,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 64,
     percentage: "1.60",
     rank: 216,
-    sourceKey: "HB2"
+    sourceKey: "DH2"
   },
   {
     id: 195,
@@ -1977,7 +1982,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 64,
     percentage: "1.60",
     rank: 217,
-    sourceKey: "BI1"
+    sourceKey: "BC2"
   },
   {
     id: 74,
@@ -1986,7 +1991,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 65,
     percentage: "1.63",
     rank: 218,
-    sourceKey: "BC4"
+    sourceKey: "AK3"
   },
   {
     id: 75,
@@ -1995,7 +2000,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 65,
     percentage: "1.63",
     rank: 219,
-    sourceKey: "CF1"
+    sourceKey: "BF2"
   },
   {
     id: 76,
@@ -2004,7 +2009,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 65,
     percentage: "1.63",
     rank: 220,
-    sourceKey: "HB1"
+    sourceKey: "DM2"
   },
   {
     id: 77,
@@ -2013,7 +2018,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 67,
     percentage: "1.68",
     rank: 221,
-    sourceKey: "AA2"
+    sourceKey: "FD3"
   },
   {
     id: 196,
@@ -2022,7 +2027,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 68,
     percentage: "1.70",
     rank: 222,
-    sourceKey: "BJ1"
+    sourceKey: "FS1"
   },
   {
     id: 78,
@@ -2031,7 +2036,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 68,
     percentage: "1.70",
     rank: 223,
-    sourceKey: "BC1"
+    sourceKey: "AA2"
   },
   {
     id: 197,
@@ -2040,7 +2045,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 68,
     percentage: "1.70",
     rank: 224,
-    sourceKey: "BJ1"
+    sourceKey: "CL1"
   },
   {
     id: 263,
@@ -2058,7 +2063,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 69,
     percentage: "1.73",
     rank: 226,
-    sourceKey: "HH1"
+    sourceKey: "BL2"
   },
   {
     id: 198,
@@ -2067,7 +2072,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 69,
     percentage: "1.73",
     rank: 227,
-    sourceKey: "BJ1"
+    sourceKey: "KI1"
   },
   {
     id: 80,
@@ -2076,7 +2081,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 70,
     percentage: "1.75",
     rank: 228,
-    sourceKey: "HB2"
+    sourceKey: "EE2"
   },
   {
     id: 199,
@@ -2085,7 +2090,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 70,
     percentage: "1.75",
     rank: 229,
-    sourceKey: "BF1"
+    sourceKey: "HB3"
   },
   {
     id: 264,
@@ -2103,7 +2108,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 73,
     percentage: "1.82",
     rank: 231,
-    sourceKey: "HB2"
+    sourceKey: "CB1"
   },
   {
     id: 200,
@@ -2112,7 +2117,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 73,
     percentage: "1.82",
     rank: 232,
-    sourceKey: "AK1"
+    sourceKey: "BC1"
   },
   {
     id: 265,
@@ -2139,7 +2144,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 73,
     percentage: "1.82",
     rank: 235,
-    sourceKey: "AE1"
+    sourceKey: "DC1"
   },
   {
     id: 83,
@@ -2148,7 +2153,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 74,
     percentage: "1.85",
     rank: 236,
-    sourceKey: "BC2"
+    sourceKey: "AK2"
   },
   {
     id: 84,
@@ -2157,7 +2162,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 74,
     percentage: "1.85",
     rank: 237,
-    sourceKey: "AA1"
+    sourceKey: "JG1"
   },
   {
     id: 267,
@@ -2175,7 +2180,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 75,
     percentage: "1.88",
     rank: 239,
-    sourceKey: "AM1"
+    sourceKey: "FD2"
   },
   {
     id: 201,
@@ -2184,7 +2189,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 76,
     percentage: "1.90",
     rank: 240,
-    sourceKey: "BI1"
+    sourceKey: "AE2"
   },
   {
     id: 86,
@@ -2193,7 +2198,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 77,
     percentage: "1.93",
     rank: 241,
-    sourceKey: "AA2"
+    sourceKey: "HP1"
   },
   {
     id: 268,
@@ -2220,7 +2225,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 78,
     percentage: "1.95",
     rank: 244,
-    sourceKey: "BI1"
+    sourceKey: "HB2"
   },
   {
     id: 87,
@@ -2229,7 +2234,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 78,
     percentage: "1.95",
     rank: 245,
-    sourceKey: "HB3"
+    sourceKey: "BI2"
   },
   {
     id: 270,
@@ -2247,7 +2252,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 79,
     percentage: "1.98",
     rank: 247,
-    sourceKey: "HH1"
+    sourceKey: "IO1"
   },
   {
     id: 89,
@@ -2256,7 +2261,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 80,
     percentage: "2.00",
     rank: 248,
-    sourceKey: "AA1"
+    sourceKey: "GN2"
   },
   {
     id: 271,
@@ -2274,7 +2279,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 81,
     percentage: "2.02",
     rank: 250,
-    sourceKey: "HB3"
+    sourceKey: "AA1"
   },
   {
     id: 272,
@@ -2292,7 +2297,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 83,
     percentage: "2.08",
     rank: 252,
-    sourceKey: "BF1"
+    sourceKey: "ED1"
   },
   {
     id: 91,
@@ -2301,7 +2306,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 85,
     percentage: "2.13",
     rank: 253,
-    sourceKey: "AK1"
+    sourceKey: "BL1"
   },
   {
     id: 204,
@@ -2310,7 +2315,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 86,
     percentage: "2.15",
     rank: 254,
-    sourceKey: "DH1"
+    sourceKey: "CF1"
   },
   {
     id: 92,
@@ -2319,7 +2324,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 89,
     percentage: "2.23",
     rank: 255,
-    sourceKey: "AA1"
+    sourceKey: "AK1"
   },
   {
     id: 205,
@@ -2328,7 +2333,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 90,
     percentage: "2.25",
     rank: 256,
-    sourceKey: "BF1"
+    sourceKey: "GG1"
   },
   {
     id: 273,
@@ -2364,7 +2369,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 93,
     percentage: "2.33",
     rank: 260,
-    sourceKey: "BJ1"
+    sourceKey: "AM1"
   },
   {
     id: 207,
@@ -2373,7 +2378,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 94,
     percentage: "2.35",
     rank: 261,
-    sourceKey: "BJ2"
+    sourceKey: "AA2"
   },
   {
     id: 93,
@@ -2382,7 +2387,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 94,
     percentage: "2.35",
     rank: 262,
-    sourceKey: "AE1"
+    sourceKey: "JG2"
   },
   {
     id: 94,
@@ -2391,7 +2396,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 96,
     percentage: "2.40",
     rank: 263,
-    sourceKey: "AA2"
+    sourceKey: "BJ2"
   },
   {
     id: 276,
@@ -2409,7 +2414,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 98,
     percentage: "2.45",
     rank: 265,
-    sourceKey: "HB2"
+    sourceKey: "FD1"
   },
   {
     id: 208,
@@ -2418,7 +2423,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 99,
     percentage: "2.48",
     rank: 266,
-    sourceKey: "BJ1"
+    sourceKey: "AK1"
   },
   {
     id: 209,
@@ -2427,7 +2432,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 99,
     percentage: "2.48",
     rank: 267,
-    sourceKey: "BF1"
+    sourceKey: "KU1"
   },
   {
     id: 96,
@@ -2436,7 +2441,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 101,
     percentage: "2.53",
     rank: 268,
-    sourceKey: "AE1"
+    sourceKey: "BF1"
   },
   {
     id: 210,
@@ -2445,7 +2450,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 104,
     percentage: "2.60",
     rank: 269,
-    sourceKey: "BJ1"
+    sourceKey: "HB1"
   },
   {
     id: 211,
@@ -2454,7 +2459,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 106,
     percentage: "2.65",
     rank: 270,
-    sourceKey: "EE1"
+    sourceKey: "BO1"
   },
   {
     id: 277,
@@ -2481,7 +2486,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 113,
     percentage: "2.83",
     rank: 273,
-    sourceKey: "HB2"
+    sourceKey: "DM1"
   },
   {
     id: 98,
@@ -2490,7 +2495,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 117,
     percentage: "2.93",
     rank: 274,
-    sourceKey: "HB1"
+    sourceKey: "BJ1"
   },
   {
     id: 279,
@@ -2526,7 +2531,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 118,
     percentage: "2.95",
     rank: 278,
-    sourceKey: "BI1"
+    sourceKey: "AA1"
   },
   {
     id: 282,
@@ -2544,7 +2549,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 119,
     percentage: "2.97",
     rank: 280,
-    sourceKey: "AA2"
+    sourceKey: "DH1"
   },
   {
     id: 283,
@@ -2571,7 +2576,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 125,
     percentage: "3.13",
     rank: 283,
-    sourceKey: "HB2"
+    sourceKey: "GN1"
   },
   {
     id: 285,
@@ -2589,7 +2594,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 126,
     percentage: "3.15",
     rank: 285,
-    sourceKey: "AA2"
+    sourceKey: "EE1"
   },
   {
     id: 213,
@@ -2598,7 +2603,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 127,
     percentage: "3.17",
     rank: 286,
-    sourceKey: "BJ1"
+    sourceKey: "HH1"
   },
   {
     id: 286,
@@ -2616,7 +2621,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 130,
     percentage: "3.25",
     rank: 288,
-    sourceKey: "BF1"
+    sourceKey: "AE1"
   },
   {
     id: 102,
@@ -2625,7 +2630,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 132,
     percentage: "3.30",
     rank: 289,
-    sourceKey: "AA1"
+    sourceKey: "BI1"
   },
   {
     id: 287,

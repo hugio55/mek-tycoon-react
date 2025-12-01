@@ -12,7 +12,8 @@ export const MekLevelBar = ({ mek, animatedLevel, levelColors }: MekLevelBarProp
   const currentLevelColor = levelColors[currentLevel - 1] || '#FFFFFF';
 
   return (
-    <div className="relative">
+    <div className="relative flex flex-col gap-2">
+      {/* Level Bars */}
       <div className="bg-black/60 backdrop-blur-md border border-gray-700/50 rounded-lg p-2">
         <div className="flex justify-between gap-1 sm:gap-1.5 h-10 sm:h-8">
           {Array.from({ length: 10 }, (_, i) => {
@@ -58,6 +59,48 @@ export const MekLevelBar = ({ mek, animatedLevel, levelColors }: MekLevelBarProp
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Inset Panel Card - Below Bars */}
+      <div className="flex justify-center">
+        <div
+          className="relative px-6 py-2 rounded-md"
+          style={{
+            background: `linear-gradient(135deg,
+              rgba(0, 0, 0, 0.8) 0%,
+              rgba(20, 20, 20, 0.9) 50%,
+              rgba(0, 0, 0, 0.8) 100%)`,
+            border: `1px solid ${currentLevelColor}60`,
+            boxShadow: `
+              inset 0 2px 8px rgba(0, 0, 0, 0.8),
+              inset 0 -1px 4px rgba(255, 255, 255, 0.05),
+              0 1px 2px ${currentLevelColor}40
+            `,
+          }}
+        >
+          <div className="text-center">
+            <div
+              className="text-3xl font-black leading-none"
+              style={{
+                color: currentLevelColor,
+                textShadow: `0 0 10px ${currentLevelColor}80, 0 2px 4px rgba(0,0,0,0.8)`,
+                fontFamily: "'Orbitron', monospace",
+              }}
+            >
+              {currentLevel}
+            </div>
+            <div
+              className="text-xs uppercase tracking-widest mt-0.5"
+              style={{
+                color: `${currentLevelColor}90`,
+                letterSpacing: '0.15em',
+                fontFamily: "'Orbitron', monospace",
+              }}
+            >
+              LVL
+            </div>
+          </div>
         </div>
       </div>
     </div>

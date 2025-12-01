@@ -14,6 +14,7 @@ export const createCampaign = mutation({
     name: v.string(),
     description: v.string(),
     nmkrProjectId: v.string(),
+    policyId: v.optional(v.string()),
     maxNFTs: v.number(),
     status: v.optional(
       v.union(
@@ -31,6 +32,7 @@ export const createCampaign = mutation({
       name: args.name,
       description: args.description,
       nmkrProjectId: args.nmkrProjectId,
+      policyId: args.policyId,
       maxNFTs: args.maxNFTs,
       status: args.status || "inactive",
       totalNFTs: 0,
@@ -59,6 +61,7 @@ export const updateCampaign = mutation({
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     nmkrProjectId: v.optional(v.string()),
+    policyId: v.optional(v.string()),
     status: v.optional(
       v.union(
         v.literal("active"),
@@ -152,10 +155,10 @@ export const updateCampaignStats = mutation({
       throw new Error("Campaign not found");
     }
 
-    // Count inventory items for this campaign
+    // Count inventory items for this campaign using indexed query
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .filter((q) => q.eq(q.field("projectId"), campaign.nmkrProjectId))
+      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
       .collect();
 
     const stats = {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useMutation, useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { api } from "@/convex/_generated/api";
 import ConfirmationLightbox from "./ConfirmationLightbox";
 
 interface MekManagementLightboxProps {
@@ -203,9 +203,9 @@ export default function MekManagementLightbox({
   };
 
   const modalContent = (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center" onClick={onClose}>
-      {/* Backdrop - very light with minimal blur */}
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-md" />
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-auto p-4" onClick={onClose}>
+      {/* Backdrop - industrial dark */}
+      <div className="fixed inset-0 bg-black/60" onClick={onClose} />
 
       {/* Modal Card */}
       <div
@@ -213,10 +213,9 @@ export default function MekManagementLightbox({
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          className="rounded-lg overflow-hidden shadow-2xl border-2 border-yellow-500/50"
+          className="bg-black/20 backdrop-blur-md border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl"
           style={{
-            background: 'linear-gradient(105deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0.01) 100%)',
-            backdropFilter: 'blur(20px) brightness(1.05)',
+            boxShadow: '0 0 40px rgba(250, 182, 23, 0.2)'
           }}
         >
           {/* Industrial Header with hazard stripes */}
@@ -246,14 +245,17 @@ export default function MekManagementLightbox({
             />
 
             {/* Mek Image */}
-            <div className="relative mb-4 p-4 rounded-lg" style={{
-              background: 'rgba(0, 0, 0, 0.2)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
+            <div className="relative mb-6 p-4 bg-black/40 border-2 border-yellow-500/30 rounded-lg" style={{
+              background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 255, 255, 0.02) 10px, rgba(255, 255, 255, 0.02) 20px)',
             }}>
+              <div className="absolute inset-0 opacity-30 pointer-events-none" style={{
+                backgroundImage: 'linear-gradient(0deg, rgba(250, 182, 23, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(250, 182, 23, 0.1) 1px, transparent 1px)',
+                backgroundSize: '20px 20px'
+              }} />
               <img
                 src={imagePath}
                 alt={mekData.customName || mekData.assetName || "Mek"}
-                className="w-full h-auto max-w-[384px] mx-auto"
+                className="relative z-10 w-full h-auto max-w-[384px] mx-auto"
                 onError={(e) => {
                   e.currentTarget.src = `/mek-images/150px/${cleanSourceKey}.webp`;
                 }}
@@ -263,23 +265,25 @@ export default function MekManagementLightbox({
             {/* Name Display/Edit Section */}
             {!isEditingName ? (
               // View Mode
-              <div className="text-center mb-4">
-                <div className="text-[10px] text-gray-400 uppercase tracking-[0.2em] mb-1">Employee Name</div>
-                <div className="text-white text-2xl font-bold mb-2">
+              <div className="text-center mb-6">
+                <div className="text-[10px] text-gray-400 uppercase tracking-[0.2em] mb-2 font-bold">Employee Name</div>
+                <div className="text-yellow-400 text-2xl font-bold mb-3 font-orbitron tracking-wider" style={{
+                  textShadow: '0 0 15px rgba(250, 182, 23, 0.4)'
+                }}>
                   {displayName || mekData.customName || "UNNAMED"}
                 </div>
                 <button
                   onClick={handleStartEdit}
-                  className="text-cyan-400 text-sm hover:text-cyan-300 transition-colors"
+                  className="px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-sm font-bold uppercase tracking-wider rounded hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all"
                 >
                   Edit Name
                 </button>
               </div>
             ) : (
               // Edit Mode
-              <div className="space-y-3">
+              <div className="space-y-3 mb-6">
                 <div>
-                  <label className="mek-label-uppercase mb-2 text-gray-400 block text-center">
+                  <label className="text-[10px] text-gray-400 uppercase tracking-[0.2em] mb-3 font-bold block text-center">
                     EMPLOYEE NAME
                   </label>
                   <input
@@ -289,33 +293,36 @@ export default function MekManagementLightbox({
                     onKeyDown={handleKeyPress}
                     maxLength={20}
                     placeholder="Enter a name (1-20 characters)"
-                    className="w-full px-4 py-3 bg-black/60 border-2 border-yellow-500/30 rounded text-yellow-100 placeholder-gray-600 focus:outline-none focus:border-yellow-500 text-center"
+                    className="w-full px-4 py-3 bg-black/80 border-2 border-yellow-500/30 rounded text-yellow-100 placeholder-gray-500 focus:outline-none focus:border-yellow-500 transition-colors text-center"
+                    style={{
+                      backdropFilter: 'blur(10px)'
+                    }}
                     disabled={isSubmitting}
                     autoFocus
                   />
-                  <p className="mt-1 text-xs text-gray-500 text-center">
+                  <p className="mt-2 text-xs text-gray-400 text-center font-mono">
                     {tempName.length}/20 characters
                   </p>
 
                   {/* Real-time Availability Feedback */}
                   {tempName.trim().length >= 1 && !error && (
-                    <div className="mt-2 text-sm text-center">
+                    <div className="mt-3 text-sm text-center">
                       {isTyping ? (
-                        <div className="text-yellow-400 flex items-center justify-center gap-2">
-                          <div className="w-3 h-3 border border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
-                          Checking availability...
+                        <div className="text-yellow-400 flex items-center justify-center gap-2 font-medium">
+                          <div className="w-3 h-3 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+                          <span className="uppercase tracking-wider text-xs">Checking availability...</span>
                         </div>
                       ) : checkAvailability === undefined ? (
-                        <div className="text-yellow-400 flex items-center justify-center gap-2">
-                          <div className="w-3 h-3 border border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
-                          Checking availability...
+                        <div className="text-yellow-400 flex items-center justify-center gap-2 font-medium">
+                          <div className="w-3 h-3 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+                          <span className="uppercase tracking-wider text-xs">Checking availability...</span>
                         </div>
                       ) : checkAvailability.available ? (
-                        <div className="text-green-400">
+                        <div className="text-green-400 font-medium bg-green-500/10 border border-green-500/30 rounded py-2 px-3">
                           ✓ "{tempName.trim()}" is available
                         </div>
                       ) : (
-                        <div className="text-red-400">
+                        <div className="text-red-400 font-medium bg-red-500/10 border border-red-500/30 rounded py-2 px-3">
                           ✗ {checkAvailability.error}
                         </div>
                       )}
@@ -325,8 +332,8 @@ export default function MekManagementLightbox({
 
                 {/* Error Message */}
                 {error && (
-                  <div className="bg-red-900/30 border border-red-500/50 rounded p-3">
-                    <p className="text-red-400 text-sm text-center">{error}</p>
+                  <div className="bg-red-900/40 backdrop-blur-sm border-2 border-red-500/50 rounded p-3">
+                    <p className="text-red-400 text-sm text-center font-medium">{error}</p>
                   </div>
                 )}
 
@@ -335,7 +342,7 @@ export default function MekManagementLightbox({
                   <button
                     onClick={handleCancelEdit}
                     disabled={isSubmitting}
-                    className="flex-1 px-4 py-2 bg-gray-800/50 border border-gray-600/50 rounded text-gray-300 hover:bg-gray-700/50 hover:border-gray-500 transition-all disabled:opacity-50"
+                    className="flex-1 px-4 py-3 bg-gray-800/60 border-2 border-gray-600/50 rounded text-gray-300 text-sm font-bold uppercase tracking-wider hover:bg-gray-700/60 hover:border-gray-500 transition-all disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -348,7 +355,7 @@ export default function MekManagementLightbox({
                       isTyping ||
                       checkAvailability === undefined
                     }
-                    className="flex-1 mek-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-4 py-3 bg-yellow-500/10 border-2 border-yellow-500/30 text-yellow-400 text-sm font-bold uppercase tracking-wider rounded hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? 'Saving...' : 'Save'}
                   </button>
@@ -357,22 +364,28 @@ export default function MekManagementLightbox({
             )}
 
             {/* Slot Display */}
-            <div className="text-center mb-4">
-              <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Deployed To</div>
-              <div className="text-yellow-400 text-lg font-bold">SLOT {slotNumber}</div>
+            <div className="text-center mb-6">
+              <div className="text-[10px] text-gray-400 uppercase tracking-[0.2em] mb-2 font-bold">Deployed To</div>
+              <div className="inline-block px-6 py-2 bg-yellow-500/10 border-2 border-yellow-500/40 rounded">
+                <div className="text-yellow-400 text-xl font-bold font-orbitron tracking-wider" style={{
+                  textShadow: '0 0 15px rgba(250, 182, 23, 0.4)'
+                }}>
+                  SLOT {slotNumber}
+                </div>
+              </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <button
                 onClick={handleSwap}
-                className="flex-1 px-6 py-3 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm font-bold uppercase tracking-wider rounded hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all"
+                className="flex-1 px-6 py-3 bg-yellow-500/10 border-2 border-yellow-500/30 text-yellow-400 text-sm font-bold uppercase tracking-wider rounded hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all"
               >
                 Swap
               </button>
               <button
                 onClick={() => setShowTerminateConfirm(true)}
-                className="flex-1 px-6 py-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-bold uppercase tracking-wider rounded hover:bg-red-500/20 hover:border-red-500/50 transition-all"
+                className="flex-1 px-6 py-3 bg-red-500/10 border-2 border-red-500/30 text-red-400 text-sm font-bold uppercase tracking-wider rounded hover:bg-red-500/20 hover:border-red-500/50 transition-all"
               >
                 Terminate
               </button>

@@ -1,0 +1,1689 @@
+
+> mek-tycoon-react@0.1.0 build
+> next build
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\Ben Meyers\package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react-staging\package-lock.json
+
+   ▲ Next.js 15.5.3
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · cpus: 1
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings in 21.0s
+
+./src/components/MekProfileLightbox.tsx
+export 'LevelProgressStyle' (reexported as 'LevelProgressStyle') was not found in '@/components/LevelProgress' (possible exports: default)
+
+Import trace for requested module:
+./src/components/MekProfileLightbox.tsx
+./src/app/mek-layouts/page.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/app/global-error.tsx
+
+./src/components/MekProfileLightbox.tsx
+export 'LevelProgressStyle' (reexported as 'LevelProgressStyle') was not found in '@/components/LevelProgress' (possible exports: default)
+
+Import trace for requested module:
+./src/components/MekProfileLightbox.tsx
+./src/app/mek-layouts/page.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+   Skipping validation of types
+   Linting ...
+   Collecting page data ...
+   Generating static pages (0/98) ...
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /_not-found
+[🎯NAV-VISIBILITY] Normalized path: /_not-found | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-essence-duplicates
+[🎯NAV-VISIBILITY] Normalized path: /admin-essence-duplicates | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-blockfrost-analysis
+[🎯NAV-VISIBILITY] Normalized path: /admin-blockfrost-analysis | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-cleanup-mocks
+[🎯NAV-VISIBILITY] Normalized path: /admin-cleanup-mocks | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-components-showcase
+[🎯NAV-VISIBILITY] Normalized path: /admin-components-showcase | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-gold-repair
+[🎯NAV-VISIBILITY] Normalized path: /admin-gold-repair | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-level-colors
+[🎯NAV-VISIBILITY] Normalized path: /admin-level-colors | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-investigate-claim
+[🎯NAV-VISIBILITY] Normalized path: /admin-investigate-claim | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-mek-tree-tables
+[🎯NAV-VISIBILITY] Normalized path: /admin-mek-tree-tables | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-master-data
+[🎯NAV-VISIBILITY] Normalized path: /admin-master-data | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-rate-limit
+[🎯NAV-VISIBILITY] Normalized path: /admin-rate-limit | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-repair-payment-urls
+[🎯NAV-VISIBILITY] Normalized path: /admin-repair-payment-urls | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-sphere
+[🎯NAV-VISIBILITY] Normalized path: /admin-sphere | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-request-analysis
+[🎯NAV-VISIBILITY] Normalized path: /admin-request-analysis | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-save
+[🎯NAV-VISIBILITY] Normalized path: /admin-save | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-sync-health
+[🎯NAV-VISIBILITY] Normalized path: /admin-sync-health | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-shop
+[🎯NAV-VISIBILITY] Normalized path: /admin-shop | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin/buff-categories
+[🎯NAV-VISIBILITY] Normalized path: /admin/buff-categories | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin/buff-categories/seed
+[🎯NAV-VISIBILITY] Normalized path: /admin/buff-categories/seed | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin/chip-builder
+[🎯NAV-VISIBILITY] Normalized path: /admin/chip-builder | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-storage
+[🎯NAV-VISIBILITY] Normalized path: /admin-storage | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-tenure-fix
+[🎯NAV-VISIBILITY] Normalized path: /admin-tenure-fix | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-system-monitoring
+[🎯NAV-VISIBILITY] Normalized path: /admin-system-monitoring | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin/frames
+[🎯NAV-VISIBILITY] Normalized path: /admin/frames | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /airdrop-button
+[🎯NAV-VISIBILITY] Normalized path: /airdrop-button | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin/test-nmkr
+[🎯NAV-VISIBILITY] Normalized path: /admin/test-nmkr | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎨UI] Inventory is undefined/null - showing loading state
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin/users
+[🎯NAV-VISIBILITY] Normalized path: /admin/users | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin
+[🎯NAV-VISIBILITY] Normalized path: /admin | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /admin-whitelist-manager
+[🎯NAV-VISIBILITY] Normalized path: /admin-whitelist-manager | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /bank
+[🎯NAV-VISIBILITY] Normalized path: /bank | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /blueprint-builder
+[🎯NAV-VISIBILITY] Normalized path: /blueprint-builder | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /contracts/active
+[🎯NAV-VISIBILITY] Normalized path: /contracts/active | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /contracts/single-missions
+[🎯NAV-VISIBILITY] Normalized path: /contracts/single-missions | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /contracts/chapters
+[🎯NAV-VISIBILITY] Normalized path: /contracts/chapters | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /crafting
+[🎯NAV-VISIBILITY] Normalized path: /crafting | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /cirutree
+[🎯NAV-VISIBILITY] Normalized path: /cirutree | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /contracts
+[🎯NAV-VISIBILITY] Normalized path: /contracts | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /dev-toolbar
+[🎯NAV-VISIBILITY] Normalized path: /dev-toolbar | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /demo/tenure-progress
+[🎯NAV-VISIBILITY] Normalized path: /demo/tenure-progress | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /debug-nft-status
+[🎯NAV-VISIBILITY] Normalized path: /debug-nft-status | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /diagnostic-campaigns
+[🎯NAV-VISIBILITY] Normalized path: /diagnostic-campaigns | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /demo/tenure-progress/specifications
+[🎯NAV-VISIBILITY] Normalized path: /demo/tenure-progress/specifications | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /essence-market-test
+[🎯NAV-VISIBILITY] Normalized path: /essence-market-test | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /essence
+[🎯NAV-VISIBILITY] Normalized path: /essence | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceDistributionLightbox] Using shared context data: { hasData: false, isLoading: true, balanceCount: 0 }
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /essence-donut
+[🎯NAV-VISIBILITY] Normalized path: /essence-donut | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /hub2
+[🎯NAV-VISIBILITY] Normalized path: /hub2 | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /home
+[🎯NAV-VISIBILITY] Normalized path: /home | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /hub
+[🎯NAV-VISIBILITY] Normalized path: /hub | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /incinerator
+[🎯NAV-VISIBILITY] Normalized path: /incinerator | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /essence-market
+[🎯NAV-VISIBILITY] Normalized path: /essence-market | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /income-variations
+[🎯NAV-VISIBILITY] Normalized path: /income-variations | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /federation
+[🎯NAV-VISIBILITY] Normalized path: /federation | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /inventory
+[🎯NAV-VISIBILITY] Normalized path: /inventory | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /landing-debug
+[🎯NAV-VISIBILITY] Normalized path: /landing-debug | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /maintenance
+[🎯NAV-VISIBILITY] Normalized path: /maintenance | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /mek-card-styles
+[🎯NAV-VISIBILITY] Normalized path: /mek-card-styles | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /leaderboard
+[🎯NAV-VISIBILITY] Normalized path: /leaderboard | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /mek-gold-mining
+[🎯NAV-VISIBILITY] Normalized path: /mek-gold-mining | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /mek-rate-logging
+[🎯NAV-VISIBILITY] Normalized path: /mek-rate-logging | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /mek-chips-3
+[🎯NAV-VISIBILITY] Normalized path: /mek-chips-3 | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /mek-layouts
+[🎯NAV-VISIBILITY] Normalized path: /mek-layouts | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /mek-selector
+[🎯NAV-VISIBILITY] Normalized path: /mek-selector | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /nav-grid
+[🎯NAV-VISIBILITY] Normalized path: /nav-grid | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /nav-varied
+[🎯NAV-VISIBILITY] Normalized path: /nav-varied | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /
+[🎯NAV-VISIBILITY] Normalized path:  | Should hide: true
+[🎯NAV-VISIBILITY] Hiding navigation on landing page
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /rarity-bias
+[🎯NAV-VISIBILITY] Normalized path: /rarity-bias | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /scrapyard
+[🎯NAV-VISIBILITY] Normalized path: /scrapyard | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /search
+[🎯NAV-VISIBILITY] Normalized path: /search | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /sentry-example-page
+[🎯NAV-VISIBILITY] Normalized path: /sentry-example-page | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /shop-wow
+[🎯NAV-VISIBILITY] Normalized path: /shop-wow | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /profile
+[🎯NAV-VISIBILITY] Normalized path: /profile | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /shop
+[🎯NAV-VISIBILITY] Normalized path: /shop | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /shop-fullwidth
+[🎯NAV-VISIBILITY] Normalized path: /shop-fullwidth | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /tenure-display-demo
+[🎯NAV-VISIBILITY] Normalized path: /tenure-display-demo | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /tenure-diagnostic
+[🎯NAV-VISIBILITY] Normalized path: /tenure-diagnostic | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🔍 DIAGNOSTIC-PAGE] Diagnostic result: undefined
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /test-loader
+[🎯NAV-VISIBILITY] Normalized path: /test-loader | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /talent-builder
+[🎯NAV-VISIBILITY] Normalized path: /talent-builder | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /ui-showcase
+[🎯NAV-VISIBILITY] Normalized path: /ui-showcase | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /scrap-yard/story-climb
+[🎯NAV-VISIBILITY] Normalized path: /scrap-yard/story-climb | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /uni-chips
+[🎯NAV-VISIBILITY] Normalized path: /uni-chips | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /xp-allocation
+[🎯NAV-VISIBILITY] Normalized path: /xp-allocation | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /landing
+[🎯NAV-VISIBILITY] Normalized path: /landing | Should hide: true
+[🎯NAV-VISIBILITY] Hiding navigation on landing page
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🔍BLUR] Column 0 render: isActive=false, blurValue="none", idleBackdropBlur=0
+[🔍BLUR] Column 1 render: isActive=false, blurValue="none", idleBackdropBlur=0
+[🔍BLUR] Column 2 render: isActive=false, blurValue="none", idleBackdropBlur=0
+[🔍BLUR] Column 3 render: isActive=false, blurValue="none", idleBackdropBlur=0
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🎯NAV-VISIBILITY] Current pathname: /achievements
+[🎯NAV-VISIBILITY] Normalized path: /achievements | Should hide: false
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+   Generating static pages (24/98) 
+   Generating static pages (48/98) 
+   Generating static pages (73/98) 
+ ✓ Generating static pages (98/98)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                   Size  First Load JS
+┌ ○ /                                        741 B         247 kB
+├ ○ /_not-found                              179 B         216 kB
+├ ○ /achievements                          7.54 kB         223 kB
+├ ○ /admin                                  3.5 kB         240 kB
+├ ○ /admin-blockfrost-analysis             2.08 kB         239 kB
+├ ○ /admin-cleanup-mocks                   1.16 kB         238 kB
+├ ○ /admin-components-showcase             2.23 kB         221 kB
+├ ○ /admin-essence-duplicates              2.79 kB         239 kB
+├ ○ /admin-gold-repair                     1.82 kB         238 kB
+├ ○ /admin-investigate-claim                2.5 kB         239 kB
+├ ○ /admin-level-colors                    2.08 kB         239 kB
+├ ○ /admin-master-data                      174 kB         536 kB
+├ ○ /admin-mek-tree-tables                 4.33 kB         241 kB
+├ ○ /admin-rate-limit                      1.42 kB         238 kB
+├ ○ /admin-repair-payment-urls             1.55 kB         238 kB
+├ ○ /admin-request-analysis                1.76 kB         238 kB
+├ ○ /admin-save                            2.86 kB         240 kB
+├ ○ /admin-shop                            3.46 kB         240 kB
+├ ○ /admin-sphere                          2.75 kB         219 kB
+├ ○ /admin-storage                           984 B         239 kB
+├ ○ /admin-sync-health                     2.47 kB         239 kB
+├ ○ /admin-system-monitoring               2.07 kB         244 kB
+├ ○ /admin-tenure-fix                      2.54 kB         244 kB
+├ ○ /admin-whitelist-manager               3.89 kB         241 kB
+├ ○ /admin/buff-categories                 7.46 kB         247 kB
+├ ○ /admin/buff-categories/seed            1.31 kB         240 kB
+├ ○ /admin/chip-builder                    3.53 kB         244 kB
+├ ○ /admin/frames                           2.2 kB         218 kB
+├ ○ /admin/test-nmkr                       5.33 kB         248 kB
+├ ○ /admin/users                           8.06 kB         246 kB
+├ ○ /airdrop-button                         2.9 kB         219 kB
+├ ƒ /api/claude-files                        179 B         216 kB
+├ ƒ /api/claude-files/delete                 179 B         216 kB
+├ ƒ /api/commit                              179 B         216 kB
+├ ƒ /api/delete-save                         179 B         216 kB
+├ ƒ /api/list-images                         179 B         216 kB
+├ ƒ /api/nmkr-webhook                        179 B         216 kB
+├ ƒ /api/restore                             179 B         216 kB
+├ ƒ /api/save                                179 B         216 kB
+├ ƒ /api/sentry-example-api                  179 B         216 kB
+├ ƒ /api/serve-image                         179 B         216 kB
+├ ƒ /api/sync-saves                          179 B         216 kB
+├ ƒ /api/wallet/generate-nonce               179 B         216 kB
+├ ƒ /api/wallet/verify-signature             179 B         216 kB
+├ ○ /bank                                   102 kB         349 kB
+├ ○ /blueprint-builder                     3.01 kB         224 kB
+├ ○ /cirutree                               9.4 kB         225 kB
+├ ○ /contracts                             3.15 kB         219 kB
+├ ƒ /contracts/[layout]                    13.6 kB         272 kB
+├ ○ /contracts/active                      5.72 kB         222 kB
+├ ○ /contracts/chapters                    7.48 kB         223 kB
+├ ƒ /contracts/chapters/[chapterId]/nodes  4.59 kB         220 kB
+├ ○ /contracts/single-missions               177 B         259 kB
+├ ƒ /corp/[identifier]                      109 kB         422 kB
+├ ○ /crafting                              13.5 kB         235 kB
+├ ○ /debug-nft-status                      1.61 kB         238 kB
+├ ○ /demo/tenure-progress                   3.6 kB         219 kB
+├ ○ /demo/tenure-progress/specifications   2.18 kB         218 kB
+├ ○ /dev-toolbar                           2.96 kB         240 kB
+├ ○ /diagnostic-campaigns                    961 B         238 kB
+├ ○ /essence                               10.9 kB         262 kB
+├ ○ /essence-donut                         10.7 kB         252 kB
+├ ○ /essence-market                        32.6 kB         274 kB
+├ ○ /essence-market-test                     373 B         216 kB
+├ ○ /federation                            4.99 kB         242 kB
+├ ○ /home                                  37.2 kB         357 kB
+├ ○ /hub                                   7.02 kB         251 kB
+├ ○ /hub2                                  5.21 kB         249 kB
+├ ○ /icon.png                                  0 B            0 B
+├ ○ /incinerator                           3.98 kB         241 kB
+├ ○ /income-variations                      1.5 kB         217 kB
+├ ○ /inventory                             4.17 kB         222 kB
+├ ○ /landing                                 166 B         225 kB
+├ ○ /landing-debug                         2.43 kB         218 kB
+├ ○ /leaderboard                           7.04 kB         223 kB
+├ ○ /maintenance                             179 B         216 kB
+├ ○ /mek-card-styles                       1.59 kB         217 kB
+├ ○ /mek-chips-3                           9.59 kB         231 kB
+├ ○ /mek-gold-mining                         503 B         216 kB
+├ ○ /mek-layouts                           25.5 kB         262 kB
+├ ○ /mek-rate-logging                        580 B         216 kB
+├ ○ /mek-selector                          7.47 kB         223 kB
+├ ƒ /mek-tree/[mekId]                      4.41 kB         243 kB
+├ ƒ /mek/[id]                              7.48 kB         250 kB
+├ ○ /nav-grid                              3.04 kB         219 kB
+├ ○ /nav-varied                             5.9 kB         222 kB
+├ ○ /profile                               7.54 kB         303 kB
+├ ○ /rarity-bias                           3.16 kB         240 kB
+├ ○ /scrap-yard/story-climb                49.4 kB         312 kB
+├ ○ /scrapyard                             2.01 kB         218 kB
+├ ○ /search                                2.64 kB         241 kB
+├ ○ /sentry-example-page                   2.68 kB         219 kB
+├ ○ /shop                                  5.68 kB         247 kB
+├ ○ /shop-fullwidth                          11 kB         253 kB
+├ ○ /shop-wow                              3.43 kB         240 kB
+├ ○ /talent-builder                        16.1 kB         256 kB
+├ ○ /tenure-diagnostic                     2.16 kB         244 kB
+├ ○ /tenure-display-demo                   4.12 kB         220 kB
+├ ○ /test-loader                           4.19 kB         223 kB
+├ ○ /ui-showcase                           16.2 kB         232 kB
+├ ○ /uni-chips                              5.6 kB         227 kB
+└ ○ /xp-allocation                         8.71 kB         225 kB
++ First Load JS shared by all               216 kB
+  ├ chunks/4bd1b696-182b6b13bdad92e3.js    54.2 kB
+  ├ chunks/504-4e62dc0c58d35396.js          121 kB
+  ├ chunks/52774a7f-a3892ae1d858db9d.js    37.8 kB
+  └ other shared chunks (total)            2.35 kB
+
+
+ƒ Middleware                               83.1 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

@@ -272,15 +272,8 @@ export async function decryptSession(encryptedString: string): Promise<any> {
     // Convert decrypted buffer to JSON
     const decoder = new TextDecoder();
     const sessionJson = decoder.decode(decryptedBuffer);
-    console.log('[TRACE-DECRYPT-1] Decrypted JSON string (first 200 chars):', sessionJson.substring(0, 200));
 
     const session = JSON.parse(sessionJson);
-    console.log('[TRACE-DECRYPT-2] Parsed session object:', {
-      walletAddress: session.walletAddress?.slice(0, 12) + '...',
-      stakeAddress: session.stakeAddress?.slice(0, 12) + '...',
-      walletAddressIsUndefined: session.walletAddress === undefined,
-      timestamp: new Date().toISOString()
-    });
 
     logger.log('session_decrypt_complete', {
       deviceId: encryptedData.deviceId.substring(0, 16) + '...',

@@ -3,18 +3,16 @@ import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
 /**
- * Commemorative NFT Reservation System
+ * Commemorative NFT Reservation System (Legacy Phase 1)
  *
  * This system manages the reservation flow for Lab Rat NFTs:
- * 1. User clicks "Claim NFT" → reserve next available NFT for 10 minutes
- * 2. Timer pauses when NMKR payment window is open
- * 3. Timer resumes if window closes without payment
- * 4. 30-second grace period after expiry for slow payments
- * 5. Auto-release expired reservations
+ * 1. User clicks "Claim NFT" → reserve next available NFT for 20 minutes
+ * 2. Timer matches NMKR's payment window duration
+ * 3. Auto-release expired reservations via cron job
  */
 
-const RESERVATION_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
-const GRACE_PERIOD = 30 * 1000; // 30 seconds
+const RESERVATION_TIMEOUT = 20 * 60 * 1000; // 20 minutes to match NMKR's payment window
+const GRACE_PERIOD = 5 * 1000; // 5 seconds (minimal grace for network delays)
 
 // Create a new reservation for the next available NFT
 export const createReservation = mutation({
@@ -38,6 +36,24 @@ export const createReservation = mutation({
 
     if (!availableNFT) {
       console.log('[RESERVATION] No available NFTs');
+
+      // Check if any NFTs are currently reserved (not sold)
+      const reservedNFTs = await ctx.db
+        .query("commemorativeNFTInventory")
+        .withIndex("by_status_and_number", (q) => q.eq("status", "reserved"))
+        .collect();
+
+      if (reservedNFTs.length > 0) {
+        // There are reserved NFTs that might become available
+        console.log('[RESERVATION] All NFTs currently reserved, but may become available');
+        return {
+          success: false,
+          error: "TEMPORARILY_UNAVAILABLE",
+          message: "All NFTs are currently in the reservation phase. If they are not purchased by the users within the 10 minute reserve period, they will be available. Please check back in 5-10 minutes.",
+        };
+      }
+
+      // All NFTs are sold
       return {
         success: false,
         error: "All NFTs have been claimed",
@@ -65,24 +81,85 @@ export const createReservation = mutation({
       };
     }
 
-    // Create the reservation
+    // Check if user has already completed a claim (CRITICAL: Prevent duplicate claims)
+    // Check 1: Look for completed reservations
+    const completedReservation = await ctx.db
+      .query("commemorativeNFTReservations")
+      .withIndex("by_reserved_by", (q) => q.eq("reservedBy", args.walletAddress))
+      .filter((q) => q.eq(q.field("status"), "completed"))
+      .first();
+
+    if (completedReservation) {
+      console.log('[RESERVATION] User has already claimed an NFT (reservation):', completedReservation.nftNumber);
+      return {
+        success: false,
+        error: "You have already claimed your commemorative NFT. Only one NFT per wallet is allowed.",
+      };
+    }
+
+    // Check 2: Look for sold NFTs in inventory (soldTo field is the source of truth)
+    const soldNFT = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_status", (q) => q.eq("status", "sold"))
+      .filter((q) => q.eq(q.field("soldTo"), args.walletAddress))
+      .first();
+
+    if (soldNFT) {
+      console.log('[RESERVATION] User has already claimed an NFT (inventory):', soldNFT.nftNumber, soldNFT.name);
+      return {
+        success: false,
+        error: "You have already claimed your commemorative NFT. Only one NFT per wallet is allowed.",
+      };
+    }
+
+    // Create the reservation with optimistic locking to prevent double-booking
     const expiresAt = now + RESERVATION_TIMEOUT;
-    const reservationId = await ctx.db.insert("commemorativeNFTReservations", {
-      nftInventoryId: availableNFT._id,
-      nftUid: availableNFT.nftUid,
-      nftNumber: availableNFT.nftNumber,
-      reservedBy: args.walletAddress,
-      reservedAt: now,
-      expiresAt,
-      status: "active",
-    });
+    let reservationId: any;
 
-    // Update NFT inventory status to reserved
-    await ctx.db.patch(availableNFT._id, {
-      status: "reserved",
-    });
+    try {
+      // CRITICAL SECURITY FIX: Check NFT status right before reservation
+      // This prevents race condition where two users try to reserve same NFT
+      const currentNFT = await ctx.db.get(availableNFT._id);
 
-    console.log('[RESERVATION] Created reservation:', reservationId, 'for NFT:', availableNFT.nftNumber);
+      if (!currentNFT || currentNFT.status !== "available") {
+        console.log('[🛡️RESERVATION] NFT status changed during reservation:', currentNFT?.status);
+        return {
+          success: false,
+          error: "This NFT was just claimed by another user. Please try again.",
+        };
+      }
+
+      // First create reservation
+      reservationId = await ctx.db.insert("commemorativeNFTReservations", {
+        nftInventoryId: availableNFT._id,
+        nftUid: availableNFT.nftUid,
+        nftNumber: availableNFT.nftNumber,
+        reservedBy: args.walletAddress,
+        reservedAt: now,
+        expiresAt,
+        status: "active",
+      });
+
+      // CRITICAL FIX: Update NFT inventory with ALL reservation fields
+      // This ensures expiresAt is set so cron cleanup can work
+      await ctx.db.patch(availableNFT._id, {
+        status: "reserved",
+        reservedBy: args.walletAddress,
+        reservedAt: now,
+        expiresAt: expiresAt,
+        paymentWindowOpenedAt: undefined,
+        paymentWindowClosedAt: undefined,
+      });
+
+      console.log('[RESERVATION] Created reservation:', reservationId, 'for NFT:', availableNFT.nftNumber);
+    } catch (error) {
+      // Rollback: If inventory update failed, delete the reservation
+      if (reservationId) {
+        console.log('[🛡️RESERVATION] Rolling back reservation due to error:', error);
+        await ctx.db.delete(reservationId);
+      }
+      throw new Error('Failed to create reservation: ' + error);
+    }
 
     return {
       success: true,
@@ -171,6 +248,18 @@ export const completeReservation = mutation({
       return { success: false, error: "Reservation not found" };
     }
 
+    // Look up company name for historical tracking
+    const walletAddress = reservation.reservedBy;
+    let companyNameAtSale: string | undefined;
+
+    if (walletAddress) {
+      const goldMiningRecord = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+        .first();
+      companyNameAtSale = goldMiningRecord?.companyName || undefined;
+    }
+
     // Update reservation status
     await ctx.db.patch(args.reservationId, {
       status: "completed",
@@ -179,6 +268,9 @@ export const completeReservation = mutation({
     // Update NFT inventory to sold
     await ctx.db.patch(reservation.nftInventoryId, {
       status: "sold",
+      soldTo: walletAddress,
+      soldAt: Date.now(),
+      companyNameAtSale,
     });
 
     console.log('[RESERVATION] Completed reservation:', args.reservationId, 'for NFT:', reservation.nftNumber);
@@ -210,6 +302,14 @@ export const completeReservationByWallet = mutation({
 
     console.log('[RESERVATION] Found reservation:', reservation._id, 'NFT:', reservation.nftNumber);
 
+    // Look up company name for historical tracking
+    let companyNameAtSale: string | undefined;
+    const goldMiningRecord = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+    companyNameAtSale = goldMiningRecord?.companyName || undefined;
+
     // Update reservation status
     await ctx.db.patch(reservation._id, {
       status: "completed",
@@ -218,6 +318,9 @@ export const completeReservationByWallet = mutation({
     // Update NFT inventory to sold
     await ctx.db.patch(reservation.nftInventoryId, {
       status: "sold",
+      soldTo: args.walletAddress,
+      soldAt: Date.now(),
+      companyNameAtSale,
     });
 
     console.log('[RESERVATION] Completed reservation from webhook:', reservation._id, 'for NFT:', reservation.nftNumber);
@@ -311,10 +414,18 @@ async function cleanupExpiredReservations(ctx: any, now: number) {
   const expiredReservations = await ctx.db
     .query("commemorativeNFTReservations")
     .withIndex("by_status", (q) => q.eq("status", "active"))
-    .filter((q: any) => q.lt(q.field("expiresAt"), now - GRACE_PERIOD)) // 30 seconds grace
+    .filter((q: any) => q.lt(q.field("expiresAt"), now - GRACE_PERIOD)) // 5 minutes grace
     .collect();
 
+  let cleanedCount = 0;
+
   for (const reservation of expiredReservations) {
+    // CRITICAL SECURITY FIX: Don't expire if payment window is currently open
+    if (reservation.paymentWindowOpenedAt && !reservation.paymentWindowClosedAt) {
+      console.log('[🛡️CLEANUP] Skipping reservation with open payment window:', reservation._id, 'NFT:', reservation.nftNumber);
+      continue; // Skip this one - user is actively trying to pay
+    }
+
     console.log('[RESERVATION] Auto-expiring reservation:', reservation._id, 'NFT:', reservation.nftNumber);
 
     // Mark as expired
@@ -329,14 +440,18 @@ async function cleanupExpiredReservations(ctx: any, now: number) {
         status: "available",
       });
     }
+
+    cleanedCount++;
   }
 
-  if (expiredReservations.length > 0) {
-    console.log('[RESERVATION] Cleaned up', expiredReservations.length, 'expired reservations');
+  if (cleanedCount > 0) {
+    console.log('[RESERVATION] Cleaned up', cleanedCount, 'expired reservations');
   }
 }
 
-// Manual cleanup mutation (can be called from admin panel or cron job)
+// Manual cleanup mutation (can be called from admin panel)
+// Note: Scheduled cleanup is handled by commemorativeNFTReservationsCampaign.internalCleanupExpiredReservations
+// which cleans both campaign and legacy reservations hourly
 export const cleanupExpiredReservationsMutation = mutation({
   handler: async (ctx) => {
     const now = Date.now();
