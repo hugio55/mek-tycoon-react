@@ -16,7 +16,17 @@ interface SyncRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    const body: SyncRequest = await request.json();
+    // Parse request body with error handling
+    let body: SyncRequest;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      );
+    }
+
     const { projectUid } = body;
 
     if (!projectUid) {

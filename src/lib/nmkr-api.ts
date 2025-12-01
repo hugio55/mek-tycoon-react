@@ -78,6 +78,7 @@ export async function fetchNMKRNFTs(
 
 /**
  * Fetch all NFTs from a project (handles pagination automatically)
+ * Includes safety limits to prevent infinite loops
  */
 export async function fetchAllProjectNFTs(
   projectUid: string,
@@ -86,8 +87,9 @@ export async function fetchAllProjectNFTs(
   const allNFTs: NMKRNFTState[] = [];
   let page = 1;
   const pageSize = 1000; // Max allowed by NMKR API
+  const maxPages = 100; // Safety limit: max 100,000 NFTs
 
-  while (true) {
+  while (page <= maxPages) {
     const nfts = await fetchNMKRNFTs(projectUid, 'all', pageSize, page, apiKey);
 
     if (nfts.length === 0) {
@@ -101,6 +103,10 @@ export async function fetchAllProjectNFTs(
     }
 
     page++;
+  }
+
+  if (page > maxPages) {
+    console.warn(`[NMKR API] Hit max page limit (${maxPages}). Some NFTs may be missing.`);
   }
 
   return allNFTs;

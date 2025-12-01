@@ -47,7 +47,7 @@ const StarField = () => {
         y: (Math.random() - 0.5) * 2000,
         z: Math.random() * MAX_DEPTH,
         age: 1000,
-        size: 0.6 + Math.random() * 0.3
+        size: 1 + Math.random() * 0.5
       });
     }
 
@@ -85,7 +85,7 @@ const StarField = () => {
             star.x = (Math.random() - 0.5) * 2000;
             star.y = (Math.random() - 0.5) * 2000;
             star.age = 0;
-            star.size = 0.6 + Math.random() * 0.3;
+            star.size = 1 + Math.random() * 0.5;
           }
 
           const scale = MAX_DEPTH / star.z;

@@ -886,6 +886,139 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
           </div>
         );
 
+      case 'wallet_verification':
+        // Show connecting spinner if wallet connection in progress
+        if (isConnectingWallet) {
+          return (
+            <div className="text-center py-8">
+              <div className="mb-6">
+                <div className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <h2 className="text-xl font-bold text-cyan-400 mb-2">Connecting Wallet...</h2>
+                <p className="text-white/60 text-sm">Please approve the connection in your wallet</p>
+              </div>
+            </div>
+          );
+        }
+
+        // Mobile browser - no window.cardano available
+        if (isMobileBrowser) {
+          return (
+            <div className="text-center py-6">
+              <div className="mb-6">
+                <div className="w-16 h-16 mx-auto rounded-full bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-white mb-4">Wallet Verification Required</h2>
+              </div>
+
+              <div className="p-4 bg-white/5 border border-white/10 rounded-xl mb-6">
+                <p className="text-sm text-white/70 leading-relaxed mb-4">
+                  Please paste this link into your mobile wallet's browser to verify.
+                </p>
+                <p className="text-sm text-white/70 leading-relaxed">
+                  Note: this must be the wallet you used to create your Mek Tycoon corporation:{' '}
+                  <span
+                    className="font-bold"
+                    style={{
+                      color: '#22d3ee',
+                      textShadow: '0 0 10px rgba(34, 211, 238, 0.6)',
+                    }}
+                  >
+                    {corporationName || 'Your Corporation'}
+                  </span>
+                </p>
+              </div>
+
+              <button
+                onClick={copyLinkToClipboard}
+                className="w-full py-3 px-6 text-base font-semibold tracking-wider text-black bg-gradient-to-r from-cyan-400 to-cyan-500 rounded-xl hover:from-cyan-300 hover:to-cyan-400 transition-all duration-300 shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-2"
+                style={{ fontFamily: "'Inter', 'Arial', sans-serif" }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Copy Link
+              </button>
+
+              <button
+                onClick={() => setState('reserved')}
+                className="w-full mt-3 py-2 px-4 text-sm font-medium text-white/60 hover:text-white transition-colors"
+              >
+                Go Back
+              </button>
+            </div>
+          );
+        }
+
+        // Desktop/WebView - show wallet picker
+        return (
+          <div className="text-center py-6">
+            <div className="mb-6">
+              <div className="w-16 h-16 mx-auto rounded-full bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">Verify Wallet Ownership</h2>
+              <p className="text-sm text-white/60 leading-relaxed">
+                Connect the wallet for{' '}
+                <span
+                  className="font-bold"
+                  style={{
+                    color: '#22d3ee',
+                    textShadow: '0 0 10px rgba(34, 211, 238, 0.6)',
+                  }}
+                >
+                  {corporationName || 'your corporation'}
+                </span>
+              </p>
+            </div>
+
+            {/* Error message */}
+            {walletVerificationError && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+                <p className="text-sm text-red-400">{walletVerificationError}</p>
+              </div>
+            )}
+
+            {/* Wallet buttons */}
+            {availableWallets.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {availableWallets.map(wallet => (
+                  <button
+                    key={wallet.name}
+                    onClick={() => connectAndVerifyWallet(wallet)}
+                    className="group relative bg-black/30 border border-cyan-500/30 text-white px-4 py-3 rounded-xl transition-all hover:bg-cyan-500/10 hover:border-cyan-500/50 flex items-center justify-center gap-2"
+                  >
+                    <img
+                      src={wallet.icon}
+                      alt={wallet.name}
+                      className="w-6 h-6 rounded"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                    <span className="font-medium">{wallet.name}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+                <p className="text-sm text-yellow-400">
+                  No Cardano wallets detected. Please install a wallet extension (Nami, Eternl, Flint, etc.)
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => setState('reserved')}
+              className="w-full py-2 px-4 text-sm font-medium text-white/60 hover:text-white transition-colors"
+            >
+              Go Back
+            </button>
+          </div>
+        );
+
       case 'payment':
         return (
           <div className="text-center">

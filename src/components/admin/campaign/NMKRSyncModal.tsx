@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 interface SyncDiscrepancy {
@@ -35,9 +35,10 @@ export default function NMKRSyncModal({
   const [mounted, setMounted] = useState(false);
   const [syncingNftUid, setSyncingNftUid] = useState<string | null>(null);
 
-  useState(() => {
+  // Must use useEffect to set mounted state after hydration (for portal to work)
+  useEffect(() => {
     setMounted(true);
-  });
+  }, []);
 
   if (!isOpen || !mounted) return null;
 
