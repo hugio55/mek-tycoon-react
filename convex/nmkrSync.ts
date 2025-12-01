@@ -255,7 +255,7 @@ export const getCampaignInventorySummary = query({
   handler: async (ctx, args) => {
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .filter((q) => q.eq(q.field("campaignId"), args.campaignId))
+      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
       .collect();
 
     const available = inventory.filter((i) => i.status === "available");

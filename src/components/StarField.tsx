@@ -7,6 +7,7 @@ interface Star {
   y: number;
   z: number;
   age: number;
+  size: number;
 }
 
 const StarField = () => {
@@ -45,7 +46,8 @@ const StarField = () => {
         x: (Math.random() - 0.5) * 2000,
         y: (Math.random() - 0.5) * 2000,
         z: Math.random() * MAX_DEPTH,
-        age: 1000
+        age: 1000,
+        size: 0.3 + Math.random() * 0.2
       });
     }
 
@@ -55,7 +57,8 @@ const StarField = () => {
         x: (Math.random() - 0.5) * 2000,
         y: (Math.random() - 0.5) * 2000,
         z: Math.random() * MAX_DEPTH,
-        age: 1000
+        age: 1000,
+        size: 2
       });
     }
 
@@ -82,6 +85,7 @@ const StarField = () => {
             star.x = (Math.random() - 0.5) * 2000;
             star.y = (Math.random() - 0.5) * 2000;
             star.age = 0;
+            star.size = 0.3 + Math.random() * 0.2;
           }
 
           const scale = MAX_DEPTH / star.z;
@@ -97,11 +101,9 @@ const StarField = () => {
           const fadeInProgress = Math.min(star.age / fadeInDuration, 1);
           const opacity = fadeInProgress * 0.8;
 
-          const size = 2;
-
           ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
           ctx.beginPath();
-          ctx.arc(screenX, screenY, size, 0, PI2);
+          ctx.arc(screenX, screenY, star.size, 0, PI2);
           ctx.fill();
         }
 
