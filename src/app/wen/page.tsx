@@ -27,27 +27,30 @@ export default function MaintenancePage() {
   const textScale = isMobile ? 1.267 : 1;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      {/* Content floating against background */}
-      <div className="text-center space-y-8">
-        {/* Generating Loader - responsive scale */}
-        <div className="flex items-center justify-center" style={{ transform: `scale(${containerScale})` }}>
-          <GeneratingLoader
-            text="Mek Tycoon is being built."
-            colorScheme={LIGHT_CYAN_SCHEME}
-            textScale={textScale}
-          />
-        </div>
-        {/* Discord link */}
-        <a
-          href="https://discord.com/channels/938648161810006119/1422726928934113340"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-white/40 text-sm hover:text-white/60 transition-colors duration-300"
-        >
-          Join the conversation
-        </a>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      {/* Loader container with height to account for scaled size */}
+      <div
+        className="flex items-center justify-center"
+        style={{
+          transform: `scale(${containerScale})`,
+          marginBottom: isMobile ? '120px' : '160px'
+        }}
+      >
+        <GeneratingLoader
+          text="Mek Tycoon is being built."
+          colorScheme={LIGHT_CYAN_SCHEME}
+          textScale={textScale}
+        />
       </div>
+      {/* Discord link - positioned below the visual circle */}
+      <a
+        href="https://discord.com/channels/938648161810006119/1422726928934113340"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-white/40 text-sm hover:text-white/60 transition-colors duration-300"
+      >
+        Join the conversation
+      </a>
     </div>
   );
 }
