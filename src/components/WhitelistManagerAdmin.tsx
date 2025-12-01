@@ -4,18 +4,12 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
-import { DatabaseProvider, useDatabaseContext } from '@/contexts/DatabaseContext';
+import { ProductionDatabaseProvider, useProductionDatabase } from '@/contexts/ProductionDatabaseContext';
+import ProductionBanner from '@/components/admin/ProductionBanner';
 
 function WhitelistManagerAdminContent() {
-  // Get database context
-  const {
-    selectedDatabase,
-    setSelectedDatabase,
-    client,
-    canMutate,
-    productionMutationsEnabled,
-    setProductionMutationsEnabled
-  } = useDatabaseContext();
+  // Get production database context (always Sturgeon)
+  const { client, canMutate, mutationsEnabled } = useProductionDatabase();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
@@ -26,9 +20,6 @@ function WhitelistManagerAdminContent() {
   const [snapshotName, setSnapshotName] = useState('');
   const [snapshotDescription, setSnapshotDescription] = useState('');
 
-  // Production mutation confirmation
-  const [confirmationText, setConfirmationText] = useState('');
-  const [showConfirmationPrompt, setShowConfirmationPrompt] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // Mount portal
@@ -74,7 +65,7 @@ function WhitelistManagerAdminContent() {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [client, selectedDatabase]);
+  }, [client]);
 
   // Query selected whitelist details
   useEffect(() => {
