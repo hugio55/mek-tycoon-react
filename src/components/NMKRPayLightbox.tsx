@@ -556,9 +556,6 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
                   <h4 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Inter, sans-serif', color: '#fef3c7', letterSpacing: '-0.02em' }}>
                     {claimedNFT.name}
                   </h4>
-                  <p className="text-lg mb-3" style={{ fontFamily: 'Inter, sans-serif', color: '#fbbf24', fontWeight: 600 }}>
-                    Edition #{claimedNFT.editionNumber}
-                  </p>
                   {mintDate && (
                     <div className="text-sm text-white/60" style={{ fontFamily: 'Inter, sans-serif' }}>
                       <span>Minted on </span>
