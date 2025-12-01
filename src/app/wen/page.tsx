@@ -18,13 +18,19 @@ export default function MaintenancePage() {
         .sphere-container {
           --sphere-scale: 2;
           --sphere-margin: 140px;
-          --text-scale: 1;
         }
+        /* Touch devices (mobile/tablet) */
         @media (any-pointer: coarse), (hover: none) {
           .sphere-container {
             --sphere-scale: 1.5;
             --sphere-margin: 80px;
-            --text-scale: 1.267;
+          }
+        }
+        /* Narrower phones (under 380px) get smaller scale */
+        @media (any-pointer: coarse) and (max-width: 380px) {
+          .sphere-container {
+            --sphere-scale: 1.3;
+            --sphere-margin: 70px;
           }
         }
       `}</style>
