@@ -38,7 +38,7 @@ export const getInventoryDiscrepancies = query({
     nmkrStatuses: v.array(
       v.object({
         nftUid: v.string(),
-        nmkrStatus: v.union(v.literal("free"), v.literal("reserved"), v.literal("sold")),
+        nmkrStatus: v.string(), // 'free' | 'reserved' | 'sold' - simplified to avoid type depth issues
         soldTo: v.optional(v.string()),
       })
     ),
@@ -55,8 +55,9 @@ export const getInventoryDiscrepancies = query({
     const discrepancies: SyncDiscrepancy[] = [];
 
     // Create a map of NMKR statuses for quick lookup
-    const nmkrMap = new Map(
-      nmkrStatuses.map((status) => [status.nftUid, status])
+    type NMKRStatusEntry = { nftUid: string; nmkrStatus: string; soldTo?: string };
+    const nmkrMap = new Map<string, NMKRStatusEntry>(
+      nmkrStatuses.map((status: NMKRStatusEntry) => [status.nftUid, status])
     );
 
     // Check each inventory item against NMKR data
@@ -69,7 +70,8 @@ export const getInventoryDiscrepancies = query({
       }
 
       // Convert NMKR state to Convex status for comparison
-      const expectedConvexStatus = nmkrStateToConvexStatus(nmkrData.nmkrStatus);
+      const nmkrStatus = nmkrData.nmkrStatus as 'free' | 'reserved' | 'sold';
+      const expectedConvexStatus = nmkrStateToConvexStatus(nmkrStatus);
 
       // Check if there's a mismatch
       if (item.status !== expectedConvexStatus) {
@@ -77,8 +79,8 @@ export const getInventoryDiscrepancies = query({
           nftUid: item.nftUid,
           nftNumber: item.nftNumber,
           name: item.name,
-          nmkrStatus: nmkrData.nmkrStatus,
-          convexStatus: item.status,
+          nmkrStatus: nmkrStatus,
+          convexStatus: item.status as 'available' | 'reserved' | 'sold',
           nmkrSoldTo: nmkrData.soldTo,
           convexSoldTo: item.soldTo,
         });
@@ -95,11 +97,12 @@ export const getInventoryDiscrepancies = query({
 export const syncSingleNFT = mutation({
   args: {
     nftUid: v.string(),
-    nmkrStatus: v.union(v.literal("free"), v.literal("reserved"), v.literal("sold")),
+    nmkrStatus: v.string(), // 'free' | 'reserved' | 'sold' - simplified to avoid type depth issues
     soldTo: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { nftUid, nmkrStatus, soldTo } = args;
+    const { nftUid, soldTo } = args;
+    const nmkrStatus = args.nmkrStatus as 'free' | 'reserved' | 'sold';
 
     // Find the NFT in inventory
     const nft = await ctx.db

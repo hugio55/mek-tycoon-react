@@ -308,7 +308,7 @@ export default function AdminMasterDataPage() {
     { name: 'Profile', path: '/profile' },
     { name: 'Contracts', path: '/contracts' },
     { name: 'NFT Phases', path: '/landing-v2' },
-    { name: 'Marketplace', path: '/marketplace' },
+    { name: 'Essence Market', path: '/essence-market' },
     { name: 'Leaderboard', path: '/leaderboard' },
     { name: 'Admin Panel', path: '/admin' },
   ];
@@ -4380,16 +4380,20 @@ function CampaignManagerWithDatabase({
   onToggleCleanup,
   onRunCleanup,
   onSyncCounters,
+  onVerifyWithNMKR,
   cleaningCampaignId,
   syncingCampaignId,
+  verifyingCampaignId,
   client
 }: {
   campaigns: any[];
   onToggleCleanup: (campaignId: string, enabled: boolean) => Promise<void>;
   onRunCleanup: (campaignId: string) => Promise<void>;
   onSyncCounters: (campaignId: string) => Promise<void>;
+  onVerifyWithNMKR: (campaignId: string, campaignName: string, nmkrProjectUid?: string) => Promise<void>;
   cleaningCampaignId: string | null;
   syncingCampaignId: string | null;
+  verifyingCampaignId: string | null;
   client: any;
 }) {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>();
@@ -4500,6 +4504,18 @@ function CampaignManagerWithDatabase({
                   title="Recalculate counters from actual inventory (fixes mismatched counts)"
                 >
                   {syncingCampaignId === campaign._id ? '⏳ Syncing...' : '🔄 Sync Counters'}
+                </button>
+                <span className="text-gray-600">|</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onVerifyWithNMKR(campaign._id, campaign.name, campaign.nmkrProjectUid);
+                  }}
+                  disabled={verifyingCampaignId === campaign._id}
+                  className="text-xs text-purple-400 hover:text-purple-300 transition-colors underline disabled:opacity-50"
+                  title="Query NMKR API to verify inventory statuses match"
+                >
+                  {verifyingCampaignId === campaign._id ? '⏳ Verifying...' : '🔍 Verify with NMKR'}
                 </button>
                 {selectedCampaignId === campaign._id && (
                   <span className="text-xs text-yellow-400 ml-auto">
@@ -4690,6 +4706,111 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
     });
   };
 
+  // NMKR Verify handler - queries NMKR API and compares with Convex
+  const handleVerifyWithNMKR = async (campaignId: string, campaignName: string, nmkrProjectUid?: string) => {
+    if (!nmkrProjectUid) {
+      alert('This campaign does not have an NMKR Project UID configured.');
+      return;
+    }
+
+    setNmkrVerifying(campaignId);
+    setNmkrSyncCampaign({ id: campaignId, name: campaignName, nmkrProjectUid });
+
+    try {
+      // 1. Fetch NMKR statuses from our API route (keeps API key server-side)
+      const response = await fetch('/api/nmkr/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectUid: nmkrProjectUid }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to fetch NMKR data');
+      }
+
+      const nmkrData = await response.json();
+      console.log('[🔄NMKR] Fetched NMKR data:', nmkrData.summary);
+
+      // 2. Query Convex to get discrepancies
+      const discrepancies = await client.query(api.nmkrSync.getInventoryDiscrepancies, {
+        campaignId,
+        nmkrStatuses: nmkrData.statuses,
+      });
+
+      console.log('[🔄NMKR] Found discrepancies:', discrepancies.length);
+      setNmkrDiscrepancies(discrepancies);
+      setNmkrSyncModalOpen(true);
+    } catch (error: any) {
+      console.error('[🔄NMKR] Error verifying:', error);
+      alert(`Error verifying with NMKR: ${error.message}`);
+    } finally {
+      setNmkrVerifying(null);
+    }
+  };
+
+  // NMKR Sync single NFT handler
+  const handleSyncSingleNFT = async (nftUid: string) => {
+    if (!nmkrSyncCampaign?.nmkrProjectUid) return;
+
+    try {
+      // Find the discrepancy for this NFT
+      const discrepancy = nmkrDiscrepancies.find(d => d.nftUid === nftUid);
+      if (!discrepancy) return;
+
+      // Sync the single NFT
+      await client.mutation(api.nmkrSync.syncSingleNFT, {
+        nftUid,
+        nmkrStatus: discrepancy.nmkrStatus,
+        soldTo: discrepancy.nmkrSoldTo,
+      });
+
+      // Remove from discrepancies list
+      setNmkrDiscrepancies(prev => prev.filter(d => d.nftUid !== nftUid));
+      setCampaignUpdateTrigger(prev => prev + 1);
+    } catch (error: any) {
+      console.error('[🔄NMKR] Error syncing NFT:', error);
+      alert(`Error syncing NFT: ${error.message}`);
+    }
+  };
+
+  // NMKR Sync all discrepancies handler
+  const handleSyncAllNMKR = async () => {
+    if (!nmkrSyncCampaign?.nmkrProjectUid) return;
+
+    setNmkrSyncing(true);
+    try {
+      // Re-fetch NMKR data to ensure fresh statuses
+      const response = await fetch('/api/nmkr/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectUid: nmkrSyncCampaign.nmkrProjectUid }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch NMKR data');
+      }
+
+      const nmkrData = await response.json();
+
+      // Sync all inventory
+      await client.mutation(api.nmkrSync.syncCampaignInventory, {
+        campaignId: nmkrSyncCampaign.id,
+        nmkrStatuses: nmkrData.statuses,
+      });
+
+      // Clear discrepancies and close modal
+      setNmkrDiscrepancies([]);
+      setNmkrSyncModalOpen(false);
+      setCampaignUpdateTrigger(prev => prev + 1);
+    } catch (error: any) {
+      console.error('[🔄NMKR] Error syncing all:', error);
+      alert(`Error syncing all: ${error.message}`);
+    } finally {
+      setNmkrSyncing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Sub-Tab Navigation */}
@@ -4801,8 +4922,10 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
             onToggleCleanup={handleToggleCleanup}
             onRunCleanup={handleRunCleanup}
             onSyncCounters={handleSyncCounters}
+            onVerifyWithNMKR={handleVerifyWithNMKR}
             cleaningCampaignId={cleaningCampaignId}
             syncingCampaignId={syncingCampaignId}
+            verifyingCampaignId={nmkrVerifying}
             client={client}
           />
         </div>
@@ -4818,6 +4941,20 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
         dangerLevel="medium"
         isLoading={confirmDialog.isLoading}
         confirmButtonText="Confirm"
+      />
+
+      {/* NMKR Sync Modal */}
+      <NMKRSyncModal
+        isOpen={nmkrSyncModalOpen}
+        onClose={() => {
+          setNmkrSyncModalOpen(false);
+          setNmkrDiscrepancies([]);
+        }}
+        campaignName={nmkrSyncCampaign?.name || ''}
+        discrepancies={nmkrDiscrepancies}
+        onSyncAll={handleSyncAllNMKR}
+        onSyncSingle={handleSyncSingleNFT}
+        isSyncing={nmkrSyncing}
       />
     </div>
   );
