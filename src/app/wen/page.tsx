@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import GeneratingLoader from '@/components/loaders/GeneratingLoader';
 
 const LIGHT_CYAN_SCHEME = {
@@ -12,49 +11,35 @@ const LIGHT_CYAN_SCHEME = {
 };
 
 export default function MaintenancePage() {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    // Detect touch device by pointer type (coarse = finger, fine = mouse)
-    const touchQuery = window.matchMedia('(pointer: coarse)');
-    const hoverQuery = window.matchMedia('(hover: none)');
-
-    // Device is mobile/tablet if it has coarse pointer OR can't hover
-    const checkDevice = () => {
-      setIsMobile(touchQuery.matches || hoverQuery.matches);
-    };
-
-    checkDevice();
-
-    // Listen for changes (e.g., connecting a mouse to tablet)
-    touchQuery.addEventListener('change', checkDevice);
-    hoverQuery.addEventListener('change', checkDevice);
-
-    return () => {
-      touchQuery.removeEventListener('change', checkDevice);
-      hoverQuery.removeEventListener('change', checkDevice);
-    };
-  }, []);
-
-  // Desktop: scale(2) for everything
-  // Mobile: circle 25% smaller (scale 1.5), text 5% smaller (needs 1.267x compensation)
-  const containerScale = isMobile ? 1.5 : 2;
-  const textScale = isMobile ? 1.267 : 1;
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      {/* Loader container with height to account for scaled size */}
+      {/* CSS variables for responsive scaling */}
+      <style>{`
+        .sphere-container {
+          --sphere-scale: 2;
+          --sphere-margin: 140px;
+          --text-scale: 1;
+        }
+        @media (any-pointer: coarse), (hover: none) {
+          .sphere-container {
+            --sphere-scale: 1.5;
+            --sphere-margin: 80px;
+            --text-scale: 1.267;
+          }
+        }
+      `}</style>
+
+      {/* Loader container with CSS-based responsive scaling */}
       <div
-        className="flex items-center justify-center"
+        className="sphere-container flex items-center justify-center"
         style={{
-          transform: `scale(${containerScale})`,
-          marginBottom: isMobile ? '80px' : '140px'
+          transform: 'scale(var(--sphere-scale))',
+          marginBottom: 'var(--sphere-margin)'
         }}
       >
         <GeneratingLoader
           text="Mek Tycoon is being built."
           colorScheme={LIGHT_CYAN_SCHEME}
-          textScale={textScale}
         />
       </div>
       {/* Discord link - glowing icon */}
