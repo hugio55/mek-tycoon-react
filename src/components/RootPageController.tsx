@@ -66,14 +66,9 @@ export default function RootPageController() {
   }, [mounted, siteSettings, isLocalhost, router]);
   */
 
-  // Show loading state while checking settings
+  // Show blank screen while checking settings (triangle loader shows on top)
   if (!mounted || siteSettings === undefined) {
-    console.log('[🏠ROOT] Showing loading state');
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center z-50 relative">
-        <div className="text-yellow-400 text-xl">Loading site settings...</div>
-      </div>
-    );
+    return <div className="min-h-screen bg-black" />;
   }
 
   // ALWAYS show landing page - safety measure until game is ready

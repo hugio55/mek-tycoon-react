@@ -23,6 +23,9 @@ import CommemorativeToken1Admin from '@/components/CommemorativeToken1Admin';
 import SourceKeyMigrationAdmin from '@/components/SourceKeyMigrationAdmin';
 import WhitelistManagerAdmin from '@/components/WhitelistManagerAdmin';
 import RouteVisualization from '@/components/RouteVisualization';
+import { ProductionDatabaseProvider, useProductionDatabase } from '@/contexts/ProductionDatabaseContext';
+import ProductionBanner from '@/components/admin/ProductionBanner';
+import MutationConfirmDialog from '@/components/admin/MutationConfirmDialog';
 import NMKRJSONGenerator from '@/components/admin/nft/NMKRJSONGenerator';
 import CampaignManager from '@/components/admin/campaign/CampaignManager';
 import NFTInventoryTable from '@/components/admin/campaign/NFTInventoryTable';
@@ -4370,9 +4373,8 @@ export default function AdminMasterDataPage() {
   );
 }
 
-// Campaign Manager Component with Database Awareness
+// Campaign Manager Component (Always uses Production)
 function CampaignManagerWithDatabase({
-  campaignDatabase,
   campaigns,
   onToggleCleanup,
   onRunCleanup,
@@ -4381,7 +4383,6 @@ function CampaignManagerWithDatabase({
   syncingCampaignId,
   client
 }: {
-  campaignDatabase: 'trout' | 'sturgeon';
   campaigns: any[];
   onToggleCleanup: (campaignId: string, enabled: boolean) => Promise<void>;
   onRunCleanup: (campaignId: string) => Promise<void>;
@@ -4408,7 +4409,7 @@ function CampaignManagerWithDatabase({
         <div className="bg-black/30 border border-yellow-500/30 rounded-lg p-12 text-center">
           <div className="text-4xl mb-3">📋</div>
           <div className="text-gray-400">
-            No campaigns found in {campaignDatabase === 'trout' ? 'Trout (Dev)' : 'Sturgeon (Production)'}.
+            No campaigns found in production database.
           </div>
         </div>
       ) : (
@@ -4524,20 +4525,36 @@ function CampaignManagerWithDatabase({
   );
 }
 
-// NFT Admin Sub-Tabs Component
+// NFT Admin Sub-Tabs Component - All tabs now use Production (Sturgeon) database
 function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturgeonClient: any }) {
   const [nftSubTab, setNftSubTab] = useState<'commemorative' | 'whitelist-manager' | 'json-generator' | 'campaigns'>('json-generator');
-  const [campaignDatabase, setCampaignDatabase] = useState<'trout' | 'sturgeon'>('trout');
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [campaignUpdateTrigger, setCampaignUpdateTrigger] = useState(0);
   const [cleaningCampaignId, setCleaningCampaignId] = useState<string | null>(null);
   const [syncingCampaignId, setSyncingCampaignId] = useState<string | null>(null);
+  const [mutationsEnabled, setMutationsEnabled] = useState(false);
 
-  // Fetch campaigns from selected database (only when campaigns tab is active)
+  // Mutation confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+    isLoading: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    onConfirm: () => {},
+    isLoading: false,
+  });
+
+  // Always use production (Sturgeon) client
+  const client = sturgeonClient;
+
+  // Fetch campaigns from production database (only when campaigns tab is active)
   useEffect(() => {
     if (nftSubTab !== 'campaigns') return;
-
-    const client = campaignDatabase === 'trout' ? troutClient : sturgeonClient;
     if (!client) return;
 
     let cancelled = false;
@@ -4560,80 +4577,109 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
       cancelled = true;
       clearInterval(interval);
     };
-  }, [nftSubTab, campaignDatabase, troutClient, sturgeonClient, campaignUpdateTrigger]);
+  }, [nftSubTab, client, campaignUpdateTrigger]);
 
   const handleToggleCleanup = async (campaignId: string, enabled: boolean) => {
-    const client = campaignDatabase === 'trout' ? troutClient : sturgeonClient;
     if (!client) return;
 
-    // Warn if trying to modify production
-    if (campaignDatabase === 'sturgeon') {
-      if (!confirm('⚠️ WARNING: You are modifying PRODUCTION (Sturgeon) database!\n\nThis affects the LIVE SITE. Are you sure?')) {
-        return;
-      }
+    if (!mutationsEnabled) {
+      alert('Mutations are disabled. Enable editing first using the banner above.');
+      return;
     }
 
-    try {
-      await client.mutation(api.commemorativeNFTReservationsCampaign.toggleCampaignReservationCleanup, {
-        campaignId,
-        enabled
-      });
-      setCampaignUpdateTrigger(prev => prev + 1);
-    } catch (error: any) {
-      console.error('[NFTAdminTabs] Error toggling cleanup:', error);
-      alert(`Error: ${error.message}`);
-    }
+    const campaign = campaigns.find(c => c._id === campaignId);
+    setConfirmDialog({
+      isOpen: true,
+      title: enabled ? 'Enable Reservation Cleanup' : 'Disable Reservation Cleanup',
+      description: `This will ${enabled ? 'enable' : 'disable'} automatic cleanup of expired reservations for "${campaign?.name || 'this campaign'}".`,
+      isLoading: false,
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isLoading: true }));
+        try {
+          await client.mutation(api.commemorativeNFTReservationsCampaign.toggleCampaignReservationCleanup, {
+            campaignId,
+            enabled
+          });
+          setCampaignUpdateTrigger(prev => prev + 1);
+          setConfirmDialog(prev => ({ ...prev, isOpen: false, isLoading: false }));
+        } catch (error: any) {
+          console.error('[NFTAdminTabs] Error toggling cleanup:', error);
+          alert(`Error: ${error.message}`);
+          setConfirmDialog(prev => ({ ...prev, isLoading: false }));
+        }
+      },
+    });
   };
 
   const handleRunCleanup = async (campaignId: string) => {
-    const client = campaignDatabase === 'trout' ? troutClient : sturgeonClient;
     if (!client) return;
 
-    if (campaignDatabase === 'sturgeon') {
-      if (!confirm('⚠️ WARNING: You are modifying PRODUCTION (Sturgeon) database!\n\nThis affects the LIVE SITE. Are you sure?')) {
-        return;
-      }
+    if (!mutationsEnabled) {
+      alert('Mutations are disabled. Enable editing first using the banner above.');
+      return;
     }
 
-    setCleaningCampaignId(campaignId);
-    try {
-      await client.mutation(api.commemorativeNFTReservationsCampaign.cleanupExpiredCampaignReservationsMutation, {
-        campaignId
-      });
-      await client.mutation(api.commemorativeCampaigns.syncCampaignCounters, {
-        campaignId
-      });
-      setCampaignUpdateTrigger(prev => prev + 1);
-    } catch (error: any) {
-      console.error('[NFTAdminTabs] Error running cleanup:', error);
-      alert(`Error: ${error.message}`);
-    } finally {
-      setCleaningCampaignId(null);
-    }
+    const campaign = campaigns.find(c => c._id === campaignId);
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Run Cleanup Now',
+      description: `This will immediately release any expired reservations for "${campaign?.name || 'this campaign'}" and sync counters.`,
+      isLoading: false,
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isLoading: true }));
+        setCleaningCampaignId(campaignId);
+        try {
+          await client.mutation(api.commemorativeNFTReservationsCampaign.cleanupExpiredCampaignReservationsMutation, {
+            campaignId
+          });
+          await client.mutation(api.commemorativeCampaigns.syncCampaignCounters, {
+            campaignId
+          });
+          setCampaignUpdateTrigger(prev => prev + 1);
+          setConfirmDialog(prev => ({ ...prev, isOpen: false, isLoading: false }));
+        } catch (error: any) {
+          console.error('[NFTAdminTabs] Error running cleanup:', error);
+          alert(`Error: ${error.message}`);
+          setConfirmDialog(prev => ({ ...prev, isLoading: false }));
+        } finally {
+          setCleaningCampaignId(null);
+        }
+      },
+    });
   };
 
   const handleSyncCounters = async (campaignId: string) => {
-    const client = campaignDatabase === 'trout' ? troutClient : sturgeonClient;
     if (!client) return;
 
-    if (campaignDatabase === 'sturgeon') {
-      if (!confirm('⚠️ WARNING: You are modifying PRODUCTION (Sturgeon) database!\n\nThis affects the LIVE SITE. Are you sure?')) {
-        return;
-      }
+    if (!mutationsEnabled) {
+      alert('Mutations are disabled. Enable editing first using the banner above.');
+      return;
     }
 
-    setSyncingCampaignId(campaignId);
-    try {
-      await client.mutation(api.commemorativeCampaigns.syncCampaignCounters, {
-        campaignId
-      });
-      setCampaignUpdateTrigger(prev => prev + 1);
-    } catch (error: any) {
-      console.error('[NFTAdminTabs] Error syncing counters:', error);
-      alert(`Error: ${error.message}`);
-    } finally {
-      setSyncingCampaignId(null);
-    }
+    const campaign = campaigns.find(c => c._id === campaignId);
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Sync Campaign Counters',
+      description: `This will recalculate all counters (available, reserved, sold) for "${campaign?.name || 'this campaign'}" from actual inventory data.`,
+      isLoading: false,
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isLoading: true }));
+        setSyncingCampaignId(campaignId);
+        try {
+          await client.mutation(api.commemorativeCampaigns.syncCampaignCounters, {
+            campaignId
+          });
+          setCampaignUpdateTrigger(prev => prev + 1);
+          setConfirmDialog(prev => ({ ...prev, isOpen: false, isLoading: false }));
+        } catch (error: any) {
+          console.error('[NFTAdminTabs] Error syncing counters:', error);
+          alert(`Error: ${error.message}`);
+          setConfirmDialog(prev => ({ ...prev, isLoading: false }));
+        } finally {
+          setSyncingCampaignId(null);
+        }
+      },
+    });
   };
 
   return (
@@ -4682,39 +4728,89 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
         </button>
       </div>
 
-      {/* Database Selector (only show for Campaigns tab) */}
-      {nftSubTab === 'campaigns' && (
-        <div className="flex justify-end mb-4">
-          <div className="bg-gray-900 border border-yellow-500/30 rounded-lg p-3">
-            <div className="text-xs text-gray-400 mb-1">Database</div>
-            <select
-              value={campaignDatabase}
-              onChange={(e) => setCampaignDatabase(e.target.value as 'trout' | 'sturgeon')}
-              className="bg-black/50 border border-yellow-500/30 rounded px-3 py-1 text-white text-sm"
-            >
-              <option value="trout">🐟 Trout (Dev - localhost:3200)</option>
-              <option value="sturgeon">🐟 Sturgeon (Production - Live Site)</option>
-            </select>
-          </div>
-        </div>
-      )}
-
       {/* Tab Content */}
       {nftSubTab === 'commemorative' && <CommemorativeToken1Admin />}
       {nftSubTab === 'whitelist-manager' && <WhitelistManagerAdmin />}
       {nftSubTab === 'json-generator' && <NMKRJSONGenerator />}
       {nftSubTab === 'campaigns' && (
-        <CampaignManagerWithDatabase
-          campaignDatabase={campaignDatabase}
-          campaigns={campaigns}
-          onToggleCleanup={handleToggleCleanup}
-          onRunCleanup={handleRunCleanup}
-          onSyncCounters={handleSyncCounters}
-          cleaningCampaignId={cleaningCampaignId}
-          syncingCampaignId={syncingCampaignId}
-          client={campaignDatabase === 'trout' ? troutClient : sturgeonClient}
-        />
+        <div className="space-y-4">
+          {/* Production Banner for Campaigns */}
+          <div
+            className={`rounded-lg p-4 transition-all ${
+              mutationsEnabled
+                ? 'bg-red-900/30 border-2 border-red-500/50'
+                : 'bg-emerald-900/20 border border-emerald-500/30'
+            }`}
+          >
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className={`w-3 h-3 rounded-full ${mutationsEnabled ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                  <div className={`absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-75 ${mutationsEnabled ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                </div>
+                <div>
+                  <div className={`font-bold ${mutationsEnabled ? 'text-red-400' : 'text-emerald-400'}`}>
+                    Campaigns - Production Data
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    {mutationsEnabled
+                      ? 'Editing LIVE data - Changes affect real users'
+                      : 'Read-only mode - Viewing live production data'
+                    }
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  if (mutationsEnabled) {
+                    setMutationsEnabled(false);
+                  } else {
+                    if (confirm('Enable editing on PRODUCTION data?\n\nChanges will immediately affect the live website and real users.')) {
+                      setMutationsEnabled(true);
+                    }
+                  }
+                }}
+                className={`px-4 py-2 rounded font-semibold text-sm transition-all ${
+                  mutationsEnabled
+                    ? 'bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30'
+                    : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 hover:bg-yellow-500/30'
+                }`}
+              >
+                {mutationsEnabled ? 'Disable Editing' : 'Enable Editing'}
+              </button>
+            </div>
+            {mutationsEnabled && (
+              <div className="mt-3 pt-3 border-t border-red-500/30">
+                <div className="flex items-start gap-2 text-sm text-red-300">
+                  <span>You are editing <strong>PRODUCTION</strong> data. All changes immediately affect the live site and real users.</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <CampaignManagerWithDatabase
+            campaigns={campaigns}
+            onToggleCleanup={handleToggleCleanup}
+            onRunCleanup={handleRunCleanup}
+            onSyncCounters={handleSyncCounters}
+            cleaningCampaignId={cleaningCampaignId}
+            syncingCampaignId={syncingCampaignId}
+            client={client}
+          />
+        </div>
       )}
+
+      {/* Mutation Confirmation Dialog */}
+      <MutationConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        description={confirmDialog.description}
+        dangerLevel="medium"
+        isLoading={confirmDialog.isLoading}
+        confirmButtonText="Confirm"
+      />
     </div>
   );
 }
