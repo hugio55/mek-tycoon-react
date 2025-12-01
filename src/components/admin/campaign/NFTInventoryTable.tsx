@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
 interface NFTInventoryTableProps {
   campaignId: Id<"commemorativeCampaigns">;
+  campaignName?: string;
+  client: any; // ConvexReactClient or ConvexHttpClient for production queries
 }
 
-export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps) {
+export default function NFTInventoryTable({ campaignId, campaignName, client }: NFTInventoryTableProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedNFTs, setSelectedNFTs] = useState<Set<Id<"commemorativeNFTInventory">>>(new Set());
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -18,18 +19,43 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
   const [now, setNow] = useState(Date.now());
   const [copiedWallet, setCopiedWallet] = useState<string | null>(null);
 
+  // Manual state for data from production client
+  const [inventory, setInventory] = useState<any[] | null>(null);
+  const [currentCompanyNames, setCurrentCompanyNames] = useState<Record<string, string> | null>(null);
+
   // Update "now" every second for countdown timers
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, []);
 
-  const inventory = useQuery(
-    api.commemorativeCampaigns.getCampaignInventory,
-    { campaignId }
-  );
+  // Fetch inventory from the provided client (always production now)
+  useEffect(() => {
+    if (!client) return;
 
-  // Collect unique wallet addresses from sold/reserved NFTs to look up current company names
+    let cancelled = false;
+
+    const fetchInventory = async () => {
+      try {
+        const data = await client.query(api.commemorativeCampaigns.getCampaignInventory, { campaignId });
+        if (!cancelled) {
+          setInventory(data || []);
+        }
+      } catch (error) {
+        console.error('[NFTInventoryTable] Error fetching inventory:', error);
+      }
+    };
+
+    fetchInventory();
+    const interval = setInterval(fetchInventory, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [client, campaignId]);
+
+  // Collect unique wallet addresses from sold/reserved NFTs
   const walletAddresses = useMemo(() => {
     if (!inventory) return [];
     const addresses = new Set<string>();
@@ -40,11 +66,32 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
     return Array.from(addresses);
   }, [inventory]);
 
-  // Query current company names for all wallet addresses
-  const currentCompanyNames = useQuery(
-    api.commemorativeCampaigns.getCompanyNamesForWallets,
-    walletAddresses.length > 0 ? { walletAddresses } : "skip"
-  );
+  // Fetch company names from the provided client
+  useEffect(() => {
+    if (!client || walletAddresses.length === 0) {
+      setCurrentCompanyNames(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchCompanyNames = async () => {
+      try {
+        const data = await client.query(api.commemorativeCampaigns.getCompanyNamesForWallets, { walletAddresses });
+        if (!cancelled) {
+          setCurrentCompanyNames(data || {});
+        }
+      } catch (error) {
+        console.error('[NFTInventoryTable] Error fetching company names:', error);
+      }
+    };
+
+    fetchCompanyNames();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [client, walletAddresses]);
 
   // Copy wallet address to clipboard
   const copyWallet = (address: string) => {
@@ -72,7 +119,11 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
     }
   }, [inventory]);
 
-  const batchUpdateImages = useMutation(api.commemorativeCampaigns.batchUpdateNFTImages);
+  // Manual mutation using the provided client
+  const batchUpdateImages = async (args: { nftIds: Id<"commemorativeNFTInventory">[]; imageUrl: string }) => {
+    if (!client) throw new Error('Client not available');
+    return await client.mutation(api.commemorativeCampaigns.batchUpdateNFTImages, args);
+  };
 
   if (!inventory) {
     return (
