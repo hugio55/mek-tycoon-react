@@ -253,6 +253,11 @@ export default function LandingV2() {
               loop
               muted
               playsInline
+              disablePictureInPicture
+              disableRemotePlayback
+              controlsList="nodownload noplaybackrate nofullscreen"
+              translate="no"
+              data-edge-enhance="false"
               className={deviceType === 'android' ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'landing-logo max-w-[40vw] max-h-[40vh] object-contain'}
               style={deviceType === 'android' ? { transform: 'scale(1.0125)' } : {}}
               onLoadedData={() => {
