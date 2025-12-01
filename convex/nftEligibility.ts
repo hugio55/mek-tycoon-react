@@ -122,6 +122,7 @@ export const checkClaimEligibility = query({
     }
 
     // SECOND: Check if they already completed a claim
+    // Check BOTH legacy reservations table AND inventory soldTo field
     const completedReservation = await ctx.db
       .query("commemorativeNFTReservations")
       .withIndex("by_reserved_by", (q) => q.eq("reservedBy", args.walletAddress))
@@ -129,6 +130,26 @@ export const checkClaimEligibility = query({
       .first();
 
     if (completedReservation) {
+      return {
+        eligible: false,
+        reason: "You have already claimed your commemorative NFT",
+        alreadyClaimed: true,
+      };
+    }
+
+    // ALSO check inventory for sold NFTs with this wallet as soldTo
+    // This catches cases where sale was completed but reservation status wasn't updated
+    const soldNFT = await ctx.db
+      .query("commemorativeNFTInventory")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("status"), "sold"),
+          q.eq(q.field("soldTo"), args.walletAddress)
+        )
+      )
+      .first();
+
+    if (soldNFT) {
       return {
         eligible: false,
         reason: "You have already claimed your commemorative NFT",
