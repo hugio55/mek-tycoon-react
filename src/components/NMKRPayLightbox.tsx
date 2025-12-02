@@ -970,12 +970,12 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
             {/* Wallet buttons */}
             {availableWallets.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-2 gap-3 mb-2">
                 {availableWallets.map(wallet => (
                   <button
                     key={wallet.name}
                     onClick={() => connectAndVerifyWallet(wallet)}
-                    className="group relative bg-black/30 border border-cyan-500/30 text-white px-4 py-3 rounded-xl transition-all hover:bg-cyan-500/10 hover:border-cyan-500/50 flex items-center justify-center gap-2 overflow-hidden"
+                    className="group relative bg-black/30 border border-cyan-500/30 text-white px-4 py-3 rounded-xl transition-all hover:bg-cyan-500/10 hover:border-cyan-500/50 flex items-center justify-center overflow-hidden"
                   >
                     {/* Honeycomb hover effect */}
                     <div
@@ -987,15 +987,13 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
                         borderRadius: '12px'
                       }}
                     />
-                    {/* Fixed-width icon container to prevent text shift */}
-                    <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center relative">
-                      <img
-                        src={wallet.icon}
-                        alt={wallet.name}
-                        className="w-6 h-6 rounded"
-                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                      />
-                    </div>
+                    {/* Icon positioned absolutely so it doesn't affect text centering */}
+                    <img
+                      src={wallet.icon}
+                      alt=""
+                      className="absolute left-3 w-5 h-5 rounded"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
                     <span className="font-medium relative">{wallet.name}</span>
                   </button>
                 ))}
