@@ -165,6 +165,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
               background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)',
               animation: 'slideParticles 3s linear infinite',
               opacity: 1.0,
+              willChange: 'transform', // GPU layer promotion for smooth animation
             }}
           />
         )}
