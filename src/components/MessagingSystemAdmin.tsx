@@ -266,7 +266,7 @@ export default function MessagingSystemAdmin() {
               </button>
 
               {/* Conversation List */}
-              {conversations?.map((conv) => (
+              {conversations?.map((conv: any) => (
                 <button
                   key={conv._id}
                   onClick={() => setSelectedConversationId(conv._id)}
@@ -339,7 +339,7 @@ export default function MessagingSystemAdmin() {
 
                 {/* Messages Area */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar min-h-[400px]">
-                  {messages?.map((msg) => {
+                  {messages?.map((msg: any) => {
                     const isOutgoing = msg.senderId === activeCorp.walletAddress;
 
                     return (
