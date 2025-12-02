@@ -136,8 +136,8 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           borderRadius: '8px',
           background: currentBackground || styles.background,
           transition: 'all 200ms ease',
-          border: styles.border,
-          boxShadow: styles.boxShadow,
+          border: (isPhaseTwo && isPhaseOneExpanded) ? 'none' : styles.border,
+          boxShadow: (isPhaseTwo && isPhaseOneExpanded) ? 'none' : styles.boxShadow,
         }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
