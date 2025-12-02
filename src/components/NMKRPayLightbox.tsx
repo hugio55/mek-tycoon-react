@@ -1016,7 +1016,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
             <button
               onClick={() => setState('reserved')}
-              className="w-full py-2 px-4 text-sm font-medium text-white/60 hover:text-white transition-colors"
+              className="w-full mt-4 py-2 px-4 text-sm font-medium text-white/60 hover:text-white transition-colors"
             >
               Go Back
             </button>
