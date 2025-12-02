@@ -22,6 +22,18 @@ interface ActionLog {
   timestamp: Date;
 }
 
+interface Backup {
+  id: string;
+  type: 'quick' | 'full';
+  timestamp: string;
+  commitHash: string;
+  commitMessage: string;
+  branch: string;
+  notes?: string;
+  convexExportPath?: string;
+  exportSizeBytes?: number;
+}
+
 // Format date to 12-hour time
 function formatCommitDate(dateString: string): string {
   try {
@@ -51,6 +63,10 @@ export default function DeploymentsAdmin() {
   const [showProdConfirm, setShowProdConfirm] = useState(false);
   const [prodConfirmStep, setProdConfirmStep] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [backups, setBackups] = useState<Backup[]>([]);
+  const [sessionBackup, setSessionBackup] = useState<Backup | null>(null);
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [backupType, setBackupType] = useState<'quick' | 'full' | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -80,11 +96,96 @@ export default function DeploymentsAdmin() {
     }
   }, []);
 
+  const fetchBackups = useCallback(async () => {
+    try {
+      const res = await fetch('/api/deployment/list-backups');
+      const data = await res.json();
+      if (data.success) {
+        setBackups(data.backups);
+      }
+    } catch (error) {
+      console.error('Failed to fetch backups:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchStatus();
+    fetchBackups();
     const interval = setInterval(fetchStatus, 10000); // Refresh every 10 seconds
     return () => clearInterval(interval);
-  }, [fetchStatus]);
+  }, [fetchStatus, fetchBackups]);
+
+  const handleQuickBackup = async () => {
+    setIsBackingUp(true);
+    setBackupType('quick');
+    addLog('Quick Backup', 'pending', 'Creating code-only backup...');
+
+    try {
+      const res = await fetch('/api/deployment/backup-quick', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: '' })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        addLog('Quick Backup', 'success', data.message);
+        setSessionBackup({
+          id: data.backupId,
+          type: 'quick',
+          timestamp: data.timestamp,
+          commitHash: data.commitHash,
+          commitMessage: data.commitMessage,
+          branch: 'master'
+        });
+        await fetchBackups();
+      } else {
+        addLog('Quick Backup', 'error', data.error);
+      }
+    } catch (error) {
+      addLog('Quick Backup', 'error', 'Failed to create backup');
+    } finally {
+      setIsBackingUp(false);
+      setBackupType(null);
+    }
+  };
+
+  const handleFullBackup = async () => {
+    setIsBackingUp(true);
+    setBackupType('full');
+    addLog('Full Backup', 'pending', 'Creating code + database backup (this may take a minute)...');
+
+    try {
+      const res = await fetch('/api/deployment/backup-full', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: '' })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        addLog('Full Backup', 'success', data.message);
+        setSessionBackup({
+          id: data.backupId,
+          type: 'full',
+          timestamp: data.timestamp,
+          commitHash: data.commitHash,
+          commitMessage: data.commitMessage,
+          branch: 'master',
+          convexExportPath: data.exportPath,
+          exportSizeBytes: data.sizeBytes
+        });
+        await fetchBackups();
+      } else {
+        addLog('Full Backup', 'error', data.error);
+      }
+    } catch (error) {
+      addLog('Full Backup', 'error', 'Failed to create backup');
+    } finally {
+      setIsBackingUp(false);
+      setBackupType(null);
+    }
+  };
 
   const handleCommit = async () => {
     if (!commitMessage.trim()) {
@@ -427,7 +528,7 @@ export default function DeploymentsAdmin() {
     );
   }
 
-  const anyActionRunning = isCommitting || isPushing || isDeployingDev || isDeployingProd || isFullDeploy;
+  const anyActionRunning = isCommitting || isPushing || isDeployingDev || isDeployingProd || isFullDeploy || isBackingUp;
 
   return (
     <div className="space-y-6">

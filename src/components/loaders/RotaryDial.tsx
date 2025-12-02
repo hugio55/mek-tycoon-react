@@ -172,7 +172,7 @@ export default function RotaryDial({
               height: '220px',
               left: '0',
               top: '0',
-              transform: `rotate(${labelAngle - angleStep / 2}deg)`,
+              transform: `rotate(${labelAngle + 90 - angleStep / 2}deg)`,
               transition: 'transform 0.5s ease'
             }}
             viewBox="0 0 220 220"
