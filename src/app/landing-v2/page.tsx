@@ -255,7 +255,12 @@ export default function LandingV2() {
               translate="no"
               data-edge-enhance="false"
               className={deviceType === 'android' ? 'max-w-[80vw] max-h-[80vh] object-contain' : 'landing-logo max-w-[40vw] max-h-[40vh] object-contain'}
-              style={deviceType === 'android' ? { transform: 'scale(1.0125)' } : {}}
+              style={deviceType === 'android' ? {
+                transform: 'scale(1.0125)',
+                willChange: 'auto', // Don't hint GPU about changes, video already GPU-accelerated
+              } : {
+                willChange: 'auto',
+              }}
               onLoadedData={() => {
                 console.log('[⭐LANDING] Logo video loaded successfully');
               }}

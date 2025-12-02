@@ -51,7 +51,13 @@ export default function LandingContainer({
         }}
       />
 
-      <div className="relative w-full flex flex-col min-h-screen" style={{ zIndex: 10 }}>
+      <div
+        className="relative w-full flex flex-col min-h-screen"
+        style={{
+          zIndex: 10,
+          isolation: 'isolate', // Create stacking context barrier - blur won't see StarField canvas
+        }}
+      >
         <div style={{ flexGrow: 1 }}>
           {children}
         </div>
@@ -74,13 +80,12 @@ export default function LandingContainer({
                 left: 0,
                 right: '17px',
                 bottom: 0,
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
+                backdropFilter: 'blur(10px)', // Reduced from 12px for GPU performance
+                WebkitBackdropFilter: 'blur(10px)',
                 backgroundColor: 'rgba(255, 255, 255, 0.005)',
-                // iOS Safari backdrop-filter fix
+                // GPU optimization: Blur won't recalculate on every frame because isolation prevents it from seeing StarField
                 transform: 'translate3d(0, 0, 0)',
                 WebkitTransform: 'translate3d(0, 0, 0)',
-                isolation: 'isolate',
               }}
             />
 

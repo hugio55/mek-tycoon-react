@@ -121,7 +121,8 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
       style={{
         opacity: shouldShow ? 1 : 0,
         transform: `translateY(${shouldShow ? 0 : 20}px)`,
-        backdropFilter: shouldShow ? 'blur(10px)' : 'blur(0px)',
+        backdropFilter: shouldShow ? 'blur(8px)' : 'blur(0px)', // Reduced from 10px for GPU performance
+        isolation: 'isolate', // Isolate blur from StarField canvas to prevent per-frame GPU recalculation
       }}
     >
       <button
@@ -215,11 +216,12 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           style={{
             background: 'rgba(0, 0, 0, 0.4)',
             borderRadius: '8px',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
+            backdropFilter: 'blur(12px)', // Reduced from 16px for GPU performance
+            WebkitBackdropFilter: 'blur(12px)',
             opacity: isExpanded ? 1 : 0,
             transition: 'opacity 300ms ease-out',
             overflow: 'hidden',
+            isolation: 'isolate', // Isolate blur from StarField canvas
           }}
         >
           <div>
