@@ -113,8 +113,7 @@ export default function MekCarousel3DSquare({
             zIndex: 2,
             transformStyle: 'preserve-3d',
             animation: `${keyframesId} ${animationDuration} linear infinite`,
-            willChange: 'transform',
-            backfaceVisibility: 'hidden'
+            willChange: 'transform'
           }}
         >
           {/* Cards */}
@@ -129,7 +128,6 @@ export default function MekCarousel3DSquare({
                 overflow: 'hidden',
                 transform: `rotateY(${(360 / quantity) * index}deg) translateZ(${sizeStyle.translateZ}px)`,
                 boxShadow: `0 0 20px ${config.glow}, inset 0 0 20px ${config.glowInner}`,
-                backfaceVisibility: 'hidden',
                 willChange: 'transform'
               }}
             >

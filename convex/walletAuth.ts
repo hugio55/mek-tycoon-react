@@ -15,13 +15,38 @@ export const connectWallet = mutation({
     if (!args.walletAddress.startsWith("addr")) {
       throw new Error("Invalid Cardano wallet address format");
     }
-    
-    // Check if user exists
-    const existingUser = await ctx.db
+
+    // Check if user exists by payment address
+    let existingUser = await ctx.db
       .query("users")
       .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
       .first();
-    
+
+    // If not found by payment address and stake address provided,
+    // check if user exists by stake address (supports unified wallet system)
+    if (!existingUser && args.stakeAddress) {
+      existingUser = await ctx.db
+        .query("users")
+        .withIndex("by_stake_address", (q) => q.eq("walletStakeAddress", args.stakeAddress))
+        .first();
+
+      // If found by stake address, update their payment address to link the accounts
+      if (existingUser) {
+        await ctx.db.patch(existingUser._id, {
+          walletAddress: args.walletAddress, // Link payment address
+          lastLogin: Date.now(),
+          walletType: args.walletType || existingUser.walletType,
+          isOnline: true,
+        });
+
+        return {
+          user: { ...existingUser, walletAddress: args.walletAddress },
+          isNewUser: false,
+          linkedByStakeAddress: true, // Flag that this was linked via stake address
+        };
+      }
+    }
+
     if (existingUser) {
       // Update last login and wallet info
       await ctx.db.patch(existingUser._id, {
@@ -30,7 +55,7 @@ export const connectWallet = mutation({
         walletStakeAddress: args.stakeAddress || existingUser.walletStakeAddress,
         isOnline: true,
       });
-      
+
       return {
         user: existingUser,
         isNewUser: false,
@@ -117,15 +142,24 @@ export const disconnectWallet = mutation({
   },
 });
 
-// Get user by wallet address
+// Get user by wallet address (supports both payment and stake addresses)
 export const getUserByWallet = query({
   args: { walletAddress: v.string() },
   handler: async (ctx, args) => {
-    const user = await ctx.db
+    // Try payment address first
+    let user = await ctx.db
       .query("users")
       .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
       .first();
-    
+
+    // If not found and it looks like a stake address, try stake address lookup
+    if (!user && args.walletAddress.startsWith("stake1")) {
+      user = await ctx.db
+        .query("users")
+        .withIndex("by_stake_address", (q) => q.eq("walletStakeAddress", args.walletAddress))
+        .first();
+    }
+
     if (!user) {
       return null;
     }
@@ -164,6 +198,45 @@ export const getUserByWallet = query({
         achievementsUnlocked: achievements.length,
       },
     };
+  },
+});
+
+// Get user by stake address (for unified wallet system)
+export const getUserByStakeAddress = query({
+  args: { stakeAddress: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_stake_address", (q) => q.eq("walletStakeAddress", args.stakeAddress))
+      .first();
+
+    if (!user) {
+      return null;
+    }
+
+    return user;
+  },
+});
+
+// Get user ID by any wallet address (payment or stake)
+export const getUserIdByAnyAddress = query({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    // Try payment address first
+    let user = await ctx.db
+      .query("users")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    // If not found, try stake address
+    if (!user) {
+      user = await ctx.db
+        .query("users")
+        .withIndex("by_stake_address", (q) => q.eq("walletStakeAddress", args.walletAddress))
+        .first();
+    }
+
+    return user ? user._id : null;
   },
 });
 
