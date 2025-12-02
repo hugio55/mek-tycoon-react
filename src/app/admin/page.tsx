@@ -4390,7 +4390,7 @@ function CampaignManagerWithDatabase({
   onToggleCleanup: (campaignId: string, enabled: boolean) => Promise<void>;
   onRunCleanup: (campaignId: string) => Promise<void>;
   onSyncCounters: (campaignId: string) => Promise<void>;
-  onVerifyWithNMKR: (campaignId: string, campaignName: string, nmkrProjectUid?: string) => Promise<void>;
+  onVerifyWithNMKR: (campaignId: string, campaignName: string, nmkrProjectId?: string) => Promise<void>;
   cleaningCampaignId: string | null;
   syncingCampaignId: string | null;
   verifyingCampaignId: string | null;
@@ -4509,7 +4509,7 @@ function CampaignManagerWithDatabase({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onVerifyWithNMKR(campaign._id, campaign.name, campaign.nmkrProjectUid);
+                    onVerifyWithNMKR(campaign._id, campaign.name, campaign.nmkrProjectId);
                   }}
                   disabled={verifyingCampaignId === campaign._id}
                   className="text-xs text-purple-400 hover:text-purple-300 transition-colors underline disabled:opacity-50"
@@ -4553,7 +4553,7 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
 
   // NMKR Sync modal state
   const [nmkrSyncModalOpen, setNmkrSyncModalOpen] = useState(false);
-  const [nmkrSyncCampaign, setNmkrSyncCampaign] = useState<{ id: string; name: string; nmkrProjectUid?: string } | null>(null);
+  const [nmkrSyncCampaign, setNmkrSyncCampaign] = useState<{ id: string; name: string; nmkrProjectId?: string } | null>(null);
   const [nmkrDiscrepancies, setNmkrDiscrepancies] = useState<any[]>([]);
   const [nmkrSyncing, setNmkrSyncing] = useState(false);
   const [nmkrVerifying, setNmkrVerifying] = useState<string | null>(null);
@@ -4707,21 +4707,21 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
   };
 
   // NMKR Verify handler - queries NMKR API and compares with Convex
-  const handleVerifyWithNMKR = async (campaignId: string, campaignName: string, nmkrProjectUid?: string) => {
-    if (!nmkrProjectUid) {
-      alert('This campaign does not have an NMKR Project UID configured.');
+  const handleVerifyWithNMKR = async (campaignId: string, campaignName: string, nmkrProjectId?: string) => {
+    if (!nmkrProjectId) {
+      alert('This campaign does not have an NMKR Project ID configured.');
       return;
     }
 
     setNmkrVerifying(campaignId);
-    setNmkrSyncCampaign({ id: campaignId, name: campaignName, nmkrProjectUid });
+    setNmkrSyncCampaign({ id: campaignId, name: campaignName, nmkrProjectId });
 
     try {
       // 1. Fetch NMKR statuses from our API route (keeps API key server-side)
       const response = await fetch('/api/nmkr/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectUid: nmkrProjectUid }),
+        body: JSON.stringify({ projectUid: nmkrProjectId }),
       });
 
       if (!response.ok) {
@@ -4751,7 +4751,7 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
 
   // NMKR Sync single NFT handler
   const handleSyncSingleNFT = async (nftUid: string) => {
-    if (!nmkrSyncCampaign?.nmkrProjectUid) return;
+    if (!nmkrSyncCampaign?.nmkrProjectId) return;
 
     try {
       // Find the discrepancy for this NFT
@@ -4776,7 +4776,7 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
 
   // NMKR Sync all discrepancies handler
   const handleSyncAllNMKR = async () => {
-    if (!nmkrSyncCampaign?.nmkrProjectUid) return;
+    if (!nmkrSyncCampaign?.nmkrProjectId) return;
 
     setNmkrSyncing(true);
     try {
@@ -4784,7 +4784,7 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
       const response = await fetch('/api/nmkr/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectUid: nmkrSyncCampaign.nmkrProjectUid }),
+        body: JSON.stringify({ projectUid: nmkrSyncCampaign.nmkrProjectId }),
       });
 
       if (!response.ok) {
