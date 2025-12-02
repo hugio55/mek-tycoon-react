@@ -15,9 +15,9 @@ interface PressedButtonRadioProps {
 }
 
 const sizeConfig = {
-  sm: { width: 60, height: 40, fontSize: 10, padding: 3, gap: 2 },
-  md: { width: 90, height: 60, fontSize: 15, padding: 4, gap: 2 },
-  lg: { width: 120, height: 80, fontSize: 18, padding: 5, gap: 3 },
+  sm: { width: 60, height: 40, fontSize: 10, padding: 4, gap: 2, shadowY: 12 },
+  md: { width: 90, height: 60, fontSize: 13, padding: 4, gap: 2, shadowY: 17 },
+  lg: { width: 120, height: 80, fontSize: 16, padding: 5, gap: 2, shadowY: 22 },
 };
 
 const PressedButtonRadio: React.FC<PressedButtonRadioProps> = ({
@@ -71,8 +71,8 @@ const PressedButtonRadio: React.FC<PressedButtonRadioProps> = ({
               borderTopRightRadius: isLast ? '6px' : 0,
               borderBottomRightRadius: isLast ? '6px' : 0,
               boxShadow: isChecked
-                ? '0px 17px 5px 1px rgba(0, 0, 0, 0)'
-                : '0px 17px 5px 1px rgba(0, 0, 0, 0.2)',
+                ? `0px ${config.shadowY}px 5px 1px rgba(0, 0, 0, 0)`
+                : `0px ${config.shadowY}px 5px 1px rgba(0, 0, 0, 0.2)`,
               transition: 'all 0.1s linear',
             }}
           >
@@ -90,7 +90,7 @@ const PressedButtonRadio: React.FC<PressedButtonRadioProps> = ({
                   ? `linear-gradient(to bottom, transparent 10%, ${glowColor}63, transparent 90%)`
                   : 'transparent',
                 transition: 'all 0.1s linear',
-                zIndex: 0,
+                zIndex: -1,
               }}
             />
 
@@ -110,8 +110,10 @@ const PressedButtonRadio: React.FC<PressedButtonRadioProps> = ({
               style={{
                 fontSize: config.fontSize,
                 lineHeight: `${Math.round(config.fontSize * 0.8)}px`,
-                color: 'black',
-                textShadow: '-1px -1px 1px rgba(224, 224, 224, 0.1), 0px 2px 3px rgba(0, 0, 0, 0.3)',
+                color: isChecked ? glowColor : '#1a1a1a',
+                textShadow: isChecked
+                  ? `0 0 8px ${glowColor}80`
+                  : '-1px -1px 1px rgba(224, 224, 224, 0.1), 0px 2px 3px rgba(0, 0, 0, 0.3)',
                 transition: 'all 0.1s linear',
                 zIndex: 1,
               }}
