@@ -947,7 +947,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
         // Desktop/WebView - show wallet picker
         return (
-          <div className="text-center pt-4 pb-2">
+          <div className="text-center pt-4 pb-0">
             <div className="mb-6">
               <div className="w-16 h-16 mx-auto rounded-full bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center mb-4">
                 <svg className="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1184,7 +1184,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
             </svg>
           </button>
 
-          <div className="p-6 sm:p-8 md:p-10">
+          <div className="px-6 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-5 md:px-10 md:pt-10 md:pb-6">
             {renderContent()}
           </div>
         </div>
