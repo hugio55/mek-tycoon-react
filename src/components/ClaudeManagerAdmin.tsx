@@ -12,6 +12,7 @@ interface ClaudeFile {
   content: string;
   frontmatter?: Record<string, any>;
   lastModified?: number;
+  format?: 'yaml' | 'markdown';
 }
 
 interface ClaudeFilesResponse {
@@ -60,6 +61,11 @@ export default function ClaudeManagerAdmin() {
                 {file.type === 'command' ? '/' : file.type === 'agent' ? '@' : ''}{file.name}
               </span>
               {getLocationBadge(file.location)}
+              {file.format === 'yaml' && (
+                <span className="px-2 py-0.5 text-xs bg-yellow-500/30 text-yellow-300 rounded border border-yellow-500/50 font-mono">
+                  YAML
+                </span>
+              )}
             </div>
             {file.description && (
               <div className="text-sm text-gray-400 mt-1">{file.description}</div>

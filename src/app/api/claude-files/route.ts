@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
+import yaml from 'js-yaml';
 
 // Paths to scan
 const PROJECT_CLAUDE_DIR = path.join(process.cwd(), '.claude');
@@ -18,6 +19,7 @@ interface ClaudeFile {
   content: string;
   frontmatter?: Record<string, any>;
   lastModified?: number;
+  format?: 'yaml' | 'markdown'; // New field to distinguish YAML agents
 }
 
 async function scanDirectory(dir: string, location: 'project' | 'parent' | 'computer', rootLevelOnly: boolean = false): Promise<ClaudeFile[]> {
@@ -51,7 +53,7 @@ async function scanDirectory(dir: string, location: 'project' | 'parent' | 'comp
                 continue;
               }
               await scanRecursive(fullPath, relPath, depth + 1);
-            } else if (entry.isFile() && entry.name.endsWith('.md')) {
+            } else if (entry.isFile() && (entry.name.endsWith('.md') || entry.name.endsWith('.yaml') || entry.name.endsWith('.yml'))) {
               // Check file size first - skip files larger than 1MB to avoid hanging
               const stats = await fs.stat(fullPath);
               if (stats.size > 1024 * 1024) {
@@ -59,19 +61,38 @@ async function scanDirectory(dir: string, location: 'project' | 'parent' | 'comp
               }
 
               const content = await fs.readFile(fullPath, 'utf-8');
+              const isYaml = entry.name.endsWith('.yaml') || entry.name.endsWith('.yml');
 
-              // Parse frontmatter if exists
+              // Parse frontmatter/YAML content
               let frontmatter: Record<string, any> = {};
               let description: string | undefined;
+              let format: 'yaml' | 'markdown' = isYaml ? 'yaml' : 'markdown';
 
-              try {
-                const parsed = matter(content);
-                frontmatter = parsed.data;
-                description = frontmatter.description || frontmatter.name;
-              } catch {
-                // No frontmatter, try to extract first line as description
-                const firstLine = content.split('\n').find(line => line.trim().length > 0);
-                description = firstLine?.replace(/^#+\s*/, '').substring(0, 100);
+              if (isYaml) {
+                // Parse YAML file
+                try {
+                  const parsed = yaml.load(content) as Record<string, any>;
+                  frontmatter = parsed || {};
+                  // Extract description from YAML - could be 'description' field or first line of it
+                  if (typeof parsed?.description === 'string') {
+                    description = parsed.description.split('\n')[0].trim().substring(0, 150);
+                  } else if (parsed?.name) {
+                    description = parsed.name;
+                  }
+                } catch {
+                  description = 'YAML agent configuration';
+                }
+              } else {
+                // Parse markdown frontmatter
+                try {
+                  const parsed = matter(content);
+                  frontmatter = parsed.data;
+                  description = frontmatter.description || frontmatter.name;
+                } catch {
+                  // No frontmatter, try to extract first line as description
+                  const firstLine = content.split('\n').find(line => line.trim().length > 0);
+                  description = firstLine?.replace(/^#+\s*/, '').substring(0, 100);
+                }
               }
 
               // Determine type based on path and filename patterns
@@ -90,15 +111,22 @@ async function scanDirectory(dir: string, location: 'project' | 'parent' | 'comp
                 type = 'reference';
               }
 
+              // Remove file extension from name
+              let displayName = entry.name;
+              if (displayName.endsWith('.md')) displayName = displayName.slice(0, -3);
+              else if (displayName.endsWith('.yaml')) displayName = displayName.slice(0, -5);
+              else if (displayName.endsWith('.yml')) displayName = displayName.slice(0, -4);
+
               files.push({
-                name: entry.name.replace('.md', ''),
+                name: displayName,
                 path: fullPath,
                 type,
                 location,
                 description,
                 content,
                 frontmatter,
-                lastModified: stats.mtimeMs
+                lastModified: stats.mtimeMs,
+                format
               });
             }
           } catch (entryError) {
