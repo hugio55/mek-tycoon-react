@@ -54,10 +54,10 @@ export async function POST(request: NextRequest) {
     console.log(`[NMKR Sync API] Retrieved ${nmkrNFTs.length} NFTs from NMKR`);
 
     // Map NMKR data to simplified format for Convex
+    // Note: Only include fields that the Convex query expects (nftUid, nmkrStatus, soldTo)
     const statuses = nmkrNFTs.map((nft: NMKRNFTState) => ({
       nftUid: nft.uid,
       nmkrStatus: nft.state, // 'free', 'reserved', or 'sold'
-      name: nft.displayName || nft.name,
       soldTo: undefined, // NMKR API doesn't directly provide buyer wallet address
     }));
 
