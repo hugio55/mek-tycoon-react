@@ -19,6 +19,9 @@ interface BackupMetadata {
 }
 
 export async function POST(request: NextRequest) {
+  const authError = checkDeploymentAuth(request);
+  if (authError) return authError;
+
   try {
     const { backupId } = await request.json();
 

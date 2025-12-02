@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { readdir, readFile } from 'fs/promises';
 import path from 'path';
+import { checkDeploymentAuth } from '@/lib/deployment/auth';
 
 interface BackupMetadata {
   id: string;
@@ -14,7 +15,10 @@ interface BackupMetadata {
   exportSizeBytes?: number;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = checkDeploymentAuth(request);
+  if (authError) return authError;
+
   try {
     const backupsDir = path.join(process.cwd(), 'backups');
     const backups: BackupMetadata[] = [];

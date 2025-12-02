@@ -34,8 +34,8 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
   const [availableWallets, setAvailableWallets] = useState<WalletInfo[]>([]);
   const [walletError, setWalletError] = useState<string | null>(null);
 
-  // Convex mutation to create/link user record in unified wallet system
-  const connectWalletMutation = useMutation(api.walletAuth.connectWallet);
+  // PHASE II: Convex mutation to create/link corporation (stake-address-only)
+  const connectCorporationMutation = useMutation(api.corporationAuth.connectCorporation);
 
   // Mount/unmount for portal rendering
   useEffect(() => {
@@ -294,23 +294,18 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
         console.log('[WalletConnect] No fallback available - continuing without Meks');
       }
 
-      // Create/link user record in the unified wallet system
-      // This ensures the user has access to crafting, essence, and other userId-dependent features
-      setConnectionStatus('Linking user account...');
+      // PHASE II: Create/link corporation using stake address ONLY
+      // Stake address is the sole identifier - no payment address stored
+      setConnectionStatus('Linking corporation...');
       try {
-        const userResult = await connectWalletMutation({
-          walletAddress: paymentAddress,
-          walletType: wallet.name.toLowerCase(),
+        const corpResult = await connectCorporationMutation({
           stakeAddress: stakeAddress,
+          walletType: wallet.name.toLowerCase(),
         });
-        console.log('[WalletConnect] User account linked:', userResult.isNewUser ? 'NEW USER' : 'EXISTING USER');
-        // Type-safe check for linkedByStakeAddress property
-        if ('linkedByStakeAddress' in userResult && userResult.linkedByStakeAddress) {
-          console.log('[WalletConnect] User was found by stake address and linked to payment address');
-        }
-      } catch (userLinkError) {
-        // Non-fatal - user can still use gold mining without users record
-        console.warn('[WalletConnect] Could not link user account:', userLinkError);
+        console.log('[WalletConnect] Corporation linked:', corpResult.isNew ? 'NEW CORPORATION' : 'EXISTING CORPORATION');
+      } catch (corpLinkError) {
+        // Non-fatal - log but continue
+        console.warn('[WalletConnect] Could not link corporation:', corpLinkError);
       }
 
       // Save session

@@ -623,7 +623,7 @@ export default function MessagingSystemAdmin() {
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 px-3 py-2">
+                  <div className="flex items-center gap-2 bg-white/[0.02] backdrop-blur-sm rounded-xl border border-white/10 px-3 py-2">
                     {/* Hidden file input */}
                     <input
                       ref={fileInputRef}
