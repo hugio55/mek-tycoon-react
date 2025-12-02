@@ -4264,11 +4264,25 @@ export default function AdminMasterDataPage() {
                     </div>
 
                     {/* Component Preview */}
-                    <div className="bg-black/60 rounded-lg p-8 flex flex-col items-center justify-center gap-4 min-h-[300px]">
-                      <GlowButton>Donate</GlowButton>
-                      <div className="flex gap-4">
-                        <GlowButton size="sm">Small</GlowButton>
-                        <GlowButton size="lg">Large</GlowButton>
+                    <div className="bg-black/60 rounded-lg p-6 flex flex-col items-center justify-center gap-6 min-h-[400px]">
+                      {/* Gold Variants - Different Shapes */}
+                      <div className="text-xs text-yellow-400 uppercase tracking-wider mb-1">Gold Shapes</div>
+                      <div className="flex flex-wrap gap-3 justify-center">
+                        <GlowButton shape="rounded" color="gold">Rounded</GlowButton>
+                        <GlowButton shape="pill" color="gold">Pill</GlowButton>
+                        <GlowButton shape="sharp" color="gold">Sharp</GlowButton>
+                        <GlowButton shape="angled" color="gold">Angled</GlowButton>
+                        <GlowButton shape="hexagon" color="gold">Hexagon</GlowButton>
+                      </div>
+
+                      {/* Cyan Variants - Different Shapes */}
+                      <div className="text-xs text-cyan-400 uppercase tracking-wider mt-4 mb-1">Cyan Shapes</div>
+                      <div className="flex flex-wrap gap-3 justify-center">
+                        <GlowButton shape="rounded" color="cyan">Rounded</GlowButton>
+                        <GlowButton shape="pill" color="cyan">Pill</GlowButton>
+                        <GlowButton shape="sharp" color="cyan">Sharp</GlowButton>
+                        <GlowButton shape="angled" color="cyan">Angled</GlowButton>
+                        <GlowButton shape="hexagon" color="cyan">Hexagon</GlowButton>
                       </div>
                     </div>
 
@@ -4276,8 +4290,9 @@ export default function AdminMasterDataPage() {
                     <div className="text-xs text-zinc-400 space-y-1">
                       <div><span className="text-zinc-500">Source:</span> Uiverse.io by Allyhere</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
-                      <div><span className="text-zinc-500">Colors:</span> Blue/Cyan → Gold (#fab617)</div>
-                      <div><span className="text-zinc-500">Features:</span> Animated gradient background (325deg), inset box-shadows, hover shifts background-position, focus ring with 2-layer outline</div>
+                      <div><span className="text-zinc-500">Colors:</span> Gold (#fab617) and Cyan (#00d4ff)</div>
+                      <div><span className="text-zinc-500">Shapes:</span> rounded, pill, sharp, angled, hexagon</div>
+                      <div><span className="text-zinc-500">Features:</span> Animated gradient (325deg), inset shadows, hover animation, focus ring</div>
                     </div>
                   </div>
 
