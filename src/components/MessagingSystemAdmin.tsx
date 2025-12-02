@@ -400,9 +400,9 @@ export default function MessagingSystemAdmin() {
                   )}
                 </div>
 
-                {/* Compose Area - Compact pill design */}
-                <div className="p-4 border-t border-gray-700">
-                  <div className="flex items-center gap-2 bg-gray-800/80 rounded-full border border-gray-600 px-2 py-1">
+                {/* Compose Area - Transparent rounded design */}
+                <div className="p-4 border-t border-gray-700/50">
+                  <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 px-3 py-2">
                     {/* Attachment/Upload Button */}
                     <button
                       className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"

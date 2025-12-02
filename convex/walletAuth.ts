@@ -177,19 +177,8 @@ export const disconnectWallet = mutation({
 export const getUserByWallet = query({
   args: { walletAddress: v.string() },
   handler: async (ctx, args) => {
-    // Try payment address first
-    let user = await ctx.db
-      .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
-      .first();
-
-    // If not found and it looks like a stake address, try stake address lookup
-    if (!user && args.walletAddress.startsWith("stake1")) {
-      user = await ctx.db
-        .query("users")
-        .withIndex("by_stake_address", (q) => q.eq("walletStakeAddress", args.walletAddress))
-        .first();
-    }
+    // Use helper to find user by any address type
+    const user = await findUserByAddress(ctx, args.walletAddress);
 
     if (!user) {
       return null;
@@ -232,41 +221,12 @@ export const getUserByWallet = query({
   },
 });
 
-// Get user by stake address (for unified wallet system)
-export const getUserByStakeAddress = query({
-  args: { stakeAddress: v.string() },
-  handler: async (ctx, args) => {
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_stake_address", (q) => q.eq("walletStakeAddress", args.stakeAddress))
-      .first();
-
-    if (!user) {
-      return null;
-    }
-
-    return user;
-  },
-});
-
 // Get user ID by any wallet address (payment or stake)
+// Note: For full user data, use getUserByWallet instead (it handles both address types)
 export const getUserIdByAnyAddress = query({
   args: { walletAddress: v.string() },
   handler: async (ctx, args) => {
-    // Try payment address first
-    let user = await ctx.db
-      .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
-      .first();
-
-    // If not found, try stake address
-    if (!user) {
-      user = await ctx.db
-        .query("users")
-        .withIndex("by_stake_address", (q) => q.eq("walletStakeAddress", args.walletAddress))
-        .first();
-    }
-
+    const user = await findUserByAddress(ctx, args.walletAddress);
     return user ? user._id : null;
   },
 });

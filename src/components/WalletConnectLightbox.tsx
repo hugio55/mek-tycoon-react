@@ -304,7 +304,8 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
           stakeAddress: stakeAddress,
         });
         console.log('[WalletConnect] User account linked:', userResult.isNewUser ? 'NEW USER' : 'EXISTING USER');
-        if ((userResult as any).linkedByStakeAddress) {
+        // Type-safe check for linkedByStakeAddress property
+        if ('linkedByStakeAddress' in userResult && userResult.linkedByStakeAddress) {
           console.log('[WalletConnect] User was found by stake address and linked to payment address');
         }
       } catch (userLinkError) {
