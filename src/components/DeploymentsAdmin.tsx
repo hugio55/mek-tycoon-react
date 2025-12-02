@@ -67,6 +67,9 @@ export default function DeploymentsAdmin() {
   const [sessionBackup, setSessionBackup] = useState<Backup | null>(null);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [backupType, setBackupType] = useState<'quick' | 'full' | null>(null);
+  const [selectedRollbackBackup, setSelectedRollbackBackup] = useState<Backup | null>(null);
+  const [showRollbackConfirm, setShowRollbackConfirm] = useState(false);
+  const [isRollingBack, setIsRollingBack] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -184,6 +187,45 @@ export default function DeploymentsAdmin() {
     } finally {
       setIsBackingUp(false);
       setBackupType(null);
+    }
+  };
+
+  const handleRollback = async () => {
+    if (!selectedRollbackBackup) return;
+
+    setIsRollingBack(true);
+    addLog('Rollback', 'pending', `Rolling back to ${selectedRollbackBackup.type} backup from ${new Date(selectedRollbackBackup.timestamp).toLocaleString()}...`);
+
+    try {
+      const res = await fetch('/api/deployment/rollback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ backupId: selectedRollbackBackup.id })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        addLog('Rollback', 'success', data.message);
+        if (data.steps && Array.isArray(data.steps)) {
+          data.steps.forEach((step: string) => {
+            addLog('Rollback', 'success', step);
+          });
+        }
+        await fetchStatus();
+      } else {
+        addLog('Rollback', 'error', data.error);
+        if (data.steps && Array.isArray(data.steps)) {
+          data.steps.forEach((step: string) => {
+            addLog('Rollback', 'success', step);
+          });
+        }
+      }
+    } catch (error) {
+      addLog('Rollback', 'error', 'Failed to rollback');
+    } finally {
+      setIsRollingBack(false);
+      setShowRollbackConfirm(false);
+      setSelectedRollbackBackup(null);
     }
   };
 
@@ -528,11 +570,68 @@ export default function DeploymentsAdmin() {
     );
   }
 
-  const anyActionRunning = isCommitting || isPushing || isDeployingDev || isDeployingProd || isFullDeploy || isBackingUp;
+  const anyActionRunning = isCommitting || isPushing || isDeployingDev || isDeployingProd || isFullDeploy || isBackingUp || isRollingBack;
+
+  const rollbackModal = showRollbackConfirm && selectedRollbackBackup && mounted && createPortal(
+    <div
+      className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]"
+      onClick={() => { setShowRollbackConfirm(false); setSelectedRollbackBackup(null); }}
+    >
+      <div
+        className="bg-gray-900 border-2 border-orange-500 rounded-lg p-6 max-w-lg mx-4"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="text-center">
+          <div className="text-4xl mb-4">!!</div>
+          <h2 className="text-xl font-bold text-orange-400 mb-4">Confirm Rollback</h2>
+
+          <div className="text-left bg-gray-800 rounded-lg p-4 mb-4">
+            <div className="text-gray-400 text-sm mb-2">Rolling back to:</div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                selectedRollbackBackup.type === 'full' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'
+              }`}>
+                {selectedRollbackBackup.type.toUpperCase()}
+              </span>
+              <span className="font-mono text-purple-400">{selectedRollbackBackup.commitHash.substring(0, 7)}</span>
+            </div>
+            <div className="text-sm text-gray-300 mb-1">{selectedRollbackBackup.commitMessage}</div>
+            <div className="text-xs text-gray-500">
+              {new Date(selectedRollbackBackup.timestamp).toLocaleString()}
+            </div>
+          </div>
+
+          <p className="text-gray-400 text-sm mb-6">
+            {selectedRollbackBackup.type === 'full'
+              ? 'This will restore both code AND database to the backup state. Any data added since then will be lost.'
+              : 'This will restore code only. Database data will remain as-is.'}
+          </p>
+
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={() => { setShowRollbackConfirm(false); setSelectedRollbackBackup(null); }}
+              className="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleRollback}
+              disabled={isRollingBack}
+              className="px-6 py-2 bg-orange-600 hover:bg-orange-500 rounded-lg font-bold disabled:opacity-50"
+            >
+              {isRollingBack ? 'Rolling Back...' : 'ROLLBACK'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
 
   return (
     <div className="space-y-6">
       {confirmationModal}
+      {rollbackModal}
 
       {/* Header */}
       <div className="text-center mb-6">
@@ -600,6 +699,74 @@ export default function DeploymentsAdmin() {
         </div>
       )}
 
+      {/* Backup Panel */}
+      <div className="bg-gray-800/50 border border-yellow-500/30 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="text-yellow-400 font-bold uppercase tracking-wider">Backup Before Deploy</div>
+            <div className="text-gray-400 text-xs mt-1">
+              {sessionBackup
+                ? `Last backup: ${sessionBackup.type === 'full' ? 'Full' : 'Quick'} @ ${new Date(sessionBackup.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`
+                : 'No backup this session - create one before deploying'}
+            </div>
+          </div>
+          {sessionBackup && (
+            <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+              sessionBackup.type === 'full' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'
+            }`}>
+              {sessionBackup.type === 'full' ? 'FULL BACKUP READY' : 'QUICK BACKUP READY'}
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={handleQuickBackup}
+            disabled={anyActionRunning}
+            className={`
+              px-4 py-3 rounded-lg transition-colors text-left
+              ${isBackingUp && backupType === 'quick'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600'}
+            `}
+          >
+            <div className="font-bold text-blue-400">Quick Backup</div>
+            <div className="text-xs text-gray-400 mt-1">Code only (~5 sec)</div>
+            <div className="text-xs text-gray-500">For routine code changes</div>
+            {isBackingUp && backupType === 'quick' && (
+              <div className="text-xs text-blue-300 mt-2 animate-pulse">Creating backup...</div>
+            )}
+          </button>
+
+          <button
+            onClick={handleFullBackup}
+            disabled={anyActionRunning}
+            className={`
+              px-4 py-3 rounded-lg transition-colors text-left
+              ${isBackingUp && backupType === 'full'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600'}
+            `}
+          >
+            <div className="font-bold text-purple-400">Full Backup</div>
+            <div className="text-xs text-gray-400 mt-1">Code + Database (~30-60 sec)</div>
+            <div className="text-xs text-gray-500">For schema or risky changes</div>
+            {isBackingUp && backupType === 'full' && (
+              <div className="text-xs text-purple-300 mt-2 animate-pulse">Exporting database...</div>
+            )}
+          </button>
+        </div>
+
+        {backups.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-gray-700">
+            <div className="text-gray-500 text-xs">
+              {backups.length} backup{backups.length !== 1 ? 's' : ''} available
+              ({backups.filter(b => b.type === 'quick').length} quick, {backups.filter(b => b.type === 'full').length} full)
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Main Action Button */}
       <div className="flex justify-center">
         <button
@@ -607,20 +774,25 @@ export default function DeploymentsAdmin() {
             setIsFullDeploy(true);
             openProdConfirm(true);
           }}
-          disabled={anyActionRunning || (gitStatus?.hasUncommittedChanges && !commitMessage.trim())}
+          disabled={anyActionRunning || (gitStatus?.hasUncommittedChanges && !commitMessage.trim()) || !sessionBackup}
           className={`
             px-8 py-4 rounded-lg text-xl font-bold tracking-wider
             transition-all duration-300
-            ${anyActionRunning
+            ${anyActionRunning || !sessionBackup
               ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
               : 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white shadow-lg hover:shadow-red-500/25'
             }
             disabled:opacity-50
           `}
         >
-          {isFullDeploy ? 'DEPLOYING...' : 'DEPLOY TO PRODUCTION'}
+          {isFullDeploy ? 'DEPLOYING...' : !sessionBackup ? 'CREATE BACKUP FIRST' : 'DEPLOY TO PRODUCTION'}
         </button>
       </div>
+      {!sessionBackup && (
+        <div className="text-center text-yellow-500 text-sm">
+          You must create a backup before deploying to production
+        </div>
+      )}
 
       <div className="text-center text-gray-500 text-sm max-w-3xl mx-auto space-y-1">
         <div>
@@ -676,6 +848,75 @@ export default function DeploymentsAdmin() {
           </button>
         </div>
       </div>
+
+      {/* Rollback Section */}
+      {backups.length > 0 && (
+        <div className="border-t border-gray-700 pt-6">
+          <div className="text-gray-400 text-sm uppercase tracking-wider mb-4">Emergency Rollback</div>
+          <div className="bg-gray-800/50 border border-orange-500/30 rounded-lg p-4">
+            <div className="text-orange-400 text-sm mb-3">
+              Select a backup to restore production to a previous state:
+            </div>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {backups.slice(0, 10).map(backup => (
+                <div
+                  key={backup.id}
+                  className={`
+                    flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors
+                    ${selectedRollbackBackup?.id === backup.id
+                      ? 'bg-orange-500/20 border border-orange-500'
+                      : 'bg-gray-700/50 hover:bg-gray-700 border border-transparent'}
+                  `}
+                  onClick={() => setSelectedRollbackBackup(
+                    selectedRollbackBackup?.id === backup.id ? null : backup
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                      backup.type === 'full' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'
+                    }`}>
+                      {backup.type.toUpperCase()}
+                    </span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-purple-400 text-sm">{backup.commitHash.substring(0, 7)}</span>
+                        <span className="text-gray-400 text-xs">
+                          {new Date(backup.timestamp).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
+                        </span>
+                      </div>
+                      <div className="text-gray-500 text-xs truncate max-w-md">{backup.commitMessage}</div>
+                    </div>
+                  </div>
+                  {backup.exportSizeBytes && (
+                    <div className="text-xs text-gray-500">
+                      {backup.exportSizeBytes > 1024 * 1024
+                        ? `${(backup.exportSizeBytes / (1024 * 1024)).toFixed(1)} MB`
+                        : `${(backup.exportSizeBytes / 1024).toFixed(1)} KB`}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            {selectedRollbackBackup && (
+              <div className="mt-4 pt-4 border-t border-gray-700 flex justify-end">
+                <button
+                  onClick={() => setShowRollbackConfirm(true)}
+                  disabled={anyActionRunning}
+                  className="px-6 py-2 bg-orange-600 hover:bg-orange-500 disabled:bg-gray-700 disabled:text-gray-500 rounded-lg font-bold transition-colors"
+                >
+                  Rollback to Selected Backup
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Activity Log */}
       <div className="border-t border-gray-700 pt-6">
