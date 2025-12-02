@@ -156,13 +156,16 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           />
         )}
 
-        {false && isPhaseTwo && (
+        {isPhaseTwo && (
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)',
               animation: 'slideParticles 3s linear infinite',
               opacity: 1.0,
+              isolation: 'isolate',
+              willChange: 'transform',
+              contain: 'paint',
             }}
           />
         )}
@@ -170,7 +173,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
         <div className="h-full flex items-center justify-center px-6 relative">
           <div className="flex items-center gap-2">
             {isPhaseOne && <Checkmark />}
-            {false && isPhaseTwo && <LoadingSpinner />}
+            {isPhaseTwo && <div style={{ isolation: 'isolate', contain: 'paint' }}><LoadingSpinner /></div>}
 
             <h3
               className="uppercase tracking-wider font-medium"
@@ -222,11 +225,6 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             marginBottom: isPhaseOne ? '2px' : '0',
           }}
         >
-          {/* DEBUG: Show empty content for Phase 1 to test if content causes the line */}
-          {isPhaseOne ? (
-            <div style={{ padding: '20px', color: 'white' }}>DEBUG: Empty Phase 1 content</div>
-          ) : (
-          <>
           <div>
             <h4
               className="text-yellow-400 uppercase tracking-wider font-medium"
@@ -238,7 +236,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
               {card.title}
             </h4>
 
-            {false && isPhaseOne && (
+            {isPhaseOne && (
               <div
                 className="uppercase font-bold mt-1 mb-3"
                 style={{
@@ -256,7 +254,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
 
           {card.description && (
             <>
-              {false && isPhaseOne ? (
+              {isPhaseOne ? (
                 // For Phase I, split description and italicize last sentence
                 (() => {
                   const lines = card.description.split('\n');
@@ -298,9 +296,9 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
             </>
           )}
 
-          {/* Claim NFT Button for Phase I - TEMPORARILY DISABLED FOR DEBUGGING */}
-          {false && isPhaseOne && (
-            <div className="mt-6 mb-2 flex justify-start">
+          {/* Claim NFT Button for Phase I */}
+          {isPhaseOne && (
+            <div className="mt-6 flex justify-start">
               <button
                 onClick={() => {
                   console.log('[PhaseCard] Opening NFT claim lightbox');
@@ -331,8 +329,6 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
                 </span>
               </button>
             </div>
-          )}
-        </>
           )}
         </div>
       </div>
