@@ -213,10 +213,10 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
         <div
           className="mt-2 px-6 py-4"
           style={{
-            background: isPhaseOne ? 'rgba(20, 30, 40, 0.92)' : 'rgba(0, 0, 0, 0.4)',
+            background: 'rgba(0, 0, 0, 0.4)',
             borderRadius: '8px',
-            backdropFilter: isPhaseOne ? 'none' : 'blur(16px)',
-            WebkitBackdropFilter: isPhaseOne ? 'none' : 'blur(16px)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
             opacity: isExpanded ? 1 : 0,
             transition: 'opacity 300ms ease-out',
             overflow: 'hidden',
@@ -233,7 +233,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
               {card.title}
             </h4>
 
-            {isPhaseOne && (
+            {false && isPhaseOne && (
               <div
                 className="uppercase font-bold mt-1 mb-3"
                 style={{
@@ -294,7 +294,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           )}
 
           {/* Claim NFT Button for Phase I */}
-          {isPhaseOne && (
+          {false && isPhaseOne && (
             <div className="mt-6 flex justify-start">
               <button
                 onClick={() => {

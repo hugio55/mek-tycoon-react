@@ -186,6 +186,7 @@ export default function DeploymentsAdmin() {
 
   const handleFullDeploy = async () => {
     setIsFullDeploy(true);
+    const originalBranch = gitStatus?.currentBranch || 'custom-minting-system';
 
     // Step 1: Commit (if there are changes and message provided)
     if (gitStatus?.hasUncommittedChanges) {
@@ -195,7 +196,7 @@ export default function DeploymentsAdmin() {
         return;
       }
 
-      addLog('Full Deploy', 'pending', 'Step 1/4: Committing changes...');
+      addLog('Full Deploy', 'pending', 'Step 1/5: Committing changes...');
       try {
         const res = await fetch('/api/deployment/commit', {
           method: 'POST',
@@ -216,43 +217,53 @@ export default function DeploymentsAdmin() {
         return;
       }
     } else {
-      addLog('Full Deploy', 'success', 'Step 1/4: No changes to commit (skipped)');
+      addLog('Full Deploy', 'success', 'Step 1/5: No changes to commit (skipped)');
     }
 
-    // Step 2: Push to GitHub
-    addLog('Full Deploy', 'pending', 'Step 2/4: Pushing to GitHub...');
+    // Step 2: Merge to master
+    addLog('Full Deploy', 'pending', `Step 2/5: Merging ${originalBranch} into master...`);
     try {
-      const res = await fetch('/api/deployment/push', { method: 'POST' });
+      const res = await fetch('/api/deployment/merge-to-master', { method: 'POST' });
       const data = await res.json();
       if (!data.success) {
-        addLog('Full Deploy', 'error', `Push failed: ${data.error}`);
+        addLog('Full Deploy', 'error', `Merge failed: ${data.error}`);
         setIsFullDeploy(false);
         return;
       }
-      addLog('Full Deploy', 'success', 'Pushed to GitHub (Vercel preview deploying...)');
+      addLog('Full Deploy', 'success', data.alreadyOnMaster ? 'Already on master' : `Merged ${originalBranch} into master`);
     } catch (error) {
-      addLog('Full Deploy', 'error', 'Push step failed');
+      addLog('Full Deploy', 'error', 'Merge to master failed');
       setIsFullDeploy(false);
       return;
     }
 
-    // Step 3: Deploy Convex to dev (optional but good practice)
-    addLog('Full Deploy', 'pending', 'Step 3/4: Deploying Convex to Trout (dev)...');
+    // Step 3: Push master to GitHub (triggers Vercel production)
+    addLog('Full Deploy', 'pending', 'Step 3/5: Pushing master to GitHub (Vercel production)...');
     try {
-      const res = await fetch('/api/deployment/deploy-dev', { method: 'POST' });
+      const res = await fetch('/api/deployment/push-master', { method: 'POST' });
       const data = await res.json();
-      if (data.success) {
-        addLog('Full Deploy', 'success', 'Deployed to Trout (dev)');
-      } else {
-        addLog('Full Deploy', 'error', `Dev deploy warning: ${data.error}`);
-        // Continue anyway - dev deploy failure shouldn't block prod
+      if (!data.success) {
+        addLog('Full Deploy', 'error', `Push master failed: ${data.error}`);
+        setIsFullDeploy(false);
+        return;
       }
+      addLog('Full Deploy', 'success', 'Pushed master to GitHub (Vercel PRODUCTION deploying!)');
     } catch (error) {
-      addLog('Full Deploy', 'error', 'Dev deploy warning - continuing...');
+      addLog('Full Deploy', 'error', 'Push master failed');
+      // Try to switch back to original branch
+      try {
+        await fetch('/api/deployment/switch-branch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ branch: originalBranch })
+        });
+      } catch (e) { /* ignore */ }
+      setIsFullDeploy(false);
+      return;
     }
 
     // Step 4: Deploy Convex to production
-    addLog('Full Deploy', 'pending', 'Step 4/4: Deploying Convex to Sturgeon (PRODUCTION)...');
+    addLog('Full Deploy', 'pending', 'Step 4/5: Deploying Convex to Sturgeon (PRODUCTION)...');
     try {
       const res = await fetch('/api/deployment/deploy-prod', {
         method: 'POST',
@@ -261,14 +272,34 @@ export default function DeploymentsAdmin() {
       });
       const data = await res.json();
       if (data.success) {
-        addLog('Full Deploy', 'success', 'PRODUCTION DEPLOYMENT COMPLETE!');
+        addLog('Full Deploy', 'success', 'Convex deployed to Sturgeon (production)');
       } else {
-        addLog('Full Deploy', 'error', `Production deploy failed: ${data.error}`);
+        addLog('Full Deploy', 'error', `Convex deploy warning: ${data.error}`);
+        // Continue anyway to switch back to original branch
       }
     } catch (error) {
-      addLog('Full Deploy', 'error', 'Production deploy failed');
+      addLog('Full Deploy', 'error', 'Convex deploy warning - continuing...');
     }
 
+    // Step 5: Switch back to original branch
+    addLog('Full Deploy', 'pending', `Step 5/5: Switching back to ${originalBranch}...`);
+    try {
+      const res = await fetch('/api/deployment/switch-branch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ branch: originalBranch })
+      });
+      const data = await res.json();
+      if (data.success) {
+        addLog('Full Deploy', 'success', `Back on ${originalBranch}`);
+      } else {
+        addLog('Full Deploy', 'error', `Could not switch back: ${data.error}`);
+      }
+    } catch (error) {
+      addLog('Full Deploy', 'error', `Could not switch back to ${originalBranch}`);
+    }
+
+    addLog('Full Deploy', 'success', 'PRODUCTION DEPLOYMENT COMPLETE!');
     await fetchStatus();
     setIsFullDeploy(false);
     setShowProdConfirm(false);
@@ -458,13 +489,11 @@ export default function DeploymentsAdmin() {
         </button>
       </div>
 
-      <div className="text-center text-gray-500 text-sm max-w-xl mx-auto">
+      <div className="text-center text-gray-500 text-sm max-w-2xl mx-auto">
         <span className="text-gray-400">1.</span> Commits your changes →
-        <span className="text-gray-400">2.</span> Pushes to <span className="text-cyan-500">{gitStatus?.currentBranch || 'current branch'}</span> on GitHub (triggers Vercel preview) →
-        <span className="text-gray-400">3.</span> Deploys Convex to Sturgeon (production database)
-      </div>
-      <div className="text-center text-gray-600 text-xs mt-1">
-        No pull request created. Direct push to your branch.
+        <span className="text-gray-400">2.</span> Merges <span className="text-cyan-500">{gitStatus?.currentBranch || 'current branch'}</span> into <span className="text-green-500">master</span> →
+        <span className="text-gray-400">3.</span> Pushes master to GitHub (triggers Vercel production) →
+        <span className="text-gray-400">4.</span> Deploys Convex to Sturgeon (production database)
       </div>
 
       {/* Individual Action Buttons */}
