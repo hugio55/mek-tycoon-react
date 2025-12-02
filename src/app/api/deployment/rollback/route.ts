@@ -28,6 +28,15 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Validate backup ID format to prevent path traversal
+    const validIdPattern = /^(quick|full)-\d+$/;
+    if (!validIdPattern.test(backupId)) {
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid backup ID format',
+      }, { status: 400 });
+    }
+
     // Determine backup type from ID
     const isFullBackup = backupId.startsWith('full-');
     const backupDir = path.join(process.cwd(), 'backups', isFullBackup ? 'full' : 'quick');
@@ -46,6 +55,15 @@ export async function POST(request: NextRequest) {
     }
 
     const steps: string[] = [];
+
+    // Get current branch before rollback so we can switch back
+    let originalBranch = 'custom-minting-system';
+    try {
+      const { stdout: branchOutput } = await execAsync('git branch --show-current');
+      originalBranch = branchOutput.trim() || 'custom-minting-system';
+    } catch (e) {
+      // Use default if we can't detect
+    }
 
     // Step 1: Switch to master
     try {
@@ -112,12 +130,14 @@ export async function POST(request: NextRequest) {
       steps.push('Warning: Could not redeploy Convex functions');
     }
 
-    // Step 6: Switch back to working branch (if we know it)
-    try {
-      await execAsync('git checkout custom-minting-system');
-      steps.push('Switched back to custom-minting-system');
-    } catch (e) {
-      steps.push('Warning: Could not switch back to custom-minting-system');
+    // Step 6: Switch back to working branch
+    if (originalBranch !== 'master') {
+      try {
+        await execAsync(`git checkout ${originalBranch}`);
+        steps.push(`Switched back to ${originalBranch}`);
+      } catch (e) {
+        steps.push(`Warning: Could not switch back to ${originalBranch}`);
+      }
     }
 
     return NextResponse.json({
