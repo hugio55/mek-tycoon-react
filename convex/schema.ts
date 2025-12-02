@@ -3897,6 +3897,10 @@ export default defineSchema({
     // Account status
     isBanned: v.optional(v.boolean()),
     role: v.optional(v.union(v.literal("user"), v.literal("moderator"), v.literal("admin"))),
+
+    // Session authentication (for secure mutations)
+    sessionToken: v.optional(v.string()), // Random UUID for session auth
+    sessionExpiresAt: v.optional(v.number()), // When session expires (timestamp)
   })
     .index("by_stake_address", ["stakeAddress"]) // Primary lookup - THE identifier
     .index("by_corporation_name", ["corporationName"]) // For name searches
