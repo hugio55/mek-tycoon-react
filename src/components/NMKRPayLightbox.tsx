@@ -595,7 +595,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
       case 'corporation_verified':
         return (
-          <div className="text-center pt-6 sm:pt-8 pb-2">
+          <div className="text-center pt-2 sm:pt-4 pb-2">
             {/* Checkmark icon */}
             <div className="mb-4 sm:mb-6">
               <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center">

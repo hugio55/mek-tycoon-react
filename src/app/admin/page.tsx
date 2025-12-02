@@ -59,6 +59,7 @@ import FloatingLabelInput from '@/components/controls/FloatingLabelInput';
 import IndustrialFlipCard from '@/components/controls/IndustrialFlipCard';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import PortMonitor from '@/components/PortMonitor';
+import DeploymentsAdmin from '@/components/DeploymentsAdmin';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
 import { getVariationTrueRank, VARIATION_MEK_RANKS } from '@/lib/variationRarityMekRanks';
@@ -125,7 +126,8 @@ const DATA_SYSTEMS = [
   { id: 'route-config', name: 'Route Configuration', icon: '🗺️', implemented: true },
   { id: 'overlay-editor', name: 'Overlay Editor', icon: '🎯', implemented: true },
   { id: 'navigation-preview', name: 'Navigation', icon: '🧭', implemented: true },
-  { id: 'components', name: 'Components', icon: '🧩', implemented: true }
+  { id: 'components', name: 'Components', icon: '🧩', implemented: true },
+  { id: 'deployments', name: 'Deployments', icon: '🚀', implemented: true }
 ];
 
 export default function AdminMasterDataPage() {
@@ -4249,6 +4251,14 @@ export default function AdminMasterDataPage() {
 
                 </div>
               </div>
+          </div>
+          )}
+
+          {activeTab === 'deployments' && (
+          <div id="section-deployments" className="mek-card-industrial mek-border-sharp-gold rounded-lg shadow-lg shadow-black/50">
+            <div className="p-6">
+              <DeploymentsAdmin />
+            </div>
           </div>
           )}
 
