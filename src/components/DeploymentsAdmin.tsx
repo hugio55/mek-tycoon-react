@@ -605,13 +605,19 @@ export default function DeploymentsAdmin() {
         <div className="font-bold text-gray-400 mb-2">How This Works:</div>
         <ul className="list-disc list-inside space-y-2">
           <li><span className="text-gray-400">Commit</span> - Saves your code changes to git history (local only)</li>
-          <li><span className="text-gray-400">Push to GitHub</span> - Uploads commits to your current branch. Vercel sees this and auto-creates a preview deployment. <span className="text-yellow-500/70">No pull request is created.</span></li>
+          <li><span className="text-gray-400">Push to GitHub</span> - Uploads commits to your current branch (creates Vercel preview)</li>
           <li><span className="text-gray-400">Deploy Dev (Trout)</span> - Updates Convex database functions for localhost testing</li>
-          <li><span className="text-gray-400">Deploy Prod (Sturgeon)</span> - Updates Convex database functions for the live site (mek.overexposed.io)</li>
+          <li><span className="text-gray-400">Deploy Prod (Sturgeon)</span> - Updates Convex database functions for the live site</li>
         </ul>
         <div className="mt-3 pt-3 border-t border-gray-700">
-          <div className="font-bold text-gray-400 mb-1">About Vercel Production:</div>
-          <p className="text-gray-500">Pushing to GitHub creates a Vercel <span className="text-blue-400">preview</span>. To make it the live production site, you need to promote the preview in the Vercel dashboard, or merge your branch to main.</p>
+          <div className="font-bold text-gray-400 mb-1">What the Big Button Does:</div>
+          <ol className="list-decimal list-inside space-y-1 text-gray-500">
+            <li>Commits your changes (if any)</li>
+            <li>Merges your branch into <span className="text-green-400">master</span></li>
+            <li>Pushes master to GitHub (triggers Vercel production)</li>
+            <li>Deploys Convex to Sturgeon (production database)</li>
+            <li>Switches you back to your working branch</li>
+          </ol>
         </div>
       </div>
     </div>

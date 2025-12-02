@@ -23,6 +23,7 @@ import CommemorativeToken1Admin from '@/components/CommemorativeToken1Admin';
 import SourceKeyMigrationAdmin from '@/components/SourceKeyMigrationAdmin';
 import WhitelistManagerAdmin from '@/components/WhitelistManagerAdmin';
 import RouteVisualization from '@/components/RouteVisualization';
+import NewStylingAdmin from '@/components/NewStylingAdmin';
 import { ProductionDatabaseProvider, useProductionDatabase } from '@/contexts/ProductionDatabaseContext';
 import ProductionBanner from '@/components/admin/ProductionBanner';
 import MutationConfirmDialog from '@/components/admin/MutationConfirmDialog';
@@ -127,7 +128,8 @@ const DATA_SYSTEMS = [
   { id: 'overlay-editor', name: 'Overlay Editor', icon: '🎯', implemented: true },
   { id: 'navigation-preview', name: 'Navigation', icon: '🧭', implemented: true },
   { id: 'components', name: 'Components', icon: '🧩', implemented: true },
-  { id: 'deployments', name: 'Deployments', icon: '🚀', implemented: true }
+  { id: 'deployments', name: 'Deployments', icon: '🚀', implemented: true },
+  { id: 'new-styling', name: 'New Styling', icon: '🎨', implemented: true }
 ];
 
 export default function AdminMasterDataPage() {
@@ -4259,6 +4261,12 @@ export default function AdminMasterDataPage() {
             <div className="p-6">
               <DeploymentsAdmin />
             </div>
+          </div>
+          )}
+
+          {activeTab === 'new-styling' && (
+          <div id="section-new-styling" className="mek-card-industrial mek-border-sharp-gold rounded-lg shadow-lg shadow-black/50">
+            <NewStylingAdmin />
           </div>
           )}
 

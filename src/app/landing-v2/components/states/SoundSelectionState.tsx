@@ -65,7 +65,7 @@ export default function SoundSelectionState({ isActive, onComplete, onAudioStart
       >
         {/* Two side-by-side ProModeToggles */}
         <div
-          className="flex items-center justify-center"
+          className="flex items-center justify-center select-none"
           style={{
             gap: '32px',
             transform: 'translateY(0px)',

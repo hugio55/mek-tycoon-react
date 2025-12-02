@@ -132,7 +132,7 @@ export default function ProModeToggle({
   };
 
   return (
-    <div className="relative">
+    <div className="relative select-none">
       {/* Label */}
       <div className="absolute left-1/2 -translate-x-1/2 -top-6 text-center uppercase font-bold text-xs tracking-widest opacity-80">
         {label}
