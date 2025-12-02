@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
 
     // Step 5: Deploy Convex to ensure functions match the code
     try {
-      await execAsync('npx convex deploy --prod', {
+      await execAsync('npx convex deploy', {
         timeout: 120000,
       });
       steps.push('Deployed Convex functions to production');

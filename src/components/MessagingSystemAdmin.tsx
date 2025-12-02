@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
@@ -75,6 +76,7 @@ export default function MessagingSystemAdmin() {
   const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<{ url: string; filename: string } | null>(null);
+  const [mounted, setMounted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -107,6 +109,11 @@ export default function MessagingSystemAdmin() {
   const setTypingIndicator = useMutation(api.messaging.setTypingIndicator);
   const generateUploadUrl = useMutation(api.messageAttachments.generateUploadUrl);
   const validateUpload = useMutation(api.messageAttachments.validateUpload);
+
+  // Mount check for portal
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -714,8 +721,8 @@ export default function MessagingSystemAdmin() {
         </div>
       </div>
 
-      {/* Image Lightbox */}
-      {lightboxImage && (
+      {/* Image Lightbox - rendered via portal to escape parent stacking context */}
+      {mounted && lightboxImage && createPortal(
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md"
           onClick={() => setLightboxImage(null)}
@@ -741,10 +748,10 @@ export default function MessagingSystemAdmin() {
               src={lightboxImage.url}
               alt={lightboxImage.filename}
               className="block max-w-[85vw] max-h-[85vh] rounded-xl"
-              style={{ display: 'block' }}
             />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
