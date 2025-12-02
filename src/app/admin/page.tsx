@@ -24,6 +24,7 @@ import SourceKeyMigrationAdmin from '@/components/SourceKeyMigrationAdmin';
 import WhitelistManagerAdmin from '@/components/WhitelistManagerAdmin';
 import RouteVisualization from '@/components/RouteVisualization';
 import NewStylingAdmin from '@/components/NewStylingAdmin';
+import MessagingSystemAdmin from '@/components/MessagingSystemAdmin';
 import { ProductionDatabaseProvider, useProductionDatabase } from '@/contexts/ProductionDatabaseContext';
 import ProductionBanner from '@/components/admin/ProductionBanner';
 import MutationConfirmDialog from '@/components/admin/MutationConfirmDialog';
@@ -143,7 +144,8 @@ const DATA_SYSTEMS = [
   { id: 'navigation-preview', name: 'Navigation', icon: '🧭', implemented: true },
   { id: 'components', name: 'Components', icon: '🧩', implemented: true },
   { id: 'deployments', name: 'Deployments', icon: '🚀', implemented: true },
-  { id: 'new-styling', name: 'New Styling', icon: '🎨', implemented: true }
+  { id: 'new-styling', name: 'New Styling', icon: '🎨', implemented: true },
+  { id: 'messaging-system', name: 'Messaging System', icon: '💬', implemented: true }
 ];
 
 export default function AdminMasterDataPage() {
@@ -4882,6 +4884,12 @@ export default function AdminMasterDataPage() {
           {activeTab === 'new-styling' && (
           <div id="section-new-styling" className="mek-card-industrial mek-border-sharp-gold rounded-lg shadow-lg shadow-black/50">
             <NewStylingAdmin />
+          </div>
+          )}
+
+          {activeTab === 'messaging-system' && (
+          <div id="section-messaging-system" className="mek-card-industrial mek-border-sharp-gold rounded-lg shadow-lg shadow-black/50 overflow-hidden">
+            <MessagingSystemAdmin />
           </div>
           )}
 

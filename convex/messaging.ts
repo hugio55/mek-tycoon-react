@@ -49,7 +49,7 @@ export const getConversations = query({
 
         const otherUser = await ctx.db
           .query("users")
-          .withIndex("by_walletAddress", (q) => q.eq("walletAddress", otherWallet))
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", otherWallet))
           .first();
 
         return {
