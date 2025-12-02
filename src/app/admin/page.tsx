@@ -38,6 +38,7 @@ import TriangleKaleidoscope from '@/components/loaders/TriangleKaleidoscope';
 import PreLoader from '@/components/loaders/PreLoader';
 import AnimatedBorderButton from '@/components/loaders/AnimatedBorderButton';
 import GlowButton from '@/components/loaders/GlowButton';
+import GlowCard from '@/components/loaders/GlowCard';
 import ProModeToggle from '@/components/controls/ProModeToggle';
 import PowerSwitch from '@/components/controls/PowerSwitch';
 import PowerSwitchToggle from '@/components/controls/PowerSwitchToggle';
@@ -60,6 +61,7 @@ import FillTextButton from '@/components/controls/FillTextButton';
 import FloatingLabelInput from '@/components/controls/FloatingLabelInput';
 import IndustrialFlipCard from '@/components/controls/IndustrialFlipCard';
 import StarBurstButton from '@/components/controls/StarBurstButton';
+import GlowingPowerSwitch from '@/components/controls/GlowingPowerSwitch';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import PortMonitor from '@/components/PortMonitor';
 import DeploymentsAdmin from '@/components/DeploymentsAdmin';
@@ -4297,6 +4299,39 @@ export default function AdminMasterDataPage() {
                     </div>
                   </div>
 
+                  {/* Glow Card */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Glow Card
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Card
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-6 flex flex-wrap items-center justify-center gap-6 min-h-[400px]">
+                      {/* Gold Variant */}
+                      <GlowCard color="gold" size="sm" title="GOLD" />
+
+                      {/* Cyan Variant */}
+                      <GlowCard color="cyan" size="sm" title="CYAN" />
+
+                      {/* White Variant */}
+                      <GlowCard color="white" size="sm" title="WHITE" />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by Spacious74</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, White variants</div>
+                      <div><span className="text-zinc-500">Shapes:</span> rounded, sharp, angled</div>
+                      <div><span className="text-zinc-500">Features:</span> Animated dot orbiting border, radial gradients, light ray effect, grid lines, gradient text</div>
+                    </div>
+                  </div>
+
                   {/* Star Burst Button */}
                   <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
                     <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
@@ -4321,6 +4356,42 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind + CSS</div>
                       <div><span className="text-zinc-500">Colors:</span> Yellow (#facc15) with stone-800 (#292524) and stone-50 (#fafaf9)</div>
                       <div><span className="text-zinc-500">Features:</span> Rotating star-burst clip-path (40-point polygon), layered box-shadow stack (yellow/dark/light), hover press animation, animated dotted pattern overlay, focus/active outline states</div>
+                    </div>
+                  </div>
+
+                  {/* Glowing Power Switch */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Glowing Power Switch
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-zinc-900 rounded-lg p-8 flex items-center justify-center gap-8 min-h-[300px]">
+                      <div className="flex flex-col items-center gap-2">
+                        <GlowingPowerSwitch />
+                        <span className="text-xs text-zinc-500">Default (cyan)</span>
+                      </div>
+                      <div className="flex flex-col items-center gap-2">
+                        <GlowingPowerSwitch glowColor="rgb(250, 182, 23)" />
+                        <span className="text-xs text-zinc-500">Gold glow</span>
+                      </div>
+                      <div className="flex flex-col items-center gap-2">
+                        <GlowingPowerSwitch glowColor="rgb(74, 222, 128)" />
+                        <span className="text-xs text-zinc-500">Green glow</span>
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by vinodjangid07</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> Cyan glow (rgb(151, 243, 255)) default, configurable via glowColor prop</div>
+                      <div><span className="text-zinc-500">Features:</span> Multi-layer box-shadow glow effect (inset + outer), power icon SVG with drop-shadow, smooth transitions, keyboard accessible, controlled/uncontrolled modes</div>
                     </div>
                   </div>
 
