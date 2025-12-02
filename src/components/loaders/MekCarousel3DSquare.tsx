@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import Image from 'next/image';
 
-interface MekCarousel3DProps {
+interface MekCarousel3DSquareProps {
   images?: string[];
   color?: 'gold' | 'cyan' | 'silver';
   size?: 'sm' | 'md' | 'lg';
@@ -12,7 +12,7 @@ interface MekCarousel3DProps {
   className?: string;
 }
 
-// Default Mek images to display
+// Default Mek images to display (square aspect ratio)
 const DEFAULT_MEK_IMAGES = [
   '/mek-images/500px/aa1-aa4-gk1.webp',
   '/mek-images/500px/bc2-dm1-ap1.webp',
@@ -25,26 +25,26 @@ const DEFAULT_MEK_IMAGES = [
 ];
 
 /**
- * Mek Carousel 3D - Transformed from Uiverse.io by ilkhoeri
+ * Mek Carousel 3D Square - Transformed from Uiverse.io by ilkhoeri
  *
- * Original: 3D rotating card carousel with perspective
- * Transformed: Mek NFT showcase with Gold/Cyan/Silver variants
- * Features: 3D perspective rotation, configurable speed/tilt, responsive sizing
+ * Square aspect ratio variant for Mek NFT showcase
+ * Features: GPU-accelerated 3D rotation, no frame drops, configurable speed/tilt
  */
-export default function MekCarousel3D({
+export default function MekCarousel3DSquare({
   images = DEFAULT_MEK_IMAGES,
   color = 'gold',
   size = 'md',
   speed = 'normal',
   tilt = -15,
   className = ''
-}: MekCarousel3DProps) {
+}: MekCarousel3DSquareProps) {
   const quantity = images.length;
 
+  // Square aspect ratio sizes
   const sizeConfig = {
-    sm: { width: 80, height: 120, translateZ: 200 },
-    md: { width: 100, height: 150, translateZ: 280 },
-    lg: { width: 140, height: 210, translateZ: 380 }
+    sm: { width: 100, height: 100, translateZ: 220 },
+    md: { width: 140, height: 140, translateZ: 300 },
+    lg: { width: 180, height: 180, translateZ: 400 }
   };
 
   const speedConfig = {
@@ -56,24 +56,18 @@ export default function MekCarousel3D({
   const colorConfig = {
     gold: {
       border: 'rgba(250, 182, 23, 0.8)',
-      gradientInner: 'rgba(250, 182, 23, 0.2)',
-      gradientMid: 'rgba(250, 182, 23, 0.5)',
-      gradientOuter: 'rgba(250, 182, 23, 0.8)',
-      glow: 'rgba(250, 182, 23, 0.4)'
+      glow: 'rgba(250, 182, 23, 0.4)',
+      glowInner: 'rgba(250, 182, 23, 0.15)'
     },
     cyan: {
       border: 'rgba(0, 212, 255, 0.8)',
-      gradientInner: 'rgba(0, 212, 255, 0.2)',
-      gradientMid: 'rgba(0, 212, 255, 0.5)',
-      gradientOuter: 'rgba(0, 212, 255, 0.8)',
-      glow: 'rgba(0, 212, 255, 0.4)'
+      glow: 'rgba(0, 212, 255, 0.4)',
+      glowInner: 'rgba(0, 212, 255, 0.15)'
     },
     silver: {
       border: 'rgba(200, 200, 200, 0.8)',
-      gradientInner: 'rgba(200, 200, 200, 0.2)',
-      gradientMid: 'rgba(200, 200, 200, 0.5)',
-      gradientOuter: 'rgba(200, 200, 200, 0.8)',
-      glow: 'rgba(200, 200, 200, 0.4)'
+      glow: 'rgba(200, 200, 200, 0.4)',
+      glowInner: 'rgba(200, 200, 200, 0.15)'
     }
   };
 
@@ -81,8 +75,8 @@ export default function MekCarousel3D({
   const sizeStyle = sizeConfig[size];
   const animationDuration = speedConfig[speed];
 
-  // Generate keyframes for this specific instance
-  const keyframesId = useMemo(() => `carousel-rotate-${Math.random().toString(36).substr(2, 9)}`, []);
+  // Generate unique keyframes ID
+  const keyframesId = useMemo(() => `carousel-square-${Math.random().toString(36).substr(2, 9)}`, []);
 
   const keyframesCSS = `
     @keyframes ${keyframesId} {
@@ -95,7 +89,7 @@ export default function MekCarousel3D({
     }
   `;
 
-  // Calculate container height based on card size and perspective
+  // Container height for square cards
   const containerHeight = sizeStyle.height * 3.5;
 
   return (
@@ -134,7 +128,7 @@ export default function MekCarousel3D({
                 borderRadius: '12px',
                 overflow: 'hidden',
                 transform: `rotateY(${(360 / quantity) * index}deg) translateZ(${sizeStyle.translateZ}px)`,
-                boxShadow: `0 0 20px ${config.glow}, inset 0 0 20px ${config.gradientInner}`,
+                boxShadow: `0 0 20px ${config.glow}, inset 0 0 20px ${config.glowInner}`,
                 backfaceVisibility: 'hidden',
                 willChange: 'transform'
               }}
@@ -158,14 +152,15 @@ export default function MekCarousel3D({
         <div
           style={{
             position: 'absolute',
-            bottom: '10%',
+            bottom: '5%',
             left: '50%',
-            transform: 'translateX(-50%)',
+            transform: 'translateX(-50%) translateZ(0)',
             width: `${sizeStyle.translateZ * 1.5}px`,
             height: '40px',
             background: `radial-gradient(ellipse at center, ${config.glow} 0%, transparent 70%)`,
             filter: 'blur(10px)',
-            opacity: 0.6
+            opacity: 0.6,
+            willChange: 'opacity'
           }}
         />
       </div>
