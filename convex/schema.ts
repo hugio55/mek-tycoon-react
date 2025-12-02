@@ -3807,4 +3807,62 @@ export default defineSchema({
   })
     .index("by_stakeAddress", ["stakeAddress"]) // For duplicate prevention and lookups
     .index("by_ipAddress", ["ipAddress"]), // For IP duplicate prevention
+
+  // ===== CORPORATION MESSAGING SYSTEM =====
+  // Conversations between corporations (users)
+  conversations: defineTable({
+    // Participants - two wallet addresses (corporations)
+    participant1: v.string(), // Wallet address of first participant
+    participant2: v.string(), // Wallet address of second participant
+    // Last message info for inbox preview
+    lastMessageAt: v.number(), // Timestamp of most recent message
+    lastMessagePreview: v.optional(v.string()), // Truncated preview (max 80 chars)
+    lastMessageSender: v.optional(v.string()), // Wallet of who sent last message
+    // Metadata
+    createdAt: v.number(),
+  })
+    .index("by_participant1", ["participant1", "lastMessageAt"])
+    .index("by_participant2", ["participant2", "lastMessageAt"])
+    .index("by_last_activity", ["lastMessageAt"]),
+
+  // Individual messages within conversations
+  messages: defineTable({
+    conversationId: v.id("conversations"), // Which conversation this belongs to
+    senderId: v.string(), // Wallet address of sender
+    recipientId: v.string(), // Wallet address of recipient
+    content: v.string(), // Message text (max 2000 chars)
+    // Status tracking (sent -> delivered -> read)
+    status: v.string(), // "sent" | "delivered" | "read"
+    // Timestamps
+    createdAt: v.number(), // When message was sent
+    deliveredAt: v.optional(v.number()), // When delivered to recipient
+    readAt: v.optional(v.number()), // When recipient read the message
+    editedAt: v.optional(v.number()), // If message was edited
+    // Soft delete
+    isDeleted: v.boolean(), // Whether message is deleted for everyone
+    deletedForSender: v.optional(v.boolean()), // Hidden from sender only
+    deletedForRecipient: v.optional(v.boolean()), // Hidden from recipient only
+  })
+    .index("by_conversation", ["conversationId", "createdAt"])
+    .index("by_sender", ["senderId", "createdAt"])
+    .index("by_recipient", ["recipientId", "createdAt"])
+    .index("by_recipient_status", ["recipientId", "status"]),
+
+  // Pre-computed unread counts per conversation per user (performance optimization)
+  messageUnreadCounts: defineTable({
+    walletAddress: v.string(), // Which user's unread count
+    conversationId: v.id("conversations"), // Which conversation
+    count: v.number(), // Number of unread messages
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_wallet_conversation", ["walletAddress", "conversationId"]),
+
+  // Typing indicators (transient - auto-expire after 5 seconds)
+  typingIndicators: defineTable({
+    conversationId: v.id("conversations"),
+    walletAddress: v.string(), // Who is typing
+    expiresAt: v.number(), // Auto-expire timestamp
+  })
+    .index("by_conversation", ["conversationId"])
+    .index("by_expires", ["expiresAt"]),
 });

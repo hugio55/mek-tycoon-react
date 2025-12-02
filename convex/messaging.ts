@@ -1,0 +1,447 @@
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
+
+// Maximum message length
+const MAX_MESSAGE_LENGTH = 2000;
+const PREVIEW_LENGTH = 80;
+
+// ============================================================================
+// QUERIES
+// ============================================================================
+
+// Get all conversations for a user (inbox view)
+export const getConversations = query({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    // Get conversations where user is participant1
+    const asParticipant1 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", args.walletAddress))
+      .order("desc")
+      .collect();
+
+    // Get conversations where user is participant2
+    const asParticipant2 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant2", (q) => q.eq("participant2", args.walletAddress))
+      .order("desc")
+      .collect();
+
+    // Combine and sort by last message time
+    const allConversations = [...asParticipant1, ...asParticipant2]
+      .sort((a, b) => b.lastMessageAt - a.lastMessageAt);
+
+    // Get unread counts for each conversation
+    const conversationsWithUnread = await Promise.all(
+      allConversations.map(async (conv) => {
+        const unreadRecord = await ctx.db
+          .query("messageUnreadCounts")
+          .withIndex("by_wallet_conversation", (q) =>
+            q.eq("walletAddress", args.walletAddress).eq("conversationId", conv._id)
+          )
+          .first();
+
+        // Get the other participant's info
+        const otherWallet = conv.participant1 === args.walletAddress
+          ? conv.participant2
+          : conv.participant1;
+
+        const otherUser = await ctx.db
+          .query("users")
+          .withIndex("by_walletAddress", (q) => q.eq("walletAddress", otherWallet))
+          .first();
+
+        return {
+          ...conv,
+          unreadCount: unreadRecord?.count ?? 0,
+          otherParticipant: {
+            walletAddress: otherWallet,
+            companyName: otherUser?.companyName ?? "Unknown Corporation",
+            displayName: otherUser?.displayName ?? otherUser?.companyName ?? "Unknown",
+          },
+        };
+      })
+    );
+
+    return conversationsWithUnread;
+  },
+});
+
+// Get messages for a specific conversation
+export const getMessages = query({
+  args: {
+    conversationId: v.id("conversations"),
+    walletAddress: v.string(), // For filtering deleted messages
+    limit: v.optional(v.number()),
+    cursor: v.optional(v.number()), // createdAt timestamp for pagination
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 50;
+
+    let messagesQuery = ctx.db
+      .query("messages")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId));
+
+    // If we have a cursor, only get messages before it
+    if (args.cursor) {
+      messagesQuery = messagesQuery.filter((q) =>
+        q.lt(q.field("createdAt"), args.cursor!)
+      );
+    }
+
+    const messages = await messagesQuery
+      .order("desc")
+      .take(limit);
+
+    // Filter out deleted messages based on who's viewing
+    const filteredMessages = messages.filter((msg) => {
+      if (msg.isDeleted) return false; // Deleted for everyone
+      if (msg.senderId === args.walletAddress && msg.deletedForSender) return false;
+      if (msg.recipientId === args.walletAddress && msg.deletedForRecipient) return false;
+      return true;
+    });
+
+    // Return in chronological order
+    return filteredMessages.reverse();
+  },
+});
+
+// Get total unread count for a user (for badge in nav)
+export const getTotalUnreadCount = query({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    const unreadRecords = await ctx.db
+      .query("messageUnreadCounts")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .collect();
+
+    return unreadRecords.reduce((sum, record) => sum + record.count, 0);
+  },
+});
+
+// Check if a conversation exists between two users
+export const getConversationBetween = query({
+  args: {
+    wallet1: v.string(),
+    wallet2: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Check both orderings
+    const conv1 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", args.wallet1))
+      .filter((q) => q.eq(q.field("participant2"), args.wallet2))
+      .first();
+
+    if (conv1) return conv1;
+
+    const conv2 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", args.wallet2))
+      .filter((q) => q.eq(q.field("participant2"), args.wallet1))
+      .first();
+
+    return conv2;
+  },
+});
+
+// Get typing indicators for a conversation
+export const getTypingIndicators = query({
+  args: { conversationId: v.id("conversations") },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    const indicators = await ctx.db
+      .query("typingIndicators")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .filter((q) => q.gt(q.field("expiresAt"), now))
+      .collect();
+
+    return indicators;
+  },
+});
+
+// ============================================================================
+// MUTATIONS
+// ============================================================================
+
+// Send a new message
+export const sendMessage = mutation({
+  args: {
+    senderWallet: v.string(),
+    recipientWallet: v.string(),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Validate content
+    if (!args.content || args.content.trim().length === 0) {
+      throw new Error("Message cannot be empty");
+    }
+    if (args.content.length > MAX_MESSAGE_LENGTH) {
+      throw new Error(`Message exceeds ${MAX_MESSAGE_LENGTH} character limit`);
+    }
+
+    const now = Date.now();
+    const content = args.content.trim();
+
+    // Find or create conversation
+    let conversation = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", args.senderWallet))
+      .filter((q) => q.eq(q.field("participant2"), args.recipientWallet))
+      .first();
+
+    if (!conversation) {
+      // Check reverse order
+      conversation = await ctx.db
+        .query("conversations")
+        .withIndex("by_participant1", (q) => q.eq("participant1", args.recipientWallet))
+        .filter((q) => q.eq(q.field("participant2"), args.senderWallet))
+        .first();
+    }
+
+    let conversationId: Id<"conversations">;
+
+    if (!conversation) {
+      // Create new conversation
+      conversationId = await ctx.db.insert("conversations", {
+        participant1: args.senderWallet,
+        participant2: args.recipientWallet,
+        lastMessageAt: now,
+        lastMessagePreview: content.slice(0, PREVIEW_LENGTH),
+        lastMessageSender: args.senderWallet,
+        createdAt: now,
+      });
+    } else {
+      conversationId = conversation._id;
+      // Update conversation with latest message info
+      await ctx.db.patch(conversationId, {
+        lastMessageAt: now,
+        lastMessagePreview: content.slice(0, PREVIEW_LENGTH),
+        lastMessageSender: args.senderWallet,
+      });
+    }
+
+    // Create the message
+    const messageId = await ctx.db.insert("messages", {
+      conversationId,
+      senderId: args.senderWallet,
+      recipientId: args.recipientWallet,
+      content,
+      status: "sent",
+      createdAt: now,
+      isDeleted: false,
+    });
+
+    // Update unread count for recipient
+    const existingUnread = await ctx.db
+      .query("messageUnreadCounts")
+      .withIndex("by_wallet_conversation", (q) =>
+        q.eq("walletAddress", args.recipientWallet).eq("conversationId", conversationId)
+      )
+      .first();
+
+    if (existingUnread) {
+      await ctx.db.patch(existingUnread._id, {
+        count: existingUnread.count + 1,
+      });
+    } else {
+      await ctx.db.insert("messageUnreadCounts", {
+        walletAddress: args.recipientWallet,
+        conversationId,
+        count: 1,
+      });
+    }
+
+    return { messageId, conversationId };
+  },
+});
+
+// Mark messages as read in a conversation
+export const markConversationAsRead = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    // Get all unread messages for this user in this conversation
+    const unreadMessages = await ctx.db
+      .query("messages")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("recipientId"), args.walletAddress),
+          q.neq(q.field("status"), "read")
+        )
+      )
+      .collect();
+
+    // Mark each as read
+    for (const msg of unreadMessages) {
+      await ctx.db.patch(msg._id, {
+        status: "read",
+        readAt: now,
+      });
+    }
+
+    // Reset unread count
+    const unreadRecord = await ctx.db
+      .query("messageUnreadCounts")
+      .withIndex("by_wallet_conversation", (q) =>
+        q.eq("walletAddress", args.walletAddress).eq("conversationId", args.conversationId)
+      )
+      .first();
+
+    if (unreadRecord) {
+      await ctx.db.patch(unreadRecord._id, { count: 0 });
+    }
+
+    return { markedCount: unreadMessages.length };
+  },
+});
+
+// Update typing indicator
+export const setTypingIndicator = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+    walletAddress: v.string(),
+    isTyping: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("typingIndicators")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .filter((q) => q.eq(q.field("walletAddress"), args.walletAddress))
+      .first();
+
+    if (args.isTyping) {
+      // Set typing indicator with 5 second expiry
+      const expiresAt = Date.now() + 5000;
+
+      if (existing) {
+        await ctx.db.patch(existing._id, { expiresAt });
+      } else {
+        await ctx.db.insert("typingIndicators", {
+          conversationId: args.conversationId,
+          walletAddress: args.walletAddress,
+          expiresAt,
+        });
+      }
+    } else {
+      // Remove typing indicator
+      if (existing) {
+        await ctx.db.delete(existing._id);
+      }
+    }
+  },
+});
+
+// Delete a message
+export const deleteMessage = mutation({
+  args: {
+    messageId: v.id("messages"),
+    walletAddress: v.string(),
+    deleteForEveryone: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const message = await ctx.db.get(args.messageId);
+    if (!message) {
+      throw new Error("Message not found");
+    }
+
+    // Verify the user is the sender or recipient
+    if (message.senderId !== args.walletAddress && message.recipientId !== args.walletAddress) {
+      throw new Error("Not authorized to delete this message");
+    }
+
+    if (args.deleteForEveryone) {
+      // Only sender can delete for everyone, and only within 1 hour
+      if (message.senderId !== args.walletAddress) {
+        throw new Error("Only the sender can delete for everyone");
+      }
+
+      const oneHour = 60 * 60 * 1000;
+      if (Date.now() - message.createdAt > oneHour) {
+        throw new Error("Cannot delete for everyone after 1 hour");
+      }
+
+      await ctx.db.patch(args.messageId, {
+        isDeleted: true,
+        content: "", // Clear content for privacy
+      });
+    } else {
+      // Delete for self only
+      if (message.senderId === args.walletAddress) {
+        await ctx.db.patch(args.messageId, { deletedForSender: true });
+      } else {
+        await ctx.db.patch(args.messageId, { deletedForRecipient: true });
+      }
+    }
+
+    return { success: true };
+  },
+});
+
+// Edit a message (within time limit)
+export const editMessage = mutation({
+  args: {
+    messageId: v.id("messages"),
+    walletAddress: v.string(),
+    newContent: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const message = await ctx.db.get(args.messageId);
+    if (!message) {
+      throw new Error("Message not found");
+    }
+
+    // Only sender can edit
+    if (message.senderId !== args.walletAddress) {
+      throw new Error("Only the sender can edit a message");
+    }
+
+    // Check time limit (30 minutes)
+    const thirtyMinutes = 30 * 60 * 1000;
+    if (Date.now() - message.createdAt > thirtyMinutes) {
+      throw new Error("Cannot edit message after 30 minutes");
+    }
+
+    // Validate new content
+    const newContent = args.newContent.trim();
+    if (!newContent || newContent.length === 0) {
+      throw new Error("Message cannot be empty");
+    }
+    if (newContent.length > MAX_MESSAGE_LENGTH) {
+      throw new Error(`Message exceeds ${MAX_MESSAGE_LENGTH} character limit`);
+    }
+
+    await ctx.db.patch(args.messageId, {
+      content: newContent,
+      editedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+// Clean up expired typing indicators (scheduled function)
+export const cleanupExpiredTypingIndicators = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+
+    const expired = await ctx.db
+      .query("typingIndicators")
+      .withIndex("by_expires", (q) => q.lt("expiresAt", now))
+      .collect();
+
+    for (const indicator of expired) {
+      await ctx.db.delete(indicator._id);
+    }
+
+    return { cleaned: expired.length };
+  },
+});
