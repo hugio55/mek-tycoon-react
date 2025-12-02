@@ -72,7 +72,9 @@ import GlowingPowerSwitch from '@/components/controls/GlowingPowerSwitch';
 import KeycapRadioGroup from '@/components/controls/KeycapRadioGroup';
 import ColorPalettePicker from '@/components/controls/ColorPalettePicker';
 import ColorPalettePickerSmooth from '@/components/controls/ColorPalettePickerSmooth';
+import GliderRadio from '@/components/controls/GliderRadio';
 import FlipToggleSwitch from '@/components/controls/FlipToggleSwitch';
+import PressedButtonRadio from '@/components/controls/PressedButtonRadio';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import PortMonitor from '@/components/PortMonitor';
 import DeploymentsAdmin from '@/components/DeploymentsAdmin';
@@ -4865,6 +4867,69 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Source:</span> Uiverse.io by r7chardgh</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
                       <div><span className="text-zinc-500">Features:</span> 3D flip effect using rotateY/rotateX, perspective transforms, size variants (sm/md/lg), customizable labels and accent color</div>
+                    </div>
+                  </div>
+
+                  {/* Glider Radio */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Glider Radio
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-zinc-900 rounded-lg p-8 flex flex-wrap items-start justify-center gap-12 min-h-[300px]">
+                      {/* Gold variant */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500 mb-2">Gold</span>
+                        <GliderRadio
+                          color="gold"
+                          options={[
+                            { value: 'easy', label: 'Easy Mode' },
+                            { value: 'normal', label: 'Normal Mode' },
+                            { value: 'hard', label: 'Hard Mode' },
+                          ]}
+                          onChange={(val) => console.log('Selected:', val)}
+                        />
+                      </div>
+                      {/* Cyan variant */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500 mb-2">Cyan</span>
+                        <GliderRadio
+                          color="cyan"
+                          options={[
+                            { value: 'bronze', label: 'Bronze' },
+                            { value: 'silver', label: 'Silver' },
+                            { value: 'gold', label: 'Gold' },
+                            { value: 'platinum', label: 'Platinum' },
+                          ]}
+                          onChange={(val) => console.log('Selected:', val)}
+                        />
+                      </div>
+                      {/* Lime variant */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500 mb-2">Lime</span>
+                        <GliderRadio
+                          color="lime"
+                          options={[
+                            { value: 'option1', label: 'First Choice' },
+                            { value: 'option2', label: 'Second Choice' },
+                          ]}
+                          onChange={(val) => console.log('Selected:', val)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by Smit-Prajapati</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, Lime, Purple variants</div>
+                      <div><span className="text-zinc-500">Features:</span> Vertical sliding glider, cubic-bezier bounce animation, glow blur effect, dynamic option count</div>
                     </div>
                   </div>
 
