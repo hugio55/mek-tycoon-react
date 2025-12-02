@@ -1200,6 +1200,42 @@ Check console for full timeline.
             👤 Load WrenCo
           </button>
 
+          {/* Export CSV Button */}
+          {walletsLoaded && wallets && wallets.length > 0 && (
+            <button
+              onClick={() => {
+                // Generate CSV content
+                const headers = ['Company Name', 'Stake Address', 'Cumulative Gold', 'Gold Per Hour'];
+                const rows = wallets.map((w: any) => [
+                  w.companyName || 'Unnamed',
+                  w.walletAddress,
+                  (w.totalCumulativeGold || 0).toFixed(2),
+                  (w.totalGoldPerHour || 0).toFixed(2)
+                ]);
+
+                const csvContent = [
+                  headers.join(','),
+                  ...rows.map((row: string[]) => row.map((cell: string) => `"${cell}"`).join(','))
+                ].join('\n');
+
+                // Create and trigger download
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                const timestamp = new Date().toISOString().slice(0, 10);
+                link.download = `mek-players-${selectedDatabase}-${timestamp}.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+              }}
+              className="px-4 py-2 bg-green-600 hover:bg-green-500 border border-green-500 rounded-lg text-white font-semibold transition-colors flex items-center gap-2"
+            >
+              📥 Export CSV
+            </button>
+          )}
+
           <input
             type="text"
             placeholder="Search wallets..."

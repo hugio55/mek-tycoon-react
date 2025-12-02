@@ -42,6 +42,7 @@ import GlowCard from '@/components/loaders/GlowCard';
 import GradientBlurButton from '@/components/loaders/GradientBlurButton';
 import SpinningGradientCard from '@/components/loaders/SpinningGradientCard';
 import RotaryDial from '@/components/loaders/RotaryDial';
+import GlowRadioStack from '@/components/loaders/GlowRadioStack';
 import ProModeToggle from '@/components/controls/ProModeToggle';
 import PowerSwitch from '@/components/controls/PowerSwitch';
 import PowerSwitchToggle from '@/components/controls/PowerSwitchToggle';
@@ -3556,8 +3557,8 @@ export default function AdminMasterDataPage() {
                   Transformed UI components from external libraries (CodePen, shadcn, v0.dev) converted to Mek Tycoon's industrial design system using expert transformation documents.
                 </p>
 
-                {/* Component Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Component Grid - flex-wrap-reverse puts newest (last) items at top */}
+                <div className="flex flex-wrap gap-6" style={{ flexWrap: 'wrap-reverse', alignContent: 'flex-start' }}>
 
                   {/* Comet Loader */}
                   <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
@@ -4449,6 +4450,67 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, Silver variants</div>
                       <div><span className="text-zinc-500">Sizes:</span> sm, md, lg</div>
                       <div><span className="text-zinc-500">Features:</span> Dynamic N-position rotary selector (any number of options), center pointer indicator, animated light/dot, 3D layered rings, auto-calculated divider lines, clickable labels</div>
+                    </div>
+                  </div>
+
+                  {/* Glow Radio Stack */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Glow Radio Stack
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-6 flex flex-wrap items-center justify-center gap-12 min-h-[250px]">
+                      {/* Vertical Gold */}
+                      <div className="flex flex-col items-center gap-4">
+                        <GlowRadioStack
+                          color="gold"
+                          size="md"
+                          options={['Low', 'Med', 'High']}
+                          defaultIndex={1}
+                          onChange={(idx, label) => console.log('Gold stack:', label)}
+                        />
+                        <span className="text-xs text-yellow-400 uppercase tracking-wider">Vertical</span>
+                      </div>
+
+                      {/* Vertical Cyan */}
+                      <div className="flex flex-col items-center gap-4">
+                        <GlowRadioStack
+                          color="cyan"
+                          size="md"
+                          options={['1', '2', '3', '4', '5']}
+                          defaultIndex={2}
+                          onChange={(idx, label) => console.log('Cyan stack:', label)}
+                        />
+                        <span className="text-xs text-cyan-400 uppercase tracking-wider">5 Options</span>
+                      </div>
+
+                      {/* Horizontal Silver */}
+                      <div className="flex flex-col items-center gap-4">
+                        <GlowRadioStack
+                          color="silver"
+                          size="md"
+                          orientation="horizontal"
+                          options={['A', 'B', 'C', 'D']}
+                          defaultIndex={0}
+                          onChange={(idx, label) => console.log('Silver stack:', label)}
+                        />
+                        <span className="text-xs text-zinc-400 uppercase tracking-wider">Horizontal</span>
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by Shoh2008</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, Silver variants</div>
+                      <div><span className="text-zinc-500">Sizes:</span> sm, md, lg</div>
+                      <div><span className="text-zinc-500">Features:</span> Positional glow indicator (above/at/below selection), scale animation on click, vertical/horizontal orientation, labeled options</div>
                     </div>
                   </div>
 
