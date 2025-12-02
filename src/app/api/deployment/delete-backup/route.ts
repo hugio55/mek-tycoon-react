@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { unlink, readFile, readdir, stat } from 'fs/promises';
 import path from 'path';
+import { checkDeploymentAuth } from '@/lib/deployment/auth';
 
 interface BackupMetadata {
   id: string;
@@ -9,6 +10,9 @@ interface BackupMetadata {
 }
 
 export async function DELETE(request: NextRequest) {
+  const authError = checkDeploymentAuth(request);
+  if (authError) return authError;
+
   try {
     const { backupId } = await request.json();
 

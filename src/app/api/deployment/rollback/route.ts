@@ -3,6 +3,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { readFile } from 'fs/promises';
 import path from 'path';
+import { checkDeploymentAuth } from '@/lib/deployment/auth';
 
 const execAsync = promisify(exec);
 
@@ -72,12 +73,32 @@ export async function POST(request: NextRequest) {
     } catch (e) {
       return NextResponse.json({
         success: false,
-        error: 'Failed to switch to master branch',
+        error: 'Failed to switch to master branch. You may have uncommitted changes.',
         steps,
       }, { status: 500 });
     }
 
-    // Step 2: Reset to backup commit
+    // Safety check: Verify no uncommitted changes on master before destructive reset
+    try {
+      const { stdout: statusCheck } = await execAsync('git status --porcelain');
+      if (statusCheck.trim()) {
+        // Switch back to original branch before returning error
+        try {
+          await execAsync(`git checkout ${originalBranch}`);
+        } catch (e) { /* ignore */ }
+        return NextResponse.json({
+          success: false,
+          error: 'Master branch has uncommitted changes. Cannot rollback safely. Please commit or stash changes first.',
+          steps,
+        }, { status: 400 });
+      }
+      steps.push('Verified master branch is clean');
+    } catch (e) {
+      // Continue anyway - status check is a safety net, not critical
+      steps.push('Warning: Could not verify branch cleanliness');
+    }
+
+    // Step 2: Reset to backup commit (DESTRUCTIVE - destroys uncommitted changes)
     try {
       await execAsync(`git reset --hard ${metadata.commitHash}`);
       steps.push(`Reset to commit ${metadata.commitHash.substring(0, 7)}`);

@@ -3,10 +3,14 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
+import { checkDeploymentAuth } from '@/lib/deployment/auth';
 
 const execAsync = promisify(exec);
 
 export async function POST(request: NextRequest) {
+  const authError = checkDeploymentAuth(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json().catch(() => ({}));
     const notes = body.notes || '';

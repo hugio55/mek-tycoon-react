@@ -61,6 +61,7 @@ import type * as componentLibrarySchema from "../componentLibrarySchema.js";
 import type * as componentTransformations from "../componentTransformations.js";
 import type * as comprehensiveWalletFix from "../comprehensiveWalletFix.js";
 import type * as contracts from "../contracts.js";
+import type * as corporationAuth from "../corporationAuth.js";
 import type * as crafting from "../crafting.js";
 import type * as crons from "../crons.js";
 import type * as debugWalletSnapshot from "../debugWalletSnapshot.js";
@@ -309,6 +310,7 @@ declare const fullApi: ApiFromModules<{
   componentTransformations: typeof componentTransformations;
   comprehensiveWalletFix: typeof comprehensiveWalletFix;
   contracts: typeof contracts;
+  corporationAuth: typeof corporationAuth;
   crafting: typeof crafting;
   crons: typeof crons;
   debugWalletSnapshot: typeof debugWalletSnapshot;

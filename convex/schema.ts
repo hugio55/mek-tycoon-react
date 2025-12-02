@@ -3837,4 +3837,70 @@ export default defineSchema({
     lastUploadAt: v.number(), // Timestamp of last upload (for burst limiting)
   })
     .index("by_wallet_date", ["walletAddress", "date"]),
+
+  // =============================================================================
+  // PHASE II: CORPORATIONS (Stake-Address-Only Architecture)
+  // =============================================================================
+  // The corporation is identified SOLELY by stake address.
+  // Payment addresses are NOT stored - NMKR handles them at transaction time.
+  // =============================================================================
+
+  corporations: defineTable({
+    // Primary identifier - stake address is THE corporation ID
+    stakeAddress: v.string(), // e.g., "stake1u9..." (mainnet) or "stake_test1..." (testnet)
+
+    // Corporation profile
+    corporationName: v.optional(v.string()), // User-chosen corporation name
+    corporationNameLower: v.optional(v.string()), // Lowercase for case-insensitive search
+
+    // Session management
+    lastConnectionTime: v.optional(v.number()), // Timestamp of last wallet connection
+    walletType: v.optional(v.string()), // Last used wallet (nami, eternl, flint, etc.)
+    isOnline: v.optional(v.boolean()), // Currently connected
+
+    // Game resources
+    gold: v.optional(v.number()), // Corporation's gold balance
+
+    // Essence balances (crafting resources)
+    totalEssence: v.optional(v.object({
+      stone: v.optional(v.number()),
+      disco: v.optional(v.number()),
+      paul: v.optional(v.number()),
+      cartoon: v.optional(v.number()),
+      candy: v.optional(v.number()),
+      tiles: v.optional(v.number()),
+      moss: v.optional(v.number()),
+      bullish: v.optional(v.number()),
+      journalist: v.optional(v.number()),
+      laser: v.optional(v.number()),
+      flashbulb: v.optional(v.number()),
+      accordion: v.optional(v.number()),
+      turret: v.optional(v.number()),
+      drill: v.optional(v.number()),
+      security: v.optional(v.number()),
+    })),
+
+    // Corporation stats
+    level: v.optional(v.number()),
+    experience: v.optional(v.number()),
+    craftingSlots: v.optional(v.number()), // Number of crafting slots unlocked
+
+    // Battle stats (if applicable)
+    totalBattles: v.optional(v.number()),
+    totalWins: v.optional(v.number()),
+    winRate: v.optional(v.number()),
+
+    // Timestamps
+    createdAt: v.number(),
+    lastLogin: v.optional(v.number()),
+
+    // Account status
+    isBanned: v.optional(v.boolean()),
+    role: v.optional(v.union(v.literal("user"), v.literal("moderator"), v.literal("admin"))),
+  })
+    .index("by_stake_address", ["stakeAddress"]) // Primary lookup - THE identifier
+    .index("by_corporation_name", ["corporationName"]) // For name searches
+    .index("by_corporation_name_lower", ["corporationNameLower"]) // Case-insensitive search
+    .index("by_level", ["level"]) // For leaderboards
+    .index("by_gold", ["gold"]), // For gold leaderboards
 });

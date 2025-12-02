@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
-import CloseButton from '@/components/controls/CloseButton';
 
 // Types for attachments
 interface PendingAttachment {
@@ -49,21 +48,26 @@ const TEST_CORPORATIONS = [
 // Character limit
 const MAX_MESSAGE_LENGTH = 2000;
 
-// Format relative timestamp
+// Format relative timestamp - shows relative for <24h, full date/time after
 function formatRelativeTime(timestamp: number): string {
   const now = Date.now();
   const diff = now - timestamp;
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
 
   if (seconds < 60) return 'Just now';
   if (minutes < 60) return `${minutes}m ago`;
   if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
 
-  return new Date(timestamp).toLocaleDateString();
+  // After 24 hours, show full date and time
+  const date = new Date(timestamp);
+  const month = date.toLocaleDateString('en-US', { month: 'short' });
+  const day = date.getDate();
+  const year = date.getFullYear();
+  const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+  return `${month} ${day}, ${year} at ${time}`;
 }
 
 export default function MessagingSystemAdmin() {
@@ -724,32 +728,31 @@ export default function MessagingSystemAdmin() {
       {/* Image Lightbox - rendered via portal to escape parent stacking context */}
       {mounted && lightboxImage && createPortal(
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md"
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md"
           onClick={() => setLightboxImage(null)}
         >
-          {/* Liquid glass container - inline-block to hug image exactly */}
+          {/* Liquid glass container - hugs image exactly */}
           <div
-            className="relative inline-block bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-3"
+            className="inline-block bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-3"
             onClick={(e) => e.stopPropagation()}
             style={{
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
             }}
           >
-            {/* Close button - using the animated CloseButton component */}
-            <div className="absolute -top-5 -right-5 z-10">
-              <CloseButton
-                onClick={() => setLightboxImage(null)}
-                className="!mt-0 !w-[30px] !h-[30px] scale-75"
-              />
-            </div>
-
             {/* Image */}
             <img
               src={lightboxImage.url}
               alt={lightboxImage.filename}
-              className="block max-w-[85vw] max-h-[85vh] rounded-xl"
+              className="block max-w-[85vw] max-h-[80vh] rounded-xl"
             />
           </div>
+          {/* Close text - outside the lightbox */}
+          <button
+            onClick={() => setLightboxImage(null)}
+            className="mt-4 text-gray-400 hover:text-gray-300 text-sm transition-colors"
+          >
+            Close
+          </button>
         </div>,
         document.body
       )}

@@ -1,10 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { checkDeploymentAuth } from '@/lib/deployment/auth';
 
 const execAsync = promisify(exec);
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  const authError = checkDeploymentAuth(request);
+  if (authError) return authError;
+
   try {
     // Deploy to Trout (dev database)
     // This uses the default CONVEX_URL from .env.local which points to Trout
