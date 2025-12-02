@@ -104,6 +104,15 @@ export default function GlobalBackground() {
     return null;
   }
 
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <div className="fixed inset-0 overflow-hidden" style={{ zIndex: -1 }}>
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950" style={{ transform: 'translateZ(0)', willChange: 'auto' }} />
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 overflow-hidden" style={{ zIndex: -1 }}>
       {/* Deep space background gradient - enhanced for visibility */}
