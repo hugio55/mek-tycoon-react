@@ -1213,7 +1213,7 @@ Check console for full timeline.
                   (w.totalCumulativeGold || 0).toFixed(2),
                   (w.totalGoldPerHour || 0).toFixed(2),
                   (w.totalGoldSpentOnUpgrades || 0).toFixed(2),
-                  w.createdAt ? new Date(w.createdAt).toLocaleDateString() : 'Unknown'
+                  w.createdAt ? `${new Date(w.createdAt).getMonth() + 1}/${new Date(w.createdAt).getDate()}/${new Date(w.createdAt).getFullYear()}` : 'N/A'
                 ]);
 
                 const csvContent = [
