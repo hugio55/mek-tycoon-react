@@ -4525,10 +4525,11 @@ export default function AdminMasterDataPage() {
                             { value: '4', label: '4' },
                             { value: '5', label: '5' },
                           ]}
+                          size="md"
                           accentColor="#fab617"
                           onChange={(val) => console.log('Selected:', val)}
                         />
-                        <span className="text-xs text-zinc-500">5 buttons (gold)</span>
+                        <span className="text-xs text-zinc-500">5 buttons - medium (gold)</span>
                       </div>
                       {/* 7 buttons */}
                       <div className="flex flex-col items-center gap-2">
@@ -4542,10 +4543,11 @@ export default function AdminMasterDataPage() {
                             { value: 'fri', label: 'FRI' },
                             { value: 'sat', label: 'SAT' },
                           ]}
+                          size="sm"
                           accentColor="#00d4ff"
                           onChange={(val) => console.log('Selected:', val)}
                         />
-                        <span className="text-xs text-zinc-500">7 buttons (complete blue)</span>
+                        <span className="text-xs text-zinc-500">7 buttons - small (complete blue)</span>
                       </div>
                     </div>
 
@@ -4554,7 +4556,8 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Source:</span> Uiverse.io by m1her</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
                       <div><span className="text-zinc-500">Colors:</span> Blue (#258ac3) default, configurable via accentColor prop</div>
-                      <div><span className="text-zinc-500">Features:</span> 3D mechanical keycap press effect (perspective rotateX), back-side reveal on press, glowing text shadow, bottom indicator line, controlled/uncontrolled modes</div>
+                      <div><span className="text-zinc-500">Sizes:</span> sm (45px), md (58px), lg (70px default)</div>
+                      <div><span className="text-zinc-500">Features:</span> 3D keycap press (perspective rotateX), back-side reveal, hover lift animation with glow, glowing text shadow, controlled/uncontrolled</div>
                     </div>
                   </div>
 

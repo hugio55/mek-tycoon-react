@@ -135,6 +135,29 @@ export default function RotaryDial({
   // Calculate the angle span for each segment (for pie slice highlighting)
   const angleStep = 360 / options.length;
 
+  // Donut segment path - only covers outer ring, not center
+  const outerR = 110; // Outer edge radius
+  const innerR = 70;  // Inner edge radius (where inner ring starts)
+  const cx = 110;     // Center x
+  const cy = 110;     // Center y
+
+  // Create donut arc segment path (before rotation)
+  const angleRad = (angleStep * Math.PI) / 180;
+  const outerEndX = cx + outerR * Math.sin(angleRad);
+  const outerEndY = cy - outerR * Math.cos(angleRad);
+  const innerEndX = cx + innerR * Math.sin(angleRad);
+  const innerEndY = cy - innerR * Math.cos(angleRad);
+  const largeArcFlag = angleStep > 180 ? 1 : 0;
+
+  const donutSegmentPath = `
+    M ${cx} ${cy - innerR}
+    L ${cx} ${cy - outerR}
+    A ${outerR} ${outerR} 0 ${largeArcFlag} 1 ${outerEndX} ${outerEndY}
+    L ${innerEndX} ${innerEndY}
+    A ${innerR} ${innerR} 0 ${largeArcFlag} 0 ${cx} ${cy - innerR}
+    Z
+  `;
+
   return (
     <div
       className={`relative select-none ${className}`}
@@ -180,11 +203,9 @@ export default function RotaryDial({
             viewBox="0 0 220 220"
           >
             <path
-              d={`M 110 110 L 110 0 A 110 110 0 ${angleStep > 180 ? 1 : 0} 1 ${
-                110 + 110 * Math.sin((angleStep * Math.PI) / 180)
-              } ${110 - 110 * Math.cos((angleStep * Math.PI) / 180)} Z`}
+              d={donutSegmentPath}
               fill={config.segmentColor}
-              transform={`rotate(${labelAngle + 90 - angleStep / 2} 110 110)`}
+              transform={`rotate(${labelAngle + 90 - angleStep / 2} ${cx} ${cy})`}
               style={{ transition: 'transform 0.5s ease' }}
             />
           </svg>
@@ -406,7 +427,7 @@ export default function RotaryDial({
             />
           </div>
 
-          {/* Clickable overlay - transparent segments on TOP for click handling */}
+          {/* Clickable overlay - transparent donut segments on TOP for click handling */}
           <svg
             className="absolute z-[10]"
             style={{
@@ -422,11 +443,9 @@ export default function RotaryDial({
               return (
                 <path
                   key={index}
-                  d={`M 110 110 L 110 0 A 110 110 0 ${angleStep > 180 ? 1 : 0} 1 ${
-                    110 + 110 * Math.sin((angleStep * Math.PI) / 180)
-                  } ${110 - 110 * Math.cos((angleStep * Math.PI) / 180)} Z`}
+                  d={donutSegmentPath}
                   fill="transparent"
-                  transform={`rotate(${segmentAngle} 110 110)`}
+                  transform={`rotate(${segmentAngle} ${cx} ${cy})`}
                   style={{ cursor: 'pointer' }}
                   onClick={() => handleSelect(index)}
                   onMouseEnter={(e) => {
@@ -440,8 +459,6 @@ export default function RotaryDial({
                 />
               );
             })}
-            {/* Cut out center circle so inner knob isn't clickable */}
-            <circle cx="110" cy="110" r="70" fill="transparent" style={{ pointerEvents: 'none' }} />
           </svg>
         </div>
       </div>
