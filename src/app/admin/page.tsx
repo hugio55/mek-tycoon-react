@@ -37,6 +37,7 @@ import CometLoader from '@/components/loaders/CometLoader';
 import TriangleKaleidoscope from '@/components/loaders/TriangleKaleidoscope';
 import PreLoader from '@/components/loaders/PreLoader';
 import AnimatedBorderButton from '@/components/loaders/AnimatedBorderButton';
+import GlowButton from '@/components/loaders/GlowButton';
 import ProModeToggle from '@/components/controls/ProModeToggle';
 import PowerSwitch from '@/components/controls/PowerSwitch';
 import PowerSwitchToggle from '@/components/controls/PowerSwitchToggle';
@@ -4248,6 +4249,35 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Source:</span> HTML/SCSS (exact CSS transplant)</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
                       <div><span className="text-zinc-500">Features:</span> X made from two 4px × 50px bars rotated 45deg/-45deg, hover rotates bars in opposite direction (-45deg/45deg), color changes from soft orange (#F4A259) to tomato red (#F25C66), "close" label fades in (opacity 0→1), all transitions 300ms ease-in</div>
+                    </div>
+                  </div>
+
+                  {/* Glow Button */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Glow Button
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Button
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex flex-col items-center justify-center gap-4 min-h-[300px]">
+                      <GlowButton>Donate</GlowButton>
+                      <div className="flex gap-4">
+                        <GlowButton size="sm">Small</GlowButton>
+                        <GlowButton size="lg">Large</GlowButton>
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by Allyhere</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> Blue/Cyan → Gold (#fab617)</div>
+                      <div><span className="text-zinc-500">Features:</span> Animated gradient background (325deg), inset box-shadows, hover shifts background-position, focus ring with 2-layer outline</div>
                     </div>
                   </div>
 
