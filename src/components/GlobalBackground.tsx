@@ -16,7 +16,7 @@ export default function GlobalBackground() {
   // ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
   const backgroundStars = useMemo(() => {
     const rng = new SeededRandom(67890); // Seed for stationary stars
-    return [...Array(200)].map((_, i) => ({
+    return [...Array(100)].map((_, i) => ({ // Reduced from 200 for performance
       id: i,
       left: `${rng.random() * 100}%`,
       top: `${rng.random() * 100}%`,
@@ -29,7 +29,7 @@ export default function GlobalBackground() {
 
   const particles = useMemo(() => {
     const rng = new SeededRandom(12345); // Seed for yellow particles
-    return [...Array(25)].map((_, i) => {
+    return [...Array(12)].map((_, i) => { // Reduced from 25 for performance
       const driftAngle = -60 + rng.random() * 120;
       return {
         id: i,
@@ -45,7 +45,7 @@ export default function GlobalBackground() {
 
   const satellites = useMemo(() => {
     const rng = new SeededRandom(11111); // Seed for satellites
-    return [...Array(8)].map((_, i) => {
+    return [...Array(4)].map((_, i) => { // Reduced from 8 for performance
       const edge = Math.floor(rng.random() * 4);
       let startX: number, startY: number, endX: number, endY: number;
 
