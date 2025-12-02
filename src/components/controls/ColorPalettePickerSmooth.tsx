@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 
 interface ColorOption {
   color: string;
@@ -18,74 +18,6 @@ const ColorPalettePickerSmooth: React.FC<ColorPalettePickerSmoothProps> = ({
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  // Track z-indices separately with delayed reset
-  const [zIndices, setZIndices] = useState<number[]>(colors.map(() => 1));
-  const timeoutRefs = useRef<(NodeJS.Timeout | null)[]>(colors.map(() => null));
-
-  // Get vertical lift amount (slide up like pulling from deck)
-  const getLift = (index: number): number => {
-    if (hoveredIndex === null) return 0;
-    const distance = Math.abs(index - hoveredIndex);
-    if (distance === 0) return -28; // Main card lifts highest
-    if (distance === 1) return -10; // Adjacent cards lift slightly
-    if (distance === 2) return -4;  // Next cards barely lift
-    return 0;
-  };
-
-  // Get scale (applied after lift)
-  const getScale = (index: number): number => {
-    if (hoveredIndex === null) return 1;
-    const distance = Math.abs(index - hoveredIndex);
-    if (distance === 0) return 1.3; // Scale up when lifted
-    if (distance === 1) return 1.05;
-    return 1;
-  };
-
-  const getTargetZIndex = (index: number): number => {
-    if (hoveredIndex === null) return 1;
-    const distance = Math.abs(index - hoveredIndex);
-    if (distance === 0) return 100;
-    if (distance === 1) return 50;
-    if (distance === 2) return 25;
-    return 1;
-  };
-
-  // Update z-indices with delayed reset for smooth transitions
-  useEffect(() => {
-    const newZIndices = [...zIndices];
-
-    colors.forEach((_, index) => {
-      const targetZ = getTargetZIndex(index);
-
-      // Clear any pending timeout for this index
-      if (timeoutRefs.current[index]) {
-        clearTimeout(timeoutRefs.current[index]!);
-        timeoutRefs.current[index] = null;
-      }
-
-      if (targetZ > newZIndices[index]) {
-        // Increasing z-index: apply immediately
-        newZIndices[index] = targetZ;
-      } else if (targetZ < newZIndices[index]) {
-        // Decreasing z-index: delay to let animation complete first
-        timeoutRefs.current[index] = setTimeout(() => {
-          setZIndices(prev => {
-            const updated = [...prev];
-            updated[index] = targetZ;
-            return updated;
-          });
-        }, 350);
-      }
-    });
-
-    setZIndices(newZIndices);
-
-    return () => {
-      timeoutRefs.current.forEach(timeout => {
-        if (timeout) clearTimeout(timeout);
-      });
-    };
-  }, [hoveredIndex]);
 
   const handleClick = async (color: string, name: string, index: number) => {
     onSelect?.(color, name);
@@ -104,14 +36,10 @@ const ColorPalettePickerSmooth: React.FC<ColorPalettePickerSmoothProps> = ({
     <div
       className="flex items-end"
       style={{
-        transformStyle: 'preserve-3d',
-        transform: 'perspective(1000px)',
-        padding: '40px 10px 10px 10px', // Extra top padding for lifted cards
+        padding: '50px 10px 10px 10px',
       }}
     >
       {colors.map((item, index) => {
-        const lift = getLift(index);
-        const scale = getScale(index);
         const isHovered = hoveredIndex === index;
         const isCopied = copiedIndex === index;
 
@@ -122,11 +50,10 @@ const ColorPalettePickerSmooth: React.FC<ColorPalettePickerSmoothProps> = ({
             style={{
               width: '32px',
               height: '40px',
-              // Combine lift (translateY) and scale in transform
-              transform: `translateY(${lift}px) scale(${scale})`,
-              zIndex: zIndices[index],
-              // Smooth easing for the slide-up effect
-              transition: 'transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+              // Only the hovered card moves - slides up and scales
+              transform: isHovered ? 'translateY(-30px) scale(1.35)' : 'translateY(0) scale(1)',
+              zIndex: isHovered ? 100 : 1,
+              transition: 'transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), z-index 0ms',
             }}
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
@@ -143,7 +70,7 @@ const ColorPalettePickerSmooth: React.FC<ColorPalettePickerSmoothProps> = ({
                 borderRadius: '6px',
                 transform: 'scale(1.15)',
                 boxShadow: isHovered
-                  ? `0 12px 24px ${item.color}50, 0 6px 12px rgba(0,0,0,0.3), 0 0 0 2px white`
+                  ? `0 12px 28px ${item.color}60, 0 8px 16px rgba(0,0,0,0.4), 0 0 0 2px white`
                   : `0 2px 6px rgba(0,0,0,0.25)`,
                 transition: 'box-shadow 300ms ease',
               }}
@@ -157,14 +84,14 @@ const ColorPalettePickerSmooth: React.FC<ColorPalettePickerSmoothProps> = ({
                 bottom: '58px',
                 fontSize: '10px',
                 lineHeight: '14px',
-                transform: `translateX(-50%) translateY(${isHovered ? '0' : '8px'})`,
+                transform: `translateX(-50%)`,
                 padding: '4px 8px',
                 backgroundColor: '#ffffff',
                 color: '#000000',
                 borderRadius: '6px',
                 opacity: isHovered ? 1 : 0,
                 visibility: isHovered ? 'visible' : 'hidden',
-                transition: 'all 250ms ease',
+                transition: 'opacity 200ms ease',
                 fontWeight: 600,
                 boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
               }}

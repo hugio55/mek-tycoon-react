@@ -4669,11 +4669,10 @@ export default function AdminMasterDataPage() {
 
                     {/* Component Info */}
                     <div className="text-xs text-zinc-400 space-y-1">
-                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by Cobp (improved)</div>
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by Cobp (simplified)</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
-                      <div><span className="text-zinc-500">Animation:</span> "Pull from deck" - cards slide UP then scale (like pulling a card from a deck)</div>
-                      <div><span className="text-zinc-500">Lift:</span> Hovered: -28px, Adjacent: -10px, Next: -4px</div>
-                      <div><span className="text-zinc-500">Features:</span> Delayed z-index reset, cascading wave lift, colored glow shadow, elastic bounce easing</div>
+                      <div><span className="text-zinc-500">Animation:</span> Single card slides UP 30px + scales 1.35x (other cards stay still)</div>
+                      <div><span className="text-zinc-500">Features:</span> Clean "pull from deck" effect, colored glow shadow, elastic bounce easing, click-to-copy</div>
                     </div>
                   </div>
 
