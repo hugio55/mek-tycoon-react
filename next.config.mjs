@@ -30,9 +30,6 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
 
-  // Use Turbopack (Next.js 16 default, faster than webpack)
-  turbopack: {},
-
   // Fix webpack crypto and WebAssembly issues
   webpack: (config, { isServer }) => {
     if (!isServer) {
