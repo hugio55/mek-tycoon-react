@@ -22,12 +22,22 @@ const ColorPalettePickerSmooth: React.FC<ColorPalettePickerSmoothProps> = ({
   const [zIndices, setZIndices] = useState<number[]>(colors.map(() => 1));
   const timeoutRefs = useRef<(NodeJS.Timeout | null)[]>(colors.map(() => null));
 
+  // Get vertical lift amount (slide up like pulling from deck)
+  const getLift = (index: number): number => {
+    if (hoveredIndex === null) return 0;
+    const distance = Math.abs(index - hoveredIndex);
+    if (distance === 0) return -28; // Main card lifts highest
+    if (distance === 1) return -10; // Adjacent cards lift slightly
+    if (distance === 2) return -4;  // Next cards barely lift
+    return 0;
+  };
+
+  // Get scale (applied after lift)
   const getScale = (index: number): number => {
     if (hoveredIndex === null) return 1;
     const distance = Math.abs(index - hoveredIndex);
-    if (distance === 0) return 1.4;
-    if (distance === 1) return 1.2;
-    if (distance === 2) return 1.1;
+    if (distance === 0) return 1.3; // Scale up when lifted
+    if (distance === 1) return 1.05;
     return 1;
   };
 
@@ -57,14 +67,14 @@ const ColorPalettePickerSmooth: React.FC<ColorPalettePickerSmoothProps> = ({
         // Increasing z-index: apply immediately
         newZIndices[index] = targetZ;
       } else if (targetZ < newZIndices[index]) {
-        // Decreasing z-index: delay to let scale animation complete first
+        // Decreasing z-index: delay to let animation complete first
         timeoutRefs.current[index] = setTimeout(() => {
           setZIndices(prev => {
             const updated = [...prev];
             updated[index] = targetZ;
             return updated;
           });
-        }, 300); // Delay z-index decrease
+        }, 350);
       }
     });
 
@@ -96,10 +106,11 @@ const ColorPalettePickerSmooth: React.FC<ColorPalettePickerSmoothProps> = ({
       style={{
         transformStyle: 'preserve-3d',
         transform: 'perspective(1000px)',
-        padding: '20px 10px',
+        padding: '40px 10px 10px 10px', // Extra top padding for lifted cards
       }}
     >
       {colors.map((item, index) => {
+        const lift = getLift(index);
         const scale = getScale(index);
         const isHovered = hoveredIndex === index;
         const isCopied = copiedIndex === index;
@@ -111,9 +122,11 @@ const ColorPalettePickerSmooth: React.FC<ColorPalettePickerSmoothProps> = ({
             style={{
               width: '32px',
               height: '40px',
-              transform: `scale(${scale})`,
+              // Combine lift (translateY) and scale in transform
+              transform: `translateY(${lift}px) scale(${scale})`,
               zIndex: zIndices[index],
-              transition: 'transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+              // Smooth easing for the slide-up effect
+              transition: 'transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1)',
             }}
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
@@ -130,9 +143,9 @@ const ColorPalettePickerSmooth: React.FC<ColorPalettePickerSmoothProps> = ({
                 borderRadius: '6px',
                 transform: 'scale(1.15)',
                 boxShadow: isHovered
-                  ? `0 8px 20px ${item.color}60, 0 0 0 2px white`
-                  : `0 2px 8px rgba(0,0,0,0.3)`,
-                transition: 'transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 300ms ease',
+                  ? `0 12px 24px ${item.color}50, 0 6px 12px rgba(0,0,0,0.3), 0 0 0 2px white`
+                  : `0 2px 6px rgba(0,0,0,0.25)`,
+                transition: 'box-shadow 300ms ease',
               }}
             />
 
@@ -141,19 +154,19 @@ const ColorPalettePickerSmooth: React.FC<ColorPalettePickerSmoothProps> = ({
               className="absolute pointer-events-none whitespace-nowrap"
               style={{
                 left: '50%',
-                bottom: '55px',
+                bottom: '58px',
                 fontSize: '10px',
                 lineHeight: '14px',
-                transform: `translateX(-50%) translateY(${isHovered ? '0' : '5px'})`,
+                transform: `translateX(-50%) translateY(${isHovered ? '0' : '8px'})`,
                 padding: '4px 8px',
                 backgroundColor: '#ffffff',
                 color: '#000000',
                 borderRadius: '6px',
                 opacity: isHovered ? 1 : 0,
                 visibility: isHovered ? 'visible' : 'hidden',
-                transition: 'all 300ms ease',
+                transition: 'all 250ms ease',
                 fontWeight: 600,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
               }}
             >
               {isCopied ? 'Copied!' : item.name}
