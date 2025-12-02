@@ -987,10 +987,10 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
                   >
                     {/* Honeycomb hover effect */}
                     <div
-                      className="absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none group-hover:opacity-[0.07]"
+                      className="absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none group-hover:opacity-[0.15] z-[1]"
                       style={{
                         backgroundImage: `url('/random-images/honey-png-big.webp')`,
-                        backgroundSize: '100%',
+                        backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         borderRadius: '12px'
                       }}
@@ -999,10 +999,10 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
                     <img
                       src={wallet.icon}
                       alt=""
-                      className="absolute left-3 w-5 h-5 rounded"
+                      className="absolute left-3 w-5 h-5 rounded z-[2]"
                       onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
-                    <span className="font-medium relative">{wallet.name}</span>
+                    <span className="font-medium relative z-[2]">{wallet.name}</span>
                   </button>
                 ))}
               </div>

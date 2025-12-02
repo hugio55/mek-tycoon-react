@@ -38,6 +38,7 @@ export default function PhaseCardsSection({ phaseCards, showPhases }: PhaseCards
             isExpanded={isExpanded}
             shouldShow={shouldShow}
             onToggle={() => handleToggle(index, card.locked)}
+            isPhaseOneExpanded={expandedIndex === 0}
           />
         );
       })}

@@ -48,13 +48,13 @@ export interface NMKRSyncDiscrepancy {
  * Fetch NFTs from NMKR project by state
  * @param projectUid - NMKR project UID
  * @param state - Filter by state: 'all', 'free', 'reserved', 'sold'
- * @param count - Number of NFTs per page (max 1000)
+ * @param count - Number of NFTs per page (max 50)
  * @param page - Page number (1-indexed)
  */
 export async function fetchNMKRNFTs(
   projectUid: string,
   state: 'all' | 'free' | 'reserved' | 'sold' = 'all',
-  count: number = 1000,
+  count: number = 50,
   page: number = 1,
   apiKey: string
 ): Promise<NMKRNFTState[]> {
@@ -86,8 +86,8 @@ export async function fetchAllProjectNFTs(
 ): Promise<NMKRNFTState[]> {
   const allNFTs: NMKRNFTState[] = [];
   let page = 1;
-  const pageSize = 1000; // Max allowed by NMKR API
-  const maxPages = 100; // Safety limit: max 100,000 NFTs
+  const pageSize = 50; // Max allowed by NMKR API is 50
+  const maxPages = 2000; // Safety limit: max 100,000 NFTs
 
   while (page <= maxPages) {
     const nfts = await fetchNMKRNFTs(projectUid, 'all', pageSize, page, apiKey);

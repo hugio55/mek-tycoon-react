@@ -16,6 +16,7 @@ interface PhaseCardProps {
   isExpanded: boolean;
   shouldShow: boolean;
   onToggle: () => void;
+  isPhaseOneExpanded: boolean;
 }
 
 const PHASE_LABELS = ['I', 'II', 'III', 'IV'];
@@ -55,7 +56,7 @@ function getPhaseStyles(index: number) {
   return styles;
 }
 
-export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggle }: PhaseCardProps) {
+export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggle, isPhaseOneExpanded }: PhaseCardProps) {
   const [currentBackground, setCurrentBackground] = useState('');
   const [showClaimLightbox, setShowClaimLightbox] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -137,7 +138,6 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           transition: 'all 200ms ease',
           border: styles.border,
           boxShadow: styles.boxShadow,
-          ...(isPhaseTwo && { isolation: 'isolate', contain: 'paint', transform: 'translateZ(0)' }),
         }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -157,16 +157,13 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           />
         )}
 
-        {isPhaseTwo && (
+        {isPhaseTwo && !isPhaseOneExpanded && (
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)',
               animation: 'slideParticles 3s linear infinite',
               opacity: 1.0,
-              isolation: 'isolate',
-              willChange: 'transform',
-              contain: 'paint',
             }}
           />
         )}
@@ -174,7 +171,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
         <div className="h-full flex items-center justify-center px-6 relative">
           <div className="flex items-center gap-2">
             {isPhaseOne && <Checkmark />}
-            {isPhaseTwo && <div style={{ isolation: 'isolate', contain: 'paint' }}><LoadingSpinner /></div>}
+            {isPhaseTwo && !isPhaseOneExpanded && <LoadingSpinner />}
 
             <h3
               className="uppercase tracking-wider font-medium"
