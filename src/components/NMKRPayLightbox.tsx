@@ -939,7 +939,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
         // Desktop/WebView - show wallet picker
         return (
-          <div className="text-center py-6">
+          <div className="text-center py-4">
             <div className="mb-6">
               <div className="w-16 h-16 mx-auto rounded-full bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center mb-4">
                 <svg className="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -970,20 +970,33 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
             {/* Wallet buttons */}
             {availableWallets.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="grid grid-cols-2 gap-3 mb-4">
                 {availableWallets.map(wallet => (
                   <button
                     key={wallet.name}
                     onClick={() => connectAndVerifyWallet(wallet)}
-                    className="group relative bg-black/30 border border-cyan-500/30 text-white px-4 py-3 rounded-xl transition-all hover:bg-cyan-500/10 hover:border-cyan-500/50 flex items-center justify-center gap-2"
+                    className="group relative bg-black/30 border border-cyan-500/30 text-white px-4 py-3 rounded-xl transition-all hover:bg-cyan-500/10 hover:border-cyan-500/50 flex items-center justify-center gap-2 overflow-hidden"
                   >
-                    <img
-                      src={wallet.icon}
-                      alt={wallet.name}
-                      className="w-6 h-6 rounded"
-                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    {/* Honeycomb hover effect */}
+                    <div
+                      className="absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none group-hover:opacity-[0.07]"
+                      style={{
+                        backgroundImage: `url('/random-images/honey-png-big.webp')`,
+                        backgroundSize: '100%',
+                        backgroundPosition: 'center',
+                        borderRadius: '12px'
+                      }}
                     />
-                    <span className="font-medium">{wallet.name}</span>
+                    {/* Fixed-width icon container to prevent text shift */}
+                    <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center relative">
+                      <img
+                        src={wallet.icon}
+                        alt={wallet.name}
+                        className="w-6 h-6 rounded"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    </div>
+                    <span className="font-medium relative">{wallet.name}</span>
                   </button>
                 ))}
               </div>

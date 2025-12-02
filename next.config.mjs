@@ -1,5 +1,13 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Fix workspace root detection (prevents using parent directory's package-lock.json)
+  outputFileTracingRoot: __dirname,
+
   // Enable standalone output for optimized Vercel deployments (reduces serverless bundle size)
   // DISABLED: Testing if this prevents webpack externals from working properly
   // Standalone mode bundles everything together which may ignore externals configuration
