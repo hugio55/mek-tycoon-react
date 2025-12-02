@@ -30,7 +30,7 @@ export default function PushButtonRadio({
   onChange,
   color = 'cyan',
   size = 'md',
-  flashDuration = 250,
+  flashDuration = 125,
   className = ''
 }: PushButtonRadioProps) {
   const groupId = useId();
@@ -150,7 +150,7 @@ export default function PushButtonRadio({
             >
               {/* Shadow layer */}
               <span
-                className="push-button-shadow absolute top-0 left-0 w-full h-full transition-transform duration-150"
+                className="push-button-shadow absolute top-0 left-0 w-full h-full transition-transform duration-300 ease-out"
                 style={{
                   borderRadius: sizes.radius,
                   background: 'hsla(0, 0%, 0%, 0.25)',
@@ -170,7 +170,7 @@ export default function PushButtonRadio({
 
               {/* Front layer */}
               <span
-                className="push-button-front flex items-center justify-center relative w-full h-full transition-all duration-150"
+                className="push-button-front flex items-center justify-center relative w-full h-full transition-all duration-300 ease-out"
                 style={{
                   borderRadius: sizes.radius,
                   background: isFlashing ? config.frontBright : config.front,
@@ -183,7 +183,7 @@ export default function PushButtonRadio({
                 }}
               >
                 <span
-                  className="push-button-icon transition-all duration-150"
+                  className="push-button-icon transition-all duration-300 ease-out"
                   style={{
                     color: isFlashing ? config.iconBright : config.iconColor,
                     width: sizes.iconSize,

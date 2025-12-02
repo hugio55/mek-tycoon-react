@@ -32,7 +32,7 @@ const StarField = () => {
     const STAR_COUNT_LAYER1 = 120; // Reduced from 220 for better performance
     const STAR_COUNT_LAYER2 = 20;  // Reduced from 40 for better performance
     const SPEED_LAYER1 = 1.5;
-    const SPEED_LAYER2 = 20;
+    const SPEED_LAYER2 = 30;
     const MAX_DEPTH = 1000;
     const MIN_DEPTH = 1;
     const PI2 = Math.PI * 2;
