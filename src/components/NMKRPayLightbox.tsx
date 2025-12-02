@@ -595,7 +595,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
       case 'corporation_verified':
         return (
-          <div className="text-center py-6 sm:py-8">
+          <div className="text-center pt-6 sm:pt-8 pb-2">
             {/* Checkmark icon */}
             <div className="mb-4 sm:mb-6">
               <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center">
@@ -632,6 +632,14 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
               style={{ minHeight: '48px', WebkitTapHighlightColor: 'transparent', fontFamily: "'Inter', 'Arial', sans-serif" }}
             >
               Continue to Claim
+            </button>
+
+            <button
+              onClick={onClose}
+              className="w-full mt-3 py-2 px-4 text-sm font-medium transition-all duration-200 hover:text-red-400"
+              style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', background: 'transparent', border: 'none', letterSpacing: '0.01em', cursor: 'pointer' }}
+            >
+              Cancel
             </button>
           </div>
         );
