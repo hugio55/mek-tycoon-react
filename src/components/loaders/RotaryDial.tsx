@@ -43,12 +43,15 @@ export default function RotaryDial({
       centerKnob: 'linear-gradient(to bottom, #faf6e5 0%, #8d7a3a 100%)',
       lightGlow: 'radial-gradient(ellipse at center, rgba(250, 182, 23, 1) 0%, rgba(250, 182, 23, 0.42) 42%, rgba(184, 134, 11, 0) 72%, rgba(67, 34, 0, 0) 100%)',
       dotColor: 'linear-gradient(to bottom, #fab617 0%, #ffd700 100%)',
-      textColor: '#fab617',
+      textColor: 'rgba(250, 182, 23, 0.5)',
+      selectedTextColor: '#ffffff',
+      selectedTextShadow: '0 0 10px #fab617, 0 0 20px #fab617',
       textShadow: '0 1px 0 #3d2e00',
       lineTop: '#5a4a1a',
       lineBottom: '#b8860b',
       pointerColor: '#3d2e00',
-      pointerGlow: '#fab617'
+      pointerGlow: '#fab617',
+      segmentColor: 'rgba(250, 182, 23, 0.35)'
     },
     cyan: {
       outerRing: 'radial-gradient(ellipse at center, #0077a3 0%, #002233 100%)',
@@ -57,12 +60,15 @@ export default function RotaryDial({
       centerKnob: 'linear-gradient(to bottom, #e5f6fa 0%, #3a7a8d 100%)',
       lightGlow: 'radial-gradient(ellipse at center, rgba(0, 212, 255, 1) 0%, rgba(0, 212, 255, 0.42) 42%, rgba(0, 119, 163, 0) 72%, rgba(0, 34, 67, 0) 100%)',
       dotColor: 'linear-gradient(to bottom, #00d4ff 0%, #80eaff 100%)',
-      textColor: '#00d4ff',
+      textColor: 'rgba(0, 212, 255, 0.5)',
+      selectedTextColor: '#ffffff',
+      selectedTextShadow: '0 0 10px #00d4ff, 0 0 20px #00d4ff',
       textShadow: '0 1px 0 #002233',
       lineTop: '#1a4a5a',
       lineBottom: '#00d4ff',
       pointerColor: '#002233',
-      pointerGlow: '#00d4ff'
+      pointerGlow: '#00d4ff',
+      segmentColor: 'rgba(0, 212, 255, 0.35)'
     },
     silver: {
       outerRing: 'radial-gradient(ellipse at center, #888888 0%, #333333 100%)',
@@ -71,12 +77,15 @@ export default function RotaryDial({
       centerKnob: 'linear-gradient(to bottom, #eef7f6 0%, #8d989a 100%)',
       lightGlow: 'radial-gradient(ellipse at center, rgba(184, 163, 204, 1) 0%, rgba(159, 197, 224, 0.42) 42%, rgba(111, 113, 179, 0) 72%, rgba(67, 34, 137, 0) 100%)',
       dotColor: 'linear-gradient(to bottom, #dae2e4 0%, #ecf5f4 100%)',
-      textColor: '#eee',
+      textColor: 'rgba(200, 200, 200, 0.5)',
+      selectedTextColor: '#ffffff',
+      selectedTextShadow: '0 0 10px #ffffff, 0 0 20px #aaaaaa',
       textShadow: '0 1px 0 #444',
       lineTop: '#3c3d3f',
       lineBottom: '#666769',
       pointerColor: '#333',
-      pointerGlow: '#fff'
+      pointerGlow: '#fff',
+      segmentColor: 'rgba(255, 255, 255, 0.25)'
     }
   };
 
@@ -112,13 +121,16 @@ export default function RotaryDial({
   const pointerRotation = labelAngle + 90;
 
   // Calculate font size based on number of options (smaller text for more options)
-  const getFontSize = (index: number) => {
+  const getFontSize = () => {
     const count = options.length;
-    if (count <= 4) return index === 0 ? '13px' : '15px';
-    if (count <= 6) return index === 0 ? '12px' : '13px';
-    if (count <= 8) return '11px';
-    return '10px';
+    if (count <= 4) return '16px';
+    if (count <= 6) return '14px';
+    if (count <= 8) return '13px';
+    return '12px';
   };
+
+  // Calculate the angle span for each segment (for pie slice highlighting)
+  const angleStep = 360 / options.length;
 
   return (
     <div
@@ -152,6 +164,27 @@ export default function RotaryDial({
             boxShadow: 'inset 0 3px 10px rgba(0, 0, 0, 0.6), 0 2px 20px rgba(255, 255, 255, 1)'
           }}
         >
+          {/* Highlighted segment for selected option */}
+          <svg
+            className="absolute z-[0]"
+            style={{
+              width: '220px',
+              height: '220px',
+              left: '0',
+              top: '0',
+              transform: `rotate(${labelAngle - angleStep / 2}deg)`,
+              transition: 'transform 0.5s ease'
+            }}
+            viewBox="0 0 220 220"
+          >
+            <path
+              d={`M 110 110 L 110 0 A 110 110 0 ${angleStep > 180 ? 1 : 0} 1 ${
+                110 + 110 * Math.sin((angleStep * Math.PI) / 180)
+              } ${110 - 110 * Math.cos((angleStep * Math.PI) / 180)} Z`}
+              fill={config.segmentColor}
+            />
+          </svg>
+
           {/* Dynamic line dividers between options */}
           {dividerAngles.map((angle, i) => (
             <hr
@@ -173,39 +206,43 @@ export default function RotaryDial({
 
           {/* Switch labels around the dial */}
           <div className="absolute inset-0 z-[3]">
-            {options.map((label, index) => (
-              <label
-                key={index}
-                className="absolute cursor-pointer"
-                style={{
-                  top: '50%',
-                  left: '50%',
-                  width: '50%',
-                  height: '70px',
-                  marginTop: '-35px',
-                  transformOrigin: '0% 50%',
-                  transform: `rotate(${positions[index]}deg)`
-                }}
-                onClick={() => handleSelect(index)}
-              >
-                <span
-                  className="absolute z-[2] font-bold text-center"
+            {options.map((label, index) => {
+              const isSelected = index === selectedIndex;
+              return (
+                <label
+                  key={index}
+                  className="absolute cursor-pointer"
                   style={{
-                    top: '0',
-                    right: '0',
-                    width: '40px',
-                    height: '100%',
-                    lineHeight: '70px',
-                    fontSize: getFontSize(index),
-                    color: config.textColor,
-                    textShadow: config.textShadow,
-                    transform: `rotate(${-positions[index]}deg)`
+                    top: '50%',
+                    left: '50%',
+                    width: '50%',
+                    height: '70px',
+                    marginTop: '-35px',
+                    transformOrigin: '0% 50%',
+                    transform: `rotate(${positions[index]}deg)`
                   }}
+                  onClick={() => handleSelect(index)}
                 >
-                  {label}
-                </span>
-              </label>
-            ))}
+                  <span
+                    className="absolute z-[2] font-bold text-center"
+                    style={{
+                      top: '0',
+                      right: '0',
+                      width: '40px',
+                      height: '100%',
+                      lineHeight: '70px',
+                      fontSize: getFontSize(),
+                      color: isSelected ? config.selectedTextColor : config.textColor,
+                      textShadow: isSelected ? config.selectedTextShadow : config.textShadow,
+                      transform: `rotate(${-positions[index]}deg)`,
+                      transition: 'color 0.3s ease, text-shadow 0.3s ease'
+                    }}
+                  >
+                    {label}
+                  </span>
+                </label>
+              );
+            })}
           </div>
 
           {/* Light indicator - uses label angle directly (horizontal origin) */}
