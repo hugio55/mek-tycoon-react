@@ -6,7 +6,142 @@ import { mutation, query } from "./_generated/server";
 // =============================================================================
 // Corporations are identified SOLELY by stake address.
 // Payment addresses are NOT stored - NMKR handles them at transaction time.
-// Note: Using 'any' type for query callbacks to avoid TypeScript deep instantiation issues
+// =============================================================================
+
+// =============================================================================
+// CONSTANTS
+// =============================================================================
+
+const CORPORATION_CONSTANTS = {
+  WELCOME_BONUS_GOLD: 100,
+  STARTING_LEVEL: 1,
+  STARTING_CRAFTING_SLOTS: 1,
+  SESSION_DURATION_MS: 24 * 60 * 60 * 1000, // 24 hours
+  STARTING_ESSENCE: {
+    stone: 10,
+    disco: 5,
+    paul: 0,
+    cartoon: 5,
+    candy: 5,
+    tiles: 5,
+    moss: 5,
+    bullish: 0,
+    journalist: 0,
+    laser: 0,
+    flashbulb: 0,
+    accordion: 0,
+    turret: 0,
+    drill: 0,
+    security: 0,
+  },
+} as const;
+
+// =============================================================================
+// VALIDATION HELPERS
+// =============================================================================
+
+/**
+ * Validates stake address format (bech32)
+ * Mainnet: stake1... (59 chars total)
+ * Testnet: stake_test1... (63 chars total)
+ */
+function isValidStakeAddress(address: string): boolean {
+  if (!address || typeof address !== 'string') return false;
+
+  // Mainnet: stake1 + 53 lowercase alphanumeric chars
+  const mainnetRegex = /^stake1[a-z0-9]{53}$/;
+  // Testnet: stake_test1 + 49 lowercase alphanumeric chars
+  const testnetRegex = /^stake_test1[a-z0-9]{49}$/;
+
+  return mainnetRegex.test(address) || testnetRegex.test(address);
+}
+
+/**
+ * Sanitizes corporation name input
+ * - Trims whitespace
+ * - Collapses multiple spaces
+ * - Returns sanitized string or null if invalid
+ */
+function sanitizeCorporationName(name: string): string | null {
+  if (!name || typeof name !== 'string') return null;
+
+  const sanitized = name.trim().replace(/\s+/g, ' ');
+
+  // Validate: 3-30 chars, alphanumeric and spaces only
+  const nameRegex = /^[a-zA-Z0-9 ]{3,30}$/;
+  if (!nameRegex.test(sanitized)) return null;
+
+  return sanitized;
+}
+
+/**
+ * Truncates stake address for display
+ */
+function truncateStakeAddress(address: string): string {
+  if (!address || address.length < 20) return address;
+  return address.slice(0, 12) + "..." + address.slice(-6);
+}
+
+// =============================================================================
+// ERROR HANDLING
+// =============================================================================
+
+function corporationError(operation: string, error: unknown): never {
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(`[corporationAuth] ${operation} failed:`, message);
+  throw new Error(`${operation} failed`);
+}
+
+// =============================================================================
+// SESSION AUTHENTICATION
+// =============================================================================
+
+/**
+ * Validates that a session token is valid for the given stake address
+ */
+async function validateSession(
+  ctx: { db: any },
+  stakeAddress: string,
+  sessionToken: string
+): Promise<{ valid: boolean; corporation: any | null }> {
+  const corp = await ctx.db
+    .query("corporations")
+    .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", stakeAddress))
+    .first();
+
+  if (!corp) {
+    return { valid: false, corporation: null };
+  }
+
+  // Check session token exists and matches
+  if (!corp.sessionToken || corp.sessionToken !== sessionToken) {
+    return { valid: false, corporation: corp };
+  }
+
+  // Check session hasn't expired
+  if (!corp.sessionExpiresAt || Date.now() > corp.sessionExpiresAt) {
+    return { valid: false, corporation: corp };
+  }
+
+  return { valid: true, corporation: corp };
+}
+
+/**
+ * Generates a new session token
+ */
+function generateSessionToken(): string {
+  // Generate UUID-like token using random values
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let token = '';
+  for (let i = 0; i < 32; i++) {
+    token += chars[Math.floor(Math.random() * chars.length)];
+    if (i === 7 || i === 11 || i === 15 || i === 19) token += '-';
+  }
+  return token;
+}
+
+// =============================================================================
+// MUTATIONS
 // =============================================================================
 
 /**
@@ -15,34 +150,43 @@ import { mutation, query } from "./_generated/server";
  */
 export const connectCorporation = mutation({
   args: {
-    stakeAddress: v.string(), // THE identifier - stake address only
-    walletType: v.optional(v.string()), // "nami", "eternl", "flint", etc.
+    stakeAddress: v.string(),
+    walletType: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Validate stake address format (mainnet or testnet)
-    if (!args.stakeAddress.startsWith("stake1") &&
-        !args.stakeAddress.startsWith("stake_test1")) {
-      throw new Error("Invalid stake address format. Must start with 'stake1' (mainnet) or 'stake_test1' (testnet)");
+    // Validate stake address format
+    if (!isValidStakeAddress(args.stakeAddress)) {
+      throw new Error("Invalid stake address format. Must be a valid bech32 stake address.");
     }
 
-    // Find existing corporation by stake address
-    const existingCorp = await ctx.db
-      .query("corporations")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
-      .first();
+    // Check for existing corporation (use unique() to detect duplicates)
+    let existingCorp;
+    try {
+      existingCorp = await ctx.db
+        .query("corporations")
+        .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
+        .first();
+    } catch (error) {
+      corporationError("Find corporation", error);
+    }
+
+    // Generate new session
+    const sessionToken = generateSessionToken();
+    const sessionExpiresAt = Date.now() + CORPORATION_CONSTANTS.SESSION_DURATION_MS;
 
     if (existingCorp) {
-      // Update last login and connection info
+      // Update existing corporation
       try {
         await ctx.db.patch(existingCorp._id, {
           lastLogin: Date.now(),
           lastConnectionTime: Date.now(),
           walletType: args.walletType || existingCorp.walletType,
           isOnline: true,
+          sessionToken,
+          sessionExpiresAt,
         });
       } catch (error) {
-        console.error('[corporationAuth] Failed to update corporation:', error);
-        throw new Error('Failed to update corporation');
+        corporationError("Update corporation", error);
       }
 
       // Fetch fresh data after patch
@@ -50,90 +194,120 @@ export const connectCorporation = mutation({
 
       return {
         corporation: updatedCorp,
+        sessionToken, // Return to frontend for authenticated calls
         isNew: false,
       };
     }
 
     // Create new corporation
-    const newCorpId = await ctx.db.insert("corporations", {
-      stakeAddress: args.stakeAddress,
-      walletType: args.walletType,
+    let newCorpId;
+    try {
+      newCorpId = await ctx.db.insert("corporations", {
+        stakeAddress: args.stakeAddress,
+        walletType: args.walletType,
 
-      // Starting resources
-      gold: 100, // Welcome bonus
-      totalEssence: {
-        stone: 10,
-        disco: 5,
-        paul: 0,
-        cartoon: 5,
-        candy: 5,
-        tiles: 5,
-        moss: 5,
-        bullish: 0,
-        journalist: 0,
-        laser: 0,
-        flashbulb: 0,
-        accordion: 0,
-        turret: 0,
-        drill: 0,
-        security: 0,
-      },
+        // Starting resources
+        gold: CORPORATION_CONSTANTS.WELCOME_BONUS_GOLD,
+        totalEssence: { ...CORPORATION_CONSTANTS.STARTING_ESSENCE },
 
-      // Starting stats
-      level: 1,
-      experience: 0,
-      craftingSlots: 1,
-      totalBattles: 0,
-      totalWins: 0,
-      winRate: 0,
+        // Starting stats
+        level: CORPORATION_CONSTANTS.STARTING_LEVEL,
+        experience: 0,
+        craftingSlots: CORPORATION_CONSTANTS.STARTING_CRAFTING_SLOTS,
+        totalBattles: 0,
+        totalWins: 0,
+        winRate: 0,
 
-      // Timestamps
-      createdAt: Date.now(),
-      lastLogin: Date.now(),
-      lastConnectionTime: Date.now(),
+        // Timestamps
+        createdAt: Date.now(),
+        lastLogin: Date.now(),
+        lastConnectionTime: Date.now(),
 
-      // Status
-      isOnline: true,
-      isBanned: false,
-      role: "user",
-    });
+        // Status
+        isOnline: true,
+        isBanned: false,
+        role: "user",
+
+        // Session
+        sessionToken,
+        sessionExpiresAt,
+      });
+    } catch (error: any) {
+      // Handle potential race condition - another request may have created the corp
+      if (error.message?.includes('duplicate') || error.message?.includes('unique')) {
+        // Retry fetch
+        const retryExisting = await ctx.db
+          .query("corporations")
+          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
+          .first();
+
+        if (retryExisting) {
+          // Update the existing one instead
+          await ctx.db.patch(retryExisting._id, {
+            lastLogin: Date.now(),
+            isOnline: true,
+            sessionToken,
+            sessionExpiresAt,
+          });
+          return {
+            corporation: await ctx.db.get(retryExisting._id),
+            sessionToken,
+            isNew: false,
+          };
+        }
+      }
+      corporationError("Create corporation", error);
+    }
 
     const newCorp = await ctx.db.get(newCorpId);
 
     // Log welcome bonus transaction
-    await ctx.db.insert("transactions", {
-      type: "reward",
-      userId: newCorpId,
-      amount: 100,
-      details: "Welcome bonus - New corporation registration",
-      timestamp: Date.now(),
-    });
+    try {
+      await ctx.db.insert("transactions", {
+        type: "reward",
+        userId: newCorpId,
+        amount: CORPORATION_CONSTANTS.WELCOME_BONUS_GOLD,
+        details: "Welcome bonus - New corporation registration",
+        timestamp: Date.now(),
+      });
+    } catch (error) {
+      // Non-fatal - corporation was created, just transaction log failed
+      console.error("[corporationAuth] Failed to log welcome bonus transaction:", error);
+    }
 
     return {
       corporation: newCorp,
+      sessionToken,
       isNew: true,
     };
   },
 });
 
 /**
- * Disconnect corporation (logout)
+ * Disconnect corporation (logout) - REQUIRES SESSION AUTH
  */
 export const disconnectCorporation = mutation({
   args: {
     stakeAddress: v.string(),
+    sessionToken: v.string(),
   },
   handler: async (ctx, args) => {
-    const corporation = await ctx.db
-      .query("corporations")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
-      .first();
+    // Validate session
+    const { valid, corporation } = await validateSession(ctx, args.stakeAddress, args.sessionToken);
 
-    if (corporation) {
+    if (!valid || !corporation) {
+      throw new Error("Invalid or expired session");
+    }
+
+    try {
       await ctx.db.patch(corporation._id, {
         isOnline: false,
         lastLogin: Date.now(),
+        sessionToken: undefined, // Clear session on disconnect
+        sessionExpiresAt: undefined,
       });
+    } catch (error) {
+      corporationError("Disconnect corporation", error);
     }
 
     return { success: true };
@@ -141,11 +315,66 @@ export const disconnectCorporation = mutation({
 });
 
 /**
+ * Update corporation name - REQUIRES SESSION AUTH
+ */
+export const updateCorporationName = mutation({
+  args: {
+    stakeAddress: v.string(),
+    sessionToken: v.string(),
+    corporationName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Validate session
+    const { valid, corporation } = await validateSession(ctx, args.stakeAddress, args.sessionToken);
+
+    if (!valid || !corporation) {
+      throw new Error("Invalid or expired session");
+    }
+
+    // Sanitize and validate name
+    const sanitizedName = sanitizeCorporationName(args.corporationName);
+    if (!sanitizedName) {
+      throw new Error("Corporation name must be 3-30 characters, letters, numbers, and spaces only");
+    }
+
+    // Check if name is already taken (case-insensitive)
+    const nameLower = sanitizedName.toLowerCase();
+    const existingName = await ctx.db
+      .query("corporations")
+      .withIndex("by_corporation_name_lower", (q: any) => q.eq("corporationNameLower", nameLower))
+      .first();
+
+    if (existingName && existingName._id !== corporation._id) {
+      throw new Error("Corporation name is already taken");
+    }
+
+    try {
+      await ctx.db.patch(corporation._id, {
+        corporationName: sanitizedName,
+        corporationNameLower: nameLower,
+      });
+    } catch (error) {
+      corporationError("Update corporation name", error);
+    }
+
+    return { success: true, corporationName: sanitizedName };
+  },
+});
+
+// =============================================================================
+// QUERIES
+// =============================================================================
+
+/**
  * Get corporation by stake address
  */
 export const getCorporationByStake = query({
   args: { stakeAddress: v.string() },
   handler: async (ctx, args) => {
+    if (!isValidStakeAddress(args.stakeAddress)) {
+      return null;
+    }
+
     const corporation = await ctx.db
       .query("corporations")
       .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
@@ -155,19 +384,7 @@ export const getCorporationByStake = query({
       return null;
     }
 
-    // Get corporation's Meks (owned by this stake address)
-    // Note: Meks table uses "owner" field - may need to be updated for Phase II
-    // For now, we'll return corporation data only
-
-    return {
-      ...corporation,
-      stats: {
-        // Placeholder - will be populated when Mek ownership is linked
-        totalMeks: 0,
-        activeCrafting: 0,
-        achievementsUnlocked: 0,
-      },
-    };
+    return corporation;
   },
 });
 
@@ -177,6 +394,10 @@ export const getCorporationByStake = query({
 export const getCorporationIdByStake = query({
   args: { stakeAddress: v.string() },
   handler: async (ctx, args) => {
+    if (!isValidStakeAddress(args.stakeAddress)) {
+      return null;
+    }
+
     const corporation = await ctx.db
       .query("corporations")
       .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
@@ -192,56 +413,16 @@ export const getCorporationIdByStake = query({
 export const corporationExists = query({
   args: { stakeAddress: v.string() },
   handler: async (ctx, args) => {
+    if (!isValidStakeAddress(args.stakeAddress)) {
+      return false;
+    }
+
     const corporation = await ctx.db
       .query("corporations")
       .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
       .first();
 
     return corporation !== null;
-  },
-});
-
-/**
- * Update corporation name
- */
-export const updateCorporationName = mutation({
-  args: {
-    stakeAddress: v.string(),
-    corporationName: v.string(),
-  },
-  handler: async (ctx, args) => {
-    // Validate name (alphanumeric only, 3-30 chars)
-    const nameRegex = /^[a-zA-Z0-9\s]{3,30}$/;
-    if (!nameRegex.test(args.corporationName)) {
-      throw new Error("Corporation name must be 3-30 characters, alphanumeric only");
-    }
-
-    const corporation = await ctx.db
-      .query("corporations")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
-      .first();
-
-    if (!corporation) {
-      throw new Error("Corporation not found");
-    }
-
-    // Check if name is already taken (case-insensitive)
-    const nameLower = args.corporationName.toLowerCase();
-    const existingName = await ctx.db
-      .query("corporations")
-      .withIndex("by_corporation_name_lower", (q: any) => q.eq("corporationNameLower", nameLower))
-      .first();
-
-    if (existingName && existingName._id !== corporation._id) {
-      throw new Error("Corporation name is already taken");
-    }
-
-    await ctx.db.patch(corporation._id, {
-      corporationName: args.corporationName,
-      corporationNameLower: nameLower,
-    });
-
-    return { success: true };
   },
 });
 
@@ -253,7 +434,7 @@ export const getOnlineCorporations = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const limit = args.limit || 50;
+    const limit = Math.min(args.limit || 50, 100); // Cap at 100
 
     const onlineCorporations = await ctx.db
       .query("corporations")
@@ -263,16 +444,18 @@ export const getOnlineCorporations = query({
 
     return onlineCorporations.map((corp: any) => ({
       _id: corp._id,
-      stakeAddress: corp.stakeAddress.slice(0, 12) + "..." + corp.stakeAddress.slice(-6),
+      stakeAddress: corp.stakeAddress, // Full address for lookups
+      stakeAddressDisplay: truncateStakeAddress(corp.stakeAddress),
       corporationName: corp.corporationName,
-      level: corp.level,
-      role: corp.role,
+      level: corp.level || CORPORATION_CONSTANTS.STARTING_LEVEL,
+      role: corp.role || "user",
     }));
   },
 });
 
 /**
  * Get corporation leaderboard
+ * Uses database indexes for efficient sorting
  */
 export const getCorporationLeaderboard = query({
   args: {
@@ -285,40 +468,87 @@ export const getCorporationLeaderboard = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const limit = args.limit || 100;
+    const limit = Math.min(args.limit || 100, 500); // Cap at 500
     const sortBy = args.sortBy || "level";
 
-    let corporations = await ctx.db
-      .query("corporations")
-      .order("desc")
-      .take(limit);
+    let corporations: any[];
 
-    // Sort by requested field
-    corporations = corporations.sort((a: any, b: any) => {
-      switch (sortBy) {
-        case "gold":
-          return (b.gold || 0) - (a.gold || 0);
-        case "level":
-          return (b.level || 0) - (a.level || 0);
-        case "wins":
+    // Use index-based sorting where possible for better performance
+    if (sortBy === "gold") {
+      corporations = await ctx.db
+        .query("corporations")
+        .withIndex("by_gold")
+        .order("desc")
+        .take(limit);
+    } else if (sortBy === "level") {
+      corporations = await ctx.db
+        .query("corporations")
+        .withIndex("by_level")
+        .order("desc")
+        .take(limit);
+    } else {
+      // For wins and winRate, fetch and sort in memory
+      // (Would need additional indexes for these to be efficient)
+      corporations = await ctx.db
+        .query("corporations")
+        .order("desc")
+        .take(limit);
+
+      corporations = corporations.sort((a: any, b: any) => {
+        if (sortBy === "wins") {
           return (b.totalWins || 0) - (a.totalWins || 0);
-        case "winRate":
+        } else if (sortBy === "winRate") {
           return (b.winRate || 0) - (a.winRate || 0);
-        default:
-          return 0;
-      }
-    });
+        }
+        return 0;
+      });
+    }
 
     return corporations.map((corp: any, index: number) => ({
       rank: index + 1,
       _id: corp._id,
-      stakeAddress: corp.stakeAddress.slice(0, 12) + "..." + corp.stakeAddress.slice(-6),
+      stakeAddress: corp.stakeAddress, // Full address
+      stakeAddressDisplay: truncateStakeAddress(corp.stakeAddress),
       corporationName: corp.corporationName,
-      level: corp.level,
-      gold: corp.gold,
-      totalWins: corp.totalWins,
-      winRate: corp.winRate,
-      isOnline: corp.isOnline,
+      level: corp.level || CORPORATION_CONSTANTS.STARTING_LEVEL,
+      gold: corp.gold || 0,
+      totalWins: corp.totalWins || 0,
+      winRate: corp.winRate || 0,
+      isOnline: corp.isOnline || false,
     }));
+  },
+});
+
+/**
+ * Validate a session token (for frontend to check if re-auth needed)
+ */
+export const validateSessionToken = query({
+  args: {
+    stakeAddress: v.string(),
+    sessionToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (!isValidStakeAddress(args.stakeAddress)) {
+      return { valid: false, reason: "invalid_address" };
+    }
+
+    const corp = await ctx.db
+      .query("corporations")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
+      .first();
+
+    if (!corp) {
+      return { valid: false, reason: "not_found" };
+    }
+
+    if (!corp.sessionToken || corp.sessionToken !== args.sessionToken) {
+      return { valid: false, reason: "invalid_token" };
+    }
+
+    if (!corp.sessionExpiresAt || Date.now() > corp.sessionExpiresAt) {
+      return { valid: false, reason: "expired" };
+    }
+
+    return { valid: true, reason: null };
   },
 });

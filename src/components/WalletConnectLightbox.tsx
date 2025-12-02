@@ -46,6 +46,10 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
   // Lock body scroll when lightbox is open
   useEffect(() => {
     if (isOpen) {
+      // Clear previous errors when lightbox opens
+      setWalletError(null);
+      setConnectionStatus('');
+
       console.log('[🔐RECONNECT] WalletConnectLightbox opened - checking disconnect nonce...');
       const nonceCheck = localStorage.getItem('mek_disconnect_nonce');
       console.log('[🔐RECONNECT] Nonce status at lightbox open:', nonceCheck ? `✅ FOUND: ${nonceCheck.slice(0, 8)}...` : '❌ NOT FOUND');
@@ -303,6 +307,12 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
           walletType: wallet.name.toLowerCase(),
         });
         console.log('[WalletConnect] Corporation linked:', corpResult.isNew ? 'NEW CORPORATION' : 'EXISTING CORPORATION');
+
+        // Store session token for authenticated mutations (disconnect, update name, etc.)
+        if (corpResult.sessionToken && typeof window !== 'undefined') {
+          localStorage.setItem('mek_session_token', corpResult.sessionToken);
+          console.log('[WalletConnect] Session token stored for authenticated operations');
+        }
       } catch (corpLinkError) {
         // Non-fatal - log but continue
         console.warn('[WalletConnect] Could not link corporation:', corpLinkError);
