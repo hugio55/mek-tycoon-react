@@ -400,37 +400,53 @@ export default function MessagingSystemAdmin() {
                   )}
                 </div>
 
-                {/* Compose Area */}
+                {/* Compose Area - Compact pill design */}
                 <div className="p-4 border-t border-gray-700">
-                  <div className="flex gap-3">
-                    <div className="flex-1 relative">
-                      <textarea
-                        value={messageInput}
-                        onChange={(e) => handleInputChange(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Type a message..."
-                        rows={2}
-                        maxLength={MAX_MESSAGE_LENGTH}
-                        className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 resize-none focus:outline-none focus:border-yellow-500/50"
-                      />
-                      <div className={`absolute bottom-2 right-2 text-xs ${getCharCountColor()}`}>
-                        {messageInput.length}/{MAX_MESSAGE_LENGTH}
-                      </div>
-                    </div>
+                  <div className="flex items-center gap-2 bg-gray-800/80 rounded-full border border-gray-600 px-2 py-1">
+                    {/* Attachment/Upload Button */}
+                    <button
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+                      title="Attach image (coming soon)"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="16" />
+                        <line x1="8" y1="12" x2="16" y2="12" />
+                      </svg>
+                    </button>
+
+                    {/* Text Input */}
+                    <input
+                      type="text"
+                      value={messageInput}
+                      onChange={(e) => handleInputChange(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Message..."
+                      maxLength={MAX_MESSAGE_LENGTH}
+                      className="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:outline-none py-2 text-sm"
+                    />
+
+                    {/* Character count (only show when typing) */}
+                    {messageInput.length > 0 && (
+                      <span className={`text-xs ${getCharCountColor()} mr-1`}>
+                        {messageInput.length > 1800 ? `${messageInput.length}/${MAX_MESSAGE_LENGTH}` : ''}
+                      </span>
+                    )}
+
+                    {/* Send Button */}
                     <button
                       onClick={handleSendMessage}
                       disabled={!messageInput.trim() || messageInput.length > MAX_MESSAGE_LENGTH}
-                      className={`px-6 rounded-lg font-semibold uppercase tracking-wider transition-all ${
+                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                         messageInput.trim() && messageInput.length <= MAX_MESSAGE_LENGTH
-                          ? 'bg-yellow-500 text-black hover:bg-yellow-400'
-                          : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                          ? 'text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10'
+                          : 'text-gray-600 cursor-not-allowed'
                       }`}
                     >
-                      Send
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                      </svg>
                     </button>
-                  </div>
-                  <div className="mt-2 text-gray-500 text-xs">
-                    Press Enter to send, Shift+Enter for new line
                   </div>
                 </div>
               </>

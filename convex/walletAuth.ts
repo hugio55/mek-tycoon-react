@@ -1,5 +1,28 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, QueryCtx, MutationCtx } from "./_generated/server";
+
+// Helper function to find user by any address type (payment or stake)
+// Reduces code duplication across queries and mutations
+async function findUserByAddress(
+  ctx: QueryCtx | MutationCtx,
+  address: string
+) {
+  // Try as payment address first
+  let user = await ctx.db
+    .query("users")
+    .withIndex("by_wallet", (q) => q.eq("walletAddress", address))
+    .first();
+
+  // Try as stake address if not found (supports both mainnet and testnet)
+  if (!user && (address.startsWith("stake1") || address.startsWith("stake_test1"))) {
+    user = await ctx.db
+      .query("users")
+      .withIndex("by_stake_address", (q) => q.eq("walletStakeAddress", address))
+      .first();
+  }
+
+  return user;
+}
 
 // Connect or create user with Cardano wallet
 export const connectWallet = mutation({
@@ -32,15 +55,23 @@ export const connectWallet = mutation({
 
       // If found by stake address, update their payment address to link the accounts
       if (existingUser) {
-        await ctx.db.patch(existingUser._id, {
-          walletAddress: args.walletAddress, // Link payment address
-          lastLogin: Date.now(),
-          walletType: args.walletType || existingUser.walletType,
-          isOnline: true,
-        });
+        try {
+          await ctx.db.patch(existingUser._id, {
+            walletAddress: args.walletAddress, // Link payment address
+            lastLogin: Date.now(),
+            walletType: args.walletType || existingUser.walletType,
+            isOnline: true,
+          });
+        } catch (error) {
+          console.error('[walletAuth] Failed to link accounts:', error);
+          throw new Error('Failed to link wallet accounts');
+        }
+
+        // Fetch fresh user data after patch to avoid returning stale data
+        const updatedUser = await ctx.db.get(existingUser._id);
 
         return {
-          user: { ...existingUser, walletAddress: args.walletAddress },
+          user: updatedUser,
           isNewUser: false,
           linkedByStakeAddress: true, // Flag that this was linked via stake address
         };
