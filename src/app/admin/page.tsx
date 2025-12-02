@@ -5163,7 +5163,7 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
                       <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, Lime, Purple variants</div>
                       <div><span className="text-zinc-500">Sizes:</span> sm (40px), md (50px), lg (60px)</div>
-                      <div><span className="text-zinc-500">Features:</span> 3D push effect with shadow/edge/front layers, pop-up fly animation on select, hover lift, glow shadow, includes 6 built-in icons</div>
+                      <div><span className="text-zinc-500">Features:</span> 3D push effect with shadow/edge/front layers, bright flash glow on click, hover lift, glow shadow, includes 6 built-in icons</div>
                     </div>
                   </div>
 

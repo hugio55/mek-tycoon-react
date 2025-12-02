@@ -716,31 +716,38 @@ export default function MessagingSystemAdmin() {
       {/* Image Lightbox */}
       {lightboxImage && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md"
           onClick={() => setLightboxImage(null)}
         >
-          {/* Close button */}
-          <button
-            onClick={() => setLightboxImage(null)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl transition-colors"
-          >
-            ×
-          </button>
-
-          {/* Image container */}
+          {/* Liquid glass container - hugs the image */}
           <div
-            className="max-w-[90vw] max-h-[90vh] p-4"
+            className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
+            style={{
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+            }}
           >
+            {/* Close button - X made from two rotated bars */}
+            <button
+              onClick={() => setLightboxImage(null)}
+              className="absolute -top-3 -right-3 w-8 h-8 flex items-center justify-center group z-10"
+            >
+              <span
+                className="absolute w-[4px] h-[24px] rounded-full bg-[#F4A259] group-hover:bg-[#F25C66] transition-all duration-300 ease-in"
+                style={{ transform: 'rotate(45deg)' }}
+              />
+              <span
+                className="absolute w-[4px] h-[24px] rounded-full bg-[#F4A259] group-hover:bg-[#F25C66] transition-all duration-300 ease-in"
+                style={{ transform: 'rotate(-45deg)' }}
+              />
+            </button>
+
+            {/* Image */}
             <img
               src={lightboxImage.url}
               alt={lightboxImage.filename}
-              className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+              className="max-w-[85vw] max-h-[85vh] object-contain rounded-xl"
             />
-            {/* Filename caption */}
-            <div className="text-center text-gray-400 text-sm mt-3">
-              {lightboxImage.filename}
-            </div>
           </div>
         </div>
       )}

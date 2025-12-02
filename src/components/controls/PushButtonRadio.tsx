@@ -21,7 +21,7 @@ interface PushButtonRadioProps {
  *
  * Original: Teal 3D push buttons with pop animation
  * Transformed: Gold/cyan/lime/purple variants matching Mek Tycoon industrial design
- * Features: 3D push effect, pop-up animation on select, hover lift, glow shadow
+ * Features: 3D push effect, flash glow on click, hover lift, glow shadow
  */
 export default function PushButtonRadio({
   options,
@@ -33,44 +33,55 @@ export default function PushButtonRadio({
 }: PushButtonRadioProps) {
   const groupId = useId();
   const [selectedValue, setSelectedValue] = useState(defaultValue || options[0]?.value);
-  const [animatingValue, setAnimatingValue] = useState<string | null>(null);
 
   const colorConfig = {
     gold: {
       front: 'hsl(43deg 96% 56%)',
+      frontBright: 'hsl(43deg 96% 75%)',
       frontLight: 'hsl(43deg 96% 70%)',
       frontDark: 'hsl(43deg 96% 40%)',
       edgeLight: 'hsl(43deg 96% 40%)',
       edgeDark: 'hsl(43deg 96% 20%)',
       glow: 'hsl(43deg 96% 50%)',
-      iconColor: 'hsl(43deg 96% 25%)'
+      glowBright: 'hsl(43deg 96% 60%)',
+      iconColor: 'hsl(43deg 96% 25%)',
+      iconBright: 'hsl(43deg 96% 15%)'
     },
     cyan: {
       front: 'hsl(170deg 100% 50%)',
+      frontBright: 'hsl(170deg 100% 70%)',
       frontLight: 'hsl(170deg 100% 80%)',
       frontDark: 'hsl(170deg 100% 30%)',
       edgeLight: 'hsl(170deg 100% 32%)',
       edgeDark: 'hsl(170deg 100% 16%)',
       glow: 'hsl(170deg 100% 40%)',
-      iconColor: 'hsl(170deg 100% 30%)'
+      glowBright: 'hsl(170deg 100% 55%)',
+      iconColor: 'hsl(170deg 100% 30%)',
+      iconBright: 'hsl(170deg 100% 20%)'
     },
     lime: {
       front: 'hsl(84deg 81% 44%)',
+      frontBright: 'hsl(84deg 81% 60%)',
       frontLight: 'hsl(84deg 81% 65%)',
       frontDark: 'hsl(84deg 81% 30%)',
       edgeLight: 'hsl(84deg 81% 32%)',
       edgeDark: 'hsl(84deg 81% 16%)',
       glow: 'hsl(84deg 81% 40%)',
-      iconColor: 'hsl(84deg 81% 25%)'
+      glowBright: 'hsl(84deg 81% 55%)',
+      iconColor: 'hsl(84deg 81% 25%)',
+      iconBright: 'hsl(84deg 81% 15%)'
     },
     purple: {
       front: 'hsl(270deg 91% 65%)',
+      frontBright: 'hsl(270deg 91% 80%)',
       frontLight: 'hsl(270deg 91% 80%)',
       frontDark: 'hsl(270deg 91% 45%)',
       edgeLight: 'hsl(270deg 91% 45%)',
       edgeDark: 'hsl(270deg 91% 25%)',
       glow: 'hsl(270deg 91% 55%)',
-      iconColor: 'hsl(270deg 91% 35%)'
+      glowBright: 'hsl(270deg 91% 70%)',
+      iconColor: 'hsl(270deg 91% 35%)',
+      iconBright: 'hsl(270deg 91% 25%)'
     }
   };
 
@@ -85,12 +96,8 @@ export default function PushButtonRadio({
 
   const handleChange = (value: string) => {
     if (value !== selectedValue) {
-      setAnimatingValue(value);
       setSelectedValue(value);
       onChange?.(value);
-
-      // Clear animation after it completes
-      setTimeout(() => setAnimatingValue(null), 500);
     }
   };
 
@@ -98,10 +105,9 @@ export default function PushButtonRadio({
     <div className={`flex relative gap-1 ${className}`}>
       {options.map((option) => {
         const isSelected = selectedValue === option.value;
-        const isAnimating = animatingValue === option.value;
 
         return (
-          <div key={option.value} className="relative">
+          <div key={option.value} className="relative group/btn">
             <input
               type="radio"
               id={`${groupId}-${option.value}`}
@@ -109,35 +115,26 @@ export default function PushButtonRadio({
               value={option.value}
               checked={isSelected}
               onChange={() => handleChange(option.value)}
-              className="absolute opacity-0 cursor-pointer h-0 w-0"
+              className="absolute opacity-0 cursor-pointer h-0 w-0 peer"
             />
             <label
               htmlFor={`${groupId}-${option.value}`}
-              className="relative block border-none bg-transparent p-0 cursor-pointer select-none transition-opacity duration-250"
+              className="push-button-label relative block border-none bg-transparent p-0 cursor-pointer select-none transition-all duration-200"
               style={{
                 width: sizes.button,
                 height: sizes.button,
                 borderRadius: sizes.button / 2,
                 opacity: isSelected ? 1 : 0.4,
+                ['--glow-color' as string]: config.glow,
+                ['--glow-bright' as string]: config.glowBright,
+                ['--front-color' as string]: config.front,
+                ['--front-bright' as string]: config.frontBright,
                 boxShadow: `0px 0px 40px -5px ${config.glow}`
               }}
             >
-              {/* Pop animation element */}
-              <span
-                className={`absolute left-1/2 top-0 -z-10 ${isAnimating ? 'push-button-pop-animate' : 'opacity-30'}`}
-                style={{
-                  width: sizes.iconSize,
-                  height: sizes.iconSize,
-                  transform: 'translate(-50%, 0)',
-                  color: config.front
-                }}
-              >
-                {option.icon}
-              </span>
-
               {/* Shadow layer */}
               <span
-                className="absolute top-0 left-0 w-full h-full transition-transform duration-600"
+                className="push-button-shadow absolute top-0 left-0 w-full h-full transition-transform duration-200"
                 style={{
                   borderRadius: sizes.radius,
                   background: 'hsla(0, 0%, 0%, 0.25)',
@@ -157,7 +154,7 @@ export default function PushButtonRadio({
 
               {/* Front layer */}
               <span
-                className="flex items-center justify-center relative w-full h-full transition-transform duration-600 hover:!-translate-y-1.5 active:!-translate-y-0.5"
+                className="push-button-front flex items-center justify-center relative w-full h-full transition-all duration-200"
                 style={{
                   borderRadius: sizes.radius,
                   background: config.front,
@@ -166,7 +163,14 @@ export default function PushButtonRadio({
                   transitionTimingFunction: 'cubic-bezier(0.3, 0.7, 0.4, 1)'
                 }}
               >
-                <span style={{ color: config.iconColor, width: sizes.iconSize, height: sizes.iconSize }}>
+                <span
+                  className="push-button-icon transition-colors duration-100"
+                  style={{
+                    color: config.iconColor,
+                    width: sizes.iconSize,
+                    height: sizes.iconSize
+                  }}
+                >
                   {option.icon}
                 </span>
               </span>
@@ -174,7 +178,6 @@ export default function PushButtonRadio({
           </div>
         );
       })}
-
     </div>
   );
 }
