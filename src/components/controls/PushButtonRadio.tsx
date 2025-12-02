@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useId } from 'react';
+import React, { useState, useId, useCallback } from 'react';
 
 interface PushButtonRadioOption {
   value: string;
@@ -13,6 +13,7 @@ interface PushButtonRadioProps {
   onChange?: (value: string) => void;
   color?: 'gold' | 'cyan' | 'lime' | 'purple';
   size?: 'sm' | 'md' | 'lg';
+  flashDuration?: number;
   className?: string;
 }
 
@@ -21,7 +22,7 @@ interface PushButtonRadioProps {
  *
  * Original: Teal 3D push buttons with pop animation
  * Transformed: Gold/cyan/lime/purple variants matching Mek Tycoon industrial design
- * Features: 3D push effect, flash glow on click, hover lift, glow shadow
+ * Features: 3D push effect, flash glow on click with minimum duration, hover lift, glow shadow
  */
 export default function PushButtonRadio({
   options,
@@ -29,10 +30,12 @@ export default function PushButtonRadio({
   onChange,
   color = 'cyan',
   size = 'md',
+  flashDuration = 250,
   className = ''
 }: PushButtonRadioProps) {
   const groupId = useId();
   const [selectedValue, setSelectedValue] = useState(defaultValue || options[0]?.value);
+  const [flashingValue, setFlashingValue] = useState<string | null>(null);
 
   const colorConfig = {
     gold: {
@@ -94,17 +97,27 @@ export default function PushButtonRadio({
   const config = colorConfig[color];
   const sizes = sizeConfig[size];
 
-  const handleChange = (value: string) => {
+  const handleClick = useCallback((value: string) => {
+    // Trigger flash effect
+    setFlashingValue(value);
+
+    // Update selection
     if (value !== selectedValue) {
       setSelectedValue(value);
       onChange?.(value);
     }
-  };
+
+    // Clear flash after minimum duration
+    setTimeout(() => {
+      setFlashingValue(null);
+    }, flashDuration);
+  }, [selectedValue, onChange, flashDuration]);
 
   return (
     <div className={`flex relative gap-1 ${className}`}>
       {options.map((option) => {
         const isSelected = selectedValue === option.value;
+        const isFlashing = flashingValue === option.value;
 
         return (
           <div key={option.value} className="relative group/btn">
@@ -114,12 +127,13 @@ export default function PushButtonRadio({
               name={groupId}
               value={option.value}
               checked={isSelected}
-              onChange={() => handleChange(option.value)}
+              onChange={() => {}}
               className="absolute opacity-0 cursor-pointer h-0 w-0 peer"
             />
             <label
               htmlFor={`${groupId}-${option.value}`}
-              className="push-button-label relative block border-none bg-transparent p-0 cursor-pointer select-none transition-all duration-200"
+              onClick={() => handleClick(option.value)}
+              className={`push-button-label relative block border-none bg-transparent p-0 cursor-pointer select-none transition-all duration-150 ${isFlashing ? 'push-button-flashing' : ''}`}
               style={{
                 width: sizes.button,
                 height: sizes.button,
@@ -129,16 +143,18 @@ export default function PushButtonRadio({
                 ['--glow-bright' as string]: config.glowBright,
                 ['--front-color' as string]: config.front,
                 ['--front-bright' as string]: config.frontBright,
-                boxShadow: `0px 0px 40px -5px ${config.glow}`
+                boxShadow: isFlashing
+                  ? `0px 0px 60px 5px ${config.glowBright}`
+                  : `0px 0px 40px -5px ${config.glow}`
               }}
             >
               {/* Shadow layer */}
               <span
-                className="push-button-shadow absolute top-0 left-0 w-full h-full transition-transform duration-200"
+                className="push-button-shadow absolute top-0 left-0 w-full h-full transition-transform duration-150"
                 style={{
                   borderRadius: sizes.radius,
                   background: 'hsla(0, 0%, 0%, 0.25)',
-                  transform: 'translateY(2px)',
+                  transform: isFlashing ? 'translateY(1px)' : 'translateY(2px)',
                   transitionTimingFunction: 'cubic-bezier(0.3, 0.7, 0.4, 1)'
                 }}
               />
@@ -154,21 +170,25 @@ export default function PushButtonRadio({
 
               {/* Front layer */}
               <span
-                className="push-button-front flex items-center justify-center relative w-full h-full transition-all duration-200"
+                className="push-button-front flex items-center justify-center relative w-full h-full transition-all duration-150"
                 style={{
                   borderRadius: sizes.radius,
-                  background: config.front,
-                  transform: 'translateY(-4px)',
-                  boxShadow: `inset 4px 4px 8px ${config.frontDark}, inset -4px -4px 8px ${config.frontLight}`,
+                  background: isFlashing ? config.frontBright : config.front,
+                  transform: isFlashing ? 'translateY(-2px)' : 'translateY(-4px)',
+                  boxShadow: isFlashing
+                    ? `inset 2px 2px 4px rgba(255, 255, 255, 0.5), inset -2px -2px 4px rgba(0, 0, 0, 0.15), 0 0 25px ${config.glowBright}`
+                    : `inset 4px 4px 8px ${config.frontDark}, inset -4px -4px 8px ${config.frontLight}`,
+                  filter: isFlashing ? 'brightness(1.25)' : 'brightness(1)',
                   transitionTimingFunction: 'cubic-bezier(0.3, 0.7, 0.4, 1)'
                 }}
               >
                 <span
-                  className="push-button-icon transition-colors duration-100"
+                  className="push-button-icon transition-all duration-150"
                   style={{
-                    color: config.iconColor,
+                    color: isFlashing ? config.iconBright : config.iconColor,
                     width: sizes.iconSize,
-                    height: sizes.iconSize
+                    height: sizes.iconSize,
+                    filter: isFlashing ? 'brightness(0.85)' : 'brightness(1)'
                   }}
                 >
                   {option.icon}

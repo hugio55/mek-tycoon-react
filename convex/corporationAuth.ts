@@ -6,6 +6,7 @@ import { mutation, query } from "./_generated/server";
 // =============================================================================
 // Corporations are identified SOLELY by stake address.
 // Payment addresses are NOT stored - NMKR handles them at transaction time.
+// Note: Using 'any' type for query callbacks to avoid TypeScript deep instantiation issues
 // =============================================================================
 
 /**
@@ -27,7 +28,7 @@ export const connectCorporation = mutation({
     // Find existing corporation by stake address
     const existingCorp = await ctx.db
       .query("corporations")
-      .withIndex("by_stake_address", (q) => q.eq("stakeAddress", args.stakeAddress))
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
       .first();
 
     if (existingCorp) {
@@ -125,7 +126,7 @@ export const disconnectCorporation = mutation({
   handler: async (ctx, args) => {
     const corporation = await ctx.db
       .query("corporations")
-      .withIndex("by_stake_address", (q) => q.eq("stakeAddress", args.stakeAddress))
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
       .first();
 
     if (corporation) {
@@ -147,7 +148,7 @@ export const getCorporationByStake = query({
   handler: async (ctx, args) => {
     const corporation = await ctx.db
       .query("corporations")
-      .withIndex("by_stake_address", (q) => q.eq("stakeAddress", args.stakeAddress))
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
       .first();
 
     if (!corporation) {
@@ -178,7 +179,7 @@ export const getCorporationIdByStake = query({
   handler: async (ctx, args) => {
     const corporation = await ctx.db
       .query("corporations")
-      .withIndex("by_stake_address", (q) => q.eq("stakeAddress", args.stakeAddress))
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
       .first();
 
     return corporation ? corporation._id : null;
@@ -193,7 +194,7 @@ export const corporationExists = query({
   handler: async (ctx, args) => {
     const corporation = await ctx.db
       .query("corporations")
-      .withIndex("by_stake_address", (q) => q.eq("stakeAddress", args.stakeAddress))
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
       .first();
 
     return corporation !== null;
@@ -217,7 +218,7 @@ export const updateCorporationName = mutation({
 
     const corporation = await ctx.db
       .query("corporations")
-      .withIndex("by_stake_address", (q) => q.eq("stakeAddress", args.stakeAddress))
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
       .first();
 
     if (!corporation) {
@@ -228,7 +229,7 @@ export const updateCorporationName = mutation({
     const nameLower = args.corporationName.toLowerCase();
     const existingName = await ctx.db
       .query("corporations")
-      .withIndex("by_corporation_name_lower", (q) => q.eq("corporationNameLower", nameLower))
+      .withIndex("by_corporation_name_lower", (q: any) => q.eq("corporationNameLower", nameLower))
       .first();
 
     if (existingName && existingName._id !== corporation._id) {
@@ -256,11 +257,11 @@ export const getOnlineCorporations = query({
 
     const onlineCorporations = await ctx.db
       .query("corporations")
-      .filter((q) => q.eq(q.field("isOnline"), true))
+      .filter((q: any) => q.eq(q.field("isOnline"), true))
       .order("desc")
       .take(limit);
 
-    return onlineCorporations.map((corp) => ({
+    return onlineCorporations.map((corp: any) => ({
       _id: corp._id,
       stakeAddress: corp.stakeAddress.slice(0, 12) + "..." + corp.stakeAddress.slice(-6),
       corporationName: corp.corporationName,
@@ -293,7 +294,7 @@ export const getCorporationLeaderboard = query({
       .take(limit);
 
     // Sort by requested field
-    corporations = corporations.sort((a, b) => {
+    corporations = corporations.sort((a: any, b: any) => {
       switch (sortBy) {
         case "gold":
           return (b.gold || 0) - (a.gold || 0);
@@ -308,7 +309,7 @@ export const getCorporationLeaderboard = query({
       }
     });
 
-    return corporations.map((corp, index) => ({
+    return corporations.map((corp: any, index: number) => ({
       rank: index + 1,
       _id: corp._id,
       stakeAddress: corp.stakeAddress.slice(0, 12) + "..." + corp.stakeAddress.slice(-6),
