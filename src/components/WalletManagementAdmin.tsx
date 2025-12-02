@@ -1204,6 +1204,22 @@ Check console for full timeline.
           {walletsLoaded && wallets && wallets.length > 0 && (
             <button
               onClick={() => {
+                // Helper function to safely format date
+                const formatDate = (timestamp: number | undefined): string => {
+                  if (!timestamp || typeof timestamp !== 'number') return 'N/A';
+                  try {
+                    const date = new Date(timestamp);
+                    if (isNaN(date.getTime())) return 'N/A';
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    return `${months[date.getMonth()]} ${date.getDate()} ${date.getFullYear()}`;
+                  } catch {
+                    return 'N/A';
+                  }
+                };
+
+                // Debug: log first wallet's createdAt
+                console.log('[CSV Export] Sample createdAt values:', wallets.slice(0, 3).map((w: any) => ({ company: w.companyName, createdAt: w.createdAt, formatted: formatDate(w.createdAt) })));
+
                 // Generate CSV content
                 const headers = ['Company Name', 'Stake Address', 'Meks', 'Cumulative Gold', 'Gold Per Hour', 'Gold Spent', 'First Connected'];
                 const rows = wallets.map((w: any) => [
@@ -1213,7 +1229,7 @@ Check console for full timeline.
                   (w.totalCumulativeGold || 0).toFixed(2),
                   (w.totalGoldPerHour || 0).toFixed(2),
                   (w.totalGoldSpentOnUpgrades || 0).toFixed(2),
-                  w.createdAt ? `${new Date(w.createdAt).getMonth() + 1}/${new Date(w.createdAt).getDate()}/${new Date(w.createdAt).getFullYear()}` : 'N/A'
+                  formatDate(w.createdAt)
                 ]);
 
                 const csvContent = [

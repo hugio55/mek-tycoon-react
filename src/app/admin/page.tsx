@@ -43,6 +43,7 @@ import GradientBlurButton from '@/components/loaders/GradientBlurButton';
 import SpinningGradientCard from '@/components/loaders/SpinningGradientCard';
 import RotaryDial from '@/components/loaders/RotaryDial';
 import GlowRadioStack from '@/components/loaders/GlowRadioStack';
+import MekCarousel3D from '@/components/loaders/MekCarousel3D';
 import ProModeToggle from '@/components/controls/ProModeToggle';
 import PowerSwitch from '@/components/controls/PowerSwitch';
 import PowerSwitchToggle from '@/components/controls/PowerSwitchToggle';
@@ -4511,6 +4512,75 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, Silver variants</div>
                       <div><span className="text-zinc-500">Sizes:</span> sm, md, lg</div>
                       <div><span className="text-zinc-500">Features:</span> Positional glow indicator (above/at/below selection), scale animation on click, vertical/horizontal orientation, labeled options</div>
+                    </div>
+                  </div>
+
+                  {/* Mek Carousel 3D - Full Width */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4 col-span-full">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Mek Carousel 3D
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Display
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex flex-row items-start justify-around gap-12 min-h-[400px]">
+                      {/* Gold - Normal Speed */}
+                      <div className="flex flex-col items-center gap-2">
+                        <MekCarousel3D
+                          color="gold"
+                          size="sm"
+                          speed="normal"
+                        />
+                        <span className="text-xs text-yellow-400 uppercase tracking-wider">Gold</span>
+                      </div>
+
+                      {/* Cyan - Fast */}
+                      <div className="flex flex-col items-center gap-2">
+                        <MekCarousel3D
+                          color="cyan"
+                          size="sm"
+                          speed="fast"
+                          images={[
+                            '/mek-images/500px/hb1-gn1-hn1.webp',
+                            '/mek-images/500px/hb1-gn2-ji1.webp',
+                            '/mek-images/500px/hb1-hp1-aj1.webp',
+                            '/mek-images/500px/hb1-io1-ap1.webp',
+                            '/mek-images/500px/hb1-jg1-il2.webp',
+                            '/mek-images/500px/hb2-ak1-cd1.webp',
+                          ]}
+                        />
+                        <span className="text-xs text-cyan-400 uppercase tracking-wider">Cyan Fast</span>
+                      </div>
+
+                      {/* Silver - Slow */}
+                      <div className="flex flex-col items-center gap-2">
+                        <MekCarousel3D
+                          color="silver"
+                          size="sm"
+                          speed="slow"
+                          tilt={-20}
+                          images={[
+                            '/mek-images/500px/dp2-bf4-il2.webp',
+                            '/mek-images/500px/dp2-bi2-fb2.webp',
+                            '/mek-images/500px/dp2-bj1-hn1.webp',
+                            '/mek-images/500px/dp2-bl1-bc1.webp',
+                          ]}
+                        />
+                        <span className="text-xs text-zinc-400 uppercase tracking-wider">Silver Slow</span>
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by ilkhoeri</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind + Next.js Image</div>
+                      <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, Silver variants</div>
+                      <div><span className="text-zinc-500">Sizes:</span> sm, md, lg</div>
+                      <div><span className="text-zinc-500">Features:</span> 3D perspective rotation, configurable speed (slow/normal/fast), adjustable tilt angle, Mek NFT images, glow reflection effect</div>
                     </div>
                   </div>
 
