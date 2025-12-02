@@ -29,7 +29,7 @@ const StarField = () => {
     };
     setCanvasSize();
 
-    const STAR_COUNT_LAYER1 = 500;
+    const STAR_COUNT_LAYER1 = 300;
     const STAR_COUNT_LAYER2 = 80;
     const SPEED_LAYER1 = 3;
     const SPEED_LAYER2 = 20;

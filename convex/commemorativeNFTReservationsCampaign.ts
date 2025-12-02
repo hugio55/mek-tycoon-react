@@ -2,6 +2,12 @@ import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
+// TESTING WHITELIST: These stake addresses can mint multiple times for testing
+// REMOVE THIS AFTER TESTING IS COMPLETE
+const TESTING_MULTI_MINT_WHITELIST = [
+  "stake1u8zevs34vf4wrsz6xs64zuztdk4agzvpg6c8zv4plesp9ughgq076", // Corporation testing account
+];
+
 /**
  * Campaign-Aware Commemorative NFT Reservation System
  *

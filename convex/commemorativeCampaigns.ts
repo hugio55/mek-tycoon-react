@@ -527,6 +527,9 @@ export const getCampaignInventory = query({
       name: nft.name,
       nftUid: nft.nftUid,
       status: nft.status,
+      soldTo: nft.soldTo,
+      companyNameAtSale: nft.companyNameAtSale,
+      reservedBy: nft.reservedBy,
     })));
 
     // Sort by nftNumber to ensure correct ordering
