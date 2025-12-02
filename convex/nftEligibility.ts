@@ -1,6 +1,12 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
+// TESTING WHITELIST: These stake addresses can mint multiple times for testing
+// REMOVE THIS AFTER TESTING IS COMPLETE
+const TESTING_MULTI_MINT_WHITELIST = [
+  "stake1u8zevs34vf4wrsz6xs64zuztdk4agzvpg6c8zv4plesp9ughgq076", // Corporation testing account
+];
+
 /**
  * SIMPLE NFT ELIGIBILITY SYSTEM FOR NMKR
  *
@@ -102,6 +108,39 @@ export const checkClaimEligibility = query({
       return {
         eligible: false,
         reason: "Active snapshot not found",
+      };
+    }
+
+    // TESTING BYPASS: Allow whitelisted addresses to mint multiple times
+    // This skips the "already claimed" checks but still requires being in snapshot
+    const isTestingWhitelisted = TESTING_MULTI_MINT_WHITELIST.includes(args.walletAddress);
+    if (isTestingWhitelisted) {
+      console.log('[🧪TEST] Whitelisted address detected, skipping claim checks:', args.walletAddress);
+
+      // Still check if in snapshot
+      const isInSnapshot = snapshot.eligibleUsers?.some((user: any) => {
+        return user.stakeAddress === args.walletAddress || user.walletAddress === args.walletAddress;
+      });
+
+      if (!isInSnapshot) {
+        return {
+          eligible: false,
+          reason: "Stake address not in active snapshot (testing whitelist still requires snapshot membership)",
+        };
+      }
+
+      // Get corporation name
+      const goldMiningRecord = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+        .first();
+
+      return {
+        eligible: true,
+        reason: "Testing whitelist - multiple mints allowed",
+        snapshotName: snapshot.snapshotName,
+        corporationName: goldMiningRecord?.companyName || null,
+        testingMode: true,
       };
     }
 

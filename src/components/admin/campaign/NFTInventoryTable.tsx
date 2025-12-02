@@ -114,8 +114,23 @@ export default function NFTInventoryTable({ campaignId, campaignName, client }: 
         sample: inventory.slice(0, 3).map(n => ({
           name: n.name,
           status: n.status,
+          soldTo: n.soldTo,
+          companyNameAtSale: n.companyNameAtSale,
+          reservedBy: n.reservedBy,
         }))
       });
+
+      // DEBUG: Log all sold/reserved NFTs with their soldTo/corporation data
+      const soldOrReserved = inventory.filter(n => n.status === 'sold' || n.status === 'reserved');
+      if (soldOrReserved.length > 0) {
+        console.log(`[🔄INVENTORY-UI ${timestamp}] Sold/Reserved NFTs data:`, soldOrReserved.map(n => ({
+          name: n.name,
+          status: n.status,
+          soldTo: n.soldTo,
+          reservedBy: n.reservedBy,
+          companyNameAtSale: n.companyNameAtSale,
+        })));
+      }
     }
   }, [inventory]);
 
