@@ -153,6 +153,7 @@ export default function GlobalBackground() {
             animationTimingFunction: 'ease-in-out',
             animationIterationCount: 'infinite',
             animationDelay: `${star.delay}s`,
+            willChange: star.twinkle ? 'opacity, transform' : 'auto',
           }}
         />
         );
@@ -185,6 +186,7 @@ export default function GlobalBackground() {
             boxShadow: '0 0 6px rgba(250, 182, 23, 0.6)',
             '--drift-x': `${Math.cos(particle.driftAngle * Math.PI / 180) * 150}vw`,
             '--drift-y': `${Math.sin(particle.driftAngle * Math.PI / 180) * 150}vh`,
+            willChange: 'transform',
           } as React.CSSProperties}
         />
       ))}
@@ -224,6 +226,7 @@ export default function GlobalBackground() {
               animationIterationCount: 'infinite',
               animationDelay: satellite.delay,
               boxShadow: '0 0 3px rgba(255, 255, 255, 0.8)',
+              willChange: 'transform',
             } as React.CSSProperties}
           />
         );

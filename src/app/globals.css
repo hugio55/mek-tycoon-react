@@ -1534,8 +1534,6 @@ body {
   50% {
     opacity: 1;
     transform: scale(1.2);
-    filter: blur(0.3px);
-    box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
   }
 }
 
@@ -1751,8 +1749,6 @@ body {
   50% {
     opacity: 1;
     transform: scale(1.2);
-    filter: blur(0.3px);
-    box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
   }
 }
 

@@ -62,6 +62,18 @@ const StarField = () => {
       });
     }
 
+    // Pre-allocate RGBA strings to avoid garbage collection during animation
+    const opacityCache = new Map<number, string>();
+    const getRGBA = (opacity: number): string => {
+      const key = Math.round(opacity * 100);
+      let cached = opacityCache.get(key);
+      if (!cached) {
+        cached = `rgba(255, 255, 255, ${(key / 100).toFixed(2)})`;
+        opacityCache.set(key, cached);
+      }
+      return cached;
+    };
+
     let lastFrameTime = 0;
     let accumulator = 0;
     const FIXED_TIMESTEP = 16.67; // Fixed 60fps timestep for consistent physics
@@ -141,7 +153,7 @@ const StarField = () => {
         const fadeInProgress = Math.min(star.age / fadeInDuration, 1);
         const opacity = fadeInProgress * 0.8;
 
-        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+        ctx.fillStyle = getRGBA(opacity);
         ctx.beginPath();
         ctx.arc(screenX, screenY, star.size, 0, PI2);
         ctx.fill();
@@ -171,7 +183,7 @@ const StarField = () => {
         const fadeInProgress = Math.min(star.age / fadeInDuration, 1);
         const opacity = fadeInProgress * 0.6;
 
-        ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+        ctx.strokeStyle = getRGBA(opacity);
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(oldScreenX, oldScreenY);
@@ -199,7 +211,11 @@ const StarField = () => {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none"
-      style={{ zIndex: 1 }}
+      style={{
+        zIndex: 1,
+        willChange: 'transform',
+        transform: 'translateZ(0)'  // Force GPU compositor layer
+      }}
     />
   );
 };
