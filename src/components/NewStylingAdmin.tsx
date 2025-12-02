@@ -417,6 +417,7 @@ function ColorStyles() {
                 style={{ background: c.color }}
               />
               <p className="text-sm font-medium text-white">{c.name}</p>
+              <p className="text-xs font-mono text-yellow-400/80 mb-1">{c.color}</p>
               <p className="text-xs text-gray-500">{c.usage}</p>
             </div>
           ))}

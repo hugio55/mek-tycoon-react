@@ -4431,10 +4431,10 @@ export default function AdminMasterDataPage() {
                     </div>
 
                     {/* Component Preview */}
-                    <div className="bg-zinc-900 rounded-lg p-8 flex items-center justify-center gap-8 min-h-[300px]">
+                    <div className="bg-zinc-900 rounded-lg p-8 flex items-center justify-center gap-6 flex-wrap min-h-[300px]">
                       <div className="flex flex-col items-center gap-2">
-                        <GlowingPowerSwitch />
-                        <span className="text-xs text-zinc-500">Default (cyan)</span>
+                        <GlowingPowerSwitch glowColor="rgb(0, 212, 255)" />
+                        <span className="text-xs text-zinc-500">Complete Blue</span>
                       </div>
                       <div className="flex flex-col items-center gap-2">
                         <GlowingPowerSwitch glowColor="rgb(250, 182, 23)" />
@@ -4443,6 +4443,10 @@ export default function AdminMasterDataPage() {
                       <div className="flex flex-col items-center gap-2">
                         <GlowingPowerSwitch glowColor="rgb(74, 222, 128)" />
                         <span className="text-xs text-zinc-500">Green glow</span>
+                      </div>
+                      <div className="flex flex-col items-center gap-2">
+                        <GlowingPowerSwitch />
+                        <span className="text-xs text-zinc-500">Default (white)</span>
                       </div>
                     </div>
 
