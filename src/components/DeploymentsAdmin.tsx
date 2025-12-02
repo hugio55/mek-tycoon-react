@@ -22,6 +22,22 @@ interface ActionLog {
   timestamp: Date;
 }
 
+// Format date to 12-hour time
+function formatCommitDate(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  } catch {
+    return dateString;
+  }
+}
+
 export default function DeploymentsAdmin() {
   const [gitStatus, setGitStatus] = useState<GitStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -392,7 +408,10 @@ export default function DeploymentsAdmin() {
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
           <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Last Commit</div>
           <div className="text-sm font-mono text-purple-400">{gitStatus?.lastCommit?.hash || '---'}</div>
-          <div className="text-xs text-gray-500 truncate">{gitStatus?.lastCommit?.message || '---'}</div>
+          <div className="text-xs text-gray-500 break-words">{gitStatus?.lastCommit?.message || '---'}</div>
+          {gitStatus?.lastCommit?.date && (
+            <div className="text-xs text-gray-600 mt-1">{formatCommitDate(gitStatus.lastCommit.date)}</div>
+          )}
         </div>
       </div>
 
@@ -439,8 +458,13 @@ export default function DeploymentsAdmin() {
         </button>
       </div>
 
-      <div className="text-center text-gray-500 text-sm">
-        Commits + Pushes to GitHub + Deploys Convex to Production
+      <div className="text-center text-gray-500 text-sm max-w-xl mx-auto">
+        <span className="text-gray-400">1.</span> Commits your changes →
+        <span className="text-gray-400">2.</span> Pushes to <span className="text-cyan-500">{gitStatus?.currentBranch || 'current branch'}</span> on GitHub (triggers Vercel preview) →
+        <span className="text-gray-400">3.</span> Deploys Convex to Sturgeon (production database)
+      </div>
+      <div className="text-center text-gray-600 text-xs mt-1">
+        No pull request created. Direct push to your branch.
       </div>
 
       {/* Individual Action Buttons */}
@@ -518,7 +542,7 @@ export default function DeploymentsAdmin() {
                     {log.message}
                   </span>
                   <span className="text-gray-600 text-xs">
-                    {log.timestamp.toLocaleTimeString()}
+                    {log.timestamp.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                   </span>
                 </div>
               ))}
@@ -550,13 +574,16 @@ export default function DeploymentsAdmin() {
       {/* Info Panel */}
       <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-4 text-sm text-gray-500">
         <div className="font-bold text-gray-400 mb-2">How This Works:</div>
-        <ul className="list-disc list-inside space-y-1">
-          <li><span className="text-gray-400">Commit</span> - Saves your code changes to git history</li>
-          <li><span className="text-gray-400">Push to GitHub</span> - Uploads commits (triggers Vercel preview auto-deploy)</li>
-          <li><span className="text-gray-400">Deploy Dev</span> - Updates Trout database (localhost testing)</li>
-          <li><span className="text-gray-400">Deploy Prod</span> - Updates Sturgeon database (live site: mek.overexposed.io)</li>
-          <li><span className="text-gray-400">Big Button</span> - Does all steps in sequence for full production deployment</li>
+        <ul className="list-disc list-inside space-y-2">
+          <li><span className="text-gray-400">Commit</span> - Saves your code changes to git history (local only)</li>
+          <li><span className="text-gray-400">Push to GitHub</span> - Uploads commits to your current branch. Vercel sees this and auto-creates a preview deployment. <span className="text-yellow-500/70">No pull request is created.</span></li>
+          <li><span className="text-gray-400">Deploy Dev (Trout)</span> - Updates Convex database functions for localhost testing</li>
+          <li><span className="text-gray-400">Deploy Prod (Sturgeon)</span> - Updates Convex database functions for the live site (mek.overexposed.io)</li>
         </ul>
+        <div className="mt-3 pt-3 border-t border-gray-700">
+          <div className="font-bold text-gray-400 mb-1">About Vercel Production:</div>
+          <p className="text-gray-500">Pushing to GitHub creates a Vercel <span className="text-blue-400">preview</span>. To make it the live production site, you need to promote the preview in the Vercel dashboard, or merge your branch to main.</p>
+        </div>
       </div>
     </div>
   );
