@@ -51,7 +51,8 @@ export default function RotaryDial({
       lineBottom: '#b8860b',
       pointerColor: '#3d2e00',
       pointerGlow: '#fab617',
-      segmentColor: 'rgba(250, 182, 23, 0.35)'
+      segmentColor: 'rgba(250, 182, 23, 0.35)',
+      segmentHoverColor: 'rgba(250, 182, 23, 0.15)'
     },
     cyan: {
       outerRing: 'radial-gradient(ellipse at center, #0077a3 0%, #002233 100%)',
@@ -68,7 +69,8 @@ export default function RotaryDial({
       lineBottom: '#00d4ff',
       pointerColor: '#002233',
       pointerGlow: '#00d4ff',
-      segmentColor: 'rgba(0, 212, 255, 0.35)'
+      segmentColor: 'rgba(0, 212, 255, 0.35)',
+      segmentHoverColor: 'rgba(0, 212, 255, 0.15)'
     },
     silver: {
       outerRing: 'radial-gradient(ellipse at center, #888888 0%, #333333 100%)',
@@ -85,7 +87,8 @@ export default function RotaryDial({
       lineBottom: '#666769',
       pointerColor: '#333',
       pointerGlow: '#fff',
-      segmentColor: 'rgba(255, 255, 255, 0.25)'
+      segmentColor: 'rgba(255, 255, 255, 0.25)',
+      segmentHoverColor: 'rgba(255, 255, 255, 0.1)'
     }
   };
 
@@ -164,25 +167,48 @@ export default function RotaryDial({
             boxShadow: 'inset 0 3px 10px rgba(0, 0, 0, 0.6), 0 2px 20px rgba(255, 255, 255, 1)'
           }}
         >
-          {/* Highlighted segment for selected option */}
+          {/* Clickable segments for each option + highlighted segment */}
           <svg
-            className="absolute z-[0]"
+            className="absolute z-[2]"
             style={{
               width: '220px',
               height: '220px',
               left: '0',
-              top: '0',
-              transform: `rotate(${labelAngle + 90 - angleStep / 2}deg)`,
-              transition: 'transform 0.5s ease'
+              top: '0'
             }}
             viewBox="0 0 220 220"
           >
-            <path
-              d={`M 110 110 L 110 0 A 110 110 0 ${angleStep > 180 ? 1 : 0} 1 ${
-                110 + 110 * Math.sin((angleStep * Math.PI) / 180)
-              } ${110 - 110 * Math.cos((angleStep * Math.PI) / 180)} Z`}
-              fill={config.segmentColor}
-            />
+            {/* Render clickable pie slices for each option */}
+            {options.map((_, index) => {
+              const segmentAngle = positions[index] + 90 - angleStep / 2;
+              const isSelected = index === selectedIndex;
+              return (
+                <path
+                  key={index}
+                  d={`M 110 110 L 110 0 A 110 110 0 ${angleStep > 180 ? 1 : 0} 1 ${
+                    110 + 110 * Math.sin((angleStep * Math.PI) / 180)
+                  } ${110 - 110 * Math.cos((angleStep * Math.PI) / 180)} Z`}
+                  fill={isSelected ? config.segmentColor : 'transparent'}
+                  style={{
+                    transform: `rotate(${segmentAngle}deg)`,
+                    transformOrigin: '110px 110px',
+                    cursor: 'pointer',
+                    transition: 'fill 0.3s ease'
+                  }}
+                  onClick={() => handleSelect(index)}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.fill = `${config.segmentColor.replace('0.35', '0.15').replace('0.25', '0.1')}`;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.fill = 'transparent';
+                    }
+                  }}
+                />
+              );
+            })}
           </svg>
 
           {/* Dynamic line dividers between options */}

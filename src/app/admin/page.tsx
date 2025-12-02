@@ -63,6 +63,7 @@ import FloatingLabelInput from '@/components/controls/FloatingLabelInput';
 import IndustrialFlipCard from '@/components/controls/IndustrialFlipCard';
 import StarBurstButton from '@/components/controls/StarBurstButton';
 import GlowingPowerSwitch from '@/components/controls/GlowingPowerSwitch';
+import KeycapRadioGroup from '@/components/controls/KeycapRadioGroup';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import PortMonitor from '@/components/PortMonitor';
 import DeploymentsAdmin from '@/components/DeploymentsAdmin';
@@ -4457,6 +4458,53 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
                       <div><span className="text-zinc-500">Colors:</span> Cyan glow (rgb(151, 243, 255)) default, configurable via glowColor prop</div>
                       <div><span className="text-zinc-500">Features:</span> Multi-layer box-shadow glow effect (inset + outer), power icon SVG with drop-shadow, smooth transitions, keyboard accessible, controlled/uncontrolled modes</div>
+                    </div>
+                  </div>
+
+                  {/* Keycap Radio Group */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Keycap Radio Group
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-zinc-900 rounded-lg p-8 flex flex-col items-center justify-center gap-6 min-h-[300px]">
+                      <div className="flex flex-col items-center gap-2">
+                        <KeycapRadioGroup
+                          options={[
+                            { value: 'low', label: 'LOW' },
+                            { value: 'mid', label: 'MID' },
+                            { value: 'high', label: 'HIGH' },
+                          ]}
+                          onChange={(val) => console.log('Selected:', val)}
+                        />
+                        <span className="text-xs text-zinc-500">Default (blue)</span>
+                      </div>
+                      <div className="flex flex-col items-center gap-2">
+                        <KeycapRadioGroup
+                          options={[
+                            { value: 'off', label: 'OFF' },
+                            { value: 'auto', label: 'AUTO' },
+                            { value: 'on', label: 'ON' },
+                          ]}
+                          accentColor="#fab617"
+                          onChange={(val) => console.log('Selected:', val)}
+                        />
+                        <span className="text-xs text-zinc-500">Gold accent</span>
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by m1her</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> Blue (#258ac3) default, configurable via accentColor prop</div>
+                      <div><span className="text-zinc-500">Features:</span> 3D mechanical keycap press effect (perspective rotateX), back-side reveal on press, glowing text shadow, bottom indicator line, controlled/uncontrolled modes</div>
                     </div>
                   </div>
 
