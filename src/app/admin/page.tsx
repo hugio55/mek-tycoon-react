@@ -3557,8 +3557,8 @@ export default function AdminMasterDataPage() {
                   Transformed UI components from external libraries (CodePen, shadcn, v0.dev) converted to Mek Tycoon's industrial design system using expert transformation documents.
                 </p>
 
-                {/* Component Grid - flex-wrap-reverse puts newest (last) items at top */}
-                <div className="flex flex-wrap gap-6" style={{ flexWrap: 'wrap-reverse', alignContent: 'flex-start' }}>
+                {/* Component Grid - reversed so newest components appear at top */}
+                <div className="mek-components-grid-reversed">
 
                   {/* Comet Loader */}
                   <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">

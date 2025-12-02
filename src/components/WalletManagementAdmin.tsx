@@ -1205,12 +1205,15 @@ Check console for full timeline.
             <button
               onClick={() => {
                 // Generate CSV content
-                const headers = ['Company Name', 'Stake Address', 'Cumulative Gold', 'Gold Per Hour'];
+                const headers = ['Company Name', 'Stake Address', 'Meks', 'Cumulative Gold', 'Gold Per Hour', 'Gold Spent', 'First Connected'];
                 const rows = wallets.map((w: any) => [
                   w.companyName || 'Unnamed',
                   w.walletAddress,
+                  String(w.mekCount || 0),
                   (w.totalCumulativeGold || 0).toFixed(2),
-                  (w.totalGoldPerHour || 0).toFixed(2)
+                  (w.totalGoldPerHour || 0).toFixed(2),
+                  (w.totalGoldSpentOnUpgrades || 0).toFixed(2),
+                  w.createdAt ? new Date(w.createdAt).toLocaleDateString() : 'Unknown'
                 ]);
 
                 const csvContent = [
