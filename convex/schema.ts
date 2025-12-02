@@ -3785,6 +3785,14 @@ export default defineSchema({
     isDeleted: v.boolean(), // Whether message is deleted for everyone
     deletedForSender: v.optional(v.boolean()), // Hidden from sender only
     deletedForRecipient: v.optional(v.boolean()), // Hidden from recipient only
+    // Attachments (images for trading)
+    attachments: v.optional(v.array(v.object({
+      storageId: v.id("_storage"), // Convex storage ID
+      filename: v.string(), // Original filename
+      mimeType: v.string(), // e.g., "image/jpeg"
+      size: v.number(), // File size in bytes
+      url: v.optional(v.string()), // Generated URL (populated at query time)
+    }))),
   })
     .index("by_conversation", ["conversationId", "createdAt"])
     .index("by_sender", ["senderId", "createdAt"])
@@ -3819,4 +3827,14 @@ export default defineSchema({
     .index("by_blocker", ["blockerWallet"])
     .index("by_blocked", ["blockedWallet"])
     .index("by_blocker_blocked", ["blockerWallet", "blockedWallet"]),
+
+  // Upload quota tracking for rate limiting file uploads
+  messageUploadQuotas: defineTable({
+    walletAddress: v.string(), // User's wallet
+    date: v.string(), // YYYY-MM-DD format for daily tracking
+    uploadCount: v.number(), // Number of files uploaded today
+    totalBytes: v.number(), // Total bytes uploaded today
+    lastUploadAt: v.number(), // Timestamp of last upload (for burst limiting)
+  })
+    .index("by_wallet_date", ["walletAddress", "date"]),
 });

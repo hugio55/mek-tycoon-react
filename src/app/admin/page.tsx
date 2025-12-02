@@ -73,6 +73,7 @@ import KeycapRadioGroup from '@/components/controls/KeycapRadioGroup';
 import ColorPalettePicker from '@/components/controls/ColorPalettePicker';
 import ColorPalettePickerSmooth from '@/components/controls/ColorPalettePickerSmooth';
 import GliderRadio from '@/components/controls/GliderRadio';
+import MekFlipCard from '@/components/controls/MekFlipCard';
 import FlipToggleSwitch from '@/components/controls/FlipToggleSwitch';
 import PressedButtonRadio from '@/components/controls/PressedButtonRadio';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
@@ -4990,6 +4991,60 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Source:</span> Uiverse.io by m1her</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
                       <div><span className="text-zinc-500">Features:</span> Pressed button effect with shadow removal on select, glow behind active item, size variants (sm/md/lg), custom glow color</div>
+                    </div>
+                  </div>
+
+                  {/* Mek Flip Card */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Mek Flip Card
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Card
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-zinc-900 rounded-lg p-8 flex flex-wrap items-center justify-center gap-8 min-h-[350px]">
+                      {/* Gold variant */}
+                      <MekFlipCard
+                        color="gold"
+                        imageSrc="/mek-images/500px/bc2-dm1-ap1.webp"
+                        badge="LEGENDARY"
+                        title="Bumblebee"
+                        subtitle="#0042"
+                        description="A rare gold-plated Mekanism with enhanced power core."
+                        footer="MEK TYCOON 2025"
+                      />
+                      {/* Cyan variant */}
+                      <MekFlipCard
+                        color="cyan"
+                        imageSrc="/mek-images/500px/dp2-bf4-il2.webp"
+                        badge="EPIC"
+                        title="Deep Sea"
+                        subtitle="#0108"
+                        description="Ocean-forged circuits with aquatic defense systems."
+                        footer="MEK TYCOON 2025"
+                      />
+                      {/* Purple variant */}
+                      <MekFlipCard
+                        color="purple"
+                        imageSrc="/mek-images/500px/hb1-gn1-hn1.webp"
+                        badge="RARE"
+                        title="Phantom"
+                        subtitle="#0256"
+                        description="Shadow-class unit with stealth capabilities."
+                        footer="MEK TYCOON 2025"
+                      />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by ElSombrero2</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, Lime, Purple variants</div>
+                      <div><span className="text-zinc-500">Features:</span> 3D flip on hover, rotating gradient border, floating orbs animation, mek image display, badge/title/description overlay</div>
                     </div>
                   </div>
 

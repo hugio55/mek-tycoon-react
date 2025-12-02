@@ -1,23 +1,24 @@
 import { v } from "convex/values";
-import { mutation, query, QueryCtx, MutationCtx } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 
 // Helper function to find user by any address type (payment or stake)
 // Reduces code duplication across queries and mutations
+// Using 'any' for ctx type to avoid TypeScript deep instantiation issues with Convex context types
 async function findUserByAddress(
-  ctx: QueryCtx | MutationCtx,
+  ctx: { db: any },
   address: string
 ) {
   // Try as payment address first
   let user = await ctx.db
     .query("users")
-    .withIndex("by_wallet", (q) => q.eq("walletAddress", address))
+    .withIndex("by_wallet", (q: any) => q.eq("walletAddress", address))
     .first();
 
   // Try as stake address if not found (supports both mainnet and testnet)
   if (!user && (address.startsWith("stake1") || address.startsWith("stake_test1"))) {
     user = await ctx.db
       .query("users")
-      .withIndex("by_stake_address", (q) => q.eq("walletStakeAddress", address))
+      .withIndex("by_stake_address", (q: any) => q.eq("walletStakeAddress", address))
       .first();
   }
 

@@ -187,19 +187,36 @@ export const getTypingIndicators = query({
 // ============================================================================
 
 // Send a new message
+// Maximum attachments per message
+const MAX_ATTACHMENTS_PER_MESSAGE = 3;
+
 export const sendMessage = mutation({
   args: {
     senderWallet: v.string(),
     recipientWallet: v.string(),
     content: v.string(),
+    attachments: v.optional(v.array(v.object({
+      storageId: v.id("_storage"),
+      filename: v.string(),
+      mimeType: v.string(),
+      size: v.number(),
+    }))),
   },
   handler: async (ctx, args) => {
-    // Validate content
-    if (!args.content || args.content.trim().length === 0) {
-      throw new Error("Message cannot be empty");
+    // Validate content - allow empty if there are attachments
+    const hasContent = args.content && args.content.trim().length > 0;
+    const hasAttachments = args.attachments && args.attachments.length > 0;
+
+    if (!hasContent && !hasAttachments) {
+      throw new Error("Message must have text or attachments");
     }
     if (args.content.length > MAX_MESSAGE_LENGTH) {
       throw new Error(`Message exceeds ${MAX_MESSAGE_LENGTH} character limit`);
+    }
+
+    // Validate attachment count
+    if (args.attachments && args.attachments.length > MAX_ATTACHMENTS_PER_MESSAGE) {
+      throw new Error(`Maximum ${MAX_ATTACHMENTS_PER_MESSAGE} attachments per message`);
     }
 
     // Check if either user has blocked the other
