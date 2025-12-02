@@ -125,12 +125,19 @@ export const createCampaignReservation = mutation({
       .filter((q) => q.eq(q.field("soldTo"), args.walletAddress))
       .first();
 
-    if (hasCompleted) {
+    // TESTING BYPASS: Allow whitelisted addresses to mint multiple times
+    const isTestingWhitelisted = TESTING_MULTI_MINT_WHITELIST.includes(args.walletAddress);
+
+    if (hasCompleted && !isTestingWhitelisted) {
       console.log('[CAMPAIGN RESERVATION] User already claimed NFT:', hasCompleted.nftNumber, hasCompleted.name);
       return {
         success: false,
         error: `You have already claimed an NFT from the "${campaign.name}" campaign`,
       };
+    }
+
+    if (hasCompleted && isTestingWhitelisted) {
+      console.log('[🧪TEST] Whitelisted address bypassing "already claimed" check:', args.walletAddress);
     }
 
     // Find the lowest available NFT in this campaign

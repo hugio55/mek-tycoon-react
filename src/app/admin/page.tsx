@@ -4381,9 +4381,11 @@ function CampaignManagerWithDatabase({
   onRunCleanup,
   onSyncCounters,
   onVerifyWithNMKR,
+  onBackfillSoldNFTData,
   cleaningCampaignId,
   syncingCampaignId,
   verifyingCampaignId,
+  backfillRunning,
   client
 }: {
   campaigns: any[];
@@ -4391,9 +4393,11 @@ function CampaignManagerWithDatabase({
   onRunCleanup: (campaignId: string) => Promise<void>;
   onSyncCounters: (campaignId: string) => Promise<void>;
   onVerifyWithNMKR: (campaignId: string, campaignName: string, nmkrProjectId?: string) => Promise<void>;
+  onBackfillSoldNFTData: () => Promise<void>;
   cleaningCampaignId: string | null;
   syncingCampaignId: string | null;
   verifyingCampaignId: string | null;
+  backfillRunning: boolean;
   client: any;
 }) {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>();
@@ -4557,6 +4561,7 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
   const [nmkrDiscrepancies, setNmkrDiscrepancies] = useState<any[]>([]);
   const [nmkrSyncing, setNmkrSyncing] = useState(false);
   const [nmkrVerifying, setNmkrVerifying] = useState<string | null>(null);
+  const [backfillRunning, setBackfillRunning] = useState(false);
 
   // Mutation confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -4808,6 +4813,30 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
       alert(`Error syncing all: ${error.message}`);
     } finally {
       setNmkrSyncing(false);
+    }
+  };
+
+  // Backfill sold NFT data handler - populates soldTo and companyNameAtSale from reservations
+  const handleBackfillSoldNFTData = async () => {
+    setBackfillRunning(true);
+    try {
+      const result = await client.mutation(api.commemorativeCampaigns.backfillSoldNFTData, {});
+      console.log('[🔧BACKFILL] Result:', result);
+
+      if (result.backfilled > 0) {
+        alert(`✅ Backfilled ${result.backfilled} NFTs with missing data.\n\n${result.notFound > 0 ? `⚠️ ${result.notFound} NFTs could not be matched to reservations.` : 'All sold NFTs now have owner data.'}`);
+      } else if (result.notFound > 0) {
+        alert(`⚠️ Found ${result.notFound} sold NFTs with missing data, but no matching reservations were found.\n\nYou may need to use "Manual Set" for these NFTs.`);
+      } else {
+        alert('✅ All sold NFTs already have owner data. No backfill needed.');
+      }
+
+      setCampaignUpdateTrigger(prev => prev + 1);
+    } catch (error: any) {
+      console.error('[🔧BACKFILL] Error:', error);
+      alert(`Error backfilling data: ${error.message}`);
+    } finally {
+      setBackfillRunning(false);
     }
   };
 
