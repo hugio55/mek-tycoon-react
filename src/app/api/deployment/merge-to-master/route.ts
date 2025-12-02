@@ -18,22 +18,8 @@ export async function POST() {
       });
     }
 
-    // First, push current branch to make sure it's up to date on remote
-    try {
-      await execAsync(`git push origin ${currentBranch}`);
-    } catch (e) {
-      // Ignore if nothing to push
-    }
-
     // Switch to master
     await execAsync('git checkout master');
-
-    // Pull latest master
-    try {
-      await execAsync('git pull origin master');
-    } catch (e) {
-      // Ignore if nothing to pull
-    }
 
     // Merge the feature branch into master
     const { stdout: mergeOutput, stderr: mergeStderr } = await execAsync(

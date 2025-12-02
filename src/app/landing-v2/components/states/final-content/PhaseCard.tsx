@@ -171,7 +171,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
         <div className="h-full flex items-center justify-center px-6 relative">
           <div className="flex items-center gap-2">
             {isPhaseOne && <Checkmark />}
-            {isPhaseTwo && !isPhaseOneExpanded && <LoadingSpinner />}
+            {isPhaseTwo && <LoadingSpinner />}
 
             <h3
               className="uppercase tracking-wider font-medium"

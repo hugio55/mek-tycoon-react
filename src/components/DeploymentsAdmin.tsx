@@ -196,7 +196,7 @@ export default function DeploymentsAdmin() {
         return;
       }
 
-      addLog('Full Deploy', 'pending', 'Step 1/5: Committing changes...');
+      addLog('Full Deploy', 'pending', 'Step 1/7: Committing changes...');
       try {
         const res = await fetch('/api/deployment/commit', {
           method: 'POST',
@@ -217,16 +217,40 @@ export default function DeploymentsAdmin() {
         return;
       }
     } else {
-      addLog('Full Deploy', 'success', 'Step 1/5: No changes to commit (skipped)');
+      addLog('Full Deploy', 'success', 'Step 1/7: No changes to commit (skipped)');
     }
 
-    // Step 2: Merge to master
-    addLog('Full Deploy', 'pending', `Step 2/5: Merging ${originalBranch} into master...`);
+    // Step 2: Push current branch to GitHub (backup)
+    addLog('Full Deploy', 'pending', `Step 2/7: Pushing ${originalBranch} to GitHub (backup)...`);
+    try {
+      const res = await fetch('/api/deployment/push', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        addLog('Full Deploy', 'success', `${originalBranch} backed up to GitHub`);
+      } else {
+        addLog('Full Deploy', 'error', `Push warning: ${data.error} - continuing...`);
+        // Continue anyway - backup is nice to have but not critical
+      }
+    } catch (error) {
+      addLog('Full Deploy', 'error', 'Push warning - continuing...');
+    }
+
+    // Step 3: Switch to master
+    // Step 4: Merge current branch into master
+    addLog('Full Deploy', 'pending', `Step 3-4/7: Switching to master and merging ${originalBranch}...`);
     try {
       const res = await fetch('/api/deployment/merge-to-master', { method: 'POST' });
       const data = await res.json();
       if (!data.success) {
         addLog('Full Deploy', 'error', `Merge failed: ${data.error}`);
+        // Try to switch back
+        try {
+          await fetch('/api/deployment/switch-branch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ branch: originalBranch })
+          });
+        } catch (e) { /* ignore */ }
         setIsFullDeploy(false);
         return;
       }
@@ -237,13 +261,21 @@ export default function DeploymentsAdmin() {
       return;
     }
 
-    // Step 3: Push master to GitHub (triggers Vercel production)
-    addLog('Full Deploy', 'pending', 'Step 3/5: Pushing master to GitHub (Vercel production)...');
+    // Step 5: Push master to GitHub (triggers Vercel production)
+    addLog('Full Deploy', 'pending', 'Step 5/7: Pushing master to GitHub (Vercel production)...');
     try {
       const res = await fetch('/api/deployment/push-master', { method: 'POST' });
       const data = await res.json();
       if (!data.success) {
         addLog('Full Deploy', 'error', `Push master failed: ${data.error}`);
+        // Try to switch back to original branch
+        try {
+          await fetch('/api/deployment/switch-branch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ branch: originalBranch })
+          });
+        } catch (e) { /* ignore */ }
         setIsFullDeploy(false);
         return;
       }
@@ -262,8 +294,8 @@ export default function DeploymentsAdmin() {
       return;
     }
 
-    // Step 4: Deploy Convex to production
-    addLog('Full Deploy', 'pending', 'Step 4/5: Deploying Convex to Sturgeon (PRODUCTION)...');
+    // Step 6: Deploy Convex to production
+    addLog('Full Deploy', 'pending', 'Step 6/7: Deploying Convex to Sturgeon (PRODUCTION)...');
     try {
       const res = await fetch('/api/deployment/deploy-prod', {
         method: 'POST',
@@ -281,8 +313,8 @@ export default function DeploymentsAdmin() {
       addLog('Full Deploy', 'error', 'Convex deploy warning - continuing...');
     }
 
-    // Step 5: Switch back to original branch
-    addLog('Full Deploy', 'pending', `Step 5/5: Switching back to ${originalBranch}...`);
+    // Step 7: Switch back to original branch
+    addLog('Full Deploy', 'pending', `Step 7/7: Switching back to ${originalBranch}...`);
     try {
       const res = await fetch('/api/deployment/switch-branch', {
         method: 'POST',
@@ -489,11 +521,18 @@ export default function DeploymentsAdmin() {
         </button>
       </div>
 
-      <div className="text-center text-gray-500 text-sm max-w-2xl mx-auto">
-        <span className="text-gray-400">1.</span> Commits your changes →
-        <span className="text-gray-400">2.</span> Merges <span className="text-cyan-500">{gitStatus?.currentBranch || 'current branch'}</span> into <span className="text-green-500">master</span> →
-        <span className="text-gray-400">3.</span> Pushes master to GitHub (triggers Vercel production) →
-        <span className="text-gray-400">4.</span> Deploys Convex to Sturgeon (production database)
+      <div className="text-center text-gray-500 text-sm max-w-3xl mx-auto space-y-1">
+        <div>
+          <span className="text-gray-400">1.</span> Commit →
+          <span className="text-gray-400">2.</span> Push <span className="text-cyan-500">{gitStatus?.currentBranch || 'branch'}</span> to GitHub →
+          <span className="text-gray-400">3.</span> Switch to master →
+          <span className="text-gray-400">4.</span> Merge
+        </div>
+        <div>
+          <span className="text-gray-400">5.</span> Push <span className="text-green-500">master</span> to GitHub (Vercel production) →
+          <span className="text-gray-400">6.</span> Deploy Convex to Sturgeon →
+          <span className="text-gray-400">7.</span> Switch back
+        </div>
       </div>
 
       {/* Individual Action Buttons */}
@@ -610,12 +649,14 @@ export default function DeploymentsAdmin() {
           <li><span className="text-gray-400">Deploy Prod (Sturgeon)</span> - Updates Convex database functions for the live site</li>
         </ul>
         <div className="mt-3 pt-3 border-t border-gray-700">
-          <div className="font-bold text-gray-400 mb-1">What the Big Button Does:</div>
+          <div className="font-bold text-gray-400 mb-1">What the Big Button Does (7 Steps):</div>
           <ol className="list-decimal list-inside space-y-1 text-gray-500">
             <li>Commits your changes (if any)</li>
+            <li>Pushes your branch to GitHub (backs up your work)</li>
+            <li>Switches to <span className="text-green-400">master</span></li>
             <li>Merges your branch into <span className="text-green-400">master</span></li>
-            <li>Pushes master to GitHub (triggers Vercel production)</li>
-            <li>Deploys Convex to Sturgeon (production database)</li>
+            <li>Pushes <span className="text-green-400">master</span> to GitHub (triggers Vercel production)</li>
+            <li>Deploys Convex to Sturgeon (production database functions)</li>
             <li>Switches you back to your working branch</li>
           </ol>
         </div>
