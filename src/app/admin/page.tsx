@@ -39,6 +39,7 @@ import PreLoader from '@/components/loaders/PreLoader';
 import AnimatedBorderButton from '@/components/loaders/AnimatedBorderButton';
 import GlowButton from '@/components/loaders/GlowButton';
 import GlowCard from '@/components/loaders/GlowCard';
+import GradientBlurButton from '@/components/loaders/GradientBlurButton';
 import RotaryDial from '@/components/loaders/RotaryDial';
 import ProModeToggle from '@/components/controls/ProModeToggle';
 import PowerSwitch from '@/components/controls/PowerSwitch';
@@ -3655,6 +3656,34 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
                       <div><span className="text-zinc-500">Colors:</span> Blue → Gold (#fab617)</div>
                       <div><span className="text-zinc-500">Features:</span> Sequential border animations with staggered delays</div>
+                    </div>
+                  </div>
+
+                  {/* Gradient Blur Button */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Gradient Blur Button
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Button
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex flex-wrap items-center justify-center gap-4 min-h-[300px]">
+                      <GradientBlurButton color="gold">Gold</GradientBlurButton>
+                      <GradientBlurButton color="cyan">Cyan</GradientBlurButton>
+                      <GradientBlurButton color="lime">Lime</GradientBlurButton>
+                      <GradientBlurButton color="purple">Purple</GradientBlurButton>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by Spacious74</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, Lime, Purple variants</div>
+                      <div><span className="text-zinc-500">Features:</span> Gradient border, blur glow on hover, press feedback</div>
                     </div>
                   </div>
 

@@ -167,48 +167,26 @@ export default function RotaryDial({
             boxShadow: 'inset 0 3px 10px rgba(0, 0, 0, 0.6), 0 2px 20px rgba(255, 255, 255, 1)'
           }}
         >
-          {/* Clickable segments for each option + highlighted segment */}
+          {/* Highlighted segment (display only, below clickable layer) */}
           <svg
-            className="absolute z-[2]"
+            className="absolute z-[0]"
             style={{
               width: '220px',
               height: '220px',
               left: '0',
-              top: '0'
+              top: '0',
+              pointerEvents: 'none'
             }}
             viewBox="0 0 220 220"
           >
-            {/* Render clickable pie slices for each option */}
-            {options.map((_, index) => {
-              const segmentAngle = positions[index] + 90 - angleStep / 2;
-              const isSelected = index === selectedIndex;
-              return (
-                <path
-                  key={index}
-                  d={`M 110 110 L 110 0 A 110 110 0 ${angleStep > 180 ? 1 : 0} 1 ${
-                    110 + 110 * Math.sin((angleStep * Math.PI) / 180)
-                  } ${110 - 110 * Math.cos((angleStep * Math.PI) / 180)} Z`}
-                  fill={isSelected ? config.segmentColor : 'transparent'}
-                  style={{
-                    transform: `rotate(${segmentAngle}deg)`,
-                    transformOrigin: '110px 110px',
-                    cursor: 'pointer',
-                    transition: 'fill 0.3s ease'
-                  }}
-                  onClick={() => handleSelect(index)}
-                  onMouseEnter={(e) => {
-                    if (!isSelected) {
-                      e.currentTarget.style.fill = `${config.segmentColor.replace('0.35', '0.15').replace('0.25', '0.1')}`;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isSelected) {
-                      e.currentTarget.style.fill = 'transparent';
-                    }
-                  }}
-                />
-              );
-            })}
+            <path
+              d={`M 110 110 L 110 0 A 110 110 0 ${angleStep > 180 ? 1 : 0} 1 ${
+                110 + 110 * Math.sin((angleStep * Math.PI) / 180)
+              } ${110 - 110 * Math.cos((angleStep * Math.PI) / 180)} Z`}
+              fill={config.segmentColor}
+              transform={`rotate(${labelAngle + 90 - angleStep / 2} 110 110)`}
+              style={{ transition: 'transform 0.5s ease' }}
+            />
           </svg>
 
           {/* Dynamic line dividers between options */}
@@ -230,14 +208,14 @@ export default function RotaryDial({
             />
           ))}
 
-          {/* Switch labels around the dial */}
-          <div className="absolute inset-0 z-[3]">
+          {/* Switch labels around the dial (display only) */}
+          <div className="absolute inset-0 z-[3]" style={{ pointerEvents: 'none' }}>
             {options.map((label, index) => {
               const isSelected = index === selectedIndex;
               return (
-                <label
+                <div
                   key={index}
-                  className="absolute cursor-pointer"
+                  className="absolute"
                   style={{
                     top: '50%',
                     left: '50%',
@@ -247,10 +225,9 @@ export default function RotaryDial({
                     transformOrigin: '0% 50%',
                     transform: `rotate(${positions[index]}deg)`
                   }}
-                  onClick={() => handleSelect(index)}
                 >
                   <span
-                    className="absolute z-[2] font-bold text-center"
+                    className="absolute font-bold text-center"
                     style={{
                       top: '0',
                       right: '0',
@@ -266,7 +243,7 @@ export default function RotaryDial({
                   >
                     {label}
                   </span>
-                </label>
+                </div>
               );
             })}
           </div>
