@@ -405,6 +405,44 @@ export default function RotaryDial({
               }}
             />
           </div>
+
+          {/* Clickable overlay - transparent segments on TOP for click handling */}
+          <svg
+            className="absolute z-[10]"
+            style={{
+              width: '220px',
+              height: '220px',
+              left: '0',
+              top: '0'
+            }}
+            viewBox="0 0 220 220"
+          >
+            {options.map((_, index) => {
+              const segmentAngle = positions[index] + 90 - angleStep / 2;
+              return (
+                <path
+                  key={index}
+                  d={`M 110 110 L 110 0 A 110 110 0 ${angleStep > 180 ? 1 : 0} 1 ${
+                    110 + 110 * Math.sin((angleStep * Math.PI) / 180)
+                  } ${110 - 110 * Math.cos((angleStep * Math.PI) / 180)} Z`}
+                  fill="transparent"
+                  transform={`rotate(${segmentAngle} 110 110)`}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => handleSelect(index)}
+                  onMouseEnter={(e) => {
+                    if (index !== selectedIndex) {
+                      e.currentTarget.style.fill = config.segmentHoverColor;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.fill = 'transparent';
+                  }}
+                />
+              );
+            })}
+            {/* Cut out center circle so inner knob isn't clickable */}
+            <circle cx="110" cy="110" r="70" fill="transparent" style={{ pointerEvents: 'none' }} />
+          </svg>
         </div>
       </div>
     </div>

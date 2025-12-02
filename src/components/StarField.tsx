@@ -29,8 +29,8 @@ const StarField = () => {
     };
     setCanvasSize();
 
-    const STAR_COUNT_LAYER1 = 150;
-    const STAR_COUNT_LAYER2 = 20;
+    const STAR_COUNT_LAYER1 = 220;
+    const STAR_COUNT_LAYER2 = 40;
     const SPEED_LAYER1 = 1.5;
     const SPEED_LAYER2 = 20;
     const MAX_DEPTH = 1000;
@@ -184,7 +184,7 @@ const StarField = () => {
         const opacity = fadeInProgress * 0.6;
 
         ctx.strokeStyle = getRGBA(opacity);
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 4;
         ctx.beginPath();
         ctx.moveTo(oldScreenX, oldScreenY);
         ctx.lineTo(screenX, screenY);
