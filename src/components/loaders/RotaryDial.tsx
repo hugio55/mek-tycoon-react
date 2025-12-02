@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 interface RotaryDialProps {
   options?: string[];
@@ -17,6 +17,7 @@ interface RotaryDialProps {
  * Original: Silver/gray 6-position rotary switch with light indicator
  * Transformed: Gold/Cyan/Silver variants matching Mek Tycoon design
  * Features: Rotating dial with position indicator, light glow, 3D layered rings
+ * Supports any number of options (3, 6, 10, etc.) - positions calculated dynamically
  */
 export default function RotaryDial({
   options = ['OFF', '1', '2', '3', '4', '5'],
@@ -79,8 +80,21 @@ export default function RotaryDial({
     }
   };
 
-  // Position angles for 6 options (starting from top, going clockwise)
-  const positions = [-90, -30, 30, 90, 150, 210];
+  // Calculate positions dynamically based on number of options
+  // First option starts at top (-90°), then evenly distributed clockwise
+  const positions = useMemo(() => {
+    const count = options.length;
+    const angleStep = 360 / count;
+    return options.map((_, i) => -90 + (i * angleStep));
+  }, [options]);
+
+  // Generate divider lines - one between each pair of adjacent options
+  const dividerAngles = useMemo(() => {
+    const count = options.length;
+    const angleStep = 360 / count;
+    // Place dividers halfway between options
+    return options.map((_, i) => -90 + (i * angleStep) + (angleStep / 2));
+  }, [options]);
 
   const handleSelect = (index: number) => {
     setSelectedIndex(index);
@@ -89,7 +103,22 @@ export default function RotaryDial({
 
   const config = colorConfig[color];
   const sizeStyle = sizeConfig[size];
-  const currentRotation = positions[selectedIndex] || -90;
+
+  // The label position angle (where the label sits on the dial)
+  const labelAngle = positions[selectedIndex] ?? -90;
+
+  // The pointer rotation needs +90° offset because pointer naturally points UP,
+  // but CSS angles use 0° = right, 90° = down, -90° = up
+  const pointerRotation = labelAngle + 90;
+
+  // Calculate font size based on number of options (smaller text for more options)
+  const getFontSize = (index: number) => {
+    const count = options.length;
+    if (count <= 4) return index === 0 ? '13px' : '15px';
+    if (count <= 6) return index === 0 ? '12px' : '13px';
+    if (count <= 8) return '11px';
+    return '10px';
+  };
 
   return (
     <div
@@ -123,39 +152,28 @@ export default function RotaryDial({
             boxShadow: 'inset 0 3px 10px rgba(0, 0, 0, 0.6), 0 2px 20px rgba(255, 255, 255, 1)'
           }}
         >
-          {/* Line dividers */}
-          <hr
-            className="absolute z-[1]"
-            style={{
-              top: '50%',
-              width: '100%',
-              height: '0',
-              marginTop: '-1px',
-              borderWidth: '1px 0',
-              borderStyle: 'solid',
-              borderTopColor: config.lineTop,
-              borderBottomColor: config.lineBottom,
-              transform: 'rotate(-60deg)'
-            }}
-          />
-          <hr
-            className="absolute z-[1]"
-            style={{
-              top: '50%',
-              width: '100%',
-              height: '0',
-              marginTop: '-1px',
-              borderWidth: '1px 0',
-              borderStyle: 'solid',
-              borderTopColor: config.lineTop,
-              borderBottomColor: config.lineBottom,
-              transform: 'rotate(60deg)'
-            }}
-          />
+          {/* Dynamic line dividers between options */}
+          {dividerAngles.map((angle, i) => (
+            <hr
+              key={i}
+              className="absolute z-[1]"
+              style={{
+                top: '50%',
+                width: '100%',
+                height: '0',
+                marginTop: '-1px',
+                borderWidth: '1px 0',
+                borderStyle: 'solid',
+                borderTopColor: config.lineTop,
+                borderBottomColor: config.lineBottom,
+                transform: `rotate(${angle}deg)`
+              }}
+            />
+          ))}
 
           {/* Switch labels around the dial */}
           <div className="absolute inset-0 z-[3]">
-            {options.slice(0, 6).map((label, index) => (
+            {options.map((label, index) => (
               <label
                 key={index}
                 className="absolute cursor-pointer"
@@ -174,11 +192,11 @@ export default function RotaryDial({
                   className="absolute z-[2] font-bold text-center"
                   style={{
                     top: '0',
-                    right: index === 0 ? '2px' : '0',
+                    right: '0',
                     width: '40px',
                     height: '100%',
                     lineHeight: '70px',
-                    fontSize: index === 0 ? '13px' : '15px',
+                    fontSize: getFontSize(index),
                     color: config.textColor,
                     textShadow: config.textShadow,
                     transform: `rotate(${-positions[index]}deg)`
@@ -190,7 +208,7 @@ export default function RotaryDial({
             ))}
           </div>
 
-          {/* Light indicator */}
+          {/* Light indicator - uses label angle directly (horizontal origin) */}
           <div
             className="absolute z-[1]"
             style={{
@@ -200,7 +218,7 @@ export default function RotaryDial({
               height: '100px',
               marginTop: '-50px',
               transformOrigin: '0% 50%',
-              transform: `rotate(${currentRotation}deg)`,
+              transform: `rotate(${labelAngle}deg)`,
               transition: 'transform 0.5s ease'
             }}
           >
@@ -217,7 +235,7 @@ export default function RotaryDial({
             />
           </div>
 
-          {/* Dot indicator */}
+          {/* Dot indicator - uses label angle directly (horizontal origin) */}
           <div
             className="absolute z-[6]"
             style={{
@@ -227,7 +245,7 @@ export default function RotaryDial({
               height: '12px',
               marginTop: '-6px',
               transformOrigin: '0% 50%',
-              transform: `rotate(${currentRotation}deg)`,
+              transform: `rotate(${labelAngle}deg)`,
               transition: 'transform 0.5s ease'
             }}
           >
@@ -288,7 +306,7 @@ export default function RotaryDial({
             }}
           />
 
-          {/* Center pointer indicator */}
+          {/* Center pointer indicator - needs +90° offset since pointer points UP */}
           <div
             className="absolute z-[7]"
             style={{
@@ -298,7 +316,7 @@ export default function RotaryDial({
               height: '100px',
               marginLeft: '-50px',
               marginTop: '-50px',
-              transform: `rotate(${currentRotation}deg)`,
+              transform: `rotate(${pointerRotation}deg)`,
               transition: 'transform 0.5s ease',
               pointerEvents: 'none'
             }}

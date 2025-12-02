@@ -4346,39 +4346,40 @@ export default function AdminMasterDataPage() {
 
                     {/* Component Preview */}
                     <div className="bg-black/60 rounded-lg p-6 flex flex-wrap items-center justify-center gap-8 min-h-[350px]">
-                      {/* Gold Variant */}
+                      {/* 3 Options - Gold */}
                       <div className="flex flex-col items-center gap-2">
                         <RotaryDial
                           color="gold"
                           size="sm"
-                          options={['OFF', '1', '2', '3', '4', '5']}
-                          onChange={(idx, label) => console.log('Gold dial:', label)}
+                          options={['LOW', 'MED', 'HIGH']}
+                          defaultIndex={1}
+                          onChange={(idx, label) => console.log('3-option dial:', label)}
                         />
-                        <span className="text-xs text-yellow-400 uppercase tracking-wider">Gold</span>
+                        <span className="text-xs text-yellow-400 uppercase tracking-wider">3 Options</span>
                       </div>
 
-                      {/* Cyan Variant */}
+                      {/* 6 Options - Cyan */}
                       <div className="flex flex-col items-center gap-2">
                         <RotaryDial
                           color="cyan"
                           size="sm"
                           options={['OFF', '1', '2', '3', '4', '5']}
-                          defaultIndex={2}
-                          onChange={(idx, label) => console.log('Cyan dial:', label)}
+                          defaultIndex={3}
+                          onChange={(idx, label) => console.log('6-option dial:', label)}
                         />
-                        <span className="text-xs text-cyan-400 uppercase tracking-wider">Cyan</span>
+                        <span className="text-xs text-cyan-400 uppercase tracking-wider">6 Options</span>
                       </div>
 
-                      {/* Silver Variant */}
+                      {/* 10 Options - Silver */}
                       <div className="flex flex-col items-center gap-2">
                         <RotaryDial
                           color="silver"
                           size="sm"
-                          options={['OFF', '1', '2', '3', '4', '5']}
-                          defaultIndex={4}
-                          onChange={(idx, label) => console.log('Silver dial:', label)}
+                          options={['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']}
+                          defaultIndex={5}
+                          onChange={(idx, label) => console.log('10-option dial:', label)}
                         />
-                        <span className="text-xs text-zinc-400 uppercase tracking-wider">Silver</span>
+                        <span className="text-xs text-zinc-400 uppercase tracking-wider">10 Options</span>
                       </div>
                     </div>
 
@@ -4388,7 +4389,7 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
                       <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, Silver variants</div>
                       <div><span className="text-zinc-500">Sizes:</span> sm, md, lg</div>
-                      <div><span className="text-zinc-500">Features:</span> 6-position rotary selector, animated light indicator, glowing dot, 3D layered rings, line dividers, clickable labels</div>
+                      <div><span className="text-zinc-500">Features:</span> Dynamic N-position rotary selector (any number of options), center pointer indicator, animated light/dot, 3D layered rings, auto-calculated divider lines, clickable labels</div>
                     </div>
                   </div>
 
