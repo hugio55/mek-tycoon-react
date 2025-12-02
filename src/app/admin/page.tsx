@@ -66,6 +66,7 @@ import StarBurstButton from '@/components/controls/StarBurstButton';
 import GlowingPowerSwitch from '@/components/controls/GlowingPowerSwitch';
 import KeycapRadioGroup from '@/components/controls/KeycapRadioGroup';
 import ColorPalettePicker from '@/components/controls/ColorPalettePicker';
+import ColorPalettePickerSmooth from '@/components/controls/ColorPalettePickerSmooth';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import PortMonitor from '@/components/PortMonitor';
 import DeploymentsAdmin from '@/components/DeploymentsAdmin';
@@ -4615,6 +4616,63 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Source:</span> Uiverse.io by Cobp</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
                       <div><span className="text-zinc-500">Features:</span> 3D perspective container, cascading hover scale effect (1.5x hovered, 1.3x adjacent, 1.15x next), tooltip on hover, click-to-copy with feedback, smooth cubic-bezier transitions</div>
+                    </div>
+                  </div>
+
+                  {/* Color Palette Picker Smooth */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Color Palette (Smooth)
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-zinc-900 rounded-lg p-8 flex flex-col items-center justify-center gap-6 min-h-[300px]">
+                      {/* Mek Tycoon palette - Smooth */}
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-xs text-zinc-500">Mek Tycoon Colors (Smooth Z-Index)</span>
+                        <ColorPalettePickerSmooth
+                          colors={[
+                            { color: '#fab617', name: 'Primary Yellow' },
+                            { color: '#00d4ff', name: 'Complete Blue' },
+                            { color: '#22c55e', name: 'Success Green' },
+                            { color: '#ef4444', name: 'Error Red' },
+                            { color: '#a855f7', name: 'Purple' },
+                            { color: '#f97316', name: 'Orange' },
+                            { color: '#06b6d4', name: 'Cyan' },
+                          ]}
+                          onSelect={(color, name) => console.log('Selected:', name, color)}
+                        />
+                      </div>
+                      {/* Rainbow palette - Smooth */}
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-xs text-zinc-500">Rainbow (Smooth Z-Index)</span>
+                        <ColorPalettePickerSmooth
+                          colors={[
+                            { color: '#ef4444', name: '#ef4444' },
+                            { color: '#f97316', name: '#f97316' },
+                            { color: '#eab308', name: '#eab308' },
+                            { color: '#22c55e', name: '#22c55e' },
+                            { color: '#06b6d4', name: '#06b6d4' },
+                            { color: '#3b82f6', name: '#3b82f6' },
+                            { color: '#8b5cf6', name: '#8b5cf6' },
+                            { color: '#ec4899', name: '#ec4899' },
+                          ]}
+                          onSelect={(color) => console.log('Copied:', color)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by Cobp (improved)</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Fix:</span> Delayed z-index reset prevents overlap glitches when transitioning between swatches</div>
+                      <div><span className="text-zinc-500">Features:</span> Smoother transitions, colored glow shadow on hover, elastic bounce easing, tooltip slide-up animation</div>
                     </div>
                   </div>
 
