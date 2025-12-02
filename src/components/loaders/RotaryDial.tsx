@@ -45,7 +45,9 @@ export default function RotaryDial({
       textColor: '#fab617',
       textShadow: '0 1px 0 #3d2e00',
       lineTop: '#5a4a1a',
-      lineBottom: '#b8860b'
+      lineBottom: '#b8860b',
+      pointerColor: '#3d2e00',
+      pointerGlow: '#fab617'
     },
     cyan: {
       outerRing: 'radial-gradient(ellipse at center, #0077a3 0%, #002233 100%)',
@@ -57,7 +59,9 @@ export default function RotaryDial({
       textColor: '#00d4ff',
       textShadow: '0 1px 0 #002233',
       lineTop: '#1a4a5a',
-      lineBottom: '#00d4ff'
+      lineBottom: '#00d4ff',
+      pointerColor: '#002233',
+      pointerGlow: '#00d4ff'
     },
     silver: {
       outerRing: 'radial-gradient(ellipse at center, #888888 0%, #333333 100%)',
@@ -69,7 +73,9 @@ export default function RotaryDial({
       textColor: '#eee',
       textShadow: '0 1px 0 #444',
       lineTop: '#3c3d3f',
-      lineBottom: '#666769'
+      lineBottom: '#666769',
+      pointerColor: '#333',
+      pointerGlow: '#fff'
     }
   };
 
@@ -281,6 +287,66 @@ export default function RotaryDial({
               boxShadow: 'inset 0 2px 3px rgba(255, 255, 255, 0.6), 0 8px 20px rgba(0, 0, 0, 0.9)'
             }}
           />
+
+          {/* Center pointer indicator */}
+          <div
+            className="absolute z-[7]"
+            style={{
+              left: '50%',
+              top: '50%',
+              width: '100px',
+              height: '100px',
+              marginLeft: '-50px',
+              marginTop: '-50px',
+              transform: `rotate(${currentRotation}deg)`,
+              transition: 'transform 0.5s ease',
+              pointerEvents: 'none'
+            }}
+          >
+            {/* Pointer line */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '8px',
+                left: '50%',
+                marginLeft: '-3px',
+                width: '6px',
+                height: '35px',
+                background: `linear-gradient(to bottom, ${config.pointerGlow} 0%, ${config.pointerColor} 100%)`,
+                borderRadius: '3px 3px 1px 1px',
+                boxShadow: `0 0 6px ${config.pointerGlow}, inset 0 1px 2px rgba(255,255,255,0.5)`
+              }}
+            />
+            {/* Pointer tip (triangle) */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '2px',
+                left: '50%',
+                marginLeft: '-6px',
+                width: '0',
+                height: '0',
+                borderLeft: '6px solid transparent',
+                borderRight: '6px solid transparent',
+                borderBottom: `10px solid ${config.pointerGlow}`,
+                filter: `drop-shadow(0 0 3px ${config.pointerGlow})`
+              }}
+            />
+            {/* Center cap */}
+            <div
+              className="absolute rounded-full"
+              style={{
+                top: '50%',
+                left: '50%',
+                width: '20px',
+                height: '20px',
+                marginLeft: '-10px',
+                marginTop: '-10px',
+                background: `radial-gradient(circle at 30% 30%, ${config.pointerGlow}, ${config.pointerColor})`,
+                boxShadow: `0 2px 4px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.3), 0 0 8px ${config.pointerGlow}`
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>

@@ -4946,6 +4946,8 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
 
   // NMKR Verify handler - queries NMKR API and compares with Convex
   const handleVerifyWithNMKR = async (campaignId: string, campaignName: string, nmkrProjectId?: string) => {
+    console.log('[🔍DEBUG] handleVerifyWithNMKR called with:', { campaignId, campaignName, nmkrProjectId });
+
     if (!nmkrProjectId) {
       alert('This campaign does not have an NMKR Project ID configured.');
       return;
@@ -4956,11 +4958,13 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
 
     try {
       // 1. Fetch NMKR statuses from our API route (keeps API key server-side)
+      console.log('[🔍DEBUG] Making fetch to /api/nmkr/sync with projectUid:', nmkrProjectId);
       const response = await fetch('/api/nmkr/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectUid: nmkrProjectId }),
       });
+      console.log('[🔍DEBUG] Response status:', response.status, response.ok);
 
       if (!response.ok) {
         const error = await response.json();

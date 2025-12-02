@@ -294,7 +294,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
           )}
 
           {/* Claim NFT Button for Phase I */}
-          {false && isPhaseOne && (
+          {isPhaseOne && (
             <div className="mt-6 flex justify-start">
               <button
                 onClick={() => {
