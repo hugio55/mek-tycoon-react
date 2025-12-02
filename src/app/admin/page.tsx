@@ -4516,7 +4516,7 @@ export default function AdminMasterDataPage() {
                   </div>
 
                   {/* Mek Carousel 3D - Full Width */}
-                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4 col-span-full">
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4 mek-component-full-width">
                     <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
                       <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
                         Mek Carousel 3D

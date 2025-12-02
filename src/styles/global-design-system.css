@@ -1108,3 +1108,9 @@
     max-width: calc(33.333% - 1rem);
   }
 }
+
+/* Full-width component card - spans entire grid width */
+.mek-components-grid-reversed > .mek-component-full-width {
+  flex: 0 0 100% !important;
+  max-width: 100% !important;
+}
