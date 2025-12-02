@@ -274,6 +274,63 @@ export default defineSchema({
     lastGoldCollection: v.optional(v.number()), // Timestamp of last gold collection
     pendingGold: v.optional(v.number()), // Gold accumulated but not collected
     employeeCount: v.optional(v.number()), // Number of Meks assigned as employees
+
+    // ========================================
+    // GOLD MINING FIELDS (migrated from goldMining table)
+    // These fields enable the unified player system
+    // ========================================
+
+    // Company identity (from goldMining)
+    companyName: v.optional(v.string()), // User-chosen company name (alphanumeric only)
+
+    // Blockchain verification status
+    isBlockchainVerified: v.optional(v.boolean()), // Has the user completed blockchain verification?
+    lastVerificationTime: v.optional(v.number()), // When was the last verification performed
+    consecutiveSnapshotFailures: v.optional(v.number()), // Track consecutive failed snapshots
+
+    // Payment addresses for Blockfrost fallback
+    paymentAddresses: v.optional(v.array(v.string())),
+
+    // Mek ownership data (from goldMining)
+    ownedMeks: v.optional(v.array(v.object({
+      assetId: v.string(), // Unique asset ID from blockchain
+      policyId: v.string(), // Policy ID for verification
+      assetName: v.string(), // Name of the Mek
+      imageUrl: v.optional(v.string()), // Thumbnail URL
+      goldPerHour: v.number(), // Base gold generation rate (LEGACY - use baseGoldPerHour)
+      rarityRank: v.optional(v.number()), // Rarity ranking
+      headVariation: v.optional(v.string()),
+      bodyVariation: v.optional(v.string()),
+      itemVariation: v.optional(v.string()),
+      sourceKey: v.optional(v.string()), // Full source key from metadata
+      sourceKeyBase: v.optional(v.string()), // Source key without suffix for image lookup
+      baseGoldPerHour: v.optional(v.number()), // Original rate from rarity (immutable)
+      currentLevel: v.optional(v.number()), // Current level (1-10)
+      levelBoostPercent: v.optional(v.number()), // Boost percentage from level (0-90)
+      levelBoostAmount: v.optional(v.number()), // Actual boost amount in gold/hr
+      effectiveGoldPerHour: v.optional(v.number()), // baseGoldPerHour + levelBoostAmount
+      customName: v.optional(v.string()), // Custom name (unique globally)
+    }))),
+
+    // Gold accumulation (SIMPLIFIED: Gold = (now - createdAt) × totalGoldPerHour, capped at 50,000)
+    totalGoldPerHour: v.optional(v.number()), // Sum of all Mek rates (including boosts)
+    baseGoldPerHourMining: v.optional(v.number()), // Sum of all base Mek rates (without boosts)
+    boostGoldPerHour: v.optional(v.number()), // Sum of all level boosts
+    lastActiveTime: v.optional(v.number()), // Last time user was active on page
+    accumulatedGold: v.optional(v.number()), // Gold accumulated up to lastSnapshotTime
+    lastSnapshotTime: v.optional(v.number()), // Time of last offline accumulation snapshot
+
+    // Gold spending tracking (for Mek leveling)
+    totalGoldSpentOnUpgrades: v.optional(v.number()), // Total gold spent on Mek upgrades
+    totalUpgradesPurchased: v.optional(v.number()), // Total number of upgrades bought
+    lastUpgradeSpend: v.optional(v.number()), // Timestamp of last upgrade purchase
+
+    // Cumulative gold tracking
+    totalCumulativeGold: v.optional(v.number()), // Total gold earned all-time (never decreases)
+
+    // Snapshot metadata
+    snapshotMekCount: v.optional(v.number()), // Mek count from last snapshot
+    miningVersion: v.optional(v.number()), // For optimistic concurrency control
     
     // User stats
     level: v.optional(v.number()),

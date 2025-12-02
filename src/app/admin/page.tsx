@@ -44,6 +44,7 @@ import SpinningGradientCard from '@/components/loaders/SpinningGradientCard';
 import RotaryDial from '@/components/loaders/RotaryDial';
 import GlowRadioStack from '@/components/loaders/GlowRadioStack';
 import MekCarousel3D from '@/components/loaders/MekCarousel3D';
+import MekCarousel3DSquare from '@/components/loaders/MekCarousel3DSquare';
 import ProModeToggle from '@/components/controls/ProModeToggle';
 import PowerSwitch from '@/components/controls/PowerSwitch';
 import PowerSwitchToggle from '@/components/controls/PowerSwitchToggle';
@@ -4541,7 +4542,38 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind + Next.js Image</div>
                       <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, Silver variants</div>
                       <div><span className="text-zinc-500">Sizes:</span> sm, md, lg</div>
-                      <div><span className="text-zinc-500">Features:</span> 3D perspective rotation, configurable speed (slow/normal/fast), adjustable tilt angle, Mek NFT images, glow reflection effect</div>
+                      <div><span className="text-zinc-500">Features:</span> 3D perspective rotation, configurable speed (slow/normal/fast), adjustable tilt angle, Mek NFT images, glow reflection effect, GPU-accelerated (will-change, backface-visibility)</div>
+                    </div>
+                  </div>
+
+                  {/* Mek Carousel 3D Square - Full Width */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4 mek-component-full-width">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Mek Carousel 3D Square
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Display
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[550px]">
+                      <MekCarousel3DSquare
+                        color="cyan"
+                        size="lg"
+                        speed="slow"
+                      />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by ilkhoeri</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind + Next.js Image</div>
+                      <div><span className="text-zinc-500">Aspect Ratio:</span> Square (1:1) - for square Mek images</div>
+                      <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, Silver variants</div>
+                      <div><span className="text-zinc-500">Sizes:</span> sm (100px), md (140px), lg (180px)</div>
+                      <div><span className="text-zinc-500">Features:</span> GPU-accelerated 3D rotation (will-change, backface-visibility), priority image loading, configurable speed/tilt</div>
                     </div>
                   </div>
 
