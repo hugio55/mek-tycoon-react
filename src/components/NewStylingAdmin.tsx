@@ -406,10 +406,10 @@ function ColorStyles() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { name: 'Primary Yellow', color: '#fab617', usage: 'Buttons, accents' },
-            { name: 'Cyan', color: '#22d3ee', usage: 'Success, verified' },
-            { name: 'Complete Blue', color: '#00d4ff', usage: 'Complete badge' },
-            { name: 'Glass White', color: 'rgba(255,255,255,0.1)', usage: 'Glass effects' },
+            { name: 'Primary Yellow', nickname: 'Bumblebee', color: '#fab617', usage: 'Buttons, accents' },
+            { name: 'Cyan', nickname: 'Cheeky Blue', color: '#22d3ee', usage: 'Success, verified, glows' },
+            { name: 'Glass White', nickname: 'Ghost Glass', color: 'rgba(255,255,255,0.1)', usage: 'Glass effects, overlays' },
+            { name: 'Deep Black', nickname: 'Void', color: '#0a0a0a', usage: 'Backgrounds, contrast' },
           ].map(c => (
             <div key={c.name} className="text-center">
               <div
@@ -417,6 +417,7 @@ function ColorStyles() {
                 style={{ background: c.color }}
               />
               <p className="text-sm font-medium text-white">{c.name}</p>
+              <p className="text-xs text-cyan-400 italic mb-1">"{c.nickname}"</p>
               <p className="text-xs font-mono text-yellow-400/80 mb-1">{c.color}</p>
               <p className="text-xs text-gray-500">{c.usage}</p>
             </div>
