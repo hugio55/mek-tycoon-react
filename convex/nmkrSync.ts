@@ -39,6 +39,7 @@ export const getInventoryDiscrepancies = query({
       v.object({
         nftUid: v.string(),
         nmkrStatus: v.string(), // 'free' | 'reserved' | 'sold' - simplified to avoid type depth issues
+        name: v.optional(v.string()), // Name from NMKR (may be included)
         soldTo: v.optional(v.string()),
       })
     ),
@@ -163,6 +164,7 @@ export const syncCampaignInventory = mutation({
       v.object({
         nftUid: v.string(),
         nmkrStatus: v.string(), // 'free' | 'reserved' | 'sold' - simplified to avoid type depth issues
+        name: v.optional(v.string()), // Name from NMKR (may be included)
         soldTo: v.optional(v.string()),
       })
     ),
