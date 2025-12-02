@@ -155,7 +155,6 @@ const StarField = () => {
           ctx.lineTo(screenX, screenY);
           ctx.stroke();
         }
-      }
 
       animationId = requestAnimationFrame(animate);
     };
