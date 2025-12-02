@@ -65,6 +65,15 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
 
   const transitionDuration = isFocused ? '4s' : '2s';
 
+  // Shared style for gradient layer containers
+  const layerContainerStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    overflow: 'hidden',
+  };
+
   return (
     <div
       className="relative flex items-center justify-center"
@@ -74,14 +83,13 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
     >
       {/* Glow layer - outermost, most blurred */}
       <div
-        className="absolute overflow-hidden"
         style={{
-          width: 354,
-          height: 130,
+          ...layerContainerStyle,
+          width: 320,
+          height: 70,
           borderRadius: 12,
-          filter: 'blur(30px)',
-          opacity: 0.4,
-          zIndex: -1,
+          filter: 'blur(15px)',
+          opacity: 0.5,
         }}
       >
         <div
@@ -89,8 +97,8 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
             position: 'absolute',
             top: '50%',
             left: '50%',
-            width: 999,
-            height: 999,
+            width: 600,
+            height: 600,
             backgroundImage: `conic-gradient(#000, ${colors.primary} 5%, #000 38%, #000 50%, ${colors.secondary} 60%, #000 87%)`,
             backgroundRepeat: 'no-repeat',
             transform: `translate(-50%, -50%) rotate(${getRotation(60)}deg)`,
@@ -101,13 +109,12 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
 
       {/* Dark border background layer */}
       <div
-        className="absolute overflow-hidden"
         style={{
+          ...layerContainerStyle,
           width: 312,
           height: 65,
           borderRadius: 12,
           filter: 'blur(3px)',
-          zIndex: -1,
         }}
       >
         <div
@@ -127,13 +134,12 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
 
       {/* Border layer */}
       <div
-        className="absolute overflow-hidden"
         style={{
-          width: 303,
-          height: 59,
+          ...layerContainerStyle,
+          width: 308,
+          height: 61,
           borderRadius: 11,
           filter: 'blur(0.5px)',
-          zIndex: -1,
         }}
       >
         <div
@@ -154,13 +160,12 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
 
       {/* White/bright layer */}
       <div
-        className="absolute overflow-hidden"
         style={{
-          width: 307,
-          height: 63,
+          ...layerContainerStyle,
+          width: 305,
+          height: 58,
           borderRadius: 10,
-          filter: 'blur(2px)',
-          zIndex: -1,
+          filter: 'blur(1px)',
         }}
       >
         <div
@@ -179,39 +184,6 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
         />
       </div>
 
-      {/* Pink glow mask */}
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          width: 30,
-          height: 20,
-          background: colors.glow,
-          top: 10,
-          left: 5,
-          filter: 'blur(20px)',
-          opacity: isHovered ? 0 : 0.8,
-          transition: 'opacity 2s ease',
-        }}
-      />
-
-      {/* Search icon */}
-      <svg
-        className="absolute"
-        style={{ left: 20, top: '50%', transform: 'translateY(-50%)' }}
-        width="17"
-        height="16"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M7.667 12.667A5.333 5.333 0 107.667 2a5.333 5.333 0 000 10.667zM14.334 14l-2.9-2.9"
-          stroke="white"
-          strokeWidth="1.333"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-
       {/* Input field */}
       <input
         type="text"
@@ -220,95 +192,67 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         placeholder={placeholder}
-        className="relative bg-[#010201] text-white text-lg outline-none"
+        className="relative text-white outline-none z-10"
         style={{
           width: 301,
           height: 56,
           borderRadius: 10,
           border: 'none',
-          paddingLeft: 59,
-          paddingRight: showFilterButton ? 59 : 20,
+          backgroundColor: '#010201',
+          paddingLeft: 45,
+          paddingRight: showFilterButton ? 55 : 16,
+          fontSize: 16,
         }}
       />
 
-      {/* Input mask (gradient fade) */}
-      {!isFocused && inputValue === '' && (
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            width: 100,
-            height: 20,
-            background: 'linear-gradient(90deg, transparent, black)',
-            top: '50%',
-            left: 70,
-            transform: 'translateY(-50%)',
-          }}
+      {/* Search icon */}
+      <svg
+        className="absolute z-20 pointer-events-none"
+        style={{ left: 20, top: '50%', transform: 'translateY(-50%)' }}
+        width="17"
+        height="16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M7.667 12.667A5.333 5.333 0 107.667 2a5.333 5.333 0 000 10.667zM14.334 14l-2.9-2.9"
+          stroke="#888"
+          strokeWidth="1.333"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
-      )}
+      </svg>
 
       {/* Filter button */}
       {showFilterButton && (
-        <div className="absolute" style={{ top: 7, right: 7 }}>
-          {/* Filter button border */}
-          <div
-            className="absolute overflow-hidden"
-            style={{
-              width: 40,
-              height: 42,
-              borderRadius: 10,
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                width: 600,
-                height: 600,
-                backgroundImage: 'conic-gradient(rgba(0,0,0,0), #3d3a4f, rgba(0,0,0,0) 50%, rgba(0,0,0,0) 50%, #3d3a4f, rgba(0,0,0,0) 100%)',
-                backgroundRepeat: 'no-repeat',
-                filter: 'brightness(1.35)',
-                transform: 'translate(-50%, -50%) rotate(90deg)',
-                animation: 'glowingBorderRotate 4s linear infinite',
-              }}
+        <button
+          onClick={onFilterClick}
+          className="absolute z-20 flex items-center justify-center"
+          style={{
+            top: '50%',
+            right: 14,
+            transform: 'translateY(-50%)',
+            width: 36,
+            height: 36,
+            borderRadius: 8,
+            background: 'linear-gradient(180deg, #252525, #1a1a1a)',
+            border: `1px solid ${colors.primary}40`,
+            cursor: 'pointer',
+            transition: 'border-color 0.3s ease',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.borderColor = colors.primary}
+          onMouseLeave={(e) => e.currentTarget.style.borderColor = `${colors.primary}40`}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M4 6h16M6 12h12M8 18h8"
+              stroke="#888"
+              strokeWidth="2"
+              strokeLinecap="round"
             />
-          </div>
-
-          {/* Filter button */}
-          <button
-            onClick={onFilterClick}
-            className="relative flex items-center justify-center"
-            style={{
-              width: 38,
-              height: 40,
-              borderRadius: 10,
-              background: 'linear-gradient(180deg, #161329, black, #1d1b4b)',
-              border: '1px solid transparent',
-              top: 1,
-              left: 1,
-              cursor: 'pointer',
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M4 6h16M6 12h12M8 18h8"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-        </div>
+          </svg>
+        </button>
       )}
-
-      {/* Keyframes style */}
-      <style>{`
-        @keyframes glowingBorderRotate {
-          100% {
-            transform: translate(-50%, -50%) rotate(450deg);
-          }
-        }
-      `}</style>
     </div>
   );
 };

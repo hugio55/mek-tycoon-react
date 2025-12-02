@@ -1114,3 +1114,26 @@
   flex: 0 0 100% !important;
   max-width: 100% !important;
 }
+
+/* ===========================
+   PUSH BUTTON RADIO ANIMATION
+   =========================== */
+
+@keyframes push-button-fly-up {
+  0% {
+    transform: translate(-50%, 0);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(-50%, -40px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, 0);
+    opacity: 0.3;
+  }
+}
+
+.push-button-pop-animate {
+  animation: push-button-fly-up 0.5s ease-in-out;
+}

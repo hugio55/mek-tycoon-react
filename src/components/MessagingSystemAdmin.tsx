@@ -73,6 +73,7 @@ export default function MessagingSystemAdmin() {
   const [isTyping, setIsTyping] = useState(false);
   const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; filename: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -522,19 +523,17 @@ export default function MessagingSystemAdmin() {
                           {msg.attachments && msg.attachments.length > 0 && (
                             <div className={`flex gap-2 flex-wrap ${msg.content ? 'mb-2' : ''}`}>
                               {msg.attachments.map((att: any, idx: number) => (
-                                <a
+                                <button
                                   key={idx}
-                                  href={att.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="block"
+                                  onClick={() => setLightboxImage({ url: att.url, filename: att.filename })}
+                                  className="block cursor-pointer"
                                 >
                                   <img
                                     src={att.url}
                                     alt={att.filename}
                                     className="max-w-[200px] max-h-[200px] rounded-lg object-cover border border-white/10 hover:border-yellow-500/50 transition-colors"
                                   />
-                                </a>
+                                </button>
                               ))}
                             </div>
                           )}
@@ -713,6 +712,38 @@ export default function MessagingSystemAdmin() {
           </div>
         </div>
       </div>
+
+      {/* Image Lightbox */}
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          onClick={() => setLightboxImage(null)}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setLightboxImage(null)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl transition-colors"
+          >
+            ×
+          </button>
+
+          {/* Image container */}
+          <div
+            className="max-w-[90vw] max-h-[90vh] p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={lightboxImage.url}
+              alt={lightboxImage.filename}
+              className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+            />
+            {/* Filename caption */}
+            <div className="text-center text-gray-400 text-sm mt-3">
+              {lightboxImage.filename}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -74,6 +74,7 @@ import ColorPalettePicker from '@/components/controls/ColorPalettePicker';
 import ColorPalettePickerSmooth from '@/components/controls/ColorPalettePickerSmooth';
 import GliderRadio from '@/components/controls/GliderRadio';
 import MekFlipCard from '@/components/controls/MekFlipCard';
+import PushButtonRadio, { PushButtonIcons } from '@/components/controls/PushButtonRadio';
 import FlipToggleSwitch from '@/components/controls/FlipToggleSwitch';
 import PressedButtonRadio from '@/components/controls/PressedButtonRadio';
 import GlowingBorderInput from '@/components/controls/GlowingBorderInput';
@@ -5094,6 +5095,75 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
                       <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, Lime, Purple variants</div>
                       <div><span className="text-zinc-500">Features:</span> 3D flip on hover, rotating gradient border, floating orbs animation, mek image display, badge/title/description overlay</div>
+                    </div>
+                  </div>
+
+                  {/* Push Button Radio */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Push Button Radio
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-zinc-900 rounded-lg p-8 flex flex-col items-center justify-center gap-8 min-h-[300px]">
+                      {/* Cyan (default) */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Cyan - Medium</span>
+                        <PushButtonRadio
+                          color="cyan"
+                          options={[
+                            { value: 'star', icon: <PushButtonIcons.Star /> },
+                            { value: 'heart', icon: <PushButtonIcons.Heart /> },
+                            { value: 'bolt', icon: <PushButtonIcons.Bolt /> },
+                            { value: 'flame', icon: <PushButtonIcons.Flame /> },
+                          ]}
+                          onChange={(val) => console.log('Selected:', val)}
+                        />
+                      </div>
+                      {/* Gold - Large */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Gold - Large</span>
+                        <PushButtonRadio
+                          color="gold"
+                          size="lg"
+                          options={[
+                            { value: 'check', icon: <PushButtonIcons.Check /> },
+                            { value: 'gear', icon: <PushButtonIcons.Gear /> },
+                            { value: 'star', icon: <PushButtonIcons.Star /> },
+                          ]}
+                          onChange={(val) => console.log('Selected:', val)}
+                        />
+                      </div>
+                      {/* Purple - Small */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Purple - Small</span>
+                        <PushButtonRadio
+                          color="purple"
+                          size="sm"
+                          options={[
+                            { value: 'heart', icon: <PushButtonIcons.Heart /> },
+                            { value: 'star', icon: <PushButtonIcons.Star /> },
+                            { value: 'flame', icon: <PushButtonIcons.Flame /> },
+                            { value: 'bolt', icon: <PushButtonIcons.Bolt /> },
+                            { value: 'gear', icon: <PushButtonIcons.Gear /> },
+                          ]}
+                          onChange={(val) => console.log('Selected:', val)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by adamgiebl</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, Lime, Purple variants</div>
+                      <div><span className="text-zinc-500">Sizes:</span> sm (40px), md (50px), lg (60px)</div>
+                      <div><span className="text-zinc-500">Features:</span> 3D push effect with shadow/edge/front layers, pop-up fly animation on select, hover lift, glow shadow, includes 6 built-in icons</div>
                     </div>
                   </div>
 
