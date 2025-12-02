@@ -47,6 +47,7 @@ export default function MessagingSystemAdmin() {
   // State for dual-corporation testing
   const [activeCorp, setActiveCorp] = useState(TEST_CORPORATIONS[0]);
   const [selectedConversationId, setSelectedConversationId] = useState<Id<"conversations"> | null>(null);
+  const [isNewConversation, setIsNewConversation] = useState(false); // For starting new conversations
   const [messageInput, setMessageInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -137,6 +138,7 @@ export default function MessagingSystemAdmin() {
 
       setMessageInput('');
       setSelectedConversationId(result.conversationId);
+      setIsNewConversation(false); // Exit new conversation mode
 
       // Clear typing indicator
       if (typingTimeoutRef.current) {
@@ -159,12 +161,19 @@ export default function MessagingSystemAdmin() {
   const switchCorporation = (corp: typeof TEST_CORPORATIONS[0]) => {
     setActiveCorp(corp);
     setSelectedConversationId(null);
+    setIsNewConversation(false);
   };
 
   // Start a new conversation with the other corp
   const startConversation = () => {
     if (existingConversation) {
+      // Existing conversation - just select it
       setSelectedConversationId(existingConversation._id);
+      setIsNewConversation(false);
+    } else {
+      // No conversation yet - enter new conversation mode
+      setSelectedConversationId(null);
+      setIsNewConversation(true);
     }
   };
 
@@ -318,7 +327,7 @@ export default function MessagingSystemAdmin() {
 
           {/* Conversation Panel */}
           <div className="col-span-2 bg-black/40 rounded-xl border border-gray-700 flex flex-col overflow-hidden">
-            {selectedConversationId ? (
+            {(selectedConversationId || isNewConversation) ? (
               <>
                 {/* Conversation Header */}
                 <div className="p-4 border-b border-gray-700">
@@ -332,7 +341,9 @@ export default function MessagingSystemAdmin() {
                       <div className="text-white font-semibold">
                         {TEST_CORPORATIONS.find(c => c.id !== activeCorp.id)?.companyName}
                       </div>
-                      <div className="text-gray-500 text-sm">Active now</div>
+                      <div className="text-gray-500 text-sm">
+                        {isNewConversation && !selectedConversationId ? 'New conversation' : 'Active now'}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -380,11 +391,11 @@ export default function MessagingSystemAdmin() {
                   })}
                   <div ref={messagesEndRef} />
 
-                  {messages?.length === 0 && (
+                  {(messages?.length === 0 || (isNewConversation && !messages)) && (
                     <div className="text-center text-gray-500 py-16">
                       <div className="text-4xl mb-2">💬</div>
                       <div>No messages yet</div>
-                      <div className="text-sm">Send the first message!</div>
+                      <div className="text-sm">Send the first message to start the conversation!</div>
                     </div>
                   )}
                 </div>
