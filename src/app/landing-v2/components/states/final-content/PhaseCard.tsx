@@ -233,7 +233,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
               {card.title}
             </h4>
 
-            {false && isPhaseOne && (
+            {isPhaseOne && (
               <div
                 className="uppercase font-bold mt-1 mb-3"
                 style={{

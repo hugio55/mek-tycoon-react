@@ -39,6 +39,7 @@ import PreLoader from '@/components/loaders/PreLoader';
 import AnimatedBorderButton from '@/components/loaders/AnimatedBorderButton';
 import GlowButton from '@/components/loaders/GlowButton';
 import GlowCard from '@/components/loaders/GlowCard';
+import RotaryDial from '@/components/loaders/RotaryDial';
 import ProModeToggle from '@/components/controls/ProModeToggle';
 import PowerSwitch from '@/components/controls/PowerSwitch';
 import PowerSwitchToggle from '@/components/controls/PowerSwitchToggle';
@@ -4329,6 +4330,65 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, White variants</div>
                       <div><span className="text-zinc-500">Shapes:</span> rounded, sharp, angled</div>
                       <div><span className="text-zinc-500">Features:</span> Animated dot orbiting border, radial gradients, light ray effect, grid lines, gradient text</div>
+                    </div>
+                  </div>
+
+                  {/* Rotary Dial */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Rotary Dial
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-6 flex flex-wrap items-center justify-center gap-8 min-h-[350px]">
+                      {/* Gold Variant */}
+                      <div className="flex flex-col items-center gap-2">
+                        <RotaryDial
+                          color="gold"
+                          size="sm"
+                          options={['OFF', '1', '2', '3', '4', '5']}
+                          onChange={(idx, label) => console.log('Gold dial:', label)}
+                        />
+                        <span className="text-xs text-yellow-400 uppercase tracking-wider">Gold</span>
+                      </div>
+
+                      {/* Cyan Variant */}
+                      <div className="flex flex-col items-center gap-2">
+                        <RotaryDial
+                          color="cyan"
+                          size="sm"
+                          options={['OFF', '1', '2', '3', '4', '5']}
+                          defaultIndex={2}
+                          onChange={(idx, label) => console.log('Cyan dial:', label)}
+                        />
+                        <span className="text-xs text-cyan-400 uppercase tracking-wider">Cyan</span>
+                      </div>
+
+                      {/* Silver Variant */}
+                      <div className="flex flex-col items-center gap-2">
+                        <RotaryDial
+                          color="silver"
+                          size="sm"
+                          options={['OFF', '1', '2', '3', '4', '5']}
+                          defaultIndex={4}
+                          onChange={(idx, label) => console.log('Silver dial:', label)}
+                        />
+                        <span className="text-xs text-zinc-400 uppercase tracking-wider">Silver</span>
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by Pradeepsaranbishnoi</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, Silver variants</div>
+                      <div><span className="text-zinc-500">Sizes:</span> sm, md, lg</div>
+                      <div><span className="text-zinc-500">Features:</span> 6-position rotary selector, animated light indicator, glowing dot, 3D layered rings, line dividers, clickable labels</div>
                     </div>
                   </div>
 
