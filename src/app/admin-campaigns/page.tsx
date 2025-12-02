@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { DatabaseProvider, useDatabaseContext } from '@/contexts/DatabaseContext';
 import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
 import CampaignManager from '@/components/admin/campaign/CampaignManager';
 import NFTInventoryTable from '@/components/admin/campaign/NFTInventoryTable';
 import NMKRSyncModal from '@/components/admin/campaign/NMKRSyncModal';
@@ -156,7 +157,7 @@ function AdminCampaignsContent() {
 
       // Get discrepancies from Convex
       const discrepancies = await client.query(api.nmkrSync.getInventoryDiscrepancies, {
-        campaignId,
+        campaignId: campaignId as Id<"commemorativeCampaigns">,
         nmkrStatuses: nmkrData.statuses,
       });
 
@@ -195,7 +196,7 @@ function AdminCampaignsContent() {
 
       // Sync all via Convex
       const result = await client.mutation(api.nmkrSync.syncCampaignInventory, {
-        campaignId: syncCampaignId,
+        campaignId: syncCampaignId as Id<"commemorativeCampaigns">,
         nmkrStatuses: nmkrData.statuses,
       });
 
@@ -203,7 +204,7 @@ function AdminCampaignsContent() {
 
       // Refresh discrepancies (should be empty now)
       const newDiscrepancies = await client.query(api.nmkrSync.getInventoryDiscrepancies, {
-        campaignId: syncCampaignId,
+        campaignId: syncCampaignId as Id<"commemorativeCampaigns">,
         nmkrStatuses: nmkrData.statuses,
       });
 
