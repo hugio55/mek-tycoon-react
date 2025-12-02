@@ -57,6 +57,9 @@ export function useBackgroundAudio() {
       return;
     }
 
+    let animationId: number;
+    let isCancelled = false;
+
     if (audioPlaying && audioEnabled) {
       audioRef.current.currentTime = 0;
       audioRef.current.volume = 0;
@@ -65,42 +68,46 @@ export function useBackgroundAudio() {
         console.error('[🎵AUDIO-V2] Play failed:', e);
       });
 
-      // Fade in over 500ms
-      let startTime = Date.now();
-      const fadeIn = setInterval(() => {
-        if (!audioRef.current) {
-          clearInterval(fadeIn);
-          return;
-        }
+      // Fade in over 500ms using requestAnimationFrame (more efficient)
+      const startTime = Date.now();
+      const fadeIn = () => {
+        if (isCancelled || !audioRef.current) return;
+
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / 500, 1);
         audioRef.current.volume = progress;
-        if (progress >= 1) {
-          clearInterval(fadeIn);
-        }
-      }, 20);
 
-      return () => clearInterval(fadeIn);
-    } else if (!audioPlaying && audioRef.current.volume > 0) {
-      // Fade out over 500ms
-      let startTime = Date.now();
-      const startVolume = audioRef.current.volume;
-      const fadeOut = setInterval(() => {
-        if (!audioRef.current) {
-          clearInterval(fadeOut);
-          return;
+        if (progress < 1) {
+          animationId = requestAnimationFrame(fadeIn);
         }
+      };
+      animationId = requestAnimationFrame(fadeIn);
+    } else if (!audioPlaying && audioRef.current.volume > 0) {
+      // Fade out over 500ms using requestAnimationFrame
+      const startTime = Date.now();
+      const startVolume = audioRef.current.volume;
+      const fadeOut = () => {
+        if (isCancelled || !audioRef.current) return;
+
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / 500, 1);
         audioRef.current.volume = startVolume * (1 - progress);
+
         if (progress >= 1) {
           audioRef.current.pause();
-          clearInterval(fadeOut);
+        } else {
+          animationId = requestAnimationFrame(fadeOut);
         }
-      }, 20);
-
-      return () => clearInterval(fadeOut);
+      };
+      animationId = requestAnimationFrame(fadeOut);
     }
+
+    return () => {
+      isCancelled = true;
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
   }, [audioPlaying, audioEnabled]);
 
   const toggleAudio = useCallback(() => {

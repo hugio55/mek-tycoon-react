@@ -29,8 +29,8 @@ const StarField = () => {
     };
     setCanvasSize();
 
-    const STAR_COUNT_LAYER1 = 220;
-    const STAR_COUNT_LAYER2 = 40;
+    const STAR_COUNT_LAYER1 = 120; // Reduced from 220 for better performance
+    const STAR_COUNT_LAYER2 = 20;  // Reduced from 40 for better performance
     const SPEED_LAYER1 = 1.5;
     const SPEED_LAYER2 = 20;
     const MAX_DEPTH = 1000;
@@ -39,6 +39,8 @@ const StarField = () => {
 
     let HALF_WIDTH = canvas.width / 2;
     let HALF_HEIGHT = canvas.height / 2;
+    let CANVAS_WIDTH = canvas.width;
+    let CANVAS_HEIGHT = canvas.height;
 
     const starsLayer1: Star[] = [];
     for (let i = 0; i < STAR_COUNT_LAYER1; i++) {
@@ -91,13 +93,20 @@ const StarField = () => {
       accumulator += deltaTime;
 
       // Fixed timestep updates - stars move EXACTLY the same distance each update
-      while (accumulator >= FIXED_TIMESTEP) {
+      // Limit to max 3 iterations to prevent performance spiral
+      let iterations = 0;
+      while (accumulator >= FIXED_TIMESTEP && iterations < 3) {
         updateStars();
         accumulator -= FIXED_TIMESTEP;
+        iterations++;
+      }
+      // If we hit limit, discard excess accumulator to prevent spiral
+      if (iterations >= 3) {
+        accumulator = 0;
       }
 
       // Render every frame for smooth 60fps display
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
       renderStars();
       animationId = requestAnimationFrame(animate);
     };
@@ -144,8 +153,8 @@ const StarField = () => {
         const screenX = star.x * scale + HALF_WIDTH;
         const screenY = star.y * scale + HALF_HEIGHT;
 
-        if (screenX < 0 || screenX > canvas.width ||
-            screenY < 0 || screenY > canvas.height) {
+        if (screenX < 0 || screenX > CANVAS_WIDTH ||
+            screenY < 0 || screenY > CANVAS_HEIGHT) {
           continue;
         }
 
@@ -174,8 +183,8 @@ const StarField = () => {
         const oldScreenX = star.x * oldScale + HALF_WIDTH;
         const oldScreenY = star.y * oldScale + HALF_HEIGHT;
 
-        if (screenX < -50 || screenX > canvas.width + 50 ||
-            screenY < -50 || screenY > canvas.height + 50) {
+        if (screenX < -50 || screenX > CANVAS_WIDTH + 50 ||
+            screenY < -50 || screenY > CANVAS_HEIGHT + 50) {
           continue;
         }
 
@@ -198,6 +207,8 @@ const StarField = () => {
       setCanvasSize();
       HALF_WIDTH = canvas.width / 2;
       HALF_HEIGHT = canvas.height / 2;
+      CANVAS_WIDTH = canvas.width;
+      CANVAS_HEIGHT = canvas.height;
     };
     window.addEventListener('resize', handleResize);
 
@@ -213,7 +224,7 @@ const StarField = () => {
       className="fixed inset-0 pointer-events-none"
       style={{
         zIndex: 1,
-        willChange: 'transform',
+        willChange: 'auto', // Canvas is already GPU-accelerated, don't force layer
         transform: 'translateZ(0)'  // Force GPU compositor layer
       }}
     />

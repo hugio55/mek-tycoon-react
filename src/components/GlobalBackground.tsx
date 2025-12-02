@@ -116,7 +116,7 @@ export default function GlobalBackground() {
   return (
     <div className="fixed inset-0 overflow-hidden" style={{ zIndex: -1 }}>
       {/* Deep space background gradient - enhanced for visibility */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950" style={{ transform: 'translateZ(0)', willChange: 'auto' }} />
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950" />
 
       {/* Industrial grid overlay */}
       <div
@@ -153,7 +153,7 @@ export default function GlobalBackground() {
             animationTimingFunction: 'ease-in-out',
             animationIterationCount: 'infinite',
             animationDelay: `${star.delay}s`,
-            willChange: star.twinkle ? 'opacity, transform' : 'auto',
+            willChange: 'auto', // Remove willChange - browser compositor is smart enough
           }}
         />
         );
@@ -186,7 +186,7 @@ export default function GlobalBackground() {
             boxShadow: '0 0 6px rgba(250, 182, 23, 0.6)',
             '--drift-x': `${Math.cos(particle.driftAngle * Math.PI / 180) * 150}vw`,
             '--drift-y': `${Math.sin(particle.driftAngle * Math.PI / 180) * 150}vh`,
-            willChange: 'transform',
+            willChange: 'auto', // Remove - reduces compositor layers from 25 to 0
           } as React.CSSProperties}
         />
       ))}
@@ -226,7 +226,7 @@ export default function GlobalBackground() {
               animationIterationCount: 'infinite',
               animationDelay: satellite.delay,
               boxShadow: '0 0 3px rgba(255, 255, 255, 0.8)',
-              willChange: 'transform',
+              willChange: 'auto', // Remove - reduces compositor layers from 8 to 0
             } as React.CSSProperties}
           />
         );

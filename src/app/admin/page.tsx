@@ -4502,7 +4502,8 @@ export default function AdminMasterDataPage() {
                     </div>
 
                     {/* Component Preview */}
-                    <div className="bg-zinc-900 rounded-lg p-8 flex flex-col items-center justify-center gap-6 min-h-[300px]">
+                    <div className="bg-zinc-900 rounded-lg p-8 flex flex-col items-center justify-center gap-6 min-h-[400px]">
+                      {/* 3 buttons */}
                       <div className="flex flex-col items-center gap-2">
                         <KeycapRadioGroup
                           options={[
@@ -4512,19 +4513,39 @@ export default function AdminMasterDataPage() {
                           ]}
                           onChange={(val) => console.log('Selected:', val)}
                         />
-                        <span className="text-xs text-zinc-500">Default (blue)</span>
+                        <span className="text-xs text-zinc-500">3 buttons (blue)</span>
                       </div>
+                      {/* 5 buttons */}
                       <div className="flex flex-col items-center gap-2">
                         <KeycapRadioGroup
                           options={[
-                            { value: 'off', label: 'OFF' },
-                            { value: 'auto', label: 'AUTO' },
-                            { value: 'on', label: 'ON' },
+                            { value: '1', label: '1' },
+                            { value: '2', label: '2' },
+                            { value: '3', label: '3' },
+                            { value: '4', label: '4' },
+                            { value: '5', label: '5' },
                           ]}
                           accentColor="#fab617"
                           onChange={(val) => console.log('Selected:', val)}
                         />
-                        <span className="text-xs text-zinc-500">Gold accent</span>
+                        <span className="text-xs text-zinc-500">5 buttons (gold)</span>
+                      </div>
+                      {/* 7 buttons */}
+                      <div className="flex flex-col items-center gap-2">
+                        <KeycapRadioGroup
+                          options={[
+                            { value: 'sun', label: 'SUN' },
+                            { value: 'mon', label: 'MON' },
+                            { value: 'tue', label: 'TUE' },
+                            { value: 'wed', label: 'WED' },
+                            { value: 'thu', label: 'THU' },
+                            { value: 'fri', label: 'FRI' },
+                            { value: 'sat', label: 'SAT' },
+                          ]}
+                          accentColor="#00d4ff"
+                          onChange={(val) => console.log('Selected:', val)}
+                        />
+                        <span className="text-xs text-zinc-500">7 buttons (complete blue)</span>
                       </div>
                     </div>
 
