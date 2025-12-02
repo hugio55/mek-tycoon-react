@@ -4933,6 +4933,66 @@ export default function AdminMasterDataPage() {
                     </div>
                   </div>
 
+                  {/* Pressed Button Radio */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Pressed Button Radio
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-zinc-900 rounded-lg p-8 flex flex-col items-center justify-center gap-8 min-h-[300px]">
+                      {/* Small */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Small</span>
+                        <PressedButtonRadio
+                          size="sm"
+                          options={[
+                            { value: 'off', label: 'OFF' },
+                            { value: 'on', label: 'ON' },
+                          ]}
+                        />
+                      </div>
+                      {/* Medium (default) */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Medium (Default)</span>
+                        <PressedButtonRadio
+                          options={[
+                            { value: 'easy', label: 'Easy' },
+                            { value: 'medium', label: 'Medium' },
+                            { value: 'hard', label: 'Hard' },
+                          ]}
+                          glowColor="#fab617"
+                        />
+                      </div>
+                      {/* Large */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Large with Custom Glow</span>
+                        <PressedButtonRadio
+                          size="lg"
+                          options={[
+                            { value: 'bronze', label: 'Bronze' },
+                            { value: 'silver', label: 'Silver' },
+                            { value: 'gold', label: 'Gold' },
+                            { value: 'plat', label: 'Platinum' },
+                          ]}
+                          glowColor="#22c55e"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by m1her</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Features:</span> Pressed button effect with shadow removal on select, glow behind active item, size variants (sm/md/lg), custom glow color</div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
           </div>

@@ -3808,4 +3808,15 @@ export default defineSchema({
   })
     .index("by_conversation", ["conversationId"])
     .index("by_expires", ["expiresAt"]),
+
+  // Message blocking - prevents users from messaging each other
+  messageBlocks: defineTable({
+    blockerWallet: v.string(), // The corporation who initiated the block
+    blockedWallet: v.string(), // The corporation who is blocked
+    createdAt: v.number(), // When the block was created
+    reason: v.optional(v.string()), // Optional reason for blocking (spam, harassment, etc.)
+  })
+    .index("by_blocker", ["blockerWallet"])
+    .index("by_blocked", ["blockedWallet"])
+    .index("by_blocker_blocked", ["blockerWallet", "blockedWallet"]),
 });

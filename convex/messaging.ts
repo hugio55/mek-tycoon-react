@@ -52,6 +52,21 @@ export const getConversations = query({
           .withIndex("by_wallet", (q) => q.eq("walletAddress", otherWallet))
           .first();
 
+        // Check block status
+        const iBlockedThem = await ctx.db
+          .query("messageBlocks")
+          .withIndex("by_blocker_blocked", (q) =>
+            q.eq("blockerWallet", args.walletAddress).eq("blockedWallet", otherWallet)
+          )
+          .first();
+
+        const theyBlockedMe = await ctx.db
+          .query("messageBlocks")
+          .withIndex("by_blocker_blocked", (q) =>
+            q.eq("blockerWallet", otherWallet).eq("blockedWallet", args.walletAddress)
+          )
+          .first();
+
         return {
           ...conv,
           unreadCount: unreadRecord?.count ?? 0,
@@ -59,6 +74,11 @@ export const getConversations = query({
             walletAddress: otherWallet,
             companyName: otherUser?.companyName ?? "Unknown Corporation",
             displayName: otherUser?.displayName ?? otherUser?.companyName ?? "Unknown",
+          },
+          blockStatus: {
+            iBlockedThem: !!iBlockedThem,
+            theyBlockedMe: !!theyBlockedMe,
+            isBlocked: !!iBlockedThem || !!theyBlockedMe,
           },
         };
       })
@@ -180,6 +200,29 @@ export const sendMessage = mutation({
     }
     if (args.content.length > MAX_MESSAGE_LENGTH) {
       throw new Error(`Message exceeds ${MAX_MESSAGE_LENGTH} character limit`);
+    }
+
+    // Check if either user has blocked the other
+    const senderBlockedRecipient = await ctx.db
+      .query("messageBlocks")
+      .withIndex("by_blocker_blocked", (q) =>
+        q.eq("blockerWallet", args.senderWallet).eq("blockedWallet", args.recipientWallet)
+      )
+      .first();
+
+    if (senderBlockedRecipient) {
+      throw new Error("You have blocked this user. Unblock them to send messages.");
+    }
+
+    const recipientBlockedSender = await ctx.db
+      .query("messageBlocks")
+      .withIndex("by_blocker_blocked", (q) =>
+        q.eq("blockerWallet", args.recipientWallet).eq("blockedWallet", args.senderWallet)
+      )
+      .first();
+
+    if (recipientBlockedSender) {
+      throw new Error("This user has blocked you and cannot receive your messages.");
     }
 
     const now = Date.now();
@@ -443,5 +486,174 @@ export const cleanupExpiredTypingIndicators = mutation({
     }
 
     return { cleaned: expired.length };
+  },
+});
+
+// ============================================================================
+// BLOCKING SYSTEM
+// ============================================================================
+
+// Check if a user is blocked (either direction)
+export const isUserBlocked = query({
+  args: {
+    myWallet: v.string(),
+    otherWallet: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Check if I blocked them
+    const iBlockedThem = await ctx.db
+      .query("messageBlocks")
+      .withIndex("by_blocker_blocked", (q) =>
+        q.eq("blockerWallet", args.myWallet).eq("blockedWallet", args.otherWallet)
+      )
+      .first();
+
+    // Check if they blocked me
+    const theyBlockedMe = await ctx.db
+      .query("messageBlocks")
+      .withIndex("by_blocker_blocked", (q) =>
+        q.eq("blockerWallet", args.otherWallet).eq("blockedWallet", args.myWallet)
+      )
+      .first();
+
+    return {
+      iBlockedThem: !!iBlockedThem,
+      theyBlockedMe: !!theyBlockedMe,
+      isBlocked: !!iBlockedThem || !!theyBlockedMe,
+      blockDetails: iBlockedThem || theyBlockedMe || null,
+    };
+  },
+});
+
+// Get all users I have blocked (for unblock menu)
+export const getBlockedUsers = query({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    const blocks = await ctx.db
+      .query("messageBlocks")
+      .withIndex("by_blocker", (q) => q.eq("blockerWallet", args.walletAddress))
+      .order("desc")
+      .collect();
+
+    // Get user info for each blocked user
+    const blockedUsersWithInfo = await Promise.all(
+      blocks.map(async (block) => {
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", block.blockedWallet))
+          .first();
+
+        return {
+          ...block,
+          blockedUser: {
+            walletAddress: block.blockedWallet,
+            companyName: user?.companyName ?? "Unknown Corporation",
+            displayName: user?.displayName ?? user?.companyName ?? "Unknown",
+          },
+        };
+      })
+    );
+
+    return blockedUsersWithInfo;
+  },
+});
+
+// Get users who have blocked me (for debugging/admin)
+export const getUsersWhoBlockedMe = query({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    const blocks = await ctx.db
+      .query("messageBlocks")
+      .withIndex("by_blocked", (q) => q.eq("blockedWallet", args.walletAddress))
+      .collect();
+
+    return blocks;
+  },
+});
+
+// Block a user
+export const blockUser = mutation({
+  args: {
+    blockerWallet: v.string(),
+    blockedWallet: v.string(),
+    reason: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Can't block yourself
+    if (args.blockerWallet === args.blockedWallet) {
+      throw new Error("Cannot block yourself");
+    }
+
+    // Check if already blocked
+    const existingBlock = await ctx.db
+      .query("messageBlocks")
+      .withIndex("by_blocker_blocked", (q) =>
+        q.eq("blockerWallet", args.blockerWallet).eq("blockedWallet", args.blockedWallet)
+      )
+      .first();
+
+    if (existingBlock) {
+      throw new Error("User is already blocked");
+    }
+
+    // Create the block
+    const blockId = await ctx.db.insert("messageBlocks", {
+      blockerWallet: args.blockerWallet,
+      blockedWallet: args.blockedWallet,
+      createdAt: Date.now(),
+      reason: args.reason,
+    });
+
+    return { success: true, blockId };
+  },
+});
+
+// Unblock a user
+export const unblockUser = mutation({
+  args: {
+    blockerWallet: v.string(),
+    blockedWallet: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Find the block
+    const existingBlock = await ctx.db
+      .query("messageBlocks")
+      .withIndex("by_blocker_blocked", (q) =>
+        q.eq("blockerWallet", args.blockerWallet).eq("blockedWallet", args.blockedWallet)
+      )
+      .first();
+
+    if (!existingBlock) {
+      throw new Error("User is not blocked");
+    }
+
+    // Delete the block
+    await ctx.db.delete(existingBlock._id);
+
+    return { success: true };
+  },
+});
+
+// Unblock by block ID (for unblock menu)
+export const unblockById = mutation({
+  args: {
+    blockId: v.id("messageBlocks"),
+    walletAddress: v.string(), // For verification
+  },
+  handler: async (ctx, args) => {
+    const block = await ctx.db.get(args.blockId);
+
+    if (!block) {
+      throw new Error("Block not found");
+    }
+
+    // Verify the requester is the blocker
+    if (block.blockerWallet !== args.walletAddress) {
+      throw new Error("Not authorized to unblock this user");
+    }
+
+    await ctx.db.delete(args.blockId);
+
+    return { success: true };
   },
 });
