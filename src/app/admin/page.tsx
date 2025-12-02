@@ -59,6 +59,7 @@ import HoverTooltip from '@/components/controls/HoverTooltip';
 import FillTextButton from '@/components/controls/FillTextButton';
 import FloatingLabelInput from '@/components/controls/FloatingLabelInput';
 import IndustrialFlipCard from '@/components/controls/IndustrialFlipCard';
+import StarBurstButton from '@/components/controls/StarBurstButton';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import PortMonitor from '@/components/PortMonitor';
 import DeploymentsAdmin from '@/components/DeploymentsAdmin';
@@ -4293,6 +4294,33 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Colors:</span> Gold (#fab617) and Cyan (#00d4ff)</div>
                       <div><span className="text-zinc-500">Shapes:</span> rounded, pill, sharp, angled, hexagon</div>
                       <div><span className="text-zinc-500">Features:</span> Animated gradient (325deg), inset shadows, hover animation, focus ring</div>
+                    </div>
+                  </div>
+
+                  {/* Star Burst Button */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Star Burst Button
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Button
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <StarBurstButton onClick={() => console.log('StarBurst clicked!')}>
+                        Click Me
+                      </StarBurstButton>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by augustin_4687</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind + CSS</div>
+                      <div><span className="text-zinc-500">Colors:</span> Yellow (#facc15) with stone-800 (#292524) and stone-50 (#fafaf9)</div>
+                      <div><span className="text-zinc-500">Features:</span> Rotating star-burst clip-path (40-point polygon), layered box-shadow stack (yellow/dark/light), hover press animation, animated dotted pattern overlay, focus/active outline states</div>
                     </div>
                   </div>
 
