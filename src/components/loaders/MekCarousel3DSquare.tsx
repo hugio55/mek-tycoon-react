@@ -152,13 +152,12 @@ export default function MekCarousel3DSquare({
             position: 'absolute',
             bottom: '5%',
             left: '50%',
-            transform: 'translateX(-50%) translateZ(0)',
+            transform: 'translateX(-50%)',
             width: `${sizeStyle.translateZ * 1.5}px`,
             height: '40px',
             background: `radial-gradient(ellipse at center, ${config.glow} 0%, transparent 70%)`,
             filter: 'blur(10px)',
-            opacity: 0.6,
-            willChange: 'opacity'
+            opacity: 0.6
           }}
         />
       </div>

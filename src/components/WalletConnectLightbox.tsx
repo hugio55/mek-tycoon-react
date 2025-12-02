@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
+import { useMutation } from 'convex/react';
+import { api } from '@/../convex/_generated/api';
 import {
   saveWalletSession,
   restoreWalletSession,
@@ -31,6 +33,9 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
   const [connectionStatus, setConnectionStatus] = useState<string>('');
   const [availableWallets, setAvailableWallets] = useState<WalletInfo[]>([]);
   const [walletError, setWalletError] = useState<string | null>(null);
+
+  // Convex mutation to create/link user record in unified wallet system
+  const connectWalletMutation = useMutation(api.walletAuth.connectWallet);
 
   // Mount/unmount for portal rendering
   useEffect(() => {
@@ -287,6 +292,24 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
 
         // Client-side parsing fallback removed - not available in staging
         console.log('[WalletConnect] No fallback available - continuing without Meks');
+      }
+
+      // Create/link user record in the unified wallet system
+      // This ensures the user has access to crafting, essence, and other userId-dependent features
+      setConnectionStatus('Linking user account...');
+      try {
+        const userResult = await connectWalletMutation({
+          walletAddress: paymentAddress,
+          walletType: wallet.name.toLowerCase(),
+          stakeAddress: stakeAddress,
+        });
+        console.log('[WalletConnect] User account linked:', userResult.isNewUser ? 'NEW USER' : 'EXISTING USER');
+        if ((userResult as any).linkedByStakeAddress) {
+          console.log('[WalletConnect] User was found by stake address and linked to payment address');
+        }
+      } catch (userLinkError) {
+        // Non-fatal - user can still use gold mining without users record
+        console.warn('[WalletConnect] Could not link user account:', userLinkError);
       }
 
       // Save session
