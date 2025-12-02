@@ -4521,6 +4521,17 @@ function CampaignManagerWithDatabase({
                 >
                   {verifyingCampaignId === campaign._id ? '⏳ Verifying...' : '🔍 Verify with NMKR'}
                 </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onBackfillSoldNFTData();
+                  }}
+                  disabled={backfillRunning}
+                  className="text-xs text-green-400 hover:text-green-300 transition-colors underline disabled:opacity-50"
+                  title="Populate Claimed By and Corporation for sold NFTs from reservation records"
+                >
+                  {backfillRunning ? '⏳ Backfilling...' : '📋 Backfill Data'}
+                </button>
                 {selectedCampaignId === campaign._id && (
                   <span className="text-xs text-yellow-400 ml-auto">
                     👇 View NFTs below
@@ -4952,9 +4963,11 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
             onRunCleanup={handleRunCleanup}
             onSyncCounters={handleSyncCounters}
             onVerifyWithNMKR={handleVerifyWithNMKR}
+            onBackfillSoldNFTData={handleBackfillSoldNFTData}
             cleaningCampaignId={cleaningCampaignId}
             syncingCampaignId={syncingCampaignId}
             verifyingCampaignId={nmkrVerifying}
+            backfillRunning={backfillRunning}
             client={client}
           />
         </div>
