@@ -164,6 +164,7 @@ import type * as migrateDesktopSettings from "../migrateDesktopSettings.js";
 import type * as migratePhaseImages from "../migratePhaseImages.js";
 import type * as migrateSourceKeys from "../migrateSourceKeys.js";
 import type * as migrationUtils from "../migrationUtils.js";
+import type * as migrations_mergeGoldMiningToUsers from "../migrations/mergeGoldMiningToUsers.js";
 import type * as migrations_migrateReservationsToInventory from "../migrations/migrateReservationsToInventory.js";
 import type * as migrations_verifyMigration from "../migrations/verifyMigration.js";
 import type * as migrations from "../migrations.js";
@@ -410,6 +411,7 @@ declare const fullApi: ApiFromModules<{
   migratePhaseImages: typeof migratePhaseImages;
   migrateSourceKeys: typeof migrateSourceKeys;
   migrationUtils: typeof migrationUtils;
+  "migrations/mergeGoldMiningToUsers": typeof migrations_mergeGoldMiningToUsers;
   "migrations/migrateReservationsToInventory": typeof migrations_migrateReservationsToInventory;
   "migrations/verifyMigration": typeof migrations_verifyMigration;
   migrations: typeof migrations;

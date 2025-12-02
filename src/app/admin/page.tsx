@@ -71,6 +71,7 @@ import GlowingPowerSwitch from '@/components/controls/GlowingPowerSwitch';
 import KeycapRadioGroup from '@/components/controls/KeycapRadioGroup';
 import ColorPalettePicker from '@/components/controls/ColorPalettePicker';
 import ColorPalettePickerSmooth from '@/components/controls/ColorPalettePickerSmooth';
+import FlipToggleSwitch from '@/components/controls/FlipToggleSwitch';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import PortMonitor from '@/components/PortMonitor';
 import DeploymentsAdmin from '@/components/DeploymentsAdmin';
@@ -4826,6 +4827,42 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Animation:</span> Sequential: slide UP first (35px), THEN scale (1.4x) - no overlap</div>
                       <div><span className="text-zinc-500">Hover Fix:</span> Stable invisible hit zone (48x70px) prevents flickering</div>
                       <div><span className="text-zinc-500">Mobile:</span> Gradient slider to scrub through colors (showSlider prop)</div>
+                    </div>
+                  </div>
+
+                  {/* Flip Toggle Switch */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        3D Flip Toggle
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-zinc-900 rounded-lg p-8 flex flex-col items-center justify-center gap-8 min-h-[280px]">
+                      {/* Size variants */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Small</span>
+                        <FlipToggleSwitch size="sm" leftLabel="OFF" rightLabel="ON" />
+                      </div>
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Medium (Default)</span>
+                        <FlipToggleSwitch size="md" leftLabel="OFF" rightLabel="ON" />
+                      </div>
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Large with Custom Color</span>
+                        <FlipToggleSwitch size="lg" leftLabel="NO" rightLabel="YES" accentColor="#fab617" />
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by r7chardgh</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Features:</span> 3D flip effect using rotateY/rotateX, perspective transforms, size variants (sm/md/lg), customizable labels and accent color</div>
                     </div>
                   </div>
 
