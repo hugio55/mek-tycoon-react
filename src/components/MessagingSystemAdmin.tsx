@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
+import CloseButton from '@/components/controls/CloseButton';
 
 // Types for attachments
 interface PendingAttachment {
@@ -719,34 +720,28 @@ export default function MessagingSystemAdmin() {
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md"
           onClick={() => setLightboxImage(null)}
         >
-          {/* Liquid glass container - hugs the image */}
+          {/* Liquid glass container - inline-block to hug image exactly */}
           <div
-            className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-2xl"
+            className="relative inline-block bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-3"
             onClick={(e) => e.stopPropagation()}
             style={{
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
             }}
           >
-            {/* Close button - X made from two rotated bars */}
-            <button
-              onClick={() => setLightboxImage(null)}
-              className="absolute -top-3 -right-3 w-8 h-8 flex items-center justify-center group z-10"
-            >
-              <span
-                className="absolute w-[4px] h-[24px] rounded-full bg-[#F4A259] group-hover:bg-[#F25C66] transition-all duration-300 ease-in"
-                style={{ transform: 'rotate(45deg)' }}
+            {/* Close button - using the animated CloseButton component */}
+            <div className="absolute -top-5 -right-5 z-10">
+              <CloseButton
+                onClick={() => setLightboxImage(null)}
+                className="!mt-0 !w-[30px] !h-[30px] scale-75"
               />
-              <span
-                className="absolute w-[4px] h-[24px] rounded-full bg-[#F4A259] group-hover:bg-[#F25C66] transition-all duration-300 ease-in"
-                style={{ transform: 'rotate(-45deg)' }}
-              />
-            </button>
+            </div>
 
             {/* Image */}
             <img
               src={lightboxImage.url}
               alt={lightboxImage.filename}
-              className="max-w-[85vw] max-h-[85vh] object-contain rounded-xl"
+              className="block max-w-[85vw] max-h-[85vh] rounded-xl"
+              style={{ display: 'block' }}
             />
           </div>
         </div>
