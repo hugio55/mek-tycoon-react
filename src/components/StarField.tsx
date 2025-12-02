@@ -63,22 +63,30 @@ const StarField = () => {
     }
 
     let lastFrameTime = 0;
-    const frameInterval = 1000 / 30;
 
     const animate = (currentTime: number) => {
-      const deltaTime = currentTime - lastFrameTime;
+      // Skip first frame to avoid huge deltaTime on initial render
+      if (lastFrameTime === 0) {
+        lastFrameTime = currentTime;
+        animationId = requestAnimationFrame(animate);
+        return;
+      }
 
-      if (deltaTime >= frameInterval) {
-        lastFrameTime = currentTime - (deltaTime % frameInterval);
+      const deltaTime = Math.min(currentTime - lastFrameTime, 50); // Cap at 50ms to prevent jumps
+      lastFrameTime = currentTime;
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Always render every frame for smooth 60fps animation
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Layer 1: Slow dots
-        for (let i = 0; i < STAR_COUNT_LAYER1; i++) {
-          const star = starsLayer1[i];
+      // Normalize movement to 60fps (16.67ms per frame)
+      const frameMultiplier = deltaTime / 16.67;
 
-          star.z -= SPEED_LAYER1;
-          star.age += deltaTime;
+      // Layer 1: Slow dots
+      for (let i = 0; i < STAR_COUNT_LAYER1; i++) {
+        const star = starsLayer1[i];
+
+        star.z -= SPEED_LAYER1 * frameMultiplier;
+        star.age += deltaTime;
 
           if (star.z <= MIN_DEPTH) {
             star.z = MAX_DEPTH;
@@ -89,8 +97,8 @@ const StarField = () => {
           }
 
           const scale = MAX_DEPTH / star.z;
-          const screenX = Math.floor(star.x * scale + HALF_WIDTH);
-          const screenY = Math.floor(star.y * scale + HALF_HEIGHT);
+          const screenX = star.x * scale + HALF_WIDTH;
+          const screenY = star.y * scale + HALF_HEIGHT;
 
           if (screenX < 0 || screenX > canvas.width ||
               screenY < 0 || screenY > canvas.height) {
@@ -112,7 +120,7 @@ const StarField = () => {
           const star = starsLayer2[i];
 
           const oldZ = star.z;
-          star.z -= SPEED_LAYER2;
+          star.z -= SPEED_LAYER2 * frameMultiplier;
           star.age += deltaTime;
 
           if (star.z <= MIN_DEPTH) {
@@ -124,12 +132,12 @@ const StarField = () => {
           }
 
           const scale = MAX_DEPTH / star.z;
-          const screenX = Math.floor(star.x * scale + HALF_WIDTH);
-          const screenY = Math.floor(star.y * scale + HALF_HEIGHT);
+          const screenX = star.x * scale + HALF_WIDTH;
+          const screenY = star.y * scale + HALF_HEIGHT;
 
           const oldScale = MAX_DEPTH / oldZ;
-          const oldScreenX = Math.floor(star.x * oldScale + HALF_WIDTH);
-          const oldScreenY = Math.floor(star.y * oldScale + HALF_HEIGHT);
+          const oldScreenX = star.x * oldScale + HALF_WIDTH;
+          const oldScreenY = star.y * oldScale + HALF_HEIGHT;
 
           if (screenX < -50 || screenX > canvas.width + 50 ||
               screenY < -50 || screenY > canvas.height + 50) {
