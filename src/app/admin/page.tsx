@@ -76,6 +76,7 @@ import GliderRadio from '@/components/controls/GliderRadio';
 import MekFlipCard from '@/components/controls/MekFlipCard';
 import FlipToggleSwitch from '@/components/controls/FlipToggleSwitch';
 import PressedButtonRadio from '@/components/controls/PressedButtonRadio';
+import GlowingBorderInput from '@/components/controls/GlowingBorderInput';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import PortMonitor from '@/components/PortMonitor';
 import DeploymentsAdmin from '@/components/DeploymentsAdmin';
@@ -4991,6 +4992,54 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Source:</span> Uiverse.io by m1her</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
                       <div><span className="text-zinc-500">Features:</span> Pressed button effect with shadow removal on select, glow behind active item, size variants (sm/md/lg), custom glow color</div>
+                    </div>
+                  </div>
+
+                  {/* Glowing Border Input */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Glowing Border Input
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Input
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-zinc-900 rounded-lg p-8 flex flex-col items-center justify-center gap-10 min-h-[350px]">
+                      {/* Purple (default) */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Purple (Default)</span>
+                        <GlowingBorderInput
+                          placeholder="Search Mekanisms..."
+                          accentColor="purple"
+                        />
+                      </div>
+                      {/* Cyan */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Cyan</span>
+                        <GlowingBorderInput
+                          placeholder="Find variations..."
+                          accentColor="cyan"
+                          showFilterButton={false}
+                        />
+                      </div>
+                      {/* Gold */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Gold</span>
+                        <GlowingBorderInput
+                          placeholder="Search marketplace..."
+                          accentColor="gold"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by Lakshay-art</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Features:</span> Multi-layer rotating conic gradient border, hover/focus animations, filter button with spinning border, color variants (purple/cyan/gold), glow effects</div>
                     </div>
                   </div>
 

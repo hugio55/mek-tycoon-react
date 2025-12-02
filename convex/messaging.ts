@@ -122,8 +122,30 @@ export const getMessages = query({
       return true;
     });
 
+    // Populate attachment URLs
+    const messagesWithUrls = await Promise.all(
+      filteredMessages.map(async (msg) => {
+        if (!msg.attachments || msg.attachments.length === 0) {
+          return msg;
+        }
+
+        // Get URLs for all attachments
+        const attachmentsWithUrls = await Promise.all(
+          msg.attachments.map(async (att: { storageId: Id<"_storage">; filename: string; mimeType: string; size: number }) => ({
+            ...att,
+            url: await ctx.storage.getUrl(att.storageId),
+          }))
+        );
+
+        return {
+          ...msg,
+          attachments: attachmentsWithUrls,
+        };
+      })
+    );
+
     // Return in chronological order
-    return filteredMessages.reverse();
+    return messagesWithUrls.reverse();
   },
 });
 
@@ -283,7 +305,7 @@ export const sendMessage = mutation({
       });
     }
 
-    // Create the message
+    // Create the message with optional attachments
     const messageId = await ctx.db.insert("messages", {
       conversationId,
       senderId: args.senderWallet,
@@ -292,6 +314,7 @@ export const sendMessage = mutation({
       status: "sent",
       createdAt: now,
       isDeleted: false,
+      attachments: args.attachments,
     });
 
     // Update unread count for recipient

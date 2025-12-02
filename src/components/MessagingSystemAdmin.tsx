@@ -5,6 +5,27 @@ import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 
+// Types for attachments
+interface PendingAttachment {
+  file: File;
+  previewUrl: string;
+  storageId?: Id<"_storage">;
+  uploading?: boolean;
+  error?: string;
+}
+
+interface UploadedAttachment {
+  storageId: Id<"_storage">;
+  filename: string;
+  mimeType: string;
+  size: number;
+}
+
+// Upload limits
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILES_PER_MESSAGE = 3;
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
 // Test corporation data for dual-testing
 const TEST_CORPORATIONS = [
   {
@@ -50,8 +71,11 @@ export default function MessagingSystemAdmin() {
   const [isNewConversation, setIsNewConversation] = useState(false); // For starting new conversations
   const [messageInput, setMessageInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Convex queries
   const conversations = useQuery(api.messaging.getConversations, {
@@ -79,6 +103,8 @@ export default function MessagingSystemAdmin() {
   const sendMessage = useMutation(api.messaging.sendMessage);
   const markAsRead = useMutation(api.messaging.markConversationAsRead);
   const setTypingIndicator = useMutation(api.messaging.setTypingIndicator);
+  const generateUploadUrl = useMutation(api.messageAttachments.generateUploadUrl);
+  const validateUpload = useMutation(api.messageAttachments.validateUpload);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -125,18 +151,46 @@ export default function MessagingSystemAdmin() {
 
   // Send message handler
   const handleSendMessage = async () => {
-    if (!messageInput.trim()) return;
+    const hasContent = messageInput.trim().length > 0;
+    const hasValidAttachments = pendingAttachments.some(a => a.storageId && !a.error);
+
+    if (!hasContent && !hasValidAttachments) return;
+
+    // Check if any attachments are still uploading
+    if (pendingAttachments.some(a => a.uploading)) {
+      alert('Please wait for uploads to complete');
+      return;
+    }
 
     const otherCorp = TEST_CORPORATIONS.find(c => c.id !== activeCorp.id)!;
 
     try {
+      // Build attachments array from successfully uploaded files
+      const attachments: UploadedAttachment[] = pendingAttachments
+        .filter(a => a.storageId && !a.error)
+        .map(a => ({
+          storageId: a.storageId!,
+          filename: a.file.name,
+          mimeType: a.file.type,
+          size: a.file.size,
+        }));
+
       const result = await sendMessage({
         senderWallet: activeCorp.walletAddress,
         recipientWallet: otherCorp.walletAddress,
         content: messageInput.trim(),
+        attachments: attachments.length > 0 ? attachments : undefined,
       });
 
+      // Clear inputs
       setMessageInput('');
+
+      // Clean up preview URLs and clear pending attachments
+      pendingAttachments.forEach(a => {
+        if (a.previewUrl) URL.revokeObjectURL(a.previewUrl);
+      });
+      setPendingAttachments([]);
+
       setSelectedConversationId(result.conversationId);
       setIsNewConversation(false); // Exit new conversation mode
 
@@ -145,7 +199,7 @@ export default function MessagingSystemAdmin() {
         clearTimeout(typingTimeoutRef.current);
       }
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error('[📎SEND] Failed to send message:', error);
     }
   };
 
@@ -155,6 +209,105 @@ export default function MessagingSystemAdmin() {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  // Handle file selection
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    // Check if we'd exceed the limit
+    if (pendingAttachments.length + files.length > MAX_FILES_PER_MESSAGE) {
+      alert(`Maximum ${MAX_FILES_PER_MESSAGE} images per message`);
+      return;
+    }
+
+    // Process each file
+    for (const file of files) {
+      // Validate type
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        alert(`Invalid file type: ${file.name}. Only images allowed.`);
+        continue;
+      }
+
+      // Validate size
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`File too large: ${file.name}. Max 5MB.`);
+        continue;
+      }
+
+      // Create preview and add to pending
+      const previewUrl = URL.createObjectURL(file);
+      const pending: PendingAttachment = {
+        file,
+        previewUrl,
+        uploading: true,
+      };
+
+      setPendingAttachments(prev => [...prev, pending]);
+
+      // Upload the file
+      try {
+        // Get upload URL
+        const uploadUrl = await generateUploadUrl();
+
+        // Upload to Convex storage
+        const response = await fetch(uploadUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': file.type },
+          body: file,
+        });
+
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+
+        const { storageId } = await response.json();
+
+        // Validate and register the upload
+        await validateUpload({
+          walletAddress: activeCorp.walletAddress,
+          storageId,
+          filename: file.name,
+          mimeType: file.type,
+          size: file.size,
+        });
+
+        // Update the pending attachment with storageId
+        setPendingAttachments(prev =>
+          prev.map(p =>
+            p.file === file
+              ? { ...p, storageId, uploading: false }
+              : p
+          )
+        );
+      } catch (error) {
+        console.error('[📎UPLOAD] Failed:', error);
+        setPendingAttachments(prev =>
+          prev.map(p =>
+            p.file === file
+              ? { ...p, uploading: false, error: 'Upload failed' }
+              : p
+          )
+        );
+      }
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Remove a pending attachment
+  const removePendingAttachment = (index: number) => {
+    setPendingAttachments(prev => {
+      const attachment = prev[index];
+      if (attachment.previewUrl) {
+        URL.revokeObjectURL(attachment.previewUrl);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   // Switch active corporation
@@ -365,7 +518,28 @@ export default function MessagingSystemAdmin() {
                               : 'bg-gray-700/50 border border-gray-600 rounded-bl-sm'
                           }`}
                         >
-                          <div className="text-white">{msg.content}</div>
+                          {/* Attachments */}
+                          {msg.attachments && msg.attachments.length > 0 && (
+                            <div className={`flex gap-2 flex-wrap ${msg.content ? 'mb-2' : ''}`}>
+                              {msg.attachments.map((att: any, idx: number) => (
+                                <a
+                                  key={idx}
+                                  href={att.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block"
+                                >
+                                  <img
+                                    src={att.url}
+                                    alt={att.filename}
+                                    className="max-w-[200px] max-h-[200px] rounded-lg object-cover border border-white/10 hover:border-yellow-500/50 transition-colors"
+                                  />
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                          {/* Message content */}
+                          {msg.content && <div className="text-white">{msg.content}</div>}
                           <div className="flex items-center justify-end gap-2 mt-1">
                             <span className="text-gray-500 text-xs">
                               {formatRelativeTime(msg.createdAt)}
@@ -402,11 +576,63 @@ export default function MessagingSystemAdmin() {
 
                 {/* Compose Area - Transparent rounded design */}
                 <div className="p-4 border-t border-gray-700/50">
+                  {/* Pending Attachments Preview */}
+                  {pendingAttachments.length > 0 && (
+                    <div className="flex gap-2 mb-3 flex-wrap">
+                      {pendingAttachments.map((attachment, index) => (
+                        <div key={index} className="relative group">
+                          <div className="w-16 h-16 rounded-lg overflow-hidden border border-white/20 bg-black/40">
+                            <img
+                              src={attachment.previewUrl}
+                              alt={attachment.file.name}
+                              className="w-full h-full object-cover"
+                            />
+                            {/* Loading overlay */}
+                            {attachment.uploading && (
+                              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                <div className="w-5 h-5 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+                              </div>
+                            )}
+                            {/* Error overlay */}
+                            {attachment.error && (
+                              <div className="absolute inset-0 bg-red-500/60 flex items-center justify-center">
+                                <span className="text-white text-xs">!</span>
+                              </div>
+                            )}
+                          </div>
+                          {/* Remove button */}
+                          <button
+                            onClick={() => removePendingAttachment(index)}
+                            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 px-3 py-2">
+                    {/* Hidden file input */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      multiple
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+
                     {/* Attachment/Upload Button */}
                     <button
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
-                      title="Attach image (coming soon)"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={pendingAttachments.length >= MAX_FILES_PER_MESSAGE}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                        pendingAttachments.length >= MAX_FILES_PER_MESSAGE
+                          ? 'text-gray-600 cursor-not-allowed'
+                          : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                      }`}
+                      title={pendingAttachments.length >= MAX_FILES_PER_MESSAGE ? 'Max images reached' : 'Attach image'}
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="12" cy="12" r="10" />
@@ -436,9 +662,15 @@ export default function MessagingSystemAdmin() {
                     {/* Send Button */}
                     <button
                       onClick={handleSendMessage}
-                      disabled={!messageInput.trim() || messageInput.length > MAX_MESSAGE_LENGTH}
+                      disabled={
+                        (!messageInput.trim() && !pendingAttachments.some(a => a.storageId && !a.error)) ||
+                        messageInput.length > MAX_MESSAGE_LENGTH ||
+                        pendingAttachments.some(a => a.uploading)
+                      }
                       className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                        messageInput.trim() && messageInput.length <= MAX_MESSAGE_LENGTH
+                        (messageInput.trim() || pendingAttachments.some(a => a.storageId && !a.error)) &&
+                        messageInput.length <= MAX_MESSAGE_LENGTH &&
+                        !pendingAttachments.some(a => a.uploading)
                           ? 'text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10'
                           : 'text-gray-600 cursor-not-allowed'
                       }`}
