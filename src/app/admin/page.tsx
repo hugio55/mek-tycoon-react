@@ -4527,51 +4527,12 @@ export default function AdminMasterDataPage() {
                     </div>
 
                     {/* Component Preview */}
-                    <div className="bg-black/60 rounded-lg p-8 flex flex-row items-start justify-around gap-12 min-h-[400px]">
-                      {/* Gold - Normal Speed */}
-                      <div className="flex flex-col items-center gap-2">
-                        <MekCarousel3D
-                          color="gold"
-                          size="sm"
-                          speed="normal"
-                        />
-                        <span className="text-xs text-yellow-400 uppercase tracking-wider">Gold</span>
-                      </div>
-
-                      {/* Cyan - Fast */}
-                      <div className="flex flex-col items-center gap-2">
-                        <MekCarousel3D
-                          color="cyan"
-                          size="sm"
-                          speed="fast"
-                          images={[
-                            '/mek-images/500px/hb1-gn1-hn1.webp',
-                            '/mek-images/500px/hb1-gn2-ji1.webp',
-                            '/mek-images/500px/hb1-hp1-aj1.webp',
-                            '/mek-images/500px/hb1-io1-ap1.webp',
-                            '/mek-images/500px/hb1-jg1-il2.webp',
-                            '/mek-images/500px/hb2-ak1-cd1.webp',
-                          ]}
-                        />
-                        <span className="text-xs text-cyan-400 uppercase tracking-wider">Cyan Fast</span>
-                      </div>
-
-                      {/* Silver - Slow */}
-                      <div className="flex flex-col items-center gap-2">
-                        <MekCarousel3D
-                          color="silver"
-                          size="sm"
-                          speed="slow"
-                          tilt={-20}
-                          images={[
-                            '/mek-images/500px/dp2-bf4-il2.webp',
-                            '/mek-images/500px/dp2-bi2-fb2.webp',
-                            '/mek-images/500px/dp2-bj1-hn1.webp',
-                            '/mek-images/500px/dp2-bl1-bc1.webp',
-                          ]}
-                        />
-                        <span className="text-xs text-zinc-400 uppercase tracking-wider">Silver Slow</span>
-                      </div>
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[450px]">
+                      <MekCarousel3D
+                        color="cyan"
+                        size="lg"
+                        speed="slow"
+                      />
                     </div>
 
                     {/* Component Info */}
