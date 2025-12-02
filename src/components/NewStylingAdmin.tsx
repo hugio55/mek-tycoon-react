@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import FillTextButton from '@/components/controls/FillTextButton';
 
 /**
@@ -1104,7 +1105,26 @@ function DemoLightbox({ onClose, inputValue, onInputChange }: {
   inputValue: string;
   onInputChange: (value: string) => void;
 }) {
-  return (
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  // Lock body scroll when lightbox is open
+  useEffect(() => {
+    if (mounted) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mounted]);
+
+  if (!mounted) return null;
+
+  const lightboxContent = (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center overflow-auto p-4"
       onClick={onClose}
@@ -1173,6 +1193,9 @@ function DemoLightbox({ onClose, inputValue, onInputChange }: {
       </div>
     </div>
   );
+
+  // Use portal to render at document.body, ensuring viewport-centered positioning
+  return createPortal(lightboxContent, document.body);
 }
 
 // ============================================================================
