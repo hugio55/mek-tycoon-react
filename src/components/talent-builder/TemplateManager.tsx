@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useRef } from 'react';
-import { Template, SavedCiruTree, TalentNode, Connection } from './types';
+import { Template, SavedCiruTree, TalentNode, Connection } from '@/app/talent-builder/types';
 import { TalentAction } from './talentReducer';
 
 interface TemplateManagerProps {

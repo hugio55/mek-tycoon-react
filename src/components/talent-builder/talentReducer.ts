@@ -1,4 +1,4 @@
-import { TalentNode, Connection, DragState, BuilderMode, CanvasMode } from './types';
+import { TalentNode, Connection, DragState, BuilderMode, CanvasMode } from '@/app/talent-builder/types';
 
 export interface TalentState {
   nodes: TalentNode[];

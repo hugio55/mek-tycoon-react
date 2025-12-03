@@ -1,5 +1,5 @@
 import React, { memo, useRef, useEffect, useCallback } from 'react';
-import { TalentNode, Connection, DragState, CanvasMode } from './types';
+import { TalentNode, Connection, DragState, CanvasMode } from '@/app/talent-builder/types';
 import { TalentAction } from './talentReducer';
 
 interface CanvasProps {

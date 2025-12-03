@@ -550,9 +550,6 @@ export default function DeploymentsAdmin() {
     setProdConfirmStep(1);
   };
 
-  // Check if commit message is required but missing
-  const needsCommitMessage = willDoFullDeploy && gitStatus?.hasUncommittedChanges && !commitMessage.trim();
-
   const confirmationModal = showProdConfirm && mounted && createPortal(
     <div
       className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]"
@@ -676,50 +673,27 @@ export default function DeploymentsAdmin() {
 
             {prodConfirmStep === 2 && (
               <>
-                {needsCommitMessage ? (
-                  /* Block if commit message is needed */
-                  <>
-                    <p className="text-yellow-400 mb-4">
-                      ⚠️ You have <span className="font-bold">uncommitted changes</span> but no commit message!
-                    </p>
-                    <p className="text-gray-400 text-sm mb-6">
-                      Please close this dialog and enter a commit message before deploying.
-                    </p>
-                    <div className="flex gap-4 justify-center">
-                      <button
-                        onClick={() => { setShowProdConfirm(false); setProdConfirmStep(0); setWillDoFullDeploy(false); }}
-                        className="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 rounded-lg font-bold"
-                      >
-                        Go Back & Enter Message
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  /* Normal confirmation */
-                  <>
-                    <p className="text-gray-300 mb-4">
-                      Are you <span className="text-red-400 font-bold">ABSOLUTELY SURE</span>?
-                    </p>
-                    <p className="text-gray-400 text-sm mb-6">
-                      Changes will go live immediately. This cannot be undone without another deployment.
-                    </p>
-                    <div className="flex gap-4 justify-center">
-                      <button
-                        onClick={() => { setShowProdConfirm(false); setProdConfirmStep(0); setWillDoFullDeploy(false); }}
-                        className="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={willDoFullDeploy ? handleFullDeploy : handleDeployProd}
-                        disabled={isDeployingProd || isFullDeploy}
-                        className="px-6 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-bold disabled:opacity-50"
-                      >
-                        {isDeployingProd || isFullDeploy ? 'Deploying...' : 'DEPLOY TO PRODUCTION'}
-                      </button>
-                    </div>
-                  </>
-                )}
+                <p className="text-gray-300 mb-4">
+                  Are you <span className="text-red-400 font-bold">ABSOLUTELY SURE</span>?
+                </p>
+                <p className="text-gray-400 text-sm mb-6">
+                  Changes will go live immediately. This cannot be undone without another deployment.
+                </p>
+                <div className="flex gap-4 justify-center">
+                  <button
+                    onClick={() => { setShowProdConfirm(false); setProdConfirmStep(0); setWillDoFullDeploy(false); }}
+                    className="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={willDoFullDeploy ? handleFullDeploy : handleDeployProd}
+                    disabled={isDeployingProd || isFullDeploy}
+                    className="px-6 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-bold disabled:opacity-50"
+                  >
+                    {isDeployingProd || isFullDeploy ? 'Deploying...' : 'DEPLOY TO PRODUCTION'}
+                  </button>
+                </div>
               </>
             )}
           </div>

@@ -1,5 +1,5 @@
 import React, { memo, useCallback } from 'react';
-import { TalentNode, BuilderMode, SavedSpell } from './types';
+import { TalentNode, BuilderMode, SavedSpell } from '@/app/talent-builder/types';
 import { TalentAction } from './talentReducer';
 import { getAllVariations } from '../../lib/variationsData';
 
