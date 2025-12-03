@@ -89,16 +89,33 @@ export const updateCampaign = mutation({
 });
 
 // Delete campaign (and all its inventory) - WITH CASCADE DELETE
+// ⚠️ EXTREME CAUTION: This game likely only has ONE campaign ever.
+// Deleting it would be CATASTROPHIC. Multiple safety checks required.
 export const deleteCampaign = mutation({
   args: {
     campaignId: v.id("commemorativeCampaigns"),
     confirmCascadeDelete: v.optional(v.boolean()),
+    iAmAbsolutelySure: v.optional(v.boolean()), // Extra safety for single-campaign scenario
   },
   handler: async (ctx, args) => {
     // Get campaign info for logging
     const campaign = await ctx.db.get(args.campaignId);
     if (!campaign) {
       throw new Error("Campaign not found");
+    }
+
+    // CRITICAL SAFETY: Check if this is the ONLY campaign
+    const allCampaigns = await ctx.db.query("commemorativeCampaigns").collect();
+    if (allCampaigns.length === 1) {
+      if (!args.iAmAbsolutelySure) {
+        throw new Error(
+          `⚠️ CRITICAL WARNING: "${campaign.name}" is the ONLY campaign in the database! ` +
+          `Deleting it will remove ALL NFT inventory and sale records PERMANENTLY. ` +
+          `This is almost certainly NOT what you want. ` +
+          `If you REALLY mean to do this, pass iAmAbsolutelySure: true`
+        );
+      }
+      console.error(`[CAMPAIGNS] ⚠️⚠️⚠️ DELETING THE ONLY CAMPAIGN IN THE DATABASE ⚠️⚠️⚠️`);
     }
 
     // CASCADE DELETE: First delete all inventory records for this campaign

@@ -9,7 +9,7 @@ interface Rank {
   max: number;
 }
 
-type ChartSize = 'large' | 'medium' | 'small' | 'micro' | 'sub-micro' | 'sub-micro-lg' | 'sub-micro-sm' | 'ultra-micro' | 'ultra-micro-bar' | 'ultra-micro-dot' | 'creative-radial' | 'creative-wave' | 'creative-orbital';
+type ChartSize = 'large' | 'medium' | 'small' | 'micro' | 'sub-micro' | 'sub-micro-lg' | 'sub-micro-sm' | 'ultra-micro' | 'ultra-micro-bar' | 'ultra-micro-dot' | 'creative-radial' | 'creative-wave' | 'creative-orbital' | 'wave-heartbeat' | 'wave-mirror' | 'wave-spectrum';
 
 interface SizeConfig {
   chartHeight: number;
@@ -296,6 +296,69 @@ const SIZE_CONFIGS: Record<ChartSize, SizeConfig> = {
     maxWidth: 'max-w-[140px]',
     padding: 'p-2',
     biasNumberSize: '20px',
+    showHeader: false,
+    showFocusText: false,
+    showPercentLabels: false,
+    showRankLabels: false,
+    showDescription: false,
+    showSliderLabels: false,
+    showPeakLabel: true,
+    percentLabelClass: '',
+    rankLabelClass: '',
+    barMargin: '',
+    barRadius: '',
+    bottomMargin: 'mb-0',
+    topLabelOffset: '',
+    bottomLabelOffset: '',
+  },
+  'wave-heartbeat': {
+    chartHeight: 70,
+    maxBarHeight: 70,
+    maxWidth: 'max-w-[220px]',
+    padding: 'p-2',
+    biasNumberSize: '16px',
+    showHeader: false,
+    showFocusText: false,
+    showPercentLabels: false,
+    showRankLabels: false,
+    showDescription: false,
+    showSliderLabels: false,
+    showPeakLabel: true,
+    percentLabelClass: '',
+    rankLabelClass: '',
+    barMargin: '',
+    barRadius: '',
+    bottomMargin: 'mb-0',
+    topLabelOffset: '',
+    bottomLabelOffset: '',
+  },
+  'wave-mirror': {
+    chartHeight: 80,
+    maxBarHeight: 80,
+    maxWidth: 'max-w-[200px]',
+    padding: 'p-2',
+    biasNumberSize: '16px',
+    showHeader: false,
+    showFocusText: false,
+    showPercentLabels: false,
+    showRankLabels: false,
+    showDescription: false,
+    showSliderLabels: false,
+    showPeakLabel: true,
+    percentLabelClass: '',
+    rankLabelClass: '',
+    barMargin: '',
+    barRadius: '',
+    bottomMargin: 'mb-0',
+    topLabelOffset: '',
+    bottomLabelOffset: '',
+  },
+  'wave-spectrum': {
+    chartHeight: 130,
+    maxBarHeight: 130,
+    maxWidth: 'max-w-[140px]',
+    padding: 'p-2',
+    biasNumberSize: '18px',
     showHeader: false,
     showFocusText: false,
     showPercentLabels: false,
@@ -889,6 +952,413 @@ export default function RarityChart({
               y="72"
               textAnchor="middle"
               fontSize="10"
+              fill="rgba(255,255,255,0.7)"
+            >
+              {peakProb.toFixed(0)}%
+            </text>
+          </svg>
+        </div>
+      </div>
+    );
+  }
+
+  // Wave Heartbeat: ECG/heart monitor style with scanning effect
+  if (size === 'wave-heartbeat') {
+    const width = 220;
+    const height = 60;
+    const padding = 15;
+    const centerY = height / 2;
+
+    // Generate ECG-style path with sharp peaks
+    let pathD = `M ${padding} ${centerY}`;
+
+    probabilities.forEach((prob, i) => {
+      const segmentWidth = (width - padding * 2) / probabilities.length;
+      const x = padding + i * segmentWidth;
+      const nextX = x + segmentWidth;
+
+      // Height of the peak (inverted so higher probability = higher peak)
+      const peakHeight = (prob / 40) * (height * 0.8);
+
+      if (i === peakIndex) {
+        // Sharp ECG spike at peak probability
+        pathD += ` L ${x + segmentWidth * 0.2} ${centerY}`;
+        pathD += ` L ${x + segmentWidth * 0.3} ${centerY + peakHeight * 0.3}`;
+        pathD += ` L ${x + segmentWidth * 0.4} ${centerY - peakHeight}`;
+        pathD += ` L ${x + segmentWidth * 0.5} ${centerY + peakHeight * 0.5}`;
+        pathD += ` L ${x + segmentWidth * 0.6} ${centerY - peakHeight * 0.2}`;
+        pathD += ` L ${x + segmentWidth * 0.8} ${centerY}`;
+        pathD += ` L ${nextX} ${centerY}`;
+      } else {
+        // Smaller bumps for other probabilities
+        const bumpHeight = peakHeight * 0.4;
+        pathD += ` L ${x + segmentWidth * 0.3} ${centerY}`;
+        pathD += ` L ${x + segmentWidth * 0.5} ${centerY - bumpHeight}`;
+        pathD += ` L ${x + segmentWidth * 0.7} ${centerY}`;
+        pathD += ` L ${nextX} ${centerY}`;
+      }
+    });
+
+    return (
+      <div className={`${config.maxWidth}`}>
+        <div
+          className="relative rounded-lg overflow-hidden"
+          style={{
+            height: `${chartHeight}px`,
+            background: 'linear-gradient(180deg, rgba(0,20,0,0.8) 0%, rgba(0,10,0,0.95) 100%)',
+            border: '1px solid rgba(0,255,0,0.2)'
+          }}
+        >
+          {/* Scan lines effect */}
+          <div
+            className="absolute inset-0 pointer-events-none opacity-20"
+            style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,0,0.03) 2px, rgba(0,255,0,0.03) 4px)'
+            }}
+          />
+
+          <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="heartbeatGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                {RANKS.map((rank, i) => (
+                  <stop
+                    key={rank.name}
+                    offset={`${(i / (RANKS.length - 1)) * 100}%`}
+                    stopColor={rank.color}
+                  />
+                ))}
+              </linearGradient>
+              <filter id="heartbeatGlow">
+                <feGaussianBlur stdDeviation="2" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Grid lines */}
+            {[0.25, 0.5, 0.75].map((y) => (
+              <line
+                key={y}
+                x1="0"
+                y1={height * y}
+                x2={width}
+                y2={height * y}
+                stroke="rgba(0,255,0,0.1)"
+                strokeWidth="0.5"
+              />
+            ))}
+            {[...Array(10)].map((_, i) => (
+              <line
+                key={i}
+                x1={padding + i * ((width - padding * 2) / 10)}
+                y1="0"
+                x2={padding + i * ((width - padding * 2) / 10)}
+                y2={height}
+                stroke="rgba(0,255,0,0.1)"
+                strokeWidth="0.5"
+              />
+            ))}
+
+            {/* ECG line */}
+            <path
+              d={pathD}
+              fill="none"
+              stroke="url(#heartbeatGradient)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#heartbeatGlow)"
+              style={{ transition: 'all 150ms ease-out' }}
+            />
+
+            {/* Glow at peak */}
+            <circle
+              cx={padding + peakIndex * ((width - padding * 2) / probabilities.length) + ((width - padding * 2) / probabilities.length) * 0.4}
+              cy={centerY - (peakProb / 40) * (height * 0.8)}
+              r="4"
+              fill={peakRank.color}
+              filter="url(#heartbeatGlow)"
+              style={{ transition: 'all 150ms ease-out' }}
+            />
+          </svg>
+
+          {/* Monitor corner text */}
+          <div className="absolute top-1 left-2 text-[8px] font-mono" style={{ color: 'rgba(0,255,0,0.6)' }}>
+            BIAS MONITOR
+          </div>
+          <div className="absolute top-1 right-2 text-[10px] font-mono font-bold" style={{ color: peakRank.color }}>
+            {peakRank.name}
+          </div>
+        </div>
+        {/* Peak label */}
+        <div className="text-center mt-1">
+          <span className="text-[10px] font-semibold" style={{ color: peakRank.color }}>
+            {peakRank.name}: {peakProb.toFixed(0)}%
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Wave Mirror: Symmetrical reflection wave
+  if (size === 'wave-mirror') {
+    const width = 200;
+    const height = 70;
+    const padding = 10;
+    const centerY = height / 2;
+
+    // Generate top wave points
+    const topPoints: string[] = [];
+    const bottomPoints: string[] = [];
+
+    probabilities.forEach((prob, i) => {
+      const x = padding + (i / (probabilities.length - 1)) * (width - padding * 2);
+      const waveHeight = (prob / 40) * (height * 0.45);
+      topPoints.push(`${x},${centerY - waveHeight}`);
+      bottomPoints.push(`${x},${centerY + waveHeight}`);
+    });
+
+    // Create smooth curve path for top
+    let topPath = `M ${topPoints[0]}`;
+    for (let i = 1; i < topPoints.length; i++) {
+      const [x, y] = topPoints[i].split(',').map(Number);
+      const [prevX, prevY] = topPoints[i - 1].split(',').map(Number);
+      const cpX = (prevX + x) / 2;
+      topPath += ` Q ${cpX},${prevY} ${cpX},${(prevY + y) / 2} T ${x},${y}`;
+    }
+
+    // Create smooth curve path for bottom
+    let bottomPath = `M ${bottomPoints[0]}`;
+    for (let i = 1; i < bottomPoints.length; i++) {
+      const [x, y] = bottomPoints[i].split(',').map(Number);
+      const [prevX, prevY] = bottomPoints[i - 1].split(',').map(Number);
+      const cpX = (prevX + x) / 2;
+      bottomPath += ` Q ${cpX},${prevY} ${cpX},${(prevY + y) / 2} T ${x},${y}`;
+    }
+
+    return (
+      <div className={`${config.maxWidth}`}>
+        <div
+          className="relative rounded-lg overflow-hidden"
+          style={{
+            height: `${chartHeight}px`,
+            background: 'linear-gradient(180deg, rgba(20,0,40,0.8) 0%, rgba(0,0,20,0.9) 50%, rgba(20,0,40,0.8) 100%)'
+          }}
+        >
+          <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="mirrorGradientTop" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="rgba(255,255,255,0.1)" />
+                <stop offset="100%" stopColor={peakRank.color} stopOpacity="0.8" />
+              </linearGradient>
+              <linearGradient id="mirrorGradientBottom" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="rgba(255,255,255,0.05)" />
+                <stop offset="100%" stopColor={peakRank.color} stopOpacity="0.3" />
+              </linearGradient>
+              <linearGradient id="mirrorStrokeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                {RANKS.map((rank, i) => (
+                  <stop
+                    key={rank.name}
+                    offset={`${(i / (RANKS.length - 1)) * 100}%`}
+                    stopColor={rank.color}
+                  />
+                ))}
+              </linearGradient>
+              <filter id="mirrorGlow">
+                <feGaussianBlur stdDeviation="1.5" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Center reflection line */}
+            <line
+              x1="0"
+              y1={centerY}
+              x2={width}
+              y2={centerY}
+              stroke="rgba(255,255,255,0.15)"
+              strokeWidth="1"
+            />
+
+            {/* Top wave fill */}
+            <path
+              d={`${topPath} L ${width - padding},${centerY} L ${padding},${centerY} Z`}
+              fill="url(#mirrorGradientTop)"
+              style={{ transition: 'all 150ms ease-out' }}
+            />
+
+            {/* Bottom wave fill (reflection) */}
+            <path
+              d={`${bottomPath} L ${width - padding},${centerY} L ${padding},${centerY} Z`}
+              fill="url(#mirrorGradientBottom)"
+              opacity="0.6"
+              style={{ transition: 'all 150ms ease-out' }}
+            />
+
+            {/* Top wave stroke */}
+            <path
+              d={topPath}
+              fill="none"
+              stroke="url(#mirrorStrokeGradient)"
+              strokeWidth="2"
+              filter="url(#mirrorGlow)"
+              style={{ transition: 'all 150ms ease-out' }}
+            />
+
+            {/* Bottom wave stroke (reflection) */}
+            <path
+              d={bottomPath}
+              fill="none"
+              stroke="url(#mirrorStrokeGradient)"
+              strokeWidth="1.5"
+              opacity="0.4"
+              style={{ transition: 'all 150ms ease-out' }}
+            />
+
+            {/* Peak markers */}
+            {probabilities.map((prob, i) => {
+              if (prob < peakProb * 0.7) return null;
+              const x = padding + (i / (probabilities.length - 1)) * (width - padding * 2);
+              const waveHeight = (prob / 40) * (height * 0.45);
+              return (
+                <g key={i}>
+                  <circle cx={x} cy={centerY - waveHeight} r="3" fill={RANKS[i].color} filter="url(#mirrorGlow)" />
+                  <circle cx={x} cy={centerY + waveHeight} r="2" fill={RANKS[i].color} opacity="0.4" />
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+        {/* Peak label */}
+        <div className="text-center mt-1">
+          <span className="text-[10px] font-semibold" style={{ color: peakRank.color }}>
+            {peakRank.name}: {peakProb.toFixed(0)}%
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Wave Spectrum: Circular radial spectrum analyzer
+  if (size === 'wave-spectrum') {
+    const size_dim = 120;
+    const centerX = size_dim / 2;
+    const centerY = size_dim / 2;
+    const innerRadius = 25;
+    const maxBarLength = 30;
+
+    return (
+      <div className={`${config.maxWidth}`}>
+        <div
+          className="relative mx-auto"
+          style={{ width: `${size_dim}px`, height: `${size_dim}px` }}
+        >
+          <svg viewBox={`0 0 ${size_dim} ${size_dim}`} className="w-full h-full">
+            <defs>
+              <filter id="spectrumGlow">
+                <feGaussianBlur stdDeviation="2" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+              <radialGradient id="spectrumCenter" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={peakRank.color} stopOpacity="0.3" />
+                <stop offset="100%" stopColor={peakRank.color} stopOpacity="0" />
+              </radialGradient>
+            </defs>
+
+            {/* Background glow */}
+            <circle cx={centerX} cy={centerY} r={innerRadius + 10} fill="url(#spectrumCenter)" />
+
+            {/* Inner circle */}
+            <circle
+              cx={centerX}
+              cy={centerY}
+              r={innerRadius}
+              fill="rgba(0,0,0,0.6)"
+              stroke="rgba(255,255,255,0.1)"
+              strokeWidth="1"
+            />
+
+            {/* Spectrum bars radiating outward */}
+            {probabilities.map((prob, i) => {
+              // Distribute bars around the circle
+              const angle = (i / probabilities.length) * 360 - 90;
+              const angleRad = (angle * Math.PI) / 180;
+
+              const barLength = (prob / 40) * maxBarLength;
+              const startX = centerX + innerRadius * Math.cos(angleRad);
+              const startY = centerY + innerRadius * Math.sin(angleRad);
+              const endX = centerX + (innerRadius + barLength) * Math.cos(angleRad);
+              const endY = centerY + (innerRadius + barLength) * Math.sin(angleRad);
+
+              const rank = RANKS[i];
+              const isPeak = i === peakIndex;
+
+              return (
+                <g key={i}>
+                  {/* Bar shadow/glow */}
+                  <line
+                    x1={startX}
+                    y1={startY}
+                    x2={endX}
+                    y2={endY}
+                    stroke={rank.color}
+                    strokeWidth={isPeak ? 6 : 4}
+                    strokeLinecap="round"
+                    opacity="0.3"
+                    filter="url(#spectrumGlow)"
+                  />
+                  {/* Main bar */}
+                  <line
+                    x1={startX}
+                    y1={startY}
+                    x2={endX}
+                    y2={endY}
+                    stroke={rank.color}
+                    strokeWidth={isPeak ? 4 : 3}
+                    strokeLinecap="round"
+                    style={{ transition: 'all 150ms ease-out' }}
+                  />
+                  {/* Tip glow for peak */}
+                  {isPeak && (
+                    <circle
+                      cx={endX}
+                      cy={endY}
+                      r="4"
+                      fill={rank.color}
+                      filter="url(#spectrumGlow)"
+                    />
+                  )}
+                </g>
+              );
+            })}
+
+            {/* Center text */}
+            <text
+              x={centerX}
+              y={centerY - 3}
+              textAnchor="middle"
+              fontSize="14"
+              fontWeight="bold"
+              fill={peakRank.color}
+              style={{ transition: 'fill 150ms ease-out' }}
+            >
+              {peakRank.name}
+            </text>
+            <text
+              x={centerX}
+              y={centerY + 10}
+              textAnchor="middle"
+              fontSize="9"
               fill="rgba(255,255,255,0.7)"
             >
               {peakProb.toFixed(0)}%
