@@ -326,6 +326,9 @@ export const sendMessage = mutation({
         lastMessageSender: args.senderWallet,
         createdAt: now,
       });
+    } else if (conversation.disabledByAdmin) {
+      // Conversation has been disabled by admin
+      throw new Error("This conversation has been disabled by an administrator due to a Terms of Service violation. You may no longer interact with this corporation. If you feel this was a mistake, please reach out to us on Discord by creating a ticket.");
     } else {
       conversationId = conversation._id;
       // Update conversation with latest message info
@@ -767,6 +770,227 @@ export const unblockById = mutation({
     }
 
     await ctx.db.delete(args.blockId);
+
+    return { success: true };
+  },
+});
+
+// ============================================================================
+// ADMIN FUNCTIONS
+// ============================================================================
+
+// Get ALL conversations for admin view (with search capability)
+export const getAllConversationsAdmin = query({
+  args: {
+    searchQuery: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Get all conversations
+    const allConversations = await ctx.db
+      .query("conversations")
+      .withIndex("by_last_activity")
+      .order("desc")
+      .collect();
+
+    // Get participant info for each conversation
+    const conversationsWithDetails = await Promise.all(
+      allConversations.map(async (conv) => {
+        // Get both participants' info
+        const participant1User = await ctx.db
+          .query("users")
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", conv.participant1))
+          .first();
+
+        const participant2User = await ctx.db
+          .query("users")
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", conv.participant2))
+          .first();
+
+        // Count messages in conversation
+        const messages = await ctx.db
+          .query("messages")
+          .withIndex("by_conversation", (q) => q.eq("conversationId", conv._id))
+          .collect();
+
+        return {
+          ...conv,
+          participant1Info: {
+            walletAddress: conv.participant1,
+            companyName: participant1User?.companyName ?? "Unknown",
+            stakeAddress: participant1User?.stakeAddress ?? "",
+          },
+          participant2Info: {
+            walletAddress: conv.participant2,
+            companyName: participant2User?.companyName ?? "Unknown",
+            stakeAddress: participant2User?.stakeAddress ?? "",
+          },
+          messageCount: messages.filter(m => !m.isDeleted).length,
+        };
+      })
+    );
+
+    // Filter by search query if provided
+    if (args.searchQuery && args.searchQuery.trim()) {
+      const query = args.searchQuery.toLowerCase().trim();
+      return conversationsWithDetails.filter((conv) => {
+        return (
+          conv.participant1Info.companyName.toLowerCase().includes(query) ||
+          conv.participant2Info.companyName.toLowerCase().includes(query) ||
+          conv.participant1.toLowerCase().includes(query) ||
+          conv.participant2.toLowerCase().includes(query) ||
+          conv.participant1Info.stakeAddress.toLowerCase().includes(query) ||
+          conv.participant2Info.stakeAddress.toLowerCase().includes(query)
+        );
+      });
+    }
+
+    return conversationsWithDetails;
+  },
+});
+
+// Get messages from any conversation (admin view)
+export const getMessagesAdmin = query({
+  args: {
+    conversationId: v.id("conversations"),
+  },
+  handler: async (ctx, args) => {
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .order("asc")
+      .collect();
+
+    // Get sender info for each message
+    const messagesWithSenderInfo = await Promise.all(
+      messages.map(async (msg) => {
+        const senderUser = await ctx.db
+          .query("users")
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", msg.senderId))
+          .first();
+
+        // Get attachment URLs if any
+        let attachmentsWithUrls = msg.attachments;
+        if (msg.attachments && msg.attachments.length > 0) {
+          attachmentsWithUrls = await Promise.all(
+            msg.attachments.map(async (att: { storageId: Id<"_storage">; filename: string; mimeType: string; size: number }) => ({
+              ...att,
+              url: await ctx.storage.getUrl(att.storageId),
+            }))
+          );
+        }
+
+        return {
+          ...msg,
+          attachments: attachmentsWithUrls,
+          senderInfo: {
+            walletAddress: msg.senderId,
+            companyName: senderUser?.companyName ?? "Unknown",
+          },
+        };
+      })
+    );
+
+    return messagesWithSenderInfo;
+  },
+});
+
+// Admin: Disable a conversation (ToS violation)
+export const disableConversationAdmin = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+    reason: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const conversation = await ctx.db.get(args.conversationId);
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    await ctx.db.patch(args.conversationId, {
+      disabledByAdmin: true,
+      disabledAt: Date.now(),
+      disabledReason: args.reason || "Terms of Service violation",
+    });
+
+    return { success: true };
+  },
+});
+
+// Admin: Re-enable a disabled conversation
+export const enableConversationAdmin = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+  },
+  handler: async (ctx, args) => {
+    const conversation = await ctx.db.get(args.conversationId);
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    await ctx.db.patch(args.conversationId, {
+      disabledByAdmin: false,
+      disabledAt: undefined,
+      disabledReason: undefined,
+    });
+
+    return { success: true };
+  },
+});
+
+// Admin: Delete a conversation permanently
+export const deleteConversationAdmin = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+  },
+  handler: async (ctx, args) => {
+    const conversation = await ctx.db.get(args.conversationId);
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    // Delete all messages in the conversation
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .collect();
+
+    for (const msg of messages) {
+      await ctx.db.delete(msg._id);
+    }
+
+    // Delete unread counts for this conversation
+    const unreadCounts = await ctx.db
+      .query("messageUnreadCounts")
+      .filter((q) => q.eq(q.field("conversationId"), args.conversationId))
+      .collect();
+
+    for (const count of unreadCounts) {
+      await ctx.db.delete(count._id);
+    }
+
+    // Delete the conversation itself
+    await ctx.db.delete(args.conversationId);
+
+    return { success: true };
+  },
+});
+
+// Admin: Delete any message
+export const deleteMessageAdmin = mutation({
+  args: {
+    messageId: v.id("messages"),
+  },
+  handler: async (ctx, args) => {
+    const message = await ctx.db.get(args.messageId);
+    if (!message) {
+      throw new Error("Message not found");
+    }
+
+    // Mark as deleted and clear content
+    await ctx.db.patch(args.messageId, {
+      isDeleted: true,
+      content: "[Deleted by admin]",
+    });
 
     return { success: true };
   },

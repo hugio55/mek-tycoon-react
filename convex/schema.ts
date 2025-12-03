@@ -3764,6 +3764,10 @@ export default defineSchema({
     // Soft delete - hide conversation for individual participants
     hiddenForParticipant1: v.optional(v.boolean()),
     hiddenForParticipant2: v.optional(v.boolean()),
+    // Admin disable - locks conversation with ToS violation message
+    disabledByAdmin: v.optional(v.boolean()),
+    disabledAt: v.optional(v.number()),
+    disabledReason: v.optional(v.string()),
     // Metadata
     createdAt: v.number(),
   })
