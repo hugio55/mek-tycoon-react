@@ -356,6 +356,9 @@ export default function MessagingSystemAdmin() {
       }
     } catch (error) {
       console.error('[📎SEND] Failed to send message:', error);
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
+      alert(errorMessage);
     }
   };
 
