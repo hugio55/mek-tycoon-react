@@ -27,55 +27,59 @@ export default function NMKRJSONGenerator() {
   const [modalNewOption, setModalNewOption] = useState('');
   const [modalType, setModalType] = useState<'fieldName' | 'fieldValue' | 'websiteUrl'>('fieldName');
 
-  // NMKR form fields (moved here before useEffect hooks that reference them)
-  const [displayNameBase, setDisplayNameBase] = useState(() => {
-    const saved = localStorage.getItem('nmkr_displayNameBase');
-    return saved || 'Bronze Token';
-  });
-  const [tokenBaseName, setTokenBaseName] = useState(() => {
-    const saved = localStorage.getItem('nmkr_tokenBaseName');
-    return saved || 'MekBetaBronzeToken';
-  });
-  const [numberOfNFTs, setNumberOfNFTs] = useState(() => {
-    const saved = localStorage.getItem('nmkr_numberOfNFTs');
-    return saved ? parseInt(saved) : 5;
-  });
+  // NMKR form fields - use defaults first, load from localStorage in useEffect (SSR-safe)
+  const [displayNameBase, setDisplayNameBase] = useState('Bronze Token');
+  const [tokenBaseName, setTokenBaseName] = useState('MekBetaBronzeToken');
+  const [numberOfNFTs, setNumberOfNFTs] = useState(5);
   const [phase] = useState(1); // Keep for backwards compatibility with library, but not shown in UI
-  const [description, setDescription] = useState(() => {
-    const saved = localStorage.getItem('nmkr_description');
-    return saved || 'Exclusive commemorative NFT.';
-  });
-  const [imageIpfsHash, setImageIpfsHash] = useState(() => {
-    const saved = localStorage.getItem('nmkr_imageIpfsHash');
-    return saved || '';
-  });
-  const [policyId, setPolicyId] = useState(() => {
-    const saved = localStorage.getItem('nmkr_policyId');
-    return saved || MEK_TYCOON_POLICY_ID;
-  });
-  const [website, setWebsite] = useState(() => {
-    const saved = localStorage.getItem('nmkr_website');
-    return saved || 'https://mektycoon.com';
-  });
+  const [description, setDescription] = useState('Exclusive commemorative NFT.');
+  const [imageIpfsHash, setImageIpfsHash] = useState('');
+  const [policyId, setPolicyId] = useState(MEK_TYCOON_POLICY_ID);
+  const [website, setWebsite] = useState('https://mektycoon.com');
 
-  // Custom metadata fields (dynamic, with localStorage restore)
-  const [customFields, setCustomFields] = useState<Array<{name: string; value: string | number}>>(() => {
-    const saved = localStorage.getItem('nmkr_customFields');
-    if (saved) {
+  // Custom metadata fields (dynamic, with localStorage restore in useEffect)
+  const [customFields, setCustomFields] = useState<Array<{name: string; value: string | number}>>([
+    { name: 'Collection', value: 'Knickknacks' },
+    { name: 'Game', value: 'Mek Tycoon' },
+    { name: 'Artist', value: 'Wren Ellis' },
+    { name: 'Company', value: 'Over Exposed' },
+    { name: 'Phase', value: 1 }
+  ]);
+
+  // SSR-safe: Load saved values from localStorage on client-side mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const savedDisplayNameBase = localStorage.getItem('nmkr_displayNameBase');
+    if (savedDisplayNameBase) setDisplayNameBase(savedDisplayNameBase);
+
+    const savedTokenBaseName = localStorage.getItem('nmkr_tokenBaseName');
+    if (savedTokenBaseName) setTokenBaseName(savedTokenBaseName);
+
+    const savedNumberOfNFTs = localStorage.getItem('nmkr_numberOfNFTs');
+    if (savedNumberOfNFTs) setNumberOfNFTs(parseInt(savedNumberOfNFTs));
+
+    const savedDescription = localStorage.getItem('nmkr_description');
+    if (savedDescription) setDescription(savedDescription);
+
+    const savedImageIpfsHash = localStorage.getItem('nmkr_imageIpfsHash');
+    if (savedImageIpfsHash) setImageIpfsHash(savedImageIpfsHash);
+
+    const savedPolicyId = localStorage.getItem('nmkr_policyId');
+    if (savedPolicyId) setPolicyId(savedPolicyId);
+
+    const savedWebsite = localStorage.getItem('nmkr_website');
+    if (savedWebsite) setWebsite(savedWebsite);
+
+    const savedCustomFields = localStorage.getItem('nmkr_customFields');
+    if (savedCustomFields) {
       try {
-        return JSON.parse(saved);
+        setCustomFields(JSON.parse(savedCustomFields));
       } catch (e) {
         console.error('Failed to load custom fields:', e);
       }
     }
-    return [
-      { name: 'Collection', value: 'Knickknacks' },
-      { name: 'Game', value: 'Mek Tycoon' },
-      { name: 'Artist', value: 'Wren Ellis' },
-      { name: 'Company', value: 'Over Exposed' },
-      { name: 'Phase', value: 1 }
-    ];
-  });
+  }, []);
 
   // Add field modal state
   const [showAddFieldModal, setShowAddFieldModal] = useState(false);

@@ -7,7 +7,7 @@
  * Ensures users understand they're modifying live data.
  */
 
-import { useState, useCallback, ReactNode } from 'react';
+import { useState, useEffect, useCallback, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 interface MutationConfirmDialogProps {
@@ -52,9 +52,9 @@ export default function MutationConfirmDialog({
   const [mounted, setMounted] = useState(false);
 
   // Handle mounting for portal
-  useState(() => {
+  useEffect(() => {
     setMounted(true);
-  });
+  }, []);
 
   const canConfirm = requireTypedConfirmation
     ? typedValue.toUpperCase() === confirmationWord.toUpperCase()
