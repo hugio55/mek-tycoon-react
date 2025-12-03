@@ -591,6 +591,314 @@ export default function RarityChart({
     );
   }
 
+  // ============================================
+  // CREATIVE VARIATIONS - Experimental designs!
+  // ============================================
+
+  // Creative Radial: Semi-circular gauge with needle indicator
+  if (size === 'creative-radial') {
+    const peakPos = calculatePeakPosition(probabilities);
+    // Convert position (0-100) to angle (-90 to 90 degrees for semi-circle)
+    const needleAngle = -90 + (peakPos / 100) * 180;
+
+    return (
+      <div className={`${config.maxWidth}`}>
+        <div
+          className="relative mx-auto"
+          style={{ width: '140px', height: '80px', overflow: 'hidden' }}
+        >
+          {/* Outer arc segments */}
+          <svg viewBox="0 0 140 80" className="w-full h-full">
+            <defs>
+              {RANKS.map((rank, i) => (
+                <linearGradient key={`grad-${i}`} id={`arcGrad${i}`}>
+                  <stop offset="0%" stopColor={rank.color} stopOpacity="0.8" />
+                  <stop offset="100%" stopColor={rank.color} stopOpacity="1" />
+                </linearGradient>
+              ))}
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Arc segments for each rank */}
+            {RANKS.map((rank, i) => {
+              const startAngle = 180 + (i / RANKS.length) * 180;
+              const endAngle = 180 + ((i + 1) / RANKS.length) * 180;
+              const opacity = Math.max(0.3, probabilities[i] / Math.max(...probabilities));
+
+              const innerRadius = 50;
+              const outerRadius = 65;
+
+              const startRad = (startAngle * Math.PI) / 180;
+              const endRad = (endAngle * Math.PI) / 180;
+
+              const x1 = 70 + outerRadius * Math.cos(startRad);
+              const y1 = 75 + outerRadius * Math.sin(startRad);
+              const x2 = 70 + outerRadius * Math.cos(endRad);
+              const y2 = 75 + outerRadius * Math.sin(endRad);
+              const x3 = 70 + innerRadius * Math.cos(endRad);
+              const y3 = 75 + innerRadius * Math.sin(endRad);
+              const x4 = 70 + innerRadius * Math.cos(startRad);
+              const y4 = 75 + innerRadius * Math.sin(startRad);
+
+              return (
+                <path
+                  key={rank.name}
+                  d={`M ${x1} ${y1} A ${outerRadius} ${outerRadius} 0 0 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 0 0 ${x4} ${y4} Z`}
+                  fill={rank.color}
+                  opacity={opacity}
+                  style={{ transition: 'opacity 150ms ease-out' }}
+                />
+              );
+            })}
+
+            {/* Needle */}
+            <g transform={`rotate(${needleAngle}, 70, 75)`} style={{ transition: 'transform 150ms ease-out' }}>
+              <line x1="70" y1="75" x2="70" y2="20" stroke={peakRank.color} strokeWidth="3" strokeLinecap="round" filter="url(#glow)" />
+              <circle cx="70" cy="75" r="6" fill={peakRank.color} filter="url(#glow)" />
+              <circle cx="70" cy="75" r="3" fill="white" />
+            </g>
+          </svg>
+        </div>
+        {/* Peak label below */}
+        <div className="text-center mt-1">
+          <span className="text-[11px] font-bold" style={{ color: peakRank.color }}>
+            {peakRank.name}
+          </span>
+          <span className="text-[10px] text-gray-400 ml-1">
+            {peakProb.toFixed(0)}%
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Creative Wave: Audio visualizer / heartbeat style
+  if (size === 'creative-wave') {
+    // Generate wave points based on probabilities
+    const wavePoints: string[] = [];
+    const width = 200;
+    const height = 50;
+    const padding = 10;
+
+    // Create smooth wave using probabilities
+    probabilities.forEach((prob, i) => {
+      const x = padding + (i / (probabilities.length - 1)) * (width - padding * 2);
+      const waveHeight = (prob / 40) * (height - 10);
+      const y = height / 2 - waveHeight / 2;
+      wavePoints.push(`${x},${y}`);
+    });
+
+    // Mirror for bottom of wave
+    const bottomPoints = [...probabilities].reverse().map((prob, i) => {
+      const x = padding + ((probabilities.length - 1 - i) / (probabilities.length - 1)) * (width - padding * 2);
+      const waveHeight = (prob / 40) * (height - 10);
+      const y = height / 2 + waveHeight / 2;
+      return `${x},${y}`;
+    });
+
+    return (
+      <div className={`${config.maxWidth}`}>
+        <div
+          className="relative rounded-lg overflow-hidden"
+          style={{
+            height: `${chartHeight}px`,
+            background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.6) 100%)'
+          }}
+        >
+          <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                {RANKS.map((rank, i) => (
+                  <stop
+                    key={rank.name}
+                    offset={`${(i / (RANKS.length - 1)) * 100}%`}
+                    stopColor={rank.color}
+                    stopOpacity={Math.max(0.5, probabilities[i] / Math.max(...probabilities))}
+                  />
+                ))}
+              </linearGradient>
+              <filter id="waveGlow">
+                <feGaussianBlur stdDeviation="1.5" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Horizontal grid lines */}
+            {[0.25, 0.5, 0.75].map((y) => (
+              <line
+                key={y}
+                x1="0"
+                y1={height * y}
+                x2={width}
+                y2={height * y}
+                stroke="rgba(255,255,255,0.1)"
+                strokeWidth="0.5"
+              />
+            ))}
+
+            {/* Wave shape */}
+            <polygon
+              points={[...wavePoints, ...bottomPoints].join(' ')}
+              fill="url(#waveGradient)"
+              filter="url(#waveGlow)"
+              style={{ transition: 'all 150ms ease-out' }}
+            />
+
+            {/* Peak indicator line */}
+            <line
+              x1={padding + (peakIndex / (probabilities.length - 1)) * (width - padding * 2)}
+              y1="0"
+              x2={padding + (peakIndex / (probabilities.length - 1)) * (width - padding * 2)}
+              y2={height}
+              stroke={peakRank.color}
+              strokeWidth="2"
+              strokeDasharray="3,2"
+              opacity="0.8"
+              style={{ transition: 'all 150ms ease-out' }}
+            />
+          </svg>
+        </div>
+        {/* Peak label */}
+        <div className="text-center mt-1">
+          <span className="text-[10px] font-semibold" style={{ color: peakRank.color }}>
+            {peakRank.name}: {peakProb.toFixed(0)}%
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Creative Orbital: Concentric rings with orbiting particle
+  if (size === 'creative-orbital') {
+    const peakPos = calculatePeakPosition(probabilities);
+    // Convert to angle (0-360)
+    const orbitAngle = (peakPos / 100) * 360 - 90;
+
+    return (
+      <div className={`${config.maxWidth}`}>
+        <div
+          className="relative mx-auto"
+          style={{ width: '120px', height: '120px' }}
+        >
+          <svg viewBox="0 0 120 120" className="w-full h-full">
+            <defs>
+              <filter id="orbitalGlow">
+                <feGaussianBlur stdDeviation="2" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+              <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={peakRank.color} stopOpacity="0.6" />
+                <stop offset="100%" stopColor={peakRank.color} stopOpacity="0" />
+              </radialGradient>
+            </defs>
+
+            {/* Background glow */}
+            <circle cx="60" cy="60" r="50" fill="url(#centerGlow)" style={{ transition: 'all 150ms ease-out' }} />
+
+            {/* Concentric rings - one for each rank tier (grouped) */}
+            {[0, 1, 2, 3, 4].map((ring) => {
+              const radius = 15 + ring * 9;
+              const rankIndex = ring * 2;
+              const color = RANKS[Math.min(rankIndex, RANKS.length - 1)].color;
+              const opacity = Math.max(0.15, (probabilities[rankIndex] || 0) / Math.max(...probabilities) * 0.5);
+
+              return (
+                <circle
+                  key={ring}
+                  cx="60"
+                  cy="60"
+                  r={radius}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth="1.5"
+                  opacity={opacity}
+                  style={{ transition: 'opacity 150ms ease-out' }}
+                />
+              );
+            })}
+
+            {/* Orbit path for the particle */}
+            <circle
+              cx="60"
+              cy="60"
+              r="45"
+              fill="none"
+              stroke="rgba(255,255,255,0.1)"
+              strokeWidth="1"
+              strokeDasharray="4,4"
+            />
+
+            {/* Orbiting particle */}
+            <g style={{
+              transform: `rotate(${orbitAngle}deg)`,
+              transformOrigin: '60px 60px',
+              transition: 'transform 150ms ease-out'
+            }}>
+              {/* Particle trail */}
+              <ellipse
+                cx="105"
+                cy="60"
+                rx="8"
+                ry="4"
+                fill={peakRank.color}
+                opacity="0.3"
+                filter="url(#orbitalGlow)"
+              />
+              {/* Main particle */}
+              <circle
+                cx="105"
+                cy="60"
+                r="6"
+                fill={peakRank.color}
+                filter="url(#orbitalGlow)"
+              />
+              <circle
+                cx="105"
+                cy="60"
+                r="3"
+                fill="white"
+              />
+            </g>
+
+            {/* Center display */}
+            <text
+              x="60"
+              y="58"
+              textAnchor="middle"
+              fontSize="16"
+              fontWeight="bold"
+              fill={peakRank.color}
+              style={{ transition: 'fill 150ms ease-out' }}
+            >
+              {peakRank.name}
+            </text>
+            <text
+              x="60"
+              y="72"
+              textAnchor="middle"
+              fontSize="10"
+              fill="rgba(255,255,255,0.7)"
+            >
+              {peakProb.toFixed(0)}%
+            </text>
+          </svg>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`${config.maxWidth} bg-gradient-to-br from-black/60 to-black/40 backdrop-blur-sm rounded-lg ${config.padding} border border-yellow-500/10`}>
       {showHeader && (

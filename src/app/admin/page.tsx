@@ -242,6 +242,25 @@ function RarityBiasAdmin() {
               </div>
             </div>
           </div>
+
+          {/* Creative Variants */}
+          <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 rounded-lg p-4 border border-purple-500/20">
+            <h4 className="text-purple-400 font-bold mb-4 uppercase tracking-wider text-sm">Creative Variants (Experimental)</h4>
+            <div className="flex flex-wrap items-start gap-8">
+              <div className="text-center">
+                <div className="text-gray-400 text-xs mb-2">Radial Gauge</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="creative-radial" />
+              </div>
+              <div className="text-center">
+                <div className="text-gray-400 text-xs mb-2">Audio Wave</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="creative-wave" />
+              </div>
+              <div className="text-center">
+                <div className="text-gray-400 text-xs mb-2">Orbital Rings</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="creative-orbital" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -6297,6 +6316,33 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
           oldStatus: result.oldStatus,
           newStatus: result.newStatus,
         });
+
+        // DIAGNOSTIC: Immediately re-query the inventory to see if it actually changed
+        console.log('[🔄NMKR] 🔍 DIAGNOSTIC: Re-querying inventory to verify change...');
+        try {
+          const freshInventory = await client.query(api.commemorativeCampaigns.getCampaignInventory, {
+            campaignId: nmkrSyncCampaign.id as any,
+          });
+          const updatedNft = freshInventory.find((n: any) => n.nftUid === nftUid);
+          console.log('[🔄NMKR] 🔍 DIAGNOSTIC: Fresh query result for this NFT:', updatedNft ? {
+            name: updatedNft.name,
+            status: updatedNft.status,
+            _id: updatedNft._id,
+            nftUid: updatedNft.nftUid,
+          } : 'NOT FOUND IN FRESH QUERY');
+
+          if (updatedNft && updatedNft.status !== result.newStatus) {
+            console.error('[🔄NMKR] ❌ MISMATCH! Mutation said newStatus:', result.newStatus, 'but fresh query shows:', updatedNft.status);
+            console.error('[🔄NMKR] This could indicate:');
+            console.error('[🔄NMKR] 1. Duplicate records in database');
+            console.error('[🔄NMKR] 2. Query and mutation using different indexes/records');
+            console.error('[🔄NMKR] 3. Different campaign IDs on Sturgeon vs local');
+            alert(`⚠️ Data mismatch detected!\n\nMutation reported: ${result.newStatus}\nBut inventory query shows: ${updatedNft.status}\n\nThis indicates a database inconsistency. Check console for details.`);
+          }
+        } catch (verifyError) {
+          console.error('[🔄NMKR] Error verifying change:', verifyError);
+        }
+
         // Only remove from discrepancies if actually successful
         setNmkrDiscrepancies(prev => prev.filter(d => d.nftUid !== nftUid));
         setCampaignUpdateTrigger(prev => prev + 1);
