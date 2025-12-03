@@ -1067,19 +1067,21 @@ export default function MessagingSystemAdmin() {
 
                 {/* Compose Area - Transparent rounded design */}
                 <div className="p-4 border-t border-gray-700/50">
-                  {/* Check if conversation is disabled */}
+                  {/* Check if conversation is disabled - check both conversation list AND existingConversation query */}
                   {(() => {
                     const currentConv = conversations?.find((c: any) => c._id === selectedConversationId);
-                    if (currentConv?.disabledByAdmin) {
+                    const isDisabled = currentConv?.disabledByAdmin || existingConversation?.disabledByAdmin;
+                    const disabledReason = currentConv?.disabledReason || existingConversation?.disabledReason;
+                    if (isDisabled) {
                       return (
                         <div className="text-center py-3">
                           <div className="flex items-center justify-center text-red-400/70 text-sm">
                             <span className="mr-2">🚫</span>
                             This conversation has been disabled. You cannot send messages.
                           </div>
-                          {currentConv.disabledReason && (
+                          {disabledReason && (
                             <div className="text-red-400/50 text-xs mt-2">
-                              <span className="font-medium">Reason:</span> {currentConv.disabledReason}
+                              <span className="font-medium">Reason:</span> {disabledReason}
                             </div>
                           )}
                         </div>
@@ -1088,8 +1090,8 @@ export default function MessagingSystemAdmin() {
                     return null;
                   })()}
 
-                  {/* Only show compose UI if not disabled */}
-                  {!conversations?.find((c: any) => c._id === selectedConversationId)?.disabledByAdmin && (
+                  {/* Only show compose UI if not disabled - check both sources */}
+                  {!conversations?.find((c: any) => c._id === selectedConversationId)?.disabledByAdmin && !existingConversation?.disabledByAdmin && (
                     <>
                   {/* Pending Attachments Preview */}
                   {pendingAttachments.length > 0 && (
@@ -1717,6 +1719,49 @@ export default function MessagingSystemAdmin() {
           >
             Close
           </button>
+        </div>,
+        document.body
+      )}
+
+      {/* Error Lightbox - for TOS violations, send failures, etc. */}
+      {mounted && errorLightbox && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md"
+          onClick={() => setErrorLightbox(null)}
+        >
+          {/* Lightbox container */}
+          <div
+            className="w-full max-w-sm bg-white/5 backdrop-blur-xl border border-red-500/30 rounded-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            {/* Header */}
+            <div className="p-4 border-b border-red-500/20 bg-red-500/10">
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">⚠️</div>
+                <h2 className="text-lg font-semibold text-red-400">{errorLightbox.title}</h2>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-4">
+              <div className="text-gray-300 text-sm whitespace-pre-line">
+                {errorLightbox.message}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-white/10">
+              <button
+                onClick={() => setErrorLightbox(null)}
+                className="w-full py-2 bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/30 transition-colors font-medium"
+              >
+                Understood
+              </button>
+            </div>
+          </div>
         </div>,
         document.body
       )}
