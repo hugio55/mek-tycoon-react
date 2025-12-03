@@ -576,10 +576,12 @@ export default function MessagingSystemAdmin() {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
-                      <span className="text-gray-400 text-lg">
-                        {conv.otherParticipant.companyName.charAt(0)}
-                      </span>
+                    <div className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden">
+                      <img
+                        src={`/mek-images/150px/${getMekImageForWallet(conv.otherParticipant.walletAddress)}`}
+                        alt={conv.otherParticipant.companyName}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
@@ -622,12 +624,16 @@ export default function MessagingSystemAdmin() {
                 {/* Conversation Header */}
                 <div className="p-4 border-b border-gray-700">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
-                      <span className="text-gray-400 text-lg">
-                        {(selectedRecipient?.companyName ||
-                          conversations?.find((c: any) => c._id === selectedConversationId)?.otherParticipant?.companyName ||
-                          TEST_CORPORATIONS.find(c => c.id !== activeCorp.id)?.companyName || '?').charAt(0).toUpperCase()}
-                      </span>
+                    <div className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden">
+                      <img
+                        src={`/mek-images/150px/${getMekImageForWallet(
+                          selectedRecipient?.walletAddress ||
+                          conversations?.find((c: any) => c._id === selectedConversationId)?.otherParticipant?.walletAddress ||
+                          TEST_CORPORATIONS.find(c => c.id !== activeCorp.id)?.walletAddress || 'default'
+                        )}`}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div>
                       <div className="text-white font-semibold">

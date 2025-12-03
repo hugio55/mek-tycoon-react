@@ -34,6 +34,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   const [isConnectingWallet, setIsConnectingWallet] = useState(false);
   const [walletVerificationError, setWalletVerificationError] = useState<string | null>(null);
   const [isMobileBrowser, setIsMobileBrowser] = useState(false);
+  const [isRequestingSignature, setIsRequestingSignature] = useState(false);
 
   const hasInitiatedTimeoutRelease = useRef(false);
 
@@ -357,16 +358,63 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
         return;
       }
 
-      console.log('[🔐VERIFY] ✅ MATCH - proceeding to payment');
+      console.log('[🔐VERIFY] ✅ MATCH - addresses match, requesting signature...');
       setIsConnectingWallet(false);
+      setIsRequestingSignature(true);
 
-      // Verification passed - open NMKR payment
-      await openNMKRPayment();
+      try {
+        // Create challenge message
+        const timestamp = Date.now();
+        const message = `Mek Tycoon NFT Claim Verification\n\nI am verifying ownership of wallet:\n${walletStakeAddress}\n\nTimestamp: ${timestamp}`;
+
+        // Convert to hex (CIP-30 requires hex-encoded message)
+        const messageHex = Array.from(new TextEncoder().encode(message))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+
+        // Get address for signing (use first used address)
+        const usedAddresses = await api.getUsedAddresses();
+        const signingAddress = usedAddresses[0];
+
+        if (!signingAddress) {
+          throw new Error('No signing address available. Please ensure your wallet has been used.');
+        }
+
+        // Request signature
+        console.log('[🔐VERIFY] Requesting signature...');
+        const signature = await api.signData(signingAddress, messageHex);
+
+        console.log('[🔐VERIFY] ✅ Signature received:', signature ? 'YES' : 'NO');
+
+        setIsRequestingSignature(false);
+
+        // Signature verified - open NMKR payment
+        await openNMKRPayment();
+
+      } catch (signError: any) {
+        console.error('[🔐VERIFY] Signature failed:', signError);
+        setIsRequestingSignature(false);
+
+        // Handle user rejection vs error
+        const errorMsg = signError.message?.toLowerCase() || '';
+        if (errorMsg.includes('declined') ||
+            errorMsg.includes('rejected') ||
+            errorMsg.includes('cancel') ||
+            errorMsg.includes('user') ||
+            errorMsg.includes('denied')) {
+          setWalletVerificationError('Signature request was declined. Please sign to verify wallet ownership.');
+        } else if (errorMsg.includes('not supported') || errorMsg.includes('signdata')) {
+          setWalletVerificationError('Your wallet doesn\'t support message signing. Please try a different wallet.');
+        } else {
+          setWalletVerificationError(`Signature failed: ${signError.message || 'Unknown error'}`);
+        }
+      }
 
     } catch (error: any) {
       console.error('[🔐VERIFY] Error:', error);
       setWalletVerificationError(error.message || 'Failed to connect wallet');
       setIsConnectingWallet(false);
+      setIsRequestingSignature(false);
     }
   };
 
@@ -888,6 +936,24 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
                 <div className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                 <h2 className="text-xl font-bold text-cyan-400 mb-2">Connecting Wallet...</h2>
                 <p className="text-white/60 text-sm">Please approve the connection in your wallet</p>
+              </div>
+            </div>
+          );
+        }
+
+        // Show signing spinner if requesting signature
+        if (isRequestingSignature) {
+          return (
+            <div className="text-center py-8">
+              <div className="mb-6">
+                <div className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <h2 className="text-xl font-bold text-cyan-400 mb-2">Sign to Verify</h2>
+                <p className="text-white/60 text-sm">Please sign the message in your wallet to prove ownership</p>
+              </div>
+              <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
+                <p className="text-sm text-cyan-300">
+                  Check your wallet extension for a signature request
+                </p>
               </div>
             </div>
           );
