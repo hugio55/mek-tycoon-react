@@ -930,9 +930,16 @@ export default function MessagingSystemAdmin() {
                     const currentConv = conversations?.find((c: any) => c._id === selectedConversationId);
                     if (currentConv?.disabledByAdmin) {
                       return (
-                        <div className="flex items-center justify-center py-3 text-red-400/70 text-sm">
-                          <span className="mr-2">🚫</span>
-                          This conversation has been disabled. You cannot send messages.
+                        <div className="text-center py-3">
+                          <div className="flex items-center justify-center text-red-400/70 text-sm">
+                            <span className="mr-2">🚫</span>
+                            This conversation has been disabled. You cannot send messages.
+                          </div>
+                          {currentConv.disabledReason && (
+                            <div className="text-red-400/50 text-xs mt-2">
+                              <span className="font-medium">Reason:</span> {currentConv.disabledReason}
+                            </div>
+                          )}
                         </div>
                       );
                     }
