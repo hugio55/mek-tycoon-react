@@ -9,7 +9,7 @@ interface Rank {
   max: number;
 }
 
-type ChartSize = 'large' | 'medium' | 'small' | 'micro' | 'sub-micro' | 'sub-micro-lg' | 'sub-micro-sm' | 'ultra-micro' | 'ultra-micro-bar' | 'ultra-micro-dot' | 'creative-radial' | 'creative-wave' | 'creative-orbital' | 'wave-heartbeat' | 'wave-mirror' | 'wave-spectrum' | 'spectrum-wedge' | 'spectrum-rings' | 'spectrum-solid';
+type ChartSize = 'large' | 'medium' | 'small' | 'micro' | 'sub-micro' | 'sub-micro-lg' | 'sub-micro-sm' | 'ultra-micro' | 'ultra-micro-bar' | 'ultra-micro-dot' | 'creative-radial' | 'creative-wave' | 'creative-orbital' | 'wave-heartbeat' | 'wave-mirror' | 'wave-spectrum' | 'spectrum-wedge' | 'spectrum-rings' | 'spectrum-solid' | 'spectrum-bloom' | 'spectrum-burst' | 'spectrum-gear';
 
 interface SizeConfig {
   chartHeight: number;
@@ -420,6 +420,69 @@ const SIZE_CONFIGS: Record<ChartSize, SizeConfig> = {
     chartHeight: 140,
     maxBarHeight: 140,
     maxWidth: 'max-w-[150px]',
+    padding: 'p-2',
+    biasNumberSize: '18px',
+    showHeader: false,
+    showFocusText: false,
+    showPercentLabels: false,
+    showRankLabels: false,
+    showDescription: false,
+    showSliderLabels: false,
+    showPeakLabel: true,
+    percentLabelClass: '',
+    rankLabelClass: '',
+    barMargin: '',
+    barRadius: '',
+    bottomMargin: 'mb-0',
+    topLabelOffset: '',
+    bottomLabelOffset: '',
+  },
+  'spectrum-bloom': {
+    chartHeight: 150,
+    maxBarHeight: 150,
+    maxWidth: 'max-w-[160px]',
+    padding: 'p-2',
+    biasNumberSize: '18px',
+    showHeader: false,
+    showFocusText: false,
+    showPercentLabels: false,
+    showRankLabels: false,
+    showDescription: false,
+    showSliderLabels: false,
+    showPeakLabel: true,
+    percentLabelClass: '',
+    rankLabelClass: '',
+    barMargin: '',
+    barRadius: '',
+    bottomMargin: 'mb-0',
+    topLabelOffset: '',
+    bottomLabelOffset: '',
+  },
+  'spectrum-burst': {
+    chartHeight: 150,
+    maxBarHeight: 150,
+    maxWidth: 'max-w-[160px]',
+    padding: 'p-2',
+    biasNumberSize: '18px',
+    showHeader: false,
+    showFocusText: false,
+    showPercentLabels: false,
+    showRankLabels: false,
+    showDescription: false,
+    showSliderLabels: false,
+    showPeakLabel: true,
+    percentLabelClass: '',
+    rankLabelClass: '',
+    barMargin: '',
+    barRadius: '',
+    bottomMargin: 'mb-0',
+    topLabelOffset: '',
+    bottomLabelOffset: '',
+  },
+  'spectrum-gear': {
+    chartHeight: 150,
+    maxBarHeight: 150,
+    maxWidth: 'max-w-[160px]',
     padding: 'p-2',
     biasNumberSize: '18px',
     showHeader: false,
@@ -1808,6 +1871,378 @@ export default function RarityChart({
               fontSize="8"
               fill="rgba(255,255,255,0.7)"
             >
+              {peakProb.toFixed(0)}%
+            </text>
+          </svg>
+        </div>
+      </div>
+    );
+  }
+
+  // Spectrum Bloom: Flower petal-like wedges with rounded outer edges
+  if (size === 'spectrum-bloom') {
+    const size_dim = 140;
+    const centerX = size_dim / 2;
+    const centerY = size_dim / 2;
+    const innerRadius = 20;
+    const maxOuterRadius = 65;
+
+    return (
+      <div className={`${config.maxWidth}`}>
+        <div
+          className="relative mx-auto"
+          style={{ width: `${size_dim}px`, height: `${size_dim}px` }}
+        >
+          <svg viewBox={`0 0 ${size_dim} ${size_dim}`} className="w-full h-full">
+            <defs>
+              <filter id="bloomGlow">
+                <feGaussianBlur stdDeviation="3" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+              <radialGradient id="bloomCenter" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={peakRank.color} stopOpacity="0.5" />
+                <stop offset="100%" stopColor={peakRank.color} stopOpacity="0" />
+              </radialGradient>
+            </defs>
+
+            {/* Background glow */}
+            <circle cx={centerX} cy={centerY} r={innerRadius + 8} fill="url(#bloomCenter)" />
+
+            {/* Petal segments */}
+            {probabilities.map((prob, i) => {
+              const anglePerSegment = 360 / probabilities.length;
+              const midAngle = i * anglePerSegment - 90 + anglePerSegment / 2;
+              const midAngleRad = (midAngle * Math.PI) / 180;
+
+              const petalLength = innerRadius + (prob / 40) * (maxOuterRadius - innerRadius);
+              const petalWidth = anglePerSegment * 0.8;
+
+              // Create petal path with rounded tip
+              const startAngle = midAngle - petalWidth / 2;
+              const endAngle = midAngle + petalWidth / 2;
+              const startRad = (startAngle * Math.PI) / 180;
+              const endRad = (endAngle * Math.PI) / 180;
+
+              // Inner points
+              const ix1 = centerX + innerRadius * Math.cos(startRad);
+              const iy1 = centerY + innerRadius * Math.sin(startRad);
+              const ix2 = centerX + innerRadius * Math.cos(endRad);
+              const iy2 = centerY + innerRadius * Math.sin(endRad);
+
+              // Outer tip point
+              const ox = centerX + petalLength * Math.cos(midAngleRad);
+              const oy = centerY + petalLength * Math.sin(midAngleRad);
+
+              // Control points for curves
+              const cp1x = centerX + (petalLength * 0.7) * Math.cos(startRad);
+              const cp1y = centerY + (petalLength * 0.7) * Math.sin(startRad);
+              const cp2x = centerX + (petalLength * 0.7) * Math.cos(endRad);
+              const cp2y = centerY + (petalLength * 0.7) * Math.sin(endRad);
+
+              const rank = RANKS[i];
+              const isPeak = i === peakIndex;
+
+              return (
+                <g key={i}>
+                  {/* Glow layer */}
+                  <path
+                    d={`M ${ix1} ${iy1} Q ${cp1x} ${cp1y} ${ox} ${oy} Q ${cp2x} ${cp2y} ${ix2} ${iy2} A ${innerRadius} ${innerRadius} 0 0 0 ${ix1} ${iy1}`}
+                    fill={rank.color}
+                    opacity="0.3"
+                    filter="url(#bloomGlow)"
+                  />
+                  {/* Main petal */}
+                  <path
+                    d={`M ${ix1} ${iy1} Q ${cp1x} ${cp1y} ${ox} ${oy} Q ${cp2x} ${cp2y} ${ix2} ${iy2} A ${innerRadius} ${innerRadius} 0 0 0 ${ix1} ${iy1}`}
+                    fill={rank.color}
+                    opacity={isPeak ? 1 : 0.75}
+                    stroke={isPeak ? 'white' : 'rgba(255,255,255,0.15)'}
+                    strokeWidth={isPeak ? 2 : 0.5}
+                    style={{ transition: 'all 150ms ease-out' }}
+                  />
+                </g>
+              );
+            })}
+
+            {/* Inner circle */}
+            <circle
+              cx={centerX}
+              cy={centerY}
+              r={innerRadius}
+              fill="rgba(0,0,0,0.85)"
+              stroke={peakRank.color}
+              strokeWidth="2"
+            />
+
+            {/* Center text */}
+            <text x={centerX} y={centerY - 1} textAnchor="middle" fontSize="12" fontWeight="bold" fill={peakRank.color}>
+              {peakRank.name}
+            </text>
+            <text x={centerX} y={centerY + 9} textAnchor="middle" fontSize="7" fill="rgba(255,255,255,0.7)">
+              {peakProb.toFixed(0)}%
+            </text>
+          </svg>
+        </div>
+      </div>
+    );
+  }
+
+  // Spectrum Burst: Starburst with extending rays
+  if (size === 'spectrum-burst') {
+    const size_dim = 140;
+    const centerX = size_dim / 2;
+    const centerY = size_dim / 2;
+    const baseRadius = 28;
+    const maxExtension = 38;
+
+    return (
+      <div className={`${config.maxWidth}`}>
+        <div
+          className="relative mx-auto"
+          style={{ width: `${size_dim}px`, height: `${size_dim}px` }}
+        >
+          <svg viewBox={`0 0 ${size_dim} ${size_dim}`} className="w-full h-full">
+            <defs>
+              <filter id="burstGlow">
+                <feGaussianBlur stdDeviation="4" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+              <radialGradient id="burstCenter" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={peakRank.color} stopOpacity="0.4" />
+                <stop offset="70%" stopColor={peakRank.color} stopOpacity="0.1" />
+                <stop offset="100%" stopColor={peakRank.color} stopOpacity="0" />
+              </radialGradient>
+            </defs>
+
+            {/* Background radial glow */}
+            <circle cx={centerX} cy={centerY} r={baseRadius + maxExtension} fill="url(#burstCenter)" />
+
+            {/* Base circle outline */}
+            <circle
+              cx={centerX}
+              cy={centerY}
+              r={baseRadius}
+              fill="none"
+              stroke="rgba(255,255,255,0.1)"
+              strokeWidth="1"
+              strokeDasharray="4,4"
+            />
+
+            {/* Burst rays */}
+            {probabilities.map((prob, i) => {
+              const anglePerSegment = 360 / probabilities.length;
+              const midAngle = i * anglePerSegment - 90;
+              const halfWidth = anglePerSegment * 0.4;
+
+              const extension = (prob / 40) * maxExtension;
+              const outerRadius = baseRadius + extension;
+
+              const startAngle = midAngle - halfWidth;
+              const endAngle = midAngle + halfWidth;
+              const startRad = (startAngle * Math.PI) / 180;
+              const endRad = (endAngle * Math.PI) / 180;
+              const midRad = (midAngle * Math.PI) / 180;
+
+              // Base points (on base circle)
+              const bx1 = centerX + baseRadius * Math.cos(startRad);
+              const by1 = centerY + baseRadius * Math.sin(startRad);
+              const bx2 = centerX + baseRadius * Math.cos(endRad);
+              const by2 = centerY + baseRadius * Math.sin(endRad);
+
+              // Outer point (tip)
+              const ox = centerX + outerRadius * Math.cos(midRad);
+              const oy = centerY + outerRadius * Math.sin(midRad);
+
+              const rank = RANKS[i];
+              const isPeak = i === peakIndex;
+
+              return (
+                <g key={i}>
+                  {/* Glow */}
+                  <path
+                    d={`M ${bx1} ${by1} L ${ox} ${oy} L ${bx2} ${by2} A ${baseRadius} ${baseRadius} 0 0 0 ${bx1} ${by1}`}
+                    fill={rank.color}
+                    opacity="0.4"
+                    filter="url(#burstGlow)"
+                  />
+                  {/* Main ray */}
+                  <path
+                    d={`M ${bx1} ${by1} L ${ox} ${oy} L ${bx2} ${by2} A ${baseRadius} ${baseRadius} 0 0 0 ${bx1} ${by1}`}
+                    fill={rank.color}
+                    opacity={isPeak ? 1 : 0.7}
+                    stroke={isPeak ? 'white' : 'rgba(0,0,0,0.3)'}
+                    strokeWidth={isPeak ? 1.5 : 0.5}
+                    style={{ transition: 'all 150ms ease-out' }}
+                  />
+                  {/* Tip highlight for peak */}
+                  {isPeak && (
+                    <circle cx={ox} cy={oy} r="4" fill="white" filter="url(#burstGlow)" />
+                  )}
+                </g>
+              );
+            })}
+
+            {/* Inner circle */}
+            <circle
+              cx={centerX}
+              cy={centerY}
+              r={baseRadius - 8}
+              fill="rgba(0,0,0,0.9)"
+              stroke={peakRank.color}
+              strokeWidth="2"
+            />
+
+            {/* Center text */}
+            <text x={centerX} y={centerY - 1} textAnchor="middle" fontSize="11" fontWeight="bold" fill={peakRank.color}>
+              {peakRank.name}
+            </text>
+            <text x={centerX} y={centerY + 8} textAnchor="middle" fontSize="7" fill="rgba(255,255,255,0.7)">
+              {peakProb.toFixed(0)}%
+            </text>
+          </svg>
+        </div>
+      </div>
+    );
+  }
+
+  // Spectrum Gear: Mechanical gear teeth style
+  if (size === 'spectrum-gear') {
+    const size_dim = 140;
+    const centerX = size_dim / 2;
+    const centerY = size_dim / 2;
+    const innerRadius = 22;
+    const baseRadius = 35;
+    const maxToothHeight = 25;
+
+    return (
+      <div className={`${config.maxWidth}`}>
+        <div
+          className="relative mx-auto"
+          style={{ width: `${size_dim}px`, height: `${size_dim}px` }}
+        >
+          <svg viewBox={`0 0 ${size_dim} ${size_dim}`} className="w-full h-full">
+            <defs>
+              <filter id="gearGlow">
+                <feGaussianBlur stdDeviation="2" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+              <linearGradient id="gearShine" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="rgba(255,255,255,0.3)" />
+                <stop offset="50%" stopColor="rgba(255,255,255,0)" />
+                <stop offset="100%" stopColor="rgba(255,255,255,0.1)" />
+              </linearGradient>
+            </defs>
+
+            {/* Gear teeth */}
+            {probabilities.map((prob, i) => {
+              const anglePerTooth = 360 / probabilities.length;
+              const midAngle = i * anglePerTooth - 90;
+              const toothWidth = anglePerTooth * 0.6;
+              const valleyWidth = anglePerTooth * 0.2;
+
+              const toothHeight = (prob / 40) * maxToothHeight;
+              const outerRadius = baseRadius + toothHeight;
+
+              // Tooth corners
+              const toothStart = midAngle - toothWidth / 2;
+              const toothEnd = midAngle + toothWidth / 2;
+              const valleyStart = midAngle - anglePerTooth / 2;
+              const valleyEnd = midAngle + anglePerTooth / 2;
+
+              const toothStartRad = (toothStart * Math.PI) / 180;
+              const toothEndRad = (toothEnd * Math.PI) / 180;
+              const valleyStartRad = (valleyStart * Math.PI) / 180;
+              const valleyEndRad = (valleyEnd * Math.PI) / 180;
+
+              // Valley points (at base)
+              const vx1 = centerX + baseRadius * Math.cos(valleyStartRad);
+              const vy1 = centerY + baseRadius * Math.sin(valleyStartRad);
+              const vx2 = centerX + baseRadius * Math.cos(valleyEndRad);
+              const vy2 = centerY + baseRadius * Math.sin(valleyEndRad);
+
+              // Tooth base points
+              const tbx1 = centerX + baseRadius * Math.cos(toothStartRad);
+              const tby1 = centerY + baseRadius * Math.sin(toothStartRad);
+              const tbx2 = centerX + baseRadius * Math.cos(toothEndRad);
+              const tby2 = centerY + baseRadius * Math.sin(toothEndRad);
+
+              // Tooth top points
+              const ttx1 = centerX + outerRadius * Math.cos(toothStartRad);
+              const tty1 = centerY + outerRadius * Math.sin(toothStartRad);
+              const ttx2 = centerX + outerRadius * Math.cos(toothEndRad);
+              const tty2 = centerY + outerRadius * Math.sin(toothEndRad);
+
+              const rank = RANKS[i];
+              const isPeak = i === peakIndex;
+
+              return (
+                <g key={i}>
+                  {/* Tooth shape */}
+                  <path
+                    d={`M ${vx1} ${vy1} L ${tbx1} ${tby1} L ${ttx1} ${tty1} L ${ttx2} ${tty2} L ${tbx2} ${tby2} L ${vx2} ${vy2}`}
+                    fill={rank.color}
+                    opacity={isPeak ? 1 : 0.75}
+                    stroke={isPeak ? 'white' : 'rgba(0,0,0,0.4)'}
+                    strokeWidth={isPeak ? 2 : 1}
+                    filter={isPeak ? 'url(#gearGlow)' : undefined}
+                    style={{ transition: 'all 150ms ease-out' }}
+                  />
+                  {/* Shine overlay */}
+                  <path
+                    d={`M ${tbx1} ${tby1} L ${ttx1} ${tty1} L ${ttx2} ${tty2} L ${tbx2} ${tby2} Z`}
+                    fill="url(#gearShine)"
+                    opacity="0.5"
+                  />
+                </g>
+              );
+            })}
+
+            {/* Base ring connecting teeth */}
+            <circle
+              cx={centerX}
+              cy={centerY}
+              r={baseRadius}
+              fill="none"
+              stroke="rgba(255,255,255,0.2)"
+              strokeWidth="2"
+            />
+
+            {/* Inner hub */}
+            <circle
+              cx={centerX}
+              cy={centerY}
+              r={innerRadius}
+              fill="rgba(0,0,0,0.9)"
+              stroke={peakRank.color}
+              strokeWidth="3"
+            />
+
+            {/* Hub detail - inner ring */}
+            <circle
+              cx={centerX}
+              cy={centerY}
+              r={innerRadius - 6}
+              fill="none"
+              stroke="rgba(255,255,255,0.15)"
+              strokeWidth="1"
+            />
+
+            {/* Center text */}
+            <text x={centerX} y={centerY - 1} textAnchor="middle" fontSize="11" fontWeight="bold" fill={peakRank.color}>
+              {peakRank.name}
+            </text>
+            <text x={centerX} y={centerY + 8} textAnchor="middle" fontSize="7" fill="rgba(255,255,255,0.7)">
               {peakProb.toFixed(0)}%
             </text>
           </svg>

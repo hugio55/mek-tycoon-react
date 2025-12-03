@@ -300,6 +300,25 @@ function RarityBiasAdmin() {
               </div>
             </div>
           </div>
+
+          {/* Spectrum Variants II (More Dense) */}
+          <div className="bg-gradient-to-br from-pink-900/20 to-purple-900/20 rounded-lg p-4 border border-pink-500/20">
+            <h4 className="text-pink-400 font-bold mb-4 uppercase tracking-wider text-sm">Spectrum Variants II (Wedge Styles)</h4>
+            <div className="flex flex-wrap items-start gap-8">
+              <div className="text-center">
+                <div className="text-gray-400 text-xs mb-2">Bloom Petals</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="spectrum-bloom" />
+              </div>
+              <div className="text-center">
+                <div className="text-gray-400 text-xs mb-2">Starburst</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="spectrum-burst" />
+              </div>
+              <div className="text-center">
+                <div className="text-gray-400 text-xs mb-2">Gear Teeth</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="spectrum-gear" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Stats Grid */}
