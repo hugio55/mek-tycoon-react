@@ -28,6 +28,7 @@ This starts both Next.js (port 3200) and Convex in one terminal.
 - Only start dev server if user explicitly asks you to
 - If user says "the server is running" or "localhost is up" - believe them, don't verify or restart
 - Focus on code changes, not server management
+- **If a server restart is needed**: Simply tell the user "You'll need to restart the dev server in your terminal" - do NOT start background servers yourself. This prevents zombie processes and `.next` folder corruption.
 
 ### 🚨 Fixing "Internal Server Error"
 
