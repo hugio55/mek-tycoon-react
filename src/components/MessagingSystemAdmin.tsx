@@ -1074,6 +1074,8 @@ export default function MessagingSystemAdmin() {
                       </svg>
                     </button>
                   </div>
+                    </>
+                  )}
                 </div>
               </>
             ) : (
