@@ -309,9 +309,16 @@ export default function MessagingSystemAdmin() {
 
     // Check if conversation is disabled before sending
     const currentConv = conversations?.find((c: any) => c._id === selectedConversationId);
-    const isDisabled = currentConv?.disabledByAdmin || existingConversation?.disabledByAdmin;
+    // Only use existingConversation if we're in the test corp conversation
+    const otherTestCorp = TEST_CORPORATIONS.find(c => c.id !== activeCorp.id);
+    const isTestCorpConversation = selectedConversationId === existingConversation?._id ||
+      (isNewConversation && selectedRecipient?.walletAddress === otherTestCorp?.walletAddress);
+    const isDisabled = currentConv?.disabledByAdmin ||
+      (isTestCorpConversation && existingConversation?.disabledByAdmin);
     if (isDisabled) {
-      const reason = currentConv?.disabledReason || existingConversation?.disabledReason || 'Terms of Service violation';
+      const reason = currentConv?.disabledReason ||
+        (isTestCorpConversation ? existingConversation?.disabledReason : undefined) ||
+        'Terms of Service violation';
       setErrorLightbox({
         title: 'Conversation Disabled',
         message: `This conversation has been disabled by an administrator. You cannot send messages.\n\nReason: ${reason}`,
@@ -1067,11 +1074,20 @@ export default function MessagingSystemAdmin() {
 
                 {/* Compose Area - Transparent rounded design */}
                 <div className="p-4 border-t border-gray-700/50">
-                  {/* Check if conversation is disabled - check both conversation list AND existingConversation query */}
+                  {/* Check if conversation is disabled */}
                   {(() => {
                     const currentConv = conversations?.find((c: any) => c._id === selectedConversationId);
-                    const isDisabled = currentConv?.disabledByAdmin || existingConversation?.disabledByAdmin;
-                    const disabledReason = currentConv?.disabledReason || existingConversation?.disabledReason;
+                    // Only use existingConversation if we're viewing that specific conversation OR
+                    // if we're in a new conversation with the other test corp
+                    const otherTestCorp = TEST_CORPORATIONS.find(c => c.id !== activeCorp.id);
+                    const isTestCorpConversation = selectedConversationId === existingConversation?._id ||
+                      (isNewConversation && selectedRecipient?.walletAddress === otherTestCorp?.walletAddress);
+
+                    const isDisabled = currentConv?.disabledByAdmin ||
+                      (isTestCorpConversation && existingConversation?.disabledByAdmin);
+                    const disabledReason = currentConv?.disabledReason ||
+                      (isTestCorpConversation ? existingConversation?.disabledReason : undefined);
+
                     if (isDisabled) {
                       return (
                         <div className="text-center py-3">
@@ -1090,8 +1106,16 @@ export default function MessagingSystemAdmin() {
                     return null;
                   })()}
 
-                  {/* Only show compose UI if not disabled - check both sources */}
-                  {!conversations?.find((c: any) => c._id === selectedConversationId)?.disabledByAdmin && !existingConversation?.disabledByAdmin && (
+                  {/* Only show compose UI if not disabled */}
+                  {(() => {
+                    const currentConv = conversations?.find((c: any) => c._id === selectedConversationId);
+                    const otherTestCorp = TEST_CORPORATIONS.find(c => c.id !== activeCorp.id);
+                    const isTestCorpConversation = selectedConversationId === existingConversation?._id ||
+                      (isNewConversation && selectedRecipient?.walletAddress === otherTestCorp?.walletAddress);
+                    const isDisabled = currentConv?.disabledByAdmin ||
+                      (isTestCorpConversation && existingConversation?.disabledByAdmin);
+                    return !isDisabled;
+                  })() && (
                     <>
                   {/* Pending Attachments Preview */}
                   {pendingAttachments.length > 0 && (
