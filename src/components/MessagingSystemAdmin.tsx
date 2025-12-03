@@ -902,17 +902,22 @@ export default function MessagingSystemAdmin() {
                     className="w-full p-4 text-left hover:bg-white/5 transition-colors border-b border-white/5 last:border-b-0"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
                         <span className="text-gray-400 text-lg">
                           {corp.companyName.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <div>
-                        <div className="text-white font-medium">{corp.companyName}</div>
-                        <div className="text-sm">
-                          <span className="font-bold text-cyan-400">AP:</span>{' '}
-                          <span className="text-white">{((corp as any).achievementPoints ?? 0).toLocaleString()}</span>
-                        </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white font-medium truncate">{corp.companyName}</div>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <span className="font-bold text-cyan-400 text-sm">AP:</span>
+                        <span
+                          className="text-white text-lg tracking-wider"
+                          style={{ fontFamily: 'Saira, sans-serif' }}
+                        >
+                          {((corp as any).achievementPoints ?? 0).toLocaleString()}
+                        </span>
                       </div>
                     </div>
                   </button>
