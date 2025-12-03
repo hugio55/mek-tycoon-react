@@ -9,7 +9,7 @@ interface Rank {
   max: number;
 }
 
-type ChartSize = 'large' | 'medium' | 'small' | 'micro' | 'sub-micro' | 'ultra-micro';
+type ChartSize = 'large' | 'medium' | 'small' | 'micro' | 'sub-micro' | 'sub-micro-lg' | 'sub-micro-sm' | 'ultra-micro' | 'ultra-micro-bar' | 'ultra-micro-dot';
 
 interface SizeConfig {
   chartHeight: number;
@@ -141,6 +141,50 @@ const SIZE_CONFIGS: Record<ChartSize, SizeConfig> = {
     bottomLabelOffset: '-bottom-2',
     barMinWidth: '3px',
   },
+  'sub-micro-lg': {
+    chartHeight: 38,
+    maxBarHeight: 34,
+    maxWidth: 'max-w-[170px]',
+    padding: 'p-1.5',
+    biasNumberSize: '14px',
+    showHeader: false,
+    showFocusText: false,
+    showPercentLabels: false,
+    showRankLabels: false,
+    showDescription: false,
+    showSliderLabels: false,
+    showPeakLabel: true,
+    percentLabelClass: 'text-[5px]',
+    rankLabelClass: 'text-[5px]',
+    barMargin: '',
+    barRadius: '1px 1px 0 0',
+    bottomMargin: 'mb-3',
+    topLabelOffset: '-top-2',
+    bottomLabelOffset: '-bottom-2',
+    barMinWidth: '5px',
+  },
+  'sub-micro-sm': {
+    chartHeight: 22,
+    maxBarHeight: 18,
+    maxWidth: 'max-w-[100px]',
+    padding: 'p-0.5',
+    biasNumberSize: '12px',
+    showHeader: false,
+    showFocusText: false,
+    showPercentLabels: false,
+    showRankLabels: false,
+    showDescription: false,
+    showSliderLabels: false,
+    showPeakLabel: true,
+    percentLabelClass: 'text-[5px]',
+    rankLabelClass: 'text-[5px]',
+    barMargin: '',
+    barRadius: '1px 1px 0 0',
+    bottomMargin: 'mb-2',
+    topLabelOffset: '-top-2',
+    bottomLabelOffset: '-bottom-2',
+    barMinWidth: '2px',
+  },
   'ultra-micro': {
     chartHeight: 20,
     maxBarHeight: 20,
@@ -159,6 +203,48 @@ const SIZE_CONFIGS: Record<ChartSize, SizeConfig> = {
     barMargin: '',
     barRadius: '2px',
     bottomMargin: 'mb-3',
+    topLabelOffset: '',
+    bottomLabelOffset: '',
+  },
+  'ultra-micro-bar': {
+    chartHeight: 16,
+    maxBarHeight: 16,
+    maxWidth: 'max-w-[100px]',
+    padding: 'p-0',
+    biasNumberSize: '10px',
+    showHeader: false,
+    showFocusText: false,
+    showPercentLabels: false,
+    showRankLabels: false,
+    showDescription: false,
+    showSliderLabels: false,
+    showPeakLabel: true,
+    percentLabelClass: '',
+    rankLabelClass: '',
+    barMargin: '',
+    barRadius: '2px',
+    bottomMargin: 'mb-2',
+    topLabelOffset: '',
+    bottomLabelOffset: '',
+  },
+  'ultra-micro-dot': {
+    chartHeight: 12,
+    maxBarHeight: 12,
+    maxWidth: 'max-w-[80px]',
+    padding: 'p-0',
+    biasNumberSize: '10px',
+    showHeader: false,
+    showFocusText: false,
+    showPercentLabels: false,
+    showRankLabels: false,
+    showDescription: false,
+    showSliderLabels: false,
+    showPeakLabel: true,
+    percentLabelClass: '',
+    rankLabelClass: '',
+    barMargin: '',
+    barRadius: '6px',
+    bottomMargin: 'mb-2',
     topLabelOffset: '',
     bottomLabelOffset: '',
   },
@@ -325,6 +411,115 @@ export default function RarityChart({
         {config.showPeakLabel && (
           <div className="text-center mt-1">
             <span className="text-[9px] font-semibold" style={{ color: peakRank.color }}>
+              {peakRank.name}: {peakProb.toFixed(0)}%
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Ultra-micro-bar: Single progress bar filled to peak position with peak color
+  if (size === 'ultra-micro-bar') {
+    const peakPos = calculatePeakPosition(probabilities);
+
+    return (
+      <div className={`${config.maxWidth}`}>
+        <div
+          className="rounded-full overflow-hidden relative"
+          style={{
+            height: `${chartHeight}px`,
+            background: 'rgba(0,0,0,0.6)',
+            border: '1px solid rgba(255,255,255,0.1)'
+          }}
+        >
+          {/* Fill bar */}
+          <div
+            className="absolute left-0 top-0 h-full rounded-full"
+            style={{
+              width: `${peakPos}%`,
+              background: `linear-gradient(to right, ${RANKS[0].color}, ${peakRank.color})`,
+              boxShadow: `0 0 10px ${peakRank.color}88`,
+              transition: 'width 150ms ease-out'
+            }}
+          />
+          {/* End cap glow */}
+          <div
+            className="absolute top-0 h-full w-2 rounded-full"
+            style={{
+              left: `${peakPos}%`,
+              transform: 'translateX(-50%)',
+              background: peakRank.color,
+              boxShadow: `0 0 6px ${peakRank.color}`,
+              transition: 'left 150ms ease-out'
+            }}
+          />
+        </div>
+        {/* Peak label below */}
+        {config.showPeakLabel && (
+          <div className="text-center mt-1">
+            <span className="text-[8px] font-semibold" style={{ color: peakRank.color }}>
+              {peakRank.name}: {peakProb.toFixed(0)}%
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Ultra-micro-dot: Track with glowing dot indicator
+  if (size === 'ultra-micro-dot') {
+    const peakPos = calculatePeakPosition(probabilities);
+
+    return (
+      <div className={`${config.maxWidth}`}>
+        <div
+          className="relative"
+          style={{ height: `${chartHeight}px` }}
+        >
+          {/* Track background with gradient */}
+          <div
+            className="absolute top-1/2 left-0 right-0 rounded-full"
+            style={{
+              height: '3px',
+              transform: 'translateY(-50%)',
+              background: `linear-gradient(to right, ${RANKS.map((r, i) => `${r.color} ${(i / (RANKS.length - 1)) * 100}%`).join(', ')})`,
+              opacity: 0.4
+            }}
+          />
+          {/* Glowing dot indicator */}
+          <div
+            className="absolute top-1/2"
+            style={{
+              left: `${peakPos}%`,
+              transform: 'translate(-50%, -50%)',
+              width: `${chartHeight}px`,
+              height: `${chartHeight}px`,
+              borderRadius: '50%',
+              background: `radial-gradient(circle, ${peakRank.color} 0%, ${peakRank.color}88 40%, transparent 70%)`,
+              boxShadow: `0 0 8px ${peakRank.color}, 0 0 12px ${peakRank.color}66`,
+              transition: 'left 150ms ease-out'
+            }}
+          />
+          {/* Center bright dot */}
+          <div
+            className="absolute top-1/2"
+            style={{
+              left: `${peakPos}%`,
+              transform: 'translate(-50%, -50%)',
+              width: '6px',
+              height: '6px',
+              borderRadius: '50%',
+              background: 'white',
+              boxShadow: `0 0 4px white`,
+              transition: 'left 150ms ease-out'
+            }}
+          />
+        </div>
+        {/* Peak label below */}
+        {config.showPeakLabel && (
+          <div className="text-center mt-0.5">
+            <span className="text-[8px] font-semibold" style={{ color: peakRank.color }}>
               {peakRank.name}: {peakProb.toFixed(0)}%
             </span>
           </div>

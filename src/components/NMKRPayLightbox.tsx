@@ -36,6 +36,11 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   const [isMobileBrowser, setIsMobileBrowser] = useState(false);
   const [isRequestingSignature, setIsRequestingSignature] = useState(false);
 
+  // Backend verification state (cryptographic proof of wallet ownership)
+  const [backendVerificationStatus, setBackendVerificationStatus] = useState<'idle' | 'generating_nonce' | 'awaiting_signature' | 'verifying' | 'success' | 'failed'>('idle');
+  const [verificationNonce, setVerificationNonce] = useState<string | null>(null);
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
+
   const hasInitiatedTimeoutRelease = useRef(false);
 
   const effectiveWalletAddress = walletAddress || manualAddress;

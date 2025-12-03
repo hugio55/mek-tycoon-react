@@ -205,32 +205,42 @@ function RarityBiasAdmin() {
             />
           </div>
 
-          {/* Sub-Micro */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-yellow-400 font-bold uppercase tracking-wider">Sub-Micro</span>
-              <span className="text-gray-500 text-sm">(30px height, 140px wide - skinny bars + peak label)</span>
+          {/* Sub-Micro Variants */}
+          <div className="bg-black/30 rounded-lg p-4 border border-yellow-500/10">
+            <h4 className="text-yellow-400 font-bold mb-4 uppercase tracking-wider text-sm">Sub-Micro Variants (Skinny Bars)</h4>
+            <div className="flex flex-wrap items-end gap-6">
+              <div>
+                <div className="text-gray-500 text-xs mb-2">sub-micro-lg (38px, 170px)</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="sub-micro-lg" />
+              </div>
+              <div>
+                <div className="text-gray-500 text-xs mb-2">sub-micro (30px, 140px)</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="sub-micro" />
+              </div>
+              <div>
+                <div className="text-gray-500 text-xs mb-2">sub-micro-sm (22px, 100px)</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="sub-micro-sm" />
+              </div>
             </div>
-            <RarityChart
-              rarityBias={rarityBias}
-              displayBias={displayBias}
-              showSlider={false}
-              size="sub-micro"
-            />
           </div>
 
-          {/* Ultra-Micro */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-yellow-400 font-bold uppercase tracking-wider">Ultra-Micro</span>
-              <span className="text-gray-500 text-sm">(20px height, 120px wide - smooth gradient + peak label)</span>
+          {/* Ultra-Micro Variants */}
+          <div className="bg-black/30 rounded-lg p-4 border border-yellow-500/10">
+            <h4 className="text-yellow-400 font-bold mb-4 uppercase tracking-wider text-sm">Ultra-Micro Variants (Abstract)</h4>
+            <div className="flex flex-wrap items-end gap-6">
+              <div>
+                <div className="text-gray-500 text-xs mb-2">ultra-micro (gradient)</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="ultra-micro" />
+              </div>
+              <div>
+                <div className="text-gray-500 text-xs mb-2">ultra-micro-bar (progress)</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="ultra-micro-bar" />
+              </div>
+              <div>
+                <div className="text-gray-500 text-xs mb-2">ultra-micro-dot (indicator)</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="ultra-micro-dot" />
+              </div>
             </div>
-            <RarityChart
-              rarityBias={rarityBias}
-              displayBias={displayBias}
-              showSlider={false}
-              size="ultra-micro"
-            />
           </div>
         </div>
 
@@ -280,14 +290,21 @@ function RarityBiasAdmin() {
 
         {/* Usage Examples */}
         <div className="mt-6 bg-black/40 border border-yellow-500/30 rounded-lg p-4">
-          <h4 className="text-yellow-400 font-bold mb-3 uppercase tracking-wider">Usage</h4>
-          <div className="text-gray-400 space-y-2 text-sm font-mono">
-            <div><span className="text-green-400">{'<RarityChart size="large" />'}</span> - Full page displays</div>
-            <div><span className="text-green-400">{'<RarityChart size="medium" />'}</span> - Sidebars, modals</div>
-            <div><span className="text-green-400">{'<RarityChart size="small" />'}</span> - Cards, compact views</div>
-            <div><span className="text-green-400">{'<RarityChart size="micro" />'}</span> - Inline widgets</div>
-            <div><span className="text-green-400">{'<RarityChart size="sub-micro" />'}</span> - Compact indicators</div>
-            <div><span className="text-green-400">{'<RarityChart size="ultra-micro" />'}</span> - Tooltips, status bars</div>
+          <h4 className="text-yellow-400 font-bold mb-3 uppercase tracking-wider">All Size Options</h4>
+          <div className="text-gray-400 space-y-1 text-xs font-mono">
+            <div className="text-yellow-400/70 mt-2 mb-1">Standard Sizes:</div>
+            <div><span className="text-green-400">size="large"</span> - Full page displays</div>
+            <div><span className="text-green-400">size="medium"</span> - Sidebars, modals</div>
+            <div><span className="text-green-400">size="small"</span> - Cards, compact views</div>
+            <div><span className="text-green-400">size="micro"</span> - Inline widgets</div>
+            <div className="text-yellow-400/70 mt-2 mb-1">Sub-Micro (Skinny Bars):</div>
+            <div><span className="text-green-400">size="sub-micro-lg"</span> - 38px, 170px wide</div>
+            <div><span className="text-green-400">size="sub-micro"</span> - 30px, 140px wide</div>
+            <div><span className="text-green-400">size="sub-micro-sm"</span> - 22px, 100px wide</div>
+            <div className="text-yellow-400/70 mt-2 mb-1">Ultra-Micro (Abstract):</div>
+            <div><span className="text-green-400">size="ultra-micro"</span> - Gradient with marker</div>
+            <div><span className="text-green-400">size="ultra-micro-bar"</span> - Progress bar style</div>
+            <div><span className="text-green-400">size="ultra-micro-dot"</span> - Glowing dot indicator</div>
           </div>
         </div>
       </div>
