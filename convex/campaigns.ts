@@ -259,8 +259,8 @@ export const findOrphanedInventory = query({
     // Get all inventory records
     const allInventory = await ctx.db.query("commemorativeNFTInventory").collect();
 
-    // Find orphans (inventory pointing to non-existent campaigns)
-    const orphans = allInventory.filter(inv => !validCampaignIds.has(inv.campaignId));
+    // Find orphans (inventory pointing to non-existent campaigns or with no campaignId)
+    const orphans = allInventory.filter(inv => !inv.campaignId || !validCampaignIds.has(inv.campaignId));
 
     console.log(`[CAMPAIGNS] Found ${orphans.length} orphaned inventory records out of ${allInventory.length} total`);
 
@@ -303,8 +303,8 @@ export const cleanupOrphanedInventory = mutation({
     // Get all inventory records
     const allInventory = await ctx.db.query("commemorativeNFTInventory").collect();
 
-    // Find orphans
-    const orphans = allInventory.filter(inv => !validCampaignIds.has(inv.campaignId));
+    // Find orphans (inventory pointing to non-existent campaigns or with no campaignId)
+    const orphans = allInventory.filter(inv => !inv.campaignId || !validCampaignIds.has(inv.campaignId));
 
     if (orphans.length === 0) {
       return { success: true, message: "No orphaned records found", deleted: 0 };
@@ -331,9 +331,9 @@ export const cleanupOrphanedInventory = mutation({
         const orphanWithSale = saleDataBackup.find(s => s.nftUid === nftUid);
         if (!orphanWithSale) continue;
 
-        // Find the valid record with this nftUid
+        // Find the valid record with this nftUid (must have a valid campaignId)
         const validRecord = allInventory.find(
-          inv => inv.nftUid === nftUid && validCampaignIds.has(inv.campaignId)
+          inv => inv.nftUid === nftUid && inv.campaignId && validCampaignIds.has(inv.campaignId)
         );
 
         if (validRecord) {

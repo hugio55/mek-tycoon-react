@@ -170,6 +170,9 @@ export default function MessagingSystemAdmin() {
   // Blocked users state
   const [showBlockedUsers, setShowBlockedUsers] = useState(false);
 
+  // Error lightbox state
+  const [errorLightbox, setErrorLightbox] = useState<{ title: string; message: string } | null>(null);
+
   // Convex queries
   const conversations = useQuery(api.messaging.getConversations, {
     walletAddress: activeCorp.walletAddress,
@@ -304,9 +307,24 @@ export default function MessagingSystemAdmin() {
 
     if (!hasContent && !hasValidAttachments) return;
 
+    // Check if conversation is disabled before sending
+    const currentConv = conversations?.find((c: any) => c._id === selectedConversationId);
+    const isDisabled = currentConv?.disabledByAdmin || existingConversation?.disabledByAdmin;
+    if (isDisabled) {
+      const reason = currentConv?.disabledReason || existingConversation?.disabledReason || 'Terms of Service violation';
+      setErrorLightbox({
+        title: 'Conversation Disabled',
+        message: `This conversation has been disabled by an administrator. You cannot send messages.\n\nReason: ${reason}`,
+      });
+      return;
+    }
+
     // Check if any attachments are still uploading
     if (pendingAttachments.some(a => a.uploading)) {
-      alert('Please wait for uploads to complete');
+      setErrorLightbox({
+        title: 'Upload in Progress',
+        message: 'Please wait for uploads to complete before sending.',
+      });
       return;
     }
 
@@ -356,9 +374,21 @@ export default function MessagingSystemAdmin() {
       }
     } catch (error) {
       console.error('[📎SEND] Failed to send message:', error);
-      // Show user-friendly error message
+      // Show user-friendly error in custom lightbox
       const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
-      alert(errorMessage);
+
+      // Check if it's a TOS violation error
+      if (errorMessage.includes('Terms of Service') || errorMessage.includes('disabled')) {
+        setErrorLightbox({
+          title: 'Conversation Disabled',
+          message: errorMessage,
+        });
+      } else {
+        setErrorLightbox({
+          title: 'Message Failed',
+          message: errorMessage,
+        });
+      }
     }
   };
 
