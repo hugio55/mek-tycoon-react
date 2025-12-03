@@ -5,7 +5,6 @@ import { TalentBuilderProvider, useTalentBuilder } from './TalentBuilderContext'
 import {
   useAutosave,
   useKeyboardShortcuts,
-  useCanvasInteraction,
   useHistory,
   useSaveLoad,
   useConnectionAnalysis
@@ -68,72 +67,63 @@ function TalentBuilderInner() {
     }
   });
 
-  // Canvas interaction handlers
-  const {
-    handleCanvasMouseDown,
-    handleMouseMove,
-    handleMouseUp,
-    handleWheel,
-    handleNodeClick,
-    handleNodeMouseDown,
-    snapPosition,
-    GRID_SIZE
-  } = useCanvasInteraction({
-    canvasRef,
-    onAddNode: (x, y) => {
-      // Generate unique ID
-      const uniqueId = state.builderMode === 'story'
-        ? `ch${state.storyChapter}_node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-        : `node-${Date.now()}`;
+  // ---------------------------------------------------------------------------
+  // Add node handler (passed to Canvas)
+  // ---------------------------------------------------------------------------
 
-      // Determine node radius based on type
-      let nodeRadius = 15;
-      if (state.builderMode === 'story') {
-        if (state.storyNodeEditMode === 'normal') nodeRadius = 20;
-        else if (state.storyNodeEditMode === 'event') nodeRadius = 40;
-        else if (state.storyNodeEditMode === 'boss') nodeRadius = 60;
-        else if (state.storyNodeEditMode === 'final_boss') nodeRadius = 80;
-      }
+  const handleAddNode = useCallback((x: number, y: number) => {
+    // Generate unique ID
+    const uniqueId = state.builderMode === 'story'
+      ? `ch${state.storyChapter}_node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      : `node-${Date.now()}`;
 
-      const newNode: TalentNode = {
-        id: uniqueId,
-        name: '',
-        x: x - nodeRadius,
-        y: y - nodeRadius,
-        tier: 1,
-        desc: '',
-        xp: 0,
-        goldCost: 0,
-        essences: [],
-        ingredients: [],
-        isSpell: false
-      };
-
-      // Add story mode specific fields
-      if (state.builderMode === 'story') {
-        newNode.storyNodeType = state.storyNodeEditMode;
-        newNode.goldReward = 100;
-        newNode.essenceRewards = [{ type: 'Fire', amount: 1 }];
-        if (state.storyNodeEditMode === 'event') {
-          newNode.eventName = 'Event Name';
-          newNode.otherRewards = [];
-        } else if (state.storyNodeEditMode === 'boss') {
-          newNode.bossMekId = '';
-          newNode.otherRewards = [];
-        } else if (state.storyNodeEditMode === 'final_boss') {
-          newNode.bossMekId = 'WREN';
-          newNode.otherRewards = [{ item: 'Epic Loot Box', quantity: 1 }];
-          newNode.goldReward = 10000;
-        }
-      }
-
-      dispatch({ type: 'ADD_NODE', payload: newNode });
-      dispatch({ type: 'SET_SELECTED_NODE', payload: newNode.id });
-      dispatch({ type: 'SET_EDITING_NODE', payload: newNode.id });
-
-      setTimeout(() => pushHistory(), 0);
+    // Determine node radius based on type
+    let nodeRadius = 15;
+    if (state.builderMode === 'story') {
+      if (state.storyNodeEditMode === 'normal') nodeRadius = 20;
+      else if (state.storyNodeEditMode === 'event') nodeRadius = 40;
+      else if (state.storyNodeEditMode === 'boss') nodeRadius = 60;
+      else if (state.storyNodeEditMode === 'final_boss') nodeRadius = 80;
     }
-  });
+
+    const newNode: TalentNode = {
+      id: uniqueId,
+      name: '',
+      x: x - nodeRadius,
+      y: y - nodeRadius,
+      tier: 1,
+      desc: '',
+      xp: 0,
+      goldCost: 0,
+      essences: [],
+      ingredients: [],
+      isSpell: false
+    };
+
+    // Add story mode specific fields
+    if (state.builderMode === 'story') {
+      newNode.storyNodeType = state.storyNodeEditMode;
+      newNode.goldReward = 100;
+      newNode.essenceRewards = [{ type: 'Fire', amount: 1 }];
+      if (state.storyNodeEditMode === 'event') {
+        newNode.eventName = 'Event Name';
+        newNode.otherRewards = [];
+      } else if (state.storyNodeEditMode === 'boss') {
+        newNode.bossMekId = '';
+        newNode.otherRewards = [];
+      } else if (state.storyNodeEditMode === 'final_boss') {
+        newNode.bossMekId = 'WREN';
+        newNode.otherRewards = [{ item: 'Epic Loot Box', quantity: 1 }];
+        newNode.goldReward = 10000;
+      }
+    }
+
+    dispatch({ type: 'ADD_NODE', payload: newNode });
+    dispatch({ type: 'SET_SELECTED_NODE', payload: newNode.id });
+    dispatch({ type: 'SET_EDITING_NODE', payload: newNode.id });
+
+    setTimeout(() => pushHistory(), 0);
+  }, [state.builderMode, state.storyChapter, state.storyNodeEditMode, dispatch, pushHistory]);
 
   // ---------------------------------------------------------------------------
   // Export/Import handlers
@@ -295,37 +285,35 @@ function TalentBuilderInner() {
         canvasRef={canvasRef}
       />
 
-      {/* Canvas */}
-      <Canvas
-        ref={canvasRef}
-        nodes={state.nodes}
-        connections={state.connections}
-        selectedNode={state.selectedNode}
-        selectedNodes={state.selectedNodes}
-        mode={state.mode}
-        connectFrom={state.connectFrom}
-        dragState={state.dragState}
-        showGrid={state.showGrid}
-        panOffset={state.panOffset}
-        zoom={state.zoom}
-        editingNode={state.editingNode}
-        builderMode={state.builderMode}
-        boxSelection={state.boxSelection}
-        lassoSelection={state.lassoSelection}
-        showViewportBox={state.showViewportBox}
-        viewportDimensions={state.viewportDimensions}
-        unconnectedNodes={state.unconnectedNodes}
-        deadEndNodes={state.deadEndNodes}
-        highlightDisconnected={state.highlightDisconnected}
-        storyChapter={state.storyChapter}
-        dispatch={dispatch}
-        onNodeClick={handleNodeClick}
-        onNodeMouseDown={handleNodeMouseDown}
-        onCanvasMouseDown={handleCanvasMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onWheel={handleWheel}
-      />
+      {/* Canvas Container (ref needed for Toolbar centering) */}
+      <div ref={canvasRef} className="flex-1">
+        <Canvas
+          nodes={state.nodes}
+          connections={state.connections}
+          selectedNode={state.selectedNode}
+          selectedNodes={state.selectedNodes}
+          mode={state.mode}
+          builderMode={state.builderMode}
+          connectFrom={state.connectFrom}
+          dragState={state.dragState}
+          showGrid={state.showGrid}
+          snapToGrid={state.snapToGrid}
+          panOffset={state.panOffset}
+          zoom={state.zoom}
+          isPanning={state.isPanning}
+          panStart={state.panStart}
+          boxSelection={state.boxSelection}
+          lassoSelection={state.lassoSelection}
+          showViewportBox={state.showViewportBox}
+          viewportDimensions={state.viewportDimensions}
+          unconnectedNodes={state.unconnectedNodes}
+          deadEndNodes={state.deadEndNodes}
+          highlightDisconnected={state.highlightDisconnected}
+          storyChapter={state.storyChapter}
+          dispatch={dispatch}
+          onAddNode={handleAddNode}
+        />
+      </div>
 
       {/* Property Panel */}
       {selectedNodeData && (
@@ -374,8 +362,16 @@ function TalentBuilderInner() {
 
       {state.showTemplateManager && (
         <TemplateManager
+          show={state.showTemplateManager}
+          savedCiruTrees={savedCiruTrees}
           dispatch={dispatch}
+          mode={state.builderMode === 'mek' ? 'mek' : 'cirutree'}
           onClose={() => dispatch({ type: 'SET_SHOW_TEMPLATE_MANAGER', payload: false })}
+          onLoadTemplate={(nodes, connections) => {
+            dispatch({ type: 'SET_SKIP_NEXT_HISTORY_PUSH', payload: true });
+            loadTree(nodes, connections);
+            pushHistory();
+          }}
         />
       )}
     </div>

@@ -9,7 +9,7 @@ interface Rank {
   max: number;
 }
 
-type ChartSize = 'large' | 'medium' | 'small' | 'micro' | 'ultra-micro';
+type ChartSize = 'large' | 'medium' | 'small' | 'micro' | 'sub-micro' | 'ultra-micro';
 
 interface SizeConfig {
   chartHeight: number;
@@ -23,6 +23,7 @@ interface SizeConfig {
   showRankLabels: boolean;
   showDescription: boolean;
   showSliderLabels: boolean;
+  showPeakLabel: boolean; // Shows percentage below peak bar for compact sizes
   percentLabelClass: string;
   rankLabelClass: string;
   barMargin: string;
@@ -30,6 +31,7 @@ interface SizeConfig {
   bottomMargin: string;
   topLabelOffset: string;
   bottomLabelOffset: string;
+  barMinWidth?: string; // For skinny bars
 }
 
 const SIZE_CONFIGS: Record<ChartSize, SizeConfig> = {
@@ -45,6 +47,7 @@ const SIZE_CONFIGS: Record<ChartSize, SizeConfig> = {
     showRankLabels: true,
     showDescription: true,
     showSliderLabels: true,
+    showPeakLabel: false,
     percentLabelClass: 'text-xs',
     rankLabelClass: 'text-sm font-semibold',
     barMargin: 'mx-1',
@@ -65,6 +68,7 @@ const SIZE_CONFIGS: Record<ChartSize, SizeConfig> = {
     showRankLabels: true,
     showDescription: false,
     showSliderLabels: false,
+    showPeakLabel: false,
     percentLabelClass: 'text-[9px]',
     rankLabelClass: 'text-[10px] font-semibold',
     barMargin: 'mx-0.5',
@@ -85,6 +89,7 @@ const SIZE_CONFIGS: Record<ChartSize, SizeConfig> = {
     showRankLabels: true,
     showDescription: false,
     showSliderLabels: false,
+    showPeakLabel: false,
     percentLabelClass: 'text-[7px]',
     rankLabelClass: 'text-[8px] font-semibold',
     barMargin: 'mx-px',
@@ -105,13 +110,36 @@ const SIZE_CONFIGS: Record<ChartSize, SizeConfig> = {
     showRankLabels: false,
     showDescription: false,
     showSliderLabels: false,
+    showPeakLabel: true,
     percentLabelClass: 'text-[6px]',
     rankLabelClass: 'text-[6px]',
     barMargin: 'mx-px',
     barRadius: '1px 1px 0 0',
-    bottomMargin: 'mb-0',
+    bottomMargin: 'mb-4',
     topLabelOffset: '-top-2',
     bottomLabelOffset: '-bottom-2',
+  },
+  'sub-micro': {
+    chartHeight: 30,
+    maxBarHeight: 26,
+    maxWidth: 'max-w-[140px]',
+    padding: 'p-1',
+    biasNumberSize: '14px',
+    showHeader: false,
+    showFocusText: false,
+    showPercentLabels: false,
+    showRankLabels: false,
+    showDescription: false,
+    showSliderLabels: false,
+    showPeakLabel: true,
+    percentLabelClass: 'text-[5px]',
+    rankLabelClass: 'text-[5px]',
+    barMargin: '',
+    barRadius: '1px 1px 0 0',
+    bottomMargin: 'mb-3',
+    topLabelOffset: '-top-2',
+    bottomLabelOffset: '-bottom-2',
+    barMinWidth: '3px',
   },
   'ultra-micro': {
     chartHeight: 20,
@@ -125,11 +153,12 @@ const SIZE_CONFIGS: Record<ChartSize, SizeConfig> = {
     showRankLabels: false,
     showDescription: false,
     showSliderLabels: false,
+    showPeakLabel: true,
     percentLabelClass: '',
     rankLabelClass: '',
     barMargin: '',
     barRadius: '2px',
-    bottomMargin: 'mb-0',
+    bottomMargin: 'mb-3',
     topLabelOffset: '',
     bottomLabelOffset: '',
   },
@@ -258,34 +287,48 @@ export default function RarityChart({
   const maxBarHeight = maxBarHeightOverride ?? config.maxBarHeight;
   const showHeader = hideCenterDisplay !== undefined ? !hideCenterDisplay : config.showHeader;
 
+  // Find peak probability info for compact sizes
+  const peakIndex = probabilities.indexOf(Math.max(...probabilities));
+  const peakProb = probabilities[peakIndex];
+  const peakRank = RANKS[peakIndex];
+
   // Ultra-micro renders a smooth gradient instead of bars
   if (size === 'ultra-micro') {
     const gradient = generateSmoothGradient(probabilities);
     const peakPos = calculatePeakPosition(probabilities);
-    const peakRank = RANKS[Math.round((peakPos / 100) * (RANKS.length - 1))];
 
     return (
-      <div
-        className={`${config.maxWidth} rounded-sm overflow-hidden`}
-        style={{ height: `${chartHeight}px` }}
-      >
+      <div className={`${config.maxWidth}`}>
         <div
-          className="w-full h-full relative"
-          style={{
-            background: gradient,
-            boxShadow: `0 0 8px ${peakRank.color}66, inset 0 0 4px rgba(0,0,0,0.5)`
-          }}
+          className="rounded-sm overflow-hidden"
+          style={{ height: `${chartHeight}px` }}
         >
-          {/* Highlight indicator showing peak position */}
           <div
-            className="absolute top-0 h-full w-1 bg-white/60 blur-[2px]"
+            className="w-full h-full relative"
             style={{
-              left: `${peakPos}%`,
-              transform: 'translateX(-50%)',
-              transition: 'left 150ms ease-out'
+              background: gradient,
+              boxShadow: `0 0 8px ${peakRank.color}66, inset 0 0 4px rgba(0,0,0,0.5)`
             }}
-          />
+          >
+            {/* Highlight indicator showing peak position */}
+            <div
+              className="absolute top-0 h-full w-1 bg-white/60 blur-[2px]"
+              style={{
+                left: `${peakPos}%`,
+                transform: 'translateX(-50%)',
+                transition: 'left 150ms ease-out'
+              }}
+            />
+          </div>
         </div>
+        {/* Peak label below */}
+        {config.showPeakLabel && (
+          <div className="text-center mt-1">
+            <span className="text-[9px] font-semibold" style={{ color: peakRank.color }}>
+              {peakRank.name}: {peakProb.toFixed(0)}%
+            </span>
+          </div>
+        )}
       </div>
     );
   }
