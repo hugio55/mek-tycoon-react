@@ -3,9 +3,8 @@ import { useTalentBuilder } from '../TalentBuilderContext';
 import { createSaveData } from '../saveMigrations';
 
 interface UseAutosaveOptions {
-  localStorageInterval?: number; // Default: 2 minutes
-  backupInterval?: number; // Default: 10 minutes
-  changeThreshold?: number; // Default: 10 changes
+  localStorageDebounce?: number; // Default: 2 seconds
+  fileBackupInterval?: number; // Default: 5 minutes
   enabled?: boolean;
 }
 
@@ -14,46 +13,58 @@ interface UseAutosaveReturn {
   lastBackup: Date | null;
   autosaveError: string | null;
   changesSinceLastSave: number;
-  triggerAutoSave: () => void;
-  triggerBackup: () => Promise<void>;
+  hasUnsavedChanges: boolean;
+  triggerLocalStorageSave: () => void;
+  triggerFileBackup: () => Promise<void>;
 }
 
-const DEFAULT_LOCAL_INTERVAL = 2 * 60 * 1000; // 2 minutes
-const DEFAULT_BACKUP_INTERVAL = 10 * 60 * 1000; // 10 minutes
-const DEFAULT_CHANGE_THRESHOLD = 10;
+const DEFAULT_LOCALSTORAGE_DEBOUNCE = 2 * 1000; // 2 seconds
+const DEFAULT_FILE_BACKUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 export function useAutosave(options: UseAutosaveOptions = {}): UseAutosaveReturn {
   const {
-    localStorageInterval = DEFAULT_LOCAL_INTERVAL,
-    backupInterval = DEFAULT_BACKUP_INTERVAL,
-    changeThreshold = DEFAULT_CHANGE_THRESHOLD,
+    localStorageDebounce = DEFAULT_LOCALSTORAGE_DEBOUNCE,
+    fileBackupInterval = DEFAULT_FILE_BACKUP_INTERVAL,
     enabled = true
   } = options;
 
   const { state, dispatch } = useTalentBuilder();
 
-  // Refs to access current state in timer callbacks
+  // Refs to access current state in callbacks
   const nodesRef = useRef(state.nodes);
   const connectionsRef = useRef(state.connections);
   const currentSaveNameRef = useRef(state.currentSaveName);
+  const builderModeRef = useRef(state.builderMode);
 
-  // Timer refs
-  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const backupTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Tracking refs
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const fileBackupTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasChangesRef = useRef(false);
+  const lastSavedNodesRef = useRef<string>('');
+  const lastSavedConnectionsRef = useRef<string>('');
 
   // Update refs when state changes
   useEffect(() => {
     nodesRef.current = state.nodes;
     connectionsRef.current = state.connections;
     currentSaveNameRef.current = state.currentSaveName;
-  }, [state.nodes, state.connections, state.currentSaveName]);
+    builderModeRef.current = state.builderMode;
+  }, [state.nodes, state.connections, state.currentSaveName, state.builderMode]);
 
-  // Perform autosave to localStorage
-  const performAutoSave = useCallback(() => {
+  // Perform localStorage save
+  const performLocalStorageSave = useCallback(() => {
     const currentNodes = nodesRef.current;
     const currentConnections = connectionsRef.current;
 
     if (currentNodes.length === 0) return;
+
+    // Check if anything actually changed
+    const nodesJson = JSON.stringify(currentNodes);
+    const connectionsJson = JSON.stringify(currentConnections);
+
+    if (nodesJson === lastSavedNodesRef.current && connectionsJson === lastSavedConnectionsRef.current) {
+      return; // No changes, skip save
+    }
 
     try {
       const saveData = createSaveData(currentNodes, currentConnections);
@@ -65,8 +76,12 @@ export function useAutosave(options: UseAutosaveOptions = {}): UseAutosaveReturn
         autoSavedAt: new Date().toISOString()
       }));
 
+      // Update tracking
+      lastSavedNodesRef.current = nodesJson;
+      lastSavedConnectionsRef.current = connectionsJson;
+      hasChangesRef.current = true; // Mark that changes exist for file backup
+
       dispatch({ type: 'SET_LAST_AUTO_SAVE', payload: new Date() });
-      dispatch({ type: 'SET_CHANGE_COUNTER', payload: 0 });
       dispatch({ type: 'SET_AUTOSAVE_ERROR', payload: null });
 
       console.log('[Autosave] Saved to localStorage');
@@ -77,96 +92,91 @@ export function useAutosave(options: UseAutosaveOptions = {}): UseAutosaveReturn
     }
   }, [dispatch]);
 
-  // Perform backup to file system via API
-  const performBackup = useCallback(async () => {
+  // Perform file backup
+  const performFileBackup = useCallback(async () => {
     const currentNodes = nodesRef.current;
     const currentConnections = connectionsRef.current;
 
     if (currentNodes.length === 0) return;
+    if (!hasChangesRef.current) {
+      console.log('[FileBackup] No changes since last backup, skipping');
+      return;
+    }
 
     try {
-      const saveData = {
-        name: currentSaveNameRef.current || 'Auto-backup',
-        data: createSaveData(currentNodes, currentConnections),
-        isActive: false
-      };
-
-      const response = await fetch('/api/save-backup', {
+      const response = await fetch('/api/talent-tree-backup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(saveData)
+        body: JSON.stringify({
+          name: currentSaveNameRef.current || 'Autosave',
+          builderMode: builderModeRef.current,
+          nodes: currentNodes,
+          connections: currentConnections,
+          isAutoBackup: true
+        })
       });
 
       const result = await response.json();
       if (result.success) {
+        hasChangesRef.current = false; // Reset change tracking
         dispatch({ type: 'SET_LAST_CONVEX_BACKUP', payload: new Date() });
-        console.log('[Backup] Created:', result.filename);
+        console.log(`[FileBackup] Created: ${result.filename} (${result.nodeCount} nodes)`);
       } else {
-        console.error('[Backup] Failed:', result.error);
+        console.error('[FileBackup] Failed:', result.error);
       }
     } catch (e) {
-      console.error('[Backup] Error:', e);
+      console.error('[FileBackup] Error:', e);
     }
   }, [dispatch]);
 
-  // Track changes and trigger autosave at threshold
+  // Debounced localStorage save - triggers on every change
   useEffect(() => {
     if (!enabled) return;
     if (state.nodes.length === 0 && state.connections.length === 0) return;
     if (state.skipNextHistoryPush) return; // Skip if this is a load/undo/redo
 
-    // Increment change counter
-    dispatch({ type: 'INCREMENT_CHANGE_COUNTER' });
-
-    // Check if we've hit the change threshold
-    if (state.changeCounter + 1 >= changeThreshold) {
-      console.log(`[Autosave] Triggered by change count (${changeThreshold} changes)`);
-      performAutoSave();
+    // Clear existing debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
     }
-  }, [state.nodes, state.connections, enabled, changeThreshold, state.skipNextHistoryPush, state.changeCounter, dispatch, performAutoSave]);
 
-  // Set up localStorage autosave timer
+    // Set new debounce timer
+    debounceTimerRef.current = setTimeout(() => {
+      performLocalStorageSave();
+    }, localStorageDebounce);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [state.nodes, state.connections, enabled, localStorageDebounce, state.skipNextHistoryPush, performLocalStorageSave]);
+
+  // File backup timer - every 5 minutes
   useEffect(() => {
     if (!enabled) return;
 
-    autoSaveTimerRef.current = setInterval(() => {
-      if (nodesRef.current.length > 0) {
-        console.log('[Autosave] Triggered by timer');
-        performAutoSave();
+    fileBackupTimerRef.current = setInterval(() => {
+      if (nodesRef.current.length > 0 && hasChangesRef.current) {
+        console.log('[FileBackup] Triggered by 5-minute timer');
+        performFileBackup();
       }
-    }, localStorageInterval);
+    }, fileBackupInterval);
 
     return () => {
-      if (autoSaveTimerRef.current) {
-        clearInterval(autoSaveTimerRef.current);
+      if (fileBackupTimerRef.current) {
+        clearInterval(fileBackupTimerRef.current);
       }
     };
-  }, [enabled, localStorageInterval, performAutoSave]);
-
-  // Set up backup timer
-  useEffect(() => {
-    if (!enabled) return;
-
-    backupTimerRef.current = setInterval(() => {
-      if (nodesRef.current.length > 0) {
-        console.log('[Backup] Triggered by timer');
-        performBackup();
-      }
-    }, backupInterval);
-
-    return () => {
-      if (backupTimerRef.current) {
-        clearInterval(backupTimerRef.current);
-      }
-    };
-  }, [enabled, backupInterval, performBackup]);
+  }, [enabled, fileBackupInterval, performFileBackup]);
 
   return {
     lastAutoSave: state.lastAutoSave,
     lastBackup: state.lastConvexBackup,
     autosaveError: state.autosaveError,
     changesSinceLastSave: state.changeCounter,
-    triggerAutoSave: performAutoSave,
-    triggerBackup: performBackup
+    hasUnsavedChanges: hasChangesRef.current,
+    triggerLocalStorageSave: performLocalStorageSave,
+    triggerFileBackup: performFileBackup
   };
 }

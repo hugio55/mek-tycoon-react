@@ -3792,6 +3792,9 @@ export default defineSchema({
     isDeleted: v.boolean(), // Whether message is deleted for everyone
     deletedForSender: v.optional(v.boolean()), // Hidden from sender only
     deletedForRecipient: v.optional(v.boolean()), // Hidden from recipient only
+    // Admin deletion tracking (preserves content for review)
+    deletedByAdmin: v.optional(v.boolean()), // Whether deleted by admin
+    deletedByAdminAt: v.optional(v.number()), // When admin deleted it
     // Attachments (images for trading)
     attachments: v.optional(v.array(v.object({
       storageId: v.id("_storage"), // Convex storage ID

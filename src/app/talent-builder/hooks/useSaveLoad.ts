@@ -6,7 +6,7 @@ import { TalentNode, Connection, SavedCiruTree, SavedStoryMode, BackupFile } fro
 interface UseSaveLoadReturn {
   // Save functions
   saveToLocalStorage: (saveName: string, isOverwrite?: boolean) => Promise<boolean>;
-  saveStoryMode: (saveName: string, chapter: number) => boolean;
+  saveStoryMode: (saveName: string, chapter: number) => Promise<boolean>;
 
   // Load functions
   loadFromLocalStorage: () => boolean;
@@ -52,7 +52,7 @@ export function useSaveLoad(): UseSaveLoadReturn {
   // Refresh backup list from API
   const refreshBackupList = useCallback(async () => {
     try {
-      const response = await fetch('/api/list-backups');
+      const response = await fetch('/api/talent-tree-backup');
       const data = await response.json();
       if (data.success) {
         dispatch({ type: 'SET_BACKUP_FILES', payload: data.backups });
@@ -97,20 +97,26 @@ export function useSaveLoad(): UseSaveLoadReturn {
 
       // Create file system backup
       try {
-        const response = await fetch('/api/save-backup', {
+        const response = await fetch('/api/talent-tree-backup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(saveData)
+          body: JSON.stringify({
+            name: saveName,
+            builderMode: state.builderMode,
+            nodes: state.nodes,
+            connections: state.connections,
+            isAutoBackup: false
+          })
         });
 
         const result = await response.json();
         if (result.success) {
-          actions.setSaveStatus(`Saved as: ${saveName} (backup created)`, 2000);
+          actions.setSaveStatus(`Saved: ${saveName} (file backup created)`, 2000);
         } else {
-          actions.setSaveStatus(`Saved as: ${saveName} (backup failed)`, 2000);
+          actions.setSaveStatus(`Saved: ${saveName} (file backup failed)`, 2000);
         }
       } catch (backupError) {
-        actions.setSaveStatus(`Saved as: ${saveName} (backup failed)`, 2000);
+        actions.setSaveStatus(`Saved: ${saveName} (file backup failed)`, 2000);
       }
 
       return true;
@@ -119,10 +125,10 @@ export function useSaveLoad(): UseSaveLoadReturn {
       actions.setSaveStatus('Save failed', 3000);
       return false;
     }
-  }, [state.nodes, state.connections, dispatch, actions]);
+  }, [state.nodes, state.connections, state.builderMode, dispatch, actions]);
 
   // Save story mode
-  const saveStoryMode = useCallback((saveName: string, chapter: number): boolean => {
+  const saveStoryMode = useCallback(async (saveName: string, chapter: number): Promise<boolean> => {
     try {
       const existingSaves = JSON.parse(localStorage.getItem('savedStoryModes') || '[]');
 
@@ -147,7 +153,30 @@ export function useSaveLoad(): UseSaveLoadReturn {
       dispatch({ type: 'SET_SAVED_STORY_MODES', payload: existingSaves });
       dispatch({ type: 'SET_HAS_UNSAVED_CHANGES', payload: false });
 
-      actions.setSaveStatus(`Story mode saved: ${saveName} (Chapter ${chapter})`, 2000);
+      // Create file backup for story mode too
+      try {
+        const response = await fetch('/api/talent-tree-backup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: `${saveName}_Ch${chapter}`,
+            builderMode: 'story',
+            nodes: state.nodes,
+            connections: state.connections,
+            isAutoBackup: false
+          })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          actions.setSaveStatus(`Story saved: ${saveName} Ch${chapter} (file backup created)`, 2000);
+        } else {
+          actions.setSaveStatus(`Story saved: ${saveName} Ch${chapter} (backup failed)`, 2000);
+        }
+      } catch {
+        actions.setSaveStatus(`Story saved: ${saveName} Ch${chapter} (backup failed)`, 2000);
+      }
+
       return true;
     } catch (e) {
       console.error('Failed to save story mode:', e);
@@ -197,7 +226,7 @@ export function useSaveLoad(): UseSaveLoadReturn {
   // Load from backup file
   const loadFromBackup = useCallback(async (filename: string): Promise<boolean> => {
     try {
-      const response = await fetch(`/api/load-backup?filename=${encodeURIComponent(filename)}`);
+      const response = await fetch(`/api/talent-tree-backup/load?filename=${encodeURIComponent(filename)}`);
       const result = await response.json();
 
       if (!result.success) {
@@ -205,17 +234,27 @@ export function useSaveLoad(): UseSaveLoadReturn {
         return false;
       }
 
-      const migratedData = loadSaveDataSafely(result.data.data);
+      // The new endpoint returns data directly (not nested under .data)
+      const backupData = result.data;
+      const migratedData = loadSaveDataSafely({
+        nodes: backupData.nodes,
+        connections: backupData.connections
+      });
 
       dispatch({ type: 'SET_SKIP_NEXT_HISTORY_PUSH', payload: true });
       dispatch({
         type: 'LOAD_TREE',
         nodes: migratedData.nodes || [],
         connections: migratedData.connections || [],
-        saveName: result.data.name
+        saveName: backupData.name
       });
 
-      actions.setSaveStatus(`Loaded from backup: ${result.data.name}`, 2000);
+      // Set builder mode if available
+      if (backupData.builderMode) {
+        dispatch({ type: 'SET_BUILDER_MODE', payload: backupData.builderMode });
+      }
+
+      actions.setSaveStatus(`Loaded from backup: ${backupData.name}`, 2000);
       return true;
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Unknown error';

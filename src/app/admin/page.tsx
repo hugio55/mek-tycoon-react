@@ -324,6 +324,10 @@ function RarityBiasAdmin() {
             <div><span className="text-green-400">size="ultra-micro"</span> - Gradient with marker</div>
             <div><span className="text-green-400">size="ultra-micro-bar"</span> - Progress bar style</div>
             <div><span className="text-green-400">size="ultra-micro-dot"</span> - Glowing dot indicator</div>
+            <div className="text-purple-400/70 mt-2 mb-1">Creative (Experimental):</div>
+            <div><span className="text-purple-400">size="creative-radial"</span> - Semi-circular gauge with needle</div>
+            <div><span className="text-purple-400">size="creative-wave"</span> - Audio visualizer wave</div>
+            <div><span className="text-purple-400">size="creative-orbital"</span> - Concentric orbital rings</div>
           </div>
         </div>
       </div>
@@ -331,15 +335,45 @@ function RarityBiasAdmin() {
   );
 }
 
-// Universal Background Admin Component
+// Universal Background Admin Component - Preview data for satellites and particles
+const PREVIEW_SATELLITES = [
+  { id: 0, startX: '-5%', startY: '20%', endX: '105%', endY: '60%', delay: '0s', duration: '35s' },
+  { id: 1, startX: '105%', startY: '70%', endX: '-5%', endY: '30%', delay: '8s', duration: '40s' },
+  { id: 2, startX: '30%', startY: '-5%', endX: '70%', endY: '105%', delay: '4s', duration: '38s' },
+];
+
+const PREVIEW_PARTICLES = [
+  { id: 0, left: '5%', top: '15%', size: 2, driftAngle: -30, delay: '0s', duration: '22s' },
+  { id: 1, left: '20%', top: '40%', size: 3, driftAngle: 15, delay: '3s', duration: '26s' },
+  { id: 2, left: '35%', top: '25%', size: 2, driftAngle: -15, delay: '6s', duration: '24s' },
+  { id: 3, left: '50%', top: '55%', size: 2, driftAngle: 30, delay: '9s', duration: '28s' },
+  { id: 4, left: '65%', top: '35%', size: 3, driftAngle: -45, delay: '12s', duration: '25s' },
+  { id: 5, left: '80%', top: '65%', size: 2, driftAngle: 0, delay: '15s', duration: '27s' },
+];
+
 function UniversalBackgroundAdmin() {
+  const openFullScreenPreview = () => {
+    window.open('/admin/background-preview', '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div className="mek-card-industrial mek-border-sharp-gold rounded-lg shadow-lg shadow-black/50 overflow-hidden">
       <div className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <span className="text-2xl">🌌</span>
-          <h3 className="text-xl font-bold text-yellow-400 uppercase tracking-wider">Universal Background</h3>
-          <span className="px-2 py-1 bg-green-600/30 text-green-400 text-xs font-bold rounded">ACTIVE</span>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🌌</span>
+            <h3 className="text-xl font-bold text-yellow-400 uppercase tracking-wider">Universal Background</h3>
+            <span className="px-2 py-1 bg-green-600/30 text-green-400 text-xs font-bold rounded">ACTIVE</span>
+          </div>
+          <button
+            onClick={openFullScreenPreview}
+            className="flex items-center gap-2 px-4 py-2 bg-yellow-500/20 border border-yellow-500/50 rounded-lg text-yellow-400 hover:bg-yellow-500/30 transition-colors uppercase tracking-wider text-sm font-bold"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            View Full Screen
+          </button>
         </div>
 
         <p className="text-gray-400 mb-6">
@@ -349,7 +383,10 @@ function UniversalBackgroundAdmin() {
 
         {/* Live Preview Section */}
         <div className="mb-8">
-          <h4 className="text-yellow-400 font-bold mb-3 uppercase tracking-wider text-sm">Live Preview</h4>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-yellow-400 font-bold uppercase tracking-wider text-sm">Live Preview</h4>
+            <span className="text-gray-500 text-xs">(Scaled representation - click Full Screen for actual view)</span>
+          </div>
           <div
             className="relative w-full h-[400px] rounded-lg overflow-hidden border-2 border-yellow-500/30"
             style={{ background: 'linear-gradient(to bottom, #030712, #111827, #030712)' }}
@@ -362,54 +399,73 @@ function UniversalBackgroundAdmin() {
               }}
             />
 
-            {/* Static stars for preview */}
+            {/* Stars with twinkling */}
             {[...Array(50)].map((_, i) => (
               <div
                 key={i}
                 className="absolute rounded-full bg-white"
                 style={{
-                  left: `${(i * 37) % 100}%`,
-                  top: `${(i * 23) % 100}%`,
+                  left: `${((i * 37 + 13) % 97) + 1}%`,
+                  top: `${((i * 23 + 7) % 97) + 1}%`,
                   width: `${1 + (i % 3)}px`,
                   height: `${1 + (i % 3)}px`,
-                  opacity: 0.4 + (i % 5) * 0.15,
-                  animation: i % 3 === 0 ? 'starTwinkle 2s ease-in-out infinite' : 'none',
-                  animationDelay: `${i * 0.1}s`,
+                  opacity: i % 2 === 0 ? 0.3 : (0.5 + (i % 4) * 0.15),
+                  animation: i % 2 === 0 ? 'starTwinkle 2s ease-in-out infinite' : 'none',
+                  animationDelay: `${(i % 8) * 0.5}s`,
                 }}
               />
             ))}
 
-            {/* Yellow particles for preview */}
-            {[...Array(8)].map((_, i) => (
+            {/* Yellow particles with proper drift animation using CSS variables */}
+            {PREVIEW_PARTICLES.map((particle) => (
               <div
-                key={`particle-${i}`}
+                key={`particle-${particle.id}`}
                 className="absolute bg-yellow-400 rounded-full"
                 style={{
-                  width: `${2 + (i % 2)}px`,
-                  height: `${2 + (i % 2)}px`,
-                  left: `${10 + i * 12}%`,
-                  top: `${20 + (i * 17) % 60}%`,
+                  width: `${particle.size}px`,
+                  height: `${particle.size}px`,
+                  left: particle.left,
+                  top: particle.top,
                   boxShadow: '0 0 6px rgba(250, 182, 23, 0.6)',
-                  animation: 'linearDrift 25s linear infinite',
-                  animationDelay: `${i * 3}s`,
-                }}
+                  animationName: 'linearDrift',
+                  animationDuration: particle.duration,
+                  animationTimingFunction: 'linear',
+                  animationIterationCount: 'infinite',
+                  animationDelay: particle.delay,
+                  '--drift-x': `${Math.cos(particle.driftAngle * Math.PI / 180) * 120}%`,
+                  '--drift-y': `${Math.sin(particle.driftAngle * Math.PI / 180) * 120}%`,
+                } as React.CSSProperties}
               />
             ))}
 
-            {/* Satellites for preview */}
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={`satellite-${i}`}
-                className="absolute w-[3px] h-[3px] bg-white rounded-full"
-                style={{
-                  left: `${5 + i * 30}%`,
-                  top: `${15 + i * 25}%`,
-                  boxShadow: '0 0 3px rgba(255, 255, 255, 0.8)',
-                  animation: 'satelliteMove 35s linear infinite',
-                  animationDelay: `${i * 5}s`,
-                }}
-              />
-            ))}
+            {/* Satellites with proper edge-to-edge movement using CSS variables */}
+            {PREVIEW_SATELLITES.map((satellite) => {
+              const startX = parseFloat(satellite.startX);
+              const startY = parseFloat(satellite.startY);
+              const endX = parseFloat(satellite.endX);
+              const endY = parseFloat(satellite.endY);
+              const translateX = `${endX - startX}%`;
+              const translateY = `${endY - startY}%`;
+
+              return (
+                <div
+                  key={`satellite-${satellite.id}`}
+                  className="absolute w-[3px] h-[3px] bg-white rounded-full"
+                  style={{
+                    left: satellite.startX,
+                    top: satellite.startY,
+                    boxShadow: '0 0 4px rgba(255, 255, 255, 0.9)',
+                    animationName: 'satelliteMove',
+                    animationDuration: satellite.duration,
+                    animationTimingFunction: 'linear',
+                    animationIterationCount: 'infinite',
+                    animationDelay: satellite.delay,
+                    '--translate-x': translateX,
+                    '--translate-y': translateY,
+                  } as React.CSSProperties}
+                />
+              );
+            })}
 
             {/* Preview Label */}
             <div className="absolute bottom-4 right-4 px-3 py-1 bg-black/70 border border-yellow-500/30 rounded text-xs text-yellow-400 uppercase tracking-wider">

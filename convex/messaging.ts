@@ -779,60 +779,81 @@ export const unblockById = mutation({
 // ADMIN FUNCTIONS
 // ============================================================================
 
-// Get ALL conversations for admin view (with search capability)
+// Get conversations for admin view (with pagination and search)
 export const getAllConversationsAdmin = query({
   args: {
     searchQuery: v.optional(v.string()),
+    limit: v.optional(v.number()), // Default 20
+    cursor: v.optional(v.number()), // lastMessageAt timestamp for pagination
   },
   handler: async (ctx, args) => {
-    // Get all conversations
-    const allConversations = await ctx.db
+    const limit = args.limit ?? 20;
+
+    // Build query with optional cursor for pagination
+    let conversationsQuery = ctx.db
       .query("conversations")
       .withIndex("by_last_activity")
-      .order("desc")
-      .collect();
+      .order("desc");
 
-    // Get participant info for each conversation
-    const conversationsWithDetails = await Promise.all(
-      allConversations.map(async (conv) => {
-        // Get both participants' info
-        const participant1User = await ctx.db
-          .query("users")
-          .withIndex("by_wallet", (q) => q.eq("walletAddress", conv.participant1))
-          .first();
+    // If we have a cursor, only get conversations older than it
+    if (args.cursor) {
+      conversationsQuery = conversationsQuery.filter((q) =>
+        q.lt(q.field("lastMessageAt"), args.cursor!)
+      );
+    }
 
-        const participant2User = await ctx.db
-          .query("users")
-          .withIndex("by_wallet", (q) => q.eq("walletAddress", conv.participant2))
-          .first();
+    // Get one extra to check if there are more
+    const conversations = await conversationsQuery.take(limit + 1);
+    const hasMore = conversations.length > limit;
+    const pageConversations = conversations.slice(0, limit);
 
-        // Count messages in conversation
-        const messages = await ctx.db
-          .query("messages")
-          .withIndex("by_conversation", (q) => q.eq("conversationId", conv._id))
-          .collect();
+    // Batch collect all unique wallet addresses for user lookups
+    const walletAddresses = new Set<string>();
+    for (const conv of pageConversations) {
+      walletAddresses.add(conv.participant1);
+      walletAddresses.add(conv.participant2);
+    }
 
-        return {
-          ...conv,
-          participant1Info: {
-            walletAddress: conv.participant1,
-            companyName: participant1User?.companyName ?? "Unknown",
-            stakeAddress: participant1User?.stakeAddress ?? "",
-          },
-          participant2Info: {
-            walletAddress: conv.participant2,
-            companyName: participant2User?.companyName ?? "Unknown",
-            stakeAddress: participant2User?.stakeAddress ?? "",
-          },
-          messageCount: messages.filter(m => !m.isDeleted).length,
-        };
-      })
-    );
+    // Batch lookup users (one query for all wallets)
+    const userMap = new Map<string, { companyName: string; stakeAddress: string }>();
+    for (const wallet of walletAddresses) {
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", wallet))
+        .first();
+      userMap.set(wallet, {
+        companyName: user?.companyName ?? "Unknown",
+        stakeAddress: user?.stakeAddress ?? "",
+      });
+    }
 
-    // Filter by search query if provided
+    // Build conversation details without counting all messages (use preview as indicator)
+    const conversationsWithDetails = pageConversations.map((conv) => {
+      const p1Info = userMap.get(conv.participant1) ?? { companyName: "Unknown", stakeAddress: "" };
+      const p2Info = userMap.get(conv.participant2) ?? { companyName: "Unknown", stakeAddress: "" };
+
+      return {
+        ...conv,
+        participant1Info: {
+          walletAddress: conv.participant1,
+          companyName: p1Info.companyName,
+          stakeAddress: p1Info.stakeAddress,
+        },
+        participant2Info: {
+          walletAddress: conv.participant2,
+          companyName: p2Info.companyName,
+          stakeAddress: p2Info.stakeAddress,
+        },
+        // Don't count messages here - too expensive. Count when conversation is selected.
+        messageCount: undefined as number | undefined,
+      };
+    });
+
+    // Filter by search query if provided (client-side filter on current page)
+    let filteredConversations = conversationsWithDetails;
     if (args.searchQuery && args.searchQuery.trim()) {
       const query = args.searchQuery.toLowerCase().trim();
-      return conversationsWithDetails.filter((conv) => {
+      filteredConversations = conversationsWithDetails.filter((conv) => {
         return (
           conv.participant1Info.companyName.toLowerCase().includes(query) ||
           conv.participant2Info.companyName.toLowerCase().includes(query) ||
@@ -844,7 +865,35 @@ export const getAllConversationsAdmin = query({
       });
     }
 
-    return conversationsWithDetails;
+    // Get cursor for next page (lastMessageAt of last conversation)
+    const nextCursor = hasMore && pageConversations.length > 0
+      ? pageConversations[pageConversations.length - 1].lastMessageAt
+      : undefined;
+
+    return {
+      conversations: filteredConversations,
+      hasMore,
+      nextCursor,
+    };
+  },
+});
+
+// Get message count for a specific conversation (called when conversation is selected)
+export const getConversationMessageCount = query({
+  args: {
+    conversationId: v.id("conversations"),
+  },
+  handler: async (ctx, args) => {
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .collect();
+
+    return {
+      total: messages.length,
+      visible: messages.filter(m => !m.isDeleted).length,
+      deleted: messages.filter(m => m.isDeleted).length,
+    };
   },
 });
 
@@ -937,7 +986,7 @@ export const enableConversationAdmin = mutation({
   },
 });
 
-// Admin: Delete a conversation permanently
+// Admin: Delete a conversation permanently (including all attachments from storage)
 export const deleteConversationAdmin = mutation({
   args: {
     conversationId: v.id("conversations"),
@@ -955,6 +1004,16 @@ export const deleteConversationAdmin = mutation({
       .collect();
 
     for (const msg of messages) {
+      // Delete attachments from storage first
+      if (msg.attachments && msg.attachments.length > 0) {
+        for (const att of msg.attachments) {
+          try {
+            await ctx.storage.delete(att.storageId);
+          } catch (e) {
+            // Attachment may already be deleted, continue
+          }
+        }
+      }
       await ctx.db.delete(msg._id);
     }
 
@@ -968,6 +1027,16 @@ export const deleteConversationAdmin = mutation({
       await ctx.db.delete(count._id);
     }
 
+    // Delete typing indicators for this conversation
+    const typingIndicators = await ctx.db
+      .query("typingIndicators")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .collect();
+
+    for (const indicator of typingIndicators) {
+      await ctx.db.delete(indicator._id);
+    }
+
     // Delete the conversation itself
     await ctx.db.delete(args.conversationId);
 
@@ -975,7 +1044,7 @@ export const deleteConversationAdmin = mutation({
   },
 });
 
-// Admin: Delete any message
+// Admin: Delete any message (preserves content for admin review)
 export const deleteMessageAdmin = mutation({
   args: {
     messageId: v.id("messages"),
@@ -986,12 +1055,61 @@ export const deleteMessageAdmin = mutation({
       throw new Error("Message not found");
     }
 
-    // Mark as deleted and clear content
+    // Mark as deleted but preserve original content for admin review
     await ctx.db.patch(args.messageId, {
       isDeleted: true,
-      content: "[Deleted by admin]",
+      deletedByAdmin: true,
+      deletedByAdminAt: Date.now(),
     });
 
     return { success: true };
+  },
+});
+
+// Admin: Get deleted messages for a conversation (for reviewing TOS violations)
+export const getDeletedMessagesAdmin = query({
+  args: {
+    conversationId: v.id("conversations"),
+  },
+  handler: async (ctx, args) => {
+    // Get all deleted messages in this conversation
+    const deletedMessages = await ctx.db
+      .query("messages")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .filter((q) => q.eq(q.field("isDeleted"), true))
+      .order("asc")
+      .collect();
+
+    // Get sender info for each message
+    const messagesWithSenderInfo = await Promise.all(
+      deletedMessages.map(async (msg) => {
+        const senderUser = await ctx.db
+          .query("users")
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", msg.senderId))
+          .first();
+
+        // Get attachment URLs if any
+        let attachmentsWithUrls = msg.attachments;
+        if (msg.attachments && msg.attachments.length > 0) {
+          attachmentsWithUrls = await Promise.all(
+            msg.attachments.map(async (att: { storageId: Id<"_storage">; filename: string; mimeType: string; size: number }) => ({
+              ...att,
+              url: await ctx.storage.getUrl(att.storageId),
+            }))
+          );
+        }
+
+        return {
+          ...msg,
+          attachments: attachmentsWithUrls,
+          senderInfo: {
+            walletAddress: msg.senderId,
+            companyName: senderUser?.companyName ?? "Unknown",
+          },
+        };
+      })
+    );
+
+    return messagesWithSenderInfo;
   },
 });
