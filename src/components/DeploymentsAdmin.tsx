@@ -70,6 +70,8 @@ export default function DeploymentsAdmin() {
   const [selectedRollbackBackup, setSelectedRollbackBackup] = useState<Backup | null>(null);
   const [showRollbackConfirm, setShowRollbackConfirm] = useState(false);
   const [isRollingBack, setIsRollingBack] = useState(false);
+  const [deployStep, setDeployStep] = useState<number>(0); // Track which step we're on (1-7)
+  const [willDoFullDeploy, setWillDoFullDeploy] = useState(false); // Intent to do full deploy (before confirmation)
 
   useEffect(() => {
     setMounted(true);
@@ -328,7 +330,9 @@ export default function DeploymentsAdmin() {
   };
 
   const handleFullDeploy = async () => {
+    console.log('[🚀DEPLOY] Starting full deploy process...');
     setIsFullDeploy(true);
+    setDeployStep(1);
     const originalBranch = gitStatus?.currentBranch || 'custom-minting-system';
 
     // Step 1: Commit (if there are changes and message provided)
@@ -336,9 +340,11 @@ export default function DeploymentsAdmin() {
       if (!commitMessage.trim()) {
         addLog('Full Deploy', 'error', 'Please enter a commit message first');
         setIsFullDeploy(false);
+        setDeployStep(0);
         return;
       }
 
+      console.log('[🚀DEPLOY] Step 1: Committing changes...');
       addLog('Full Deploy', 'pending', 'Step 1/7: Committing changes...');
       try {
         const res = await fetch('/api/deployment/commit', {
@@ -347,27 +353,35 @@ export default function DeploymentsAdmin() {
           body: JSON.stringify({ message: commitMessage })
         });
         const data = await res.json();
+        console.log('[🚀DEPLOY] Step 1 result:', data);
         if (!data.success) {
           addLog('Full Deploy', 'error', `Commit failed: ${data.error}`);
           setIsFullDeploy(false);
+          setDeployStep(0);
           return;
         }
         addLog('Full Deploy', 'success', 'Committed successfully');
         setCommitMessage('');
       } catch (error) {
+        console.error('[🚀DEPLOY] Step 1 error:', error);
         addLog('Full Deploy', 'error', 'Commit step failed');
         setIsFullDeploy(false);
+        setDeployStep(0);
         return;
       }
     } else {
+      console.log('[🚀DEPLOY] Step 1: No changes to commit (skipped)');
       addLog('Full Deploy', 'success', 'Step 1/7: No changes to commit (skipped)');
     }
 
     // Step 2: Push current branch to GitHub (backup)
+    setDeployStep(2);
+    console.log('[🚀DEPLOY] Step 2: Pushing to GitHub...');
     addLog('Full Deploy', 'pending', `Step 2/7: Pushing ${originalBranch} to GitHub (backup)...`);
     try {
       const res = await fetch('/api/deployment/push', { method: 'POST' });
       const data = await res.json();
+      console.log('[🚀DEPLOY] Step 2 result:', data);
       if (data.success) {
         addLog('Full Deploy', 'success', `${originalBranch} backed up to GitHub`);
       } else {
@@ -375,15 +389,19 @@ export default function DeploymentsAdmin() {
         // Continue anyway - backup is nice to have but not critical
       }
     } catch (error) {
+      console.error('[🚀DEPLOY] Step 2 error:', error);
       addLog('Full Deploy', 'error', 'Push warning - continuing...');
     }
 
     // Step 3: Switch to master
     // Step 4: Merge current branch into master
+    setDeployStep(3);
+    console.log('[🚀DEPLOY] Step 3-4: Merge to master...');
     addLog('Full Deploy', 'pending', `Step 3-4/7: Switching to master and merging ${originalBranch}...`);
     try {
       const res = await fetch('/api/deployment/merge-to-master', { method: 'POST' });
       const data = await res.json();
+      console.log('[🚀DEPLOY] Step 3-4 result:', data);
       if (!data.success) {
         addLog('Full Deploy', 'error', `Merge failed: ${data.error}`);
         // Try to switch back
@@ -395,20 +413,26 @@ export default function DeploymentsAdmin() {
           });
         } catch (e) { /* ignore */ }
         setIsFullDeploy(false);
+        setDeployStep(0);
         return;
       }
       addLog('Full Deploy', 'success', data.alreadyOnMaster ? 'Already on master' : `Merged ${originalBranch} into master`);
     } catch (error) {
+      console.error('[🚀DEPLOY] Step 3-4 error:', error);
       addLog('Full Deploy', 'error', 'Merge to master failed');
       setIsFullDeploy(false);
+      setDeployStep(0);
       return;
     }
 
     // Step 5: Push master to GitHub (triggers Vercel production)
+    setDeployStep(5);
+    console.log('[🚀DEPLOY] Step 5: Push master to GitHub...');
     addLog('Full Deploy', 'pending', 'Step 5/7: Pushing master to GitHub (Vercel production)...');
     try {
       const res = await fetch('/api/deployment/push-master', { method: 'POST' });
       const data = await res.json();
+      console.log('[🚀DEPLOY] Step 5 result:', data);
       if (!data.success) {
         addLog('Full Deploy', 'error', `Push master failed: ${data.error}`);
         // Try to switch back to original branch
@@ -420,10 +444,12 @@ export default function DeploymentsAdmin() {
           });
         } catch (e) { /* ignore */ }
         setIsFullDeploy(false);
+        setDeployStep(0);
         return;
       }
       addLog('Full Deploy', 'success', 'Pushed master to GitHub (Vercel PRODUCTION deploying!)');
     } catch (error) {
+      console.error('[🚀DEPLOY] Step 5 error:', error);
       addLog('Full Deploy', 'error', 'Push master failed');
       // Try to switch back to original branch
       try {
@@ -434,10 +460,13 @@ export default function DeploymentsAdmin() {
         });
       } catch (e) { /* ignore */ }
       setIsFullDeploy(false);
+      setDeployStep(0);
       return;
     }
 
     // Step 6: Deploy Convex to production
+    setDeployStep(6);
+    console.log('[🚀DEPLOY] Step 6: Deploy Convex to production...');
     addLog('Full Deploy', 'pending', 'Step 6/7: Deploying Convex to Sturgeon (PRODUCTION)...');
     try {
       const res = await fetch('/api/deployment/deploy-prod', {
@@ -446,6 +475,7 @@ export default function DeploymentsAdmin() {
         body: JSON.stringify({ confirmationToken: 'DEPLOY_TO_PRODUCTION' })
       });
       const data = await res.json();
+      console.log('[🚀DEPLOY] Step 6 result:', data);
       if (data.success) {
         addLog('Full Deploy', 'success', 'Convex deployed to Sturgeon (production)');
       } else {
@@ -453,10 +483,13 @@ export default function DeploymentsAdmin() {
         // Continue anyway to switch back to original branch
       }
     } catch (error) {
+      console.error('[🚀DEPLOY] Step 6 error:', error);
       addLog('Full Deploy', 'error', 'Convex deploy warning - continuing...');
     }
 
     // Step 7: Switch back to original branch
+    setDeployStep(7);
+    console.log('[🚀DEPLOY] Step 7: Switch back to original branch...');
     addLog('Full Deploy', 'pending', `Step 7/7: Switching back to ${originalBranch}...`);
     try {
       const res = await fetch('/api/deployment/switch-branch', {
@@ -465,34 +498,36 @@ export default function DeploymentsAdmin() {
         body: JSON.stringify({ branch: originalBranch })
       });
       const data = await res.json();
+      console.log('[🚀DEPLOY] Step 7 result:', data);
       if (data.success) {
         addLog('Full Deploy', 'success', `Back on ${originalBranch}`);
       } else {
         addLog('Full Deploy', 'error', `Could not switch back: ${data.error}`);
       }
     } catch (error) {
+      console.error('[🚀DEPLOY] Step 7 error:', error);
       addLog('Full Deploy', 'error', `Could not switch back to ${originalBranch}`);
     }
 
+    console.log('[🚀DEPLOY] COMPLETE!');
     addLog('Full Deploy', 'success', 'PRODUCTION DEPLOYMENT COMPLETE!');
     await fetchStatus();
     setIsFullDeploy(false);
+    setDeployStep(0);
     setShowProdConfirm(false);
     setProdConfirmStep(0);
   };
 
   const openProdConfirm = (fullDeploy: boolean) => {
+    setWillDoFullDeploy(fullDeploy);
     setShowProdConfirm(true);
     setProdConfirmStep(1);
-    if (fullDeploy) {
-      // Will do full deploy after confirmation
-    }
   };
 
   const confirmationModal = showProdConfirm && mounted && createPortal(
     <div
       className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]"
-      onClick={() => { setShowProdConfirm(false); setProdConfirmStep(0); }}
+      onClick={() => { setShowProdConfirm(false); setProdConfirmStep(0); setWillDoFullDeploy(false); }}
     >
       <div
         className="bg-gray-900 border-2 border-red-500 rounded-lg p-6 max-w-lg mx-4"
@@ -516,7 +551,7 @@ export default function DeploymentsAdmin() {
               </p>
               <div className="flex gap-4 justify-center">
                 <button
-                  onClick={() => { setShowProdConfirm(false); setProdConfirmStep(0); }}
+                  onClick={() => { setShowProdConfirm(false); setProdConfirmStep(0); setWillDoFullDeploy(false); }}
                   className="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg"
                 >
                   Cancel
@@ -541,13 +576,13 @@ export default function DeploymentsAdmin() {
               </p>
               <div className="flex gap-4 justify-center">
                 <button
-                  onClick={() => { setShowProdConfirm(false); setProdConfirmStep(0); }}
+                  onClick={() => { setShowProdConfirm(false); setProdConfirmStep(0); setWillDoFullDeploy(false); }}
                   className="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={isFullDeploy ? handleFullDeploy : handleDeployProd}
+                  onClick={willDoFullDeploy ? handleFullDeploy : handleDeployProd}
                   disabled={isDeployingProd || isFullDeploy}
                   className="px-6 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-bold disabled:opacity-50"
                 >
@@ -770,10 +805,7 @@ export default function DeploymentsAdmin() {
       {/* Main Action Button */}
       <div className="flex justify-center">
         <button
-          onClick={() => {
-            setIsFullDeploy(true);
-            openProdConfirm(true);
-          }}
+          onClick={() => openProdConfirm(true)}
           disabled={anyActionRunning || (gitStatus?.hasUncommittedChanges && !commitMessage.trim()) || !sessionBackup}
           className={`
             px-8 py-4 rounded-lg text-xl font-bold tracking-wider
@@ -788,6 +820,35 @@ export default function DeploymentsAdmin() {
           {isFullDeploy ? 'DEPLOYING...' : !sessionBackup ? 'CREATE BACKUP FIRST' : 'DEPLOY TO PRODUCTION'}
         </button>
       </div>
+
+      {/* Deploy Step Indicator */}
+      {isFullDeploy && deployStep > 0 && (
+        <div className="flex justify-center">
+          <div className="bg-gray-800/80 border border-yellow-500/50 rounded-lg px-6 py-3 text-center">
+            <div className="text-yellow-400 font-bold mb-2">Deploying Step {deployStep}/7</div>
+            <div className="flex gap-1 justify-center">
+              {[1, 2, 3, 4, 5, 6, 7].map((step) => (
+                <div
+                  key={step}
+                  className={`w-8 h-2 rounded-full transition-colors ${
+                    step < deployStep ? 'bg-green-500' :
+                    step === deployStep ? 'bg-yellow-500 animate-pulse' :
+                    'bg-gray-600'
+                  }`}
+                />
+              ))}
+            </div>
+            <div className="text-gray-400 text-xs mt-2">
+              {deployStep === 1 && 'Committing changes...'}
+              {deployStep === 2 && 'Pushing branch to GitHub...'}
+              {deployStep === 3 && 'Merging to master...'}
+              {deployStep === 5 && 'Pushing master to GitHub...'}
+              {deployStep === 6 && 'Deploying Convex to production...'}
+              {deployStep === 7 && 'Switching back to working branch...'}
+            </div>
+          </div>
+        </div>
+      )}
       {!sessionBackup && (
         <div className="text-center text-yellow-500 text-sm">
           You must create a backup before deploying to production
