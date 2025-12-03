@@ -167,6 +167,9 @@ export default function MessagingSystemAdmin() {
   const [adminSelectedConversationId, setAdminSelectedConversationId] = useState<Id<"conversations"> | null>(null);
   const [showDeletedMessages, setShowDeletedMessages] = useState(false);
 
+  // Blocked users state
+  const [showBlockedUsers, setShowBlockedUsers] = useState(false);
+
   // Convex queries
   const conversations = useQuery(api.messaging.getConversations, {
     walletAddress: activeCorp.walletAddress,

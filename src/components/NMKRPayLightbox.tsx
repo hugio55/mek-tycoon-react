@@ -138,6 +138,63 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
     };
   }, []);
 
+  // Detect and handle mobile resume from URL parameters
+  // This allows mobile users to continue their session in wallet browser
+  useEffect(() => {
+    if (!mounted) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const isResume = params.get('claimResume') === 'true';
+
+    if (isResume) {
+      const rid = params.get('rid');
+      const addr = params.get('addr');
+      const cid = params.get('cid');
+
+      if (rid && addr && cid) {
+        console.log('[🔐RESUME] Mobile resume detected from URL:', { rid: rid.substring(0, 10) + '...', addr: addr.substring(0, 20) + '...', cid: cid.substring(0, 10) + '...' });
+        setIsResumingFromMobile(true);
+
+        // Set state from URL params to resume session
+        setReservationId(rid as Id<"commemorativeNFTInventory">);
+        setManualAddress(addr);
+        setActiveCampaignId(cid as Id<"commemorativeCampaigns">);
+
+        // Skip directly to reserved state - the activeReservation query will validate
+        setState('reserved');
+
+        // Clean up URL (remove query params for cleaner display)
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, '', cleanUrl);
+
+        console.log('[🔐RESUME] Session restored, transitioning to reserved state');
+      } else {
+        console.warn('[🔐RESUME] Incomplete resume params, starting fresh');
+      }
+    }
+  }, [mounted]);
+
+  // Handle failed mobile resume (reservation expired or invalid)
+  useEffect(() => {
+    if (isResumingFromMobile && state === 'reserved' && reservationId && mounted) {
+      // Give the query a moment to load
+      const timeout = setTimeout(() => {
+        if (!activeReservation) {
+          console.log('[🔐RESUME] Reservation invalid or expired - resetting to address entry');
+          setIsResumingFromMobile(false);
+          setErrorMessage('Your reservation has expired. Please start again.');
+          setState('address_entry');
+          setReservationId(null);
+        } else {
+          console.log('[🔐RESUME] ✅ Reservation still valid, proceeding with wallet verification');
+          setIsResumingFromMobile(false);
+        }
+      }, 2000); // Wait 2 seconds for query to populate
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isResumingFromMobile, state, reservationId, activeReservation, mounted]);
+
   const validateCardanoAddress = (address: string): boolean => {
     if (!address) return false;
     const isMainnet = address.startsWith('addr1');
@@ -1124,7 +1181,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
               <div className="p-4 bg-white/5 border border-white/10 rounded-xl mb-6">
                 <p className="text-sm text-white/70 leading-relaxed mb-4">
-                  Please paste this link into your mobile wallet's browser to verify.
+                  Copy the link below and paste it into your mobile wallet's built-in browser.
+                  <span className="block mt-2 text-cyan-400">Your progress will be saved - you'll continue right where you left off.</span>
                 </p>
                 <p className="text-sm text-white/70 leading-relaxed">
                   Note: this must be the wallet you used to create your Mek Tycoon corporation:{' '}
@@ -1142,13 +1200,28 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
               <button
                 onClick={copyLinkToClipboard}
-                className="w-full py-3 px-6 text-base font-semibold tracking-wider text-black bg-gradient-to-r from-cyan-400 to-cyan-500 rounded-xl hover:from-cyan-300 hover:to-cyan-400 transition-all duration-300 shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-2"
+                className={`w-full py-3 px-6 text-base font-semibold tracking-wider rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center gap-2 ${
+                  linkCopied
+                    ? 'bg-green-500 text-white shadow-green-500/30'
+                    : 'bg-gradient-to-r from-cyan-400 to-cyan-500 text-black hover:from-cyan-300 hover:to-cyan-400 shadow-cyan-500/30'
+                }`}
                 style={{ fontFamily: "'Inter', 'Arial', sans-serif" }}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                Copy Link
+                {linkCopied ? (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Copied! Now paste in your wallet
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Copy Link
+                  </>
+                )}
               </button>
 
               <button

@@ -933,6 +933,51 @@ export default function AdminMasterDataPage() {
   const [isCommitting, setIsCommitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null);
 
+  // Pages dropdown state
+  const [showPagesDropdown, setShowPagesDropdown] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+
+  // List of important pages for quick access
+  const QUICK_ACCESS_PAGES = [
+    { name: 'Home (Triangle + Slots)', path: '/home', category: 'Main' },
+    { name: 'Landing Page', path: '/', category: 'Main' },
+    { name: 'Corporation', path: '/corp/demo_wallet_123', category: 'Main' },
+    { name: 'Essence Market', path: '/essence-market', category: 'Main' },
+    { name: 'Federation', path: '/federation', category: 'Main' },
+    { name: 'Profile', path: '/profile', category: 'Main' },
+    { name: 'Crafting', path: '/crafting', category: 'Main' },
+    { name: 'Contracts', path: '/contracts', category: 'Contracts' },
+    { name: 'Single Missions', path: '/contracts/single-missions', category: 'Contracts' },
+    { name: 'Story Climb', path: '/scrap-yard/story-climb', category: 'Contracts' },
+    { name: 'Cirutree (Talent)', path: '/cirutree', category: 'Systems' },
+    { name: 'Shop', path: '/shop', category: 'Systems' },
+    { name: 'Achievements', path: '/achievements', category: 'Systems' },
+    { name: 'Leaderboard', path: '/leaderboard', category: 'Systems' },
+    { name: 'Search', path: '/search', category: 'Systems' },
+    { name: 'Admin', path: '/admin', category: 'Admin' },
+    { name: 'Admin Users', path: '/admin/users', category: 'Admin' },
+  ];
+
+  const copyPageUrl = (path: string) => {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3200';
+    const fullUrl = `${baseUrl}${path}`;
+    navigator.clipboard.writeText(fullUrl);
+    setCopiedUrl(path);
+    setTimeout(() => setCopiedUrl(null), 1500);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showPagesDropdown && !target.closest('[data-pages-dropdown]')) {
+        setShowPagesDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showPagesDropdown]);
+
   // Market configuration state
   const [marketConfig, setMarketConfig] = useState({
     durationCosts: {
@@ -1621,10 +1666,71 @@ export default function AdminMasterDataPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white p-8 relative z-10">
       {/* Header */}
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-yellow-500 mb-2 font-orbitron tracking-wider">
-          MASTER DATA SYSTEMS
-        </h1>
-        <p className="text-gray-400 mb-4">Centralized procedural generation and game balance control</p>
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h1 className="text-4xl font-bold text-yellow-500 mb-2 font-orbitron tracking-wider">
+              MASTER DATA SYSTEMS
+            </h1>
+            <p className="text-gray-400">Centralized procedural generation and game balance control</p>
+          </div>
+
+          {/* Quick Access Pages Dropdown */}
+          <div className="relative" data-pages-dropdown>
+            <button
+              onClick={() => setShowPagesDropdown(!showPagesDropdown)}
+              className="flex items-center gap-2 px-4 py-2 bg-cyan-600/20 border border-cyan-500/50 rounded-lg text-cyan-400 hover:bg-cyan-600/30 hover:border-cyan-400 transition-all"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <span className="font-bold text-sm uppercase tracking-wider">Pages</span>
+              <svg className={`w-4 h-4 transition-transform ${showPagesDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Dropdown Menu */}
+            {showPagesDropdown && (
+              <div className="absolute right-0 mt-2 w-72 bg-gray-900 border border-cyan-500/30 rounded-lg shadow-xl shadow-black/50 z-50 overflow-hidden">
+                <div className="p-2 bg-cyan-900/20 border-b border-cyan-500/30">
+                  <span className="text-xs text-cyan-400 uppercase tracking-wider font-bold">Quick Access Pages</span>
+                  <span className="text-xs text-gray-500 ml-2">(click to copy URL)</span>
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {['Main', 'Contracts', 'Systems', 'Admin'].map(category => (
+                    <div key={category}>
+                      <div className="px-3 py-1.5 bg-gray-800/50 text-xs text-gray-500 uppercase tracking-wider font-bold">
+                        {category}
+                      </div>
+                      {QUICK_ACCESS_PAGES.filter(p => p.category === category).map(page => (
+                        <button
+                          key={page.path}
+                          onClick={() => copyPageUrl(page.path)}
+                          className="w-full px-3 py-2 text-left hover:bg-cyan-600/20 transition-colors flex items-center justify-between group"
+                        >
+                          <span className="text-sm text-gray-300 group-hover:text-cyan-300">{page.name}</span>
+                          {copiedUrl === page.path ? (
+                            <span className="text-xs text-green-400 font-bold">Copied!</span>
+                          ) : (
+                            <span className="text-xs text-gray-600 group-hover:text-cyan-500 font-mono">{page.path}</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+                <div className="p-2 bg-gray-800/50 border-t border-gray-700">
+                  <button
+                    onClick={() => setShowPagesDropdown(false)}
+                    className="w-full text-xs text-gray-500 hover:text-gray-300 py-1"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* 🐟 DUAL DATABASE CONTROLS 🐟 */}
         <div className="mb-4 grid grid-cols-2 gap-3">
@@ -6037,10 +6143,6 @@ export default function AdminMasterDataPage() {
 
           {activeTab === 'universal-background' && (
             <UniversalBackgroundAdmin />
-          )}
-
-          {activeTab === 'planet-background' && (
-            <PlanetBackgroundAdmin />
           )}
 
         </div>

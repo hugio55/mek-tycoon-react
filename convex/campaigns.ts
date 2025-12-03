@@ -88,22 +88,64 @@ export const updateCampaign = mutation({
   },
 });
 
-// Delete campaign (and all its inventory)
+// Delete campaign (and all its inventory) - WITH CASCADE DELETE
 export const deleteCampaign = mutation({
   args: {
     campaignId: v.id("commemorativeCampaigns"),
+    confirmCascadeDelete: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    // Delete the campaign
+    // Get campaign info for logging
+    const campaign = await ctx.db.get(args.campaignId);
+    if (!campaign) {
+      throw new Error("Campaign not found");
+    }
+
+    // CASCADE DELETE: First delete all inventory records for this campaign
+    const inventory = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .collect();
+
+    console.log(`[CAMPAIGNS] Deleting campaign "${campaign.name}" (${args.campaignId})`);
+    console.log(`[CAMPAIGNS] CASCADE DELETE: Found ${inventory.length} inventory records to delete`);
+
+    // Safety check: If there are sold NFTs, require explicit confirmation
+    const soldCount = inventory.filter(i => i.status === "sold").length;
+    if (soldCount > 0 && !args.confirmCascadeDelete) {
+      throw new Error(
+        `SAFETY STOP: This campaign has ${soldCount} SOLD NFT(s). ` +
+        `Deleting will remove sale records permanently. ` +
+        `Pass confirmCascadeDelete: true to proceed.`
+      );
+    }
+
+    // Delete all inventory records
+    for (const item of inventory) {
+      await ctx.db.delete(item._id);
+    }
+    console.log(`[CAMPAIGNS] Deleted ${inventory.length} inventory records`);
+
+    // Also delete any reservations for this campaign
+    const reservations = await ctx.db
+      .query("commemorativeNFTReservations")
+      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .collect();
+
+    for (const reservation of reservations) {
+      await ctx.db.delete(reservation._id);
+    }
+    console.log(`[CAMPAIGNS] Deleted ${reservations.length} reservation records`);
+
+    // Finally delete the campaign itself
     await ctx.db.delete(args.campaignId);
 
-    // Note: In production, you might want to also delete associated inventory
-    // and reservations, or implement soft deletes
-
-    console.log("[CAMPAIGNS] Deleted campaign:", args.campaignId);
+    console.log(`[CAMPAIGNS] Successfully deleted campaign "${campaign.name}" and all associated data`);
 
     return {
       success: true,
+      deletedInventory: inventory.length,
+      deletedReservations: reservations.length,
     };
   },
 });
