@@ -856,8 +856,7 @@ const DATA_SYSTEMS = [
   { id: 'new-styling', name: 'Space Age Style', icon: '🎨', implemented: true },
   { id: 'messaging-system', name: 'Messaging System', icon: '💬', implemented: true },
   { id: 'rarity-bias', name: 'Rarity Bias', icon: '📊', implemented: true },
-  { id: 'universal-background', name: 'Universal Background', icon: '🌌', implemented: true },
-  { id: 'planet-background', name: 'Planet Background', icon: '🪐', implemented: true }
+  { id: 'universal-background', name: 'Universal Background', icon: '🌌', implemented: true }
 ];
 
 export default function AdminMasterDataPage() {

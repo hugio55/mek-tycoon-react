@@ -35,6 +35,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   const [walletVerificationError, setWalletVerificationError] = useState<string | null>(null);
   const [isMobileBrowser, setIsMobileBrowser] = useState(false);
   const [isRequestingSignature, setIsRequestingSignature] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [isResumingFromMobile, setIsResumingFromMobile] = useState(false);
 
   // Backend verification state (cryptographic proof of wallet ownership)
   const [backendVerificationStatus, setBackendVerificationStatus] = useState<'idle' | 'generating_nonce' | 'awaiting_signature' | 'verifying' | 'success' | 'failed'>('idle');
@@ -518,14 +520,27 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
     }
   };
 
-  // Copy current URL to clipboard
+  // Copy resume URL to clipboard (preserves session state for mobile wallet browser)
   const copyLinkToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href);
-      // Could add a toast notification here
-      console.log('[🔐VERIFY] Link copied to clipboard');
+      // Build resume URL with session state so mobile users don't lose progress
+      const baseUrl = window.location.origin + window.location.pathname;
+      const params = new URLSearchParams({
+        claimResume: 'true',
+        rid: reservationId || '',
+        addr: effectiveWalletAddress || '',
+        cid: activeCampaignId || '',
+      });
+      const resumeUrl = `${baseUrl}?${params.toString()}`;
+
+      await navigator.clipboard.writeText(resumeUrl);
+      console.log('[🔐RESUME] Mobile resume link copied:', resumeUrl);
+
+      // Show "Copied!" feedback
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
     } catch (err) {
-      console.error('[🔐VERIFY] Failed to copy link:', err);
+      console.error('[🔐RESUME] Failed to copy link:', err);
     }
   };
 
