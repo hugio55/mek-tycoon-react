@@ -472,14 +472,9 @@ export const deleteMessage = mutation({
     }
 
     if (args.deleteForEveryone) {
-      // Only sender can delete for everyone, and only within 1 hour
+      // Only sender can delete for everyone (no time limit, like Discord)
       if (message.senderId !== args.walletAddress) {
         throw new Error("Only the sender can delete for everyone");
-      }
-
-      const oneHour = 60 * 60 * 1000;
-      if (Date.now() - message.createdAt > oneHour) {
-        throw new Error("Cannot delete for everyone after 1 hour");
       }
 
       await ctx.db.patch(args.messageId, {

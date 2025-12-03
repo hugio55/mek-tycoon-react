@@ -477,11 +477,9 @@ export default function MessagingSystemAdmin() {
     return 'text-gray-500';
   };
 
-  // Handle deleting a message
-  const handleDeleteMessage = async (messageId: Id<"messages">, deleteForEveryone: boolean) => {
-    if (!confirm(deleteForEveryone
-      ? 'Delete this message for everyone? This cannot be undone.'
-      : 'Delete this message for yourself?')) {
+  // Handle deleting a message (always deletes for everyone, like Discord)
+  const handleDeleteMessage = async (messageId: Id<"messages">) => {
+    if (!confirm('Delete this message? This cannot be undone.')) {
       return;
     }
 
@@ -489,7 +487,7 @@ export default function MessagingSystemAdmin() {
       await deleteMessage({
         messageId,
         walletAddress: activeCorp.walletAddress,
-        deleteForEveryone,
+        deleteForEveryone: true,
       });
     } catch (error) {
       console.error('[📨DELETE] Failed to delete message:', error);
@@ -719,7 +717,7 @@ export default function MessagingSystemAdmin() {
                         {/* Delete button for outgoing messages - appears on left */}
                         {isOutgoing && (
                           <button
-                            onClick={() => handleDeleteMessage(msg._id, true)}
+                            onClick={() => handleDeleteMessage(msg._id)}
                             className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-all p-1"
                             title="Delete message"
                           >
@@ -731,7 +729,7 @@ export default function MessagingSystemAdmin() {
                         <div
                           className={`max-w-[70%] rounded-2xl px-4 py-2 ${
                             isOutgoing
-                              ? 'bg-yellow-500/20 border border-yellow-500/30 rounded-br-sm'
+                              ? 'bg-cyan-500/20 border border-cyan-500/30 rounded-br-sm'
                               : 'bg-gray-700/50 border border-gray-600 rounded-bl-sm'
                           }`}
                         >
