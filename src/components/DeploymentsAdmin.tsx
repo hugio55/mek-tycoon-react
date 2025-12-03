@@ -72,14 +72,16 @@ export default function DeploymentsAdmin() {
   const [isRollingBack, setIsRollingBack] = useState(false);
   const [deployStep, setDeployStep] = useState<number>(0); // Track which step we're on (1-7)
   const [willDoFullDeploy, setWillDoFullDeploy] = useState(false); // Intent to do full deploy (before confirmation)
+  const [logCounter, setLogCounter] = useState(0); // Counter for unique log IDs
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const addLog = (action: string, status: 'success' | 'error' | 'pending', message: string) => {
+    setLogCounter(prev => prev + 1);
     setActionLogs(prev => [{
-      id: Date.now().toString(),
+      id: `${Date.now()}-${logCounter}-${Math.random().toString(36).substr(2, 9)}`,
       action,
       status,
       message,
@@ -524,74 +526,142 @@ export default function DeploymentsAdmin() {
     setProdConfirmStep(1);
   };
 
+  // Check if commit message is required but missing
+  const needsCommitMessage = willDoFullDeploy && gitStatus?.hasUncommittedChanges && !commitMessage.trim();
+
   const confirmationModal = showProdConfirm && mounted && createPortal(
     <div
       className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]"
-      onClick={() => { setShowProdConfirm(false); setProdConfirmStep(0); setWillDoFullDeploy(false); }}
+      onClick={() => {
+        if (!isFullDeploy && !isDeployingProd) {
+          setShowProdConfirm(false);
+          setProdConfirmStep(0);
+          setWillDoFullDeploy(false);
+        }
+      }}
     >
       <div
         className="bg-gray-900 border-2 border-red-500 rounded-lg p-6 max-w-lg mx-4"
         onClick={e => e.stopPropagation()}
       >
-        <div className="text-center">
-          <div className="text-4xl mb-4">
-            {prodConfirmStep === 1 ? '!' : '!!'}
+        {/* Deploying State - Show Step Indicator */}
+        {isFullDeploy && deployStep > 0 ? (
+          <div className="text-center">
+            <div className="text-4xl mb-4">🚀</div>
+            <h2 className="text-xl font-bold text-yellow-400 mb-4">
+              Deploying to Production
+            </h2>
+            <div className="text-yellow-400 font-bold mb-3">Step {deployStep}/7</div>
+            <div className="flex gap-1 justify-center mb-4">
+              {[1, 2, 3, 4, 5, 6, 7].map((step) => (
+                <div
+                  key={step}
+                  className={`w-8 h-3 rounded-full transition-colors ${
+                    step < deployStep ? 'bg-green-500' :
+                    step === deployStep ? 'bg-yellow-500 animate-pulse' :
+                    (step === 4 && deployStep >= 3) ? 'bg-green-500' :
+                    'bg-gray-600'
+                  }`}
+                />
+              ))}
+            </div>
+            <div className="text-gray-300 text-sm mb-4">
+              {deployStep === 1 && 'Committing changes...'}
+              {deployStep === 2 && 'Pushing branch to GitHub...'}
+              {deployStep === 3 && 'Switching to master & merging...'}
+              {deployStep === 5 && 'Pushing master to GitHub (Vercel)...'}
+              {deployStep === 6 && 'Deploying Convex to production...'}
+              {deployStep === 7 && 'Switching back to working branch...'}
+            </div>
+            <p className="text-gray-500 text-xs">
+              Please wait... Do not close this window.
+            </p>
           </div>
-          <h2 className="text-xl font-bold text-red-400 mb-4">
-            {prodConfirmStep === 1 ? 'Production Deployment' : 'Final Confirmation'}
-          </h2>
+        ) : (
+          /* Confirmation States */
+          <div className="text-center">
+            <div className="text-4xl mb-4">
+              {prodConfirmStep === 1 ? '⚠️' : '‼️'}
+            </div>
+            <h2 className="text-xl font-bold text-red-400 mb-4">
+              {prodConfirmStep === 1 ? 'Production Deployment' : 'Final Confirmation'}
+            </h2>
 
-          {prodConfirmStep === 1 && (
-            <>
-              <p className="text-gray-300 mb-4">
-                You are about to deploy to <span className="text-red-400 font-bold">PRODUCTION</span>.
-              </p>
-              <p className="text-gray-400 text-sm mb-6">
-                This will affect the live website (mek.overexposed.io) and all active players.
-              </p>
-              <div className="flex gap-4 justify-center">
-                <button
-                  onClick={() => { setShowProdConfirm(false); setProdConfirmStep(0); setWillDoFullDeploy(false); }}
-                  className="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => setProdConfirmStep(2)}
-                  className="px-6 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-bold"
-                >
-                  Continue
-                </button>
-              </div>
-            </>
-          )}
+            {prodConfirmStep === 1 && (
+              <>
+                <p className="text-gray-300 mb-4">
+                  You are about to deploy to <span className="text-red-400 font-bold">PRODUCTION</span>.
+                </p>
+                <p className="text-gray-400 text-sm mb-6">
+                  This will affect the live website (mek.overexposed.io) and all active players.
+                </p>
+                <div className="flex gap-4 justify-center">
+                  <button
+                    onClick={() => { setShowProdConfirm(false); setProdConfirmStep(0); setWillDoFullDeploy(false); }}
+                    className="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => setProdConfirmStep(2)}
+                    className="px-6 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-bold"
+                  >
+                    Continue
+                  </button>
+                </div>
+              </>
+            )}
 
-          {prodConfirmStep === 2 && (
-            <>
-              <p className="text-gray-300 mb-4">
-                Are you <span className="text-red-400 font-bold">ABSOLUTELY SURE</span>?
-              </p>
-              <p className="text-gray-400 text-sm mb-6">
-                Changes will go live immediately. This cannot be undone without another deployment.
-              </p>
-              <div className="flex gap-4 justify-center">
-                <button
-                  onClick={() => { setShowProdConfirm(false); setProdConfirmStep(0); setWillDoFullDeploy(false); }}
-                  className="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={willDoFullDeploy ? handleFullDeploy : handleDeployProd}
-                  disabled={isDeployingProd || isFullDeploy}
-                  className="px-6 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-bold disabled:opacity-50"
-                >
-                  {isDeployingProd || isFullDeploy ? 'Deploying...' : 'DEPLOY TO PRODUCTION'}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+            {prodConfirmStep === 2 && (
+              <>
+                {needsCommitMessage ? (
+                  /* Block if commit message is needed */
+                  <>
+                    <p className="text-yellow-400 mb-4">
+                      ⚠️ You have <span className="font-bold">uncommitted changes</span> but no commit message!
+                    </p>
+                    <p className="text-gray-400 text-sm mb-6">
+                      Please close this dialog and enter a commit message before deploying.
+                    </p>
+                    <div className="flex gap-4 justify-center">
+                      <button
+                        onClick={() => { setShowProdConfirm(false); setProdConfirmStep(0); setWillDoFullDeploy(false); }}
+                        className="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 rounded-lg font-bold"
+                      >
+                        Go Back & Enter Message
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  /* Normal confirmation */
+                  <>
+                    <p className="text-gray-300 mb-4">
+                      Are you <span className="text-red-400 font-bold">ABSOLUTELY SURE</span>?
+                    </p>
+                    <p className="text-gray-400 text-sm mb-6">
+                      Changes will go live immediately. This cannot be undone without another deployment.
+                    </p>
+                    <div className="flex gap-4 justify-center">
+                      <button
+                        onClick={() => { setShowProdConfirm(false); setProdConfirmStep(0); setWillDoFullDeploy(false); }}
+                        className="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={willDoFullDeploy ? handleFullDeploy : handleDeployProd}
+                        disabled={isDeployingProd || isFullDeploy}
+                        className="px-6 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-bold disabled:opacity-50"
+                      >
+                        {isDeployingProd || isFullDeploy ? 'Deploying...' : 'DEPLOY TO PRODUCTION'}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>,
     document.body
@@ -841,36 +911,6 @@ export default function DeploymentsAdmin() {
         </button>
       </div>
 
-      {/* Deploy Step Indicator */}
-      {isFullDeploy && deployStep > 0 && (
-        <div className="flex justify-center">
-          <div className="bg-gray-800/80 border border-yellow-500/50 rounded-lg px-6 py-3 text-center">
-            <div className="text-yellow-400 font-bold mb-2">Deploying Step {deployStep}/7</div>
-            <div className="flex gap-1 justify-center">
-              {[1, 2, 3, 4, 5, 6, 7].map((step) => (
-                <div
-                  key={step}
-                  className={`w-8 h-2 rounded-full transition-colors ${
-                    step < deployStep ? 'bg-green-500' :
-                    step === deployStep ? 'bg-yellow-500 animate-pulse' :
-                    // Step 4 shows green when step 3 is active (they're combined)
-                    (step === 4 && deployStep >= 3) ? 'bg-green-500' :
-                    'bg-gray-600'
-                  }`}
-                />
-              ))}
-            </div>
-            <div className="text-gray-400 text-xs mt-2">
-              {deployStep === 1 && 'Committing changes...'}
-              {deployStep === 2 && 'Pushing branch to GitHub...'}
-              {deployStep === 3 && 'Switching to master & merging...'}
-              {deployStep === 5 && 'Pushing master to GitHub (Vercel)...'}
-              {deployStep === 6 && 'Deploying Convex to production...'}
-              {deployStep === 7 && 'Switching back to working branch...'}
-            </div>
-          </div>
-        </div>
-      )}
       {!sessionBackup && (
         <div className="text-center text-yellow-500 text-sm">
           You must create a backup before deploying to production

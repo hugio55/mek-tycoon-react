@@ -142,6 +142,9 @@ function formatRelativeTime(timestamp: number): string {
 }
 
 export default function MessagingSystemAdmin() {
+  // Subtab state
+  const [activeSubtab, setActiveSubtab] = useState<MessagingSubtab>('testing');
+
   // State for dual-corporation testing
   const [activeCorp, setActiveCorp] = useState(TEST_CORPORATIONS[0]);
   const [selectedConversationId, setSelectedConversationId] = useState<Id<"conversations"> | null>(null);
@@ -158,6 +161,10 @@ export default function MessagingSystemAdmin() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Admin view state
+  const [adminSearchQuery, setAdminSearchQuery] = useState('');
+  const [adminSelectedConversationId, setAdminSelectedConversationId] = useState<Id<"conversations"> | null>(null);
 
   // Convex queries
   const conversations = useQuery(api.messaging.getConversations, {
@@ -186,6 +193,17 @@ export default function MessagingSystemAdmin() {
     excludeWallet: activeCorp.walletAddress,
   });
 
+  // Admin queries
+  const allConversationsAdmin = useQuery(
+    api.messaging.getAllConversationsAdmin,
+    activeSubtab === 'admin' ? { searchQuery: adminSearchQuery || undefined } : 'skip'
+  );
+
+  const adminMessages = useQuery(
+    api.messaging.getMessagesAdmin,
+    adminSelectedConversationId ? { conversationId: adminSelectedConversationId } : 'skip'
+  );
+
   // Convex mutations
   const sendMessage = useMutation(api.messaging.sendMessage);
   const markAsRead = useMutation(api.messaging.markConversationAsRead);
@@ -194,6 +212,12 @@ export default function MessagingSystemAdmin() {
   const deleteConversation = useMutation(api.messaging.deleteConversation);
   const generateUploadUrl = useMutation(api.messageAttachments.generateUploadUrl);
   const validateUpload = useMutation(api.messageAttachments.validateUpload);
+
+  // Admin mutations
+  const disableConversationAdmin = useMutation(api.messaging.disableConversationAdmin);
+  const enableConversationAdmin = useMutation(api.messaging.enableConversationAdmin);
+  const deleteConversationAdmin = useMutation(api.messaging.deleteConversationAdmin);
+  const deleteMessageAdmin = useMutation(api.messaging.deleteMessageAdmin);
 
   // Mount check for portal
   useEffect(() => {
@@ -522,6 +546,84 @@ export default function MessagingSystemAdmin() {
     }
   };
 
+  // ============================================================================
+  // ADMIN HANDLERS
+  // ============================================================================
+
+  // Admin: Disable a conversation
+  const handleAdminDisableConversation = async (conversationId: Id<"conversations">) => {
+    const reason = prompt('Enter reason for disabling (or leave blank for default):');
+    if (reason === null) return; // Cancelled
+
+    if (!confirm('Disable this conversation? Both users will see a ToS violation message and cannot send messages.')) {
+      return;
+    }
+
+    try {
+      await disableConversationAdmin({
+        conversationId,
+        reason: reason || undefined,
+      });
+    } catch (error) {
+      console.error('[🛡️ADMIN] Failed to disable conversation:', error);
+      alert(error instanceof Error ? error.message : 'Failed to disable conversation');
+    }
+  };
+
+  // Admin: Re-enable a conversation
+  const handleAdminEnableConversation = async (conversationId: Id<"conversations">) => {
+    if (!confirm('Re-enable this conversation? Users will be able to message again.')) {
+      return;
+    }
+
+    try {
+      await enableConversationAdmin({ conversationId });
+    } catch (error) {
+      console.error('[🛡️ADMIN] Failed to enable conversation:', error);
+      alert(error instanceof Error ? error.message : 'Failed to enable conversation');
+    }
+  };
+
+  // Admin: Delete a conversation permanently
+  const handleAdminDeleteConversation = async (conversationId: Id<"conversations">) => {
+    if (!confirm('PERMANENTLY DELETE this conversation and all messages? This cannot be undone!')) {
+      return;
+    }
+
+    if (!confirm('Are you ABSOLUTELY SURE? All messages will be permanently deleted.')) {
+      return;
+    }
+
+    try {
+      await deleteConversationAdmin({ conversationId });
+      if (adminSelectedConversationId === conversationId) {
+        setAdminSelectedConversationId(null);
+      }
+    } catch (error) {
+      console.error('[🛡️ADMIN] Failed to delete conversation:', error);
+      alert(error instanceof Error ? error.message : 'Failed to delete conversation');
+    }
+  };
+
+  // Admin: Delete a message
+  const handleAdminDeleteMessage = async (messageId: Id<"messages">) => {
+    if (!confirm('Delete this message? It will show as "[Deleted by admin]" to users.')) {
+      return;
+    }
+
+    try {
+      await deleteMessageAdmin({ messageId });
+    } catch (error) {
+      console.error('[🛡️ADMIN] Failed to delete message:', error);
+      alert(error instanceof Error ? error.message : 'Failed to delete message');
+    }
+  };
+
+  // Get the selected admin conversation details
+  const selectedAdminConversation = allConversationsAdmin?.find(
+    (c: any) => c._id === adminSelectedConversationId
+  );
+
   return (
     <div
       className="min-h-[800px] rounded-lg overflow-hidden relative"
@@ -545,10 +647,41 @@ export default function MessagingSystemAdmin() {
             Messaging System
           </h1>
           <p className="text-gray-400">
-            Test corporation-to-corporation messaging with dual-view
+            {activeSubtab === 'testing'
+              ? 'Test corporation-to-corporation messaging with dual-view'
+              : 'View and manage all user conversations'}
           </p>
         </div>
 
+        {/* Subtabs */}
+        <div className="mb-6 flex gap-2">
+          <button
+            onClick={() => setActiveSubtab('testing')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              activeSubtab === 'testing'
+                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
+                : 'bg-black/30 text-gray-400 border border-gray-700 hover:border-gray-500'
+            }`}
+          >
+            Testing Tool
+          </button>
+          <button
+            onClick={() => setActiveSubtab('admin')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              activeSubtab === 'admin'
+                ? 'bg-red-500/20 text-red-400 border border-red-500/50'
+                : 'bg-black/30 text-gray-400 border border-gray-700 hover:border-gray-500'
+            }`}
+          >
+            Admin View (All Conversations)
+          </button>
+        </div>
+
+        {/* ============================================================ */}
+        {/* TESTING SUBTAB */}
+        {/* ============================================================ */}
+        {activeSubtab === 'testing' && (
+          <>
         {/* Corporation Switcher */}
         <div className="mb-6 p-4 bg-black/40 rounded-xl border border-gray-700">
           <div className="text-sm text-gray-400 uppercase tracking-wider mb-3">
@@ -928,6 +1061,271 @@ export default function MessagingSystemAdmin() {
             </div>
           </div>
         </div>
+          </>
+        )}
+
+        {/* ============================================================ */}
+        {/* ADMIN SUBTAB */}
+        {/* ============================================================ */}
+        {activeSubtab === 'admin' && (
+          <>
+            {/* Search Bar */}
+            <div className="mb-6">
+              <input
+                type="text"
+                value={adminSearchQuery}
+                onChange={(e) => setAdminSearchQuery(e.target.value)}
+                placeholder="Search by corporation name or stake address..."
+                className="w-full bg-black/40 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50 transition-colors"
+              />
+            </div>
+
+            {/* Main Admin Area */}
+            <div className="grid grid-cols-3 gap-6">
+              {/* All Conversations Panel */}
+              <div className="col-span-1 bg-black/40 rounded-xl border border-gray-700 overflow-hidden">
+                <div className="p-4 border-b border-gray-700">
+                  <h2 className="text-lg font-semibold text-white">All Conversations</h2>
+                  <div className="text-sm text-gray-500">
+                    {allConversationsAdmin?.length ?? 0} total
+                  </div>
+                </div>
+
+                <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
+                  {allConversationsAdmin?.map((conv: any) => (
+                    <div
+                      key={conv._id}
+                      onClick={() => setAdminSelectedConversationId(conv._id)}
+                      className={`group p-4 border-b border-gray-700/50 cursor-pointer transition-colors ${
+                        adminSelectedConversationId === conv._id
+                          ? 'bg-red-500/10'
+                          : 'hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Both participant avatars */}
+                        <div className="flex -space-x-2 flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-gray-700 overflow-hidden border-2 border-gray-800">
+                            <img
+                              src={`/mek-images/150px/${getMekImageForWallet(conv.participant1)}`}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="w-8 h-8 rounded-full bg-gray-700 overflow-hidden border-2 border-gray-800">
+                            <img
+                              src={`/mek-images/150px/${getMekImageForWallet(conv.participant2)}`}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1 text-white font-medium text-sm">
+                            <span className="truncate">{conv.participant1Info.companyName}</span>
+                            <span className="text-gray-500">↔</span>
+                            <span className="truncate">{conv.participant2Info.companyName}</span>
+                          </div>
+                          <div className="flex items-center justify-between mt-1">
+                            <div className="text-gray-500 text-xs">
+                              {conv.messageCount} messages
+                            </div>
+                            <div className="text-gray-500 text-xs">
+                              {formatRelativeTime(conv.lastMessageAt)}
+                            </div>
+                          </div>
+                          {conv.disabledByAdmin && (
+                            <div className="mt-1 text-xs text-red-400 font-medium">
+                              ⚠️ DISABLED
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {allConversationsAdmin?.length === 0 && (
+                    <div className="p-8 text-center text-gray-500">
+                      <div className="text-4xl mb-2">📭</div>
+                      <div>No conversations found</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Message Viewer Panel */}
+              <div className="col-span-2 bg-black/40 rounded-xl border border-gray-700 flex flex-col overflow-hidden">
+                {adminSelectedConversationId && selectedAdminConversation ? (
+                  <>
+                    {/* Conversation Header with Admin Controls */}
+                    <div className="p-4 border-b border-gray-700">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex -space-x-2">
+                            <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden border-2 border-gray-800">
+                              <img
+                                src={`/mek-images/150px/${getMekImageForWallet(selectedAdminConversation.participant1)}`}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden border-2 border-gray-800">
+                              <img
+                                src={`/mek-images/150px/${getMekImageForWallet(selectedAdminConversation.participant2)}`}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-white font-semibold">
+                              {selectedAdminConversation.participant1Info.companyName} ↔ {selectedAdminConversation.participant2Info.companyName}
+                            </div>
+                            <div className="text-gray-500 text-sm">
+                              {selectedAdminConversation.messageCount} messages
+                              {selectedAdminConversation.disabledByAdmin && (
+                                <span className="ml-2 text-red-400">• DISABLED</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Admin Action Buttons */}
+                        <div className="flex items-center gap-2">
+                          {selectedAdminConversation.disabledByAdmin ? (
+                            <button
+                              onClick={() => handleAdminEnableConversation(adminSelectedConversationId)}
+                              className="px-3 py-1.5 bg-green-500/20 text-green-400 border border-green-500/50 rounded-lg text-sm hover:bg-green-500/30 transition-colors"
+                            >
+                              Re-enable
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleAdminDisableConversation(adminSelectedConversationId)}
+                              className="px-3 py-1.5 bg-orange-500/20 text-orange-400 border border-orange-500/50 rounded-lg text-sm hover:bg-orange-500/30 transition-colors"
+                            >
+                              Disable (ToS)
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleAdminDeleteConversation(adminSelectedConversationId)}
+                            className="px-3 py-1.5 bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg text-sm hover:bg-red-500/30 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Messages Area */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar min-h-[400px]">
+                      {adminMessages?.map((msg: any) => (
+                        <div
+                          key={msg._id}
+                          className="group flex items-start gap-3"
+                        >
+                          {/* Sender avatar */}
+                          <div className="w-8 h-8 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                            <img
+                              src={`/mek-images/150px/${getMekImageForWallet(msg.senderId)}`}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-cyan-400 font-medium text-sm">
+                                {msg.senderInfo.companyName}
+                              </span>
+                              <span className="text-gray-500 text-xs">
+                                {formatRelativeTime(msg.createdAt)}
+                              </span>
+                              {/* Admin delete button */}
+                              {!msg.isDeleted && (
+                                <button
+                                  onClick={() => handleAdminDeleteMessage(msg._id)}
+                                  className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-all p-1"
+                                  title="Delete message"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                            {/* Message content */}
+                            <div className={`mt-1 ${msg.isDeleted ? 'text-gray-500 italic' : 'text-white'}`}>
+                              {msg.content || (msg.isDeleted ? '[Deleted]' : '')}
+                            </div>
+                            {/* Attachments */}
+                            {msg.attachments && msg.attachments.length > 0 && !msg.isDeleted && (
+                              <div className="flex gap-2 mt-2 flex-wrap">
+                                {msg.attachments.map((att: any, idx: number) => (
+                                  <button
+                                    key={idx}
+                                    onClick={() => setLightboxImage({ url: att.url, filename: att.filename })}
+                                    className="block"
+                                  >
+                                    <img
+                                      src={att.url}
+                                      alt={att.filename}
+                                      className="max-w-[150px] max-h-[150px] rounded-lg object-cover border border-white/10 hover:border-cyan-500/50 transition-colors"
+                                    />
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+
+                      {adminMessages?.length === 0 && (
+                        <div className="text-center text-gray-500 py-16">
+                          <div className="text-4xl mb-2">💬</div>
+                          <div>No messages in this conversation</div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Read-only notice */}
+                    <div className="p-4 border-t border-gray-700 bg-black/20">
+                      <div className="text-center text-gray-500 text-sm">
+                        Admin View (Read-Only)
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-gray-500">
+                    <div className="text-center">
+                      <div className="text-6xl mb-4">🔍</div>
+                      <div className="text-lg">Select a conversation to view</div>
+                      <div className="text-sm">Messages will appear here</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Admin Stats */}
+            <div className="mt-6 p-4 bg-black/40 rounded-xl border border-gray-700">
+              <div className="text-sm text-gray-400 uppercase tracking-wider mb-2">Admin Stats</div>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-500">Total Conversations:</span>{' '}
+                  <span className="text-white">{allConversationsAdmin?.length ?? 0}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Disabled:</span>{' '}
+                  <span className="text-red-400">{allConversationsAdmin?.filter((c: any) => c.disabledByAdmin).length ?? 0}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Active:</span>{' '}
+                  <span className="text-green-400">{allConversationsAdmin?.filter((c: any) => !c.disabledByAdmin).length ?? 0}</span>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Image Lightbox - rendered via portal to escape parent stacking context */}
