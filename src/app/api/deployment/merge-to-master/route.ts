@@ -55,6 +55,13 @@ export async function POST(request: NextRequest) {
       // Ignore abort errors
     }
 
+    // Try to switch back to original branch (belt-and-suspenders with frontend recovery)
+    try {
+      await execAsync(`git checkout ${currentBranch}`);
+    } catch (e) {
+      // Ignore - frontend will also attempt to switch back
+    }
+
     console.error('Merge error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Merge failed' },
