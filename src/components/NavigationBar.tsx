@@ -4,13 +4,27 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter, usePathname } from "next/navigation";
 import { restoreWalletSession } from "@/lib/walletSessionManager";
-import { useState, useEffect, useRef } from "react";
-import { useLoaderContext } from "@/features/page-loader";
-import { TIMING } from "@/features/page-loader/config/constants";
+import { useState, useEffect, useRef, useContext } from "react";
+import { LoaderContext, TIMING } from "@/features/page-loader";
 
 export default function NavigationBar() {
   const router = useRouter();
   const pathname = usePathname();
+
+  // ============================================================
+  // 🚨 ALL HOOKS MUST BE DECLARED BEFORE ANY EARLY RETURNS 🚨
+  // React Rules of Hooks: Hooks must be called unconditionally
+  // ============================================================
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [currentGold, setCurrentGold] = useState(0);
+  const goldAnimationRef = useRef<number | null>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const imageKeyRef = useRef<string | null>(null);
+
+  // Check if we're in a loading state (use useContext directly to avoid hook-in-try-catch)
+  const loaderContext = useContext(LoaderContext);
+  const isPageLoading = loaderContext?.isLoading ?? false;
 
   // ============================================================
   // 🚨 NAVIGATION BAR VISIBILITY CONTROL 🚨
@@ -28,27 +42,6 @@ export default function NavigationBar() {
   // More robust pathname checking (handles trailing slashes)
   const normalizedPath = pathname?.toLowerCase().replace(/\/$/, '') || '';
   const shouldHide = normalizedPath === '' || normalizedPath === '/landing' || normalizedPath === '/landing-v2' || normalizedPath === '/wen';
-
-  if (shouldHide) {
-    return null;
-  }
-  // ============================================================
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [currentGold, setCurrentGold] = useState(0);
-  const goldAnimationRef = useRef<number | null>(null);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
-  const imageKeyRef = useRef<string | null>(null);
-
-  // Check if we're in a loading state (may not be in LoaderProvider)
-  let isPageLoading = false;
-  try {
-    const loaderContext = useLoaderContext();
-    isPageLoading = loaderContext?.isLoading ?? false;
-  } catch {
-    // Not in LoaderProvider, that's fine
-    isPageLoading = false;
-  }
 
   // Get wallet address from session
   useEffect(() => {

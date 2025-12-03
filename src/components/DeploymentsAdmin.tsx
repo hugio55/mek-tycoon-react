@@ -833,6 +833,8 @@ export default function DeploymentsAdmin() {
                   className={`w-8 h-2 rounded-full transition-colors ${
                     step < deployStep ? 'bg-green-500' :
                     step === deployStep ? 'bg-yellow-500 animate-pulse' :
+                    // Step 4 shows green when step 3 is active (they're combined)
+                    (step === 4 && deployStep >= 3) ? 'bg-green-500' :
                     'bg-gray-600'
                   }`}
                 />
@@ -841,8 +843,8 @@ export default function DeploymentsAdmin() {
             <div className="text-gray-400 text-xs mt-2">
               {deployStep === 1 && 'Committing changes...'}
               {deployStep === 2 && 'Pushing branch to GitHub...'}
-              {deployStep === 3 && 'Merging to master...'}
-              {deployStep === 5 && 'Pushing master to GitHub...'}
+              {deployStep === 3 && 'Switching to master & merging...'}
+              {deployStep === 5 && 'Pushing master to GitHub (Vercel)...'}
               {deployStep === 6 && 'Deploying Convex to production...'}
               {deployStep === 7 && 'Switching back to working branch...'}
             </div>
@@ -898,10 +900,7 @@ export default function DeploymentsAdmin() {
           </button>
 
           <button
-            onClick={() => {
-              setIsFullDeploy(false);
-              openProdConfirm(false);
-            }}
+            onClick={() => openProdConfirm(false)}
             disabled={anyActionRunning}
             className="px-4 py-3 bg-red-700 hover:bg-red-600 disabled:bg-gray-800 disabled:text-gray-600 rounded-lg transition-colors"
           >
