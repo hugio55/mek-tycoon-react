@@ -385,18 +385,12 @@ export default function HomePage() {
           </div>
 
           {/* Triangle Image - Center - Floating on space */}
+          {/* OverlayRenderer handles both base image and sprites */}
           <div className="relative" style={{ maxWidth: '48rem' }}>
-            <img
-              ref={triangleRef}
-              src="/triangle/backplate_2.webp"
-              alt="Mek Variations Triangle"
-              className="w-full h-auto"
-            />
-
-            {/* Positioned sprites from database - using OverlayRenderer */}
             <OverlayRenderer
               overlayData={triangleOverlayData}
               displayWidth={triangleSize.width}
+              imageRef={triangleRef}
               // Only show sprites for variations the user owns
               filterSprites={(sprite) => {
                 const variationName = sprite.metadata?.variationName?.toUpperCase();

@@ -315,6 +315,10 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   const connectAndVerifyWallet = async (wallet: { name: string; icon: string; api: any }) => {
     setIsConnectingWallet(true);
     setWalletVerificationError(null);
+    // Reset backend verification state for fresh attempt
+    setBackendVerificationStatus('idle');
+    setVerificationNonce(null);
+    setVerificationMessage(null);
 
     try {
       console.log(`[🔐VERIFY] Connecting to ${wallet.name}...`);
@@ -363,16 +367,48 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
         return;
       }
 
-      console.log('[🔐VERIFY] ✅ MATCH - addresses match, requesting signature...');
+      console.log('[🔐CLAIM-VERIFY] ✅ MATCH - addresses match, starting backend verification...');
       setIsConnectingWallet(false);
-      setIsRequestingSignature(true);
+      setBackendVerificationStatus('generating_nonce');
 
       try {
-        // Create challenge message
-        const timestamp = Date.now();
-        const message = `Mek Tycoon NFT Claim Verification\n\nI am verifying ownership of wallet:\n${walletStakeAddress}\n\nTimestamp: ${timestamp}`;
+        // ============================================
+        // STEP 1: Generate nonce from backend
+        // ============================================
+        console.log('[🔐NONCE] Requesting nonce from backend...');
+        const nonceResponse = await fetch('/api/wallet/generate-nonce', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            stakeAddress: walletStakeAddress,
+            walletName: wallet.name.toLowerCase()
+          })
+        });
 
-        // Convert to hex (CIP-30 requires hex-encoded message)
+        if (!nonceResponse.ok) {
+          const errorData = await nonceResponse.json().catch(() => ({}));
+          console.error('[🔐NONCE] ❌ Backend nonce generation failed:', errorData);
+
+          // Handle specific error cases
+          if (nonceResponse.status === 429) {
+            throw new Error('Too many verification attempts. Please wait a few minutes and try again.');
+          }
+          throw new Error(errorData.error || 'Failed to generate verification challenge');
+        }
+
+        const { nonce, message } = await nonceResponse.json();
+        console.log('[🔐NONCE] ✅ Received nonce:', nonce?.substring(0, 20) + '...');
+
+        setVerificationNonce(nonce);
+        setVerificationMessage(message);
+
+        // ============================================
+        // STEP 2: Request user signature on backend message
+        // ============================================
+        setBackendVerificationStatus('awaiting_signature');
+        setIsRequestingSignature(true);
+
+        // Convert backend message to hex (CIP-30 requires hex-encoded message)
         const messageHex = Array.from(new TextEncoder().encode(message))
           .map(b => b.toString(16).padStart(2, '0'))
           .join('');
@@ -385,20 +421,67 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
           throw new Error('No signing address available. Please ensure your wallet has been used.');
         }
 
-        // Request signature
-        console.log('[🔐VERIFY] Requesting signature...');
-        const signature = await api.signData(signingAddress, messageHex);
+        console.log('[🔐SIG] Requesting user signature on backend message...');
+        const signatureResult = await api.signData(signingAddress, messageHex);
 
-        console.log('[🔐VERIFY] ✅ Signature received:', signature ? 'YES' : 'NO');
-
+        console.log('[🔐SIG] ✅ Signature received from wallet');
         setIsRequestingSignature(false);
 
-        // Signature verified - open NMKR payment
-        await openNMKRPayment();
+        // ============================================
+        // STEP 3: Send signature to backend for verification
+        // ============================================
+        setBackendVerificationStatus('verifying');
+        console.log('[🔐BACKEND] Sending signature to backend for cryptographic verification...');
+
+        const verifyResponse = await fetch('/api/wallet/verify-signature', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            stakeAddress: walletStakeAddress,
+            nonce,
+            signature: signatureResult.signature || signatureResult,
+            key: signatureResult.key || undefined,
+            walletName: wallet.name.toLowerCase()
+          })
+        });
+
+        const verifyResult = await verifyResponse.json();
+        console.log('[🔐BACKEND] Verification result:', verifyResult);
+
+        // ============================================
+        // STEP 4: Only proceed if backend confirms
+        // ============================================
+        if (verifyResult.success && verifyResult.verified) {
+          console.log('[🔐CLAIM-VERIFY] ✅ BACKEND VERIFIED - opening payment window');
+          setBackendVerificationStatus('success');
+
+          // Clear verification state
+          setVerificationNonce(null);
+          setVerificationMessage(null);
+
+          // Proceed to NMKR payment
+          await openNMKRPayment();
+        } else {
+          console.error('[🔐CLAIM-VERIFY] ❌ BACKEND REJECTED:', verifyResult.error);
+          setBackendVerificationStatus('failed');
+
+          // Provide user-friendly error message
+          let errorMsg = 'Signature verification failed. Please try again.';
+          if (verifyResult.error?.includes('rate limit') || verifyResult.error?.includes('Too many')) {
+            errorMsg = 'Too many verification attempts. Please wait a few minutes and try again.';
+          } else if (verifyResult.error?.includes('expired')) {
+            errorMsg = 'Verification challenge expired. Please try again.';
+          } else if (verifyResult.error?.includes('locked')) {
+            errorMsg = 'Account temporarily locked due to failed attempts. Please wait an hour.';
+          }
+
+          setWalletVerificationError(errorMsg);
+        }
 
       } catch (signError: any) {
-        console.error('[🔐VERIFY] Signature failed:', signError);
+        console.error('[🔐CLAIM-VERIFY] Verification failed:', signError);
         setIsRequestingSignature(false);
+        setBackendVerificationStatus('failed');
 
         // Handle user rejection vs error
         const errorMsg = signError.message?.toLowerCase() || '';
@@ -410,8 +493,10 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
           setWalletVerificationError('Signature request was declined. Please sign to verify wallet ownership.');
         } else if (errorMsg.includes('not supported') || errorMsg.includes('signdata')) {
           setWalletVerificationError('Your wallet doesn\'t support message signing. Please try a different wallet.');
+        } else if (errorMsg.includes('rate limit') || errorMsg.includes('too many')) {
+          setWalletVerificationError('Too many verification attempts. Please wait a few minutes and try again.');
         } else {
-          setWalletVerificationError(`Signature failed: ${signError.message || 'Unknown error'}`);
+          setWalletVerificationError(signError.message || 'Verification failed. Please try again.');
         }
       }
 
@@ -945,8 +1030,26 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
           );
         }
 
+        // Show nonce generation spinner
+        if (backendVerificationStatus === 'generating_nonce') {
+          return (
+            <div className="text-center py-8">
+              <div className="mb-6">
+                <div className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <h2 className="text-xl font-bold text-cyan-400 mb-2">Generating Challenge...</h2>
+                <p className="text-white/60 text-sm">Preparing secure verification</p>
+              </div>
+              <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
+                <p className="text-sm text-cyan-300">
+                  Creating cryptographic challenge for wallet verification
+                </p>
+              </div>
+            </div>
+          );
+        }
+
         // Show signing spinner if requesting signature
-        if (isRequestingSignature) {
+        if (isRequestingSignature || backendVerificationStatus === 'awaiting_signature') {
           return (
             <div className="text-center py-8">
               <div className="mb-6">
@@ -957,6 +1060,24 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
               <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
                 <p className="text-sm text-cyan-300">
                   Check your wallet extension for a signature request
+                </p>
+              </div>
+            </div>
+          );
+        }
+
+        // Show backend verification spinner
+        if (backendVerificationStatus === 'verifying') {
+          return (
+            <div className="text-center py-8">
+              <div className="mb-6">
+                <div className="w-16 h-16 border-4 border-green-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <h2 className="text-xl font-bold text-green-400 mb-2">Verifying Signature...</h2>
+                <p className="text-white/60 text-sm">Cryptographically verifying wallet ownership</p>
+              </div>
+              <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+                <p className="text-sm text-green-300">
+                  This ensures only the rightful owner can claim this NFT
                 </p>
               </div>
             </div>
