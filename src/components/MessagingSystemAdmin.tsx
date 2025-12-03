@@ -48,48 +48,48 @@ const TEST_CORPORATIONS = [
 // TEMPORARY TEST DATA - Real corporation names from production for testing search
 // TODO: Remove this once connected to real database with corporations
 const MOCK_CORPORATIONS_FOR_TESTING = [
-  { walletAddress: 'mock_wrenco', companyName: 'WrenCo', displayName: 'WrenCo', achievementPoints: 1250 },
-  { walletAddress: 'mock_aumining', companyName: 'AUmining', displayName: 'AUmining', achievementPoints: 4820 },
+  { walletAddress: 'mock_wrenco', companyName: 'WrenCo', displayName: 'WrenCo', achievementPoints: 18750 },
+  { walletAddress: 'mock_aumining', companyName: 'AUmining', displayName: 'AUmining', achievementPoints: 12340 },
   { walletAddress: 'mock_sellout', companyName: 'Sellout', displayName: 'Sellout', achievementPoints: 890 },
   { walletAddress: 'mock_statuecorp', companyName: 'StatueCorp', displayName: 'StatueCorp', achievementPoints: 2100 },
-  { walletAddress: 'mock_stellar', companyName: 'Stellar Depletion Syndicate', displayName: 'Stellar Depletion Syndicate', achievementPoints: 5670 },
+  { walletAddress: 'mock_stellar', companyName: 'Stellar Depletion Syndicate', displayName: 'Stellar Depletion Syndicate', achievementPoints: 19850 },
   { walletAddress: 'mock_ultraco', companyName: 'UltraCo', displayName: 'UltraCo', achievementPoints: 150 },
-  { walletAddress: 'mock_traiectum', companyName: 'Traiectum', displayName: 'Traiectum', achievementPoints: 420 },
-  { walletAddress: 'mock_sargecorp', companyName: 'SargeCorp', displayName: 'SargeCorp', achievementPoints: 7890 },
-  { walletAddress: 'mock_nfg', companyName: 'NFG', displayName: 'NFG', achievementPoints: 50 },
+  { walletAddress: 'mock_traiectum', companyName: 'Traiectum', displayName: 'Traiectum', achievementPoints: 8420 },
+  { walletAddress: 'mock_sargecorp', companyName: 'SargeCorp', displayName: 'SargeCorp', achievementPoints: 15670 },
+  { walletAddress: 'mock_nfg', companyName: 'NFG', displayName: 'NFG', achievementPoints: 10 },
   { walletAddress: 'mock_defifomofo', companyName: 'defifomofo', displayName: 'defifomofo', achievementPoints: 680 },
-  { walletAddress: 'mock_kotton', companyName: 'Kotton', displayName: 'Kotton', achievementPoints: 310 },
+  { walletAddress: 'mock_kotton', companyName: 'Kotton', displayName: 'Kotton', achievementPoints: 4310 },
   { walletAddress: 'mock_andypro500', companyName: 'Andypro500', displayName: 'Andypro500', achievementPoints: 95 },
-  { walletAddress: 'mock_hadi', companyName: 'HADI', displayName: 'HADI', achievementPoints: 1540 },
+  { walletAddress: 'mock_hadi', companyName: 'HADI', displayName: 'HADI', achievementPoints: 11540 },
   { walletAddress: 'mock_lx', companyName: 'LX', displayName: 'LX', achievementPoints: 1120 },
-  { walletAddress: 'mock_mtman', companyName: 'MTman', displayName: 'MTman', achievementPoints: 1680 },
+  { walletAddress: 'mock_mtman', companyName: 'MTman', displayName: 'MTman', achievementPoints: 16800 },
   { walletAddress: 'mock_biko1', companyName: 'biko1', displayName: 'biko1', achievementPoints: 275 },
-  { walletAddress: 'mock_spannercorps', companyName: 'Spannercorps', displayName: 'Spannercorps', achievementPoints: 2450 },
+  { walletAddress: 'mock_spannercorps', companyName: 'Spannercorps', displayName: 'Spannercorps', achievementPoints: 7450 },
   { walletAddress: 'mock_mako', companyName: 'Mako', displayName: 'Mako', achievementPoints: 340 },
   { walletAddress: 'mock_chilliminer', companyName: 'ChilliMiner', displayName: 'ChilliMiner', achievementPoints: 180 },
-  { walletAddress: 'mock_kryptoknight', companyName: 'Kryptoknight', displayName: 'Kryptoknight', achievementPoints: 1890 },
-  { walletAddress: 'mock_argent9999', companyName: 'Argent 9999', displayName: 'Argent 9999', achievementPoints: 6240 },
+  { walletAddress: 'mock_kryptoknight', companyName: 'Kryptoknight', displayName: 'Kryptoknight', achievementPoints: 13890 },
+  { walletAddress: 'mock_argent9999', companyName: 'Argent 9999', displayName: 'Argent 9999', achievementPoints: 20000 },
   { walletAddress: 'mock_ka1111', companyName: 'KA1111', displayName: 'KA1111', achievementPoints: 2080 },
-  { walletAddress: 'mock_burglecorps', companyName: 'BurgleCorps', displayName: 'BurgleCorps', achievementPoints: 560 },
+  { walletAddress: 'mock_burglecorps', companyName: 'BurgleCorps', displayName: 'BurgleCorps', achievementPoints: 5560 },
   { walletAddress: 'mock_ken1320', companyName: 'Ken1320', displayName: 'Ken1320', achievementPoints: 120 },
-  { walletAddress: 'mock_hamfish', companyName: 'hamfish', displayName: 'hamfish', achievementPoints: 980 },
+  { walletAddress: 'mock_hamfish', companyName: 'hamfish', displayName: 'hamfish', achievementPoints: 9800 },
   { walletAddress: 'mock_sora', companyName: 'sora', displayName: 'sora', achievementPoints: 210 },
-  { walletAddress: 'mock_jr', companyName: 'Jr', displayName: 'Jr', achievementPoints: 75 },
-  { walletAddress: 'mock_wcorp', companyName: 'W Corp', displayName: 'W Corp', achievementPoints: 3150 },
-  { walletAddress: 'mock_ikarus', companyName: 'ikarus', displayName: 'ikarus', achievementPoints: 4100 },
-  { walletAddress: 'mock_mojamtz', companyName: 'Mojamtz', displayName: 'Mojamtz', achievementPoints: 140 },
+  { walletAddress: 'mock_jr', companyName: 'Jr', displayName: 'Jr', achievementPoints: 45 },
+  { walletAddress: 'mock_wcorp', companyName: 'W Corp', displayName: 'W Corp', achievementPoints: 14150 },
+  { walletAddress: 'mock_ikarus', companyName: 'ikarus', displayName: 'ikarus', achievementPoints: 6100 },
+  { walletAddress: 'mock_mojamtz', companyName: 'Mojamtz', displayName: 'Mojamtz', achievementPoints: 1400 },
   { walletAddress: 'mock_argh', companyName: 'argh', displayName: 'argh', achievementPoints: 225 },
-  { walletAddress: 'mock_bigolringybingy', companyName: 'Big ol Ringy Bingy', displayName: 'Big ol Ringy Bingy', achievementPoints: 3890 },
-  { walletAddress: 'mock_mekgold', companyName: 'MekGold', displayName: 'MekGold', achievementPoints: 290 },
+  { walletAddress: 'mock_bigolringybingy', companyName: 'Big ol Ringy Bingy', displayName: 'Big ol Ringy Bingy', achievementPoints: 17890 },
+  { walletAddress: 'mock_mekgold', companyName: 'MekGold', displayName: 'MekGold', achievementPoints: 3290 },
   { walletAddress: 'mock_goldmine', companyName: 'goldmine', displayName: 'goldmine', achievementPoints: 85 },
-  { walletAddress: 'mock_fourfivetjeff', companyName: 'FourFiveJeff', displayName: 'FourFiveJeff', achievementPoints: 470 },
+  { walletAddress: 'mock_fourfivetjeff', companyName: 'FourFiveJeff', displayName: 'FourFiveJeff', achievementPoints: 4700 },
   { walletAddress: 'mock_arrowhead', companyName: 'Arrowhead Integrated Solutions', displayName: 'Arrowhead Integrated Solutions', achievementPoints: 60 },
-  { walletAddress: 'mock_benzington', companyName: 'Benzington', displayName: 'Benzington', achievementPoints: 380 },
+  { walletAddress: 'mock_benzington', companyName: 'Benzington', displayName: 'Benzington', achievementPoints: 10380 },
   { walletAddress: 'mock_livelovelevelup', companyName: 'Livelovelevelup', displayName: 'Livelovelevelup', achievementPoints: 165 },
-  { walletAddress: 'mock_blove', companyName: 'BLove', displayName: 'BLove', achievementPoints: 420 },
+  { walletAddress: 'mock_blove', companyName: 'BLove', displayName: 'BLove', achievementPoints: 8420 },
   { walletAddress: 'mock_cracksey', companyName: 'Cracksey', displayName: 'Cracksey', achievementPoints: 110 },
   { walletAddress: 'mock_saturninellc', companyName: 'saturnine llc', displayName: 'saturnine llc', achievementPoints: 25 },
-  { walletAddress: 'mock_actionhenk', companyName: 'Actionhenk', displayName: 'Actionhenk', achievementPoints: 195 },
+  { walletAddress: 'mock_actionhenk', companyName: 'Actionhenk', displayName: 'Actionhenk', achievementPoints: 5195 },
 ];
 
 // Character limit
@@ -909,8 +909,9 @@ export default function MessagingSystemAdmin() {
                       </div>
                       <div>
                         <div className="text-white font-medium">{corp.companyName}</div>
-                        <div className="text-gray-500 text-sm">
-                          AP: {(corp as any).achievementPoints ?? 0}
+                        <div className="text-sm">
+                          <span className="font-bold text-cyan-400">AP:</span>{' '}
+                          <span className="text-white">{((corp as any).achievementPoints ?? 0).toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
