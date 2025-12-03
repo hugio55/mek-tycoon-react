@@ -608,6 +608,221 @@ function UniversalBackgroundAdmin() {
   );
 }
 
+// Planet Background Admin Component - Uses actual StarField component from landing page
+function PlanetBackgroundAdmin() {
+  const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const userAgent = navigator.userAgent.toLowerCase();
+    const mobile = /iphone|ipod|android/.test(userAgent);
+    setIsMobile(mobile);
+  }, []);
+
+  const openFullScreenPreview = () => {
+    window.open('/admin/planet-background-preview', '_blank', 'noopener,noreferrer');
+  };
+
+  // Use consistent values until mounted to prevent hydration mismatch
+  const effectiveIsMobile = mounted ? isMobile : false;
+
+  return (
+    <div className="mek-card-industrial mek-border-sharp-gold rounded-lg shadow-lg shadow-black/50 overflow-hidden">
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🪐</span>
+            <h3 className="text-xl font-bold text-yellow-400 uppercase tracking-wider">Planet Background</h3>
+            <span className="px-2 py-1 bg-blue-600/30 text-blue-400 text-xs font-bold rounded">LANDING PAGE</span>
+          </div>
+          <button
+            onClick={openFullScreenPreview}
+            className="flex items-center gap-2 px-4 py-2 bg-yellow-500/20 border border-yellow-500/50 rounded-lg text-yellow-400 hover:bg-yellow-500/30 transition-colors uppercase tracking-wider text-sm font-bold"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            View Full Screen
+          </button>
+        </div>
+
+        <p className="text-gray-400 mb-6">
+          This is the background used on the landing page (root path). It features an animated canvas-based starfield
+          with two layers of stars flying toward you, overlaid on the planet image.
+        </p>
+
+        {/* Live Preview Section - Uses actual StarField component */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-yellow-400 font-bold uppercase tracking-wider text-sm">Live Preview</h4>
+            <span className="text-gray-500 text-xs">(Actual StarField component + background image)</span>
+          </div>
+          <div
+            className="relative w-full h-[400px] rounded-lg overflow-hidden border-2 border-yellow-500/30"
+            style={{ background: '#000' }}
+          >
+            {/* Background image - exact same as LandingContainer */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: 'url(/colored-bg-1.webp)',
+                backgroundSize: effectiveIsMobile ? '180%' : 'cover',
+                backgroundPosition: effectiveIsMobile ? 'center calc(50% + 80px)' : 'center',
+                opacity: 0.77,
+                zIndex: 0,
+              }}
+            />
+
+            {/* StarField - exact same component from landing page */}
+            {mounted && (
+              <div
+                className="absolute inset-0"
+                style={{
+                  zIndex: 1,
+                  pointerEvents: 'none',
+                }}
+              >
+                <StarField />
+              </div>
+            )}
+
+            {/* Preview Label */}
+            <div className="absolute bottom-4 right-4 px-3 py-1 bg-black/70 border border-yellow-500/30 rounded text-xs text-yellow-400 uppercase tracking-wider z-10">
+              Live Preview
+            </div>
+          </div>
+        </div>
+
+        {/* Background Elements Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">🌟</span>
+              <span className="text-yellow-400 font-bold uppercase tracking-wider text-sm">StarField Layer 1</span>
+            </div>
+            <div className="text-gray-400 text-sm space-y-1">
+              <div className="flex justify-between">
+                <span>Count:</span>
+                <span className="text-white">120 stars</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Type:</span>
+                <span className="text-white">Slow moving dots</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Speed:</span>
+                <span className="text-blue-400">1.5 (slow drift)</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Size:</span>
+                <span className="text-white">1-1.3px</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">✨</span>
+              <span className="text-yellow-400 font-bold uppercase tracking-wider text-sm">StarField Layer 2</span>
+            </div>
+            <div className="text-gray-400 text-sm space-y-1">
+              <div className="flex justify-between">
+                <span>Count:</span>
+                <span className="text-white">20 streaks</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Type:</span>
+                <span className="text-white">Fast streaking lines</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Speed:</span>
+                <span className="text-red-400">30 (fast)</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Line Width:</span>
+                <span className="text-white">6px</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">🪐</span>
+              <span className="text-yellow-400 font-bold uppercase tracking-wider text-sm">Planet Image</span>
+            </div>
+            <div className="text-gray-400 text-sm space-y-1">
+              <div className="flex justify-between">
+                <span>File:</span>
+                <span className="text-white">/colored-bg-1.webp</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Size (Desktop):</span>
+                <span className="text-white">cover</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Size (Mobile):</span>
+                <span className="text-white">180%</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Opacity:</span>
+                <span className="text-yellow-400">77%</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">⚙️</span>
+              <span className="text-yellow-400 font-bold uppercase tracking-wider text-sm">Animation</span>
+            </div>
+            <div className="text-gray-400 text-sm space-y-1">
+              <div className="flex justify-between">
+                <span>Type:</span>
+                <span className="text-white">Canvas 2D</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Frame Rate:</span>
+                <span className="text-green-400">60fps (fixed timestep)</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Max Depth:</span>
+                <span className="text-white">1000</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Direction:</span>
+                <span className="text-blue-400">Toward viewer</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Source Files Info */}
+        <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">📁</span>
+            <span className="text-yellow-400 font-bold uppercase tracking-wider text-sm">Source Files</span>
+          </div>
+          <div className="space-y-2">
+            <div>
+              <code className="text-green-400 text-sm">src/components/StarField.tsx</code>
+              <p className="text-gray-500 text-xs mt-1">Canvas-based animated starfield with two layers</p>
+            </div>
+            <div>
+              <code className="text-green-400 text-sm">src/app/landing-v2/components/LandingContainer.tsx</code>
+              <p className="text-gray-500 text-xs mt-1">Container with background image positioning</p>
+            </div>
+            <div>
+              <code className="text-green-400 text-sm">public/colored-bg-1.webp</code>
+              <p className="text-gray-500 text-xs mt-1">Planet/space background image</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Data system definitions
 const DATA_SYSTEMS = [
   { id: 'mek-systems', name: 'Mek Systems', icon: '⚙️', implemented: true },
@@ -5823,6 +6038,10 @@ export default function AdminMasterDataPage() {
 
           {activeTab === 'universal-background' && (
             <UniversalBackgroundAdmin />
+          )}
+
+          {activeTab === 'planet-background' && (
+            <PlanetBackgroundAdmin />
           )}
 
         </div>

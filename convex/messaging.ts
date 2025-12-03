@@ -943,10 +943,13 @@ export const getMessagesAdmin = query({
         let attachmentsWithUrls = msg.attachments;
         if (msg.attachments && msg.attachments.length > 0) {
           attachmentsWithUrls = await Promise.all(
-            msg.attachments.map(async (att: { storageId: Id<"_storage">; filename: string; mimeType: string; size: number }) => ({
-              ...att,
-              url: await ctx.storage.getUrl(att.storageId),
-            }))
+            msg.attachments.map(async (att: { storageId: Id<"_storage">; filename: string; mimeType: string; size: number }) => {
+              const url = await ctx.storage.getUrl(att.storageId);
+              return {
+                ...att,
+                url: url ?? undefined,
+              };
+            })
           );
         }
 
@@ -955,7 +958,7 @@ export const getMessagesAdmin = query({
           attachments: attachmentsWithUrls,
           senderInfo: {
             walletAddress: msg.senderId,
-            companyName: senderUser?.companyName ?? "Unknown",
+            companyName: (senderUser as any)?.companyName ?? "Unknown",
           },
         };
       })
@@ -1114,10 +1117,13 @@ export const getDeletedMessagesAdmin = query({
         let attachmentsWithUrls = msg.attachments;
         if (msg.attachments && msg.attachments.length > 0) {
           attachmentsWithUrls = await Promise.all(
-            msg.attachments.map(async (att: { storageId: Id<"_storage">; filename: string; mimeType: string; size: number }) => ({
-              ...att,
-              url: await ctx.storage.getUrl(att.storageId),
-            }))
+            msg.attachments.map(async (att: { storageId: Id<"_storage">; filename: string; mimeType: string; size: number }) => {
+              const url = await ctx.storage.getUrl(att.storageId);
+              return {
+                ...att,
+                url: url ?? undefined,
+              };
+            })
           );
         }
 
@@ -1126,7 +1132,7 @@ export const getDeletedMessagesAdmin = query({
           attachments: attachmentsWithUrls,
           senderInfo: {
             walletAddress: msg.senderId,
-            companyName: senderUser?.companyName ?? "Unknown",
+            companyName: (senderUser as any)?.companyName ?? "Unknown",
           },
         };
       })
