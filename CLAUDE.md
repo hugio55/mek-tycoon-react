@@ -457,6 +457,37 @@ The site uses an **Industrial/Military** aesthetic with the following key elemen
 - Progress bars with yellow gradient fills
 - Slots with dashed borders and hazard patterns
 
+### 🚀 SPACE AGE STYLE
+**When user says "make it Space Age Style" or "apply Space Age styling":**
+
+This refers to the liquid glass aesthetic from the Landing Page (root `/` page with phases). The complete reference is in the **Admin → Space Age Style** tab (`src/components/NewStylingAdmin.tsx`).
+
+**Key Elements:**
+- **Liquid Glass Cards**: `backdrop-filter: blur(12px)` with gradient backgrounds (`rgba(255,255,255,0.12) to rgba(255,255,255,0.06)`)
+- **Honeycomb Hover**: Overlay `/random-images/honey-png-big.webp` at 7% opacity on hover
+- **Background**: Planet image `/public/colored-bg-1.webp` with black overlay
+- **Lightboxes**: `rounded-2xl`, border `border-white/10`, 30px backdrop blur
+- **Glowing Text**: Multi-layer text-shadows for cyan glow effects
+
+**Color Palette (with nicknames):**
+| Nickname | Hex | Usage |
+|----------|-----|-------|
+| **"Bumblebee"** | #fab617 | Primary yellow, buttons, accents |
+| **"Cheeky Blue"** | #22d3ee | Cyan glow, verified text, success states |
+| **"Ghost Glass"** | rgba(255,255,255,0.1) | Glass effects, translucent overlays |
+| **"Void"** | #0a0a0a | Deep black backgrounds |
+
+**Fonts:**
+- **Saira**: Phase labels (uppercase, tracking-wider)
+- **Play**: Body text, descriptions
+- **Inter**: Buttons, UI elements
+- **Orbitron**: Special titles (uppercase, bold)
+
+**Reference Files:**
+- Live demos: Admin → Space Age Style tab
+- Component: `src/components/NewStylingAdmin.tsx`
+- Landing page: `src/app/landing/page.tsx`
+
 ## Important Data Structure
 
 ### Variation Names & Mapping

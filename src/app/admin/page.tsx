@@ -149,7 +149,7 @@ const DATA_SYSTEMS = [
   { id: 'navigation-preview', name: 'Navigation', icon: '🧭', implemented: true },
   { id: 'components', name: 'Components', icon: '🧩', implemented: true },
   { id: 'deployments', name: 'Deployments', icon: '🚀', implemented: true },
-  { id: 'new-styling', name: 'New Styling', icon: '🎨', implemented: true },
+  { id: 'new-styling', name: 'Space Age Style', icon: '🎨', implemented: true },
   { id: 'messaging-system', name: 'Messaging System', icon: '💬', implemented: true }
 ];
 

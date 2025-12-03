@@ -1107,6 +1107,50 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
           </div>
         );
 
+      case 'payment_window_closed':
+        return (
+          <div className="text-center py-6">
+            <div className="mb-6">
+              <div className="w-16 h-16 mx-auto rounded-full bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-white mb-3">Payment Window Closed</h2>
+              <p className="text-white/60 text-sm leading-relaxed mb-2">
+                We noticed the payment window has been closed.
+              </p>
+              <p className="text-white/60 text-sm leading-relaxed">
+                If this was an accident, you can try again. Your reservation is still active.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => setState('reserved')}
+                className="w-full py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200"
+                style={{ fontFamily: 'Inter, sans-serif', background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)', color: '#ffffff', boxShadow: '0 6px 24px rgba(6, 182, 212, 0.4)', border: 'none' }}
+              >
+                Try Again
+              </button>
+
+              <button
+                onClick={() => setState('processing')}
+                className="w-full py-2 px-4 text-sm font-medium text-cyan-300 hover:text-cyan-200 transition-colors"
+              >
+                I already paid - check for my payment
+              </button>
+
+              <button
+                onClick={attemptCancel}
+                className="w-full py-2 px-4 text-sm font-medium text-white/40 hover:text-white/60 transition-colors"
+              >
+                Cancel Reservation
+              </button>
+            </div>
+          </div>
+        );
+
       case 'processing':
         return (
           <div className="text-center">
@@ -1262,24 +1306,24 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
         >
           <div className="fixed inset-0 bg-black/90 backdrop-blur-md" />
           <div
-            className="relative w-full max-w-md bg-black/40 backdrop-blur-lg border-2 border-red-500/50 rounded-xl overflow-hidden shadow-2xl p-6"
-            style={{ boxShadow: '0 0 40px rgba(239, 68, 68, 0.4)' }}
+            className="relative w-full max-w-md bg-black/60 backdrop-blur-lg border-2 border-cyan-500/40 rounded-2xl overflow-hidden shadow-2xl p-6"
+            style={{ boxShadow: '0 0 40px rgba(6, 182, 212, 0.3), 0 0 80px rgba(6, 182, 212, 0.15)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500/50 flex items-center justify-center">
-                <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <div className="w-16 h-16 rounded-full bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center">
+                <svg className="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
 
-            <h3 className="text-2xl font-bold text-center mb-3" style={{ fontFamily: 'Inter, sans-serif', color: '#fca5a5' }}>
-              Cancel Transaction?
+            <h3 className="text-2xl font-bold text-center mb-3" style={{ fontFamily: 'Inter, sans-serif', color: '#e0f2fe' }}>
+              Cancel Reservation?
             </h3>
 
-            <p className="text-center mb-6" style={{ fontFamily: 'Inter, sans-serif', color: '#d1d5db', fontSize: '0.95rem', lineHeight: '1.6' }}>
-              Are you sure you want to cancel this transaction? Doing so will not guarantee the <span style={{ color: '#10b981', fontWeight: 600, textShadow: '0 0 12px rgba(16, 185, 129, 0.8), 0 0 24px rgba(16, 185, 129, 0.5), 0 0 36px rgba(16, 185, 129, 0.3)' }}>same edition number</span>.
+            <p className="text-center mb-6" style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', fontSize: '0.95rem', lineHeight: '1.6' }}>
+              Are you sure you want to cancel? Doing so will not guarantee the <span style={{ color: '#22d3ee', fontWeight: 600, textShadow: '0 0 12px rgba(34, 211, 238, 0.8), 0 0 24px rgba(34, 211, 238, 0.5)' }}>same edition number</span>.
             </p>
 
             <div className="flex gap-3">
@@ -1292,8 +1336,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
               </button>
               <button
                 onClick={handleConfirmCancel}
-                className="flex-1 py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200 border-2 border-red-500/50 hover:bg-red-500/20"
-                style={{ fontFamily: 'Inter, sans-serif', background: 'rgba(239, 68, 68, 0.1)', color: '#fca5a5' }}
+                className="flex-1 py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200 border border-white/20 hover:bg-white/5"
+                style={{ fontFamily: 'Inter, sans-serif', background: 'rgba(255, 255, 255, 0.05)', color: '#94a3b8' }}
               >
                 Confirm Cancel
               </button>
