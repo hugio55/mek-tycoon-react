@@ -339,16 +339,21 @@ export default function DeploymentsAdmin() {
     setDeployStep(1);
     const originalBranch = gitStatus?.currentBranch || 'custom-minting-system';
 
-    // Step 1: Commit (if there are changes and message provided)
-    if (gitStatus?.hasUncommittedChanges) {
-      if (!commitMessage.trim()) {
-        addLog('Full Deploy', 'error', 'Please enter a commit message first');
-        setDeployError('Missing commit message. Please enter a commit message and try again.');
-        setIsFullDeploy(false);
-        setDeployStep(0);
-        return;
+    // Fetch fresh status to avoid stale data issues
+    let freshHasChanges = gitStatus?.hasUncommittedChanges;
+    try {
+      const statusRes = await fetch('/api/deployment/status');
+      const statusData = await statusRes.json();
+      if (statusData.success) {
+        freshHasChanges = statusData.data.hasUncommittedChanges;
+        console.log('[🚀DEPLOY] Fresh status: hasUncommittedChanges =', freshHasChanges);
       }
+    } catch (e) {
+      console.log('[🚀DEPLOY] Could not fetch fresh status, using cached');
+    }
 
+    // Step 1: Commit (if there are changes and message provided)
+    if (freshHasChanges && commitMessage.trim()) {
       console.log('[🚀DEPLOY] Step 1: Committing changes...');
       addLog('Full Deploy', 'pending', 'Step 1/7: Committing changes...');
       try {
@@ -360,14 +365,21 @@ export default function DeploymentsAdmin() {
         const data = await res.json();
         console.log('[🚀DEPLOY] Step 1 result:', data);
         if (!data.success) {
-          addLog('Full Deploy', 'error', `Commit failed: ${data.error}`);
-          setDeployError(`Step 1 failed: ${data.error}`);
-          setIsFullDeploy(false);
-          setDeployStep(0);
-          return;
+          // Check if it's just "no changes" - that's OK, continue deployment
+          if (data.error?.includes('No changes') || data.error?.includes('nothing to commit')) {
+            console.log('[🚀DEPLOY] Step 1: No actual changes to commit, continuing...');
+            addLog('Full Deploy', 'success', 'Step 1/7: No changes to commit (skipped)');
+          } else {
+            addLog('Full Deploy', 'error', `Commit failed: ${data.error}`);
+            setDeployError(`Step 1 failed: ${data.error}`);
+            setIsFullDeploy(false);
+            setDeployStep(0);
+            return;
+          }
+        } else {
+          addLog('Full Deploy', 'success', 'Committed successfully');
+          setCommitMessage('');
         }
-        addLog('Full Deploy', 'success', 'Committed successfully');
-        setCommitMessage('');
       } catch (error) {
         console.error('[🚀DEPLOY] Step 1 error:', error);
         addLog('Full Deploy', 'error', 'Commit step failed - server may be down');
