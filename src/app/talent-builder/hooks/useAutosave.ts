@@ -1,10 +1,11 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useTalentBuilder } from '../TalentBuilderContext';
 import { createSaveData } from '../saveMigrations';
 
 interface UseAutosaveOptions {
   localStorageDebounce?: number; // Default: 2 seconds
   fileBackupInterval?: number; // Default: 5 minutes
+  maxAutoBackups?: number; // Default: 20 - cleanup older auto-backups
   enabled?: boolean;
 }
 
@@ -20,15 +21,20 @@ interface UseAutosaveReturn {
 
 const DEFAULT_LOCALSTORAGE_DEBOUNCE = 2 * 1000; // 2 seconds
 const DEFAULT_FILE_BACKUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const DEFAULT_MAX_AUTO_BACKUPS = 20;
 
 export function useAutosave(options: UseAutosaveOptions = {}): UseAutosaveReturn {
   const {
     localStorageDebounce = DEFAULT_LOCALSTORAGE_DEBOUNCE,
     fileBackupInterval = DEFAULT_FILE_BACKUP_INTERVAL,
+    maxAutoBackups = DEFAULT_MAX_AUTO_BACKUPS,
     enabled = true
   } = options;
 
   const { state, dispatch } = useTalentBuilder();
+
+  // State for hasUnsavedChanges (not a ref, so it triggers re-renders)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Refs to access current state in callbacks
   const nodesRef = useRef(state.nodes);
@@ -39,7 +45,6 @@ export function useAutosave(options: UseAutosaveOptions = {}): UseAutosaveReturn
   // Tracking refs
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const fileBackupTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const hasChangesRef = useRef(false);
   const lastSavedNodesRef = useRef<string>('');
   const lastSavedConnectionsRef = useRef<string>('');
 
@@ -79,7 +84,7 @@ export function useAutosave(options: UseAutosaveOptions = {}): UseAutosaveReturn
       // Update tracking
       lastSavedNodesRef.current = nodesJson;
       lastSavedConnectionsRef.current = connectionsJson;
-      hasChangesRef.current = true; // Mark that changes exist for file backup
+      setHasUnsavedChanges(true); // Mark that changes exist for file backup
 
       dispatch({ type: 'SET_LAST_AUTO_SAVE', payload: new Date() });
       dispatch({ type: 'SET_AUTOSAVE_ERROR', payload: null });
@@ -98,10 +103,6 @@ export function useAutosave(options: UseAutosaveOptions = {}): UseAutosaveReturn
     const currentConnections = connectionsRef.current;
 
     if (currentNodes.length === 0) return;
-    if (!hasChangesRef.current) {
-      console.log('[FileBackup] No changes since last backup, skipping');
-      return;
-    }
 
     try {
       const response = await fetch('/api/talent-tree-backup', {
@@ -118,16 +119,26 @@ export function useAutosave(options: UseAutosaveOptions = {}): UseAutosaveReturn
 
       const result = await response.json();
       if (result.success) {
-        hasChangesRef.current = false; // Reset change tracking
+        setHasUnsavedChanges(false); // Reset change tracking
         dispatch({ type: 'SET_LAST_CONVEX_BACKUP', payload: new Date() });
         console.log(`[FileBackup] Created: ${result.filename} (${result.nodeCount} nodes)`);
+
+        // Cleanup old auto-backups (fire and forget)
+        fetch('/api/talent-tree-backup/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            keepCount: maxAutoBackups,
+            mode: builderModeRef.current
+          })
+        }).catch(() => {}); // Ignore cleanup errors
       } else {
         console.error('[FileBackup] Failed:', result.error);
       }
     } catch (e) {
       console.error('[FileBackup] Error:', e);
     }
-  }, [dispatch]);
+  }, [dispatch, maxAutoBackups]);
 
   // Debounced localStorage save - triggers on every change
   useEffect(() => {

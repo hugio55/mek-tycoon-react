@@ -363,3 +363,47 @@ export const cleanupOrphanedInventory = mutation({
     };
   },
 });
+
+/**
+ * Manually patch sale data for an inventory item
+ * Use this to restore lost sale data or fix incorrect records
+ */
+export const patchInventorySaleData = mutation({
+  args: {
+    nftUid: v.string(),
+    soldTo: v.optional(v.string()),
+    soldAt: v.optional(v.number()),
+    companyNameAtSale: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Find the inventory item by UID
+    const inventory = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_uid", (q) => q.eq("nftUid", args.nftUid))
+      .first();
+
+    if (!inventory) {
+      throw new Error(`NFT with UID ${args.nftUid} not found`);
+    }
+
+    // Build update object with only provided fields
+    const updates: Record<string, string | number | undefined> = {};
+    if (args.soldTo !== undefined) updates.soldTo = args.soldTo;
+    if (args.soldAt !== undefined) updates.soldAt = args.soldAt;
+    if (args.companyNameAtSale !== undefined) updates.companyNameAtSale = args.companyNameAtSale;
+
+    if (Object.keys(updates).length === 0) {
+      return { success: false, error: "No fields to update" };
+    }
+
+    await ctx.db.patch(inventory._id, updates);
+
+    console.log(`[CAMPAIGNS] Patched sale data for ${inventory.name}:`, updates);
+
+    return {
+      success: true,
+      nftName: inventory.name,
+      updatedFields: Object.keys(updates),
+    };
+  },
+});
