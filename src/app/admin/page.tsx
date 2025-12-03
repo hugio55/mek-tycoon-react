@@ -79,6 +79,7 @@ import FlipToggleSwitch from '@/components/controls/FlipToggleSwitch';
 import PressedButtonRadio from '@/components/controls/PressedButtonRadio';
 import GlowingBorderInput from '@/components/controls/GlowingBorderInput';
 import ProgressiveBlur from '@/components/controls/ProgressiveBlur';
+import NumberTicker from '@/components/controls/NumberTicker';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import PortMonitor from '@/components/PortMonitor';
 import DeploymentsAdmin from '@/components/DeploymentsAdmin';
@@ -5103,6 +5104,78 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Source:</span> Motion Primitives</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
                       <div><span className="text-zinc-500">Features:</span> Multi-layer backdrop blur with mask gradients, configurable position (top/bottom/both), adjustable height, customizable blur levels [0.5, 1, 2, 4, 8, 16, 32, 64]</div>
+                    </div>
+                  </div>
+
+                  {/* Number Ticker */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Number Ticker
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Animation
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-zinc-900 rounded-lg p-8 flex flex-col items-center justify-center gap-8 min-h-[300px]">
+                      {/* Large gold counter */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Gold Counter (Count Up)</span>
+                        <div className="flex items-baseline gap-1">
+                          <NumberTicker
+                            value={1234567}
+                            className="text-5xl font-bold text-yellow-400"
+                          />
+                          <span className="text-yellow-400/60 text-xl">G</span>
+                        </div>
+                      </div>
+
+                      {/* Percentage with decimals */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Percentage (2 decimals, delayed)</span>
+                        <div className="flex items-baseline">
+                          <NumberTicker
+                            value={97.85}
+                            decimalPlaces={2}
+                            delay={0.5}
+                            className="text-4xl font-bold text-cyan-400"
+                          />
+                          <span className="text-cyan-400/60 text-2xl ml-1">%</span>
+                        </div>
+                      </div>
+
+                      {/* Count down */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Countdown (from 100)</span>
+                        <NumberTicker
+                          value={0}
+                          startValue={100}
+                          direction="down"
+                          delay={1}
+                          className="text-3xl font-bold text-red-400"
+                        />
+                      </div>
+
+                      {/* Small inline example */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Inline Usage</span>
+                        <p className="text-zinc-300">
+                          You have collected{' '}
+                          <NumberTicker value={42} className="text-green-400 font-bold" />{' '}
+                          Mekanisms worth{' '}
+                          <NumberTicker value={8500} className="text-yellow-400 font-bold" />{' '}
+                          gold.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Motion Primitives (vanilla React port)</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript (no dependencies)</div>
+                      <div><span className="text-zinc-500">Features:</span> Spring physics animation, count up/down direction, configurable delay, decimal places, Intl.NumberFormat support, triggers on scroll into view</div>
                     </div>
                   </div>
 
