@@ -65,7 +65,7 @@ npm run dev:all
 
 | System | Document | Read Before |
 |--------|----------|-------------|
-| **Job Slots** | `SLOTS.md` | Any work on jobs, income, tenure, pit stops, buffs, Attaboy, Corp/Unit Bias |
+| **Job Slots** | `SLOTS.md` | Jobs, daily income, tenure progression, pit stop rewards, Attaboy system, Corp/Unit Bias |
 
 **Why this matters**: These documents contain design decisions, system architecture, and open questions that took hours to define. Reading them first prevents contradicting established designs or re-solving already-solved problems.
 

@@ -78,6 +78,9 @@ export default function EssenceMarketPage() {
   const [siphonLayoutChoice, setSiphonLayoutChoice] = useState<1 | 2 | 3 | 4 | 5>(5); // Siphon modal layout style
   const lightboxVersion = 6; // New listing lightbox design version - locked to V6
 
+  // Space Age styling toggle for header
+  const [useSpaceAgeHeader, setUseSpaceAgeHeader] = useState(false);
+
   // Purchase modal state
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [selectedListing, setSelectedListing] = useState<any>(null);
@@ -3106,6 +3109,36 @@ export default function EssenceMarketPage() {
               </div>
             </div>
 
+            {/* Space Age Header Toggle */}
+            <div className="pt-4 border-t border-cyan-500/30">
+              <label className="block mb-2 text-cyan-400 text-xs uppercase tracking-wider">Header Style</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setUseSpaceAgeHeader(false)}
+                  className={`flex-1 px-3 py-2 text-xs font-bold rounded transition-all ${
+                    !useSpaceAgeHeader
+                      ? 'bg-yellow-500 text-black'
+                      : 'bg-black border border-yellow-500/30 text-yellow-400 hover:border-yellow-500'
+                  }`}
+                >
+                  Industrial
+                </button>
+                <button
+                  onClick={() => setUseSpaceAgeHeader(true)}
+                  className={`flex-1 px-3 py-2 text-xs font-bold rounded transition-all ${
+                    useSpaceAgeHeader
+                      ? 'bg-cyan-500 text-black'
+                      : 'bg-black border border-cyan-500/30 text-cyan-400 hover:border-cyan-500'
+                  }`}
+                >
+                  Space Age
+                </button>
+              </div>
+              <div className="mt-1 text-[9px] text-gray-500">
+                {useSpaceAgeHeader ? "Liquid glass style from landing page" : "Industrial military style (current)"}
+              </div>
+            </div>
+
             {/* Gold Management */}
             <div className="pt-4 border-t border-yellow-500/30">
               <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Gold</label>
@@ -3154,32 +3187,120 @@ export default function EssenceMarketPage() {
 
       {/* Main Content */}
       <div className="relative z-10 py-6">
-        {/* Title Section - Military Command Panel */}
-        <div className="relative mb-6 mek-card-industrial mek-border-sharp-gold rounded-xl p-4 mek-glow-yellow">
-          <div className="absolute top-0 left-0 right-0 h-3 mek-overlay-hazard-stripes opacity-60" />
-          <div className="absolute inset-0 mek-overlay-scratches pointer-events-none" />
-          <div className="absolute inset-0 mek-overlay-rust pointer-events-none" />
-          <div className="absolute inset-0 opacity-5">
-            <div className="absolute inset-0 mek-overlay-metal-texture" />
-          </div>
+        {/* Title Section - Conditional Header Style */}
+        {useSpaceAgeHeader ? (
+          /* Space Age Style Header - Liquid Glass Aesthetic */
+          <div
+            className="relative mb-6 rounded-2xl p-5 overflow-hidden transition-all duration-500"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.05)',
+            }}
+          >
+            {/* Subtle gradient shimmer overlay */}
+            <div
+              className="absolute inset-0 pointer-events-none opacity-30"
+              style={{
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%)',
+                animation: 'slideParticles 8s linear infinite',
+              }}
+            />
 
-          {/* Header Layout - Compact Grid (headerLayout locked to 5) */}
-          <div className="relative">
-            <div className="flex justify-between items-center">
-              <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
+            {/* Header Layout */}
+            <div className="relative flex justify-between items-center">
+              <h1
+                className="text-5xl font-bold tracking-wider uppercase"
+                style={{
+                  fontFamily: "'Saira', 'Orbitron', sans-serif",
+                  color: '#ffffff',
+                  textShadow: '0 0 20px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.5)',
+                  letterSpacing: '0.15em',
+                }}
+              >
                 MARKET
               </h1>
-              <div className="flex items-center gap-4">
-                {renderHeaderButtons({
-                  onCreateListing: () => setShowCreateListing(true),
-                  onToggleMyListings: () => setShowMyListingsModal(true),
-                  showOnlyMyListings,
-                  listingCount: debugListingCount
-                })}
+              <div className="flex items-center gap-3">
+                {/* Space Age List Item Button */}
+                <button
+                  onClick={() => setShowCreateListing(true)}
+                  className="group relative px-6 py-2.5 rounded-xl font-semibold uppercase tracking-wider text-sm transition-all duration-300 overflow-hidden hover:scale-[1.02] active:scale-[0.98]"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(34,211,238,0.2) 0%, rgba(34,211,238,0.1) 100%)',
+                    border: '1px solid rgba(34,211,238,0.4)',
+                    color: '#22d3ee',
+                    fontFamily: "'Play', sans-serif",
+                  }}
+                >
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                    style={{
+                      backgroundImage: `url('/random-images/honey-png1.webp')`,
+                      backgroundSize: '150%',
+                      backgroundPosition: 'center',
+                    }}
+                  />
+                  <span className="relative z-10 transition-all duration-300 group-hover:[text-shadow:0_0_10px_rgba(34,211,238,0.8)]">
+                    LIST ITEM
+                  </span>
+                </button>
+
+                {/* Space Age My Listings Button */}
+                <button
+                  onClick={() => setShowMyListingsModal(true)}
+                  className="group relative px-6 py-2.5 rounded-xl font-medium uppercase tracking-wider text-sm transition-all duration-300 overflow-hidden hover:scale-[1.02] active:scale-[0.98]"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    color: 'rgba(255,255,255,0.8)',
+                    fontFamily: "'Play', sans-serif",
+                  }}
+                >
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                    style={{
+                      backgroundImage: `url('/random-images/honey-png1.webp')`,
+                      backgroundSize: '150%',
+                      backgroundPosition: 'center',
+                    }}
+                  />
+                  <span className="relative z-10 transition-all duration-300 group-hover:text-white group-hover:[text-shadow:0_0_6px_rgba(255,255,255,0.6)]">
+                    MY LISTINGS
+                  </span>
+                </button>
               </div>
             </div>
           </div>
-        </div>
+        ) : (
+          /* Industrial Style Header - Military Command Panel (Original) */
+          <div className="relative mb-6 mek-card-industrial mek-border-sharp-gold rounded-xl p-4 mek-glow-yellow">
+            <div className="absolute top-0 left-0 right-0 h-3 mek-overlay-hazard-stripes opacity-60" />
+            <div className="absolute inset-0 mek-overlay-scratches pointer-events-none" />
+            <div className="absolute inset-0 mek-overlay-rust pointer-events-none" />
+            <div className="absolute inset-0 opacity-5">
+              <div className="absolute inset-0 mek-overlay-metal-texture" />
+            </div>
+
+            {/* Header Layout - Compact Grid (headerLayout locked to 5) */}
+            <div className="relative">
+              <div className="flex justify-between items-center">
+                <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
+                  MARKET
+                </h1>
+                <div className="flex items-center gap-4">
+                  {renderHeaderButtons({
+                    onCreateListing: () => setShowCreateListing(true),
+                    onToggleMyListings: () => setShowMyListingsModal(true),
+                    showOnlyMyListings,
+                    listingCount: debugListingCount
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* OFFERS VIEW */}
         {showOffersView && (
