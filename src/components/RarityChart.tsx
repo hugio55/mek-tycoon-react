@@ -1432,6 +1432,390 @@ export default function RarityChart({
     );
   }
 
+  // Spectrum Wedge: Thick pie wedge segments
+  if (size === 'spectrum-wedge') {
+    const size_dim = 130;
+    const centerX = size_dim / 2;
+    const centerY = size_dim / 2;
+    const innerRadius = 22;
+    const maxOuterRadius = 60;
+
+    // Helper to create arc path
+    const createArcPath = (startAngle: number, endAngle: number, inner: number, outer: number) => {
+      const startRad = (startAngle * Math.PI) / 180;
+      const endRad = (endAngle * Math.PI) / 180;
+
+      const x1 = centerX + outer * Math.cos(startRad);
+      const y1 = centerY + outer * Math.sin(startRad);
+      const x2 = centerX + outer * Math.cos(endRad);
+      const y2 = centerY + outer * Math.sin(endRad);
+      const x3 = centerX + inner * Math.cos(endRad);
+      const y3 = centerY + inner * Math.sin(endRad);
+      const x4 = centerX + inner * Math.cos(startRad);
+      const y4 = centerY + inner * Math.sin(startRad);
+
+      const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+
+      return `M ${x1} ${y1} A ${outer} ${outer} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${inner} ${inner} 0 ${largeArc} 0 ${x4} ${y4} Z`;
+    };
+
+    return (
+      <div className={`${config.maxWidth}`}>
+        <div
+          className="relative mx-auto"
+          style={{ width: `${size_dim}px`, height: `${size_dim}px` }}
+        >
+          <svg viewBox={`0 0 ${size_dim} ${size_dim}`} className="w-full h-full">
+            <defs>
+              <filter id="wedgeGlow">
+                <feGaussianBlur stdDeviation="3" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+              <radialGradient id="wedgeCenter" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={peakRank.color} stopOpacity="0.4" />
+                <stop offset="100%" stopColor={peakRank.color} stopOpacity="0" />
+              </radialGradient>
+            </defs>
+
+            {/* Background glow */}
+            <circle cx={centerX} cy={centerY} r={innerRadius + 5} fill="url(#wedgeCenter)" />
+
+            {/* Wedge segments */}
+            {probabilities.map((prob, i) => {
+              const anglePerSegment = 360 / probabilities.length;
+              const startAngle = i * anglePerSegment - 90;
+              const endAngle = startAngle + anglePerSegment - 2; // Gap between segments
+
+              const outerRadius = innerRadius + (prob / 40) * (maxOuterRadius - innerRadius);
+              const rank = RANKS[i];
+              const isPeak = i === peakIndex;
+
+              return (
+                <g key={i}>
+                  {/* Glow layer */}
+                  <path
+                    d={createArcPath(startAngle, endAngle, innerRadius, outerRadius)}
+                    fill={rank.color}
+                    opacity="0.3"
+                    filter="url(#wedgeGlow)"
+                  />
+                  {/* Main wedge */}
+                  <path
+                    d={createArcPath(startAngle, endAngle, innerRadius, outerRadius)}
+                    fill={rank.color}
+                    opacity={isPeak ? 1 : 0.7}
+                    stroke={isPeak ? 'white' : 'rgba(255,255,255,0.2)'}
+                    strokeWidth={isPeak ? 2 : 0.5}
+                    style={{ transition: 'all 150ms ease-out' }}
+                  />
+                </g>
+              );
+            })}
+
+            {/* Inner circle */}
+            <circle
+              cx={centerX}
+              cy={centerY}
+              r={innerRadius}
+              fill="rgba(0,0,0,0.8)"
+              stroke="rgba(255,255,255,0.1)"
+              strokeWidth="1"
+            />
+
+            {/* Center text */}
+            <text
+              x={centerX}
+              y={centerY - 2}
+              textAnchor="middle"
+              fontSize="13"
+              fontWeight="bold"
+              fill={peakRank.color}
+              style={{ transition: 'fill 150ms ease-out' }}
+            >
+              {peakRank.name}
+            </text>
+            <text
+              x={centerX}
+              y={centerY + 10}
+              textAnchor="middle"
+              fontSize="8"
+              fill="rgba(255,255,255,0.7)"
+            >
+              {peakProb.toFixed(0)}%
+            </text>
+          </svg>
+        </div>
+      </div>
+    );
+  }
+
+  // Spectrum Rings: Concentric filled rings
+  if (size === 'spectrum-rings') {
+    const size_dim = 130;
+    const centerX = size_dim / 2;
+    const centerY = size_dim / 2;
+    const minRadius = 18;
+    const maxRadius = 60;
+    const ringSpacing = (maxRadius - minRadius) / probabilities.length;
+
+    return (
+      <div className={`${config.maxWidth}`}>
+        <div
+          className="relative mx-auto"
+          style={{ width: `${size_dim}px`, height: `${size_dim}px` }}
+        >
+          <svg viewBox={`0 0 ${size_dim} ${size_dim}`} className="w-full h-full">
+            <defs>
+              <filter id="ringGlow">
+                <feGaussianBlur stdDeviation="2" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Rings from outside to inside */}
+            {[...probabilities].reverse().map((prob, i) => {
+              const actualIndex = probabilities.length - 1 - i;
+              const rank = RANKS[actualIndex];
+              const isPeak = actualIndex === peakIndex;
+
+              const radius = minRadius + (actualIndex + 1) * ringSpacing;
+              const thickness = ringSpacing - 1;
+              const opacity = Math.max(0.25, prob / Math.max(...probabilities));
+
+              return (
+                <circle
+                  key={actualIndex}
+                  cx={centerX}
+                  cy={centerY}
+                  r={radius - thickness / 2}
+                  fill="none"
+                  stroke={rank.color}
+                  strokeWidth={thickness}
+                  opacity={isPeak ? 1 : opacity}
+                  filter={isPeak ? 'url(#ringGlow)' : undefined}
+                  style={{ transition: 'all 150ms ease-out' }}
+                />
+              );
+            })}
+
+            {/* Inner circle */}
+            <circle
+              cx={centerX}
+              cy={centerY}
+              r={minRadius}
+              fill="rgba(0,0,0,0.9)"
+              stroke={peakRank.color}
+              strokeWidth="2"
+            />
+
+            {/* Center text */}
+            <text
+              x={centerX}
+              y={centerY - 1}
+              textAnchor="middle"
+              fontSize="12"
+              fontWeight="bold"
+              fill={peakRank.color}
+              style={{ transition: 'fill 150ms ease-out' }}
+            >
+              {peakRank.name}
+            </text>
+            <text
+              x={centerX}
+              y={centerY + 9}
+              textAnchor="middle"
+              fontSize="7"
+              fill="rgba(255,255,255,0.7)"
+            >
+              {peakProb.toFixed(0)}%
+            </text>
+          </svg>
+        </div>
+        {/* Label below */}
+        <div className="text-center mt-1">
+          <span className="text-[9px] font-semibold" style={{ color: peakRank.color }}>
+            Peak: {peakRank.name}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Spectrum Solid: Filled donut with blended segments
+  if (size === 'spectrum-solid') {
+    const size_dim = 130;
+    const centerX = size_dim / 2;
+    const centerY = size_dim / 2;
+    const innerRadius = 20;
+    const outerRadius = 55;
+
+    // Create smooth arc path
+    const createSmoothArc = (startAngle: number, endAngle: number, inner: number, outer: number) => {
+      const startRad = (startAngle * Math.PI) / 180;
+      const endRad = (endAngle * Math.PI) / 180;
+
+      const x1 = centerX + outer * Math.cos(startRad);
+      const y1 = centerY + outer * Math.sin(startRad);
+      const x2 = centerX + outer * Math.cos(endRad);
+      const y2 = centerY + outer * Math.sin(endRad);
+      const x3 = centerX + inner * Math.cos(endRad);
+      const y3 = centerY + inner * Math.sin(endRad);
+      const x4 = centerX + inner * Math.cos(startRad);
+      const y4 = centerY + inner * Math.sin(startRad);
+
+      const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+
+      return `M ${x1} ${y1} A ${outer} ${outer} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${inner} ${inner} 0 ${largeArc} 0 ${x4} ${y4} Z`;
+    };
+
+    return (
+      <div className={`${config.maxWidth}`}>
+        <div
+          className="relative mx-auto"
+          style={{ width: `${size_dim}px`, height: `${size_dim}px` }}
+        >
+          <svg viewBox={`0 0 ${size_dim} ${size_dim}`} className="w-full h-full">
+            <defs>
+              <filter id="solidGlow">
+                <feGaussianBlur stdDeviation="4" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+              {/* Create gradient for each segment that blends into next */}
+              {probabilities.map((_, i) => {
+                const nextI = (i + 1) % probabilities.length;
+                return (
+                  <linearGradient
+                    key={`solidGrad${i}`}
+                    id={`solidGrad${i}`}
+                    gradientUnits="userSpaceOnUse"
+                    x1={centerX}
+                    y1={centerY - outerRadius}
+                    x2={centerX}
+                    y2={centerY + outerRadius}
+                  >
+                    <stop offset="0%" stopColor={RANKS[i].color} />
+                    <stop offset="100%" stopColor={RANKS[nextI].color} />
+                  </linearGradient>
+                );
+              })}
+              <radialGradient id="solidCenter" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={peakRank.color} stopOpacity="0.5" />
+                <stop offset="100%" stopColor={peakRank.color} stopOpacity="0" />
+              </radialGradient>
+            </defs>
+
+            {/* Outer glow ring */}
+            <circle
+              cx={centerX}
+              cy={centerY}
+              r={outerRadius + 5}
+              fill="none"
+              stroke={peakRank.color}
+              strokeWidth="8"
+              opacity="0.15"
+              filter="url(#solidGlow)"
+            />
+
+            {/* Solid filled segments */}
+            {probabilities.map((prob, i) => {
+              const anglePerSegment = 360 / probabilities.length;
+              const startAngle = i * anglePerSegment - 90;
+              const endAngle = startAngle + anglePerSegment + 0.5; // Slight overlap for seamless
+
+              const rank = RANKS[i];
+              const isPeak = i === peakIndex;
+              const opacity = Math.max(0.4, prob / Math.max(...probabilities));
+
+              return (
+                <path
+                  key={i}
+                  d={createSmoothArc(startAngle, endAngle, innerRadius, outerRadius)}
+                  fill={rank.color}
+                  opacity={isPeak ? 1 : opacity}
+                  style={{ transition: 'opacity 150ms ease-out' }}
+                />
+              );
+            })}
+
+            {/* Peak indicator - pulsing outer ring segment */}
+            {(() => {
+              const anglePerSegment = 360 / probabilities.length;
+              const startAngle = peakIndex * anglePerSegment - 90;
+              const endAngle = startAngle + anglePerSegment;
+
+              const startRad = (startAngle * Math.PI) / 180;
+              const endRad = (endAngle * Math.PI) / 180;
+              const midRad = ((startAngle + endAngle) / 2 * Math.PI) / 180;
+
+              const indicatorRadius = outerRadius + 8;
+              const x1 = centerX + indicatorRadius * Math.cos(startRad);
+              const y1 = centerY + indicatorRadius * Math.sin(startRad);
+              const x2 = centerX + indicatorRadius * Math.cos(endRad);
+              const y2 = centerY + indicatorRadius * Math.sin(endRad);
+
+              return (
+                <path
+                  d={`M ${x1} ${y1} A ${indicatorRadius} ${indicatorRadius} 0 0 1 ${x2} ${y2}`}
+                  fill="none"
+                  stroke={peakRank.color}
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  filter="url(#solidGlow)"
+                  style={{ transition: 'all 150ms ease-out' }}
+                />
+              );
+            })()}
+
+            {/* Inner glow */}
+            <circle cx={centerX} cy={centerY} r={innerRadius + 3} fill="url(#solidCenter)" />
+
+            {/* Inner circle */}
+            <circle
+              cx={centerX}
+              cy={centerY}
+              r={innerRadius}
+              fill="rgba(0,0,0,0.85)"
+              stroke={peakRank.color}
+              strokeWidth="1.5"
+            />
+
+            {/* Center text */}
+            <text
+              x={centerX}
+              y={centerY - 1}
+              textAnchor="middle"
+              fontSize="13"
+              fontWeight="bold"
+              fill={peakRank.color}
+              style={{ transition: 'fill 150ms ease-out' }}
+            >
+              {peakRank.name}
+            </text>
+            <text
+              x={centerX}
+              y={centerY + 10}
+              textAnchor="middle"
+              fontSize="8"
+              fill="rgba(255,255,255,0.7)"
+            >
+              {peakProb.toFixed(0)}%
+            </text>
+          </svg>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`${config.maxWidth} bg-gradient-to-br from-black/60 to-black/40 backdrop-blur-sm rounded-lg ${config.padding} border border-yellow-500/10`}>
       {showHeader && (

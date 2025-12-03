@@ -281,6 +281,25 @@ function RarityBiasAdmin() {
               </div>
             </div>
           </div>
+
+          {/* Spectrum Variants (Dense) */}
+          <div className="bg-gradient-to-br from-orange-900/20 to-red-900/20 rounded-lg p-4 border border-orange-500/20">
+            <h4 className="text-orange-400 font-bold mb-4 uppercase tracking-wider text-sm">Spectrum Variants (Dense Radial)</h4>
+            <div className="flex flex-wrap items-start gap-8">
+              <div className="text-center">
+                <div className="text-gray-400 text-xs mb-2">Wedge Segments</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="spectrum-wedge" />
+              </div>
+              <div className="text-center">
+                <div className="text-gray-400 text-xs mb-2">Concentric Rings</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="spectrum-rings" />
+              </div>
+              <div className="text-center">
+                <div className="text-gray-400 text-xs mb-2">Solid Donut</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="spectrum-solid" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -352,6 +371,10 @@ function RarityBiasAdmin() {
             <div><span className="text-cyan-400">size="wave-heartbeat"</span> - ECG heart monitor style</div>
             <div><span className="text-cyan-400">size="wave-mirror"</span> - Symmetrical reflection wave</div>
             <div><span className="text-cyan-400">size="wave-spectrum"</span> - Radial spectrum analyzer</div>
+            <div className="text-orange-400/70 mt-2 mb-1">Spectrum Series (Dense Radial):</div>
+            <div><span className="text-orange-400">size="spectrum-wedge"</span> - Thick pie wedge segments</div>
+            <div><span className="text-orange-400">size="spectrum-rings"</span> - Concentric filled rings</div>
+            <div><span className="text-orange-400">size="spectrum-solid"</span> - Solid donut with indicator</div>
           </div>
         </div>
       </div>
