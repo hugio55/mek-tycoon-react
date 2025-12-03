@@ -910,14 +910,14 @@ export default function MessagingSystemAdmin() {
                       <div className="flex-1 min-w-0">
                         <div className="text-white font-medium truncate">{corp.companyName}</div>
                       </div>
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <span className="font-bold text-cyan-400 text-sm">AP:</span>
+                      <div className="flex items-baseline gap-1 flex-shrink-0">
                         <span
                           className="text-white text-lg tracking-wider"
                           style={{ fontFamily: 'Saira, sans-serif' }}
                         >
                           {((corp as any).achievementPoints ?? 0).toLocaleString()}
                         </span>
+                        <span className="font-bold text-cyan-400 text-xs">AP</span>
                       </div>
                     </div>
                   </button>
