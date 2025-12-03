@@ -3761,6 +3761,9 @@ export default defineSchema({
     lastMessageAt: v.number(), // Timestamp of most recent message
     lastMessagePreview: v.optional(v.string()), // Truncated preview (max 80 chars)
     lastMessageSender: v.optional(v.string()), // Wallet of who sent last message
+    // Soft delete - hide conversation for individual participants
+    hiddenForParticipant1: v.optional(v.boolean()),
+    hiddenForParticipant2: v.optional(v.boolean()),
     // Metadata
     createdAt: v.number(),
   })

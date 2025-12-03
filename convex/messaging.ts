@@ -553,6 +553,54 @@ export const cleanupExpiredTypingIndicators = mutation({
   },
 });
 
+// Delete/hide a conversation for a user (soft delete - other user still sees it)
+export const deleteConversation = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const conversation = await ctx.db.get(args.conversationId);
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    // Verify user is a participant
+    if (
+      conversation.participant1 !== args.walletAddress &&
+      conversation.participant2 !== args.walletAddress
+    ) {
+      throw new Error("Not authorized to delete this conversation");
+    }
+
+    // Determine which participant is deleting
+    const isParticipant1 = conversation.participant1 === args.walletAddress;
+
+    // Soft delete - mark as hidden for this user
+    if (isParticipant1) {
+      await ctx.db.patch(args.conversationId, { hiddenForParticipant1: true });
+    } else {
+      await ctx.db.patch(args.conversationId, { hiddenForParticipant2: true });
+    }
+
+    // Also mark all messages as deleted for this user
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .collect();
+
+    for (const msg of messages) {
+      if (msg.senderId === args.walletAddress) {
+        await ctx.db.patch(msg._id, { deletedForSender: true });
+      } else {
+        await ctx.db.patch(msg._id, { deletedForRecipient: true });
+      }
+    }
+
+    return { success: true };
+  },
+});
+
 // ============================================================================
 // BLOCKING SYSTEM
 // ============================================================================

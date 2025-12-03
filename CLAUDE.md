@@ -738,11 +738,13 @@ Example transformation:
 3. Explain exactly what will change and why
 
 ## Communication Guidelines
-- **DO IT, DON'T DELEGATE**: If you are capable of doing a task (editing files, restarting servers, running commands, etc.), DO IT immediately. Never instruct the user to do something you can do yourself. Examples:
+- **TAKE ACTION**: You have permission to edit files, run commands, and take action directly. Don't ask the user to do things you can do yourself. Examples:
   - BAD: "Please update .env.local with X value"
   - GOOD: *Updates .env.local immediately*
-  - BAD: "You'll need to restart the dev server"
-  - GOOD: *Restarts dev server automatically*
+  - BAD: "You should add this import to the file"
+  - GOOD: *Edits the file to add the import*
+  - **EXCEPTION - Dev servers**: Never start/restart dev servers as background tasks. Just tell the user: "You'll need to restart the dev server in your terminal." (See Dev Server Management section)
+  - **Delegating to agents is fine**: Using Task tool to delegate work to specialized agents is encouraged.
 - **Ask for clarity**: If instructions are vague or unclear, ask specific questions rather than guessing
 - **Voice concerns**: If an implementation might break something or cause issues, speak up before proceeding
 - **Be direct and honest**: Don't hesitate to point out potential problems or downsides

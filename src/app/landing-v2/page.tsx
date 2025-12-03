@@ -212,7 +212,8 @@ export default function LandingV2() {
       )}
 
       {/* Logo - fade in after stars complete */}
-      {isRevealing && (
+      {/* HYDRATION FIX: Only render device-specific content after mounted to prevent SSR mismatch */}
+      {isRevealing && mounted && (
         <div
           className="transition-opacity"
           style={{
