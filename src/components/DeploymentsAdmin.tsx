@@ -1031,7 +1031,22 @@ export default function DeploymentsAdmin() {
       {/* Rollback Section */}
       {backups.length > 0 && (
         <div className="border-t border-gray-700 pt-6">
-          <div className="text-gray-400 text-sm uppercase tracking-wider mb-4">Emergency Rollback</div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-gray-400 text-sm uppercase tracking-wider">Emergency Rollback</div>
+            <button
+              onClick={() => {
+                const backupPath = `${window.location.protocol}//${window.location.host}`.includes('localhost')
+                  ? 'C:\\Users\\Ben Meyers\\Documents\\Mek Tycoon\\TYCOON REACT 8-27\\mek-tycoon-react-staging\\backups\\full'
+                  : './backups/full';
+                navigator.clipboard.writeText(backupPath);
+                addLog('Copy', 'success', 'Backup folder path copied to clipboard');
+              }}
+              className="text-xs text-gray-500 hover:text-gray-300 bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded transition-colors"
+              title="Click to copy backup folder path"
+            >
+              📁 Copy Path
+            </button>
+          </div>
           <div className="bg-gray-800/50 border border-orange-500/30 rounded-lg p-4">
             <div className="text-orange-400 text-sm mb-3">
               Select a backup to restore production to a previous state:
