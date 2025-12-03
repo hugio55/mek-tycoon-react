@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
+import { ensureBech32StakeAddress } from '@/lib/cardanoAddressConverter';
 
 interface NMKRPayLightboxProps {
   walletAddress: string | null;
@@ -336,7 +337,6 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
       if (!walletStakeRaw.startsWith('stake')) {
         // It's hex, convert to bech32
         try {
-          const { ensureBech32StakeAddress } = await import('@/lib/cardanoAddressConverter');
           walletStakeAddress = ensureBech32StakeAddress(walletStakeRaw);
           console.log('[🔐VERIFY] Converted to bech32:', walletStakeAddress);
         } catch (convErr) {
