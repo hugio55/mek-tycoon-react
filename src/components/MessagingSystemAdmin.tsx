@@ -252,6 +252,11 @@ export default function MessagingSystemAdmin() {
     }
   }, [selectedConversationId, activeCorp.walletAddress]);
 
+  // Reset deleted messages view when switching admin conversations
+  useEffect(() => {
+    setShowDeletedMessages(false);
+  }, [adminSelectedConversationId]);
+
   // Handle typing indicator
   const handleInputChange = (text: string) => {
     setMessageInput(text);
@@ -1222,7 +1227,10 @@ export default function MessagingSystemAdmin() {
                               {selectedAdminConversation.participant1Info.companyName} ↔ {selectedAdminConversation.participant2Info.companyName}
                             </div>
                             <div className="text-gray-500 text-sm">
-                              {selectedAdminConversation.messageCount} messages
+                              {messageCount ? `${messageCount.visible} messages` : 'Loading...'}
+                              {messageCount && messageCount.deleted > 0 && (
+                                <span className="ml-2 text-purple-400">({messageCount.deleted} deleted)</span>
+                              )}
                               {selectedAdminConversation.disabledByAdmin && (
                                 <span className="ml-2 text-red-400">• DISABLED</span>
                               )}
@@ -1295,6 +1303,64 @@ export default function MessagingSystemAdmin() {
                                 </div>
                               )}
                             </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Deleted Messages Section */}
+                      {showDeletedMessages && deletedMessages && deletedMessages.length > 0 && (
+                        <div className="mb-6 p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
+                          <div className="text-purple-400 font-semibold mb-3 flex items-center gap-2">
+                            <span>🗑️</span>
+                            <span>Deleted Messages ({deletedMessages.length})</span>
+                          </div>
+                          <div className="space-y-3">
+                            {deletedMessages.map((msg: any) => (
+                              <div key={msg._id} className="flex items-start gap-3 p-2 bg-black/30 rounded-lg">
+                                <div className="w-6 h-6 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                                  <img
+                                    src={`/mek-images/150px/${getMekImageForWallet(msg.senderId)}`}
+                                    alt=""
+                                    className="w-full h-full object-cover opacity-50"
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-purple-400/70 font-medium text-xs">
+                                      {msg.senderInfo.companyName}
+                                    </span>
+                                    <span className="text-gray-600 text-xs">
+                                      {formatRelativeTime(msg.createdAt)}
+                                    </span>
+                                    {msg.deletedByAdmin && (
+                                      <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded">
+                                        Admin deleted
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="mt-1 text-gray-400 text-sm break-words">
+                                    {msg.content || '[No content]'}
+                                  </div>
+                                  {msg.attachments && msg.attachments.length > 0 && (
+                                    <div className="flex gap-1 mt-2 flex-wrap">
+                                      {msg.attachments.map((att: any, idx: number) => (
+                                        <button
+                                          key={idx}
+                                          onClick={() => setLightboxImage({ url: att.url, filename: att.filename })}
+                                          className="block opacity-60 hover:opacity-100 transition-opacity"
+                                        >
+                                          <img
+                                            src={att.url}
+                                            alt={att.filename}
+                                            className="max-w-[80px] max-h-[80px] rounded object-cover border border-purple-500/30"
+                                          />
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}

@@ -84,6 +84,7 @@ import NumberTicker from '@/components/controls/NumberTicker';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import PortMonitor from '@/components/PortMonitor';
 import DeploymentsAdmin from '@/components/DeploymentsAdmin';
+import StarField from '@/components/StarField';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
 import { getVariationTrueRank, VARIATION_MEK_RANKS } from '@/lib/variationRarityMekRanks';
@@ -640,7 +641,8 @@ const DATA_SYSTEMS = [
   { id: 'new-styling', name: 'Space Age Style', icon: '🎨', implemented: true },
   { id: 'messaging-system', name: 'Messaging System', icon: '💬', implemented: true },
   { id: 'rarity-bias', name: 'Rarity Bias', icon: '📊', implemented: true },
-  { id: 'universal-background', name: 'Universal Background', icon: '🌌', implemented: true }
+  { id: 'universal-background', name: 'Universal Background', icon: '🌌', implemented: true },
+  { id: 'planet-background', name: 'Planet Background', icon: '🪐', implemented: true }
 ];
 
 export default function AdminMasterDataPage() {

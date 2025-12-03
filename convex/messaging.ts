@@ -10,7 +10,7 @@ const PREVIEW_LENGTH = 80;
 // QUERIES
 // ============================================================================
 
-// Get all conversations for a user (inbox view)
+// Get all conversations for a user (inbox view) - Optimized with batched lookups
 export const getConversations = query({
   args: { walletAddress: v.string() },
   handler: async (ctx, args) => {
@@ -39,59 +39,81 @@ export const getConversations = query({
       })
       .sort((a, b) => b.lastMessageAt - a.lastMessageAt);
 
-    // Get unread counts for each conversation
-    const conversationsWithUnread = await Promise.all(
-      allConversations.map(async (conv) => {
-        const unreadRecord = await ctx.db
-          .query("messageUnreadCounts")
-          .withIndex("by_wallet_conversation", (q) =>
-            q.eq("walletAddress", args.walletAddress).eq("conversationId", conv._id)
-          )
-          .first();
+    // Early return if no conversations
+    if (allConversations.length === 0) {
+      return [];
+    }
 
-        // Get the other participant's info
-        const otherWallet = conv.participant1 === args.walletAddress
-          ? conv.participant2
-          : conv.participant1;
+    // Collect all other wallet addresses for batch lookup
+    const otherWallets = new Set<string>();
+    for (const conv of allConversations) {
+      const otherWallet = conv.participant1 === args.walletAddress
+        ? conv.participant2
+        : conv.participant1;
+      otherWallets.add(otherWallet);
+    }
 
-        const otherUser = await ctx.db
-          .query("users")
-          .withIndex("by_wallet", (q) => q.eq("walletAddress", otherWallet))
-          .first();
+    // Batch fetch: Get all unread counts for this user in one query
+    const unreadRecords = await ctx.db
+      .query("messageUnreadCounts")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .collect();
+    const unreadMap = new Map(unreadRecords.map(r => [r.conversationId.toString(), r.count]));
 
-        // Check block status
-        const iBlockedThem = await ctx.db
-          .query("messageBlocks")
-          .withIndex("by_blocker_blocked", (q) =>
-            q.eq("blockerWallet", args.walletAddress).eq("blockedWallet", otherWallet)
-          )
-          .first();
+    // Batch fetch: Get all user info for other participants
+    const userMap = new Map<string, { companyName: string; displayName: string }>();
+    for (const wallet of otherWallets) {
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", wallet))
+        .first();
+      userMap.set(wallet, {
+        companyName: user?.companyName ?? "Unknown Corporation",
+        displayName: user?.displayName ?? user?.companyName ?? "Unknown",
+      });
+    }
 
-        const theyBlockedMe = await ctx.db
-          .query("messageBlocks")
-          .withIndex("by_blocker_blocked", (q) =>
-            q.eq("blockerWallet", otherWallet).eq("blockedWallet", args.walletAddress)
-          )
-          .first();
+    // Batch fetch: Get all blocks where I am the blocker
+    const myBlocks = await ctx.db
+      .query("messageBlocks")
+      .withIndex("by_blocker", (q) => q.eq("blockerWallet", args.walletAddress))
+      .collect();
+    const iBlockedSet = new Set(myBlocks.map(b => b.blockedWallet));
 
-        return {
-          ...conv,
-          unreadCount: unreadRecord?.count ?? 0,
-          otherParticipant: {
-            walletAddress: otherWallet,
-            companyName: otherUser?.companyName ?? "Unknown Corporation",
-            displayName: otherUser?.displayName ?? otherUser?.companyName ?? "Unknown",
-          },
-          blockStatus: {
-            iBlockedThem: !!iBlockedThem,
-            theyBlockedMe: !!theyBlockedMe,
-            isBlocked: !!iBlockedThem || !!theyBlockedMe,
-          },
-        };
-      })
-    );
+    // Batch fetch: Get all blocks where I am the blocked
+    const blocksAgainstMe = await ctx.db
+      .query("messageBlocks")
+      .withIndex("by_blocked", (q) => q.eq("blockedWallet", args.walletAddress))
+      .collect();
+    const theyBlockedMeSet = new Set(blocksAgainstMe.map(b => b.blockerWallet));
 
-    return conversationsWithUnread;
+    // Build final conversation list with all data
+    const conversationsWithDetails = allConversations.map((conv) => {
+      const otherWallet = conv.participant1 === args.walletAddress
+        ? conv.participant2
+        : conv.participant1;
+
+      const userInfo = userMap.get(otherWallet) ?? { companyName: "Unknown Corporation", displayName: "Unknown" };
+      const iBlockedThem = iBlockedSet.has(otherWallet);
+      const theyBlockedMe = theyBlockedMeSet.has(otherWallet);
+
+      return {
+        ...conv,
+        unreadCount: unreadMap.get(conv._id.toString()) ?? 0,
+        otherParticipant: {
+          walletAddress: otherWallet,
+          companyName: userInfo.companyName,
+          displayName: userInfo.displayName,
+        },
+        blockStatus: {
+          iBlockedThem,
+          theyBlockedMe,
+          isBlocked: iBlockedThem || theyBlockedMe,
+        },
+      };
+    });
+
+    return conversationsWithDetails;
   },
 });
 
