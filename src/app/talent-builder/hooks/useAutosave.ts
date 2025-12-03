@@ -164,11 +164,18 @@ export function useAutosave(options: UseAutosaveOptions = {}): UseAutosaveReturn
   }, [state.nodes, state.connections, enabled, localStorageDebounce, state.skipNextHistoryPush, performLocalStorageSave]);
 
   // File backup timer - every 5 minutes
+  // Note: We use a ref to track hasUnsavedChanges for the interval check
+  // because the interval callback captures the initial value otherwise
+  const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
+  useEffect(() => {
+    hasUnsavedChangesRef.current = hasUnsavedChanges;
+  }, [hasUnsavedChanges]);
+
   useEffect(() => {
     if (!enabled) return;
 
     fileBackupTimerRef.current = setInterval(() => {
-      if (nodesRef.current.length > 0 && hasChangesRef.current) {
+      if (nodesRef.current.length > 0 && hasUnsavedChangesRef.current) {
         console.log('[FileBackup] Triggered by 5-minute timer');
         performFileBackup();
       }
@@ -186,7 +193,7 @@ export function useAutosave(options: UseAutosaveOptions = {}): UseAutosaveReturn
     lastBackup: state.lastConvexBackup,
     autosaveError: state.autosaveError,
     changesSinceLastSave: state.changeCounter,
-    hasUnsavedChanges: hasChangesRef.current,
+    hasUnsavedChanges,
     triggerLocalStorageSave: performLocalStorageSave,
     triggerFileBackup: performFileBackup
   };
