@@ -5,6 +5,13 @@ import { checkDeploymentAuth } from '@/lib/deployment/auth';
 
 const execAsync = promisify(exec);
 
+/**
+ * Push current branch directly to origin/master WITHOUT switching branches locally.
+ * This prevents the dev server from crashing when the working directory changes.
+ *
+ * Uses: git push origin <current-branch>:master --force
+ * This pushes the local branch to the remote master branch directly.
+ */
 export async function POST(request: NextRequest) {
   const authError = checkDeploymentAuth(request);
   if (authError) return authError;
@@ -15,56 +22,57 @@ export async function POST(request: NextRequest) {
     const currentBranch = branchOutput.trim();
 
     if (currentBranch === 'master') {
+      // If we're already on master, just push normally
+      const { stdout: pushOutput, stderr: pushStderr } = await execAsync(
+        'git push origin master',
+        { timeout: 120000 }
+      );
+
+      const output = pushOutput + pushStderr;
+      const alreadyUpToDate = output.includes('Everything up-to-date');
+
       return NextResponse.json({
         success: true,
-        message: 'Already on master branch',
+        message: alreadyUpToDate
+          ? 'Master already up to date with GitHub'
+          : 'Pushed master to GitHub - Vercel production deployment triggered',
         alreadyOnMaster: true,
+        alreadyUpToDate,
       });
     }
 
-    // Switch to master
-    await execAsync('git checkout master');
-
-    // Merge the feature branch into master
-    const { stdout: mergeOutput, stderr: mergeStderr } = await execAsync(
-      `git merge ${currentBranch} --no-edit`
+    // Push current branch directly to origin/master (without switching branches locally)
+    // This is the key change - we never checkout master, so dev server stays running
+    const { stdout: pushOutput, stderr: pushStderr } = await execAsync(
+      `git push origin ${currentBranch}:master --force`,
+      { timeout: 120000 } // 2 minute timeout
     );
 
-    const output = mergeOutput + mergeStderr;
-
-    // Check if merge was successful
-    if (output.includes('Already up to date') || output.includes('Already up-to-date')) {
-      return NextResponse.json({
-        success: true,
-        message: `Master already contains all changes from ${currentBranch}`,
-        alreadyUpToDate: true,
-        previousBranch: currentBranch,
-      });
-    }
+    const output = pushOutput + pushStderr;
+    const alreadyUpToDate = output.includes('Everything up-to-date');
 
     return NextResponse.json({
       success: true,
-      message: `Merged ${currentBranch} into master`,
+      message: alreadyUpToDate
+        ? `origin/master already matches ${currentBranch}`
+        : `Pushed ${currentBranch} to origin/master - Vercel production deployment triggered`,
       previousBranch: currentBranch,
+      alreadyUpToDate,
+      method: 'direct-push', // Indicates we used the new method
     });
   } catch (error: any) {
-    // If merge fails, try to abort and go back
-    try {
-      await execAsync('git merge --abort');
-    } catch (e) {
-      // Ignore abort errors
-    }
+    console.error('Push to master error:', error);
 
-    // Try to switch back to original branch (belt-and-suspenders with frontend recovery)
-    try {
-      await execAsync(`git checkout ${currentBranch}`);
-    } catch (e) {
-      // Ignore - frontend will also attempt to switch back
-    }
+    // Extract useful error info
+    const errorMessage = error.message || 'Push failed';
+    const stderr = error.stderr || '';
 
-    console.error('Merge error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Merge failed' },
+      {
+        success: false,
+        error: errorMessage,
+        details: stderr.substring(0, 500), // Include some stderr for debugging
+      },
       { status: 500 }
     );
   }
