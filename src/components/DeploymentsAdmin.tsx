@@ -73,6 +73,7 @@ export default function DeploymentsAdmin() {
   const [deployStep, setDeployStep] = useState<number>(0); // Track which step we're on (1-7)
   const [willDoFullDeploy, setWillDoFullDeploy] = useState(false); // Intent to do full deploy (before confirmation)
   const [logCounter, setLogCounter] = useState(0); // Counter for unique log IDs
+  const [deployError, setDeployError] = useState<string | null>(null); // Error message if deploy fails
 
   useEffect(() => {
     setMounted(true);
