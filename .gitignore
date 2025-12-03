@@ -54,3 +54,6 @@ discord-bot/set-secrets.bat
 # Sentry Config File
 .env.sentry-build-plugin
 migration-backup.zip
+
+# Deployment backups (large files)
+/backups/
