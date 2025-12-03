@@ -879,17 +879,12 @@ export default function DeploymentsAdmin() {
         </div>
       )}
 
-      <div className="text-center text-gray-500 text-sm max-w-3xl mx-auto space-y-1">
+      <div className="text-center text-gray-500 text-sm max-w-3xl mx-auto">
         <div>
           <span className="text-gray-400">1.</span> Commit →
-          <span className="text-gray-400">2.</span> Push <span className="text-cyan-500">{gitStatus?.currentBranch || 'branch'}</span> to GitHub →
-          <span className="text-gray-400">3.</span> Switch to master →
-          <span className="text-gray-400">4.</span> Merge
-        </div>
-        <div>
-          <span className="text-gray-400">5.</span> Push <span className="text-green-500">master</span> to GitHub (Vercel production) →
-          <span className="text-gray-400">6.</span> Deploy Convex to Sturgeon →
-          <span className="text-gray-400">7.</span> Switch back
+          <span className="text-gray-400">2.</span> Push <span className="text-cyan-500">{gitStatus?.currentBranch || 'branch'}</span> to GitHub (backup) →
+          <span className="text-gray-400">3.</span> Push to <span className="text-green-500">origin/master</span> (Vercel production) →
+          <span className="text-gray-400">4.</span> Deploy Convex to Sturgeon
         </div>
       </div>
 
@@ -1088,16 +1083,16 @@ export default function DeploymentsAdmin() {
           <li><span className="text-gray-400">Deploy Prod (Sturgeon)</span> - Updates Convex database functions for the live site</li>
         </ul>
         <div className="mt-3 pt-3 border-t border-gray-700">
-          <div className="font-bold text-gray-400 mb-1">What the Big Button Does (7 Steps):</div>
+          <div className="font-bold text-gray-400 mb-1">What the Big Button Does (4 Steps):</div>
           <ol className="list-decimal list-inside space-y-1 text-gray-500">
             <li>Commits your changes (if any)</li>
             <li>Pushes your branch to GitHub (backs up your work)</li>
-            <li>Switches to <span className="text-green-400">master</span></li>
-            <li>Merges your branch into <span className="text-green-400">master</span></li>
-            <li>Pushes <span className="text-green-400">master</span> to GitHub (triggers Vercel production)</li>
+            <li>Pushes directly to <span className="text-green-400">origin/master</span> (triggers Vercel production - no branch switching!)</li>
             <li>Deploys Convex to Sturgeon (production database functions)</li>
-            <li>Switches you back to your working branch</li>
           </ol>
+          <div className="mt-2 text-xs text-gray-600">
+            Note: This uses direct push (git push origin branch:master) so the dev server stays running!
+          </div>
         </div>
       </div>
     </div>
