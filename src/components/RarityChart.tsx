@@ -119,10 +119,10 @@ export default function RarityChart({
       
       <div className="flex items-end justify-center mb-8 px-4" style={{ height: `${chartHeight}px`, overflow: 'visible' }}>
         {probabilities.map((prob, i) => {
-          // Use absolute scaling: bar height directly represents probability
-          // Scale so 100% probability = maxBarHeight (bars grow proportionally to actual %)
-          // This ensures bars are always dynamic and never hit a ceiling
-          const scaledHeight = (prob / 100) * maxBarHeight;
+          // Use absolute scaling with amplification for better visual height
+          // Scale so ~40% probability = maxBarHeight (since max probs are typically 30-35%)
+          // This makes bars taller while still being dynamic and proportional
+          const scaledHeight = (prob / 40) * maxBarHeight;
           const height = Math.max(2, scaledHeight); // Minimum 2px for visibility
           const rank = RANKS[i];
           
