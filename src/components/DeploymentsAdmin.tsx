@@ -542,11 +542,49 @@ export default function DeploymentsAdmin() {
       }}
     >
       <div
-        className="bg-gray-900 border-2 border-red-500 rounded-lg p-6 max-w-lg mx-4"
+        className={`bg-gray-900 border-2 rounded-lg p-6 max-w-lg mx-4 ${
+          deployError ? 'border-orange-500' : 'border-red-500'
+        }`}
         onClick={e => e.stopPropagation()}
       >
-        {/* Deploying State - Show Step Indicator */}
-        {isFullDeploy && deployStep > 0 ? (
+        {/* Error State */}
+        {deployError ? (
+          <div className="text-center">
+            <div className="text-4xl mb-4">❌</div>
+            <h2 className="text-xl font-bold text-orange-400 mb-4">
+              Deployment Failed
+            </h2>
+            <p className="text-gray-300 mb-4">
+              {deployError}
+            </p>
+            <p className="text-gray-500 text-sm mb-6">
+              Check the Activity Log below for more details. You may need to restart the dev server.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => {
+                  setDeployError(null);
+                  setShowProdConfirm(false);
+                  setProdConfirmStep(0);
+                  setWillDoFullDeploy(false);
+                }}
+                className="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setDeployError(null);
+                  setProdConfirmStep(2);
+                }}
+                className="px-6 py-2 bg-orange-600 hover:bg-orange-500 rounded-lg font-bold"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        ) : isFullDeploy && deployStep > 0 ? (
+          /* Deploying State - Show Step Indicator */
           <div className="text-center">
             <div className="text-4xl mb-4">🚀</div>
             <h2 className="text-xl font-bold text-yellow-400 mb-4">
