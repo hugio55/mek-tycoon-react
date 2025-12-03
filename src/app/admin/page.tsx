@@ -7,6 +7,7 @@ import { ConvexHttpClient } from 'convex/browser';
 import { api } from '@/convex/_generated/api';
 import * as Switch from '@radix-ui/react-switch';
 import MasterRangeSystem from '@/components/MasterRangeSystem';
+import RarityChart from '@/components/RarityChart';
 import GameDataLightbox from '@/components/GameDataLightbox';
 import StoryClimbConfig from '@/components/StoryClimbConfig';
 import DifficultyAdminConfig from '@/components/DifficultyAdminConfig';
@@ -121,6 +122,90 @@ const STORY_CLIMB_SUBSECTIONS = [
 ];
 
 
+// Rarity Bias Admin Component
+function RarityBiasAdmin() {
+  const [rarityBias, setRarityBias] = useState(150);
+  const [displayBias, setDisplayBias] = useState(150);
+
+  const handleSliderChange = (value: number) => {
+    setDisplayBias(value);
+    setRarityBias(value);
+  };
+
+  return (
+    <div className="mek-card-industrial mek-border-sharp-gold rounded-lg shadow-lg shadow-black/50 overflow-hidden">
+      <div className="p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="text-2xl">📊</span>
+          <h3 className="text-xl font-bold text-yellow-400 uppercase tracking-wider">Rarity Bias System</h3>
+          <span className="px-2 py-1 bg-green-600/30 text-green-400 text-xs font-bold rounded">IMPLEMENTED</span>
+        </div>
+
+        <p className="text-gray-400 mb-6">
+          The Rarity Bias system determines crafting probabilities using a bell curve distribution.
+          Higher bias values shift the curve toward rarer ranks (S, SS, SSS, X, XX, XXX).
+        </p>
+
+        {/* Interactive Chart */}
+        <div className="mb-8">
+          <RarityChart
+            rarityBias={rarityBias}
+            displayBias={displayBias}
+            onSliderChange={handleSliderChange}
+            showSlider={true}
+            chartHeight={300}
+            maxBarHeight={290}
+          />
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4 text-center">
+            <div className="text-gray-400 text-sm mb-1 uppercase tracking-wider">Current Bias</div>
+            <div className="text-3xl font-bold text-yellow-400">{displayBias}</div>
+          </div>
+          <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4 text-center">
+            <div className="text-gray-400 text-sm mb-1 uppercase tracking-wider">Min Bias</div>
+            <div className="text-3xl font-bold text-gray-500">0</div>
+          </div>
+          <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4 text-center">
+            <div className="text-gray-400 text-sm mb-1 uppercase tracking-wider">Max Bias</div>
+            <div className="text-3xl font-bold text-red-500">1000</div>
+          </div>
+        </div>
+
+        {/* Rank Reference */}
+        <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+          <h4 className="text-yellow-400 font-bold mb-3 uppercase tracking-wider">Rank Reference</h4>
+          <div className="grid grid-cols-5 md:grid-cols-10 gap-2 text-center text-sm">
+            <div><span className="block text-[#999999] font-bold">D</span><span className="text-gray-500">0-100</span></div>
+            <div><span className="block text-[#90EE90] font-bold">C</span><span className="text-gray-500">100-200</span></div>
+            <div><span className="block text-[#87CEEB] font-bold">B</span><span className="text-gray-500">200-300</span></div>
+            <div><span className="block text-[#FFF700] font-bold">A</span><span className="text-gray-500">300-400</span></div>
+            <div><span className="block text-[#FFB6C1] font-bold">S</span><span className="text-gray-500">400-500</span></div>
+            <div><span className="block text-[#DA70D6] font-bold">SS</span><span className="text-gray-500">500-600</span></div>
+            <div><span className="block text-[#9370DB] font-bold">SSS</span><span className="text-gray-500">600-700</span></div>
+            <div><span className="block text-[#FF8C00] font-bold">X</span><span className="text-gray-500">700-800</span></div>
+            <div><span className="block text-[#DC143C] font-bold">XX</span><span className="text-gray-500">800-900</span></div>
+            <div><span className="block text-[#8B0000] font-bold">XXX</span><span className="text-gray-500">900-1000</span></div>
+          </div>
+        </div>
+
+        {/* How It Works */}
+        <div className="mt-6 bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+          <h4 className="text-yellow-400 font-bold mb-3 uppercase tracking-wider">How It Works</h4>
+          <ul className="text-gray-400 space-y-2 text-sm">
+            <li><span className="text-yellow-500 mr-2">1.</span> Bell curve is centered based on the bias value using sqrt progression</li>
+            <li><span className="text-yellow-500 mr-2">2.</span> Each rank has a probability calculated by Gaussian distribution (sigma = 120)</li>
+            <li><span className="text-yellow-500 mr-2">3.</span> Probabilities are normalized to sum to 100%</li>
+            <li><span className="text-yellow-500 mr-2">4.</span> Players increase bias through: Equipment, Upgrades, Buffs, Achievements</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Data system definitions
 const DATA_SYSTEMS = [
   { id: 'mek-systems', name: 'Mek Systems', icon: '⚙️', implemented: true },
@@ -152,7 +237,8 @@ const DATA_SYSTEMS = [
   { id: 'components', name: 'Components', icon: '🧩', implemented: true },
   { id: 'deployments', name: 'Deployments', icon: '🚀', implemented: true },
   { id: 'new-styling', name: 'Space Age Style', icon: '🎨', implemented: true },
-  { id: 'messaging-system', name: 'Messaging System', icon: '💬', implemented: true }
+  { id: 'messaging-system', name: 'Messaging System', icon: '💬', implemented: true },
+  { id: 'rarity-bias', name: 'Rarity Bias', icon: '📊', implemented: true }
 ];
 
 export default function AdminMasterDataPage() {
@@ -5325,6 +5411,10 @@ export default function AdminMasterDataPage() {
           <div id="section-messaging-system" className="mek-card-industrial mek-border-sharp-gold rounded-lg shadow-lg shadow-black/50 overflow-hidden">
             <MessagingSystemAdmin />
           </div>
+          )}
+
+          {activeTab === 'rarity-bias' && (
+          <RarityBiasAdmin />
           )}
 
         </div>

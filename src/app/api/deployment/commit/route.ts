@@ -3,6 +3,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { writeFile, unlink } from 'fs/promises';
 import path from 'path';
+import os from 'os';
 import { checkDeploymentAuth } from '@/lib/deployment/auth';
 
 const execAsync = promisify(exec);
@@ -45,8 +46,9 @@ export async function POST(request: NextRequest) {
 
 Generated via Deployment Control Center`;
 
-    // Use a temp file for commit message (handles newlines properly on Windows)
-    const tempMsgFile = path.join(process.cwd(), '.git', 'COMMIT_MSG_TEMP');
+    // Use OS temp directory for commit message file (handles newlines properly on Windows)
+    // Using os.tmpdir() instead of .git folder since process.cwd() may differ in API routes
+    const tempMsgFile = path.join(os.tmpdir(), `COMMIT_MSG_TEMP_${Date.now()}.txt`);
     await writeFile(tempMsgFile, commitMessage, 'utf-8');
 
     let commitOutput: string;
