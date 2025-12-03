@@ -17,9 +17,10 @@ interface FinalContentStateProps {
   isActive: boolean;
   phaseCards: PhaseCard[] | undefined;
   startDelay?: number;
+  skipAnimations?: boolean;
 }
 
-export default function FinalContentState({ isActive, phaseCards, startDelay = 0 }: FinalContentStateProps) {
+export default function FinalContentState({ isActive, phaseCards, startDelay = 0, skipAnimations = false }: FinalContentStateProps) {
   const [showDescription, setShowDescription] = useState(false);
   const [showButton, setShowButton] = useState(false);
   const [showPhases, setShowPhases] = useState<number>(0);
@@ -34,7 +35,16 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
 
   useEffect(() => {
     if (isActive) {
-      // Description starts first
+      if (skipAnimations) {
+        // MOBILE RESUME: Show everything immediately
+        console.log('[🔐RESUME] Skipping FinalContentState animations');
+        setShowDescription(true);
+        setShowButton(true);
+        setShowPhases(4); // Show all phases immediately
+        return;
+      }
+
+      // Normal flow: Description starts first
       const descTimer = setTimeout(() => setShowDescription(true), startDelay);
 
       // Button starts after description (400ms gap - moderate slowdown)
@@ -55,7 +65,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
         clearTimeout(phase4Timer);
       };
     }
-  }, [isActive, startDelay]);
+  }, [isActive, startDelay, skipAnimations]);
 
   if (!isActive) return null;
 

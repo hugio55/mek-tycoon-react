@@ -59,6 +59,18 @@ npm run dev:all
 
 ---
 
+## 📋 Key System Documentation
+
+**Before working on major systems, read the relevant Claude doc first:**
+
+| System | Document | Read Before |
+|--------|----------|-------------|
+| **Job Slots** | `SLOTS.md` | Any work on jobs, income, tenure, pit stops, buffs, Attaboy, Corp/Unit Bias |
+
+**Why this matters**: These documents contain design decisions, system architecture, and open questions that took hours to define. Reading them first prevents contradicting established designs or re-solving already-solved problems.
+
+---
+
 ## 🚨 CRITICAL: PRODUCTION DEPLOYMENT PROTECTION 🚨
 **NEVER DEPLOY TO PRODUCTION WITHOUT EXPLICIT USER INSTRUCTION AND TRIPLE CONFIRMATION**
 

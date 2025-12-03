@@ -22,6 +22,7 @@ export default function LandingV2() {
   const { isLoading, registerCriticalAsset, markCriticalAssetLoaded } = useLoaderContext();
   const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'android' | 'other'>('other');
   const [mounted, setMounted] = useState(false);
+  const [isMobileResume, setIsMobileResume] = useState(false);
 
   const [revealStarted, setRevealStarted] = useState(false);
   const [backgroundFadedIn, setBackgroundFadedIn] = useState(false);
@@ -33,9 +34,25 @@ export default function LandingV2() {
   const { currentState, next, transitionTo, isState } = useLandingStateMachine();
   const { audioPlaying, toggleAudio, startAudio } = useBackgroundAudio();
 
-  // Detect device type on mount
+  // Detect device type and mobile resume on mount
   useEffect(() => {
     setMounted(true);
+
+    // Check for mobile resume URL params FIRST
+    const params = new URLSearchParams(window.location.search);
+    const isResume = params.get('claimResume') === 'true';
+    const rid = params.get('rid');
+    const addr = params.get('addr');
+    const cid = params.get('cid');
+
+    if (isResume && rid && rid.length > 0 && addr && addr.length > 0 && cid && cid.length > 0) {
+      console.log('[🔐RESUME] Mobile resume URL detected at page level');
+      console.log('[🔐RESUME] Skipping intro animations...');
+      setIsMobileResume(true);
+      // Skip sound selection - go directly to REVEAL state
+      transitionTo('REVEAL');
+    }
+
     const userAgent = navigator.userAgent.toLowerCase();
 
     // Detect device type and store in local variable for immediate use
@@ -128,13 +145,22 @@ export default function LandingV2() {
     if (mounted && !isLoading && !entranceStarted) {
       setEntranceStarted(true);
 
-      // Initial entrance sequence
-      // 1. Lightbox (darkening layer) fades in first
-      setTimeout(() => setShowLightbox(true), 100);
-      // 2. Background fades in 500ms later (after darkening layer is established)
-      setTimeout(() => setBackgroundFadedIn(true), 600);
+      if (isMobileResume) {
+        // MOBILE RESUME: Skip animations, show everything immediately
+        console.log('[🔐RESUME] Skipping entrance animations for mobile resume');
+        setShowLightbox(true);
+        setBackgroundFadedIn(true);
+        setRevealStarted(true);
+        setShowFooter(true);
+      } else {
+        // Normal flow: Initial entrance sequence
+        // 1. Lightbox (darkening layer) fades in first
+        setTimeout(() => setShowLightbox(true), 100);
+        // 2. Background fades in 500ms later (after darkening layer is established)
+        setTimeout(() => setBackgroundFadedIn(true), 600);
+      }
     }
-  }, [mounted, isLoading, entranceStarted]);
+  }, [mounted, isLoading, entranceStarted, isMobileResume]);
 
   // Logo fades simultaneously with stars (no delay)
   const logoDelay = 0;
@@ -144,6 +170,13 @@ export default function LandingV2() {
   // Trigger reveal animations when entering REVEAL state
   useEffect(() => {
     if (isState('REVEAL') && !revealStarted) {
+      // Mobile resume already set revealStarted in entrance sequence
+      if (isMobileResume) {
+        console.log('[🔐RESUME] Mobile resume - animations already instant');
+        // Don't start audio automatically for mobile resume (wallet browser context)
+        return;
+      }
+
       console.log('[🎵PAGE] Entering REVEAL state');
 
       // Small delay before starting reveal to ensure logo/stars render with opacity: 0 first
@@ -166,7 +199,7 @@ export default function LandingV2() {
         setShowFooter(true);
       }, footerDelay);
     }
-  }, [currentState, revealStarted, startAudio, isState]);
+  }, [currentState, revealStarted, startAudio, isState, isMobileResume]);
 
   const isRevealing = isState('REVEAL');
 
@@ -279,7 +312,8 @@ export default function LandingV2() {
       <FinalContentState
         isActive={isRevealing}
         phaseCards={phaseCards}
-        startDelay={contentDelay}
+        startDelay={isMobileResume ? 0 : contentDelay}
+        skipAnimations={isMobileResume}
       />
 
       <SpeakerButton
