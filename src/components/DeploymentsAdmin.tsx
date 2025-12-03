@@ -352,8 +352,17 @@ export default function DeploymentsAdmin() {
       console.log('[🚀DEPLOY] Could not fetch fresh status, using cached');
     }
 
-    // Step 1: Commit (if there are changes and message provided)
-    if (freshHasChanges && commitMessage.trim()) {
+    // Step 1: Commit (if there are changes)
+    if (freshHasChanges) {
+      // Require commit message if there are uncommitted changes
+      if (!commitMessage.trim()) {
+        addLog('Full Deploy', 'error', 'Please enter a commit message first');
+        setDeployError('Missing commit message. You have uncommitted changes - please enter a commit message and try again.');
+        setIsFullDeploy(false);
+        setDeployStep(0);
+        return;
+      }
+
       console.log('[🚀DEPLOY] Step 1: Committing changes...');
       addLog('Full Deploy', 'pending', 'Step 1/7: Committing changes...');
       try {
