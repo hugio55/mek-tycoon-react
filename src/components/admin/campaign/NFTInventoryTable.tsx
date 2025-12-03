@@ -370,6 +370,9 @@ export default function NFTInventoryTable({ campaignId, campaignName, client }: 
                       Corporation
                     </th>
                     <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Sold At
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                       Image
                     </th>
                   </tr>
@@ -533,6 +536,26 @@ export default function NFTInventoryTable({ campaignId, campaignName, client }: 
 
                             return <span className="text-xs text-white">{historicalName || currentName}</span>;
                           })()}
+                        </td>
+                        <td className="px-3 py-2">
+                          {nft.soldAt ? (
+                            <span className="text-xs text-gray-300">
+                              {new Date(nft.soldAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })}
+                              <br />
+                              <span className="text-gray-500">
+                                {new Date(nft.soldAt).toLocaleTimeString('en-US', {
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                })}
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="text-xs text-gray-500">-</span>
+                          )}
                         </td>
                         <td className="px-3 py-2">
                           {nft.imageUrl ? (
