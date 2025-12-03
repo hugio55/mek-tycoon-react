@@ -81,6 +81,9 @@ export default function MessagingSystemAdmin() {
   const [isUploading, setIsUploading] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<{ url: string; filename: string } | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [showNewConversation, setShowNewConversation] = useState(false);
+  const [corpSearchQuery, setCorpSearchQuery] = useState('');
+  const [selectedRecipient, setSelectedRecipient] = useState<{ walletAddress: string; companyName: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -105,6 +108,11 @@ export default function MessagingSystemAdmin() {
   const existingConversation = useQuery(api.messaging.getConversationBetween, {
     wallet1: TEST_CORPORATIONS[0].walletAddress,
     wallet2: TEST_CORPORATIONS[1].walletAddress,
+  });
+
+  // Get all corporations for new conversation search
+  const allCorporations = useQuery(api.messaging.getAllCorporations, {
+    excludeWallet: activeCorp.walletAddress,
   });
 
   // Convex mutations
@@ -330,7 +338,41 @@ export default function MessagingSystemAdmin() {
     setIsNewConversation(false);
   };
 
-  // Start a new conversation with the other corp
+  // Open the new conversation lightbox
+  const openNewConversation = () => {
+    setCorpSearchQuery('');
+    setShowNewConversation(true);
+  };
+
+  // Select a corporation to message
+  const selectCorporation = async (corp: { walletAddress: string; companyName: string }) => {
+    // Check if conversation already exists
+    const existingConv = conversations?.find(
+      (c: any) => c.otherParticipant.walletAddress === corp.walletAddress
+    );
+
+    if (existingConv) {
+      // Select existing conversation
+      setSelectedConversationId(existingConv._id);
+      setIsNewConversation(false);
+      setSelectedRecipient(null);
+    } else {
+      // Enter new conversation mode with this recipient
+      setSelectedConversationId(null);
+      setIsNewConversation(true);
+      setSelectedRecipient(corp);
+    }
+
+    setShowNewConversation(false);
+    setCorpSearchQuery('');
+  };
+
+  // Filter corporations based on search query
+  const filteredCorporations = allCorporations?.filter((corp) =>
+    corp.companyName.toLowerCase().includes(corpSearchQuery.toLowerCase())
+  ) || [];
+
+  // Legacy function for test corporations
   const startConversation = () => {
     if (existingConversation) {
       // Existing conversation - just select it
@@ -424,7 +466,7 @@ export default function MessagingSystemAdmin() {
             <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
               {/* Start New Conversation Button */}
               <button
-                onClick={startConversation}
+                onClick={openNewConversation}
                 className="w-full p-4 text-left border-b border-gray-700/50 hover:bg-white/5 transition-colors"
               >
                 <div className="flex items-center gap-3">
@@ -432,9 +474,9 @@ export default function MessagingSystemAdmin() {
                     <span className="text-cyan-400">+</span>
                   </div>
                   <div>
-                    <div className="text-cyan-400 font-medium">Start Test Conversation</div>
+                    <div className="text-cyan-400 font-medium">New Conversation</div>
                     <div className="text-gray-500 text-sm">
-                      with {TEST_CORPORATIONS.find(c => c.id !== activeCorp.id)?.companyName}
+                      Search for a corporation
                     </div>
                   </div>
                 </div>
@@ -749,6 +791,89 @@ export default function MessagingSystemAdmin() {
           {/* Close text - outside the lightbox */}
           <button
             onClick={() => setLightboxImage(null)}
+            className="mt-4 text-gray-400 hover:text-gray-300 text-sm transition-colors"
+          >
+            Close
+          </button>
+        </div>,
+        document.body
+      )}
+
+      {/* New Conversation Lightbox */}
+      {mounted && showNewConversation && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md"
+          onClick={() => setShowNewConversation(false)}
+        >
+          {/* Lightbox container */}
+          <div
+            className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            {/* Header */}
+            <div className="p-4 border-b border-white/10">
+              <h2 className="text-lg font-semibold text-white mb-3">New Conversation</h2>
+              {/* Search Input */}
+              <input
+                type="text"
+                value={corpSearchQuery}
+                onChange={(e) => setCorpSearchQuery(e.target.value)}
+                placeholder="Search corporations..."
+                autoFocus
+                className="w-full bg-white/[0.02] border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/50 transition-colors"
+              />
+            </div>
+
+            {/* Corporation List */}
+            <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+              {filteredCorporations.length > 0 ? (
+                filteredCorporations.map((corp) => (
+                  <button
+                    key={corp.walletAddress}
+                    onClick={() => selectCorporation(corp)}
+                    className="w-full p-4 text-left hover:bg-white/5 transition-colors border-b border-white/5 last:border-b-0"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                        <span className="text-gray-400 text-lg">
+                          {corp.companyName.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="text-white font-medium">{corp.companyName}</div>
+                        <div className="text-gray-500 text-sm truncate max-w-[280px]">
+                          {corp.walletAddress.slice(0, 20)}...
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ))
+              ) : corpSearchQuery ? (
+                <div className="p-8 text-center text-gray-500">
+                  <div className="text-2xl mb-2">🔍</div>
+                  <div>No corporations found</div>
+                  <div className="text-sm">Try a different search term</div>
+                </div>
+              ) : allCorporations?.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  <div className="text-2xl mb-2">📭</div>
+                  <div>No corporations available</div>
+                </div>
+              ) : (
+                <div className="p-8 text-center text-gray-500">
+                  <div className="text-2xl mb-2">⏳</div>
+                  <div>Loading corporations...</div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Close text - outside the lightbox */}
+          <button
+            onClick={() => setShowNewConversation(false)}
             className="mt-4 text-gray-400 hover:text-gray-300 text-sm transition-colors"
           >
             Close

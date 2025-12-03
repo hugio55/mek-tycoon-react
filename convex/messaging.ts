@@ -204,6 +204,30 @@ export const getTypingIndicators = query({
   },
 });
 
+// Get all corporations for new conversation search
+export const getAllCorporations = query({
+  args: { excludeWallet: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    // Get all users with company names
+    const users = await ctx.db
+      .query("users")
+      .collect();
+
+    // Filter to users with company names and map to corporation data
+    const corporations = users
+      .filter((user) => user.companyName && user.companyName.trim().length > 0)
+      .filter((user) => !args.excludeWallet || user.walletAddress !== args.excludeWallet)
+      .map((user) => ({
+        walletAddress: user.walletAddress,
+        companyName: user.companyName!,
+        displayName: user.displayName || user.companyName!,
+      }))
+      .sort((a, b) => a.companyName.localeCompare(b.companyName));
+
+    return corporations;
+  },
+});
+
 // ============================================================================
 // MUTATIONS
 // ============================================================================
