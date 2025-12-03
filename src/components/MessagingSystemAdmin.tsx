@@ -45,6 +45,53 @@ const TEST_CORPORATIONS = [
   },
 ];
 
+// TEMPORARY TEST DATA - Real corporation names from production for testing search
+// TODO: Remove this once connected to real database with corporations
+const MOCK_CORPORATIONS_FOR_TESTING = [
+  { walletAddress: 'mock_wrenco', companyName: 'WrenCo', displayName: 'WrenCo' },
+  { walletAddress: 'mock_aumining', companyName: 'AUmining', displayName: 'AUmining' },
+  { walletAddress: 'mock_sellout', companyName: 'Sellout', displayName: 'Sellout' },
+  { walletAddress: 'mock_statuecorp', companyName: 'StatueCorp', displayName: 'StatueCorp' },
+  { walletAddress: 'mock_stellar', companyName: 'Stellar Depletion Syndicate', displayName: 'Stellar Depletion Syndicate' },
+  { walletAddress: 'mock_ultraco', companyName: 'UltraCo', displayName: 'UltraCo' },
+  { walletAddress: 'mock_traiectum', companyName: 'Traiectum', displayName: 'Traiectum' },
+  { walletAddress: 'mock_sargecorp', companyName: 'SargeCorp', displayName: 'SargeCorp' },
+  { walletAddress: 'mock_nfg', companyName: 'NFG', displayName: 'NFG' },
+  { walletAddress: 'mock_defifomofo', companyName: 'defifomofo', displayName: 'defifomofo' },
+  { walletAddress: 'mock_kotton', companyName: 'Kotton', displayName: 'Kotton' },
+  { walletAddress: 'mock_andypro500', companyName: 'Andypro500', displayName: 'Andypro500' },
+  { walletAddress: 'mock_hadi', companyName: 'HADI', displayName: 'HADI' },
+  { walletAddress: 'mock_lx', companyName: 'LX', displayName: 'LX' },
+  { walletAddress: 'mock_mtman', companyName: 'MTman', displayName: 'MTman' },
+  { walletAddress: 'mock_biko1', companyName: 'biko1', displayName: 'biko1' },
+  { walletAddress: 'mock_spannercorps', companyName: 'Spannercorps', displayName: 'Spannercorps' },
+  { walletAddress: 'mock_mako', companyName: 'Mako', displayName: 'Mako' },
+  { walletAddress: 'mock_chilliminer', companyName: 'ChilliMiner', displayName: 'ChilliMiner' },
+  { walletAddress: 'mock_kryptoknight', companyName: 'Kryptoknight', displayName: 'Kryptoknight' },
+  { walletAddress: 'mock_argent9999', companyName: 'Argent 9999', displayName: 'Argent 9999' },
+  { walletAddress: 'mock_ka1111', companyName: 'KA1111', displayName: 'KA1111' },
+  { walletAddress: 'mock_burglecorps', companyName: 'BurgleCorps', displayName: 'BurgleCorps' },
+  { walletAddress: 'mock_ken1320', companyName: 'Ken1320', displayName: 'Ken1320' },
+  { walletAddress: 'mock_hamfish', companyName: 'hamfish', displayName: 'hamfish' },
+  { walletAddress: 'mock_sora', companyName: 'sora', displayName: 'sora' },
+  { walletAddress: 'mock_jr', companyName: 'Jr', displayName: 'Jr' },
+  { walletAddress: 'mock_wcorp', companyName: 'W Corp', displayName: 'W Corp' },
+  { walletAddress: 'mock_ikarus', companyName: 'ikarus', displayName: 'ikarus' },
+  { walletAddress: 'mock_mojamtz', companyName: 'Mojamtz', displayName: 'Mojamtz' },
+  { walletAddress: 'mock_argh', companyName: 'argh', displayName: 'argh' },
+  { walletAddress: 'mock_bigolringybingy', companyName: 'Big ol Ringy Bingy', displayName: 'Big ol Ringy Bingy' },
+  { walletAddress: 'mock_mekgold', companyName: 'MekGold', displayName: 'MekGold' },
+  { walletAddress: 'mock_goldmine', companyName: 'goldmine', displayName: 'goldmine' },
+  { walletAddress: 'mock_fourfivetjeff', companyName: 'FourFiveJeff', displayName: 'FourFiveJeff' },
+  { walletAddress: 'mock_arrowhead', companyName: 'Arrowhead Integrated Solutions', displayName: 'Arrowhead Integrated Solutions' },
+  { walletAddress: 'mock_benzington', companyName: 'Benzington', displayName: 'Benzington' },
+  { walletAddress: 'mock_livelovelevelup', companyName: 'Livelovelevelup', displayName: 'Livelovelevelup' },
+  { walletAddress: 'mock_blove', companyName: 'BLove', displayName: 'BLove' },
+  { walletAddress: 'mock_cracksey', companyName: 'Cracksey', displayName: 'Cracksey' },
+  { walletAddress: 'mock_saturninellc', companyName: 'saturnine llc', displayName: 'saturnine llc' },
+  { walletAddress: 'mock_actionhenk', companyName: 'Actionhenk', displayName: 'Actionhenk' },
+];
+
 // Character limit
 const MAX_MESSAGE_LENGTH = 2000;
 
@@ -377,9 +424,14 @@ export default function MessagingSystemAdmin() {
   };
 
   // Filter corporations based on search query
-  const filteredCorporations = allCorporations?.filter((corp: { walletAddress: string; companyName: string }) =>
+  // Use mock data for testing if database is empty
+  const corporationsToSearch = (allCorporations && allCorporations.length > 0)
+    ? allCorporations
+    : MOCK_CORPORATIONS_FOR_TESTING;
+
+  const filteredCorporations = corporationsToSearch.filter((corp: { walletAddress: string; companyName: string }) =>
     corp.companyName.toLowerCase().includes(corpSearchQuery.toLowerCase())
-  ) || [];
+  );
 
   // Legacy function for test corporations
   const startConversation = () => {
@@ -870,7 +922,7 @@ export default function MessagingSystemAdmin() {
                   <div>No corporations found</div>
                   <div className="text-sm">Try a different search term</div>
                 </div>
-              ) : allCorporations?.length === 0 ? (
+              ) : corporationsToSearch.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
                   <div className="text-2xl mb-2">📭</div>
                   <div>No corporations available</div>
