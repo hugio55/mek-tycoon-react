@@ -183,7 +183,14 @@ export default function MessagingSystemAdmin() {
       return;
     }
 
-    const otherCorp = TEST_CORPORATIONS.find(c => c.id !== activeCorp.id)!;
+    // Determine recipient - use selectedRecipient if in new conversation mode, otherwise use test corp
+    const recipientWallet = selectedRecipient?.walletAddress ||
+      TEST_CORPORATIONS.find(c => c.id !== activeCorp.id)?.walletAddress;
+
+    if (!recipientWallet) {
+      console.error('[📎SEND] No recipient wallet address');
+      return;
+    }
 
     try {
       // Build attachments array from successfully uploaded files
@@ -198,7 +205,7 @@ export default function MessagingSystemAdmin() {
 
       const result = await sendMessage({
         senderWallet: activeCorp.walletAddress,
-        recipientWallet: otherCorp.walletAddress,
+        recipientWallet: recipientWallet,
         content: messageInput.trim(),
         attachments: attachments.length > 0 ? attachments : undefined,
       });
@@ -213,7 +220,8 @@ export default function MessagingSystemAdmin() {
       setPendingAttachments([]);
 
       setSelectedConversationId(result.conversationId);
-      setIsNewConversation(false); // Exit new conversation mode
+      setIsNewConversation(false);
+      setSelectedRecipient(null); // Clear recipient after sending
 
       // Clear typing indicator
       if (typingTimeoutRef.current) {
@@ -336,6 +344,7 @@ export default function MessagingSystemAdmin() {
     setActiveCorp(corp);
     setSelectedConversationId(null);
     setIsNewConversation(false);
+    setSelectedRecipient(null);
   };
 
   // Open the new conversation lightbox
@@ -368,7 +377,7 @@ export default function MessagingSystemAdmin() {
   };
 
   // Filter corporations based on search query
-  const filteredCorporations = allCorporations?.filter((corp) =>
+  const filteredCorporations = allCorporations?.filter((corp: { walletAddress: string; companyName: string }) =>
     corp.companyName.toLowerCase().includes(corpSearchQuery.toLowerCase())
   ) || [];
 
@@ -542,12 +551,16 @@ export default function MessagingSystemAdmin() {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
                       <span className="text-gray-400 text-lg">
-                        {TEST_CORPORATIONS.find(c => c.id !== activeCorp.id)?.companyName.charAt(0)}
+                        {(selectedRecipient?.companyName ||
+                          conversations?.find((c: any) => c._id === selectedConversationId)?.otherParticipant?.companyName ||
+                          TEST_CORPORATIONS.find(c => c.id !== activeCorp.id)?.companyName || '?').charAt(0).toUpperCase()}
                       </span>
                     </div>
                     <div>
                       <div className="text-white font-semibold">
-                        {TEST_CORPORATIONS.find(c => c.id !== activeCorp.id)?.companyName}
+                        {selectedRecipient?.companyName ||
+                          conversations?.find((c: any) => c._id === selectedConversationId)?.otherParticipant?.companyName ||
+                          TEST_CORPORATIONS.find(c => c.id !== activeCorp.id)?.companyName}
                       </div>
                       <div className="text-gray-500 text-sm">
                         {isNewConversation && !selectedConversationId ? 'New conversation' : 'Active now'}
@@ -830,7 +843,7 @@ export default function MessagingSystemAdmin() {
             {/* Corporation List */}
             <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
               {filteredCorporations.length > 0 ? (
-                filteredCorporations.map((corp) => (
+                filteredCorporations.map((corp: { walletAddress: string; companyName: string; displayName: string }) => (
                   <button
                     key={corp.walletAddress}
                     onClick={() => selectCorporation(corp)}
