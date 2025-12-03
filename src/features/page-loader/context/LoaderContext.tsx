@@ -23,7 +23,7 @@ interface LoaderContextValue {
   setIsLoading: (loading: boolean) => void;
 }
 
-const LoaderContext = createContext<LoaderContextValue | null>(null);
+export const LoaderContext = createContext<LoaderContextValue | null>(null);
 
 export function LoaderProvider({ children }: { children: React.ReactNode }) {
   // Detect environment and check appropriate loader setting

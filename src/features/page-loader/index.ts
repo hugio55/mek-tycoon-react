@@ -1,4 +1,4 @@
-export { LoaderProvider, useLoaderContext, useTrackedQuery } from './context/LoaderContext';
+export { LoaderProvider, LoaderContext, useLoaderContext, useTrackedQuery } from './context/LoaderContext';
 export { usePageLoadProgress } from './hooks/usePageLoadProgress';
 export { LoadingOverlay } from './components/LoadingOverlay';
 export { HexagonalSpinner } from './components/HexagonalSpinner';

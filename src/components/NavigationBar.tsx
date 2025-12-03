@@ -158,6 +158,15 @@ export default function NavigationBar() {
     };
   }, [goldMiningData]);
 
+  // ============================================================
+  // EARLY RETURNS (after all hooks are called)
+  // ============================================================
+
+  // Hide navigation on specific pages
+  if (shouldHide) {
+    return null;
+  }
+
   // Don't render anything if no active navigation
   if (!activeNavConfig || !overlayData) {
     return null;
