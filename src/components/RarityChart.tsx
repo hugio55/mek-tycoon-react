@@ -360,7 +360,7 @@ export default function RarityChart({
       )}
 
       <div
-        className={`flex items-end justify-center ${config.bottomMargin}`}
+        className={`flex items-end ${config.barMinWidth ? 'justify-center gap-0.5' : 'justify-center'} ${config.bottomMargin}`}
         style={{ height: `${chartHeight}px`, overflow: 'visible' }}
       >
         {probabilities.map((prob, i) => {
@@ -370,16 +370,19 @@ export default function RarityChart({
           const scaledHeight = (prob / 40) * maxBarHeight;
           const height = Math.max(2, scaledHeight); // Minimum 2px for visibility
           const rank = RANKS[i];
+          const isPeak = i === peakIndex;
 
           return (
             <div
               key={rank.name}
-              className={`flex-1 ${config.barMargin} relative group hover:brightness-125`}
+              className={`${config.barMinWidth ? '' : 'flex-1'} ${config.barMargin} relative group hover:brightness-125`}
               style={{
                 height: `${height}px`,
+                width: config.barMinWidth || undefined,
+                minWidth: config.barMinWidth || undefined,
                 background: `linear-gradient(to top, ${rank.color}88, ${rank.color})`,
                 borderRadius: config.barRadius,
-                boxShadow: `0 0 ${size === 'micro' ? '2px' : '6px'} ${rank.color}44`,
+                boxShadow: `0 0 ${size === 'micro' || size === 'sub-micro' ? '2px' : '6px'} ${rank.color}44`,
                 transition: 'height 75ms ease-out, filter 200ms ease'
               }}
             >
@@ -403,6 +406,15 @@ export default function RarityChart({
           );
         })}
       </div>
+
+      {/* Peak label for compact sizes */}
+      {config.showPeakLabel && (
+        <div className="text-center">
+          <span className="text-[9px] font-semibold" style={{ color: peakRank.color }}>
+            {peakRank.name}: {peakProb.toFixed(0)}%
+          </span>
+        </div>
+      )}
 
       {config.showDescription && (
         <div className="text-center text-gray-400 text-sm mt-6">
