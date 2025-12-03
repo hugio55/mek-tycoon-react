@@ -433,6 +433,16 @@
   }
 }
 
+/* Space Age sliding particles animation */
+@keyframes slideParticles {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 .mek-scan-effect::after {
   content: '';
   position: absolute;
