@@ -842,6 +842,34 @@ export default function MessagingSystemAdmin() {
 
                 {/* Messages Area */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar min-h-[400px]">
+                  {/* ToS Disabled Banner - Testing Tool */}
+                  {(() => {
+                    const currentConv = conversations?.find((c: any) => c._id === selectedConversationId);
+                    if (currentConv?.disabledByAdmin) {
+                      return (
+                        <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-xl">
+                          <div className="flex items-start gap-3">
+                            <div className="text-2xl">⚠️</div>
+                            <div>
+                              <div className="text-red-400 font-semibold mb-1">Conversation Disabled</div>
+                              <div className="text-red-300/80 text-sm">
+                                This conversation has been disabled by an administrator due to a Terms of Service violation.
+                                You may no longer interact with this corporation. If you feel this was a mistake, please
+                                reach out to us on Discord by creating a ticket.
+                              </div>
+                              {currentConv.disabledAt && (
+                                <div className="text-red-400/60 text-xs mt-2">
+                                  Disabled: {formatRelativeTime(currentConv.disabledAt)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
                   {messages?.map((msg: any) => {
                     const isOutgoing = msg.senderId === activeCorp.walletAddress;
 
@@ -1219,6 +1247,33 @@ export default function MessagingSystemAdmin() {
 
                     {/* Messages Area */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar min-h-[400px]">
+                      {/* ToS Disabled Banner - Admin View */}
+                      {selectedAdminConversation?.disabledByAdmin && (
+                        <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-xl">
+                          <div className="flex items-start gap-3">
+                            <div className="text-2xl">⚠️</div>
+                            <div>
+                              <div className="text-red-400 font-semibold mb-1">Conversation Disabled</div>
+                              <div className="text-red-300/80 text-sm">
+                                This conversation has been disabled by an administrator due to a Terms of Service violation.
+                                You may no longer interact with this corporation. If you feel this was a mistake, please
+                                reach out to us on Discord by creating a ticket.
+                              </div>
+                              {selectedAdminConversation.disabledReason && (
+                                <div className="text-red-400/70 text-sm mt-2">
+                                  <span className="font-medium">Reason:</span> {selectedAdminConversation.disabledReason}
+                                </div>
+                              )}
+                              {selectedAdminConversation.disabledAt && (
+                                <div className="text-red-400/60 text-xs mt-2">
+                                  Disabled: {formatRelativeTime(selectedAdminConversation.disabledAt)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {adminMessages?.map((msg: any) => (
                         <div
                           key={msg._id}
