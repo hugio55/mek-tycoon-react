@@ -312,6 +312,226 @@ function RarityBiasAdmin() {
   );
 }
 
+// Universal Background Admin Component
+function UniversalBackgroundAdmin() {
+  return (
+    <div className="mek-card-industrial mek-border-sharp-gold rounded-lg shadow-lg shadow-black/50 overflow-hidden">
+      <div className="p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="text-2xl">🌌</span>
+          <h3 className="text-xl font-bold text-yellow-400 uppercase tracking-wider">Universal Background</h3>
+          <span className="px-2 py-1 bg-green-600/30 text-green-400 text-xs font-bold rounded">ACTIVE</span>
+        </div>
+
+        <p className="text-gray-400 mb-6">
+          The Universal Background is rendered across all pages of the site. It includes animated stars,
+          drifting particles, and satellites creating a deep space atmosphere.
+        </p>
+
+        {/* Live Preview Section */}
+        <div className="mb-8">
+          <h4 className="text-yellow-400 font-bold mb-3 uppercase tracking-wider text-sm">Live Preview</h4>
+          <div
+            className="relative w-full h-[400px] rounded-lg overflow-hidden border-2 border-yellow-500/30"
+            style={{ background: 'linear-gradient(to bottom, #030712, #111827, #030712)' }}
+          >
+            {/* Industrial grid overlay */}
+            <div
+              className="absolute inset-0 pointer-events-none opacity-10"
+              style={{
+                backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(250, 182, 23, 0.1) 49px, rgba(250, 182, 23, 0.1) 50px), repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(250, 182, 23, 0.1) 49px, rgba(250, 182, 23, 0.1) 50px)',
+              }}
+            />
+
+            {/* Static stars for preview */}
+            {[...Array(50)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute rounded-full bg-white"
+                style={{
+                  left: `${(i * 37) % 100}%`,
+                  top: `${(i * 23) % 100}%`,
+                  width: `${1 + (i % 3)}px`,
+                  height: `${1 + (i % 3)}px`,
+                  opacity: 0.4 + (i % 5) * 0.15,
+                  animation: i % 3 === 0 ? 'starTwinkle 2s ease-in-out infinite' : 'none',
+                  animationDelay: `${i * 0.1}s`,
+                }}
+              />
+            ))}
+
+            {/* Yellow particles for preview */}
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={`particle-${i}`}
+                className="absolute bg-yellow-400 rounded-full"
+                style={{
+                  width: `${2 + (i % 2)}px`,
+                  height: `${2 + (i % 2)}px`,
+                  left: `${10 + i * 12}%`,
+                  top: `${20 + (i * 17) % 60}%`,
+                  boxShadow: '0 0 6px rgba(250, 182, 23, 0.6)',
+                  animation: 'linearDrift 25s linear infinite',
+                  animationDelay: `${i * 3}s`,
+                }}
+              />
+            ))}
+
+            {/* Satellites for preview */}
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={`satellite-${i}`}
+                className="absolute w-[3px] h-[3px] bg-white rounded-full"
+                style={{
+                  left: `${5 + i * 30}%`,
+                  top: `${15 + i * 25}%`,
+                  boxShadow: '0 0 3px rgba(255, 255, 255, 0.8)',
+                  animation: 'satelliteMove 35s linear infinite',
+                  animationDelay: `${i * 5}s`,
+                }}
+              />
+            ))}
+
+            {/* Preview Label */}
+            <div className="absolute bottom-4 right-4 px-3 py-1 bg-black/70 border border-yellow-500/30 rounded text-xs text-yellow-400 uppercase tracking-wider">
+              Live Preview
+            </div>
+          </div>
+        </div>
+
+        {/* Background Elements Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">🌟</span>
+              <span className="text-yellow-400 font-bold uppercase tracking-wider text-sm">Stars</span>
+            </div>
+            <div className="text-gray-400 text-sm space-y-1">
+              <div className="flex justify-between">
+                <span>Count:</span>
+                <span className="text-white">100 stars</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Size Range:</span>
+                <span className="text-white">1-3px</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Twinkling:</span>
+                <span className="text-green-400">50% of stars</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Color:</span>
+                <span className="text-white">White</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">✨</span>
+              <span className="text-yellow-400 font-bold uppercase tracking-wider text-sm">Yellow Particles</span>
+            </div>
+            <div className="text-gray-400 text-sm space-y-1">
+              <div className="flex justify-between">
+                <span>Count:</span>
+                <span className="text-white">12 particles</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Size Range:</span>
+                <span className="text-white">1.5-3px</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Animation:</span>
+                <span className="text-yellow-400">Linear drift</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Duration:</span>
+                <span className="text-white">20-35s</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">🛰️</span>
+              <span className="text-yellow-400 font-bold uppercase tracking-wider text-sm">Satellites</span>
+            </div>
+            <div className="text-gray-400 text-sm space-y-1">
+              <div className="flex justify-between">
+                <span>Count:</span>
+                <span className="text-white">4 satellites</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Size:</span>
+                <span className="text-white">3px</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Animation:</span>
+                <span className="text-blue-400">Edge-to-edge movement</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Duration:</span>
+                <span className="text-white">30-50s</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">📐</span>
+              <span className="text-yellow-400 font-bold uppercase tracking-wider text-sm">Grid Overlay</span>
+            </div>
+            <div className="text-gray-400 text-sm space-y-1">
+              <div className="flex justify-between">
+                <span>Type:</span>
+                <span className="text-white">Industrial grid</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Spacing:</span>
+                <span className="text-white">50px</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Color:</span>
+                <span className="text-yellow-400">Yellow (#fab617)</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Opacity:</span>
+                <span className="text-white">10%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Base Gradient Info */}
+        <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">🎨</span>
+            <span className="text-yellow-400 font-bold uppercase tracking-wider text-sm">Base Gradient</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex-1 h-8 rounded" style={{ background: 'linear-gradient(to right, #030712, #111827, #030712)' }} />
+            <div className="text-gray-400 text-sm">
+              <code className="text-green-400">from-gray-950 via-gray-900 to-gray-950</code>
+            </div>
+          </div>
+        </div>
+
+        {/* Source File Info */}
+        <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg">📁</span>
+            <span className="text-yellow-400 font-bold uppercase tracking-wider text-sm">Source File</span>
+          </div>
+          <code className="text-green-400 text-sm">src/components/GlobalBackground.tsx</code>
+          <p className="text-gray-500 text-xs mt-2">
+            This component is rendered in the root layout and appears on all pages except the landing page.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Data system definitions
 const DATA_SYSTEMS = [
   { id: 'mek-systems', name: 'Mek Systems', icon: '⚙️', implemented: true },
@@ -344,7 +564,8 @@ const DATA_SYSTEMS = [
   { id: 'deployments', name: 'Deployments', icon: '🚀', implemented: true },
   { id: 'new-styling', name: 'Space Age Style', icon: '🎨', implemented: true },
   { id: 'messaging-system', name: 'Messaging System', icon: '💬', implemented: true },
-  { id: 'rarity-bias', name: 'Rarity Bias', icon: '📊', implemented: true }
+  { id: 'rarity-bias', name: 'Rarity Bias', icon: '📊', implemented: true },
+  { id: 'universal-background', name: 'Universal Background', icon: '🌌', implemented: true }
 ];
 
 export default function AdminMasterDataPage() {
@@ -5521,6 +5742,10 @@ export default function AdminMasterDataPage() {
 
           {activeTab === 'rarity-bias' && (
           <RarityBiasAdmin />
+          )}
+
+          {activeTab === 'universal-background' && (
+            <UniversalBackgroundAdmin />
           )}
 
         </div>
