@@ -334,6 +334,7 @@ export default function DeploymentsAdmin() {
 
   const handleFullDeploy = async () => {
     console.log('[🚀DEPLOY] Starting full deploy process...');
+    setDeployError(null); // Clear any previous error
     setIsFullDeploy(true);
     setDeployStep(1);
     const originalBranch = gitStatus?.currentBranch || 'custom-minting-system';
@@ -342,6 +343,7 @@ export default function DeploymentsAdmin() {
     if (gitStatus?.hasUncommittedChanges) {
       if (!commitMessage.trim()) {
         addLog('Full Deploy', 'error', 'Please enter a commit message first');
+        setDeployError('Missing commit message. Please enter a commit message and try again.');
         setIsFullDeploy(false);
         setDeployStep(0);
         return;
@@ -359,6 +361,7 @@ export default function DeploymentsAdmin() {
         console.log('[🚀DEPLOY] Step 1 result:', data);
         if (!data.success) {
           addLog('Full Deploy', 'error', `Commit failed: ${data.error}`);
+          setDeployError(`Step 1 failed: ${data.error}`);
           setIsFullDeploy(false);
           setDeployStep(0);
           return;
@@ -367,7 +370,8 @@ export default function DeploymentsAdmin() {
         setCommitMessage('');
       } catch (error) {
         console.error('[🚀DEPLOY] Step 1 error:', error);
-        addLog('Full Deploy', 'error', 'Commit step failed');
+        addLog('Full Deploy', 'error', 'Commit step failed - server may be down');
+        setDeployError('Step 1 failed: Could not connect to server. Is the dev server running?');
         setIsFullDeploy(false);
         setDeployStep(0);
         return;
@@ -393,7 +397,7 @@ export default function DeploymentsAdmin() {
       }
     } catch (error) {
       console.error('[🚀DEPLOY] Step 2 error:', error);
-      addLog('Full Deploy', 'error', 'Push warning - continuing...');
+      addLog('Full Deploy', 'error', 'Push warning - server may be down, continuing...');
     }
 
     // Step 3: Switch to master
@@ -415,6 +419,7 @@ export default function DeploymentsAdmin() {
             body: JSON.stringify({ branch: originalBranch })
           });
         } catch (e) { /* ignore */ }
+        setDeployError(`Step 3-4 failed: ${data.error}`);
         setIsFullDeploy(false);
         setDeployStep(0);
         return;
@@ -422,7 +427,8 @@ export default function DeploymentsAdmin() {
       addLog('Full Deploy', 'success', data.alreadyOnMaster ? 'Already on master' : `Merged ${originalBranch} into master`);
     } catch (error) {
       console.error('[🚀DEPLOY] Step 3-4 error:', error);
-      addLog('Full Deploy', 'error', 'Merge to master failed');
+      addLog('Full Deploy', 'error', 'Merge to master failed - server may be down');
+      setDeployError('Step 3-4 failed: Could not connect to server. Is the dev server running?');
       setIsFullDeploy(false);
       setDeployStep(0);
       return;
@@ -446,6 +452,7 @@ export default function DeploymentsAdmin() {
             body: JSON.stringify({ branch: originalBranch })
           });
         } catch (e) { /* ignore */ }
+        setDeployError(`Step 5 failed: ${data.error}`);
         setIsFullDeploy(false);
         setDeployStep(0);
         return;
@@ -453,7 +460,7 @@ export default function DeploymentsAdmin() {
       addLog('Full Deploy', 'success', 'Pushed master to GitHub (Vercel PRODUCTION deploying!)');
     } catch (error) {
       console.error('[🚀DEPLOY] Step 5 error:', error);
-      addLog('Full Deploy', 'error', 'Push master failed');
+      addLog('Full Deploy', 'error', 'Push master failed - server may be down');
       // Try to switch back to original branch
       try {
         await fetch('/api/deployment/switch-branch', {
@@ -462,6 +469,7 @@ export default function DeploymentsAdmin() {
           body: JSON.stringify({ branch: originalBranch })
         });
       } catch (e) { /* ignore */ }
+      setDeployError('Step 5 failed: Could not connect to server. Is the dev server running?');
       setIsFullDeploy(false);
       setDeployStep(0);
       return;
@@ -487,7 +495,7 @@ export default function DeploymentsAdmin() {
       }
     } catch (error) {
       console.error('[🚀DEPLOY] Step 6 error:', error);
-      addLog('Full Deploy', 'error', 'Convex deploy warning - continuing...');
+      addLog('Full Deploy', 'error', 'Convex deploy warning - server may be down, continuing...');
     }
 
     // Step 7: Switch back to original branch

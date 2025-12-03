@@ -953,6 +953,23 @@ export default function MessagingSystemAdmin() {
 
                 {/* Compose Area - Transparent rounded design */}
                 <div className="p-4 border-t border-gray-700/50">
+                  {/* Check if conversation is disabled */}
+                  {(() => {
+                    const currentConv = conversations?.find((c: any) => c._id === selectedConversationId);
+                    if (currentConv?.disabledByAdmin) {
+                      return (
+                        <div className="flex items-center justify-center py-3 text-red-400/70 text-sm">
+                          <span className="mr-2">🚫</span>
+                          This conversation has been disabled. You cannot send messages.
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  {/* Only show compose UI if not disabled */}
+                  {!conversations?.find((c: any) => c._id === selectedConversationId)?.disabledByAdmin && (
+                    <>
                   {/* Pending Attachments Preview */}
                   {pendingAttachments.length > 0 && (
                     <div className="flex gap-2 mb-3 flex-wrap">
