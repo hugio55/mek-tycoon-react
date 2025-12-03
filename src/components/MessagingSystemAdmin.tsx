@@ -220,6 +220,12 @@ export default function MessagingSystemAdmin() {
     adminSelectedConversationId ? { conversationId: adminSelectedConversationId } : 'skip'
   );
 
+  // Query for blocked users
+  const blockedUsers = useQuery(
+    api.messaging.getBlockedUsers,
+    showBlockedUsers ? { walletAddress: activeCorp.walletAddress } : 'skip'
+  );
+
   // Convex mutations
   const sendMessage = useMutation(api.messaging.sendMessage);
   const markAsRead = useMutation(api.messaging.markConversationAsRead);
@@ -234,6 +240,9 @@ export default function MessagingSystemAdmin() {
   const enableConversationAdmin = useMutation(api.messaging.enableConversationAdmin);
   const deleteConversationAdmin = useMutation(api.messaging.deleteConversationAdmin);
   const deleteMessageAdmin = useMutation(api.messaging.deleteMessageAdmin);
+
+  // Block/unblock mutations
+  const unblockUser = useMutation(api.messaging.unblockUser);
 
   // Mount check for portal
   useEffect(() => {
@@ -640,6 +649,23 @@ export default function MessagingSystemAdmin() {
     }
   };
 
+  // Handle unblocking a user
+  const handleUnblockUser = async (blockedWallet: string, companyName: string) => {
+    if (!confirm(`Unblock ${companyName}? They will be able to message you again.`)) {
+      return;
+    }
+
+    try {
+      await unblockUser({
+        blockerWallet: activeCorp.walletAddress,
+        blockedWallet: blockedWallet,
+      });
+    } catch (error) {
+      console.error('[🚫BLOCK] Failed to unblock user:', error);
+      alert(error instanceof Error ? error.message : 'Failed to unblock user');
+    }
+  };
+
   // Get the selected admin conversation details
   const selectedAdminConversation = allConversationsAdmin?.conversations?.find(
     (c: any) => c._id === adminSelectedConversationId
@@ -739,12 +765,74 @@ export default function MessagingSystemAdmin() {
           <div className="col-span-1 bg-black/40 rounded-xl border border-gray-700 overflow-hidden">
             <div className="p-4 border-b border-gray-700 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-white">Inbox</h2>
-              {totalUnread !== undefined && totalUnread > 0 && (
-                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                  {totalUnread > 99 ? '99+' : totalUnread}
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {/* Blocked Users Button */}
+                <button
+                  onClick={() => setShowBlockedUsers(!showBlockedUsers)}
+                  className={`text-xs px-2 py-1 rounded-full border transition-colors ${
+                    showBlockedUsers
+                      ? 'bg-red-500/20 text-red-400 border-red-500/50'
+                      : 'bg-gray-700/50 text-gray-400 border-gray-600 hover:border-gray-500'
+                  }`}
+                  title="Manage blocked users"
+                >
+                  Blocked
+                </button>
+                {totalUnread !== undefined && totalUnread > 0 && (
+                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                    {totalUnread > 99 ? '99+' : totalUnread}
+                  </span>
+                )}
+              </div>
             </div>
+
+            {/* Blocked Users Panel */}
+            {showBlockedUsers && (
+              <div className="border-b border-gray-700 bg-red-500/5">
+                <div className="p-3 border-b border-red-500/20">
+                  <div className="text-sm font-medium text-red-400">Blocked Users</div>
+                  <div className="text-xs text-gray-500">
+                    {blockedUsers?.length ?? 0} blocked
+                  </div>
+                </div>
+                <div className="max-h-[200px] overflow-y-auto custom-scrollbar">
+                  {blockedUsers && blockedUsers.length > 0 ? (
+                    blockedUsers.map((block: any) => (
+                      <div
+                        key={block._id}
+                        className="p-3 border-b border-red-500/10 flex items-center justify-between hover:bg-red-500/10"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-gray-700 overflow-hidden">
+                            <img
+                              src={`/mek-images/150px/${getMekImageForWallet(block.blockedWallet)}`}
+                              alt=""
+                              className="w-full h-full object-cover opacity-50"
+                            />
+                          </div>
+                          <div>
+                            <div className="text-white text-sm">{block.blockedUser.companyName}</div>
+                            <div className="text-gray-500 text-xs">
+                              {formatRelativeTime(block.createdAt)}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleUnblockUser(block.blockedWallet, block.blockedUser.companyName)}
+                          className="px-2 py-1 text-xs bg-green-500/20 text-green-400 border border-green-500/50 rounded hover:bg-green-500/30 transition-colors"
+                        >
+                          Unblock
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      No blocked users
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
               {/* Start New Conversation Button */}

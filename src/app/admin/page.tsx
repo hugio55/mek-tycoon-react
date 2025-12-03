@@ -352,9 +352,32 @@ const PREVIEW_PARTICLES = [
   { id: 5, left: '80%', top: '65%', size: 2, driftAngle: 0, delay: '15s', duration: '27s' },
 ];
 
+// Sub-tabs for Universal Background
+const BACKGROUND_SUB_TABS = [
+  { id: 'current', name: 'Current Background', icon: '🌌' },
+  { id: 'planet', name: 'Planet Background', icon: '🪐' },
+];
+
 function UniversalBackgroundAdmin() {
+  const [activeSubTab, setActiveSubTab] = useState<'current' | 'planet'>('current');
+  const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const userAgent = navigator.userAgent.toLowerCase();
+    const mobile = /iphone|ipod|android/.test(userAgent);
+    setIsMobile(mobile);
+  }, []);
+
+  const effectiveIsMobile = mounted ? isMobile : false;
+
   const openFullScreenPreview = () => {
-    window.open('/admin/background-preview', '_blank', 'noopener,noreferrer');
+    if (activeSubTab === 'current') {
+      window.open('/admin/background-preview', '_blank', 'noopener,noreferrer');
+    } else {
+      window.open('/admin/planet-background-preview', '_blank', 'noopener,noreferrer');
+    }
   };
 
   return (
@@ -377,10 +400,31 @@ function UniversalBackgroundAdmin() {
           </button>
         </div>
 
-        <p className="text-gray-400 mb-6">
-          The Universal Background is rendered across all pages of the site. It includes animated stars,
-          drifting particles, and satellites creating a deep space atmosphere.
-        </p>
+        {/* Sub-tab navigation */}
+        <div className="flex gap-2 mb-6">
+          {BACKGROUND_SUB_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveSubTab(tab.id as 'current' | 'planet')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold uppercase tracking-wider text-sm transition-colors ${
+                activeSubTab === tab.id
+                  ? 'bg-yellow-500/30 text-yellow-400 border border-yellow-500/50'
+                  : 'bg-black/40 text-gray-400 border border-gray-700 hover:bg-black/60 hover:text-gray-300'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              {tab.name}
+            </button>
+          ))}
+        </div>
+
+        {/* Current Background Content */}
+        {activeSubTab === 'current' && (
+          <>
+            <p className="text-gray-400 mb-6">
+              The Universal Background is rendered across all pages of the site. It includes animated stars,
+              drifting particles, and satellites creating a deep space atmosphere.
+            </p>
 
         {/* Live Preview Section */}
         <div className="mb-8">
@@ -6678,11 +6722,12 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
         targetDatabase: 'Sturgeon (production)',
       });
 
-      // Sync the single NFT
+      // Sync the single NFT - IMPORTANT: Pass campaignId to ensure we update the correct record
       const result = await client.mutation(api.nmkrSync.syncSingleNFT, {
         nftUid,
         nmkrStatus: discrepancy.nmkrStatus,
         soldTo: discrepancy.nmkrSoldTo,
+        campaignId: nmkrSyncCampaign.id as any, // Prevents updating orphaned records
       });
 
       console.log('[🔄NMKR] Sync result:', result);

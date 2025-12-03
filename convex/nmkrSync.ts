@@ -94,48 +94,89 @@ export const getInventoryDiscrepancies = query({
 
 /**
  * Sync a single NFT's status from NMKR
+ * IMPORTANT: Now requires campaignId to prevent updating orphaned records
  */
 export const syncSingleNFT = mutation({
   args: {
     nftUid: v.string(),
     nmkrStatus: v.string(), // 'free' | 'reserved' | 'sold' - simplified to avoid type depth issues
     soldTo: v.optional(v.string()),
+    campaignId: v.optional(v.id("commemorativeCampaigns")), // Optional for backward compatibility, but SHOULD be provided
   },
   handler: async (ctx, args) => {
-    const { nftUid, soldTo } = args;
+    const { nftUid, soldTo, campaignId } = args;
     const nmkrStatus = args.nmkrStatus as 'free' | 'reserved' | 'sold';
 
-    console.log('[🔄SYNC-MUTATION] syncSingleNFT called with:', { nftUid, nmkrStatus, soldTo });
+    console.log('[🔄SYNC-MUTATION] syncSingleNFT called with:', { nftUid, nmkrStatus, soldTo, campaignId });
 
-    // Find the NFT in inventory using by_uid index
-    const nft = await ctx.db
-      .query("commemorativeNFTInventory")
-      .withIndex("by_uid", (q) => q.eq("nftUid", nftUid))
-      .first();
-
-    console.log('[🔄SYNC-MUTATION] Found NFT by uid:', nft ? {
-      _id: nft._id,
-      name: nft.name,
-      status: nft.status,
-      campaignId: nft.campaignId,
-      nftUid: nft.nftUid,
-    } : 'NOT FOUND');
-
-    // Also check if there are MULTIPLE records with this nftUid (data corruption check)
+    // Check for ALL records with this nftUid (detect duplicates/orphans)
     const allMatchingByUid = await ctx.db
       .query("commemorativeNFTInventory")
       .withIndex("by_uid", (q) => q.eq("nftUid", nftUid))
       .collect();
 
+    console.log(`[🔄SYNC-MUTATION] Found ${allMatchingByUid.length} records with nftUid ${nftUid}`);
+
+    if (allMatchingByUid.length === 0) {
+      throw new Error(`NFT with UID ${nftUid} not found in inventory`);
+    }
+
     if (allMatchingByUid.length > 1) {
-      console.error('[🔄SYNC-MUTATION] ⚠️ DUPLICATE RECORDS FOUND! Multiple NFTs with same nftUid:',
-        allMatchingByUid.map(n => ({ _id: n._id, name: n.name, status: n.status, campaignId: n.campaignId }))
-      );
+      console.error('[🔄SYNC-MUTATION] ⚠️ DUPLICATE/ORPHAN RECORDS DETECTED!');
+      console.error('[🔄SYNC-MUTATION] Records found:', allMatchingByUid.map(n => ({
+        _id: n._id,
+        name: n.name,
+        status: n.status,
+        campaignId: n.campaignId,
+      })));
+
+      // If campaignId provided, find the record for THAT campaign specifically
+      if (campaignId) {
+        const correctRecord = allMatchingByUid.find(n => n.campaignId === campaignId);
+        if (!correctRecord) {
+          throw new Error(
+            `NFT ${nftUid} has ${allMatchingByUid.length} records but NONE belong to campaign ${campaignId}. ` +
+            `This indicates orphaned data. Run findOrphanedInventory to diagnose.`
+          );
+        }
+        console.log('[🔄SYNC-MUTATION] Using record for specified campaign:', correctRecord._id);
+      } else {
+        // No campaignId provided - warn but continue with first match (legacy behavior)
+        console.warn('[🔄SYNC-MUTATION] ⚠️ WARNING: No campaignId provided and duplicates exist. Using first match.');
+        console.warn('[🔄SYNC-MUTATION] This may update the wrong record! Consider passing campaignId.');
+      }
+    }
+
+    // Find the correct NFT to update
+    let nft;
+    if (campaignId && allMatchingByUid.length > 1) {
+      // Multiple records exist - use the one for the specified campaign
+      nft = allMatchingByUid.find(n => n.campaignId === campaignId);
+    } else {
+      // Single record or no campaignId - use first match
+      nft = allMatchingByUid[0];
     }
 
     if (!nft) {
-      throw new Error(`NFT with UID ${nftUid} not found in inventory`);
+      throw new Error(`NFT with UID ${nftUid} not found for campaign ${campaignId}`);
     }
+
+    // Verify the campaign still exists (prevent updating orphans)
+    const campaign = await ctx.db.get(nft.campaignId);
+    if (!campaign) {
+      throw new Error(
+        `ORPHAN DETECTED: NFT ${nft.name} (${nftUid}) belongs to campaign ${nft.campaignId} which no longer exists. ` +
+        `This record should be cleaned up. Run cleanupOrphanedInventory to fix.`
+      );
+    }
+
+    console.log('[🔄SYNC-MUTATION] Updating NFT:', {
+      _id: nft._id,
+      name: nft.name,
+      currentStatus: nft.status,
+      campaignId: nft.campaignId,
+      campaignName: campaign.name,
+    });
 
     // Convert NMKR state to Convex status
     const newStatus = nmkrStateToConvexStatus(nmkrStatus);

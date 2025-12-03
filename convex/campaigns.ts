@@ -223,3 +223,126 @@ export const updateCampaignStats = mutation({
     };
   },
 });
+
+// =============================================================================
+// ORPHAN DETECTION & CLEANUP FUNCTIONS
+// These help identify and fix data integrity issues
+// =============================================================================
+
+/**
+ * Find orphaned inventory records (records pointing to non-existent campaigns)
+ * This is a QUERY - safe to run, doesn't modify anything
+ */
+export const findOrphanedInventory = query({
+  handler: async (ctx) => {
+    // Get all existing campaign IDs
+    const campaigns = await ctx.db.query("commemorativeCampaigns").collect();
+    const validCampaignIds = new Set(campaigns.map(c => c._id));
+
+    // Get all inventory records
+    const allInventory = await ctx.db.query("commemorativeNFTInventory").collect();
+
+    // Find orphans (inventory pointing to non-existent campaigns)
+    const orphans = allInventory.filter(inv => !validCampaignIds.has(inv.campaignId));
+
+    console.log(`[CAMPAIGNS] Found ${orphans.length} orphaned inventory records out of ${allInventory.length} total`);
+
+    return {
+      totalInventory: allInventory.length,
+      orphanCount: orphans.length,
+      validCampaignCount: campaigns.length,
+      orphans: orphans.map(o => ({
+        _id: o._id,
+        name: o.name,
+        nftUid: o.nftUid,
+        status: o.status,
+        campaignId: o.campaignId,
+        soldTo: o.soldTo,
+        soldAt: o.soldAt,
+      })),
+    };
+  },
+});
+
+/**
+ * Clean up orphaned inventory records
+ * DANGEROUS - will delete records permanently
+ * Requires explicit confirmation and returns sale data before deleting
+ */
+export const cleanupOrphanedInventory = mutation({
+  args: {
+    confirmDelete: v.boolean(),
+    transferSaleDataToNftUids: v.optional(v.array(v.string())),
+  },
+  handler: async (ctx, args) => {
+    if (!args.confirmDelete) {
+      throw new Error("SAFETY: Must pass confirmDelete: true to proceed");
+    }
+
+    // Get all existing campaign IDs
+    const campaigns = await ctx.db.query("commemorativeCampaigns").collect();
+    const validCampaignIds = new Set(campaigns.map(c => c._id));
+
+    // Get all inventory records
+    const allInventory = await ctx.db.query("commemorativeNFTInventory").collect();
+
+    // Find orphans
+    const orphans = allInventory.filter(inv => !validCampaignIds.has(inv.campaignId));
+
+    if (orphans.length === 0) {
+      return { success: true, message: "No orphaned records found", deleted: 0 };
+    }
+
+    // Save sale data from orphans that have it (for recovery)
+    const saleDataBackup = orphans
+      .filter(o => o.status === "sold" && o.soldTo)
+      .map(o => ({
+        nftUid: o.nftUid,
+        name: o.name,
+        soldTo: o.soldTo,
+        soldAt: o.soldAt,
+        companyNameAtSale: o.companyNameAtSale,
+        orphanedCampaignId: o.campaignId,
+      }));
+
+    console.log(`[CAMPAIGNS] CLEANUP: Backing up ${saleDataBackup.length} sale records before deletion`);
+    console.log(`[CAMPAIGNS] Sale data backup:`, JSON.stringify(saleDataBackup, null, 2));
+
+    // If transferSaleDataToNftUids is provided, transfer sale data to matching records
+    if (args.transferSaleDataToNftUids && args.transferSaleDataToNftUids.length > 0) {
+      for (const nftUid of args.transferSaleDataToNftUids) {
+        const orphanWithSale = saleDataBackup.find(s => s.nftUid === nftUid);
+        if (!orphanWithSale) continue;
+
+        // Find the valid record with this nftUid
+        const validRecord = allInventory.find(
+          inv => inv.nftUid === nftUid && validCampaignIds.has(inv.campaignId)
+        );
+
+        if (validRecord) {
+          await ctx.db.patch(validRecord._id, {
+            status: "sold",
+            soldTo: orphanWithSale.soldTo,
+            soldAt: orphanWithSale.soldAt,
+            companyNameAtSale: orphanWithSale.companyNameAtSale,
+          });
+          console.log(`[CAMPAIGNS] Transferred sale data for ${orphanWithSale.name} to valid record`);
+        }
+      }
+    }
+
+    // Delete orphans
+    for (const orphan of orphans) {
+      await ctx.db.delete(orphan._id);
+    }
+
+    console.log(`[CAMPAIGNS] CLEANUP: Deleted ${orphans.length} orphaned inventory records`);
+
+    return {
+      success: true,
+      deleted: orphans.length,
+      saleDataBackup,
+      message: `Deleted ${orphans.length} orphaned records. Sale data backed up in logs.`,
+    };
+  },
+});

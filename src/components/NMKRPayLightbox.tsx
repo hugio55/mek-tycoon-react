@@ -36,7 +36,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   const [isMobileBrowser, setIsMobileBrowser] = useState(false);
   const [isRequestingSignature, setIsRequestingSignature] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [linkCopyFailed, setLinkCopyFailed] = useState(false);
   const [isResumingFromMobile, setIsResumingFromMobile] = useState(false);
+  const [resumeValidating, setResumeValidating] = useState(false);
 
   // Backend verification state (cryptographic proof of wallet ownership)
   const [backendVerificationStatus, setBackendVerificationStatus] = useState<'idle' | 'generating_nonce' | 'awaiting_signature' | 'verifying' | 'success' | 'failed'>('idle');
@@ -140,9 +142,11 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
   // Detect and handle mobile resume from URL parameters
   // This allows mobile users to continue their session in wallet browser
+  // Compatible with: iOS Safari 11+, Chrome Mobile, Firefox Mobile, Samsung Internet
   useEffect(() => {
     if (!mounted) return;
 
+    // URLSearchParams is supported in all modern browsers (iOS 11+, Android 5+)
     const params = new URLSearchParams(window.location.search);
     const isResume = params.get('claimResume') === 'true';
 
@@ -151,9 +155,16 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
       const addr = params.get('addr');
       const cid = params.get('cid');
 
-      if (rid && addr && cid) {
-        console.log('[🔐RESUME] Mobile resume detected from URL:', { rid: rid.substring(0, 10) + '...', addr: addr.substring(0, 20) + '...', cid: cid.substring(0, 10) + '...' });
+      // Validate all required params exist and are non-empty
+      if (rid && rid.length > 0 && addr && addr.length > 0 && cid && cid.length > 0) {
+        console.log('[🔐RESUME] Mobile resume detected from URL:', {
+          rid: rid.substring(0, 10) + '...',
+          addr: addr.substring(0, 20) + '...',
+          cid: cid.substring(0, 10) + '...'
+        });
+
         setIsResumingFromMobile(true);
+        setResumeValidating(true);
 
         // Set state from URL params to resume session
         setReservationId(rid as Id<"commemorativeNFTInventory">);
@@ -164,36 +175,54 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
         setState('reserved');
 
         // Clean up URL (remove query params for cleaner display)
-        const cleanUrl = window.location.origin + window.location.pathname;
-        window.history.replaceState({}, '', cleanUrl);
+        // history.replaceState is supported in all modern browsers
+        try {
+          const cleanUrl = window.location.origin + window.location.pathname;
+          window.history.replaceState({}, '', cleanUrl);
+        } catch (historyError) {
+          // Some browsers restrict history manipulation in certain contexts
+          console.warn('[🔐RESUME] Could not clean URL:', historyError);
+        }
 
-        console.log('[🔐RESUME] Session restored, transitioning to reserved state');
+        console.log('[🔐RESUME] Session restored, validating reservation...');
       } else {
-        console.warn('[🔐RESUME] Incomplete resume params, starting fresh');
+        console.warn('[🔐RESUME] Incomplete or invalid resume params, starting fresh');
+        // Clean up malformed URL
+        try {
+          const cleanUrl = window.location.origin + window.location.pathname;
+          window.history.replaceState({}, '', cleanUrl);
+        } catch (e) { /* ignore */ }
       }
     }
   }, [mounted]);
 
-  // Handle failed mobile resume (reservation expired or invalid)
+  // Handle mobile resume validation - watch for query to populate
+  // Uses reactive approach instead of fixed timeout for better reliability
   useEffect(() => {
-    if (isResumingFromMobile && state === 'reserved' && reservationId && mounted) {
-      // Give the query a moment to load
-      const timeout = setTimeout(() => {
-        if (!activeReservation) {
-          console.log('[🔐RESUME] Reservation invalid or expired - resetting to address entry');
-          setIsResumingFromMobile(false);
-          setErrorMessage('Your reservation has expired. Please start again.');
-          setState('address_entry');
-          setReservationId(null);
-        } else {
-          console.log('[🔐RESUME] ✅ Reservation still valid, proceeding with wallet verification');
-          setIsResumingFromMobile(false);
-        }
-      }, 2000); // Wait 2 seconds for query to populate
+    if (!isResumingFromMobile || !resumeValidating || !mounted) return;
 
-      return () => clearTimeout(timeout);
+    // If activeReservation populated, resume is successful
+    if (activeReservation) {
+      console.log('[🔐RESUME] ✅ Reservation validated, proceeding with wallet verification');
+      setIsResumingFromMobile(false);
+      setResumeValidating(false);
+      return;
     }
-  }, [isResumingFromMobile, state, reservationId, activeReservation, mounted]);
+
+    // Set a maximum wait time (5 seconds for slow connections)
+    const timeout = setTimeout(() => {
+      if (!activeReservation) {
+        console.log('[🔐RESUME] Reservation invalid or expired after 5s - resetting');
+        setIsResumingFromMobile(false);
+        setResumeValidating(false);
+        setErrorMessage('Your reservation has expired or is invalid. Please start again.');
+        setState('address_entry');
+        setReservationId(null);
+      }
+    }, 5000);
+
+    return () => clearTimeout(timeout);
+  }, [isResumingFromMobile, resumeValidating, activeReservation, mounted]);
 
   const validateCardanoAddress = (address: string): boolean => {
     if (!address) return false;
@@ -578,26 +607,64 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   };
 
   // Copy resume URL to clipboard (preserves session state for mobile wallet browser)
+  // Compatible with: iOS Safari 13.4+, Chrome 66+, Firefox 63+, Samsung Internet 12+
+  // Fallback for older browsers using execCommand
   const copyLinkToClipboard = async () => {
-    try {
-      // Build resume URL with session state so mobile users don't lose progress
-      const baseUrl = window.location.origin + window.location.pathname;
-      const params = new URLSearchParams({
-        claimResume: 'true',
-        rid: reservationId || '',
-        addr: effectiveWalletAddress || '',
-        cid: activeCampaignId || '',
-      });
-      const resumeUrl = `${baseUrl}?${params.toString()}`;
+    // Validate we have all required data before building URL
+    if (!reservationId || !effectiveWalletAddress || !activeCampaignId) {
+      console.error('[🔐RESUME] Cannot copy link - missing required data');
+      setLinkCopyFailed(true);
+      setTimeout(() => setLinkCopyFailed(false), 3000);
+      return;
+    }
 
-      await navigator.clipboard.writeText(resumeUrl);
-      console.log('[🔐RESUME] Mobile resume link copied:', resumeUrl);
+    // Build resume URL with session state so mobile users don't lose progress
+    const baseUrl = window.location.origin + window.location.pathname;
+    const params = new URLSearchParams({
+      claimResume: 'true',
+      rid: reservationId,
+      addr: effectiveWalletAddress,
+      cid: activeCampaignId,
+    });
+    const resumeUrl = `${baseUrl}?${params.toString()}`;
+
+    try {
+      // Try modern Clipboard API first (requires HTTPS or localhost)
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(resumeUrl);
+        console.log('[🔐RESUME] Mobile resume link copied via Clipboard API');
+      } else {
+        // Fallback for older browsers or HTTP contexts
+        // Create temporary textarea, copy, then remove
+        const textArea = document.createElement('textarea');
+        textArea.value = resumeUrl;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        if (!successful) {
+          throw new Error('execCommand copy failed');
+        }
+        console.log('[🔐RESUME] Mobile resume link copied via execCommand fallback');
+      }
 
       // Show "Copied!" feedback
       setLinkCopied(true);
-      setTimeout(() => setLinkCopied(false), 2000);
+      setLinkCopyFailed(false);
+      setTimeout(() => setLinkCopied(false), 2500);
+
     } catch (err) {
       console.error('[🔐RESUME] Failed to copy link:', err);
+      // Show error feedback to user
+      setLinkCopyFailed(true);
+      setLinkCopied(false);
+      setTimeout(() => setLinkCopyFailed(false), 3000);
     }
   };
 
@@ -1034,10 +1101,17 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
         if (!activeReservation) {
           console.log('[🔨RESERVE] Rendering "reserved" state but activeReservation is undefined - showing loading spinner');
           return (
-            <div className="text-center">
+            <div className="text-center py-8">
               <div className="mb-6">
-                <div className="w-12 h-12 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-400">Loading reservation...</p>
+                <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <h2 className="text-xl font-bold text-white mb-2">
+                  {resumeValidating ? 'Restoring Your Session...' : 'Loading Reservation...'}
+                </h2>
+                <p className="text-white/60 text-sm">
+                  {resumeValidating
+                    ? 'Verifying your reservation is still valid'
+                    : 'Please wait a moment'}
+                </p>
               </div>
             </div>
           );
@@ -1203,6 +1277,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
                 className={`w-full py-3 px-6 text-base font-semibold tracking-wider rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center gap-2 ${
                   linkCopied
                     ? 'bg-green-500 text-white shadow-green-500/30'
+                    : linkCopyFailed
+                    ? 'bg-red-500 text-white shadow-red-500/30'
                     : 'bg-gradient-to-r from-cyan-400 to-cyan-500 text-black hover:from-cyan-300 hover:to-cyan-400 shadow-cyan-500/30'
                 }`}
                 style={{ fontFamily: "'Inter', 'Arial', sans-serif" }}
@@ -1213,6 +1289,13 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Copied! Now paste in your wallet
+                  </>
+                ) : linkCopyFailed ? (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Copy failed - tap to retry
                   </>
                 ) : (
                   <>
