@@ -262,6 +262,25 @@ function RarityBiasAdmin() {
               </div>
             </div>
           </div>
+
+          {/* Wave Variants */}
+          <div className="bg-gradient-to-br from-cyan-900/20 to-teal-900/20 rounded-lg p-4 border border-cyan-500/20">
+            <h4 className="text-cyan-400 font-bold mb-4 uppercase tracking-wider text-sm">Wave Variants (Soundwave Series)</h4>
+            <div className="flex flex-wrap items-start gap-8">
+              <div className="text-center">
+                <div className="text-gray-400 text-xs mb-2">ECG Heartbeat</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="wave-heartbeat" />
+              </div>
+              <div className="text-center">
+                <div className="text-gray-400 text-xs mb-2">Mirror Reflection</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="wave-mirror" />
+              </div>
+              <div className="text-center">
+                <div className="text-gray-400 text-xs mb-2">Radial Spectrum</div>
+                <RarityChart rarityBias={rarityBias} displayBias={displayBias} showSlider={false} size="wave-spectrum" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -329,6 +348,10 @@ function RarityBiasAdmin() {
             <div><span className="text-purple-400">size="creative-radial"</span> - Semi-circular gauge with needle</div>
             <div><span className="text-purple-400">size="creative-wave"</span> - Audio visualizer wave</div>
             <div><span className="text-purple-400">size="creative-orbital"</span> - Concentric orbital rings</div>
+            <div className="text-cyan-400/70 mt-2 mb-1">Wave Series (Soundwave Variations):</div>
+            <div><span className="text-cyan-400">size="wave-heartbeat"</span> - ECG heart monitor style</div>
+            <div><span className="text-cyan-400">size="wave-mirror"</span> - Symmetrical reflection wave</div>
+            <div><span className="text-cyan-400">size="wave-spectrum"</span> - Radial spectrum analyzer</div>
           </div>
         </div>
       </div>
@@ -1703,7 +1726,7 @@ export default function AdminMasterDataPage() {
                   <span className="text-xs text-cyan-400 uppercase tracking-wider font-bold">Quick Access Pages</span>
                   <span className="text-xs text-gray-500 ml-2">(click to copy URL)</span>
                 </div>
-                <div className="max-h-96 overflow-y-auto">
+                <div className="max-h-[80vh] overflow-y-auto">
                   {['Main', 'Contracts', 'Systems', 'Admin'].map(category => (
                     <div key={category}>
                       <div className="px-3 py-1.5 bg-gray-800/50 text-xs text-gray-500 uppercase tracking-wider font-bold">
