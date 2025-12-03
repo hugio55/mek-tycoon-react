@@ -394,6 +394,10 @@ function RarityBiasAdmin() {
             <div><span className="text-orange-400">size="spectrum-wedge"</span> - Thick pie wedge segments</div>
             <div><span className="text-orange-400">size="spectrum-rings"</span> - Concentric filled rings</div>
             <div><span className="text-orange-400">size="spectrum-solid"</span> - Solid donut with indicator</div>
+            <div className="text-pink-400/70 mt-2 mb-1">Spectrum Series II (Wedge Styles):</div>
+            <div><span className="text-pink-400">size="spectrum-bloom"</span> - Flower petal shapes</div>
+            <div><span className="text-pink-400">size="spectrum-burst"</span> - Starburst rays</div>
+            <div><span className="text-pink-400">size="spectrum-gear"</span> - Mechanical gear teeth</div>
           </div>
         </div>
       </div>
