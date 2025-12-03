@@ -55,6 +55,7 @@ function TalentBuilderInner() {
   const { findDisconnectedAndDeadEndNodes, clearHighlights } = useConnectionAnalysis();
 
   // Keyboard shortcuts with custom delete handler
+  // Note: useKeyboardShortcuts already calls pushHistory() after onDelete
   useKeyboardShortcuts({
     enabled: true,
     onDelete: (nodeId) => {
@@ -63,7 +64,7 @@ function TalentBuilderInner() {
         return;
       }
       actions.deleteNode(nodeId);
-      pushHistory();
+      // Don't call pushHistory here - useKeyboardShortcuts handles it
     }
   });
 
@@ -258,7 +259,7 @@ function TalentBuilderInner() {
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white overflow-hidden relative">
+    <div className="min-h-screen bg-gray-950 text-white overflow-hidden relative flex flex-col">
       {/* Hidden file input for import */}
       <input
         ref={fileInputRef}

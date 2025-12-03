@@ -9,7 +9,7 @@ import { BuilderMode, CanvasMode, TalentNode } from '../types';
 
 interface ToolbarProps {
   onExport: () => void;
-  onImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onImport: () => void;
   canvasRef: React.RefObject<HTMLDivElement>;
 }
 
@@ -503,10 +503,12 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
           Export
         </button>
 
-        <label className="px-2 py-1 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded cursor-pointer">
+        <button
+          onClick={onImport}
+          className="px-2 py-1 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded"
+        >
           Import
-          <input type="file" accept=".json" onChange={onImport} className="hidden" />
-        </label>
+        </button>
       </div>
     </div>
   );
