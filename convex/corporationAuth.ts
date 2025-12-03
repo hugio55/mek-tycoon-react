@@ -262,10 +262,12 @@ export const connectCorporation = mutation({
     const newCorp = await ctx.db.get(newCorpId);
 
     // Log welcome bonus transaction
+    // Note: Using 'as any' because transactions table expects users ID
+    // but we're in Phase II (corporations). This is a temporary compatibility measure.
     try {
       await ctx.db.insert("transactions", {
         type: "reward",
-        userId: newCorpId,
+        userId: newCorpId as any, // Phase II: corporation ID used where user ID expected
         amount: CORPORATION_CONSTANTS.WELCOME_BONUS_GOLD,
         details: "Welcome bonus - New corporation registration",
         timestamp: Date.now(),
