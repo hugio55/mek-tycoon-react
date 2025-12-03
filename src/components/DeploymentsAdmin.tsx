@@ -333,11 +333,11 @@ export default function DeploymentsAdmin() {
   };
 
   const handleFullDeploy = async () => {
-    console.log('[🚀DEPLOY] Starting full deploy process...');
+    console.log('[🚀DEPLOY] Starting full deploy process (direct push method)...');
     setDeployError(null); // Clear any previous error
     setIsFullDeploy(true);
     setDeployStep(1);
-    const originalBranch = gitStatus?.currentBranch || 'custom-minting-system';
+    const currentBranch = gitStatus?.currentBranch || 'custom-minting-system';
 
     // Fetch fresh status to avoid stale data issues
     let freshHasChanges = gitStatus?.hasUncommittedChanges;
@@ -358,7 +358,7 @@ export default function DeploymentsAdmin() {
       const finalCommitMessage = commitMessage.trim() || `Pre-deploy commit (${new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })})`;
 
       console.log('[🚀DEPLOY] Step 1: Committing changes...');
-      addLog('Full Deploy', 'pending', 'Step 1/7: Committing changes...');
+      addLog('Full Deploy', 'pending', 'Step 1/4: Committing changes...');
       try {
         const res = await fetch('/api/deployment/commit', {
           method: 'POST',
@@ -371,7 +371,7 @@ export default function DeploymentsAdmin() {
           // Check if it's just "no changes" - that's OK, continue deployment
           if (data.error?.includes('No changes') || data.error?.includes('nothing to commit')) {
             console.log('[🚀DEPLOY] Step 1: No actual changes to commit, continuing...');
-            addLog('Full Deploy', 'success', 'Step 1/7: No changes to commit (skipped)');
+            addLog('Full Deploy', 'success', 'Step 1/4: No changes to commit (skipped)');
           } else {
             addLog('Full Deploy', 'error', `Commit failed: ${data.error}`);
             setDeployError(`Step 1 failed: ${data.error}`);
@@ -393,19 +393,19 @@ export default function DeploymentsAdmin() {
       }
     } else {
       console.log('[🚀DEPLOY] Step 1: No changes to commit (skipped)');
-      addLog('Full Deploy', 'success', 'Step 1/7: No changes to commit (skipped)');
+      addLog('Full Deploy', 'success', 'Step 1/4: No changes to commit (skipped)');
     }
 
     // Step 2: Push current branch to GitHub (backup)
     setDeployStep(2);
     console.log('[🚀DEPLOY] Step 2: Pushing to GitHub...');
-    addLog('Full Deploy', 'pending', `Step 2/7: Pushing ${originalBranch} to GitHub (backup)...`);
+    addLog('Full Deploy', 'pending', `Step 2/4: Pushing ${currentBranch} to GitHub (backup)...`);
     try {
       const res = await fetch('/api/deployment/push', { method: 'POST' });
       const data = await res.json();
       console.log('[🚀DEPLOY] Step 2 result:', data);
       if (data.success) {
-        addLog('Full Deploy', 'success', `${originalBranch} backed up to GitHub`);
+        addLog('Full Deploy', 'success', `${currentBranch} backed up to GitHub`);
       } else {
         addLog('Full Deploy', 'error', `Push warning: ${data.error} - continuing...`);
         // Continue anyway - backup is nice to have but not critical
@@ -415,85 +415,38 @@ export default function DeploymentsAdmin() {
       addLog('Full Deploy', 'error', 'Push warning - server may be down, continuing...');
     }
 
-    // Step 3: Switch to master
-    // Step 4: Merge current branch into master
+    // Step 3: Push current branch directly to origin/master (triggers Vercel production)
+    // This is the NEW approach - no branch switching, dev server stays running!
     setDeployStep(3);
-    console.log('[🚀DEPLOY] Step 3-4: Merge to master...');
-    addLog('Full Deploy', 'pending', `Step 3-4/7: Switching to master and merging ${originalBranch}...`);
+    console.log('[🚀DEPLOY] Step 3: Push directly to origin/master...');
+    addLog('Full Deploy', 'pending', `Step 3/4: Pushing ${currentBranch} to origin/master (Vercel production)...`);
     try {
       const res = await fetch('/api/deployment/merge-to-master', { method: 'POST' });
       const data = await res.json();
-      console.log('[🚀DEPLOY] Step 3-4 result:', data);
+      console.log('[🚀DEPLOY] Step 3 result:', data);
       if (!data.success) {
-        addLog('Full Deploy', 'error', `Merge failed: ${data.error}`);
-        // Try to switch back
-        try {
-          await fetch('/api/deployment/switch-branch', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ branch: originalBranch })
-          });
-        } catch (e) { /* ignore */ }
-        setDeployError(`Step 3-4 failed: ${data.error}`);
+        addLog('Full Deploy', 'error', `Push to master failed: ${data.error}`);
+        setDeployError(`Step 3 failed: ${data.error}`);
         setIsFullDeploy(false);
         setDeployStep(0);
         return;
       }
-      addLog('Full Deploy', 'success', data.alreadyOnMaster ? 'Already on master' : `Merged ${originalBranch} into master`);
+      addLog('Full Deploy', 'success', data.alreadyUpToDate
+        ? 'origin/master already up to date'
+        : `Pushed ${currentBranch} to origin/master - Vercel PRODUCTION deploying!`);
     } catch (error) {
-      console.error('[🚀DEPLOY] Step 3-4 error:', error);
-      addLog('Full Deploy', 'error', 'Merge to master failed - server may be down');
-      setDeployError('Step 3-4 failed: Could not connect to server. Is the dev server running?');
+      console.error('[🚀DEPLOY] Step 3 error:', error);
+      addLog('Full Deploy', 'error', 'Push to master failed - server may be down');
+      setDeployError('Step 3 failed: Could not connect to server. Is the dev server running?');
       setIsFullDeploy(false);
       setDeployStep(0);
       return;
     }
 
-    // Step 5: Push master to GitHub (triggers Vercel production)
-    setDeployStep(5);
-    console.log('[🚀DEPLOY] Step 5: Push master to GitHub...');
-    addLog('Full Deploy', 'pending', 'Step 5/7: Pushing master to GitHub (Vercel production)...');
-    try {
-      const res = await fetch('/api/deployment/push-master', { method: 'POST' });
-      const data = await res.json();
-      console.log('[🚀DEPLOY] Step 5 result:', data);
-      if (!data.success) {
-        addLog('Full Deploy', 'error', `Push master failed: ${data.error}`);
-        // Try to switch back to original branch
-        try {
-          await fetch('/api/deployment/switch-branch', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ branch: originalBranch })
-          });
-        } catch (e) { /* ignore */ }
-        setDeployError(`Step 5 failed: ${data.error}`);
-        setIsFullDeploy(false);
-        setDeployStep(0);
-        return;
-      }
-      addLog('Full Deploy', 'success', 'Pushed master to GitHub (Vercel PRODUCTION deploying!)');
-    } catch (error) {
-      console.error('[🚀DEPLOY] Step 5 error:', error);
-      addLog('Full Deploy', 'error', 'Push master failed - server may be down');
-      // Try to switch back to original branch
-      try {
-        await fetch('/api/deployment/switch-branch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ branch: originalBranch })
-        });
-      } catch (e) { /* ignore */ }
-      setDeployError('Step 5 failed: Could not connect to server. Is the dev server running?');
-      setIsFullDeploy(false);
-      setDeployStep(0);
-      return;
-    }
-
-    // Step 6: Deploy Convex to production
-    setDeployStep(6);
-    console.log('[🚀DEPLOY] Step 6: Deploy Convex to production...');
-    addLog('Full Deploy', 'pending', 'Step 6/7: Deploying Convex to Sturgeon (PRODUCTION)...');
+    // Step 4: Deploy Convex to production
+    setDeployStep(4);
+    console.log('[🚀DEPLOY] Step 4: Deploy Convex to production...');
+    addLog('Full Deploy', 'pending', 'Step 4/4: Deploying Convex to Sturgeon (PRODUCTION)...');
     try {
       const res = await fetch('/api/deployment/deploy-prod', {
         method: 'POST',
@@ -501,38 +454,16 @@ export default function DeploymentsAdmin() {
         body: JSON.stringify({ confirmationToken: 'DEPLOY_TO_PRODUCTION' })
       });
       const data = await res.json();
-      console.log('[🚀DEPLOY] Step 6 result:', data);
+      console.log('[🚀DEPLOY] Step 4 result:', data);
       if (data.success) {
         addLog('Full Deploy', 'success', 'Convex deployed to Sturgeon (production)');
       } else {
         addLog('Full Deploy', 'error', `Convex deploy warning: ${data.error}`);
-        // Continue anyway to switch back to original branch
+        // Not critical - Vercel deploy already triggered
       }
     } catch (error) {
-      console.error('[🚀DEPLOY] Step 6 error:', error);
-      addLog('Full Deploy', 'error', 'Convex deploy warning - server may be down, continuing...');
-    }
-
-    // Step 7: Switch back to original branch
-    setDeployStep(7);
-    console.log('[🚀DEPLOY] Step 7: Switch back to original branch...');
-    addLog('Full Deploy', 'pending', `Step 7/7: Switching back to ${originalBranch}...`);
-    try {
-      const res = await fetch('/api/deployment/switch-branch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ branch: originalBranch })
-      });
-      const data = await res.json();
-      console.log('[🚀DEPLOY] Step 7 result:', data);
-      if (data.success) {
-        addLog('Full Deploy', 'success', `Back on ${originalBranch}`);
-      } else {
-        addLog('Full Deploy', 'error', `Could not switch back: ${data.error}`);
-      }
-    } catch (error) {
-      console.error('[🚀DEPLOY] Step 7 error:', error);
-      addLog('Full Deploy', 'error', `Could not switch back to ${originalBranch}`);
+      console.error('[🚀DEPLOY] Step 4 error:', error);
+      addLog('Full Deploy', 'error', 'Convex deploy warning - server may be down');
     }
 
     console.log('[🚀DEPLOY] COMPLETE!');
@@ -610,15 +541,14 @@ export default function DeploymentsAdmin() {
             <h2 className="text-xl font-bold text-yellow-400 mb-4">
               Deploying to Production
             </h2>
-            <div className="text-yellow-400 font-bold mb-3">Step {deployStep}/7</div>
+            <div className="text-yellow-400 font-bold mb-3">Step {deployStep}/4</div>
             <div className="flex gap-1 justify-center mb-4">
-              {[1, 2, 3, 4, 5, 6, 7].map((step) => (
+              {[1, 2, 3, 4].map((step) => (
                 <div
                   key={step}
-                  className={`w-8 h-3 rounded-full transition-colors ${
+                  className={`w-10 h-3 rounded-full transition-colors ${
                     step < deployStep ? 'bg-green-500' :
                     step === deployStep ? 'bg-yellow-500 animate-pulse' :
-                    (step === 4 && deployStep >= 3) ? 'bg-green-500' :
                     'bg-gray-600'
                   }`}
                 />
@@ -626,11 +556,9 @@ export default function DeploymentsAdmin() {
             </div>
             <div className="text-gray-300 text-sm mb-4">
               {deployStep === 1 && 'Committing changes...'}
-              {deployStep === 2 && 'Pushing branch to GitHub...'}
-              {deployStep === 3 && 'Switching to master & merging...'}
-              {deployStep === 5 && 'Pushing master to GitHub (Vercel)...'}
-              {deployStep === 6 && 'Deploying Convex to production...'}
-              {deployStep === 7 && 'Switching back to working branch...'}
+              {deployStep === 2 && 'Pushing branch to GitHub (backup)...'}
+              {deployStep === 3 && 'Pushing to origin/master (Vercel production)...'}
+              {deployStep === 4 && 'Deploying Convex to production...'}
             </div>
             <p className="text-gray-500 text-xs">
               Please wait... Do not close this window.
