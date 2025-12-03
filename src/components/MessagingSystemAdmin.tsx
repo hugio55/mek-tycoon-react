@@ -165,6 +165,7 @@ export default function MessagingSystemAdmin() {
   // Admin view state
   const [adminSearchQuery, setAdminSearchQuery] = useState('');
   const [adminSelectedConversationId, setAdminSelectedConversationId] = useState<Id<"conversations"> | null>(null);
+  const [showDeletedMessages, setShowDeletedMessages] = useState(false);
 
   // Convex queries
   const conversations = useQuery(api.messaging.getConversations, {
@@ -201,6 +202,18 @@ export default function MessagingSystemAdmin() {
 
   const adminMessages = useQuery(
     api.messaging.getMessagesAdmin,
+    adminSelectedConversationId ? { conversationId: adminSelectedConversationId } : 'skip'
+  );
+
+  // Query for deleted messages in admin view
+  const deletedMessages = useQuery(
+    api.messaging.getDeletedMessagesAdmin,
+    adminSelectedConversationId && showDeletedMessages ? { conversationId: adminSelectedConversationId } : 'skip'
+  );
+
+  // Query for message counts when conversation is selected
+  const messageCount = useQuery(
+    api.messaging.getConversationMessageCount,
     adminSelectedConversationId ? { conversationId: adminSelectedConversationId } : 'skip'
   );
 
@@ -620,7 +633,7 @@ export default function MessagingSystemAdmin() {
   };
 
   // Get the selected admin conversation details
-  const selectedAdminConversation = allConversationsAdmin?.find(
+  const selectedAdminConversation = allConversationsAdmin?.conversations?.find(
     (c: any) => c._id === adminSelectedConversationId
   );
 
@@ -1113,12 +1126,13 @@ export default function MessagingSystemAdmin() {
                 <div className="p-4 border-b border-gray-700">
                   <h2 className="text-lg font-semibold text-white">All Conversations</h2>
                   <div className="text-sm text-gray-500">
-                    {allConversationsAdmin?.length ?? 0} total
+                    {allConversationsAdmin?.conversations?.length ?? 0} shown
+                    {allConversationsAdmin?.hasMore && ' (more available)'}
                   </div>
                 </div>
 
                 <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
-                  {allConversationsAdmin?.map((conv: any) => (
+                  {allConversationsAdmin?.conversations?.map((conv: any) => (
                     <div
                       key={conv._id}
                       onClick={() => setAdminSelectedConversationId(conv._id)}
@@ -1170,7 +1184,7 @@ export default function MessagingSystemAdmin() {
                     </div>
                   ))}
 
-                  {allConversationsAdmin?.length === 0 && (
+                  {allConversationsAdmin?.conversations?.length === 0 && (
                     <div className="p-8 text-center text-gray-500">
                       <div className="text-4xl mb-2">📭</div>
                       <div>No conversations found</div>
@@ -1218,6 +1232,19 @@ export default function MessagingSystemAdmin() {
 
                         {/* Admin Action Buttons */}
                         <div className="flex items-center gap-2">
+                          {/* View Deleted Messages Toggle */}
+                          {messageCount && messageCount.deleted > 0 && (
+                            <button
+                              onClick={() => setShowDeletedMessages(!showDeletedMessages)}
+                              className={`px-3 py-1.5 border rounded-lg text-sm transition-colors ${
+                                showDeletedMessages
+                                  ? 'bg-purple-500/30 text-purple-300 border-purple-500/50'
+                                  : 'bg-purple-500/20 text-purple-400 border-purple-500/50 hover:bg-purple-500/30'
+                              }`}
+                            >
+                              {showDeletedMessages ? 'Hide' : 'View'} Deleted ({messageCount.deleted})
+                            </button>
+                          )}
                           {selectedAdminConversation.disabledByAdmin ? (
                             <button
                               onClick={() => handleAdminEnableConversation(adminSelectedConversationId)}
@@ -1361,19 +1388,19 @@ export default function MessagingSystemAdmin() {
 
             {/* Admin Stats */}
             <div className="mt-6 p-4 bg-black/40 rounded-xl border border-gray-700">
-              <div className="text-sm text-gray-400 uppercase tracking-wider mb-2">Admin Stats</div>
+              <div className="text-sm text-gray-400 uppercase tracking-wider mb-2">Admin Stats (Current Page)</div>
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500">Total Conversations:</span>{' '}
-                  <span className="text-white">{allConversationsAdmin?.length ?? 0}</span>
+                  <span className="text-gray-500">Conversations Shown:</span>{' '}
+                  <span className="text-white">{allConversationsAdmin?.conversations?.length ?? 0}</span>
                 </div>
                 <div>
                   <span className="text-gray-500">Disabled:</span>{' '}
-                  <span className="text-red-400">{allConversationsAdmin?.filter((c: any) => c.disabledByAdmin).length ?? 0}</span>
+                  <span className="text-red-400">{allConversationsAdmin?.conversations?.filter((c: any) => c.disabledByAdmin).length ?? 0}</span>
                 </div>
                 <div>
                   <span className="text-gray-500">Active:</span>{' '}
-                  <span className="text-green-400">{allConversationsAdmin?.filter((c: any) => !c.disabledByAdmin).length ?? 0}</span>
+                  <span className="text-green-400">{allConversationsAdmin?.conversations?.filter((c: any) => !c.disabledByAdmin).length ?? 0}</span>
                 </div>
               </div>
             </div>
