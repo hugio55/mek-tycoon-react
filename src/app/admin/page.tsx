@@ -148,11 +148,11 @@ function RarityBiasAdmin() {
 
         {/* Size Variants Showcase */}
         <div className="space-y-8">
-          {/* Large */}
+          {/* Large - with slider for demo */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-yellow-400 font-bold uppercase tracking-wider">Large</span>
-              <span className="text-gray-500 text-sm">(300px height - full features)</span>
+              <span className="text-gray-500 text-sm">(300px height, full width - full features)</span>
             </div>
             <RarityChart
               rarityBias={rarityBias}
@@ -167,13 +167,12 @@ function RarityBiasAdmin() {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-yellow-400 font-bold uppercase tracking-wider">Medium</span>
-              <span className="text-gray-500 text-sm">(180px height - compact with labels)</span>
+              <span className="text-gray-500 text-sm">(150px height, max-w-md - compact with labels)</span>
             </div>
             <RarityChart
               rarityBias={rarityBias}
               displayBias={displayBias}
-              onSliderChange={handleSliderChange}
-              showSlider={true}
+              showSlider={false}
               size="medium"
             />
           </div>
@@ -182,13 +181,12 @@ function RarityBiasAdmin() {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-yellow-400 font-bold uppercase tracking-wider">Small</span>
-              <span className="text-gray-500 text-sm">(100px height - minimal labels)</span>
+              <span className="text-gray-500 text-sm">(80px height, max-w-xs - minimal)</span>
             </div>
             <RarityChart
               rarityBias={rarityBias}
               displayBias={displayBias}
-              onSliderChange={handleSliderChange}
-              showSlider={true}
+              showSlider={false}
               size="small"
             />
           </div>
@@ -197,17 +195,28 @@ function RarityBiasAdmin() {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-yellow-400 font-bold uppercase tracking-wider">Micro</span>
-              <span className="text-gray-500 text-sm">(50px height - bars only, inline widget)</span>
+              <span className="text-gray-500 text-sm">(40px height, 180px wide - bars only)</span>
             </div>
-            <div className="max-w-md">
-              <RarityChart
-                rarityBias={rarityBias}
-                displayBias={displayBias}
-                onSliderChange={handleSliderChange}
-                showSlider={true}
-                size="micro"
-              />
+            <RarityChart
+              rarityBias={rarityBias}
+              displayBias={displayBias}
+              showSlider={false}
+              size="micro"
+            />
+          </div>
+
+          {/* Ultra-Micro */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-yellow-400 font-bold uppercase tracking-wider">Ultra-Micro</span>
+              <span className="text-gray-500 text-sm">(20px height, 120px wide - smooth gradient)</span>
             </div>
+            <RarityChart
+              rarityBias={rarityBias}
+              displayBias={displayBias}
+              showSlider={false}
+              size="ultra-micro"
+            />
           </div>
         </div>
 
@@ -262,7 +271,8 @@ function RarityBiasAdmin() {
             <div><span className="text-green-400">{'<RarityChart size="large" />'}</span> - Full page displays</div>
             <div><span className="text-green-400">{'<RarityChart size="medium" />'}</span> - Sidebars, modals</div>
             <div><span className="text-green-400">{'<RarityChart size="small" />'}</span> - Cards, compact views</div>
-            <div><span className="text-green-400">{'<RarityChart size="micro" />'}</span> - Inline widgets, tooltips</div>
+            <div><span className="text-green-400">{'<RarityChart size="micro" />'}</span> - Inline widgets</div>
+            <div><span className="text-green-400">{'<RarityChart size="ultra-micro" />'}</span> - Tooltips, status bars</div>
           </div>
         </div>
       </div>

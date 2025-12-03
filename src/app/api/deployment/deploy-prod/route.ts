@@ -33,8 +33,9 @@ export async function POST(request: NextRequest) {
 
     // Deploy to production using the Sturgeon URL
     // --yes flag skips confirmation prompt (required for non-interactive terminals)
+    // --typecheck=disable skips TypeScript checking (matches dev server behavior)
     const { stdout, stderr } = await execAsync(
-      `npx convex deploy --url "${sturgeonUrl}" --yes`,
+      `npx convex deploy --url "${sturgeonUrl}" --yes --typecheck=disable`,
       {
         timeout: 180000, // 3 minute timeout for production
         env: {

@@ -9,11 +9,12 @@ interface Rank {
   max: number;
 }
 
-type ChartSize = 'large' | 'medium' | 'small' | 'micro';
+type ChartSize = 'large' | 'medium' | 'small' | 'micro' | 'ultra-micro';
 
 interface SizeConfig {
   chartHeight: number;
   maxBarHeight: number;
+  maxWidth: string;
   padding: string;
   biasNumberSize: string;
   showHeader: boolean;
@@ -35,6 +36,7 @@ const SIZE_CONFIGS: Record<ChartSize, SizeConfig> = {
   large: {
     chartHeight: 300,
     maxBarHeight: 290,
+    maxWidth: 'max-w-full',
     padding: 'p-6',
     biasNumberSize: '72px',
     showHeader: true,
@@ -52,48 +54,51 @@ const SIZE_CONFIGS: Record<ChartSize, SizeConfig> = {
     bottomLabelOffset: '-bottom-6',
   },
   medium: {
-    chartHeight: 180,
-    maxBarHeight: 170,
-    padding: 'p-4',
-    biasNumberSize: '48px',
+    chartHeight: 150,
+    maxBarHeight: 140,
+    maxWidth: 'max-w-md',
+    padding: 'p-3',
+    biasNumberSize: '36px',
     showHeader: true,
-    showFocusText: true,
+    showFocusText: false,
     showPercentLabels: true,
     showRankLabels: true,
     showDescription: false,
-    showSliderLabels: true,
-    percentLabelClass: 'text-[10px]',
-    rankLabelClass: 'text-xs font-semibold',
+    showSliderLabels: false,
+    percentLabelClass: 'text-[9px]',
+    rankLabelClass: 'text-[10px] font-semibold',
     barMargin: 'mx-0.5',
     barRadius: '3px 3px 0 0',
-    bottomMargin: 'mb-6',
+    bottomMargin: 'mb-5',
     topLabelOffset: '-top-4',
-    bottomLabelOffset: '-bottom-5',
+    bottomLabelOffset: '-bottom-4',
   },
   small: {
-    chartHeight: 100,
-    maxBarHeight: 90,
-    padding: 'p-3',
-    biasNumberSize: '32px',
+    chartHeight: 80,
+    maxBarHeight: 70,
+    maxWidth: 'max-w-xs',
+    padding: 'p-2',
+    biasNumberSize: '24px',
     showHeader: true,
     showFocusText: false,
     showPercentLabels: false,
     showRankLabels: true,
     showDescription: false,
     showSliderLabels: false,
-    percentLabelClass: 'text-[8px]',
-    rankLabelClass: 'text-[9px] font-semibold',
-    barMargin: 'mx-0.5',
+    percentLabelClass: 'text-[7px]',
+    rankLabelClass: 'text-[8px] font-semibold',
+    barMargin: 'mx-px',
     barRadius: '2px 2px 0 0',
-    bottomMargin: 'mb-4',
+    bottomMargin: 'mb-3',
     topLabelOffset: '-top-3',
-    bottomLabelOffset: '-bottom-4',
+    bottomLabelOffset: '-bottom-3',
   },
   micro: {
-    chartHeight: 50,
-    maxBarHeight: 45,
-    padding: 'p-2',
-    biasNumberSize: '20px',
+    chartHeight: 40,
+    maxBarHeight: 36,
+    maxWidth: 'max-w-[180px]',
+    padding: 'p-1.5',
+    biasNumberSize: '16px',
     showHeader: false,
     showFocusText: false,
     showPercentLabels: false,
@@ -101,12 +106,32 @@ const SIZE_CONFIGS: Record<ChartSize, SizeConfig> = {
     showDescription: false,
     showSliderLabels: false,
     percentLabelClass: 'text-[6px]',
-    rankLabelClass: 'text-[7px]',
+    rankLabelClass: 'text-[6px]',
     barMargin: 'mx-px',
     barRadius: '1px 1px 0 0',
     bottomMargin: 'mb-0',
     topLabelOffset: '-top-2',
     bottomLabelOffset: '-bottom-2',
+  },
+  'ultra-micro': {
+    chartHeight: 20,
+    maxBarHeight: 20,
+    maxWidth: 'max-w-[120px]',
+    padding: 'p-0',
+    biasNumberSize: '12px',
+    showHeader: false,
+    showFocusText: false,
+    showPercentLabels: false,
+    showRankLabels: false,
+    showDescription: false,
+    showSliderLabels: false,
+    percentLabelClass: '',
+    rankLabelClass: '',
+    barMargin: '',
+    barRadius: '2px',
+    bottomMargin: 'mb-0',
+    topLabelOffset: '',
+    bottomLabelOffset: '',
   },
 };
 
@@ -184,6 +209,36 @@ function getCurrentFocus(rarityBias: number): string {
   return 'Between ranks';
 }
 
+// Generate smooth gradient for ultra-micro based on probabilities
+function generateSmoothGradient(probabilities: number[]): string {
+  // Create color stops based on probability-weighted colors
+  const stops: string[] = [];
+  const maxProb = Math.max(...probabilities);
+
+  probabilities.forEach((prob, i) => {
+    const rank = RANKS[i];
+    const position = (i / (RANKS.length - 1)) * 100;
+    // Opacity based on probability (higher prob = more visible)
+    const opacity = Math.max(0.2, prob / maxProb);
+    stops.push(`${rank.color}${Math.round(opacity * 255).toString(16).padStart(2, '0')} ${position}%`);
+  });
+
+  return `linear-gradient(to right, ${stops.join(', ')})`;
+}
+
+// Calculate the "peak" position for the gradient glow effect
+function calculatePeakPosition(probabilities: number[]): number {
+  let maxProb = 0;
+  let peakIndex = 0;
+  probabilities.forEach((prob, i) => {
+    if (prob > maxProb) {
+      maxProb = prob;
+      peakIndex = i;
+    }
+  });
+  return (peakIndex / (RANKS.length - 1)) * 100;
+}
+
 export default function RarityChart({
   rarityBias,
   displayBias,
@@ -203,13 +258,45 @@ export default function RarityChart({
   const maxBarHeight = maxBarHeightOverride ?? config.maxBarHeight;
   const showHeader = hideCenterDisplay !== undefined ? !hideCenterDisplay : config.showHeader;
 
-  return (
-    <div className={`bg-gradient-to-br from-black/60 to-black/40 backdrop-blur-sm rounded-lg ${config.padding} border border-yellow-500/10`}>
-      {showHeader && (
-        <div className="text-center mb-4">
-          <div className="text-gray-400 text-sm uppercase tracking-wider mb-1">Current Bias</div>
+  // Ultra-micro renders a smooth gradient instead of bars
+  if (size === 'ultra-micro') {
+    const gradient = generateSmoothGradient(probabilities);
+    const peakPos = calculatePeakPosition(probabilities);
+    const peakRank = RANKS[Math.round((peakPos / 100) * (RANKS.length - 1))];
+
+    return (
+      <div
+        className={`${config.maxWidth} rounded-sm overflow-hidden`}
+        style={{ height: `${chartHeight}px` }}
+      >
+        <div
+          className="w-full h-full relative"
+          style={{
+            background: gradient,
+            boxShadow: `0 0 8px ${peakRank.color}66, inset 0 0 4px rgba(0,0,0,0.5)`
+          }}
+        >
+          {/* Highlight indicator showing peak position */}
           <div
-            className="text-yellow-400 mb-2"
+            className="absolute top-0 h-full w-1 bg-white/60 blur-[2px]"
+            style={{
+              left: `${peakPos}%`,
+              transform: 'translateX(-50%)',
+              transition: 'left 150ms ease-out'
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${config.maxWidth} bg-gradient-to-br from-black/60 to-black/40 backdrop-blur-sm rounded-lg ${config.padding} border border-yellow-500/10`}>
+      {showHeader && (
+        <div className="text-center mb-2">
+          <div className="text-gray-400 text-[10px] uppercase tracking-wider mb-0.5">Bias</div>
+          <div
+            className="text-yellow-400"
             style={{
               fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
               fontSize: config.biasNumberSize,
@@ -222,15 +309,15 @@ export default function RarityChart({
             {actualDisplayBias}
           </div>
           {config.showFocusText && (
-            <div className="text-gray-300 text-lg font-inter">
-              Your Current Focus: <span className="text-yellow-400 font-semibold">{getCurrentFocus(rarityBias)}</span>
+            <div className="text-gray-300 text-sm font-inter mt-1">
+              Focus: <span className="text-yellow-400 font-semibold">{getCurrentFocus(rarityBias)}</span>
             </div>
           )}
         </div>
       )}
 
       <div
-        className={`flex items-end justify-center ${config.bottomMargin} px-2`}
+        className={`flex items-end justify-center ${config.bottomMargin}`}
         style={{ height: `${chartHeight}px`, overflow: 'visible' }}
       >
         {probabilities.map((prob, i) => {
@@ -249,7 +336,7 @@ export default function RarityChart({
                 height: `${height}px`,
                 background: `linear-gradient(to top, ${rank.color}88, ${rank.color})`,
                 borderRadius: config.barRadius,
-                boxShadow: `0 0 ${size === 'micro' ? '2px' : '8px'} ${rank.color}55`,
+                boxShadow: `0 0 ${size === 'micro' ? '2px' : '6px'} ${rank.color}44`,
                 transition: 'height 75ms ease-out, filter 200ms ease'
               }}
             >
@@ -275,26 +362,24 @@ export default function RarityChart({
       </div>
 
       {config.showDescription && (
-        <div className="text-center text-gray-400 mt-10">
+        <div className="text-center text-gray-400 text-sm mt-6">
           This shows the probability of crafting at each rarity level
         </div>
       )}
 
       {/* Slider Control */}
       {showSlider && onSliderChange && (
-        <div className={`mt-${size === 'micro' ? '2' : size === 'small' ? '4' : '8'} px-2`}>
-          {size !== 'micro' && (
-            <label className={`block text-yellow-400 ${size === 'small' ? 'text-xs' : 'text-sm'} font-bold mb-2`}>
-              Adjust Rarity Bias: {actualDisplayBias}
-            </label>
-          )}
+        <div className="mt-6 px-2">
+          <label className="block text-yellow-400 text-sm font-bold mb-2">
+            Adjust Rarity Bias: {actualDisplayBias}
+          </label>
           <input
             type="range"
             min="0"
             max="1000"
             value={actualDisplayBias}
             onChange={(e) => onSliderChange(Number(e.target.value))}
-            className={`w-full ${size === 'micro' ? 'h-1' : 'h-2'} bg-gray-700 rounded-lg appearance-none cursor-pointer slider`}
+            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
             style={{
               background: `linear-gradient(to right, #999999 0%, #87CEEB 10%, #90EE90 20%, #FFF700 30%, #FFB6C1 40%, #DA70D6 50%, #9370DB 60%, #FF8C00 70%, #DC143C 80%, #8B0000 100%)`
             }}
