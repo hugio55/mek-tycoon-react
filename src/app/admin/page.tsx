@@ -6274,19 +6274,39 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
       const discrepancy = nmkrDiscrepancies.find(d => d.nftUid === nftUid);
       if (!discrepancy) return;
 
+      console.log('[🔄NMKR] Attempting to sync NFT:', {
+        nftUid,
+        nmkrStatus: discrepancy.nmkrStatus,
+        soldTo: discrepancy.nmkrSoldTo,
+        targetDatabase: 'Sturgeon (production)',
+      });
+
       // Sync the single NFT
-      await client.mutation(api.nmkrSync.syncSingleNFT, {
+      const result = await client.mutation(api.nmkrSync.syncSingleNFT, {
         nftUid,
         nmkrStatus: discrepancy.nmkrStatus,
         soldTo: discrepancy.nmkrSoldTo,
       });
 
-      // Remove from discrepancies list
-      setNmkrDiscrepancies(prev => prev.filter(d => d.nftUid !== nftUid));
-      setCampaignUpdateTrigger(prev => prev + 1);
+      console.log('[🔄NMKR] Sync result:', result);
+
+      // Validate the result
+      if (result && result.success) {
+        console.log('[🔄NMKR] ✅ Successfully synced NFT:', {
+          nftUid,
+          oldStatus: result.oldStatus,
+          newStatus: result.newStatus,
+        });
+        // Only remove from discrepancies if actually successful
+        setNmkrDiscrepancies(prev => prev.filter(d => d.nftUid !== nftUid));
+        setCampaignUpdateTrigger(prev => prev + 1);
+      } else {
+        console.error('[🔄NMKR] ❌ Sync returned but was not successful:', result);
+        alert(`Sync failed: The mutation returned but did not report success. Check console for details.`);
+      }
     } catch (error: any) {
-      console.error('[🔄NMKR] Error syncing NFT:', error);
-      alert(`Error syncing NFT: ${error.message}`);
+      console.error('[🔄NMKR] ❌ Error syncing NFT:', error);
+      alert(`Error syncing NFT: ${error.message}\n\nThis might mean the nmkrSync functions are not deployed to Sturgeon (production). Check the Convex dashboard.`);
     }
   };
 
