@@ -715,14 +715,28 @@ export default function DeploymentsAdmin() {
 
       {/* Commit Message Input */}
       {gitStatus?.hasUncommittedChanges && (
-        <div className="bg-gray-800/50 border border-yellow-500/30 rounded-lg p-4">
-          <label className="text-gray-400 text-xs uppercase tracking-wider mb-2 block">Commit Message (required for commit/deploy)</label>
+        <div className={`bg-gray-800/50 rounded-lg p-4 ${
+          !commitMessage.trim() && sessionBackup
+            ? 'border-2 border-yellow-500 animate-pulse'
+            : 'border border-yellow-500/30'
+        }`}>
+          <label className={`text-xs uppercase tracking-wider mb-2 block ${
+            !commitMessage.trim() && sessionBackup ? 'text-yellow-400 font-bold' : 'text-gray-400'
+          }`}>
+            {!commitMessage.trim() && sessionBackup
+              ? '⚠️ ENTER COMMIT MESSAGE TO DEPLOY'
+              : 'Commit Message (required for commit/deploy)'}
+          </label>
           <input
             type="text"
             value={commitMessage}
             onChange={(e) => setCommitMessage(e.target.value)}
             placeholder="Describe your changes..."
-            className="w-full bg-gray-900 border border-gray-700 rounded px-4 py-2 text-white focus:border-yellow-500 focus:outline-none"
+            className={`w-full bg-gray-900 rounded px-4 py-2 text-white focus:outline-none ${
+              !commitMessage.trim() && sessionBackup
+                ? 'border-2 border-yellow-500 focus:border-yellow-400'
+                : 'border border-gray-700 focus:border-yellow-500'
+            }`}
             disabled={anyActionRunning}
           />
           {gitStatus?.changedFiles && gitStatus.changedFiles.length > 0 && (
@@ -817,7 +831,13 @@ export default function DeploymentsAdmin() {
             disabled:opacity-50
           `}
         >
-          {isFullDeploy ? 'DEPLOYING...' : !sessionBackup ? 'CREATE BACKUP FIRST' : 'DEPLOY TO PRODUCTION'}
+          {isFullDeploy
+            ? 'DEPLOYING...'
+            : !sessionBackup
+              ? 'CREATE BACKUP FIRST'
+              : (gitStatus?.hasUncommittedChanges && !commitMessage.trim())
+                ? 'ENTER COMMIT MESSAGE FIRST'
+                : 'DEPLOY TO PRODUCTION'}
         </button>
       </div>
 
