@@ -354,14 +354,8 @@ export default function DeploymentsAdmin() {
 
     // Step 1: Commit (if there are changes)
     if (freshHasChanges) {
-      // Require commit message if there are uncommitted changes
-      if (!commitMessage.trim()) {
-        addLog('Full Deploy', 'error', 'Please enter a commit message first');
-        setDeployError('Missing commit message. You have uncommitted changes - please enter a commit message and try again.');
-        setIsFullDeploy(false);
-        setDeployStep(0);
-        return;
-      }
+      // Use provided message or auto-generate one (like auto-save does)
+      const finalCommitMessage = commitMessage.trim() || `Pre-deploy commit (${new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })})`;
 
       console.log('[🚀DEPLOY] Step 1: Committing changes...');
       addLog('Full Deploy', 'pending', 'Step 1/7: Committing changes...');
@@ -369,7 +363,7 @@ export default function DeploymentsAdmin() {
         const res = await fetch('/api/deployment/commit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: commitMessage })
+          body: JSON.stringify({ message: finalCommitMessage })
         });
         const data = await res.json();
         console.log('[🚀DEPLOY] Step 1 result:', data);
@@ -958,7 +952,7 @@ export default function DeploymentsAdmin() {
       <div className="flex justify-center">
         <button
           onClick={() => openProdConfirm(true)}
-          disabled={anyActionRunning || (gitStatus?.hasUncommittedChanges && !commitMessage.trim()) || !sessionBackup}
+          disabled={anyActionRunning || !sessionBackup}
           className={`
             px-8 py-4 rounded-lg text-xl font-bold tracking-wider
             transition-all duration-300
@@ -973,9 +967,7 @@ export default function DeploymentsAdmin() {
             ? 'DEPLOYING...'
             : !sessionBackup
               ? 'CREATE BACKUP FIRST'
-              : (gitStatus?.hasUncommittedChanges && !commitMessage.trim())
-                ? 'ENTER COMMIT MESSAGE FIRST'
-                : 'DEPLOY TO PRODUCTION'}
+              : 'DEPLOY TO PRODUCTION'}
         </button>
       </div>
 
