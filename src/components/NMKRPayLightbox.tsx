@@ -449,10 +449,20 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
         console.log('[🔐BACKEND] Verification result:', verifyResult);
 
         // ============================================
-        // STEP 4: Only proceed if backend confirms
+        // STEP 4: Only proceed if backend confirms with FULL cryptographic verification
         // ============================================
+        // SECURITY: For NFT claims, we require full Ed25519 verification
+        // Reject if warning indicates simplified/relaxed verification was used
+        if (verifyResult.warning) {
+          console.warn('[🔐CLAIM-VERIFY] ⚠️ WEAK VERIFICATION WARNING:', verifyResult.warning);
+          console.error('[🔐CLAIM-VERIFY] ❌ Rejecting weak verification for NFT claim security');
+          setBackendVerificationStatus('failed');
+          setWalletVerificationError('Your wallet\'s signature could not be fully verified. Please try a different wallet (Eternl, Nami, or Flint recommended).');
+          return;
+        }
+
         if (verifyResult.success && verifyResult.verified) {
-          console.log('[🔐CLAIM-VERIFY] ✅ BACKEND VERIFIED - opening payment window');
+          console.log('[🔐CLAIM-VERIFY] ✅ BACKEND VERIFIED (full cryptographic verification) - opening payment window');
           setBackendVerificationStatus('success');
 
           // Clear verification state

@@ -322,7 +322,7 @@ export const verifySignature = action({
     signature: v.string(),
     walletName: v.string()
   },
-  handler: async (ctx, args): Promise<{success: boolean, error?: string, verified?: boolean, expiresAt?: number, sessionId?: string}> => {
+  handler: async (ctx, args): Promise<{success: boolean, error?: string, verified?: boolean, expiresAt?: number, sessionId?: string, warning?: string}> => {
     try {
       // Check rate limit for signature verification
       const rateLimitCheck = await ctx.runMutation(api.walletAuthentication.checkSignatureRateLimit, {
@@ -478,6 +478,9 @@ export const verifySignature = action({
           verified: true,
           expiresAt: sessionExpiresAt,
           sessionId: sessionId, // Return sessionId so frontend can store it
+          // SECURITY: Pass through any verification warning (e.g., simplified/relaxed verification)
+          // Frontend should reject claims with warnings for maximum security
+          warning: verificationResult.warning,
         };
       } else {
         // IMPORTANT: Even though verification failed, nonce is already consumed

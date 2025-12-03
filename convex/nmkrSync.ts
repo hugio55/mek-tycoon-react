@@ -105,11 +105,33 @@ export const syncSingleNFT = mutation({
     const { nftUid, soldTo } = args;
     const nmkrStatus = args.nmkrStatus as 'free' | 'reserved' | 'sold';
 
-    // Find the NFT in inventory
+    console.log('[🔄SYNC-MUTATION] syncSingleNFT called with:', { nftUid, nmkrStatus, soldTo });
+
+    // Find the NFT in inventory using by_uid index
     const nft = await ctx.db
       .query("commemorativeNFTInventory")
       .withIndex("by_uid", (q) => q.eq("nftUid", nftUid))
       .first();
+
+    console.log('[🔄SYNC-MUTATION] Found NFT by uid:', nft ? {
+      _id: nft._id,
+      name: nft.name,
+      status: nft.status,
+      campaignId: nft.campaignId,
+      nftUid: nft.nftUid,
+    } : 'NOT FOUND');
+
+    // Also check if there are MULTIPLE records with this nftUid (data corruption check)
+    const allMatchingByUid = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_uid", (q) => q.eq("nftUid", nftUid))
+      .collect();
+
+    if (allMatchingByUid.length > 1) {
+      console.error('[🔄SYNC-MUTATION] ⚠️ DUPLICATE RECORDS FOUND! Multiple NFTs with same nftUid:',
+        allMatchingByUid.map(n => ({ _id: n._id, name: n.name, status: n.status, campaignId: n.campaignId }))
+      );
+    }
 
     if (!nft) {
       throw new Error(`NFT with UID ${nftUid} not found in inventory`);
