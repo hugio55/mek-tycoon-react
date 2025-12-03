@@ -130,7 +130,7 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
   }, [highlightDisconnected, findDisconnectedAndDeadEndNodes, clearHighlights]);
 
   const handleSaveMekTemplate = useCallback(async () => {
-    let name = state.templateName;
+    let name: string | null = state.templateName;
     if (!name) {
       name = prompt('Enter template name:');
       if (!name) return;
@@ -141,21 +141,24 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
     if (description) dispatch({ type: 'SET_TEMPLATE_DESCRIPTION', payload: description });
 
     try {
-      const cleanedNodes = state.nodes.map(node => ({
-        id: node.id,
-        name: node.name,
-        x: node.x,
-        y: node.y,
-        tier: node.tier,
-        desc: node.desc,
-        xp: node.xp,
-        ...(node.unlocked !== undefined && { unlocked: node.unlocked }),
-        ...(node.nodeType && { nodeType: node.nodeType }),
-        ...(node.statBonus && { statBonus: node.statBonus }),
-        ...(node.abilityId && { abilityId: node.abilityId }),
-        ...(node.passiveEffect && { passiveEffect: node.passiveEffect }),
-        ...(node.buffGrant && { buffGrant: node.buffGrant })
-      }));
+      const cleanedNodes = state.nodes.map(node => {
+        const cleaned: Record<string, unknown> = {
+          id: node.id,
+          name: node.name,
+          x: node.x,
+          y: node.y,
+          tier: node.tier,
+          desc: node.desc,
+          xp: node.xp
+        };
+        if (node.unlocked !== undefined) cleaned.unlocked = node.unlocked;
+        if (node.nodeType) cleaned.nodeType = node.nodeType;
+        if (node.statBonus) cleaned.statBonus = node.statBonus;
+        if (node.abilityId) cleaned.abilityId = node.abilityId;
+        if (node.passiveEffect) cleaned.passiveEffect = node.passiveEffect;
+        if (node.buffGrant) cleaned.buffGrant = node.buffGrant;
+        return cleaned;
+      });
 
       if (state.selectedTemplateId) {
         await updateTemplate({

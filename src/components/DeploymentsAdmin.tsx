@@ -234,6 +234,44 @@ export default function DeploymentsAdmin() {
     }
   };
 
+  const handleDeleteBackup = async (backup: Backup, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent selecting the backup when clicking delete
+
+    const confirmMsg = backup.type === 'full'
+      ? `Delete this FULL backup (${backup.exportSizeBytes ? (backup.exportSizeBytes / (1024 * 1024)).toFixed(1) + ' MB' : 'unknown size'})?\n\nThis will permanently delete the backup and its database export.`
+      : 'Delete this quick backup?';
+
+    if (!confirm(confirmMsg)) return;
+
+    addLog('Delete Backup', 'pending', `Deleting ${backup.type} backup ${backup.id}...`);
+
+    try {
+      const res = await fetch('/api/deployment/delete-backup', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ backupId: backup.id })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        addLog('Delete Backup', 'success', data.message);
+        // Clear selection if this backup was selected
+        if (selectedRollbackBackup?.id === backup.id) {
+          setSelectedRollbackBackup(null);
+        }
+        // Clear session backup if this was it
+        if (sessionBackup?.id === backup.id) {
+          setSessionBackup(null);
+        }
+        await fetchBackups();
+      } else {
+        addLog('Delete Backup', 'error', data.error);
+      }
+    } catch (error) {
+      addLog('Delete Backup', 'error', 'Failed to delete backup');
+    }
+  };
+
   const handleCommit = async () => {
     if (!commitMessage.trim()) {
       addLog('Commit', 'error', 'Please enter a commit message');

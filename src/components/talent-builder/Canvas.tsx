@@ -1,12 +1,14 @@
 import React, { memo, useRef, useEffect, useCallback } from 'react';
-import { TalentNode, Connection, DragState, CanvasMode } from '@/app/talent-builder/types';
+import { TalentNode, Connection, DragState, CanvasMode, BoxSelection, LassoSelection, BuilderMode, ViewportDimensions } from '@/app/talent-builder/types';
 import { TalentAction } from './talentReducer';
 
 interface CanvasProps {
   nodes: TalentNode[];
   connections: Connection[];
   selectedNode: string | null;
+  selectedNodes: Set<string>;
   mode: CanvasMode;
+  builderMode: BuilderMode;
   connectFrom: string | null;
   dragState: DragState;
   showGrid: boolean;
@@ -15,6 +17,14 @@ interface CanvasProps {
   zoom: number;
   isPanning: boolean;
   panStart: { x: number; y: number };
+  boxSelection: BoxSelection;
+  lassoSelection: LassoSelection;
+  showViewportBox: boolean;
+  viewportDimensions: ViewportDimensions;
+  unconnectedNodes: Set<string>;
+  deadEndNodes: Set<string>;
+  highlightDisconnected: boolean;
+  storyChapter: number;
   dispatch: React.Dispatch<TalentAction>;
   onAddNode: (x: number, y: number) => void;
 }
@@ -25,7 +35,9 @@ const Canvas: React.FC<CanvasProps> = memo(({
   nodes,
   connections,
   selectedNode,
+  selectedNodes,
   mode,
+  builderMode,
   connectFrom,
   dragState,
   showGrid,
@@ -34,6 +46,14 @@ const Canvas: React.FC<CanvasProps> = memo(({
   zoom,
   isPanning,
   panStart,
+  boxSelection,
+  lassoSelection,
+  showViewportBox,
+  viewportDimensions,
+  unconnectedNodes,
+  deadEndNodes,
+  highlightDisconnected,
+  storyChapter,
   dispatch,
   onAddNode
 }) => {
@@ -43,15 +63,15 @@ const Canvas: React.FC<CanvasProps> = memo(({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     const preventScroll = (e: WheelEvent) => {
       e.preventDefault();
       e.stopPropagation();
       return false;
     };
-    
+
     canvas.addEventListener('wheel', preventScroll, { passive: false });
-    
+
     return () => {
       if (canvas) {
         canvas.removeEventListener('wheel', preventScroll);
@@ -68,31 +88,43 @@ const Canvas: React.FC<CanvasProps> = memo(({
   const handleNodeClick = useCallback((nodeId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    
+
     if (mode === 'connect') {
       if (!connectFrom) {
         dispatch({ type: 'SET_CONNECT_FROM', payload: nodeId });
       } else if (connectFrom !== nodeId) {
         const exists = connections.some(
-          c => (c.from === connectFrom && c.to === nodeId) || 
+          c => (c.from === connectFrom && c.to === nodeId) ||
                (c.from === nodeId && c.to === connectFrom)
         );
-        
+
         if (!exists) {
-          dispatch({ 
-            type: 'ADD_CONNECTION', 
+          dispatch({
+            type: 'ADD_CONNECTION',
             payload: { from: connectFrom, to: nodeId }
           });
         }
         dispatch({ type: 'SET_CONNECT_FROM', payload: null });
       }
     } else if (mode === 'select' || mode === 'add') {
-      dispatch({ 
-        type: 'SET_SELECTED_NODE', 
-        payload: selectedNode === nodeId ? null : nodeId 
-      });
+      // Handle multi-select with shift key
+      if (e.shiftKey) {
+        const newSelectedNodes = new Set(selectedNodes);
+        if (newSelectedNodes.has(nodeId)) {
+          newSelectedNodes.delete(nodeId);
+        } else {
+          newSelectedNodes.add(nodeId);
+        }
+        dispatch({ type: 'SET_SELECTED_NODES', payload: newSelectedNodes });
+      } else {
+        dispatch({
+          type: 'SET_SELECTED_NODE',
+          payload: selectedNode === nodeId ? null : nodeId
+        });
+        dispatch({ type: 'SET_SELECTED_NODES', payload: new Set() });
+      }
     }
-  }, [mode, connectFrom, connections, selectedNode, dispatch]);
+  }, [mode, connectFrom, connections, selectedNode, selectedNodes, dispatch]);
 
   const handleNodeMouseDown = useCallback((nodeId: string, e: React.MouseEvent) => {
     if (mode === 'connect') return;
@@ -113,86 +145,224 @@ const Canvas: React.FC<CanvasProps> = memo(({
   const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     const isNodeClick = target.closest('.talent-node');
-    
+
     if (isNodeClick) return;
-    
-    if (mode === 'add') {
+
+    if (mode === 'add' || mode === 'addLabel') {
       const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
-      
+
       const x = (e.clientX - rect.left - panOffset.x) / zoom;
       const y = (e.clientY - rect.top - panOffset.y) / zoom;
-      
+
       onAddNode(snapPosition(x), snapPosition(y));
       return;
     }
-    
+
     if (mode === 'select') {
-      dispatch({ type: 'SET_IS_PANNING', payload: true });
-      dispatch({ type: 'SET_PAN_START', payload: { x: e.clientX, y: e.clientY } });
+      // Start box selection
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const x = (e.clientX - rect.left - panOffset.x) / zoom;
+      const y = (e.clientY - rect.top - panOffset.y) / zoom;
+
+      dispatch({
+        type: 'SET_BOX_SELECTION',
+        payload: {
+          isSelecting: true,
+          startX: x,
+          startY: y,
+          endX: x,
+          endY: y,
+          addToSelection: e.shiftKey
+        }
+      });
+      return;
     }
+
+    if (mode === 'lasso') {
+      // Start lasso selection
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const x = (e.clientX - rect.left - panOffset.x) / zoom;
+      const y = (e.clientY - rect.top - panOffset.y) / zoom;
+
+      dispatch({
+        type: 'SET_LASSO_SELECTION',
+        payload: {
+          isSelecting: true,
+          points: [{ x, y }]
+        }
+      });
+      return;
+    }
+
+    // Start panning
+    dispatch({ type: 'SET_IS_PANNING', payload: true });
+    dispatch({ type: 'SET_PAN_START', payload: { x: e.clientX, y: e.clientY } });
   }, [mode, panOffset, zoom, snapPosition, onAddNode, dispatch]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (isPanning) {
       const deltaX = e.clientX - panStart.x;
       const deltaY = e.clientY - panStart.y;
-      dispatch({ 
-        type: 'SET_PAN_OFFSET', 
-        payload: { 
-          x: panOffset.x + deltaX, 
-          y: panOffset.y + deltaY 
+      dispatch({
+        type: 'SET_PAN_OFFSET',
+        payload: {
+          x: panOffset.x + deltaX,
+          y: panOffset.y + deltaY
         }
       });
       dispatch({ type: 'SET_PAN_START', payload: { x: e.clientX, y: e.clientY } });
       return;
     }
-    
+
+    // Handle box selection
+    if (boxSelection.isSelecting) {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const x = (e.clientX - rect.left - panOffset.x) / zoom;
+      const y = (e.clientY - rect.top - panOffset.y) / zoom;
+
+      dispatch({
+        type: 'SET_BOX_SELECTION',
+        payload: { ...boxSelection, endX: x, endY: y }
+      });
+      return;
+    }
+
+    // Handle lasso selection
+    if (lassoSelection.isSelecting) {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const x = (e.clientX - rect.left - panOffset.x) / zoom;
+      const y = (e.clientY - rect.top - panOffset.y) / zoom;
+
+      dispatch({
+        type: 'SET_LASSO_SELECTION',
+        payload: {
+          isSelecting: true,
+          points: [...lassoSelection.points, { x, y }]
+        }
+      });
+      return;
+    }
+
     if (!dragState.isDragging || !dragState.nodeId) return;
-    
+
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
-    
+
     const worldX = (e.clientX - rect.left - panOffset.x) / zoom - dragState.offsetX;
     const worldY = (e.clientY - rect.top - panOffset.y) / zoom - dragState.offsetY;
-    
-    dispatch({
-      type: 'UPDATE_NODE',
-      nodeId: dragState.nodeId,
-      updates: {
-        x: snapPosition(worldX),
-        y: snapPosition(worldY)
+
+    // If multiple nodes selected, move all of them
+    if (selectedNodes.size > 1 && selectedNodes.has(dragState.nodeId)) {
+      const targetNode = nodes.find(n => n.id === dragState.nodeId);
+      if (targetNode) {
+        const deltaX = snapPosition(worldX) - targetNode.x;
+        const deltaY = snapPosition(worldY) - targetNode.y;
+
+        const updates = Array.from(selectedNodes).map(nodeId => {
+          const node = nodes.find(n => n.id === nodeId);
+          if (!node) return null;
+          return {
+            nodeId,
+            updates: {
+              x: node.x + deltaX,
+              y: node.y + deltaY
+            }
+          };
+        }).filter(Boolean);
+
+        dispatch({ type: 'UPDATE_NODES', updates: updates as { nodeId: string; updates: Partial<TalentNode> }[] });
       }
-    });
-  }, [isPanning, panStart, panOffset, dragState, zoom, snapPosition, dispatch]);
+    } else {
+      dispatch({
+        type: 'UPDATE_NODE',
+        nodeId: dragState.nodeId,
+        updates: {
+          x: snapPosition(worldX),
+          y: snapPosition(worldY)
+        }
+      });
+    }
+  }, [isPanning, panStart, panOffset, boxSelection, lassoSelection, dragState, zoom, snapPosition, nodes, selectedNodes, dispatch]);
 
   const handleMouseUp = useCallback(() => {
-    dispatch({ 
-      type: 'SET_DRAG_STATE', 
-      payload: { isDragging: false, nodeId: null, offsetX: 0, offsetY: 0 } 
+    // Finish box selection
+    if (boxSelection.isSelecting) {
+      const minX = Math.min(boxSelection.startX, boxSelection.endX);
+      const maxX = Math.max(boxSelection.startX, boxSelection.endX);
+      const minY = Math.min(boxSelection.startY, boxSelection.endY);
+      const maxY = Math.max(boxSelection.startY, boxSelection.endY);
+
+      const nodesInBox = nodes.filter(node => {
+        const isStart = node.id === 'start' || node.id.startsWith('start-');
+        const nodeRadius = isStart ? 25 : 15;
+        const nodeCenterX = node.x + nodeRadius;
+        const nodeCenterY = node.y + nodeRadius;
+        return nodeCenterX >= minX && nodeCenterX <= maxX && nodeCenterY >= minY && nodeCenterY <= maxY;
+      });
+
+      const newSelectedNodes = boxSelection.addToSelection ? new Set(selectedNodes) : new Set<string>();
+      nodesInBox.forEach(node => newSelectedNodes.add(node.id));
+
+      dispatch({ type: 'SET_SELECTED_NODES', payload: newSelectedNodes });
+      dispatch({ type: 'SET_BOX_SELECTION', payload: { isSelecting: false, startX: 0, startY: 0, endX: 0, endY: 0, addToSelection: false } });
+      return;
+    }
+
+    // Finish lasso selection
+    if (lassoSelection.isSelecting && lassoSelection.points.length > 2) {
+      const nodesInLasso = nodes.filter(node => {
+        const isStart = node.id === 'start' || node.id.startsWith('start-');
+        const nodeRadius = isStart ? 25 : 15;
+        const nodeCenterX = node.x + nodeRadius;
+        const nodeCenterY = node.y + nodeRadius;
+        return isPointInPolygon(nodeCenterX, nodeCenterY, lassoSelection.points);
+      });
+
+      const newSelectedNodes = new Set<string>();
+      nodesInLasso.forEach(node => newSelectedNodes.add(node.id));
+
+      dispatch({ type: 'SET_SELECTED_NODES', payload: newSelectedNodes });
+      dispatch({ type: 'SET_LASSO_SELECTION', payload: { isSelecting: false, points: [] } });
+      return;
+    }
+
+    dispatch({
+      type: 'SET_DRAG_STATE',
+      payload: { isDragging: false, nodeId: null, offsetX: 0, offsetY: 0 }
     });
     dispatch({ type: 'SET_IS_PANNING', payload: false });
-  }, [dispatch]);
+    dispatch({ type: 'SET_BOX_SELECTION', payload: { isSelecting: false, startX: 0, startY: 0, endX: 0, endY: 0, addToSelection: false } });
+    dispatch({ type: 'SET_LASSO_SELECTION', payload: { isSelecting: false, points: [] } });
+  }, [boxSelection, lassoSelection, nodes, selectedNodes, dispatch]);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
-    
+
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-    
+
     const worldX = (mouseX - panOffset.x) / zoom;
     const worldY = (mouseY - panOffset.y) / zoom;
-    
+
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
     const newZoom = Math.max(0.2, Math.min(3, zoom * delta));
-    
+
     const newPanX = mouseX - worldX * newZoom;
     const newPanY = mouseY - worldY * newZoom;
-    
+
     dispatch({ type: 'SET_ZOOM', payload: newZoom });
     dispatch({ type: 'SET_PAN_OFFSET', payload: { x: newPanX, y: newPanY } });
   }, [zoom, panOffset, dispatch]);
@@ -201,38 +371,123 @@ const Canvas: React.FC<CanvasProps> = memo(({
     dispatch({ type: 'DELETE_CONNECTION', index });
   }, [dispatch]);
 
+  // Helper function for point-in-polygon test (ray casting)
+  const isPointInPolygon = (x: number, y: number, polygon: { x: number; y: number }[]): boolean => {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const xi = polygon[i].x, yi = polygon[i].y;
+      const xj = polygon[j].x, yj = polygon[j].y;
+
+      if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) {
+        inside = !inside;
+      }
+    }
+    return inside;
+  };
+
+  // Get node size based on type
+  const getNodeSize = (node: TalentNode): number => {
+    const isStart = node.id === 'start' || node.id.startsWith('start-');
+    if (isStart) return 50;
+
+    if (builderMode === 'story' && node.storyNodeType) {
+      if (node.storyNodeType === 'normal') return 40;
+      if (node.storyNodeType === 'event') return 80;
+      if (node.storyNodeType === 'boss') return 120;
+      if (node.storyNodeType === 'final_boss') return 160;
+    }
+
+    return 30;
+  };
+
+  // Get node styling based on type
+  const getNodeStyle = (node: TalentNode, isSelected: boolean, isConnecting: boolean) => {
+    const isStart = node.id === 'start' || node.id.startsWith('start-');
+    const size = getNodeSize(node);
+
+    let background = '#6b7280';
+    let borderRadius = '50%';
+
+    if (isStart) {
+      background = 'radial-gradient(circle, #00ff88, #00cc66)';
+    } else if (builderMode === 'story' && node.storyNodeType) {
+      if (node.storyNodeType === 'normal') {
+        borderRadius = '8px';
+        background = node.challenger
+          ? 'linear-gradient(135deg, #ff8c00, #ffa500)'
+          : '#3b82f6';
+      } else if (node.storyNodeType === 'event') {
+        background = 'linear-gradient(135deg, #9333ea, #c084fc)';
+      } else if (node.storyNodeType === 'boss') {
+        background = 'linear-gradient(135deg, #ef4444, #f87171)';
+      } else if (node.storyNodeType === 'final_boss') {
+        background = 'linear-gradient(135deg, #f97316, #fb923c)';
+      }
+    } else if (node.isSpell) {
+      background = 'linear-gradient(135deg, #9333ea, #c084fc)';
+      borderRadius = '4px';
+    } else if (node.nodeType) {
+      if (node.nodeType === 'stat') background = '#3b82f6';
+      else if (node.nodeType === 'ability') background = '#a855f7';
+      else if (node.nodeType === 'passive') background = '#f97316';
+      else if (node.nodeType === 'special') background = '#ef4444';
+    }
+
+    return {
+      width: `${size}px`,
+      height: `${size}px`,
+      left: `${node.x}px`,
+      top: `${node.y}px`,
+      background,
+      border: `3px solid ${isSelected ? '#fbbf24' : isConnecting ? '#10b981' : 'transparent'}`,
+      borderRadius,
+      boxShadow: isSelected
+        ? '0 0 20px rgba(251, 191, 36, 0.5)'
+        : isConnecting
+        ? '0 0 20px rgba(16, 185, 129, 0.5)'
+        : isStart
+        ? '0 0 15px rgba(0, 255, 136, 0.5)'
+        : 'none',
+      zIndex: isSelected ? 20 : 10,
+      transform: isSelected ? 'scale(1.1)' : 'scale(1)'
+    };
+  };
+
+  const gridSize = builderMode === 'story' ? 6000 : 3000;
+
   return (
-    <div 
+    <div
       ref={canvasRef}
-      className="fixed inset-0 bg-gray-950"
-      style={{ top: '200px' }}
+      className="absolute inset-0 bg-gray-950 overflow-hidden"
       onWheel={handleWheel}
     >
-      <div 
+      <div
         className={`relative w-full h-full ${
+          isPanning ? 'cursor-grabbing' :
           mode === 'add' ? 'cursor-crosshair' :
           mode === 'addLabel' ? 'cursor-text' :
           mode === 'connect' ? 'cursor-pointer' :
-          'cursor-grab active:cursor-grabbing'
+          mode === 'lasso' ? 'cursor-crosshair' :
+          'cursor-grab'
         }`}
         onMouseDown={handleCanvasMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       >
-        <div 
+        <div
           className="canvas-content absolute"
-          style={{ 
-            width: '3000px', 
-            height: '3000px',
+          style={{
+            width: `${gridSize}px`,
+            height: `${gridSize}px`,
             transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`,
             transformOrigin: '0 0',
-            transition: dragState.isDragging || isPanning ? 'none' : 'transform 0.1s'
+            transition: dragState.isDragging || isPanning || boxSelection.isSelecting || lassoSelection.isSelecting ? 'none' : 'transform 0.1s'
           }}
         >
           {/* Grid */}
           {showGrid && (
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.2 }}>
+            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.25 }}>
               <defs>
                 <pattern id="grid" width={GRID_SIZE} height={GRID_SIZE} patternUnits="userSpaceOnUse">
                   <circle cx={GRID_SIZE/2} cy={GRID_SIZE/2} r="1" fill="white"/>
@@ -242,28 +497,55 @@ const Canvas: React.FC<CanvasProps> = memo(({
             </svg>
           )}
 
+          {/* Story Mode Runway Guidelines */}
+          {builderMode === 'story' && (
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute h-full bg-yellow-500" style={{ left: '2850px', width: '2px', opacity: 0.3 }} />
+              <div className="absolute h-full bg-yellow-500" style={{ left: '3150px', width: '2px', opacity: 0.3 }} />
+              <div className="absolute h-full bg-yellow-500" style={{ left: '3000px', width: '1px', opacity: 0.2 }} />
+              <div className="absolute w-full bg-red-500" style={{ bottom: '50px', height: '2px', opacity: 0.3 }} />
+              <div className="absolute text-yellow-500 text-sm font-bold" style={{ left: '3010px', top: '10px', opacity: 0.5 }}>
+                STORY RUNWAY (300px)
+              </div>
+            </div>
+          )}
+
+          {/* Viewport Box */}
+          {showViewportBox && (
+            <div
+              className="absolute pointer-events-none border-2 border-dashed border-yellow-500"
+              style={{
+                left: `${3000 - viewportDimensions.width / 2}px`,
+                top: `${3000 - viewportDimensions.height / 2}px`,
+                width: `${viewportDimensions.width}px`,
+                height: `${viewportDimensions.height}px`,
+                zIndex: 5
+              }}
+            />
+          )}
+
           {/* Connections */}
           {connections.map((conn, index) => {
             const fromNode = nodes.find(n => n.id === conn.from);
             const toNode = nodes.find(n => n.id === conn.to);
-            
+
             if (!fromNode || !toNode) return null;
-            
-            const isFromStart = fromNode.id === 'start' || fromNode.id.startsWith('start-');
-            const isToStart = toNode.id === 'start' || toNode.id.startsWith('start-');
-            
-            const fromRadius = isFromStart ? 25 : 15;
-            const toRadius = isToStart ? 25 : 15;
+
+            const fromSize = getNodeSize(fromNode);
+            const toSize = getNodeSize(toNode);
+            const fromRadius = fromSize / 2;
+            const toRadius = toSize / 2;
+
             const fromCenterX = fromNode.x + fromRadius;
             const fromCenterY = fromNode.y + fromRadius;
             const toCenterX = toNode.x + toRadius;
             const toCenterY = toNode.y + toRadius;
-            
+
             const dx = toCenterX - fromCenterX;
             const dy = toCenterY - fromCenterY;
             const length = Math.sqrt(dx * dx + dy * dy);
             const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-            
+
             return (
               <div
                 key={index}
@@ -282,12 +564,57 @@ const Canvas: React.FC<CanvasProps> = memo(({
               />
             );
           })}
-          
+
+          {/* Box Selection Rectangle */}
+          {boxSelection.isSelecting && (
+            <div
+              style={{
+                position: 'absolute',
+                left: `${Math.min(boxSelection.startX, boxSelection.endX)}px`,
+                top: `${Math.min(boxSelection.startY, boxSelection.endY)}px`,
+                width: `${Math.abs(boxSelection.endX - boxSelection.startX)}px`,
+                height: `${Math.abs(boxSelection.endY - boxSelection.startY)}px`,
+                border: '2px dashed #fbbf24',
+                background: 'rgba(251, 191, 36, 0.1)',
+                pointerEvents: 'none',
+                zIndex: 100
+              }}
+            />
+          )}
+
+          {/* Lasso Selection Path */}
+          {lassoSelection.isSelecting && lassoSelection.points.length > 1 && (
+            <svg
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: '100%',
+                height: '100%',
+                pointerEvents: 'none',
+                zIndex: 100
+              }}
+            >
+              <polyline
+                points={lassoSelection.points.map(p => `${p.x},${p.y}`).join(' ')}
+                fill="rgba(251, 191, 36, 0.1)"
+                stroke="#fbbf24"
+                strokeWidth="2"
+                strokeDasharray="5,5"
+              />
+            </svg>
+          )}
+
           {/* Nodes */}
           {nodes.map(node => {
-            const isSelected = selectedNode === node.id;
+            const isSelected = selectedNode === node.id || selectedNodes.has(node.id);
             const isConnecting = connectFrom === node.id;
             const isStart = node.id === 'start' || node.id.startsWith('start-');
+            const isUnconnected = unconnectedNodes.has(node.id);
+            const isDeadEnd = deadEndNodes.has(node.id);
+            const hasIssue = isUnconnected || isDeadEnd;
+            const isDimmed = highlightDisconnected && !hasIssue && !isSelected;
+            const nodeSize = getNodeSize(node);
 
             // Render label nodes differently
             if (node.isLabel) {
@@ -304,7 +631,8 @@ const Canvas: React.FC<CanvasProps> = memo(({
                     borderRadius: '4px',
                     boxShadow: isSelected ? '0 0 20px rgba(251, 191, 36, 0.5)' : '0 0 10px rgba(147, 51, 234, 0.3)',
                     zIndex: isSelected ? 20 : 10,
-                    transform: isSelected ? 'scale(1.1)' : 'scale(1)'
+                    transform: isSelected ? 'scale(1.1)' : 'scale(1)',
+                    opacity: isDimmed ? 0.3 : 1
                   }}
                   onClick={(e) => handleNodeClick(node.id, e)}
                   onMouseDown={(e) => handleNodeMouseDown(node.id, e)}
@@ -322,27 +650,10 @@ const Canvas: React.FC<CanvasProps> = memo(({
                 <div
                   className={`talent-node absolute flex items-center justify-center cursor-move transition-all duration-200`}
                   style={{
-                    width: isStart ? '50px' : '30px',
-                    height: isStart ? '50px' : '30px',
-                    left: `${node.x}px`,
-                    top: `${node.y}px`,
-                    background: isStart
-                      ? 'radial-gradient(circle, #00ff88, #00cc66)'
-                      : node.isSpell ? 'linear-gradient(135deg, #9333ea, #c084fc)'
-                      : node.nodeType === 'stat' ? '#3b82f6'
-                      : node.nodeType === 'ability' ? '#a855f7'
-                      : node.nodeType === 'passive' ? '#f97316'
-                      : node.nodeType === 'special' ? '#ef4444'
-                      : '#6b7280',
-                    border: `3px solid ${
-                      isSelected ? '#fbbf24' : isConnecting ? '#10b981' : 'transparent'
-                    }`,
-                    borderRadius: node.isSpell ? '4px' : '50%',
-                    boxShadow: isSelected ? '0 0 20px rgba(251, 191, 36, 0.5)' :
-                              isConnecting ? '0 0 20px rgba(16, 185, 129, 0.5)' :
-                              isStart ? '0 0 15px rgba(0, 255, 136, 0.5)' : 'none',
-                    zIndex: isSelected ? 20 : 10,
-                    transform: isSelected ? 'scale(1.2)' : 'scale(1)'
+                    ...getNodeStyle(node, isSelected, isConnecting),
+                    opacity: isDimmed ? 0.3 : 1,
+                    outline: hasIssue ? `3px solid ${isUnconnected ? '#ef4444' : '#f97316'}` : 'none',
+                    outlineOffset: '2px'
                   }}
                   onClick={(e) => handleNodeClick(node.id, e)}
                   onMouseDown={(e) => handleNodeMouseDown(node.id, e)}
@@ -356,7 +667,13 @@ const Canvas: React.FC<CanvasProps> = memo(({
                     />
                   ) : (
                     <div className="text-xs font-bold text-white pointer-events-none">
-                      {node.tier}
+                      {builderMode === 'story' ? (
+                        node.storyNodeType === 'normal' ? 'M' :
+                        node.storyNodeType === 'event' ? 'E' :
+                        node.storyNodeType === 'boss' ? 'B' :
+                        node.storyNodeType === 'final_boss' ? 'F' :
+                        node.tier
+                      ) : node.tier}
                     </div>
                   )}
                 </div>
@@ -365,12 +682,13 @@ const Canvas: React.FC<CanvasProps> = memo(({
                   <div
                     className="absolute pointer-events-none text-xs text-white font-medium"
                     style={{
-                      left: `${node.x + (isStart ? 25 : 15)}px`,
-                      top: `${node.y + (isStart ? 55 : 35)}px`,
+                      left: `${node.x + nodeSize / 2}px`,
+                      top: `${node.y + nodeSize + 5}px`,
                       transform: 'translateX(-50%)',
                       width: '100px',
                       textAlign: 'center',
-                      textShadow: '1px 1px 2px rgba(0,0,0,0.8), -1px -1px 2px rgba(0,0,0,0.8)'
+                      textShadow: '1px 1px 2px rgba(0,0,0,0.8), -1px -1px 2px rgba(0,0,0,0.8)',
+                      opacity: isDimmed ? 0.3 : 1
                     }}
                   >
                     {node.name}
@@ -381,24 +699,24 @@ const Canvas: React.FC<CanvasProps> = memo(({
           })}
         </div>
       </div>
-      
+
       {/* Zoom Controls */}
       <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 bg-gray-900/90 p-2 rounded">
-        <button 
-          onClick={() => dispatch({ type: 'SET_ZOOM', payload: Math.min(3, zoom * 1.2) })} 
+        <button
+          onClick={() => dispatch({ type: 'SET_ZOOM', payload: Math.min(3, zoom * 1.2) })}
           className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm"
         >
           +
         </button>
         <div className="text-center text-xs text-yellow-400">{Math.round(zoom * 100)}%</div>
-        <button 
-          onClick={() => dispatch({ type: 'SET_ZOOM', payload: Math.max(0.2, zoom * 0.8) })} 
+        <button
+          onClick={() => dispatch({ type: 'SET_ZOOM', payload: Math.max(0.2, zoom * 0.8) })}
           className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm"
         >
           -
         </button>
-        <button 
-          onClick={() => dispatch({ type: 'RESET_VIEW' })} 
+        <button
+          onClick={() => dispatch({ type: 'RESET_VIEW' })}
           className="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs"
         >
           Reset
