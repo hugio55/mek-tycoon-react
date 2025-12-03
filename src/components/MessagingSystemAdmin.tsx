@@ -45,6 +45,27 @@ const TEST_CORPORATIONS = [
   },
 ];
 
+// Sample Mek images for random profile pictures (from /mek-images/150px/)
+const SAMPLE_MEK_IMAGES = [
+  'aa1-aa1-cd1.webp', 'bc2-dm1-ap1.webp', 'dp2-bf4-il2.webp', 'hb1-gn1-hn1.webp',
+  'aa1-ak1-de1.webp', 'bc2-ee1-bc1.webp', 'dp2-bj2-da1.webp', 'hb1-hp1-aj1.webp',
+  'aa1-bf2-ap2.webp', 'bc2-gn2-eh1.webp', 'dp2-dm1-fb2.webp', 'hb2-aa1-gk2.webp',
+  'aa1-at4-ey2.webp', 'bc2-hp1-hn1.webp', 'dp2-er3-hn2.webp', 'hb2-ak2-ap2.webp',
+  'aa1-bf4-cu1.webp', 'bc2-ev1-hn1.webp', 'dp2-fd1-da2.webp', 'hb1-io1-ap1.webp',
+  'aa1-bi1-ap1.webp', 'bc2-er1-bc1.webp', 'dp2-bq1-bc1.webp', 'hb1-jg2-bc1.webp',
+];
+
+// Deterministic random image based on wallet address (so same corp always gets same image)
+function getMekImageForWallet(walletAddress: string): string {
+  let hash = 0;
+  for (let i = 0; i < walletAddress.length; i++) {
+    hash = ((hash << 5) - hash) + walletAddress.charCodeAt(i);
+    hash = hash & hash;
+  }
+  const index = Math.abs(hash) % SAMPLE_MEK_IMAGES.length;
+  return SAMPLE_MEK_IMAGES[index];
+}
+
 // TEMPORARY TEST DATA - Real corporation names from production for testing search
 // TODO: Remove this once connected to real database with corporations
 const MOCK_CORPORATIONS_FOR_TESTING = [
@@ -902,10 +923,12 @@ export default function MessagingSystemAdmin() {
                     className="w-full p-4 text-left hover:bg-white/5 transition-colors border-b border-white/5 last:border-b-0"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
-                        <span className="text-gray-400 text-lg">
-                          {corp.companyName.charAt(0).toUpperCase()}
-                        </span>
+                      <div className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden">
+                        <img
+                          src={`/mek-images/150px/${getMekImageForWallet(corp.walletAddress)}`}
+                          alt={corp.companyName}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-white font-medium truncate">{corp.companyName}</div>
