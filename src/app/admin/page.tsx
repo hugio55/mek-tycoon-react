@@ -78,6 +78,7 @@ import PushButtonRadio, { PushButtonIcons } from '@/components/controls/PushButt
 import FlipToggleSwitch from '@/components/controls/FlipToggleSwitch';
 import PressedButtonRadio from '@/components/controls/PressedButtonRadio';
 import GlowingBorderInput from '@/components/controls/GlowingBorderInput';
+import ProgressiveBlur from '@/components/controls/ProgressiveBlur';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import PortMonitor from '@/components/PortMonitor';
 import DeploymentsAdmin from '@/components/DeploymentsAdmin';
@@ -5041,6 +5042,67 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Source:</span> Uiverse.io by Lakshay-art</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
                       <div><span className="text-zinc-500">Features:</span> Multi-layer rotating conic gradient border, hover/focus animations, filter button with spinning border, color variants (purple/cyan/gold), glow effects</div>
+                    </div>
+                  </div>
+
+                  {/* Progressive Blur */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Progressive Blur
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Effect
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-zinc-900 rounded-lg p-4 flex flex-col gap-6 min-h-[400px]">
+                      {/* Bottom blur example */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Bottom Blur (30%)</span>
+                        <div className="relative w-full h-[150px] overflow-hidden rounded-lg">
+                          <img
+                            src="/mek-images/500px/bc2-dm1-ap1.webp"
+                            alt="Demo"
+                            className="w-full h-full object-cover"
+                          />
+                          <ProgressiveBlur position="bottom" height="30%" />
+                        </div>
+                      </div>
+
+                      {/* Top blur example */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Top Blur (25%)</span>
+                        <div className="relative w-full h-[150px] overflow-hidden rounded-lg">
+                          <img
+                            src="/mek-images/500px/dp2-bf4-il2.webp"
+                            alt="Demo"
+                            className="w-full h-full object-cover"
+                          />
+                          <ProgressiveBlur position="top" height="25%" />
+                        </div>
+                      </div>
+
+                      {/* Both blur example */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-zinc-500">Both Edges</span>
+                        <div className="relative w-full h-[150px] overflow-hidden rounded-lg">
+                          <img
+                            src="/mek-images/500px/hb1-gn1-hn1.webp"
+                            alt="Demo"
+                            className="w-full h-full object-cover"
+                          />
+                          <ProgressiveBlur position="both" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Motion Primitives</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Features:</span> Multi-layer backdrop blur with mask gradients, configurable position (top/bottom/both), adjustable height, customizable blur levels [0.5, 1, 2, 4, 8, 16, 32, 64]</div>
                     </div>
                   </div>
 

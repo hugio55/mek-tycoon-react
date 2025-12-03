@@ -21,13 +21,18 @@ export default function LandingContainer({
   height = 'auto',
   isLoading = false
 }: LandingContainerProps) {
+  const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const userAgent = navigator.userAgent.toLowerCase();
     const mobile = /iphone|ipod|android/.test(userAgent);
     setIsMobile(mobile);
   }, []);
+
+  // HYDRATION FIX: Use consistent values until mounted to prevent SSR mismatch
+  const effectiveIsMobile = mounted ? isMobile : false;
 
   return (
     <div
@@ -43,8 +48,8 @@ export default function LandingContainer({
         className="fixed inset-0 pointer-events-none transition-opacity ease-out"
         style={{
           backgroundImage: 'url(/colored-bg-1.webp)',
-          backgroundSize: isMobile ? '180%' : 'cover',
-          backgroundPosition: isMobile ? 'center calc(50% + 80px)' : 'center',
+          backgroundSize: effectiveIsMobile ? '180%' : 'cover',
+          backgroundPosition: effectiveIsMobile ? 'center calc(50% + 80px)' : 'center',
           opacity: isLoading ? 0 : backgroundOpacity,
           transitionDuration: `${transitionDuration}ms`,
           zIndex: 0,

@@ -28,8 +28,15 @@ export const getConversations = query({
       .order("desc")
       .collect();
 
-    // Combine and sort by last message time
+    // Combine, filter hidden, and sort by last message time
     const allConversations = [...asParticipant1, ...asParticipant2]
+      .filter((conv) => {
+        // Filter out conversations hidden by this user
+        const isParticipant1 = conv.participant1 === args.walletAddress;
+        if (isParticipant1 && conv.hiddenForParticipant1) return false;
+        if (!isParticipant1 && conv.hiddenForParticipant2) return false;
+        return true;
+      })
       .sort((a, b) => b.lastMessageAt - a.lastMessageAt);
 
     // Get unread counts for each conversation

@@ -187,6 +187,8 @@ export default function MessagingSystemAdmin() {
   const sendMessage = useMutation(api.messaging.sendMessage);
   const markAsRead = useMutation(api.messaging.markConversationAsRead);
   const setTypingIndicator = useMutation(api.messaging.setTypingIndicator);
+  const deleteMessage = useMutation(api.messaging.deleteMessage);
+  const deleteConversation = useMutation(api.messaging.deleteConversation);
   const generateUploadUrl = useMutation(api.messageAttachments.generateUploadUrl);
   const validateUpload = useMutation(api.messageAttachments.validateUpload);
 
@@ -475,6 +477,50 @@ export default function MessagingSystemAdmin() {
     return 'text-gray-500';
   };
 
+  // Handle deleting a message
+  const handleDeleteMessage = async (messageId: Id<"messages">, deleteForEveryone: boolean) => {
+    if (!confirm(deleteForEveryone
+      ? 'Delete this message for everyone? This cannot be undone.'
+      : 'Delete this message for yourself?')) {
+      return;
+    }
+
+    try {
+      await deleteMessage({
+        messageId,
+        walletAddress: activeCorp.walletAddress,
+        deleteForEveryone,
+      });
+    } catch (error) {
+      console.error('[📨DELETE] Failed to delete message:', error);
+      alert(error instanceof Error ? error.message : 'Failed to delete message');
+    }
+  };
+
+  // Handle deleting a conversation
+  const handleDeleteConversation = async (conversationId: Id<"conversations">, e: React.MouseEvent) => {
+    e.stopPropagation(); // Don't select the conversation
+
+    if (!confirm('Delete this conversation? You will no longer see messages from this chat.')) {
+      return;
+    }
+
+    try {
+      await deleteConversation({
+        conversationId,
+        walletAddress: activeCorp.walletAddress,
+      });
+
+      // If we were viewing this conversation, clear selection
+      if (selectedConversationId === conversationId) {
+        setSelectedConversationId(null);
+      }
+    } catch (error) {
+      console.error('[📨DELETE] Failed to delete conversation:', error);
+      alert(error instanceof Error ? error.message : 'Failed to delete conversation');
+    }
+  };
+
   return (
     <div
       className="min-h-[800px] rounded-lg overflow-hidden relative"
@@ -566,10 +612,10 @@ export default function MessagingSystemAdmin() {
 
               {/* Conversation List */}
               {conversations?.map((conv: any) => (
-                <button
+                <div
                   key={conv._id}
                   onClick={() => setSelectedConversationId(conv._id)}
-                  className={`w-full p-4 text-left border-b border-gray-700/50 transition-colors ${
+                  className={`group w-full p-4 text-left border-b border-gray-700/50 transition-colors cursor-pointer ${
                     selectedConversationId === conv._id
                       ? 'bg-yellow-500/10'
                       : 'hover:bg-white/5'
@@ -588,8 +634,20 @@ export default function MessagingSystemAdmin() {
                         <div className="text-white font-medium truncate">
                           {conv.otherParticipant.companyName}
                         </div>
-                        <div className="text-gray-500 text-xs">
-                          {formatRelativeTime(conv.lastMessageAt)}
+                        <div className="flex items-center gap-2">
+                          {/* Delete button - appears on hover */}
+                          <button
+                            onClick={(e) => handleDeleteConversation(conv._id, e)}
+                            className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-all p-1"
+                            title="Delete conversation"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                            </svg>
+                          </button>
+                          <div className="text-gray-500 text-xs">
+                            {formatRelativeTime(conv.lastMessageAt)}
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
@@ -604,7 +662,7 @@ export default function MessagingSystemAdmin() {
                       </div>
                     </div>
                   </div>
-                </button>
+                </div>
               ))}
 
               {conversations?.length === 0 && (
@@ -656,8 +714,20 @@ export default function MessagingSystemAdmin() {
                     return (
                       <div
                         key={msg._id}
-                        className={`flex ${isOutgoing ? 'justify-end' : 'justify-start'}`}
+                        className={`group flex items-center gap-2 ${isOutgoing ? 'justify-end' : 'justify-start'}`}
                       >
+                        {/* Delete button for outgoing messages - appears on left */}
+                        {isOutgoing && (
+                          <button
+                            onClick={() => handleDeleteMessage(msg._id, true)}
+                            className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-all p-1"
+                            title="Delete message"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                            </svg>
+                          </button>
+                        )}
                         <div
                           className={`max-w-[70%] rounded-2xl px-4 py-2 ${
                             isOutgoing
