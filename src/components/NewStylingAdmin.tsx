@@ -48,10 +48,10 @@ export default function NewStylingAdmin() {
     <div className="p-6 space-y-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-yellow-400 mb-2" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-          New Styling Reference
+          Space Age Style
         </h1>
         <p className="text-gray-400">
-          Live demos of Landing Page V2 styling. Technical details are collapsed by default.
+          Live demos of the Space Age styling system. Technical details are collapsed by default.
         </p>
       </div>
 

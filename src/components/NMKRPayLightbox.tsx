@@ -14,7 +14,7 @@ interface NMKRPayLightboxProps {
   campaignId?: Id<"commemorativeCampaigns">;
 }
 
-type LightboxState = 'loading_campaign' | 'no_campaign' | 'address_entry' | 'checking_eligibility' | 'ineligible' | 'already_claimed' | 'corporation_verified' | 'creating' | 'reserved' | 'wallet_verification' | 'payment' | 'processing' | 'success' | 'error' | 'timeout';
+type LightboxState = 'loading_campaign' | 'no_campaign' | 'address_entry' | 'checking_eligibility' | 'ineligible' | 'already_claimed' | 'corporation_verified' | 'creating' | 'reserved' | 'wallet_verification' | 'payment' | 'payment_window_closed' | 'processing' | 'success' | 'error' | 'timeout';
 
 export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: propCampaignId }: NMKRPayLightboxProps) {
   const [mounted, setMounted] = useState(false);
@@ -436,10 +436,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
     const checkInterval = setInterval(async () => {
       if (paymentWindow.closed && reservationId) {
         clearInterval(checkInterval);
-        console.log('[PAY] Payment window closed');
+        console.log('[PAY] Payment window closed - showing notice');
         await markPaymentWindowClosed({ reservationId });
-        setState('processing');
-        console.log('[PAY] Auto-starting payment verification...');
+        setState('payment_window_closed');
       }
     }, 500);
 
@@ -512,7 +511,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
       onClose();
       return;
     }
-    if (state === 'reserved' || state === 'payment' || state === 'processing') {
+    if (state === 'reserved' || state === 'payment' || state === 'processing' || state === 'payment_window_closed') {
       setShowCancelConfirmation(true);
       return;
     }
