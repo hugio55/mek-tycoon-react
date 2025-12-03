@@ -431,6 +431,15 @@ function UniversalBackgroundAdmin() {
   const [activeSubTab, setActiveSubTab] = useState<'current' | 'planet'>('current');
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Get current site settings to know which background is active
+  const siteSettings = useQuery(api.siteSettings.getSiteSettings);
+  const setBackgroundType = useMutation(api.siteSettings.setBackgroundType);
+
+  // Current active background from settings
+  const currentBackgroundType = siteSettings?.backgroundType ?? 'current';
+  const isActiveBackground = activeSubTab === currentBackgroundType;
 
   useEffect(() => {
     setMounted(true);
@@ -449,6 +458,15 @@ function UniversalBackgroundAdmin() {
     }
   };
 
+  const handleActivateBackground = async () => {
+    setIsUpdating(true);
+    try {
+      await setBackgroundType({ backgroundType: activeSubTab });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <div className="mek-card-industrial mek-border-sharp-gold rounded-lg shadow-lg shadow-black/50 overflow-hidden">
       <div className="p-6">
@@ -456,35 +474,63 @@ function UniversalBackgroundAdmin() {
           <div className="flex items-center gap-3">
             <span className="text-2xl">🌌</span>
             <h3 className="text-xl font-bold text-yellow-400 uppercase tracking-wider">Universal Background</h3>
-            <span className="px-2 py-1 bg-green-600/30 text-green-400 text-xs font-bold rounded">ACTIVE</span>
+            <span className="px-2 py-1 bg-green-600/30 text-green-400 text-xs font-bold rounded">
+              {currentBackgroundType === 'current' ? 'STARS ACTIVE' : 'PLANET ACTIVE'}
+            </span>
           </div>
-          <button
-            onClick={openFullScreenPreview}
-            className="flex items-center gap-2 px-4 py-2 bg-yellow-500/20 border border-yellow-500/50 rounded-lg text-yellow-400 hover:bg-yellow-500/30 transition-colors uppercase tracking-wider text-sm font-bold"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-            View Full Screen
-          </button>
+          <div className="flex items-center gap-2">
+            {!isActiveBackground && (
+              <button
+                onClick={handleActivateBackground}
+                disabled={isUpdating}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600/30 border border-green-500/50 rounded-lg text-green-400 hover:bg-green-500/40 transition-colors uppercase tracking-wider text-sm font-bold disabled:opacity-50"
+              >
+                {isUpdating ? (
+                  <span className="animate-spin">⏳</span>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+                Activate This Background
+              </button>
+            )}
+            <button
+              onClick={openFullScreenPreview}
+              className="flex items-center gap-2 px-4 py-2 bg-yellow-500/20 border border-yellow-500/50 rounded-lg text-yellow-400 hover:bg-yellow-500/30 transition-colors uppercase tracking-wider text-sm font-bold"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              View Full Screen
+            </button>
+          </div>
         </div>
 
         {/* Sub-tab navigation */}
         <div className="flex gap-2 mb-6">
-          {BACKGROUND_SUB_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveSubTab(tab.id as 'current' | 'planet')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold uppercase tracking-wider text-sm transition-colors ${
-                activeSubTab === tab.id
-                  ? 'bg-yellow-500/30 text-yellow-400 border border-yellow-500/50'
-                  : 'bg-black/40 text-gray-400 border border-gray-700 hover:bg-black/60 hover:text-gray-300'
-              }`}
-            >
-              <span>{tab.icon}</span>
-              {tab.name}
-            </button>
-          ))}
+          {BACKGROUND_SUB_TABS.map((tab) => {
+            const isCurrentlyActive = tab.id === currentBackgroundType;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveSubTab(tab.id as 'current' | 'planet')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold uppercase tracking-wider text-sm transition-colors ${
+                  activeSubTab === tab.id
+                    ? 'bg-yellow-500/30 text-yellow-400 border border-yellow-500/50'
+                    : 'bg-black/40 text-gray-400 border border-gray-700 hover:bg-black/60 hover:text-gray-300'
+                }`}
+              >
+                <span>{tab.icon}</span>
+                {tab.name}
+                {isCurrentlyActive && (
+                  <span className="ml-1 px-1.5 py-0.5 bg-green-600/50 text-green-300 text-[10px] rounded uppercase">
+                    Live
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Current Background Content */}

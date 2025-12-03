@@ -32,6 +32,7 @@ export const getSiteSettings = query({
         ...settings,
         localhostBypass,
         maintenanceMode: settings.maintenanceMode ?? false,
+        backgroundType: settings.backgroundType ?? "current",
       };
     }
 
@@ -40,6 +41,7 @@ export const getSiteSettings = query({
       landingPageEnabled: true, // Default: show landing page
       localhostBypass: true, // Default: localhost bypasses protection for dev convenience
       maintenanceMode: false, // Default: maintenance mode OFF
+      backgroundType: "current" as const, // Default: use current GlobalBackground
     };
   },
 });
@@ -132,6 +134,33 @@ export const toggleMaintenanceMode = mutation({
         maintenanceMode: args.enabled,
       });
       return { success: true, maintenanceMode: args.enabled };
+    }
+  },
+});
+
+// Update the global background type
+export const setBackgroundType = mutation({
+  args: {
+    backgroundType: v.union(v.literal("current"), v.literal("planet")),
+  },
+  handler: async (ctx, args) => {
+    const existingSettings = await ctx.db
+      .query("siteSettings")
+      .first();
+
+    if (existingSettings) {
+      await ctx.db.patch(existingSettings._id, {
+        backgroundType: args.backgroundType,
+      });
+      return { success: true, backgroundType: args.backgroundType };
+    } else {
+      await ctx.db.insert("siteSettings", {
+        landingPageEnabled: true,
+        localhostBypass: true,
+        maintenanceMode: false,
+        backgroundType: args.backgroundType,
+      });
+      return { success: true, backgroundType: args.backgroundType };
     }
   },
 });

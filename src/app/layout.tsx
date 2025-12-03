@@ -9,7 +9,7 @@ import "./globals.css";
 import "@/styles/special-buttons.css";
 import "@/styles/typography-system.css";
 import { Providers } from "./providers";
-import GlobalBackground from "@/components/GlobalBackground";
+import DynamicBackground from "@/components/DynamicBackground";
 import { DemoModeWrapper } from "@/components/DemoModeWrapper";
 import NavigationBar from "@/components/NavigationBar";
 import GlobalLightboxHandler from "@/components/GlobalLightboxHandler";
@@ -190,8 +190,8 @@ export default function RootLayout({
         <div className="relative z-10">
           <DemoModeWrapper>
             <Providers>
-              {/* Global background with animated stars and particles */}
-              <GlobalBackground />
+              {/* Global background - dynamically switches based on site settings */}
+              <DynamicBackground />
 
               {/* SessionCleanup removed - was clearing wallet sessions on every page load */}
               <PageLoadingOverlay />

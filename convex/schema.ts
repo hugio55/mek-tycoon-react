@@ -3643,6 +3643,7 @@ export default defineSchema({
     localhostBypass: v.optional(v.boolean()), // When true, localhost bypasses protection (dev mode). When false, localhost acts like production (for testing)
     ignoreLocalhostRule: v.optional(v.boolean()), // Legacy field, use localhostBypass instead
     maintenanceMode: v.optional(v.boolean()), // EMERGENCY: When true, ALL routes redirect to maintenance page (nuclear option)
+    backgroundType: v.optional(v.union(v.literal("current"), v.literal("planet"))), // Controls which global background to display
   }),
 
   // ===== LANDING PAGE PHASE CARDS =====
