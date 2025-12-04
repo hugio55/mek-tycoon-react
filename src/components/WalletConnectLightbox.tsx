@@ -62,9 +62,15 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
   // Lock body scroll when lightbox is open
   useEffect(() => {
     if (isOpen) {
-      // Clear previous errors when lightbox opens
+      // Clear previous errors and states when lightbox opens
       setWalletError(null);
       setConnectionStatus('');
+      setQuickMekCount(null);
+      setFinalMekCount(null);
+      setDisplayCount(0);
+      setIsCountingUp(false);
+      setShowFinalFlourish(false);
+      setLoadingPhase('connecting');
 
       console.log('[🔐RECONNECT] WalletConnectLightbox opened - checking disconnect nonce...');
       const nonceCheck = localStorage.getItem('mek_disconnect_nonce');
@@ -76,12 +82,73 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       document.body.style.overflow = '';
       setIsConnecting(false);
       setWalletError(null);
+      // Clear counting interval on close
+      if (countingIntervalRef.current) {
+        clearInterval(countingIntervalRef.current);
+        countingIntervalRef.current = null;
+      }
     }
 
     return () => {
       document.body.style.overflow = '';
+      if (countingIntervalRef.current) {
+        clearInterval(countingIntervalRef.current);
+        countingIntervalRef.current = null;
+      }
     };
   }, [isOpen]);
+
+  // Animate count from 1 to final number - returns Promise that resolves when animation + flourish complete
+  const startCountingAnimation = useCallback((targetCount: number): Promise<void> => {
+    return new Promise((resolve) => {
+      if (targetCount <= 0) {
+        setDisplayCount(0);
+        setShowFinalFlourish(true);
+        setLoadingPhase('complete');
+        // Brief delay for zero case
+        setTimeout(() => {
+          setShowFinalFlourish(false);
+          resolve();
+        }, 1000);
+        return;
+      }
+
+      console.log('[🔢COUNT] Starting counting animation to', targetCount);
+      setIsCountingUp(true);
+      setDisplayCount(1);
+      setLoadingPhase('animating');
+
+      // Calculate animation speed - faster for larger numbers
+      // Base: 80ms per number, but speed up for larger counts
+      const baseDelay = 80;
+      const speedFactor = Math.max(1, targetCount / 20); // Speed up for counts > 20
+      const delay = Math.max(20, baseDelay / speedFactor); // Min 20ms between updates
+
+      let current = 1;
+      countingIntervalRef.current = setInterval(() => {
+        current++;
+        setDisplayCount(current);
+
+        if (current >= targetCount) {
+          // Animation complete!
+          if (countingIntervalRef.current) {
+            clearInterval(countingIntervalRef.current);
+            countingIntervalRef.current = null;
+          }
+          setIsCountingUp(false);
+          setShowFinalFlourish(true);
+          setLoadingPhase('complete');
+          console.log('[🔢COUNT] Animation complete! Final count:', targetCount);
+
+          // Show flourish for 1.5 seconds then resolve
+          setTimeout(() => {
+            setShowFinalFlourish(false);
+            resolve();
+          }, 1500);
+        }
+      }, delay);
+    });
+  }, []);
 
   // Detect available Cardano wallets
   const detectAvailableWallets = () => {
@@ -274,9 +341,36 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
         throw new Error('Could not retrieve stake address from wallet');
       }
 
-      // Fetch NFTs from blockchain via Blockfrost
-      console.log('[WalletConnect] Fetching NFTs from blockchain...');
-      setConnectionStatus('Loading your Meks from blockchain...');
+      // PHASE 1: Quick count - get Mek count immediately
+      console.log('[WalletConnect] Phase 1: Getting quick Mek count...');
+      setConnectionStatus('Scanning blockchain for Meks...');
+      setLoadingPhase('counting');
+
+      let detectedMekCount = 0;
+
+      try {
+        const quickCountResult = await quickMekCountAction({ stakeAddress });
+        if (quickCountResult.success && quickCountResult.count > 0) {
+          detectedMekCount = quickCountResult.count;
+          setQuickMekCount(detectedMekCount);
+          setConnectionStatus(`Found ${detectedMekCount} Mek${detectedMekCount !== 1 ? 's' : ''} on blockchain!`);
+          console.log(`[WalletConnect] Quick count: ${detectedMekCount} Meks`);
+        } else if (quickCountResult.count === 0) {
+          setConnectionStatus('No Meks found in wallet');
+          console.log('[WalletConnect] Quick count: 0 Meks');
+        }
+      } catch (quickCountError: any) {
+        console.warn('[WalletConnect] Quick count failed, continuing...', quickCountError);
+      }
+
+      // PHASE 2: Full initialization with metadata
+      console.log('[WalletConnect] Phase 2: Loading full Mek data...');
+      setLoadingPhase('loading');
+      if (detectedMekCount > 0) {
+        setConnectionStatus(`Loading ${detectedMekCount} Mek${detectedMekCount !== 1 ? 's' : ''}...`);
+      } else {
+        setConnectionStatus('Loading your Meks from blockchain...');
+      }
 
       let meks: any[] = [];
 
@@ -293,6 +387,14 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
         if (initResult.success) {
           console.log(`[WalletConnect] Successfully fetched ${initResult.mekCount} Meks from blockchain`);
           meks = initResult.meks || [];
+          setFinalMekCount(initResult.mekCount || 0);
+
+          // PHASE 3: Trigger counting animation if we have Meks and wait for it
+          if (initResult.mekCount && initResult.mekCount > 0) {
+            setConnectionStatus('');
+            await startCountingAnimation(initResult.mekCount);
+            console.log('[WalletConnect] Counting animation complete, continuing...');
+          }
         } else {
           console.error('[WalletConnect] Blockfrost initialization failed:', initResult.error);
           throw new Error(initResult.error || 'Failed to fetch NFTs from blockchain');
@@ -305,6 +407,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
 
       // PHASE II: Create/link corporation using stake address ONLY
       // Stake address is the sole identifier - no payment address stored
+      setLoadingPhase('connecting');
       setConnectionStatus('Linking corporation...');
       let isNewCorporation = false;
       try {
@@ -413,36 +516,145 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
           onClick={(e) => e.stopPropagation()}
         >
           <div className="px-6 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8">
-            {/* 3D Cube Spinner */}
-            <div className="flex justify-center mb-6">
-              <CubeSpinner size={50} color="gold" />
-            </div>
+            {/* Show cube spinner when not in counting animation phase */}
+            {loadingPhase !== 'animating' && loadingPhase !== 'complete' && (
+              <div className="flex justify-center mb-6">
+                <CubeSpinner size={50} color="gold" />
+              </div>
+            )}
+
+            {/* Counting animation display */}
+            {(loadingPhase === 'animating' || loadingPhase === 'complete') && (
+              <div className="flex flex-col items-center mb-6">
+                {/* Large animated counter */}
+                <div
+                  className={`relative transition-all duration-300 ${
+                    showFinalFlourish ? 'scale-110' : isCountingUp ? 'scale-100' : 'scale-100'
+                  }`}
+                >
+                  {/* Glow effect on final flourish */}
+                  {showFinalFlourish && (
+                    <>
+                      {/* Outer glow pulse */}
+                      <div
+                        className="absolute inset-0 rounded-full animate-ping"
+                        style={{
+                          background: 'radial-gradient(circle, rgba(250, 182, 23, 0.4) 0%, transparent 70%)',
+                          transform: 'scale(2)',
+                          animationDuration: '1s',
+                        }}
+                      />
+                      {/* Inner glow */}
+                      <div
+                        className="absolute inset-0 rounded-full"
+                        style={{
+                          background: 'radial-gradient(circle, rgba(250, 182, 23, 0.3) 0%, transparent 60%)',
+                          transform: 'scale(1.5)',
+                          filter: 'blur(10px)',
+                        }}
+                      />
+                    </>
+                  )}
+
+                  {/* The count number */}
+                  <div
+                    className={`relative text-6xl sm:text-7xl font-bold transition-all duration-200 ${
+                      showFinalFlourish
+                        ? 'text-yellow-400'
+                        : isCountingUp
+                        ? 'text-yellow-500/90'
+                        : 'text-white'
+                    }`}
+                    style={{
+                      fontFamily: "'Orbitron', sans-serif",
+                      textShadow: showFinalFlourish
+                        ? '0 0 30px rgba(250, 182, 23, 0.8), 0 0 60px rgba(250, 182, 23, 0.5), 0 0 90px rgba(250, 182, 23, 0.3)'
+                        : isCountingUp
+                        ? '0 0 15px rgba(250, 182, 23, 0.4)'
+                        : 'none',
+                    }}
+                  >
+                    {displayCount}
+                  </div>
+                </div>
+
+                {/* Label under the count */}
+                <p
+                  className={`mt-3 text-lg font-light tracking-wider transition-all duration-300 ${
+                    showFinalFlourish ? 'text-yellow-400/90' : 'text-white/60'
+                  }`}
+                >
+                  {displayCount === 1 ? 'Mek' : 'Meks'}
+                  {showFinalFlourish && ' Loaded!'}
+                </p>
+
+                {/* Sparkle effects on completion */}
+                {showFinalFlourish && (
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    {[...Array(8)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="absolute w-1 h-1 bg-yellow-400 rounded-full animate-ping"
+                        style={{
+                          left: `${20 + Math.random() * 60}%`,
+                          top: `${20 + Math.random() * 60}%`,
+                          animationDelay: `${i * 0.1}s`,
+                          animationDuration: '1.5s',
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Status text - elegant typography */}
             <h2 className="text-2xl sm:text-3xl font-light text-white tracking-wide mb-4 text-center">
-              Connecting...
+              {loadingPhase === 'connecting' && 'Connecting...'}
+              {loadingPhase === 'counting' && 'Scanning Blockchain...'}
+              {loadingPhase === 'loading' && (quickMekCount !== null ? `Loading ${quickMekCount} Meks...` : 'Loading...')}
+              {loadingPhase === 'animating' && 'Loading Complete!'}
+              {loadingPhase === 'complete' && (showFinalFlourish ? 'Ready!' : 'Finalizing...')}
             </h2>
 
-            {connectionStatus && (
+            {connectionStatus && loadingPhase !== 'animating' && loadingPhase !== 'complete' && (
               <p className="text-white/60 text-center text-sm sm:text-base mb-6 font-light tracking-wide">
                 {connectionStatus}
               </p>
             )}
 
+            {/* Quick count badge - shows detected count before full load */}
+            {quickMekCount !== null && loadingPhase === 'loading' && (
+              <div className="flex justify-center mb-4">
+                <div
+                  className="px-4 py-2 rounded-full text-sm font-medium"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(250, 182, 23, 0.2), rgba(250, 182, 23, 0.1))',
+                    border: '1px solid rgba(250, 182, 23, 0.3)',
+                    color: 'rgba(250, 182, 23, 0.9)',
+                  }}
+                >
+                  {quickMekCount} Mek{quickMekCount !== 1 ? 's' : ''} detected
+                </div>
+              </div>
+            )}
+
             {/* Cancel button - glass style */}
-            <div className="flex justify-center mt-6">
-              <button
-                onClick={cancelConnection}
-                className="px-8 py-3 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/10 active:scale-[0.98]"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  color: 'rgba(255, 255, 255, 0.7)',
-                }}
-              >
-                Cancel
-              </button>
-            </div>
+            {loadingPhase !== 'complete' && (
+              <div className="flex justify-center mt-6">
+                <button
+                  onClick={cancelConnection}
+                  className="px-8 py-3 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/10 active:scale-[0.98]"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

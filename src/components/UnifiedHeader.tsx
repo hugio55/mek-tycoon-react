@@ -479,6 +479,86 @@ export default function UnifiedHeader() {
           }
         }}
       />
+
+      {/* MANDATORY Corporation Name Modal - Cannot be dismissed without action */}
+      {showMandatoryNameModal && walletAddress && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+          {/* Backdrop - no click to dismiss */}
+          <div
+            className="fixed inset-0 bg-black/70"
+            style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
+          />
+
+          {/* Modal content */}
+          <div
+            className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset',
+              backdropFilter: 'blur(30px)',
+              WebkitBackdropFilter: 'blur(30px)',
+            }}
+          >
+            <div className="px-6 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8">
+              {/* Warning icon */}
+              <div className="flex justify-center mb-6">
+                <div className="w-16 h-16 rounded-full bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Title */}
+              <h2 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-4 text-center">
+                Corporation Name Required
+              </h2>
+
+              {/* Message */}
+              <p className="text-white/60 text-center text-sm sm:text-base font-light tracking-wide leading-relaxed mb-8">
+                To continue using Mek Tycoon, you must name your corporation. Otherwise, you will be disconnected.
+              </p>
+
+              {/* Buttons */}
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    setShowMandatoryNameModal(false);
+                    setCompanyNameModalMode('initial');
+                    setShowCompanyNameModal(true);
+                  }}
+                  className="w-full py-3 rounded-xl text-sm font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(250, 182, 23, 0.3), rgba(250, 182, 23, 0.15))',
+                    border: '1px solid rgba(250, 182, 23, 0.5)',
+                    color: '#fab617',
+                  }}
+                >
+                  Set Corporation Name
+                </button>
+                <button
+                  onClick={async () => {
+                    setShowMandatoryNameModal(false);
+                    await clearWalletSession();
+                    setWalletAddress(null);
+                    setSessionExpiresAt(null);
+                    window.location.reload();
+                  }}
+                  className="w-full py-3 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/10 active:scale-[0.98]"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                  }}
+                >
+                  Disconnect Wallet
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </>
   );
 }
