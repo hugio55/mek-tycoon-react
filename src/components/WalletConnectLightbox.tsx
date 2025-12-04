@@ -44,6 +44,11 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
   const [loadingPhase, setLoadingPhase] = useState<'connecting' | 'counting' | 'loading' | 'animating' | 'complete'>('connecting');
   const countingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Signature help states - show extended instructions after 10 seconds
+  const [isAwaitingSignature, setIsAwaitingSignature] = useState(false);
+  const [showSignatureHelp, setShowSignatureHelp] = useState(false);
+  const signatureHelpTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // PHASE II: Convex mutation to create/link corporation (stake-address-only)
   const connectCorporationMutation = useMutation(api.corporationAuth.connectCorporation);
 
@@ -71,6 +76,8 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       setIsCountingUp(false);
       setShowFinalFlourish(false);
       setLoadingPhase('connecting');
+      setIsAwaitingSignature(false);
+      setShowSignatureHelp(false);
 
       console.log('[🔐RECONNECT] WalletConnectLightbox opened - checking disconnect nonce...');
       const nonceCheck = localStorage.getItem('mek_disconnect_nonce');
@@ -87,6 +94,11 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
         clearInterval(countingIntervalRef.current);
         countingIntervalRef.current = null;
       }
+      // Clear signature help timeout on close
+      if (signatureHelpTimeoutRef.current) {
+        clearTimeout(signatureHelpTimeoutRef.current);
+        signatureHelpTimeoutRef.current = null;
+      }
     }
 
     return () => {
@@ -94,6 +106,10 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       if (countingIntervalRef.current) {
         clearInterval(countingIntervalRef.current);
         countingIntervalRef.current = null;
+      }
+      if (signatureHelpTimeoutRef.current) {
+        clearTimeout(signatureHelpTimeoutRef.current);
+        signatureHelpTimeoutRef.current = null;
       }
     };
   }, [isOpen]);
@@ -281,9 +297,28 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
             .join('');
           console.log('[🔐SIGNATURE] Using hex-encoded message:', messagePayload.substring(0, 40) + '...');
 
+          // Set up signature waiting state with delayed help message
+          setIsAwaitingSignature(true);
+          setShowSignatureHelp(false);
+
+          // After 10 seconds, show extended help if still waiting
+          signatureHelpTimeoutRef.current = setTimeout(() => {
+            setShowSignatureHelp(true);
+            console.log('[🔐SIGNATURE] Showing extended help - user may not see the popup');
+          }, 10000);
+
           // Request signature from wallet
           console.log('[🔐SIGNATURE] Calling api.signData()...');
           const signResult = await api.signData(addressForSigning, messagePayload);
+
+          // Clear the help timeout - signature received
+          if (signatureHelpTimeoutRef.current) {
+            clearTimeout(signatureHelpTimeoutRef.current);
+            signatureHelpTimeoutRef.current = null;
+          }
+          setIsAwaitingSignature(false);
+          setShowSignatureHelp(false);
+
           console.log('[🔐SIGNATURE] Signature result:', signResult);
 
           console.log('[🔐SIGNATURE] Signature verification successful!');
@@ -292,6 +327,14 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
           // Signature succeeded - user proved they own the wallet
           // The disconnect nonce will be cleared after successful session save
         } catch (signError: any) {
+          // Clear the help timeout on error
+          if (signatureHelpTimeoutRef.current) {
+            clearTimeout(signatureHelpTimeoutRef.current);
+            signatureHelpTimeoutRef.current = null;
+          }
+          setIsAwaitingSignature(false);
+          setShowSignatureHelp(false);
+
           console.error('[🔐SIGNATURE] Signature verification failed:', signError);
           console.error('[🔐SIGNATURE] Error details:', {
             name: signError?.name,
