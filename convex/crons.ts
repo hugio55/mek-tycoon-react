@@ -61,6 +61,17 @@ crons.interval(
   internal.commemorativeNFTReservationsCampaign.internalCleanupExpiredReservations
 );
 
+// Auto-sync NMKR NFT statuses every 10 minutes
+// This catches any missed webhooks and ensures our database reflects NMKR's actual state
+// If a payment goes through but webhook fails, this will detect and fix it within 10 minutes
+crons.interval(
+  "auto sync NMKR NFT statuses",
+  {
+    minutes: 10
+  },
+  internal.nmkrSync.internalAutoSyncWithNMKR
+);
+
 // PAUSED (Dec 1, 2025): No wallet logins during maintenance - cleanup not needed
 // One-time cleanup ran: 0 expired lockouts found
 // Re-enable when wallet connections are live again

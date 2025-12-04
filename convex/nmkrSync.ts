@@ -9,7 +9,7 @@
  */
 
 import { v } from "convex/values";
-import { mutation, query, action, internalAction } from "./_generated/server";
+import { mutation, query, action, internalAction, internalQuery, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 
 /**
@@ -403,5 +403,282 @@ export const getCampaignInventorySummary = query({
         reservedBy: i.reservedBy,
       })),
     };
+  },
+});
+
+// ============================================
+// AUTOMATIC NMKR SYNC (Cron Job Target)
+// ============================================
+
+const NMKR_API_BASE = 'https://studio-api.nmkr.io/v2';
+
+/**
+ * Fetch all NFTs from NMKR project (handles pagination)
+ */
+async function fetchAllNMKRNFTs(
+  projectUid: string,
+  apiKey: string
+): Promise<Array<{ uid: string; state: 'free' | 'reserved' | 'sold'; name: string }>> {
+  const allNFTs: Array<{ uid: string; state: 'free' | 'reserved' | 'sold'; name: string }> = [];
+  let page = 1;
+  const pageSize = 50;
+  const maxPages = 100; // Safety limit
+
+  while (page <= maxPages) {
+    const url = `${NMKR_API_BASE}/GetNfts/${projectUid}/all/${pageSize}/${page}`;
+
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`NMKR API error (${response.status}): ${errorText}`);
+    }
+
+    const nfts = await response.json();
+
+    if (!nfts || nfts.length === 0) {
+      break;
+    }
+
+    allNFTs.push(...nfts.map((nft: { uid: string; state: string; name: string }) => ({
+      uid: nft.uid,
+      state: nft.state as 'free' | 'reserved' | 'sold',
+      name: nft.name,
+    })));
+
+    if (nfts.length < pageSize) {
+      break;
+    }
+
+    page++;
+  }
+
+  return allNFTs;
+}
+
+/**
+ * Internal action called by cron job to automatically sync all active campaigns with NMKR
+ * This catches any missed webhooks and ensures database stays in sync with NMKR's truth
+ */
+export const internalAutoSyncWithNMKR = internalAction({
+  args: {},
+  handler: async (ctx): Promise<{
+    success: boolean;
+    campaignsSynced: number;
+    totalDiscrepanciesFixed: number;
+    errors: string[];
+  }> => {
+    console.log('[🔄NMKR-AUTO-SYNC] Starting automatic NMKR synchronization...');
+
+    // Get NMKR API key from environment
+    const apiKey = process.env.NMKR_API_KEY;
+    if (!apiKey) {
+      console.error('[🔄NMKR-AUTO-SYNC] NMKR_API_KEY not configured');
+      return {
+        success: false,
+        campaignsSynced: 0,
+        totalDiscrepanciesFixed: 0,
+        errors: ['NMKR_API_KEY not configured in environment'],
+      };
+    }
+
+    // Get all active campaigns
+    const campaigns = await ctx.runQuery(internal.nmkrSync.getActiveCampaignsForSync);
+
+    if (campaigns.length === 0) {
+      console.log('[🔄NMKR-AUTO-SYNC] No active campaigns to sync');
+      return {
+        success: true,
+        campaignsSynced: 0,
+        totalDiscrepanciesFixed: 0,
+        errors: [],
+      };
+    }
+
+    console.log(`[🔄NMKR-AUTO-SYNC] Found ${campaigns.length} active campaign(s) to sync`);
+
+    let campaignsSynced = 0;
+    let totalDiscrepanciesFixed = 0;
+    const errors: string[] = [];
+
+    for (const campaign of campaigns) {
+      try {
+        console.log(`[🔄NMKR-AUTO-SYNC] Syncing campaign: ${campaign.name} (${campaign.nmkrProjectUid})`);
+
+        // Fetch current NFT statuses from NMKR
+        const nmkrNFTs = await fetchAllNMKRNFTs(campaign.nmkrProjectUid, apiKey);
+
+        console.log(`[🔄NMKR-AUTO-SYNC] Retrieved ${nmkrNFTs.length} NFTs from NMKR`);
+
+        // Map to format expected by syncCampaignInventory
+        const nmkrStatuses = nmkrNFTs.map(nft => ({
+          nftUid: nft.uid,
+          nmkrStatus: nft.state,
+          name: nft.name,
+          soldTo: undefined,
+        }));
+
+        // Run the sync mutation
+        const result = await ctx.runMutation(internal.nmkrSync.internalSyncCampaignInventory, {
+          campaignId: campaign._id,
+          nmkrStatuses,
+        });
+
+        if (result.syncedCount > 0) {
+          console.log(`[🔄NMKR-AUTO-SYNC] ✓ Campaign "${campaign.name}": Fixed ${result.syncedCount} discrepancies`);
+          totalDiscrepanciesFixed += result.syncedCount;
+        } else {
+          console.log(`[🔄NMKR-AUTO-SYNC] ✓ Campaign "${campaign.name}": Already in sync`);
+        }
+
+        campaignsSynced++;
+
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`[🔄NMKR-AUTO-SYNC] ✗ Failed to sync campaign "${campaign.name}":`, errorMsg);
+        errors.push(`${campaign.name}: ${errorMsg}`);
+      }
+    }
+
+    console.log(`[🔄NMKR-AUTO-SYNC] Completed. Synced ${campaignsSynced}/${campaigns.length} campaigns, fixed ${totalDiscrepanciesFixed} discrepancies`);
+
+    return {
+      success: errors.length === 0,
+      campaignsSynced,
+      totalDiscrepanciesFixed,
+      errors,
+    };
+  },
+});
+
+/**
+ * Internal query to get active campaigns that need syncing
+ */
+export const getActiveCampaignsForSync = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const campaigns = await ctx.db
+      .query("commemorativeCampaigns")
+      .filter((q) => q.eq(q.field("isActive"), true))
+      .collect();
+
+    // Only return campaigns that have NMKR project UIDs
+    return campaigns
+      .filter(c => c.nmkrProjectUid)
+      .map(c => ({
+        _id: c._id,
+        name: c.name,
+        nmkrProjectUid: c.nmkrProjectUid!,
+      }));
+  },
+});
+
+/**
+ * Internal mutation version of syncCampaignInventory (callable from actions)
+ */
+export const internalSyncCampaignInventory = internalMutation({
+  args: {
+    campaignId: v.id("commemorativeCampaigns"),
+    nmkrStatuses: v.array(
+      v.object({
+        nftUid: v.string(),
+        nmkrStatus: v.string(),
+        name: v.optional(v.string()),
+        soldTo: v.optional(v.string()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const { campaignId, nmkrStatuses } = args;
+
+    // Get all inventory items for this campaign
+    const inventory = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_campaign", (q) => q.eq("campaignId", campaignId))
+      .collect();
+
+    type NMKRStatusEntry = { nftUid: string; nmkrStatus: string; soldTo?: string };
+    const nmkrMap = new Map<string, NMKRStatusEntry>(
+      nmkrStatuses.map((status: NMKRStatusEntry) => [status.nftUid, status])
+    );
+
+    // Find discrepancies
+    const discrepancies: Array<{
+      nftUid: string;
+      nmkrStatus: string;
+      currentStatus: string;
+    }> = [];
+
+    for (const item of inventory) {
+      const nmkrData = nmkrMap.get(item.nftUid);
+      if (!nmkrData) continue;
+
+      const nmkrStatus = nmkrData.nmkrStatus as 'free' | 'reserved' | 'sold';
+      const expectedConvexStatus = nmkrStateToConvexStatus(nmkrStatus);
+
+      if (item.status !== expectedConvexStatus) {
+        discrepancies.push({
+          nftUid: item.nftUid,
+          nmkrStatus: nmkrData.nmkrStatus,
+          currentStatus: item.status,
+        });
+      }
+    }
+
+    if (discrepancies.length === 0) {
+      return { syncedCount: 0, message: "Already in sync" };
+    }
+
+    // Fix discrepancies
+    let syncedCount = 0;
+    for (const discrepancy of discrepancies) {
+      const nmkrData = nmkrStatuses.find((s: NMKRStatusEntry) => s.nftUid === discrepancy.nftUid);
+      if (!nmkrData) continue;
+
+      const nft = inventory.find(i => i.nftUid === discrepancy.nftUid);
+      if (!nft) continue;
+
+      const nmkrStatus = nmkrData.nmkrStatus as 'free' | 'reserved' | 'sold';
+      const newStatus = nmkrStateToConvexStatus(nmkrStatus);
+
+      const updates: Record<string, unknown> = { status: newStatus };
+
+      if (newStatus === 'sold') {
+        updates.soldTo = nmkrData.soldTo || nft.soldTo;
+        updates.soldAt = Date.now();
+        updates.reservedBy = undefined;
+        updates.reservedAt = undefined;
+        updates.expiresAt = undefined;
+      } else if (newStatus === 'available') {
+        updates.reservedBy = undefined;
+        updates.reservedAt = undefined;
+        updates.expiresAt = undefined;
+      }
+
+      await ctx.db.patch(nft._id, updates);
+      syncedCount++;
+    }
+
+    // Update campaign counters
+    const campaign = await ctx.db.get(campaignId);
+    if (campaign) {
+      const updatedInventory = await ctx.db
+        .query("commemorativeNFTInventory")
+        .withIndex("by_campaign", (q) => q.eq("campaignId", campaignId))
+        .collect();
+
+      await ctx.db.patch(campaignId, {
+        availableNFTs: updatedInventory.filter(i => i.status === "available").length,
+        reservedNFTs: updatedInventory.filter(i => i.status === "reserved").length,
+        soldNFTs: updatedInventory.filter(i => i.status === "sold").length,
+      });
+    }
+
+    return { syncedCount, message: `Fixed ${syncedCount} discrepancies` };
   },
 });

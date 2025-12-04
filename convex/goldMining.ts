@@ -1210,9 +1210,71 @@ export const factoryResetForProduction = mutation({
   },
 });
 
-// PHASE II RESET: Clear only Phase I player data (targeted, safe)
-// Only clears: goldMining (corporations), users (profiles), mekLevels, levelUpgrades
-// Does NOT touch: commemorative campaigns, game config, recipes, story climb, etc.
+// PHASE II RESET: Clear Phase I player data in BATCHES to avoid read limits
+// Run these functions in order: 1, 2, 3, 4 (each clears one table)
+// Each function deletes up to 500 records per run - run multiple times if needed
+
+export const clearPhaseOne_Step1_GoldMining = mutation({
+  args: { confirmationCode: v.string() },
+  handler: async (ctx, args) => {
+    if (args.confirmationCode !== "CLEAR_PHASE_ONE") {
+      throw new Error("Invalid confirmation code");
+    }
+    const records = await ctx.db.query("goldMining").take(500);
+    for (const record of records) {
+      await ctx.db.delete(record._id);
+    }
+    const remaining = (await ctx.db.query("goldMining").take(1)).length;
+    return { deleted: records.length, remaining, table: "goldMining" };
+  },
+});
+
+export const clearPhaseOne_Step2_Users = mutation({
+  args: { confirmationCode: v.string() },
+  handler: async (ctx, args) => {
+    if (args.confirmationCode !== "CLEAR_PHASE_ONE") {
+      throw new Error("Invalid confirmation code");
+    }
+    const records = await ctx.db.query("users").take(500);
+    for (const record of records) {
+      await ctx.db.delete(record._id);
+    }
+    const remaining = (await ctx.db.query("users").take(1)).length;
+    return { deleted: records.length, remaining, table: "users" };
+  },
+});
+
+export const clearPhaseOne_Step3_MekLevels = mutation({
+  args: { confirmationCode: v.string() },
+  handler: async (ctx, args) => {
+    if (args.confirmationCode !== "CLEAR_PHASE_ONE") {
+      throw new Error("Invalid confirmation code");
+    }
+    const records = await ctx.db.query("mekLevels").take(500);
+    for (const record of records) {
+      await ctx.db.delete(record._id);
+    }
+    const remaining = (await ctx.db.query("mekLevels").take(1)).length;
+    return { deleted: records.length, remaining, table: "mekLevels" };
+  },
+});
+
+export const clearPhaseOne_Step4_LevelUpgrades = mutation({
+  args: { confirmationCode: v.string() },
+  handler: async (ctx, args) => {
+    if (args.confirmationCode !== "CLEAR_PHASE_ONE") {
+      throw new Error("Invalid confirmation code");
+    }
+    const records = await ctx.db.query("levelUpgrades").take(500);
+    for (const record of records) {
+      await ctx.db.delete(record._id);
+    }
+    const remaining = (await ctx.db.query("levelUpgrades").take(1)).length;
+    return { deleted: records.length, remaining, table: "levelUpgrades" };
+  },
+});
+
+// Legacy function - kept for reference but will hit read limits on large tables
 export const clearPhaseOnePlayerData = mutation({
   args: {
     confirmationCode: v.string(),
@@ -1228,7 +1290,7 @@ export const clearPhaseOnePlayerData = mutation({
     const breakdown: Record<string, number> = {};
 
     // 1. Clear goldMining (corporations - ~42 records)
-    const goldMining = await ctx.db.query("goldMining").collect();
+    const goldMining = await ctx.db.query("goldMining").take(100);
     for (const record of goldMining) {
       await ctx.db.delete(record._id);
       totalDeleted++;
@@ -1236,23 +1298,23 @@ export const clearPhaseOnePlayerData = mutation({
     breakdown.goldMining = goldMining.length;
 
     // 2. Clear users (player profiles - ~42 records)
-    const users = await ctx.db.query("users").collect();
+    const users = await ctx.db.query("users").take(100);
     for (const user of users) {
       await ctx.db.delete(user._id);
       totalDeleted++;
     }
     breakdown.users = users.length;
 
-    // 3. Clear mekLevels (Mek level progression)
-    const mekLevels = await ctx.db.query("mekLevels").collect();
+    // 3. Clear mekLevels (Mek level progression) - BATCHED
+    const mekLevels = await ctx.db.query("mekLevels").take(100);
     for (const level of mekLevels) {
       await ctx.db.delete(level._id);
       totalDeleted++;
     }
     breakdown.mekLevels = mekLevels.length;
 
-    // 4. Clear levelUpgrades (upgrade transaction logs)
-    const levelUpgrades = await ctx.db.query("levelUpgrades").collect();
+    // 4. Clear levelUpgrades (upgrade transaction logs) - BATCHED
+    const levelUpgrades = await ctx.db.query("levelUpgrades").take(100);
     for (const upgrade of levelUpgrades) {
       await ctx.db.delete(upgrade._id);
       totalDeleted++;
@@ -1261,7 +1323,7 @@ export const clearPhaseOnePlayerData = mutation({
 
     return {
       success: true,
-      message: "Phase I player data cleared. Ready for Phase II!",
+      message: "Phase I player data cleared (batch of 100 per table). Run again if more remain.",
       totalRecordsDeleted: totalDeleted,
       deletedBreakdown: breakdown,
       preserved: [
