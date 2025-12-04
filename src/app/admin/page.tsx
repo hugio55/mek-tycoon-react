@@ -6397,10 +6397,12 @@ function CampaignManagerWithDatabase({
   onSyncCounters,
   onVerifyWithNMKR,
   onBackfillSoldNFTData,
+  onBackfillImages,
   cleaningCampaignId,
   syncingCampaignId,
   verifyingCampaignId,
   backfillRunning,
+  backfillImagesRunning,
   client
 }: {
   campaigns: any[];
@@ -6409,10 +6411,12 @@ function CampaignManagerWithDatabase({
   onSyncCounters: (campaignId: string) => Promise<void>;
   onVerifyWithNMKR: (campaignId: string, campaignName: string, nmkrProjectId?: string) => Promise<void>;
   onBackfillSoldNFTData: () => Promise<void>;
+  onBackfillImages: (campaignId: string, nmkrProjectId: string) => Promise<void>;
   cleaningCampaignId: string | null;
   syncingCampaignId: string | null;
   verifyingCampaignId: string | null;
   backfillRunning: boolean;
+  backfillImagesRunning: string | null;
   client: any;
 }) {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>();
@@ -6551,7 +6555,7 @@ function CampaignManagerWithDatabase({
                   onClick={(e) => {
                     e.stopPropagation();
                     if (campaign.nmkrProjectId) {
-                      handleBackfillImages(campaign._id, campaign.nmkrProjectId);
+                      onBackfillImages(campaign._id, campaign.nmkrProjectId);
                     } else {
                       alert('⚠️ This campaign has no NMKR Project ID configured.');
                     }
@@ -7101,10 +7105,12 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
             onSyncCounters={handleSyncCounters}
             onVerifyWithNMKR={handleVerifyWithNMKR}
             onBackfillSoldNFTData={handleBackfillSoldNFTData}
+            onBackfillImages={handleBackfillImages}
             cleaningCampaignId={cleaningCampaignId}
             syncingCampaignId={syncingCampaignId}
             verifyingCampaignId={nmkrVerifying}
             backfillRunning={backfillRunning}
+            backfillImagesRunning={backfillImagesRunning}
             client={client}
           />
         </div>

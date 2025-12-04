@@ -237,6 +237,7 @@ export default function MessagingSystemAdmin() {
   const deleteConversation = useMutation(api.messaging.deleteConversation);
   const generateUploadUrl = useMutation(api.messageAttachments.generateUploadUrl);
   const validateUpload = useMutation(api.messageAttachments.validateUpload);
+  const deleteUpload = useMutation(api.messageAttachments.deleteUpload);
 
   // Admin mutations
   const disableConversationAdmin = useMutation(api.messaging.disableConversationAdmin);
@@ -381,6 +382,23 @@ export default function MessagingSystemAdmin() {
       }
     } catch (error) {
       console.error('[📎SEND] Failed to send message:', error);
+
+      // Clean up uploaded attachments since message failed to send
+      // This prevents orphaned files in storage
+      const uploadedAttachments = pendingAttachments.filter(a => a.storageId && !a.error);
+      if (uploadedAttachments.length > 0) {
+        console.log('[📎SEND] Cleaning up', uploadedAttachments.length, 'orphaned attachments');
+        // Clean up in parallel, don't block on errors
+        await Promise.allSettled(
+          uploadedAttachments.map(a =>
+            deleteUpload({
+              storageId: a.storageId!,
+              walletAddress: activeCorp.walletAddress,
+            })
+          )
+        );
+      }
+
       // Show user-friendly error in custom lightbox
       const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
 

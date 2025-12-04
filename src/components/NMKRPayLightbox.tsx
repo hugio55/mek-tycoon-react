@@ -65,6 +65,14 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
       return;
     }
 
+    // CRITICAL: Don't override state if we're resuming from mobile
+    // The resume flow already set the campaign ID and state
+    if (isResumingFromMobile) {
+      console.log('[CAMPAIGN] Skipping campaign selection - resuming from mobile');
+      setHasInitializedCampaign(true);
+      return;
+    }
+
     // Only run campaign selection logic once on initial load
     if (hasInitializedCampaign) return;
 
@@ -91,7 +99,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
       setState('error');
       setHasInitializedCampaign(true);
     }
-  }, [activeCampaigns, propCampaignId, walletAddress, hasInitializedCampaign]);
+  }, [activeCampaigns, propCampaignId, walletAddress, hasInitializedCampaign, isResumingFromMobile]);
 
   // Campaign-aware mutations
   const createReservation = useMutation(api.commemorativeNFTReservationsCampaign.createCampaignReservation);
@@ -201,11 +209,15 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   useEffect(() => {
     if (!isResumingFromMobile || !resumeValidating || !mounted) return;
 
-    // If activeReservation populated, resume is successful
+    // If activeReservation populated, resume is successful - go directly to wallet verification
     if (activeReservation) {
-      console.log('[🔐RESUME] ✅ Reservation validated, proceeding with wallet verification');
+      console.log('[🔐RESUME] ✅ Reservation validated, going directly to wallet verification');
       setIsResumingFromMobile(false);
       setResumeValidating(false);
+
+      // Detect available wallets and transition to wallet_verification
+      detectWalletsAndMobile();
+      setState('wallet_verification');
       return;
     }
 

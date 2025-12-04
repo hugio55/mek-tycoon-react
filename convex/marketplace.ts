@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { addEssenceToBalance } from "./lib/essenceHelpers";
+import { internal } from "./_generated/api";
 
 // Get all active marketplace listings (alias for shop page) - OPTIMIZED
 export const getActiveListings = query({
@@ -237,7 +238,7 @@ async function processPurchase(ctx: any, args: {
   });
 
   // Record purchase in history for marketplace analytics
-  await ctx.db.insert("marketListingPurchases", {
+  const purchaseId = await ctx.db.insert("marketListingPurchases", {
     listingId: args.listingId,
     buyerId: args.buyerId,
     sellerId: listing.sellerId,
@@ -249,6 +250,25 @@ async function processPurchase(ctx: any, args: {
     totalCost: totalCost,
     timestamp: now,
   });
+
+  // Run trade abuse detection (async, non-blocking)
+  try {
+    await ctx.scheduler.runAfter(0, internal.tradeAbuse.analyzeTradeForAbuse, {
+      purchaseId: purchaseId,
+      listingId: args.listingId,
+      buyerId: args.buyerId,
+      sellerId: listing.sellerId,
+      itemType: listing.itemType,
+      itemVariation: listing.itemVariation,
+      purchasePrice: listing.pricePerUnit,
+      quantity: purchaseQuantity,
+      listingTimestamp: listing.listedAt,
+      purchaseTimestamp: now,
+    });
+  } catch (e) {
+    // Don't fail the purchase if abuse detection fails
+    console.error("[TRADE_ABUSE] Error scheduling abuse detection:", e);
+  }
 
   return { success: true, totalCost };
 }
@@ -475,7 +495,23 @@ export const createListing = mutation({
       details: `Listed ${args.quantity}x for ${args.pricePerUnit}g each (Total Fee: ${totalFee}g - Duration: ${durationFee}g + Market: ${marketFee}g)`,
       timestamp: now,
     });
-    
+
+    // Check for price gap abuse (buying cheap, reselling high)
+    if (args.itemVariation) {
+      try {
+        await ctx.scheduler.runAfter(0, internal.tradeAbuse.detectResaleGap, {
+          sellerId: args.sellerId,
+          itemType: args.itemType,
+          itemVariation: args.itemVariation,
+          newListingPrice: args.pricePerUnit,
+          newListingId: listingId,
+        });
+      } catch (e) {
+        // Don't fail the listing if abuse detection fails
+        console.error("[TRADE_ABUSE] Error scheduling resale gap detection:", e);
+      }
+    }
+
     return listingId;
   },
 });
@@ -613,7 +649,7 @@ export const purchaseListing = mutation({
     });
 
     // Record purchase in history for marketplace analytics
-    await ctx.db.insert("marketListingPurchases", {
+    const purchaseId = await ctx.db.insert("marketListingPurchases", {
       listingId: args.listingId,
       buyerId: args.buyerId,
       sellerId: listing.sellerId,
@@ -625,6 +661,25 @@ export const purchaseListing = mutation({
       totalCost: totalCost,
       timestamp: now,
     });
+
+    // Run trade abuse detection (async, non-blocking)
+    try {
+      await ctx.scheduler.runAfter(0, internal.tradeAbuse.analyzeTradeForAbuse, {
+        purchaseId: purchaseId,
+        listingId: args.listingId,
+        buyerId: args.buyerId,
+        sellerId: listing.sellerId,
+        itemType: listing.itemType,
+        itemVariation: listing.itemVariation,
+        purchasePrice: listing.pricePerUnit,
+        quantity: purchaseQuantity,
+        listingTimestamp: listing.listedAt,
+        purchaseTimestamp: now,
+      });
+    } catch (e) {
+      // Don't fail the purchase if abuse detection fails
+      console.error("[TRADE_ABUSE] Error scheduling abuse detection:", e);
+    }
 
     return { success: true, totalCost };
   },
