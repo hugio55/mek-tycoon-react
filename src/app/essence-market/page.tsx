@@ -3362,7 +3362,7 @@ export default function EssenceMarketPage() {
 
         {/* Market Category Tabs + Search/Filters - Combined Card */}
         <div
-          className="mb-6 rounded-2xl overflow-hidden"
+          className="mb-6 rounded-2xl"
           style={{
             background: useSpaceAgeHeader
               ? 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)'
@@ -3379,49 +3379,61 @@ export default function EssenceMarketPage() {
         >
           {/* Category Tabs Row */}
           <div
-            className="flex gap-1 p-2"
+            className="flex items-stretch px-2 pt-2"
             style={{
               borderBottom: useSpaceAgeHeader
-                ? '1px solid rgba(255,255,255,0.08)'
-                : '1px solid rgba(107, 114, 128, 0.3)',
+                ? '1px solid rgba(255,255,255,0.1)'
+                : '1px solid rgba(107, 114, 128, 0.4)',
             }}
           >
-            {marketCategories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setActiveMarketCategory(category.id)}
-                className={`
-                  relative px-5 py-2.5 rounded-lg font-medium uppercase tracking-wider text-sm
-                  transition-all duration-300 overflow-hidden
-                  ${activeMarketCategory === category.id
-                    ? useSpaceAgeHeader
-                      ? 'text-cyan-400'
-                      : 'text-yellow-400'
-                    : 'text-gray-500 hover:text-gray-300'
-                  }
-                `}
-                style={{
-                  background: activeMarketCategory === category.id
-                    ? useSpaceAgeHeader
-                      ? 'linear-gradient(135deg, rgba(34,211,238,0.15) 0%, rgba(34,211,238,0.05) 100%)'
-                      : 'linear-gradient(135deg, rgba(250,182,23,0.15) 0%, rgba(250,182,23,0.05) 100%)'
-                    : 'transparent',
-                  border: activeMarketCategory === category.id
-                    ? useSpaceAgeHeader
-                      ? '1px solid rgba(34,211,238,0.3)'
-                      : '1px solid rgba(250,182,23,0.3)'
-                    : '1px solid transparent',
-                  fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
-                  boxShadow: activeMarketCategory === category.id
-                    ? useSpaceAgeHeader
-                      ? '0 0 15px rgba(34,211,238,0.2)'
-                      : '0 0 15px rgba(250,182,23,0.2)'
-                    : 'none',
-                }}
-              >
-                <span className="mr-2">{category.icon}</span>
-                {category.name}
-              </button>
+            {marketCategories.map((category, index) => (
+              <div key={category.id} className="flex items-stretch">
+                {/* Vertical divider between tabs */}
+                {index > 0 && (
+                  <div
+                    className="w-px my-2"
+                    style={{
+                      background: useSpaceAgeHeader
+                        ? 'rgba(255,255,255,0.1)'
+                        : 'rgba(107, 114, 128, 0.3)',
+                    }}
+                  />
+                )}
+                <button
+                  onClick={() => setActiveMarketCategory(category.id)}
+                  className={`
+                    relative px-6 py-3 font-medium uppercase tracking-wider text-sm
+                    transition-all duration-200
+                    ${activeMarketCategory === category.id
+                      ? useSpaceAgeHeader
+                        ? 'text-cyan-400'
+                        : 'text-yellow-400'
+                      : 'text-gray-500 hover:text-gray-300'
+                    }
+                  `}
+                  style={{
+                    fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
+                  }}
+                >
+                  {category.name}
+                  {/* Active tab underline indicator */}
+                  <div
+                    className="absolute bottom-0 left-2 right-2 h-0.5 transition-all duration-200"
+                    style={{
+                      background: activeMarketCategory === category.id
+                        ? useSpaceAgeHeader
+                          ? 'linear-gradient(90deg, transparent, #22d3ee, transparent)'
+                          : 'linear-gradient(90deg, transparent, #facc15, transparent)'
+                        : 'transparent',
+                      boxShadow: activeMarketCategory === category.id
+                        ? useSpaceAgeHeader
+                          ? '0 0 10px rgba(34,211,238,0.5)'
+                          : '0 0 10px rgba(250,182,23,0.5)'
+                        : 'none',
+                    }}
+                  />
+                </button>
+              </div>
             ))}
           </div>
 

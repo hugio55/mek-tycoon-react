@@ -2,11 +2,11 @@
  * NMKR Fetch NFTs API Route
  *
  * Fetches NFTs from NMKR project and returns them formatted for inventory population.
- * Includes image URLs from IPFS.
+ * Note: GetNfts endpoint doesn't return ipfslink, so we call GetNftDetails for each NFT.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchAllProjectNFTs } from '@/lib/nmkr-api';
+import { fetchAllProjectNFTs, fetchNFTDetails } from '@/lib/nmkr-api';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,29 +43,59 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('[NMKR Fetch NFTs] Fetching NFTs from project:', projectUid);
+    console.log('[NMKR Fetch NFTs] Fetching NFT list from project:', projectUid);
 
+    // Step 1: Get list of all NFTs (doesn't include ipfslink)
     const nmkrNFTs = await fetchAllProjectNFTs(projectUid, apiKey);
+    console.log(`[NMKR Fetch NFTs] Retrieved ${nmkrNFTs.length} NFTs, fetching details for each...`);
 
-    console.log(`[NMKR Fetch NFTs] Retrieved ${nmkrNFTs.length} NFTs`);
+    // Step 2: Fetch details for each NFT to get ipfslink
+    // Process in batches to avoid overwhelming the API
+    const batchSize = 5;
+    const nfts: Array<{
+      nftUid: string;
+      nftNumber: number;
+      name: string;
+      imageUrl?: string;
+      state: string;
+    }> = [];
 
-    // Map NFTs to the format needed for populateCampaignInventory
-    // Extract number from name like "Lab Rat #1" -> 1
-    const nfts = nmkrNFTs.map((nft, index) => {
-      const name = nft.displayName || nft.name;
+    for (let i = 0; i < nmkrNFTs.length; i += batchSize) {
+      const batch = nmkrNFTs.slice(i, i + batchSize);
 
-      // Try to extract number from name (e.g., "Lab Rat #1" -> 1)
-      const numberMatch = name.match(/#(\d+)/);
-      const nftNumber = numberMatch ? parseInt(numberMatch[1], 10) : index + 1;
+      const detailsPromises = batch.map(async (nft, batchIndex) => {
+        const name = nft.displayName || nft.name;
 
-      return {
-        nftUid: nft.uid,
-        nftNumber,
-        name,
-        imageUrl: nft.ipfslink || undefined,
-        state: nft.state, // Include state for filtering if needed
-      };
-    });
+        // Try to extract number from name (e.g., "Lab Rat #1" -> 1)
+        const numberMatch = name.match(/#(\d+)/);
+        const nftNumber = numberMatch ? parseInt(numberMatch[1], 10) : i + batchIndex + 1;
+
+        try {
+          const details = await fetchNFTDetails(nft.uid, apiKey);
+          return {
+            nftUid: nft.uid,
+            nftNumber,
+            name,
+            imageUrl: details.ipfslink || undefined,
+            state: nft.state,
+          };
+        } catch (error) {
+          console.warn(`[NMKR Fetch NFTs] Failed to fetch details for ${nft.uid}:`, error);
+          return {
+            nftUid: nft.uid,
+            nftNumber,
+            name,
+            imageUrl: undefined,
+            state: nft.state,
+          };
+        }
+      });
+
+      const results = await Promise.all(detailsPromises);
+      nfts.push(...results);
+
+      console.log(`[NMKR Fetch NFTs] Processed ${Math.min(i + batchSize, nmkrNFTs.length)}/${nmkrNFTs.length} NFTs`);
+    }
 
     // Sort by nftNumber
     nfts.sort((a, b) => a.nftNumber - b.nftNumber);
@@ -73,7 +103,7 @@ export async function POST(request: NextRequest) {
     const withImages = nfts.filter(n => n.imageUrl).length;
     const withoutImages = nfts.length - withImages;
 
-    console.log(`[NMKR Fetch NFTs] ${withImages} NFTs have images, ${withoutImages} do not`);
+    console.log(`[NMKR Fetch NFTs] Complete: ${withImages} NFTs have images, ${withoutImages} do not`);
 
     return NextResponse.json({
       success: true,
