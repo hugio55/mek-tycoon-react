@@ -39,6 +39,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   const [linkCopyFailed, setLinkCopyFailed] = useState(false);
   const [isResumingFromMobile, setIsResumingFromMobile] = useState(false);
   const [resumeValidating, setResumeValidating] = useState(false);
+  const [isVerifyingClosedWindowPayment, setIsVerifyingClosedWindowPayment] = useState(false);
 
   // Backend verification state (cryptographic proof of wallet ownership)
   const [backendVerificationStatus, setBackendVerificationStatus] = useState<'idle' | 'generating_nonce' | 'awaiting_signature' | 'verifying' | 'success' | 'failed'>('idle');
@@ -691,14 +692,31 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
     const checkInterval = setInterval(async () => {
       if (paymentWindow.closed && reservationId) {
         clearInterval(checkInterval);
-        console.log('[PAY] Payment window closed - showing notice');
+        console.log('[PAY] Payment window closed - starting payment verification');
         await markPaymentWindowClosed({ reservationId });
+        // Start verification period - show spinner while checking for payment
+        setIsVerifyingClosedWindowPayment(true);
         setState('payment_window_closed');
       }
     }, 500);
 
     return () => clearInterval(checkInterval);
   }, [paymentWindow, state, reservationId, markPaymentWindowClosed]);
+
+  // When payment window closes, verify payment for a few seconds before showing manual options
+  useEffect(() => {
+    if (state !== 'payment_window_closed' || !isVerifyingClosedWindowPayment) return;
+
+    console.log('[PAY] Starting closed-window payment verification (8 second timeout)');
+
+    // Give the payment 8 seconds to be detected, then show manual options
+    const timeout = setTimeout(() => {
+      console.log('[PAY] Payment verification timeout - showing manual options');
+      setIsVerifyingClosedWindowPayment(false);
+    }, 8000);
+
+    return () => clearTimeout(timeout);
+  }, [state, isVerifyingClosedWindowPayment]);
 
   // Force re-render for countdown timer
   const [, setTick] = useState(0);
@@ -1430,6 +1448,35 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
         );
 
       case 'payment_window_closed':
+        // If we're in the initial verification period, show a spinner
+        if (isVerifyingClosedWindowPayment) {
+          return (
+            <div className="text-center py-6">
+              <div className="mb-6">
+                <div className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <h2 className="text-xl font-bold text-white mb-3">Verifying Payment...</h2>
+                <p className="text-white/60 text-sm leading-relaxed">
+                  Checking if your payment was successful
+                </p>
+              </div>
+
+              <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <div className="relative">
+                    <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                    <div className="absolute inset-0 w-2 h-2 bg-cyan-400 rounded-full animate-ping opacity-75"></div>
+                  </div>
+                  <span className="text-cyan-300 text-sm font-medium">Actively checking blockchain</span>
+                </div>
+                <p className="text-white/50 text-xs">
+                  This usually takes just a few seconds...
+                </p>
+              </div>
+            </div>
+          );
+        }
+
+        // After verification timeout, show manual options
         return (
           <div className="text-center py-6">
             <div className="mb-6">
@@ -1457,10 +1504,13 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
               </button>
 
               <button
-                onClick={() => setState('processing')}
+                onClick={() => {
+                  setIsVerifyingClosedWindowPayment(true);
+                  // Will auto-clear after 8 seconds if no payment detected
+                }}
                 className="w-full py-2 px-4 text-sm font-medium text-cyan-300 hover:text-cyan-200 transition-colors"
               >
-                I already paid - check for my payment
+                I already paid - check again
               </button>
 
               <button
