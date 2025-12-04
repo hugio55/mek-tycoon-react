@@ -491,8 +491,19 @@ export default function CampaignManager({
         return;
       }
 
+      // Filter to only include "free" (available) NFTs, matching CSV import behavior
+      const freeNfts = data.nfts.filter((nft: { state?: string }) => nft.state === 'free');
+
+      if (freeNfts.length === 0) {
+        setImportMessage({
+          type: "error",
+          text: `No available NFTs found (${data.nfts.length} total, but all are reserved or sold)`
+        });
+        return;
+      }
+
       // Format NFTs for populateCampaignInventory (includes images!)
-      const nfts = data.nfts.map((nft: { nftUid: string; nftNumber: number; name: string; imageUrl?: string }) => ({
+      const nfts = freeNfts.map((nft: { nftUid: string; nftNumber: number; name: string; imageUrl?: string }) => ({
         nftUid: nft.nftUid,
         nftNumber: nft.nftNumber,
         name: nft.name,
@@ -506,9 +517,10 @@ export default function CampaignManager({
       });
 
       if (result.success) {
+        const withImages = freeNfts.filter((n: { imageUrl?: string }) => n.imageUrl).length;
         setImportMessage({
           type: "success",
-          text: `Successfully imported ${result.count} NFTs with images from NMKR!`
+          text: `Successfully imported ${result.count} NFTs from NMKR (${withImages} with images)!`
         });
 
         // Refresh campaign stats

@@ -129,6 +129,16 @@ export default function EssenceMarketPage() {
     { id: 'nft' as const, name: 'NFT', icon: '🎨' },
   ];
 
+  // Get current filter options based on active market category
+  const currentFilters = MARKET_CATEGORY_FILTERS[activeMarketCategory] || MARKET_CATEGORY_FILTERS.essence;
+  const currentSearchPlaceholder = SEARCH_PLACEHOLDERS[activeMarketCategory] || SEARCH_PLACEHOLDERS.essence;
+
+  // Reset filter when category changes
+  useEffect(() => {
+    setSelectedRarity("all");
+    setSearchTerm("");
+  }, [activeMarketCategory]);
+
   // Purchase modal state
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [selectedListing, setSelectedListing] = useState<any>(null);
@@ -3350,17 +3360,29 @@ export default function EssenceMarketPage() {
           </div>
         )}
 
-        {/* Market Category Tabs */}
-        <div className="mb-4">
+        {/* Market Category Tabs + Search/Filters - Combined Card */}
+        <div
+          className="mb-6 rounded-2xl overflow-hidden"
+          style={{
+            background: useSpaceAgeHeader
+              ? 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)'
+              : 'rgba(0,0,0,0.5)',
+            backdropFilter: useSpaceAgeHeader ? 'blur(16px)' : 'blur(4px)',
+            WebkitBackdropFilter: useSpaceAgeHeader ? 'blur(16px)' : 'blur(4px)',
+            border: useSpaceAgeHeader
+              ? '1px solid rgba(255,255,255,0.1)'
+              : '1px solid rgba(107, 114, 128, 0.4)',
+            boxShadow: useSpaceAgeHeader
+              ? '0 8px 32px rgba(0,0,0,0.2)'
+              : '0 4px 20px rgba(0,0,0,0.3)',
+          }}
+        >
+          {/* Category Tabs Row */}
           <div
-            className="flex gap-1 p-1.5 rounded-xl"
+            className="flex gap-1 p-2"
             style={{
-              background: useSpaceAgeHeader
-                ? 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)'
-                : 'rgba(0,0,0,0.4)',
-              backdropFilter: useSpaceAgeHeader ? 'blur(12px)' : 'none',
-              border: useSpaceAgeHeader
-                ? '1px solid rgba(255,255,255,0.1)'
+              borderBottom: useSpaceAgeHeader
+                ? '1px solid rgba(255,255,255,0.08)'
                 : '1px solid rgba(107, 114, 128, 0.3)',
             }}
           >
@@ -3401,6 +3423,231 @@ export default function EssenceMarketPage() {
                 {category.name}
               </button>
             ))}
+          </div>
+
+          {/* Search and Filters Row */}
+          <div className="flex gap-3 flex-wrap items-center p-3">
+            {/* Category Filter Dropdown */}
+            <div className="relative category-dropdown-container">
+              <button
+                onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm uppercase tracking-wider font-medium transition-all"
+                style={{
+                  background: useSpaceAgeHeader
+                    ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)'
+                    : 'rgba(0,0,0,0.6)',
+                  border: useSpaceAgeHeader
+                    ? '1px solid rgba(255,255,255,0.15)'
+                    : '1px solid rgba(107, 114, 128, 0.5)',
+                  color: selectedRarity !== "all"
+                    ? useSpaceAgeHeader ? '#22d3ee' : '#facc15'
+                    : useSpaceAgeHeader ? 'rgba(255,255,255,0.7)' : '#9ca3af',
+                  fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
+                }}
+              >
+                <span>{currentFilters.find(c => c.id === selectedRarity)?.name || currentFilters[0].name}</span>
+                <svg
+                  className={`w-4 h-4 transition-transform ${categoryDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {categoryDropdownOpen && (
+                <div
+                  className="absolute top-full mt-2 left-0 z-50 min-w-[180px] rounded-lg overflow-hidden"
+                  style={{
+                    background: useSpaceAgeHeader
+                      ? 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.9) 100%)'
+                      : 'rgba(0,0,0,0.95)',
+                    backdropFilter: 'blur(20px)',
+                    border: useSpaceAgeHeader
+                      ? '1px solid rgba(34,211,238,0.3)'
+                      : '1px solid rgba(250,182,23,0.3)',
+                    boxShadow: useSpaceAgeHeader
+                      ? '0 10px 40px rgba(34,211,238,0.15)'
+                      : '0 10px 40px rgba(250,182,23,0.15)',
+                  }}
+                >
+                  {currentFilters.map((filter) => (
+                    <button
+                      key={filter.id}
+                      onClick={() => {
+                        setSelectedRarity(filter.id);
+                        setCategoryDropdownOpen(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm uppercase tracking-wider transition-all"
+                      style={{
+                        background: selectedRarity === filter.id
+                          ? useSpaceAgeHeader
+                            ? 'rgba(34,211,238,0.15)'
+                            : 'rgba(250,182,23,0.15)'
+                          : 'transparent',
+                        color: selectedRarity === filter.id
+                          ? useSpaceAgeHeader ? '#22d3ee' : '#facc15'
+                          : 'rgba(255,255,255,0.7)',
+                        fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
+                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      {filter.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Search Input */}
+            <div className="relative flex-1 min-w-[280px] max-w-[400px]">
+              <div
+                className="absolute left-3 top-1/2 -translate-y-1/2"
+                style={{ color: useSpaceAgeHeader ? 'rgba(34,211,238,0.5)' : 'rgba(250,182,23,0.5)' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onFocus={() => searchSuggestions.length > 0 && setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                placeholder={currentSearchPlaceholder}
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg text-sm uppercase tracking-wider focus:outline-none transition-all"
+                style={{
+                  background: useSpaceAgeHeader
+                    ? 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%)'
+                    : 'rgba(0,0,0,0.6)',
+                  border: searchTerm
+                    ? useSpaceAgeHeader
+                      ? '1px solid rgba(34,211,238,0.4)'
+                      : '1px solid rgba(250,182,23,0.4)'
+                    : useSpaceAgeHeader
+                      ? '1px solid rgba(255,255,255,0.1)'
+                      : '1px solid rgba(107, 114, 128, 0.5)',
+                  color: useSpaceAgeHeader ? '#22d3ee' : '#facc15',
+                  fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
+                  boxShadow: searchTerm
+                    ? useSpaceAgeHeader
+                      ? '0 0 20px rgba(34,211,238,0.15), inset 0 0 10px rgba(34,211,238,0.05)'
+                      : '0 0 20px rgba(250,182,23,0.15), inset 0 0 10px rgba(250,182,23,0.05)'
+                    : 'none',
+                }}
+              />
+              <style>{`
+                input::placeholder {
+                  color: ${useSpaceAgeHeader ? 'rgba(255,255,255,0.3)' : 'rgba(156, 163, 175, 0.6)'};
+                }
+              `}</style>
+
+              {/* Autocomplete Suggestions */}
+              {showSuggestions && searchSuggestions.length > 0 && (
+                <div
+                  className="absolute top-full mt-2 left-0 right-0 z-50 rounded-lg max-h-60 overflow-y-auto"
+                  style={{
+                    background: useSpaceAgeHeader
+                      ? 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.9) 100%)'
+                      : 'rgba(0,0,0,0.95)',
+                    backdropFilter: 'blur(20px)',
+                    border: useSpaceAgeHeader
+                      ? '1px solid rgba(34,211,238,0.3)'
+                      : '2px solid rgba(250,182,23,0.5)',
+                  }}
+                >
+                  {searchSuggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setSearchTerm(suggestion);
+                        setShowSuggestions(false);
+                      }}
+                      className="w-full px-4 py-2 text-left transition-colors"
+                      style={{
+                        color: useSpaceAgeHeader ? '#22d3ee' : '#facc15',
+                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="relative sort-dropdown-container ml-auto">
+              <button
+                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm uppercase tracking-wider font-medium transition-all"
+                style={{
+                  background: useSpaceAgeHeader
+                    ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)'
+                    : 'rgba(0,0,0,0.6)',
+                  border: useSpaceAgeHeader
+                    ? '1px solid rgba(255,255,255,0.15)'
+                    : '1px solid rgba(107, 114, 128, 0.5)',
+                  color: useSpaceAgeHeader ? 'rgba(255,255,255,0.7)' : '#9ca3af',
+                  fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
+                }}
+              >
+                <span>{SORT_OPTIONS.find(o => o.id === sortBy)?.name}</span>
+                <svg
+                  className={`w-4 h-4 transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {sortDropdownOpen && (
+                <div
+                  className="absolute top-full mt-2 right-0 z-50 min-w-[200px] rounded-lg overflow-hidden"
+                  style={{
+                    background: useSpaceAgeHeader
+                      ? 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.9) 100%)'
+                      : 'rgba(0,0,0,0.95)',
+                    backdropFilter: 'blur(20px)',
+                    border: useSpaceAgeHeader
+                      ? '1px solid rgba(34,211,238,0.3)'
+                      : '1px solid rgba(250,182,23,0.3)',
+                    boxShadow: useSpaceAgeHeader
+                      ? '0 10px 40px rgba(34,211,238,0.15)'
+                      : '0 10px 40px rgba(250,182,23,0.15)',
+                  }}
+                >
+                  {SORT_OPTIONS.map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => {
+                        setSortBy(option.id);
+                        setSortDropdownOpen(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm tracking-wider transition-all"
+                      style={{
+                        background: sortBy === option.id
+                          ? useSpaceAgeHeader
+                            ? 'rgba(34,211,238,0.15)'
+                            : 'rgba(250,182,23,0.15)'
+                          : 'transparent',
+                        color: sortBy === option.id
+                          ? useSpaceAgeHeader ? '#22d3ee' : '#facc15'
+                          : 'rgba(255,255,255,0.7)',
+                        fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
+                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      {option.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -4586,126 +4833,6 @@ export default function EssenceMarketPage() {
         {/* REGULAR MARKET VIEW */}
         {!showOffersView && (
           <>
-        {/* Search and Filters - Combined on One Card */}
-        <div className="mb-6">
-          <div className="flex gap-3 flex-wrap items-center p-3 bg-black/40 border border-gray-800 rounded-lg mek-overlay-metal-texture mb-3">
-            {/* Category Dropdown */}
-            <div className="relative category-dropdown-container">
-              <button
-                onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
-                className={getHeaderMyListingsButtonClasses(headerButtonStyle, selectedRarity !== "all")}
-              >
-                <span>{RARITY_CATEGORIES.find(c => c.id === selectedRarity)?.name || "All Essence"}</span>
-                <svg
-                  className={`w-4 h-4 ml-2 transition-transform ${categoryDropdownOpen ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {categoryDropdownOpen && (
-                <div
-                  className={getDropdownMenuClasses(dropdownMenuStyle).container}
-                  style={{ willChange: 'opacity, transform', transform: 'translate3d(0,0,0)' }}
-                >
-                  {RARITY_CATEGORIES.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => {
-                        setSelectedRarity(category.id);
-                        setCategoryDropdownOpen(false);
-                      }}
-                      className={getDropdownMenuClasses(dropdownMenuStyle).item(selectedRarity === category.id)}
-                    >
-                      {category.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Search with Autocomplete */}
-            <div className="relative w-80">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-yellow-500/50">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onFocus={() => searchSuggestions.length > 0 && setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                placeholder="SEARCH ESSENCE BY VARIATION NAME..."
-                className="w-full pl-9 pr-3 py-2 bg-black/60 border border-gray-700/50 text-yellow-400 placeholder-gray-600 text-xs uppercase tracking-wider focus:border-yellow-500/50 focus:outline-none transition-all rounded"
-                style={{
-                  boxShadow: searchTerm ? "0 0 15px rgba(250, 182, 23, 0.15), inset 0 0 8px rgba(250, 182, 23, 0.08)" : "none",
-                }}
-              />
-
-              {/* Autocomplete Suggestions */}
-              {showSuggestions && searchSuggestions.length > 0 && (
-                <div className="absolute top-full mt-2 left-0 right-0 z-50 bg-black/95 border-2 border-yellow-500/50 rounded-lg max-h-60 overflow-y-auto">
-                  {searchSuggestions.map((suggestion, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setSearchTerm(suggestion);
-                        setShowSuggestions(false);
-                      }}
-                      className="w-full px-4 py-2 text-left text-yellow-400 hover:bg-yellow-500/20 transition-colors border-b border-gray-800 last:border-0"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Sort Dropdown */}
-            <div className="relative sort-dropdown-container ml-auto">
-              <button
-                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-              >
-                <span>{SORT_OPTIONS.find(o => o.id === sortBy)?.name}</span>
-                <svg
-                  className={`w-4 h-4 ml-2 transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {sortDropdownOpen && (
-                <div
-                  className={getDropdownMenuClasses(dropdownMenuStyle).container.replace('left-0', 'right-0')}
-                  style={{ willChange: 'opacity, transform', transform: 'translate3d(0,0,0)' }}
-                >
-                  {SORT_OPTIONS.map((option) => (
-                    <button
-                      key={option.id}
-                      onClick={() => {
-                        setSortBy(option.id);
-                        setSortDropdownOpen(false);
-                      }}
-                      className={getDropdownMenuClasses(dropdownMenuStyle).item(sortBy === option.id)}
-                    >
-                      {option.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
         {/* Listings Grid */}
         <div
           className="grid mt-6"

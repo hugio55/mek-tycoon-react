@@ -997,6 +997,9 @@ export default function AdminMasterDataPage() {
   const [sturgeonSettings, setSturgeonSettings] = useState<any>(null);
   const [sturgeonLoading, setSturgeonLoading] = useState(true);
 
+  // Portal mounting state
+  const [mounted, setMounted] = useState(false);
+
   // Fetch settings from both databases
   useEffect(() => {
     async function fetchTroutSettings() {
@@ -1032,6 +1035,11 @@ export default function AdminMasterDataPage() {
 
     return () => clearInterval(interval);
   }, [troutClient, sturgeonClient]);
+
+  // Set mounted state for portals
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Site settings for current database (using default convex client)
   const siteSettings = useQuery(api.siteSettings.getSiteSettings);

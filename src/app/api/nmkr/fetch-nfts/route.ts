@@ -84,13 +84,13 @@ export async function POST(request: NextRequest) {
       nfts,
       timestamp: Date.now(),
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('[NMKR Fetch NFTs] Error:', error);
 
     return NextResponse.json(
       {
         error: 'Failed to fetch NFTs from NMKR',
-        details: error.message,
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
