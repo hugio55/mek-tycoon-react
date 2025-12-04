@@ -6,7 +6,7 @@ import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import { createPortal } from 'react-dom';
 
-type SubView = 'dashboard' | 'flagged' | 'investigate';
+type SubView = 'dashboard' | 'flagged' | 'investigate' | 'simulate';
 type FlagStatus = 'pending' | 'investigating' | 'confirmed_abuse' | 'cleared' | 'auto_cleared';
 
 const FLAG_REASON_LABELS: Record<string, { label: string; color: string }> = {
@@ -51,6 +51,7 @@ export default function TradeAbuseAdmin() {
     api.tradeAbuse.searchCorporations,
     searchTerm.length >= 2 ? { searchTerm, limit: 10 } : "skip"
   );
+  const allSimulations = useQuery(api.tradeAbuse.simulateAllScenarios);
 
   // Mutations
   const updateFlagStatus = useMutation(api.tradeAbuse.updateFlagStatus);
@@ -129,6 +130,16 @@ export default function TradeAbuseAdmin() {
           }`}
         >
           Investigate Corp
+        </button>
+        <button
+          onClick={() => setActiveView('simulate')}
+          className={`px-4 py-2 rounded-t text-xs font-bold transition-colors ${
+            activeView === 'simulate'
+              ? 'bg-cyan-600/30 border-2 border-cyan-500 text-cyan-300'
+              : 'bg-black/30 border border-gray-600 text-gray-400 hover:text-gray-300'
+          }`}
+        >
+          Test Detection
         </button>
       </div>
 
@@ -523,6 +534,154 @@ export default function TradeAbuseAdmin() {
               Search for a corporation to investigate their trading activity
             </div>
           )}
+        </div>
+      )}
+
+      {/* Simulate View - Dry Run Testing */}
+      {activeView === 'simulate' && (
+        <div className="space-y-4">
+          {/* Header */}
+          <div className="bg-cyan-900/20 border border-cyan-500/30 rounded p-4">
+            <h4 className="text-sm font-bold text-cyan-300 mb-2">Detection Logic Test</h4>
+            <p className="text-xs text-gray-400">
+              These simulations show what flags WOULD be triggered for different abuse scenarios.
+              No data is written to the database - this is purely a logic verification tool.
+            </p>
+          </div>
+
+          {/* Simulation Results */}
+          <div className="space-y-4">
+            {allSimulations?.map((sim, index) => (
+              <div
+                key={index}
+                className={`bg-black/30 border rounded-lg overflow-hidden ${
+                  sim.wouldTriggerFlags.length > 0
+                    ? 'border-red-500/50'
+                    : 'border-green-500/50'
+                }`}
+              >
+                {/* Scenario Header */}
+                <div className={`px-4 py-3 ${
+                  sim.wouldTriggerFlags.length > 0
+                    ? 'bg-red-900/30 border-b border-red-500/30'
+                    : 'bg-green-900/30 border-b border-green-500/30'
+                }`}>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h5 className="font-bold text-sm text-gray-200 capitalize">
+                        {sim.scenario.replace(/_/g, ' ')}
+                      </h5>
+                      <p className="text-xs text-gray-400 mt-1">{sim.description}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-2xl font-bold ${
+                        sim.riskScore >= 50 ? 'text-red-400' :
+                        sim.riskScore >= 30 ? 'text-orange-400' :
+                        sim.riskScore > 0 ? 'text-yellow-400' :
+                        'text-green-400'
+                      }`}>
+                        {sim.riskScore}
+                      </div>
+                      <div className="text-xs text-gray-500">Risk Score</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Scenario Details */}
+                <div className="p-4">
+                  {/* Parameters */}
+                  <div className="grid grid-cols-4 gap-3 mb-4">
+                    <div className="bg-gray-800/50 rounded p-2 text-center">
+                      <div className={`text-lg font-bold ${
+                        (sim.details.timeSinceListing || 999) <= 60 ? 'text-red-400' : 'text-gray-300'
+                      }`}>
+                        {sim.details.timeSinceListing}s
+                      </div>
+                      <div className="text-xs text-gray-500">Purchase Time</div>
+                    </div>
+                    <div className="bg-gray-800/50 rounded p-2 text-center">
+                      <div className={`text-lg font-bold ${
+                        (sim.details.priceGapMultiplier || 1) >= 10 ? 'text-red-400' : 'text-gray-300'
+                      }`}>
+                        {sim.details.priceGapMultiplier}x
+                      </div>
+                      <div className="text-xs text-gray-500">Price Gap</div>
+                    </div>
+                    <div className="bg-gray-800/50 rounded p-2 text-center">
+                      <div className={`text-lg font-bold ${
+                        (sim.details.previousTradeCount || 0) >= 2 ? 'text-orange-400' : 'text-gray-300'
+                      }`}>
+                        {sim.details.previousTradeCount || 0}
+                      </div>
+                      <div className="text-xs text-gray-500">Prior Trades</div>
+                    </div>
+                    <div className="bg-gray-800/50 rounded p-2 text-center">
+                      <div className={`text-lg font-bold ${
+                        (sim.details.corpAgeDays || 999) < 7 ? 'text-blue-400' : 'text-gray-300'
+                      }`}>
+                        {sim.details.corpAgeDays}d
+                      </div>
+                      <div className="text-xs text-gray-500">Buyer Age</div>
+                    </div>
+                  </div>
+
+                  {/* Flags Triggered */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">Would trigger:</span>
+                    {sim.wouldTriggerFlags.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {sim.wouldTriggerFlags.map((flag) => (
+                          <span
+                            key={flag}
+                            className={`px-2 py-1 rounded text-xs border ${FLAG_REASON_LABELS[flag]?.color || 'bg-gray-500/30'}`}
+                          >
+                            {FLAG_REASON_LABELS[flag]?.label || flag}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="px-2 py-1 rounded text-xs bg-green-500/30 border border-green-500 text-green-300">
+                        No flags - Trade looks normal
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {!allSimulations && (
+              <div className="text-center text-gray-500 py-8">
+                Loading simulations...
+              </div>
+            )}
+          </div>
+
+          {/* Legend */}
+          <div className="bg-black/30 border border-gray-700 rounded p-4">
+            <h5 className="text-xs font-bold text-gray-400 mb-3">Detection Thresholds</h5>
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Fast Purchase:</span>
+                  <span className="text-red-300">&lt;60 seconds</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Price Gap:</span>
+                  <span className="text-purple-300">&gt;10x markup</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Repeated Pair:</span>
+                  <span className="text-orange-300">&gt;2 trades</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">New Corp:</span>
+                  <span className="text-blue-300">&lt;7 days old</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

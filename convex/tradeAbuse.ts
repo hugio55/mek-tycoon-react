@@ -742,6 +742,235 @@ export const getFlaggedCorpPairs = query({
   },
 });
 
+// ============================================
+// DRY RUN SIMULATION (NO DATABASE WRITES)
+// ============================================
+
+type SimulationScenario = "fast_cheap_resale" | "repeated_trades" | "new_corp_buyer" | "custom";
+
+interface SimulationResult {
+  scenario: string;
+  description: string;
+  wouldTriggerFlags: FlagReason[];
+  riskScore: number;
+  details: {
+    timeSinceListing?: number;
+    priceGapMultiplier?: number;
+    previousTradeCount?: number;
+    corpAgeDays?: number;
+  };
+}
+
+// Simulate abuse detection without writing to database
+export const simulateAbuseScenario = query({
+  args: {
+    scenario: v.union(
+      v.literal("fast_cheap_resale"),
+      v.literal("repeated_trades"),
+      v.literal("new_corp_buyer"),
+      v.literal("custom")
+    ),
+    // Custom scenario parameters
+    customParams: v.optional(v.object({
+      timeSinceListingSeconds: v.optional(v.number()),
+      purchasePrice: v.optional(v.number()),
+      resalePrice: v.optional(v.number()),
+      previousTradeCount: v.optional(v.number()),
+      buyerAgeDays: v.optional(v.number()),
+    })),
+  },
+  handler: async (ctx, args): Promise<SimulationResult> => {
+    const flagReasons: FlagReason[] = [];
+    let riskScore = 0;
+    const details: SimulationResult["details"] = {};
+
+    // Define scenario parameters
+    let timeSinceListing: number;
+    let purchasePrice: number;
+    let resalePrice: number;
+    let previousTradeCount: number;
+    let buyerAgeDays: number;
+
+    switch (args.scenario) {
+      case "fast_cheap_resale":
+        // Classic abuse: buy cheap instantly, resell high
+        timeSinceListing = 15; // 15 seconds
+        purchasePrice = 1;
+        resalePrice = 100;
+        previousTradeCount = 0;
+        buyerAgeDays = 3; // New account
+        break;
+
+      case "repeated_trades":
+        // Repeated trades between same corps
+        timeSinceListing = 120; // 2 minutes (not fast)
+        purchasePrice = 50;
+        resalePrice = 60; // Small markup (not flagged)
+        previousTradeCount = 5; // Multiple previous trades
+        buyerAgeDays = 30; // Established account
+        break;
+
+      case "new_corp_buyer":
+        // Brand new account making purchases
+        timeSinceListing = 300; // 5 minutes
+        purchasePrice = 100;
+        resalePrice = 150; // Normal markup
+        previousTradeCount = 0;
+        buyerAgeDays = 1; // Very new
+        break;
+
+      case "custom":
+        // Use provided parameters
+        timeSinceListing = args.customParams?.timeSinceListingSeconds ?? 60;
+        purchasePrice = args.customParams?.purchasePrice ?? 10;
+        resalePrice = args.customParams?.resalePrice ?? 10;
+        previousTradeCount = args.customParams?.previousTradeCount ?? 0;
+        buyerAgeDays = args.customParams?.buyerAgeDays ?? 30;
+        break;
+    }
+
+    // ---- CHECK 1: Repeated buyer-seller pair ----
+    if (previousTradeCount >= REPEATED_PAIR_THRESHOLD) {
+      flagReasons.push("repeated_pair");
+      riskScore += RISK_SCORES.repeated_pair;
+    }
+    details.previousTradeCount = previousTradeCount;
+
+    // ---- CHECK 2: Fast purchase ----
+    if (timeSinceListing <= FAST_PURCHASE_THRESHOLD_SECONDS) {
+      flagReasons.push("fast_purchase");
+      riskScore += RISK_SCORES.fast_purchase;
+    }
+    details.timeSinceListing = timeSinceListing;
+
+    // ---- CHECK 3: New corp buyer ----
+    if (buyerAgeDays < NEW_CORP_AGE_DAYS) {
+      flagReasons.push("new_corp_buyer");
+      riskScore += RISK_SCORES.new_corp_buyer;
+    }
+    details.corpAgeDays = buyerAgeDays;
+
+    // ---- CHECK 4: Price gap (resale detection) ----
+    const priceGapMultiplier = resalePrice / purchasePrice;
+    if (priceGapMultiplier >= PRICE_GAP_MULTIPLIER_THRESHOLD) {
+      flagReasons.push("price_gap");
+      riskScore += RISK_SCORES.price_gap;
+    }
+    details.priceGapMultiplier = Math.round(priceGapMultiplier * 10) / 10;
+
+    // Build description
+    let description = "";
+    switch (args.scenario) {
+      case "fast_cheap_resale":
+        description = `Corp A lists essence for 1G. Corp B (3 days old) buys it in 15 seconds, then relists for 100G.`;
+        break;
+      case "repeated_trades":
+        description = `Same two corps have traded 5 times before. New trade at normal price, not especially fast.`;
+        break;
+      case "new_corp_buyer":
+        description = `Brand new corp (1 day old) makes a purchase at normal price, normal timing.`;
+        break;
+      case "custom":
+        description = `Custom scenario: ${timeSinceListing}s purchase time, ${purchasePrice}G→${resalePrice}G price, ${previousTradeCount} previous trades, ${buyerAgeDays} day old buyer.`;
+        break;
+    }
+
+    return {
+      scenario: args.scenario,
+      description,
+      wouldTriggerFlags: flagReasons,
+      riskScore,
+      details,
+    };
+  },
+});
+
+// Run all preset scenarios at once for testing
+export const simulateAllScenarios = query({
+  args: {},
+  handler: async (ctx): Promise<SimulationResult[]> => {
+    const scenarios: SimulationScenario[] = ["fast_cheap_resale", "repeated_trades", "new_corp_buyer"];
+    const results: SimulationResult[] = [];
+
+    for (const scenario of scenarios) {
+      // Inline the logic since we can't call other queries from within a query
+      const flagReasons: FlagReason[] = [];
+      let riskScore = 0;
+      const details: SimulationResult["details"] = {};
+
+      let timeSinceListing: number;
+      let purchasePrice: number;
+      let resalePrice: number;
+      let previousTradeCount: number;
+      let buyerAgeDays: number;
+      let description = "";
+
+      switch (scenario) {
+        case "fast_cheap_resale":
+          timeSinceListing = 15;
+          purchasePrice = 1;
+          resalePrice = 100;
+          previousTradeCount = 0;
+          buyerAgeDays = 3;
+          description = `Corp A lists essence for 1G. Corp B (3 days old) buys it in 15 seconds, then relists for 100G.`;
+          break;
+        case "repeated_trades":
+          timeSinceListing = 120;
+          purchasePrice = 50;
+          resalePrice = 60;
+          previousTradeCount = 5;
+          buyerAgeDays = 30;
+          description = `Same two corps have traded 5 times before. New trade at normal price, not especially fast.`;
+          break;
+        case "new_corp_buyer":
+          timeSinceListing = 300;
+          purchasePrice = 100;
+          resalePrice = 150;
+          previousTradeCount = 0;
+          buyerAgeDays = 1;
+          description = `Brand new corp (1 day old) makes a purchase at normal price, normal timing.`;
+          break;
+      }
+
+      // Check flags
+      if (previousTradeCount >= REPEATED_PAIR_THRESHOLD) {
+        flagReasons.push("repeated_pair");
+        riskScore += RISK_SCORES.repeated_pair;
+      }
+      details.previousTradeCount = previousTradeCount;
+
+      if (timeSinceListing <= FAST_PURCHASE_THRESHOLD_SECONDS) {
+        flagReasons.push("fast_purchase");
+        riskScore += RISK_SCORES.fast_purchase;
+      }
+      details.timeSinceListing = timeSinceListing;
+
+      if (buyerAgeDays < NEW_CORP_AGE_DAYS) {
+        flagReasons.push("new_corp_buyer");
+        riskScore += RISK_SCORES.new_corp_buyer;
+      }
+      details.corpAgeDays = buyerAgeDays;
+
+      const priceGapMultiplier = resalePrice / purchasePrice;
+      if (priceGapMultiplier >= PRICE_GAP_MULTIPLIER_THRESHOLD) {
+        flagReasons.push("price_gap");
+        riskScore += RISK_SCORES.price_gap;
+      }
+      details.priceGapMultiplier = Math.round(priceGapMultiplier * 10) / 10;
+
+      results.push({
+        scenario,
+        description,
+        wouldTriggerFlags: flagReasons,
+        riskScore,
+        details,
+      });
+    }
+
+    return results;
+  },
+});
+
 // Search for corporations by name
 export const searchCorporations = query({
   args: {

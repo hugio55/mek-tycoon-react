@@ -211,7 +211,15 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
   console.log('[🔧TOOLBAR] About to return JSX');
 
   return (
-    <div className="bg-gray-900 border-b border-gray-800 min-h-[80px]">
+    <div
+      className="bg-gray-900 border-b border-gray-800"
+      style={{
+        minHeight: '100px',
+        backgroundColor: 'red',
+        position: 'relative',
+        zIndex: 100
+      }}
+    >
       {/* Primary Toolbar */}
       <div className="flex items-center justify-between px-4 py-2">
         {/* Left - Builder Mode Selector */}

@@ -956,6 +956,7 @@ function WhitelistTableModal({
   const [manualWalletInput, setManualWalletInput] = useState('');
   const [manualDisplayNameInput, setManualDisplayNameInput] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
 
@@ -1233,8 +1234,29 @@ function WhitelistTableModal({
 
         {/* Footer */}
         <div className="p-6 border-t border-cyan-500/30 flex justify-between items-center">
-          <div className="text-sm text-gray-400">
-            Total: <span className="text-cyan-400 font-bold">{whitelist.userCount}</span> eligible users
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-gray-400">
+              Total: <span className="text-cyan-400 font-bold">{whitelist.userCount}</span> eligible users
+            </div>
+            {whitelist.userCount > 0 && (
+              <button
+                onClick={async () => {
+                  if (!confirm(`Are you sure you want to delete ALL ${whitelist.userCount} users from this whitelist? This cannot be undone.`)) return;
+                  setIsClearing(true);
+                  try {
+                    await clearAllUsersFromWhitelist({ whitelistId: whitelist._id });
+                  } catch (error: any) {
+                    alert(error.message || 'Failed to clear users');
+                  } finally {
+                    setIsClearing(false);
+                  }
+                }}
+                disabled={isClearing}
+                className="bg-red-600 hover:bg-red-700 disabled:bg-red-800 disabled:cursor-wait text-white text-sm px-3 py-1 rounded"
+              >
+                {isClearing ? 'Deleting...' : 'Delete All'}
+              </button>
+            )}
           </div>
           <div className="flex gap-3">
             <button
