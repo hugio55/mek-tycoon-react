@@ -578,6 +578,11 @@ export const editMessage = mutation({
       throw new Error("Message not found");
     }
 
+    // Cannot edit deleted messages
+    if (message.isDeleted) {
+      throw new Error("Cannot edit a deleted message");
+    }
+
     // Only sender can edit
     if (message.senderId !== args.walletAddress) {
       throw new Error("Only the sender can edit a message");
@@ -981,13 +986,20 @@ export const getConversationMessageCount = query({
 export const getMessagesAdmin = query({
   args: {
     conversationId: v.id("conversations"),
+    limit: v.optional(v.number()), // Default 100, max 500
+    cursor: v.optional(v.string()), // For pagination
   },
   handler: async (ctx, args) => {
-    const messages = await ctx.db
+    const pageSize = Math.min(args.limit ?? 100, 500);
+
+    let query = ctx.db
       .query("messages")
       .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
-      .order("asc")
-      .collect();
+      .order("asc");
+
+    // Apply cursor if provided (skip messages before cursor)
+    const result = await query.paginate({ numItems: pageSize, cursor: args.cursor ?? null });
+    const messages = result.page;
 
     // Get sender info for each message
     const messagesWithSenderInfo = await Promise.all(
@@ -1022,7 +1034,11 @@ export const getMessagesAdmin = query({
       })
     );
 
-    return messagesWithSenderInfo;
+    return {
+      messages: messagesWithSenderInfo,
+      nextCursor: result.continueCursor,
+      hasMore: !result.isDone,
+    };
   },
 });
 

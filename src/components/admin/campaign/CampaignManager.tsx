@@ -46,6 +46,9 @@ export default function CampaignManager({
   const [csvPreview, setCsvPreview] = useState<CSVImportPreview | null>(null);
   const [isImportingCSV, setIsImportingCSV] = useState(false);
 
+  // Fetch from NMKR state
+  const [isFetchingFromNMKR, setIsFetchingFromNMKR] = useState(false);
+
   // Manual cleanup state
   const [cleaningCampaignId, setCleaningCampaignId] = useState<string | null>(null);
   const [cleanupResult, setCleanupResult] = useState<{ campaignId: string; message: string } | null>(null);
@@ -450,6 +453,84 @@ export default function CampaignManager({
   const handleCancelCSVImport = () => {
     setCsvPreview(null);
     setImportMessage(null);
+  };
+
+  // Fetch NFTs directly from NMKR with images
+  const handleFetchFromNMKR = async (campaignId: string, nmkrProjectId: string) => {
+    if (!nmkrProjectId) {
+      setImportMessage({
+        type: "error",
+        text: "This campaign has no NMKR Project ID configured"
+      });
+      return;
+    }
+
+    setIsFetchingFromNMKR(true);
+    setImportMessage(null);
+
+    try {
+      // Fetch NFTs from NMKR API
+      const response = await fetch('/api/nmkr/fetch-nfts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectUid: nmkrProjectId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to fetch NFTs from NMKR');
+      }
+
+      const data = await response.json();
+
+      if (!data.nfts || data.nfts.length === 0) {
+        setImportMessage({
+          type: "error",
+          text: "No NFTs found in NMKR project"
+        });
+        return;
+      }
+
+      // Format NFTs for populateCampaignInventory (includes images!)
+      const nfts = data.nfts.map((nft: { nftUid: string; nftNumber: number; name: string; imageUrl?: string }) => ({
+        nftUid: nft.nftUid,
+        nftNumber: nft.nftNumber,
+        name: nft.name,
+        imageUrl: nft.imageUrl, // Include image URL from NMKR
+      }));
+
+      // Populate inventory with images
+      const result = await populateInventory({
+        campaignId: campaignId as Id<"commemorativeCampaigns">,
+        nfts,
+      });
+
+      if (result.success) {
+        setImportMessage({
+          type: "success",
+          text: `Successfully imported ${result.count} NFTs with images from NMKR!`
+        });
+
+        // Refresh campaign stats
+        await syncCounters({
+          campaignId: campaignId as Id<"commemorativeCampaigns">,
+        });
+
+        onCampaignUpdated?.();
+      } else {
+        setImportMessage({
+          type: "error",
+          text: result.error || "Failed to import NFTs"
+        });
+      }
+    } catch (error) {
+      setImportMessage({
+        type: "error",
+        text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`
+      });
+    } finally {
+      setIsFetchingFromNMKR(false);
+    }
   };
 
   if (!campaigns) {
@@ -892,6 +973,26 @@ export default function CampaignManager({
                     </div>
                   )}
 
+                  {/* Fetch from NMKR Button */}
+                  <div className="mb-3">
+                    <button
+                      onClick={() => handleFetchFromNMKR(campaign._id, campaign.nmkrProjectId)}
+                      disabled={isFetchingFromNMKR}
+                      className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:bg-cyan-800 disabled:cursor-wait text-white px-4 py-3 rounded font-semibold transition-colors"
+                    >
+                      {isFetchingFromNMKR ? (
+                        <>⏳ Fetching NFTs from NMKR...</>
+                      ) : (
+                        <>🚀 Fetch NFTs from NMKR (with Images)</>
+                      )}
+                    </button>
+                    <p className="text-xs text-gray-500 mt-1 text-center">
+                      Automatically imports all NFTs with their images from NMKR
+                    </p>
+                  </div>
+
+                  <div className="text-center text-xs text-gray-500 mb-3">— or —</div>
+
                   {/* CSV Drag-and-Drop Zone */}
                   <div
                     onDragOver={handleDragOver}
@@ -908,7 +1009,7 @@ export default function CampaignManager({
                         Drag & Drop NMKR Studio CSV here
                       </p>
                       <p className="text-xs text-gray-500">
-                        Only "free" (available) NFTs will be imported
+                        Only "free" (available) NFTs will be imported (no images)
                       </p>
                     </div>
                   </div>

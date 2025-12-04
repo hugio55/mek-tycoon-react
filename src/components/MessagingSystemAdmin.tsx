@@ -932,8 +932,21 @@ export default function MessagingSystemAdmin() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <div className="text-white font-medium truncate">
-                          {conv.otherParticipant.companyName}
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="text-white font-medium truncate">
+                            {conv.otherParticipant.companyName}
+                          </span>
+                          {/* Block status indicator */}
+                          {conv.blockStatus?.iBlockedThem && (
+                            <span className="text-red-400 text-xs flex-shrink-0" title="You blocked this user">
+                              [Blocked]
+                            </span>
+                          )}
+                          {conv.blockStatus?.theyBlockedMe && !conv.blockStatus?.iBlockedThem && (
+                            <span className="text-orange-400 text-xs flex-shrink-0" title="This user blocked you">
+                              [Blocked you]
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           {/* Delete button - appears on hover */}
@@ -1533,7 +1546,7 @@ export default function MessagingSystemAdmin() {
                         </div>
                       )}
 
-                      {adminMessages?.map((msg: any) => (
+                      {adminMessages?.messages?.map((msg: any) => (
                         <div
                           key={msg._id}
                           className="group flex items-start gap-3"
@@ -1593,7 +1606,7 @@ export default function MessagingSystemAdmin() {
                         </div>
                       ))}
 
-                      {adminMessages?.length === 0 && (
+                      {adminMessages?.messages?.length === 0 && (
                         <div className="text-center text-gray-500 py-16">
                           <div className="text-4xl mb-2">💬</div>
                           <div>No messages in this conversation</div>
