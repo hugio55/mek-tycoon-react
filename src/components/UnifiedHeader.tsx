@@ -448,13 +448,19 @@ export default function UnifiedHeader() {
         onClose={() => {
           setShowWalletConnect(false);
         }}
-        onConnected={async (address) => {
+        onConnected={async (address, isNewCorporation) => {
           setWalletAddress(address);
           setShowWalletConnect(false);
           // Refresh session data
           const session = await restoreWalletSession();
           if (session) {
             setSessionExpiresAt(session.expiresAt || null);
+          }
+          // Auto-open company name modal for new corporations
+          if (isNewCorporation) {
+            console.log('[UnifiedHeader] New corporation detected - opening name modal');
+            setCompanyNameModalMode('initial');
+            setShowCompanyNameModal(true);
           }
         }}
       />

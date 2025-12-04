@@ -1400,6 +1400,7 @@ function validateCompanyName(name: string): { valid: boolean; error?: string } {
 }
 
 // Set company name for a wallet
+// PHASE II: Works with both corporations table (stake address) and goldMining table
 export const setCompanyName = mutation({
   args: {
     walletAddress: v.string(),
@@ -1422,10 +1423,11 @@ export const setCompanyName = mutation({
     }
 
     const trimmedName = args.companyName.trim();
+    const nameLower = trimmedName.toLowerCase();
 
-    // Check if company name is already taken (case-insensitive)
-    console.log('[setCompanyName] Checking if name is taken...');
-    const existingCompany = await ctx.db
+    // Check if company name is already taken in goldMining table
+    console.log('[setCompanyName] Checking if name is taken in goldMining...');
+    const existingInGoldMining = await ctx.db
       .query("goldMining")
       .filter((q) =>
         q.and(
@@ -1435,23 +1437,59 @@ export const setCompanyName = mutation({
       )
       .first();
 
-    if (existingCompany) {
-      console.log('[setCompanyName] Name already taken by:', existingCompany.walletAddress?.slice(0, 20) + '...');
+    if (existingInGoldMining) {
+      console.log('[setCompanyName] Name already taken in goldMining by:', existingInGoldMining.walletAddress?.slice(0, 20) + '...');
       return {
         success: false,
         error: "Company name is already taken"
       };
     }
 
-    // Find the user's gold mining record
-    console.log('[setCompanyName] Finding user record...');
+    // PHASE II: Also check corporations table
+    console.log('[setCompanyName] Checking if name is taken in corporations...');
+    const existingInCorporations = await ctx.db
+      .query("corporations")
+      .withIndex("by_corporation_name_lower", (q: any) => q.eq("corporationNameLower", nameLower))
+      .first();
+
+    if (existingInCorporations && existingInCorporations.stakeAddress !== args.walletAddress) {
+      console.log('[setCompanyName] Name already taken in corporations');
+      return {
+        success: false,
+        error: "Company name is already taken"
+      };
+    }
+
+    // PHASE II: First try to find corporation record (stake address based)
+    console.log('[setCompanyName] Looking for corporation record...');
+    const corporation = await ctx.db
+      .query("corporations")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.walletAddress))
+      .first();
+
+    if (corporation) {
+      // Update corporation name
+      console.log('[setCompanyName] Updating corporation name...');
+      await ctx.db.patch(corporation._id, {
+        corporationName: trimmedName,
+        corporationNameLower: nameLower,
+      });
+      console.log('[setCompanyName] Corporation name updated successfully');
+      return {
+        success: true,
+        companyName: trimmedName
+      };
+    }
+
+    // Fall back to Phase I: Find the user's gold mining record
+    console.log('[setCompanyName] No corporation found, checking goldMining...');
     const existing = await ctx.db
       .query("goldMining")
       .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!existing) {
-      console.log('[setCompanyName] User record not found for wallet:', args.walletAddress?.slice(0, 20) + '...');
+      console.log('[setCompanyName] No record found for wallet:', args.walletAddress?.slice(0, 20) + '...');
       return {
         success: false,
         error: "Wallet not found. Please connect your wallet first."
@@ -1490,24 +1528,47 @@ export const setCompanyName = mutation({
 });
 
 // Get company name for a wallet
+// PHASE II: Also checks corporations table (stake address based)
 export const getCompanyName = query({
   args: {
     walletAddress: v.string(),
   },
   handler: async (ctx, args) => {
+    // First check Phase I goldMining table
     const data = await ctx.db
       .query("goldMining")
       .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
       .first();
 
+    if (data?.companyName) {
+      return {
+        companyName: data.companyName,
+        hasCompanyName: true
+      };
+    }
+
+    // PHASE II: Check corporations table (stake address = walletAddress)
+    const corporation = await ctx.db
+      .query("corporations")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.walletAddress))
+      .first();
+
+    if (corporation?.corporationName) {
+      return {
+        companyName: corporation.corporationName,
+        hasCompanyName: true
+      };
+    }
+
     return {
-      companyName: data?.companyName || null,
-      hasCompanyName: !!data?.companyName
+      companyName: null,
+      hasCompanyName: false
     };
   },
 });
 
 // Check if company name is available
+// PHASE II: Also checks corporations table
 export const checkCompanyNameAvailability = query({
   args: {
     companyName: v.string(),
@@ -1523,9 +1584,10 @@ export const checkCompanyNameAvailability = query({
     }
 
     const trimmedName = args.companyName.trim();
+    const nameLower = trimmedName.toLowerCase();
 
-    // Check if name is taken by someone else
-    const existingCompany = await ctx.db
+    // Check if name is taken in goldMining table
+    const existingInGoldMining = await ctx.db
       .query("goldMining")
       .filter((q) =>
         args.currentWalletAddress
@@ -1537,9 +1599,29 @@ export const checkCompanyNameAvailability = query({
       )
       .first();
 
+    if (existingInGoldMining) {
+      return {
+        available: false,
+        error: "Company name is already taken"
+      };
+    }
+
+    // PHASE II: Also check corporations table
+    const existingInCorporations = await ctx.db
+      .query("corporations")
+      .withIndex("by_corporation_name_lower", (q: any) => q.eq("corporationNameLower", nameLower))
+      .first();
+
+    if (existingInCorporations && existingInCorporations.stakeAddress !== args.currentWalletAddress) {
+      return {
+        available: false,
+        error: "Company name is already taken"
+      };
+    }
+
     return {
-      available: !existingCompany,
-      error: existingCompany ? "Company name is already taken" : undefined
+      available: true,
+      error: undefined
     };
   },
 });

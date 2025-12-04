@@ -491,18 +491,25 @@ export const clearAllUsersFromWhitelist = mutation({
     whitelistId: v.id("whitelists"),
   },
   handler: async (ctx, args) => {
+    console.log("[clearAllUsersFromWhitelist] Starting with whitelistId:", args.whitelistId);
+
     const whitelist = await ctx.db.get(args.whitelistId);
     if (!whitelist) {
+      console.log("[clearAllUsersFromWhitelist] Whitelist not found");
       throw new Error("Whitelist not found");
     }
 
-    const previousCount = whitelist.userCount;
+    console.log("[clearAllUsersFromWhitelist] Found whitelist:", whitelist.name, "with", whitelist.userCount, "users");
+
+    const previousCount = whitelist.userCount || 0;
 
     await ctx.db.patch(args.whitelistId, {
       eligibleUsers: [],
       userCount: 0,
       updatedAt: Date.now(),
     });
+
+    console.log("[clearAllUsersFromWhitelist] Cleared successfully");
 
     return { success: true, deletedCount: previousCount };
   },
