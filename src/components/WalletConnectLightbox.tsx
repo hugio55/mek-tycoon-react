@@ -682,16 +682,16 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
               <div
                 className="mb-6 p-4 rounded-xl text-center transition-opacity duration-500"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(250, 182, 23, 0.1), rgba(250, 182, 23, 0.05))',
-                  border: '1px solid rgba(250, 182, 23, 0.2)',
+                  background: 'linear-gradient(135deg, rgba(0, 200, 220, 0.08), rgba(0, 200, 220, 0.03))',
+                  border: '1px solid rgba(0, 200, 220, 0.2)',
                 }}
               >
-                <p className="text-yellow-400/90 text-sm font-medium mb-2">
+                <p className="text-cyan-400/90 text-sm font-medium mb-2">
                   Can't find the signature window?
                 </p>
                 <p className="text-white/60 text-xs leading-relaxed">
                   Look for a small floating popup window from your wallet extension.
-                  It may have appeared behind other windows on your screen.
+                  It may have appeared behind other windows or minimized to your taskbar/dock.
                 </p>
                 <p className="text-white/40 text-xs mt-2 leading-relaxed">
                   Note: Clicking the wallet extension icon won't show this popup — you need to find the window that automatically opened.
