@@ -72,7 +72,7 @@ npm run dev:all
 ---
 
 ## 🚨 CRITICAL: PRODUCTION DEPLOYMENT PROTECTION 🚨
-**NEVER DEPLOY TO PRODUCTION WITHOUT EXPLICIT USER INSTRUCTION AND TRIPLE CONFIRMATION**
+**NEVER DEPLOY TO PRODUCTION WITHOUT EXPLICIT USER INSTRUCTION AND CONFIRMATION**
 
 ### Database Architecture
 
@@ -112,7 +112,7 @@ npm run dev:all
 
 ---
 
-### Production Deployment Protocol (THREE CONFIRMATIONS REQUIRED)
+### Production Deployment Protocol (SINGLE CONFIRMATION)
 
 **Before running ANY command that deploys to backend (npx convex deploy, etc.):**
 
@@ -125,49 +125,16 @@ B) Sturgeon (production - live site with real users)?"
 
 **Wait for explicit answer. Do NOT proceed without user response.**
 
-#### Step 2: IF USER SAYS PRODUCTION - First Warning
+#### Step 2: IF USER SAYS PRODUCTION - Confirm and Execute
 ```
-⚠️ WARNING: You selected PRODUCTION deployment (Sturgeon - fabulous-sturgeon-691)
+⚠️ Deploying to PRODUCTION (Sturgeon - fabulous-sturgeon-691)
+This affects the live site with real users. Proceeding...
 
-This will immediately affect:
-- Live website (mek.overexposed.io)
-- 36+ active players
-- Real user data and gold balances
-- Production cron jobs and background systems
-
-Changes being deployed:
-[List specific changes - cron frequencies, schema changes, function updates, etc.]
-
-Do you want to proceed with PRODUCTION deployment? (yes/no)
-```
-
-#### Step 3: IF USER SAYS YES - Second Warning
-```
-⚠️ SECOND WARNING: Production Deployment Confirmation
-
-You are about to deploy to LIVE PRODUCTION:
-- Database: fabulous-sturgeon-691 (Sturgeon)
-- Affects: Real users and live data
-- Cannot be undone without another deployment
-
-Are you ABSOLUTELY SURE you want to deploy to production? (yes/no)
-```
-
-#### Step 4: IF USER SAYS YES - Final Confirmation
-```
-⚠️ FINAL CONFIRMATION: Production Deployment
-
-To proceed with production deployment, type exactly: DEPLOY TO PRODUCTION
-
-[Wait for user to type exact phrase]
-```
-
-#### Step 5: Only After THREE Confirmations
-```
-Deploying to PRODUCTION (Sturgeon - fabulous-sturgeon-691)...
 [Execute deployment]
 ✓ Deployed successfully to production
 ```
+
+**No additional confirmations needed after user explicitly says "production" or "Sturgeon".**
 
 ---
 
@@ -204,7 +171,7 @@ Deploying to PRODUCTION (Sturgeon - fabulous-sturgeon-691)...
 - 🚨 User said "make this live" or "go live with this"
 
 **If ALL signals point to dev → Deploy to dev (Trout) after single confirmation**
-**If ANY signal suggests production → Apply FULL triple confirmation protocol**
+**If ANY signal suggests production → Ask which environment, then proceed after single confirmation**
 
 ---
 
@@ -228,7 +195,7 @@ Deploying to PRODUCTION (Sturgeon - fabulous-sturgeon-691)...
 1. **Default to Dev**: All work targets Trout unless explicitly told otherwise
 2. **User Controls Production**: Only deploy to production when user explicitly says so
 3. **Urgency ≠ Production**: "Right now" means do it now, NOT push to production
-4. **Triple Confirm Production**: Production requires THREE separate confirmations
+4. **Single Confirm Production**: Ask target environment once, then proceed
 5. **One Question for Dev**: Dev deployments need only one confirmation
 6. **When in Doubt, Ask**: Better to ask unnecessarily than break production
 7. **Environmental Context**: `.env.local` = Trout, localhost = dev, no mention of production = dev
