@@ -694,7 +694,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
                   It may have appeared behind other windows or minimized to your taskbar/dock.
                 </p>
                 <p className="text-white/40 text-xs mt-2 leading-relaxed">
-                  Note: Clicking the wallet extension icon won't show this popup — you need to find the window that automatically opened.
+                  Clicking the wallet extension might not show this popup. You need to find the window that automatically opened.
                 </p>
               </div>
             )}
