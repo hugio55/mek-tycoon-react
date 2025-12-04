@@ -12,6 +12,7 @@ import {
   generateSessionId,
 } from '@/lib/walletSessionManager';
 import { ensureBech32StakeAddress } from '@/lib/cardanoAddressConverter';
+import CubeSpinner from '@/components/loaders/CubeSpinner';
 
 interface WalletInfo {
   name: string;
@@ -400,12 +401,9 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
           onClick={(e) => e.stopPropagation()}
         >
           <div className="px-6 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8">
-            {/* Spinning loader - glass style */}
+            {/* 3D Cube Spinner */}
             <div className="flex justify-center mb-6">
-              <div className="relative w-16 h-16">
-                <div className="absolute inset-0 border-4 border-white/10 rounded-full" />
-                <div className="absolute inset-0 border-4 border-transparent border-t-yellow-400 rounded-full animate-spin" />
-              </div>
+              <CubeSpinner size={50} color="gold" />
             </div>
 
             {/* Status text - elegant typography */}
@@ -527,28 +525,9 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
               </>
             ) : (
               <div className="relative text-center py-4">
-                {/* Elegant indicator - Space Age style */}
-                <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 mb-6 flex items-center justify-center">
-                  {/* Outer rotating ring */}
-                  <div
-                    className="absolute inset-0 rounded-full animate-spin"
-                    style={{
-                      animationDuration: '8s',
-                      border: '2px solid rgba(255, 255, 255, 0.1)',
-                    }}
-                  >
-                    <div className="absolute top-0 left-1/2 w-1.5 h-1.5 -ml-0.5 -mt-0.5 bg-yellow-400 rounded-full" />
-                  </div>
-                  {/* Center circle */}
-                  <div
-                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                    }}
-                  >
-                    <div className="w-3 h-3 bg-yellow-400/60 rounded-full animate-pulse" style={{ boxShadow: '0 0 20px rgba(250, 200, 50, 0.5)' }} />
-                  </div>
+                {/* 3D Cube indicator */}
+                <div className="flex justify-center mb-6">
+                  <CubeSpinner size={50} color="purple" />
                 </div>
 
                 <div className="space-y-4">
