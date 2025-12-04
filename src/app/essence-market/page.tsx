@@ -3362,7 +3362,7 @@ export default function EssenceMarketPage() {
 
         {/* Market Category Tabs + Search/Filters - Combined Card */}
         <div
-          className="mb-6 rounded-2xl"
+          className="mb-6 rounded-2xl relative z-50"
           style={{
             background: useSpaceAgeHeader
               ? 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)'
