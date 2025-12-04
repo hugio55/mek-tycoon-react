@@ -239,7 +239,8 @@ function TalentBuilderInner() {
         });
       }
     }
-  }, [dispatch, actions]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount - dispatch and actions are stable
 
   // ---------------------------------------------------------------------------
   // Handle delete node

@@ -6427,6 +6427,8 @@ function CampaignManagerWithDatabase({
   client: any;
 }) {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>();
+  const [snapshots, setSnapshots] = useState<Array<{ _id: string; snapshotName: string; eligibleUsers?: any[] }>>([]);
+  const [assigningSnapshotCampaignId, setAssigningSnapshotCampaignId] = useState<string | null>(null);
 
   // Auto-select first campaign when campaigns load or change
   useEffect(() => {
@@ -6434,6 +6436,36 @@ function CampaignManagerWithDatabase({
       setSelectedCampaignId(campaigns[0]._id);
     }
   }, [campaigns, selectedCampaignId]);
+
+  // Fetch snapshots for the dropdown
+  useEffect(() => {
+    if (!client) return;
+    const fetchSnapshots = async () => {
+      try {
+        const data = await client.query(api.whitelists.getAllSnapshots, {});
+        setSnapshots(data || []);
+      } catch (error) {
+        console.error('[CampaignManagerWithDatabase] Error fetching snapshots:', error);
+      }
+    };
+    fetchSnapshots();
+  }, [client]);
+
+  // Handle snapshot assignment
+  const handleSnapshotAssignment = async (campaignId: string, snapshotId: string | null) => {
+    if (!client) return;
+    setAssigningSnapshotCampaignId(campaignId);
+    try {
+      await client.mutation(api.campaigns.assignEligibilitySnapshot, {
+        campaignId,
+        snapshotId: snapshotId || undefined,
+      });
+    } catch (error) {
+      console.error('[CampaignManagerWithDatabase] Error assigning snapshot:', error);
+    } finally {
+      setAssigningSnapshotCampaignId(null);
+    }
+  };
 
   const selectedCampaign = campaigns.find(c => c._id === selectedCampaignId);
 
@@ -6472,6 +6504,41 @@ function CampaignManagerWithDatabase({
                 }`}>
                   {campaign.status.toUpperCase()}
                 </div>
+              </div>
+
+              {/* Eligibility Snapshot Selector */}
+              <div className="mb-4 p-3 bg-black/40 rounded border border-purple-500/30" onClick={(e) => e.stopPropagation()}>
+                <label className="block text-xs text-gray-400 mb-2">
+                  Eligibility Snapshot
+                  <span className="text-purple-400 ml-2">(Who can claim from this campaign)</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={campaign.eligibilitySnapshotId || ""}
+                    onChange={(e) => handleSnapshotAssignment(campaign._id, e.target.value || null)}
+                    disabled={assigningSnapshotCampaignId === campaign._id}
+                    className="flex-1 bg-black/50 border border-gray-600 rounded p-2 text-sm text-white"
+                  >
+                    <option value="">-- No Snapshot (Claims Disabled) --</option>
+                    {snapshots.map((snapshot) => (
+                      <option key={snapshot._id} value={snapshot._id}>
+                        {snapshot.snapshotName} ({snapshot.eligibleUsers?.length || 0} users)
+                      </option>
+                    ))}
+                  </select>
+                  {assigningSnapshotCampaignId === campaign._id && (
+                    <span className="text-xs text-purple-400 animate-pulse">Saving...</span>
+                  )}
+                </div>
+                {campaign.eligibilitySnapshotId ? (
+                  <p className="text-xs text-green-400 mt-2">
+                    ✓ Users in this snapshot can claim NFTs from this campaign
+                  </p>
+                ) : (
+                  <p className="text-xs text-yellow-400 mt-2">
+                    ⚠ No snapshot assigned - nobody can claim from this campaign
+                  </p>
+                )}
               </div>
 
               {/* Campaign Stats */}
