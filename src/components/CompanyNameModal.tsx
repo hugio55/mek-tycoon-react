@@ -297,10 +297,10 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Input field */}
             <div>
-              <label htmlFor="companyName" className="block text-sm font-light text-white/70 mb-2 tracking-wide">
+              <label htmlFor="companyName" className="block text-sm font-light text-cyan-400/80 mb-2 tracking-wide">
                 Corporation Name
               </label>
-              <div className="relative">
+              <div className="relative group">
                 <input
                   id="companyName"
                   type="text"
@@ -308,15 +308,24 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="Enter corporation name..."
                   maxLength={30}
-                  className="w-full px-4 py-3 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
+                  className="w-full px-4 py-3 rounded-xl text-white placeholder-white/30 focus:outline-none transition-all duration-300"
                   style={{
                     background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    border: '1px solid rgba(0, 220, 220, 0.25)',
+                    boxShadow: '0 0 0 0 rgba(0, 220, 220, 0)',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.border = '1px solid rgba(0, 220, 220, 0.5)';
+                    e.target.style.boxShadow = '0 0 20px rgba(0, 220, 220, 0.15), 0 0 40px rgba(0, 220, 220, 0.05)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.border = '1px solid rgba(0, 220, 220, 0.25)';
+                    e.target.style.boxShadow = '0 0 0 0 rgba(0, 220, 220, 0)';
                   }}
                   disabled={isSubmitting}
                   autoFocus
                 />
-                <div className="absolute right-3 top-3 text-xs text-white/40">
+                <div className="absolute right-3 top-3 text-xs text-cyan-400/50">
                   {companyName.length}/30
                 </div>
               </div>
@@ -360,25 +369,39 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
               <button
                 type="submit"
                 disabled={buttonDisabled}
-                className="w-full py-3 rounded-xl text-sm font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="group relative w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden"
                 style={{
                   background: buttonDisabled
                     ? 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))'
-                    : 'linear-gradient(135deg, rgba(250, 182, 23, 0.3), rgba(250, 182, 23, 0.15))',
+                    : 'linear-gradient(135deg, rgba(0, 220, 220, 0.25), rgba(0, 180, 180, 0.15))',
                   border: buttonDisabled
                     ? '1px solid rgba(255, 255, 255, 0.1)'
-                    : '1px solid rgba(250, 182, 23, 0.5)',
-                  color: buttonDisabled ? 'rgba(255, 255, 255, 0.4)' : '#fab617',
+                    : '1px solid rgba(0, 220, 220, 0.5)',
+                  color: buttonDisabled ? 'rgba(255, 255, 255, 0.4)' : '#00dcdc',
+                  boxShadow: buttonDisabled ? 'none' : '0 0 20px rgba(0, 220, 220, 0.1)',
                 }}
               >
-                {isSubmitting ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border border-current border-t-transparent rounded-full animate-spin"></div>
-                    {mode === 'initial' ? 'Creating...' : 'Updating...'}
-                  </span>
-                ) : (
-                  mode === 'initial' ? 'Create Corporation' : 'Update Name'
+                {/* Honeycomb hover effect */}
+                {!buttonDisabled && (
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl"
+                    style={{
+                      backgroundImage: `url('/random-images/honey-png1.webp')`,
+                      backgroundSize: '125%',
+                      backgroundPosition: 'center',
+                    }}
+                  />
                 )}
+                <span className="relative z-10 transition-all duration-300 group-hover:[text-shadow:0_0_8px_rgba(0,220,220,0.8)]">
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                      {mode === 'initial' ? 'Creating...' : 'Updating...'}
+                    </span>
+                  ) : (
+                    mode === 'initial' ? 'Create Corporation' : 'Update Name'
+                  )}
+                </span>
               </button>
 
               {mode === 'edit' && (
