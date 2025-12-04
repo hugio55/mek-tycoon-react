@@ -153,45 +153,12 @@ crons.daily(
   internal.snapshotCleanup.cleanupOldSnapshotLogs
 );
 
-// Clean up old transaction history tables (runs weekly on Monday at 2 AM UTC)
-crons.weekly(
-  "cleanup old stock price history",
-  {
-    dayOfWeek: "monday",
-    hourUTC: 2,
-    minuteUTC: 0
-  },
-  internal.transactionCleanup.cleanupOldStockPriceHistory
-);
-
-crons.weekly(
-  "cleanup old gold transactions",
-  {
-    dayOfWeek: "monday",
-    hourUTC: 2,
-    minuteUTC: 15
-  },
-  internal.transactionCleanup.cleanupOldGoldTransactions
-);
-
-crons.weekly(
-  "cleanup old bank transactions",
-  {
-    dayOfWeek: "monday",
-    hourUTC: 2,
-    minuteUTC: 30
-  },
-  internal.transactionCleanup.cleanupOldBankTransactions
-);
-
-crons.weekly(
-  "cleanup old stock transactions",
-  {
-    dayOfWeek: "monday",
-    hourUTC: 2,
-    minuteUTC: 45
-  },
-  internal.transactionCleanup.cleanupOldStockTransactions
-);
+// ============================================
+// PHASE II: Transaction cleanup crons REMOVED
+// Deleted crons: cleanup old stock price history, cleanup old gold transactions,
+// cleanup old bank transactions, cleanup old stock transactions
+// (These referenced tables that were removed: stockPriceHistory, goldTransactions,
+// bankTransactions, stockTransactions)
+// ============================================
 
 export default crons;
