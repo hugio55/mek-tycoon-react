@@ -165,7 +165,6 @@ export default function NavigationBar() {
 
   // Hide navigation on specific pages
   if (shouldHide) {
-    console.log('[🎯NAV] HIDING navigation on path:', normalizedPath);
     return null;
   }
 

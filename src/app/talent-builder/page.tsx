@@ -288,7 +288,7 @@ function TalentBuilderInner() {
       />
 
       {/* Canvas Container (ref needed for Toolbar centering) */}
-      <div ref={canvasRef} className="flex-1">
+      <div ref={canvasRef} className="flex-1 relative">
         <Canvas
           nodes={state.nodes}
           connections={state.connections}
