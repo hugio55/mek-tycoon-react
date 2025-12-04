@@ -608,6 +608,70 @@ export const batchUpdateNFTImages = mutation({
 });
 
 /**
+ * Backfill inventory images from NMKR
+ *
+ * Takes an array of {nftUid, imageUrl} pairs from NMKR API
+ * and updates matching inventory records.
+ */
+export const backfillInventoryImages = mutation({
+  args: {
+    campaignId: v.id("commemorativeCampaigns"),
+    images: v.array(
+      v.object({
+        nftUid: v.string(),
+        imageUrl: v.string(),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    console.log('[CAMPAIGN] Backfilling images for campaign:', args.campaignId);
+    console.log('[CAMPAIGN] Received', args.images.length, 'images from NMKR');
+
+    // Get all inventory for this campaign
+    const inventory = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .collect();
+
+    // Create a map for quick lookup
+    const imageMap = new Map(args.images.map(img => [img.nftUid, img.imageUrl]));
+
+    let updated = 0;
+    let skipped = 0;
+    let notFound = 0;
+
+    for (const nft of inventory) {
+      const imageUrl = imageMap.get(nft.nftUid);
+
+      if (!imageUrl) {
+        notFound++;
+        continue;
+      }
+
+      // Skip if already has the same image
+      if (nft.imageUrl === imageUrl) {
+        skipped++;
+        continue;
+      }
+
+      await ctx.db.patch(nft._id, { imageUrl });
+      updated++;
+      console.log('[CAMPAIGN] Updated image for:', nft.name);
+    }
+
+    console.log('[CAMPAIGN] Backfill complete:', { updated, skipped, notFound });
+
+    return {
+      success: true,
+      updated,
+      skipped,
+      notFound,
+      total: inventory.length,
+    };
+  },
+});
+
+/**
  * Backfill soldTo and companyNameAtSale for NFTs that were sold before these fields existed
  *
  * Looks up the completed reservation record to find the wallet address,

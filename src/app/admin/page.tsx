@@ -6547,6 +6547,21 @@ function CampaignManagerWithDatabase({
                 >
                   {backfillRunning ? '⏳ Backfilling...' : '📋 Backfill Data'}
                 </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (campaign.nmkrProjectId) {
+                      handleBackfillImages(campaign._id, campaign.nmkrProjectId);
+                    } else {
+                      alert('⚠️ This campaign has no NMKR Project ID configured.');
+                    }
+                  }}
+                  disabled={backfillImagesRunning === campaign._id}
+                  className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors underline disabled:opacity-50"
+                  title="Fetch and populate NFT images from NMKR"
+                >
+                  {backfillImagesRunning === campaign._id ? '⏳ Loading Images...' : '🖼️ Backfill Images'}
+                </button>
                 {selectedCampaignId === campaign._id && (
                   <span className="text-xs text-yellow-400 ml-auto">
                     👇 View NFTs below
@@ -6588,6 +6603,7 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
   const [nmkrSyncing, setNmkrSyncing] = useState(false);
   const [nmkrVerifying, setNmkrVerifying] = useState<string | null>(null);
   const [backfillRunning, setBackfillRunning] = useState(false);
+  const [backfillImagesRunning, setBackfillImagesRunning] = useState<string | null>(null);
 
   // Mutation confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -6915,6 +6931,60 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
       alert(`Error backfilling data: ${error.message}`);
     } finally {
       setBackfillRunning(false);
+    }
+  };
+
+  // Backfill images from NMKR handler
+  const handleBackfillImages = async (campaignId: string, nmkrProjectId: string) => {
+    setBackfillImagesRunning(campaignId);
+    try {
+      // Step 1: Fetch images from NMKR via API route
+      console.log('[🖼️BACKFILL-IMAGES] Fetching images from NMKR...');
+      const response = await fetch('/api/nmkr/backfill-images', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectUid: nmkrProjectId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch images from NMKR');
+      }
+
+      const nmkrData = await response.json();
+      console.log('[🖼️BACKFILL-IMAGES] NMKR response:', nmkrData);
+
+      if (!nmkrData.images || nmkrData.images.length === 0) {
+        alert('⚠️ No images found in NMKR for this project.');
+        return;
+      }
+
+      // Step 2: Update inventory with images via Convex mutation
+      console.log('[🖼️BACKFILL-IMAGES] Updating inventory with', nmkrData.images.length, 'images...');
+      const result = await client.mutation(api.commemorativeCampaigns.backfillInventoryImages, {
+        campaignId: campaignId as any,
+        images: nmkrData.images.map((img: any) => ({
+          nftUid: img.nftUid,
+          imageUrl: img.imageUrl,
+        })),
+      });
+
+      console.log('[🖼️BACKFILL-IMAGES] Result:', result);
+
+      if (result.updated > 0) {
+        alert(`✅ Updated ${result.updated} NFT images from NMKR.\n\n${result.skipped > 0 ? `⏭️ ${result.skipped} already had images.` : ''}${result.notFound > 0 ? `\n⚠️ ${result.notFound} NFTs not found in NMKR.` : ''}`);
+      } else if (result.skipped > 0) {
+        alert(`✅ All ${result.skipped} NFTs already have images. No update needed.`);
+      } else {
+        alert('⚠️ No images were updated. NFTs may not match NMKR UIDs.');
+      }
+
+      setCampaignUpdateTrigger(prev => prev + 1);
+    } catch (error: any) {
+      console.error('[🖼️BACKFILL-IMAGES] Error:', error);
+      alert(`Error backfilling images: ${error.message}`);
+    } finally {
+      setBackfillImagesRunning(null);
     }
   };
 
