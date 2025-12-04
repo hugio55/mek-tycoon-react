@@ -378,53 +378,59 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
 
   const lightboxContent = (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-auto p-4"
       onClick={onClose}
     >
+      {/* Space Age backdrop with blur */}
+      <div
+        className="fixed inset-0 bg-black/60"
+        style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
+      />
+
       {/* Connecting Modal */}
       {isConnecting && (
         <div
-          className="relative max-w-md w-full"
+          className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset',
+            backdropFilter: 'blur(30px)',
+            WebkitBackdropFilter: 'blur(30px)',
+          }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Corner brackets */}
-          <div className="hidden sm:block absolute -top-4 -left-4 w-12 h-12 border-l-2 border-t-2 border-yellow-500/50" />
-          <div className="hidden sm:block absolute -top-4 -right-4 w-12 h-12 border-r-2 border-t-2 border-yellow-500/50" />
-          <div className="hidden sm:block absolute -bottom-4 -left-4 w-12 h-12 border-l-2 border-b-2 border-yellow-500/50" />
-          <div className="hidden sm:block absolute -bottom-4 -right-4 w-12 h-12 border-r-2 border-b-2 border-yellow-500/50" />
-
-          <div className="bg-black/40 border-2 border-yellow-500/30 p-8 backdrop-blur-md">
-            {/* Spinning loader */}
+          <div className="px-6 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8">
+            {/* Spinning loader - glass style */}
             <div className="flex justify-center mb-6">
               <div className="relative w-16 h-16">
-                <div className="absolute inset-0 border-4 border-yellow-500/20 rounded-full" />
-                <div className="absolute inset-0 border-4 border-transparent border-t-yellow-500 rounded-full animate-spin" />
+                <div className="absolute inset-0 border-4 border-white/10 rounded-full" />
+                <div className="absolute inset-0 border-4 border-transparent border-t-yellow-400 rounded-full animate-spin" />
               </div>
             </div>
 
-            {/* Status text */}
-            <h2 className="text-2xl font-black text-yellow-500 mb-4 uppercase tracking-widest text-center font-['Orbitron']">
-              CONNECTING...
+            {/* Status text - elegant typography */}
+            <h2 className="text-2xl sm:text-3xl font-light text-white tracking-wide mb-4 text-center">
+              Connecting...
             </h2>
 
             {connectionStatus && (
-              <p className="text-yellow-400/80 text-center font-mono text-sm mb-6">
+              <p className="text-white/60 text-center text-sm sm:text-base mb-6 font-light tracking-wide">
                 {connectionStatus}
               </p>
             )}
 
-            {/* Cancel button */}
+            {/* Cancel button - glass style */}
             <div className="flex justify-center mt-6">
               <button
                 onClick={cancelConnection}
-                className="group relative bg-black/30 border border-yellow-500/30 text-yellow-500 px-6 py-2 transition-all hover:bg-yellow-500/10 hover:border-yellow-500/50 active:bg-yellow-500/20 uppercase tracking-wider font-['Orbitron'] font-bold"
+                className="px-8 py-3 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/10 active:scale-[0.98]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                }}
               >
-                {/* Corner accents */}
-                <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-yellow-500/60" />
-                <div className="absolute top-0 right-0 w-2 h-2 border-r border-t border-yellow-500/60" />
-                <div className="absolute bottom-0 left-0 w-2 h-2 border-l border-b border-yellow-500/60" />
-                <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-yellow-500/60" />
-                <span className="relative z-10">Cancel</span>
+                Cancel
               </button>
             </div>
           </div>
@@ -434,62 +440,50 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       {/* Main Wallet Selection */}
       {!isConnecting && (
         <div
-          className="relative max-w-[600px] w-full px-2 sm:px-4 md:px-0"
+          className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-white/10"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset',
+            backdropFilter: 'blur(30px)',
+            WebkitBackdropFilter: 'blur(30px)',
+          }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Corner brackets */}
-          <div className="hidden sm:block absolute -top-2 -left-2 w-8 h-8 border-l-2 border-t-2 border-yellow-500/50" />
-          <div className="hidden sm:block absolute -top-2 -right-2 w-8 h-8 border-r-2 border-t-2 border-yellow-500/50" />
-          <div className="hidden sm:block absolute -bottom-2 -left-2 w-8 h-8 border-l-2 border-b-2 border-yellow-500/50" />
-          <div className="hidden sm:block absolute -bottom-2 -right-2 w-8 h-8 border-r-2 border-b-2 border-yellow-500/50" />
+          {/* Close button - Space Age style */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-white/50 hover:text-white/80 transition-colors z-10"
+            style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            aria-label="Close"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
 
-          <div className="bg-black/20 border border-yellow-500/20 p-6 sm:p-8 md:p-12 backdrop-blur-md relative overflow-hidden">
-            {/* Scan line effect */}
-            <div
-              className="absolute inset-0 pointer-events-none opacity-20"
-              style={{
-                backgroundImage: `linear-gradient(0deg, transparent 50%, rgba(250, 182, 23, 0.03) 50%)`,
-                backgroundSize: '100% 4px',
-                animation: 'scanlines 8s linear infinite'
-              }}
-            />
+          <div className="px-6 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8">
+            {/* Title - elegant Space Age typography */}
+            <div className="text-center mb-6 sm:mb-8 pt-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-light text-white tracking-wide mb-3">
+                Connect Wallet
+              </h1>
 
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10 transition-colors border border-yellow-500/30 hover:border-yellow-500/60 z-10"
-              aria-label="Close"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {/* Title with glow */}
-            <h1
-              className="text-3xl sm:text-4xl md:text-5xl font-black text-yellow-500 mb-2 uppercase tracking-[0.1em] sm:tracking-[0.15em] md:tracking-[0.2em] text-center font-['Orbitron']"
-              style={{
-                textShadow: '0 0 20px rgba(250, 182, 23, 0.5), 0 0 40px rgba(250, 182, 23, 0.3)'
-              }}
-            >
-              CONNECT WALLET
-            </h1>
-
-            {/* System status */}
-            <div className="flex items-center justify-center gap-2 mb-8">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <p className="text-gray-500 uppercase tracking-widest font-mono whitespace-nowrap" style={{
-                fontSize: 'clamp(0.5rem, 2.5vw, 0.875rem)'
-              }}>
-                System Online • Awaiting Authorization
-              </p>
+              {/* System status - subtle */}
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                <p className="text-white/40 text-sm tracking-wide">
+                  System Online
+                </p>
+              </div>
             </div>
 
-            <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent mb-8" />
+            {/* Subtle divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-6 sm:mb-8" />
 
-            {/* Error message */}
+            {/* Error message - Space Age style */}
             {walletError && (
-              <div className="mb-6 p-4 border border-red-500/30 bg-red-500/10 text-red-400 text-sm font-mono">
+              <div className="mb-6 p-4 rounded-xl border border-red-500/30 bg-red-500/10 text-red-300 text-sm font-light tracking-wide">
                 {walletError}
               </div>
             )}
@@ -497,68 +491,84 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
             {/* Wallet buttons or no wallets message */}
             {availableWallets.length > 0 ? (
               <>
-                <p className="text-gray-400 mb-8 text-center font-mono text-sm">
+                <p className="text-white/60 mb-6 sm:mb-8 text-center text-sm sm:text-base font-light tracking-wide leading-relaxed">
                   Connect your Cardano wallet to access Mek Tycoon
                 </p>
-                <div className={availableWallets.length === 1 ? "flex justify-center" : "grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"}>
+                <div className={availableWallets.length === 1 ? "flex justify-center" : "grid grid-cols-1 sm:grid-cols-2 gap-3"}>
                   {availableWallets.map(wallet => (
                     <button
                       key={wallet.name}
                       onClick={() => connectWallet(wallet)}
                       disabled={isConnecting}
-                      className={`group relative bg-black/30 border border-yellow-500/20 text-yellow-500 px-4 py-3 sm:px-6 sm:py-4 transition-all hover:bg-yellow-500/5 hover:border-yellow-500/40 active:bg-yellow-500/10 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider sm:tracking-widest font-['Orbitron'] font-bold backdrop-blur-sm overflow-hidden min-h-[48px] touch-manipulation ${availableWallets.length === 1 ? 'w-64' : ''}`}
+                      className="group relative overflow-hidden rounded-xl min-h-[52px] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                      }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-yellow-500/40" />
-                      <div className="absolute top-0 right-0 w-2 h-2 border-r border-t border-yellow-500/40" />
-                      <div className="absolute bottom-0 left-0 w-2 h-2 border-l border-b border-yellow-500/40" />
-                      <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-yellow-500/40" />
-                      <span className="relative z-10">{wallet.name}</span>
+                      {/* Honeycomb hover effect */}
+                      <div
+                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl"
+                        style={{
+                          backgroundImage: `url('/random-images/honey-png1.webp')`,
+                          backgroundSize: '125%',
+                          backgroundPosition: 'center',
+                        }}
+                      />
+                      <span
+                        className="relative z-10 text-white/90 font-medium tracking-wide transition-all duration-300 group-hover:[text-shadow:0_0_6px_rgba(255,255,255,0.9),0_0_12px_rgba(255,255,255,0.6)]"
+                        style={{ fontFamily: "'Inter', sans-serif" }}
+                      >
+                        {wallet.name}
+                      </span>
                     </button>
                   ))}
                 </div>
               </>
             ) : (
-              <div className="relative text-center bg-black/30 p-4 sm:p-8 backdrop-blur-sm overflow-hidden">
-                <div className="absolute inset-0 opacity-5">
-                  <div className="absolute left-1/2 top-0 bottom-0 w-px bg-yellow-500/20" />
-                  <div className="absolute top-1/2 left-0 right-0 h-px bg-yellow-500/20" />
-                </div>
-                <div className="relative mx-auto w-28 h-28 mb-6 flex items-center justify-center">
-                  {/* Crosshair */}
-                  <div className="absolute w-full h-0.5 bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent" />
-                  <div className="absolute h-full w-0.5 bg-gradient-to-b from-transparent via-yellow-500/40 to-transparent" />
-                  {/* Corner brackets */}
-                  <div className="absolute top-0 left-0 w-6 h-6 border-l-2 border-t-2 border-yellow-500/60" />
-                  <div className="absolute top-0 right-0 w-6 h-6 border-r-2 border-t-2 border-yellow-500/60" />
-                  <div className="absolute bottom-0 left-0 w-6 h-6 border-l-2 border-b-2 border-yellow-500/60" />
-                  <div className="absolute bottom-0 right-0 w-6 h-6 border-r-2 border-b-2 border-yellow-500/60" />
-                  {/* Rotating outer ring */}
-                  <div className="absolute inset-0 border-2 border-yellow-500/20 rounded-full animate-spin" style={{ animationDuration: '8s' }}>
-                    <div className="absolute top-0 left-1/2 w-1 h-1 -ml-0.5 -mt-0.5 bg-yellow-500 rounded-full" />
-                    <div className="absolute right-0 top-1/2 w-1 h-1 -mr-0.5 -mt-0.5 bg-yellow-500 rounded-full" />
+              <div className="relative text-center py-4">
+                {/* Elegant indicator - Space Age style */}
+                <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 mb-6 flex items-center justify-center">
+                  {/* Outer rotating ring */}
+                  <div
+                    className="absolute inset-0 rounded-full animate-spin"
+                    style={{
+                      animationDuration: '8s',
+                      border: '2px solid rgba(255, 255, 255, 0.1)',
+                    }}
+                  >
+                    <div className="absolute top-0 left-1/2 w-1.5 h-1.5 -ml-0.5 -mt-0.5 bg-yellow-400 rounded-full" />
                   </div>
-                  {/* Center indicator */}
-                  <div className="relative w-12 h-12 border-2 border-yellow-500/50 rounded-full bg-black/50 flex items-center justify-center">
-                    <div className="w-6 h-6 bg-yellow-500/20 rounded-full animate-pulse" style={{ boxShadow: '0 0 20px rgba(250, 182, 23, 0.4)' }}>
-                      <div className="w-full h-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-yellow-500 rounded-full" />
-                      </div>
-                    </div>
+                  {/* Center circle */}
+                  <div
+                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                    }}
+                  >
+                    <div className="w-3 h-3 bg-yellow-400/60 rounded-full animate-pulse" style={{ boxShadow: '0 0 20px rgba(250, 200, 50, 0.5)' }} />
                   </div>
                 </div>
-                <div className="relative space-y-3">
-                  <p className="text-yellow-500 font-['Orbitron'] uppercase tracking-wider text-sm font-bold">Wallet Connection Required</p>
-                  <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent" />
-                  <div className="px-1 sm:px-4 space-y-2">
-                    <p className="text-gray-400 font-mono leading-relaxed" style={{ fontSize: 'clamp(0.65rem, 2vw, 0.875rem)' }}>
-                      Please install your Mek-holding Cardano wallet on this device then refresh this page.
-                    </p>
-                    <p className="text-gray-500 text-xs italic font-sans">They will appear here.</p>
-                  </div>
-                  <div className="pt-3">
-                    <div className="inline-flex flex-wrap items-center justify-center gap-1 bg-black/40 border border-yellow-500/20 px-3 py-2">
-                      <span className="text-xs text-gray-500 font-mono uppercase tracking-wider">Nami • Eternl • Flint • Yoroi • Typhon • Gero • NuFi</span>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg sm:text-xl font-light text-white tracking-wide">
+                    No Wallet Detected
+                  </h3>
+                  <p className="text-white/50 text-sm sm:text-base font-light tracking-wide leading-relaxed max-w-sm mx-auto">
+                    Please install a Cardano wallet extension on this device, then refresh the page.
+                  </p>
+
+                  {/* Supported wallets - glass pill */}
+                  <div className="pt-2">
+                    <div
+                      className="inline-flex flex-wrap items-center justify-center gap-2 px-4 py-2 rounded-full"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                      }}
+                    >
+                      <span className="text-xs text-white/40 tracking-wide">Nami • Eternl • Flint • Vespr • Lace • NuFi</span>
                     </div>
                   </div>
                 </div>
