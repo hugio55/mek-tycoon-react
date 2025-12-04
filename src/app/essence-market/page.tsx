@@ -3256,8 +3256,8 @@ export default function EssenceMarketPage() {
             className="relative mb-6 rounded-2xl p-5 overflow-hidden transition-all duration-500"
             style={{
               background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
               border: '1px solid rgba(255,255,255,0.15)',
               boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.05)',
             }}
@@ -3371,8 +3371,8 @@ export default function EssenceMarketPage() {
             background: useSpaceAgeHeader
               ? 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)'
               : 'rgba(0,0,0,0.5)',
-            backdropFilter: useSpaceAgeHeader ? 'blur(16px)' : 'blur(4px)',
-            WebkitBackdropFilter: useSpaceAgeHeader ? 'blur(16px)' : 'blur(4px)',
+            backdropFilter: useSpaceAgeHeader ? 'blur(8px)' : 'blur(4px)',
+            WebkitBackdropFilter: useSpaceAgeHeader ? 'blur(8px)' : 'blur(4px)',
             border: useSpaceAgeHeader
               ? '1px solid rgba(255,255,255,0.1)'
               : '1px solid rgba(107, 114, 128, 0.4)',

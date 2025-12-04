@@ -59,7 +59,7 @@ const Canvas: React.FC<CanvasProps> = memo(({
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  // Prevent page scroll when over canvas
+  // Prevent page scroll and middle-click auto-scroll when over canvas
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -70,11 +70,31 @@ const Canvas: React.FC<CanvasProps> = memo(({
       return false;
     };
 
+    // Prevent middle-click auto-scroll
+    const preventMiddleClick = (e: MouseEvent) => {
+      if (e.button === 1) {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Prevent context menu on right-click
+    const preventContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      return false;
+    };
+
     canvas.addEventListener('wheel', preventScroll, { passive: false });
+    canvas.addEventListener('mousedown', preventMiddleClick);
+    canvas.addEventListener('auxclick', preventMiddleClick);
+    canvas.addEventListener('contextmenu', preventContextMenu);
 
     return () => {
       if (canvas) {
         canvas.removeEventListener('wheel', preventScroll);
+        canvas.removeEventListener('mousedown', preventMiddleClick);
+        canvas.removeEventListener('auxclick', preventMiddleClick);
+        canvas.removeEventListener('contextmenu', preventContextMenu);
       }
     };
   }, []);
@@ -146,6 +166,14 @@ const Canvas: React.FC<CanvasProps> = memo(({
     const target = e.target as HTMLElement;
     const isNodeClick = target.closest('.talent-node');
 
+    // Middle mouse button (button 1) always starts panning
+    if (e.button === 1) {
+      e.preventDefault();
+      dispatch({ type: 'SET_IS_PANNING', payload: true });
+      dispatch({ type: 'SET_PAN_START', payload: { x: e.clientX, y: e.clientY } });
+      return;
+    }
+
     if (isNodeClick) return;
 
     if (mode === 'add' || mode === 'addLabel') {
@@ -199,7 +227,7 @@ const Canvas: React.FC<CanvasProps> = memo(({
       return;
     }
 
-    // Start panning
+    // Left mouse button starts panning in other modes
     dispatch({ type: 'SET_IS_PANNING', payload: true });
     dispatch({ type: 'SET_PAN_START', payload: { x: e.clientX, y: e.clientY } });
   }, [mode, panOffset, zoom, snapPosition, onAddNode, dispatch]);
