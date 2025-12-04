@@ -1460,7 +1460,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
                 </p>
               </div>
 
-              <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
+              <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl mb-4">
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <div className="relative">
                     <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
@@ -1472,6 +1472,16 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
                   This usually takes just a few seconds...
                 </p>
               </div>
+
+              <button
+                onClick={() => {
+                  setIsVerifyingClosedWindowPayment(false);
+                  setState('reserved');
+                }}
+                className="w-full py-2 px-4 text-sm font-medium text-white/50 hover:text-white/70 transition-colors"
+              >
+                I didn't pay - go back
+              </button>
             </div>
           );
         }
