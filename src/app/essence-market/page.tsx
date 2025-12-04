@@ -3439,12 +3439,13 @@ export default function EssenceMarketPage() {
 
           {/* Search and Filters Row */}
           <div className="flex gap-3 flex-wrap items-center p-3">
-            {/* Category Filter Dropdown - Expanding Accordion Style */}
+            {/* Category Filter Dropdown - Floating Style */}
             <div className="relative category-dropdown-container z-[100]">
-              <div
-                className="overflow-hidden transition-all duration-300 ease-out"
+              {/* Dropdown Button */}
+              <button
+                onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+                className="flex items-center gap-2 px-3 py-2 text-sm uppercase tracking-wider font-medium transition-all"
                 style={{
-                  minWidth: '180px',
                   background: useSpaceAgeHeader
                     ? 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)'
                     : 'rgba(0,0,0,0.6)',
@@ -3455,47 +3456,43 @@ export default function EssenceMarketPage() {
                       ? '1px solid rgba(34,211,238,0.3)'
                       : '1px solid rgba(255,255,255,0.15)'
                     : '1px solid rgba(107, 114, 128, 0.5)',
-                  borderRadius: categoryDropdownOpen ? '12px' : '8px',
-                  boxShadow: categoryDropdownOpen
-                    ? useSpaceAgeHeader
-                      ? '0 8px 32px rgba(34,211,238,0.15), inset 0 1px 0 rgba(255,255,255,0.1)'
-                      : '0 8px 32px rgba(250,182,23,0.15)'
-                    : 'none',
+                  borderRadius: categoryDropdownOpen ? '8px 8px 0 0' : '8px',
+                  color: selectedRarity !== "all"
+                    ? useSpaceAgeHeader ? '#22d3ee' : '#facc15'
+                    : useSpaceAgeHeader ? 'rgba(255,255,255,0.8)' : '#9ca3af',
+                  fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
                 }}
               >
-                {/* Dropdown Header/Button */}
-                <button
-                  onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
-                  className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm uppercase tracking-wider font-medium transition-all"
-                  style={{
-                    color: selectedRarity !== "all"
-                      ? useSpaceAgeHeader ? '#22d3ee' : '#facc15'
-                      : useSpaceAgeHeader ? 'rgba(255,255,255,0.8)' : '#9ca3af',
-                    fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
-                    borderBottom: categoryDropdownOpen
-                      ? useSpaceAgeHeader
-                        ? '1px solid rgba(255,255,255,0.1)'
-                        : '1px solid rgba(107, 114, 128, 0.3)'
-                      : '1px solid transparent',
-                  }}
+                <span>{currentFilters.find(c => c.id === selectedRarity)?.name || currentFilters[0].name}</span>
+                <svg
+                  className={`w-3.5 h-3.5 transition-transform duration-200 flex-shrink-0 ${categoryDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <span>{currentFilters.find(c => c.id === selectedRarity)?.name || currentFilters[0].name}</span>
-                  <svg
-                    className={`w-4 h-4 transition-transform duration-300 flex-shrink-0 ${categoryDropdownOpen ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
 
-                {/* Expanding Options */}
+              {/* Floating Dropdown Menu */}
+              {categoryDropdownOpen && (
                 <div
-                  className="transition-all duration-300 ease-out"
+                  className="absolute top-full left-0 z-[200] overflow-hidden"
                   style={{
-                    maxHeight: categoryDropdownOpen ? `${currentFilters.length * 44}px` : '0px',
-                    opacity: categoryDropdownOpen ? 1 : 0,
+                    minWidth: '100%',
+                    background: useSpaceAgeHeader
+                      ? 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 100%)'
+                      : 'rgba(0,0,0,0.85)',
+                    backdropFilter: useSpaceAgeHeader ? 'blur(24px)' : 'blur(12px)',
+                    WebkitBackdropFilter: useSpaceAgeHeader ? 'blur(24px)' : 'blur(12px)',
+                    border: useSpaceAgeHeader
+                      ? '1px solid rgba(34,211,238,0.3)'
+                      : '1px solid rgba(107, 114, 128, 0.5)',
+                    borderTop: 'none',
+                    borderRadius: '0 0 8px 8px',
+                    boxShadow: useSpaceAgeHeader
+                      ? '0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(34,211,238,0.1)'
+                      : '0 12px 32px rgba(0,0,0,0.5)',
                   }}
                 >
                   {currentFilters.map((filter, index) => (
@@ -3505,21 +3502,19 @@ export default function EssenceMarketPage() {
                         setSelectedRarity(filter.id);
                         setCategoryDropdownOpen(false);
                       }}
-                      className="w-full px-4 py-2.5 text-left text-sm uppercase tracking-wider transition-all hover:pl-5"
+                      className="w-full px-3 py-2 text-left text-sm uppercase tracking-wider transition-all"
                       style={{
                         background: selectedRarity === filter.id
                           ? useSpaceAgeHeader
-                            ? 'linear-gradient(90deg, rgba(34,211,238,0.15) 0%, rgba(34,211,238,0.05) 100%)'
+                            ? 'rgba(34,211,238,0.15)'
                             : 'rgba(250,182,23,0.15)'
                           : 'transparent',
                         color: selectedRarity === filter.id
                           ? useSpaceAgeHeader ? '#22d3ee' : '#facc15'
-                          : useSpaceAgeHeader ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.7)',
+                          : useSpaceAgeHeader ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.6)',
                         fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
                         borderBottom: index < currentFilters.length - 1
-                          ? useSpaceAgeHeader
-                            ? '1px solid rgba(255,255,255,0.05)'
-                            : '1px solid rgba(255,255,255,0.05)'
+                          ? '1px solid rgba(255,255,255,0.05)'
                           : 'none',
                       }}
                     >
@@ -3527,7 +3522,7 @@ export default function EssenceMarketPage() {
                     </button>
                   ))}
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Search Input */}
@@ -3608,12 +3603,13 @@ export default function EssenceMarketPage() {
               )}
             </div>
 
-            {/* Sort Dropdown - Expanding Accordion Style */}
+            {/* Sort Dropdown - Floating Style */}
             <div className="relative sort-dropdown-container ml-auto z-[100]">
-              <div
-                className="overflow-hidden transition-all duration-300 ease-out"
+              {/* Dropdown Button */}
+              <button
+                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                className="flex items-center gap-2 px-3 py-2 text-sm uppercase tracking-wider font-medium transition-all"
                 style={{
-                  minWidth: '180px',
                   background: useSpaceAgeHeader
                     ? 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)'
                     : 'rgba(0,0,0,0.6)',
@@ -3624,45 +3620,41 @@ export default function EssenceMarketPage() {
                       ? '1px solid rgba(34,211,238,0.3)'
                       : '1px solid rgba(255,255,255,0.15)'
                     : '1px solid rgba(107, 114, 128, 0.5)',
-                  borderRadius: sortDropdownOpen ? '12px' : '8px',
-                  boxShadow: sortDropdownOpen
-                    ? useSpaceAgeHeader
-                      ? '0 8px 32px rgba(34,211,238,0.15), inset 0 1px 0 rgba(255,255,255,0.1)'
-                      : '0 8px 32px rgba(250,182,23,0.15)'
-                    : 'none',
+                  borderRadius: sortDropdownOpen ? '8px 8px 0 0' : '8px',
+                  color: useSpaceAgeHeader ? 'rgba(255,255,255,0.8)' : '#9ca3af',
+                  fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
                 }}
               >
-                {/* Dropdown Header/Button */}
-                <button
-                  onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                  className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm uppercase tracking-wider font-medium transition-all"
-                  style={{
-                    color: useSpaceAgeHeader ? 'rgba(255,255,255,0.8)' : '#9ca3af',
-                    fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
-                    borderBottom: sortDropdownOpen
-                      ? useSpaceAgeHeader
-                        ? '1px solid rgba(255,255,255,0.1)'
-                        : '1px solid rgba(107, 114, 128, 0.3)'
-                      : '1px solid transparent',
-                  }}
+                <span>{SORT_OPTIONS.find(o => o.id === sortBy)?.name}</span>
+                <svg
+                  className={`w-3.5 h-3.5 transition-transform duration-200 flex-shrink-0 ${sortDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <span>{SORT_OPTIONS.find(o => o.id === sortBy)?.name}</span>
-                  <svg
-                    className={`w-4 h-4 transition-transform duration-300 flex-shrink-0 ${sortDropdownOpen ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
 
-                {/* Expanding Options */}
+              {/* Floating Dropdown Menu */}
+              {sortDropdownOpen && (
                 <div
-                  className="transition-all duration-300 ease-out"
+                  className="absolute top-full right-0 z-[200] overflow-hidden"
                   style={{
-                    maxHeight: sortDropdownOpen ? `${SORT_OPTIONS.length * 44}px` : '0px',
-                    opacity: sortDropdownOpen ? 1 : 0,
+                    minWidth: '100%',
+                    background: useSpaceAgeHeader
+                      ? 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 100%)'
+                      : 'rgba(0,0,0,0.85)',
+                    backdropFilter: useSpaceAgeHeader ? 'blur(24px)' : 'blur(12px)',
+                    WebkitBackdropFilter: useSpaceAgeHeader ? 'blur(24px)' : 'blur(12px)',
+                    border: useSpaceAgeHeader
+                      ? '1px solid rgba(34,211,238,0.3)'
+                      : '1px solid rgba(107, 114, 128, 0.5)',
+                    borderTop: 'none',
+                    borderRadius: '0 0 8px 8px',
+                    boxShadow: useSpaceAgeHeader
+                      ? '0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(34,211,238,0.1)'
+                      : '0 12px 32px rgba(0,0,0,0.5)',
                   }}
                 >
                   {SORT_OPTIONS.map((option, index) => (
@@ -3672,16 +3664,16 @@ export default function EssenceMarketPage() {
                         setSortBy(option.id);
                         setSortDropdownOpen(false);
                       }}
-                      className="w-full px-4 py-2.5 text-left text-sm tracking-wider transition-all hover:pl-5"
+                      className="w-full px-3 py-2 text-left text-sm tracking-wider transition-all whitespace-nowrap"
                       style={{
                         background: sortBy === option.id
                           ? useSpaceAgeHeader
-                            ? 'linear-gradient(90deg, rgba(34,211,238,0.15) 0%, rgba(34,211,238,0.05) 100%)'
+                            ? 'rgba(34,211,238,0.15)'
                             : 'rgba(250,182,23,0.15)'
                           : 'transparent',
                         color: sortBy === option.id
                           ? useSpaceAgeHeader ? '#22d3ee' : '#facc15'
-                          : useSpaceAgeHeader ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.7)',
+                          : useSpaceAgeHeader ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.6)',
                         fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
                         borderBottom: index < SORT_OPTIONS.length - 1
                           ? '1px solid rgba(255,255,255,0.05)'
@@ -3692,7 +3684,7 @@ export default function EssenceMarketPage() {
                     </button>
                   ))}
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
