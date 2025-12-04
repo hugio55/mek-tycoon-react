@@ -177,7 +177,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" translate="no" className="notranslate" style={{ margin: 0, padding: 0, width: '100vw', height: 'auto', overflowX: 'hidden', overflowY: 'scroll', backgroundColor: '#0a0a0a' }} suppressHydrationWarning>
+    <html lang="en" translate="no" className="notranslate" style={{ margin: 0, padding: 0, width: '100vw', height: 'auto', overflowX: 'hidden', overflowY: 'scroll', backgroundColor: '#000000' }} suppressHydrationWarning>
       <head>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       </head>

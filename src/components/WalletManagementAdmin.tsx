@@ -90,7 +90,8 @@ function WalletManagementAdminContent() {
       return;
     }
 
-    client.query(api.adminVerificationReset.getAllWallets)
+    // PHASE II: Query users table instead of goldMining
+    client.query(api.adminUsers.getAllUsersForAdmin)
       .then((data: any) => {
         setWalletsData(data);
         setIsLoadingWallets(false);
@@ -123,7 +124,8 @@ function WalletManagementAdminContent() {
     if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
     const client = getClient();
     if (!client) throw new Error('Client not initialized');
-    return await client.mutation(api.adminVerificationReset.deleteWallet, args);
+    // PHASE II: Delete from users table
+    return await client.mutation(api.adminUsers.deleteUserCompletely, args);
   };
 
   const mergeDuplicates = async (args: any) => {
@@ -165,14 +167,16 @@ function WalletManagementAdminContent() {
     if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
     const client = getClient();
     if (!client) throw new Error('Client not initialized');
-    return await client.mutation(api.adminVerificationReset.updateWalletGold, args);
+    // PHASE II: Update gold in users table
+    return await client.mutation(api.adminUsers.updateUserGoldAmount, args);
   };
 
   const resetAllGoldToZero = async (args: any) => {
     if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
     const client = getClient();
     if (!client) throw new Error('Client not initialized');
-    return await client.mutation(api.adminVerificationReset.resetAllGoldToZero, args);
+    // PHASE II: Reset gold in users table
+    return await client.mutation(api.adminUsers.resetUserGoldToZero, args);
   };
 
   const fixCumulativeGold = async (args: any) => {
@@ -207,7 +211,8 @@ function WalletManagementAdminContent() {
     if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
     const client = getClient();
     if (!client) throw new Error('Client not initialized');
-    return await client.mutation(api.mekLeveling.resetAllMekLevels, args);
+    // PHASE II: Reset mek levels for user
+    return await client.mutation(api.adminUsers.resetUserMekLevels, args);
   };
 
   const findCorruptedGoldRecords = async (args: any) => {
