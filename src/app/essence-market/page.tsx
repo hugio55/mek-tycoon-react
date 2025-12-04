@@ -3440,11 +3440,12 @@ export default function EssenceMarketPage() {
           {/* Search and Filters Row */}
           <div className="flex gap-3 flex-wrap items-center p-3">
             {/* Category Filter Dropdown */}
-            <div className="relative category-dropdown-container">
+            <div className="relative category-dropdown-container z-[100]">
               <button
                 onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm uppercase tracking-wider font-medium transition-all"
+                className="flex items-center justify-between gap-2 px-4 py-2 rounded-lg text-sm uppercase tracking-wider font-medium transition-all"
                 style={{
+                  minWidth: '180px',
                   background: useSpaceAgeHeader
                     ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)'
                     : 'rgba(0,0,0,0.6)',
@@ -3459,7 +3460,7 @@ export default function EssenceMarketPage() {
               >
                 <span>{currentFilters.find(c => c.id === selectedRarity)?.name || currentFilters[0].name}</span>
                 <svg
-                  className={`w-4 h-4 transition-transform ${categoryDropdownOpen ? 'rotate-180' : ''}`}
+                  className={`w-4 h-4 transition-transform flex-shrink-0 ${categoryDropdownOpen ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -3470,18 +3471,18 @@ export default function EssenceMarketPage() {
 
               {categoryDropdownOpen && (
                 <div
-                  className="absolute top-full mt-2 left-0 z-50 min-w-[180px] rounded-lg overflow-hidden"
+                  className="absolute top-full mt-2 left-0 z-[200] min-w-[180px] rounded-lg overflow-hidden"
                   style={{
                     background: useSpaceAgeHeader
-                      ? 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.9) 100%)'
-                      : 'rgba(0,0,0,0.95)',
+                      ? 'linear-gradient(135deg, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.95) 100%)'
+                      : 'rgba(0,0,0,0.98)',
                     backdropFilter: 'blur(20px)',
                     border: useSpaceAgeHeader
                       ? '1px solid rgba(34,211,238,0.3)'
                       : '1px solid rgba(250,182,23,0.3)',
                     boxShadow: useSpaceAgeHeader
-                      ? '0 10px 40px rgba(34,211,238,0.15)'
-                      : '0 10px 40px rgba(250,182,23,0.15)',
+                      ? '0 10px 40px rgba(34,211,238,0.2), 0 0 0 1px rgba(0,0,0,0.5)'
+                      : '0 10px 40px rgba(250,182,23,0.2), 0 0 0 1px rgba(0,0,0,0.5)',
                   }}
                 >
                   {currentFilters.map((filter) => (
