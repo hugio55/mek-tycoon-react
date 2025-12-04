@@ -36,6 +36,7 @@ import NMKRSyncModal from '@/components/admin/campaign/NMKRSyncModal';
 import EssenceMarketAdmin from '@/components/EssenceMarketAdmin';
 import OverlayEditor from '@/components/OverlayEditor';
 import CometLoader from '@/components/loaders/CometLoader';
+import CubeSpinner from '@/components/loaders/CubeSpinner';
 import TriangleKaleidoscope from '@/components/loaders/TriangleKaleidoscope';
 import PreLoader from '@/components/loaders/PreLoader';
 import AnimatedBorderButton from '@/components/loaders/AnimatedBorderButton';
@@ -4510,6 +4511,34 @@ export default function AdminMasterDataPage() {
 
                 {/* Component Grid - reversed so newest components appear at top */}
                 <div className="mek-components-grid-reversed">
+
+                  {/* Cube Spinner */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Cube Spinner
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Loader
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex flex-wrap items-center justify-center gap-8 min-h-[300px]">
+                      <CubeSpinner color="gold" size={44} />
+                      <CubeSpinner color="cyan" size={44} />
+                      <CubeSpinner color="lime" size={44} />
+                      <CubeSpinner color="purple" size={44} />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Uiverse.io by AqFox</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS-in-JS</div>
+                      <div><span className="text-zinc-500">Colors:</span> Gold, Cyan, Lime, Purple variants</div>
+                      <div><span className="text-zinc-500">Features:</span> 3D cube rotation, preserve-3d, translucent faces</div>
+                    </div>
+                  </div>
 
                   {/* Comet Loader */}
                   <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
