@@ -11,13 +11,51 @@ import { renderHeaderButtons } from "@/lib/headerButtonVariations";
 import { Tooltip } from "@/components/ui/tooltip-card";
 // Removed: restoreWalletSession - using localStorage directly like hub page
 
-// Variation type categories for essence filtering
-const RARITY_CATEGORIES = [
-  { id: "all", name: "All Essence" },
-  { id: "head", name: "Head" },
-  { id: "body", name: "Body" },
-  { id: "trait", name: "Trait" },
-];
+// Dynamic filter options per market category
+const MARKET_CATEGORY_FILTERS: Record<string, { id: string; name: string }[]> = {
+  essence: [
+    { id: "all", name: "All Essence" },
+    { id: "head", name: "Head" },
+    { id: "body", name: "Body" },
+    { id: "trait", name: "Trait" },
+  ],
+  merchandise: [
+    { id: "all", name: "All Merchandise" },
+    { id: "apparel", name: "Apparel" },
+    { id: "posters", name: "Posters" },
+    { id: "stickers", name: "Stickers" },
+    { id: "collectibles", name: "Collectibles" },
+  ],
+  cosmetics: [
+    { id: "all", name: "All Cosmetics" },
+    { id: "skins", name: "Skins" },
+    { id: "effects", name: "Effects" },
+    { id: "badges", name: "Badges" },
+    { id: "frames", name: "Frames" },
+  ],
+  miscellaneous: [
+    { id: "all", name: "All Items" },
+    { id: "slots", name: "Slots" },
+    { id: "boosts", name: "Boosts" },
+    { id: "materials", name: "Materials" },
+    { id: "other", name: "Other" },
+  ],
+  nft: [
+    { id: "all", name: "All NFTs" },
+    { id: "meks", name: "Meks" },
+    { id: "commemorative", name: "Commemorative" },
+    { id: "special", name: "Special Edition" },
+  ],
+};
+
+// Search placeholder per category
+const SEARCH_PLACEHOLDERS: Record<string, string> = {
+  essence: "SEARCH ESSENCE BY VARIATION NAME...",
+  merchandise: "SEARCH MERCHANDISE...",
+  cosmetics: "SEARCH COSMETICS...",
+  miscellaneous: "SEARCH ITEMS...",
+  nft: "SEARCH NFTs...",
+};
 
 const SORT_OPTIONS = [
   { id: "price_asc", name: "Price: Low to High" },
@@ -78,8 +116,8 @@ export default function EssenceMarketPage() {
   const [siphonLayoutChoice, setSiphonLayoutChoice] = useState<1 | 2 | 3 | 4 | 5>(5); // Siphon modal layout style
   const lightboxVersion = 6; // New listing lightbox design version - locked to V6
 
-  // Space Age styling toggle for header
-  const [useSpaceAgeHeader, setUseSpaceAgeHeader] = useState(false);
+  // Space Age styling toggle for header (default: true)
+  const [useSpaceAgeHeader, setUseSpaceAgeHeader] = useState(true);
 
   // Market category tabs
   const [activeMarketCategory, setActiveMarketCategory] = useState<'essence' | 'merchandise' | 'cosmetics' | 'miscellaneous' | 'nft'>('essence');

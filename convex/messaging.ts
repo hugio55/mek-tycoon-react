@@ -790,6 +790,11 @@ export const blockUser = mutation({
       throw new Error("Cannot block yourself");
     }
 
+    // Validate reason length (max 500 characters)
+    if (args.reason && args.reason.length > 500) {
+      throw new Error("Block reason cannot exceed 500 characters");
+    }
+
     // Check if already blocked
     const existingBlock = await ctx.db
       .query("messageBlocks")

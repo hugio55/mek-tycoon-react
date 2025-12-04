@@ -1578,6 +1578,21 @@ export default function MessagingSystemAdmin() {
                               <span className="text-gray-500 text-xs">
                                 {formatRelativeTime(msg.createdAt)}
                               </span>
+                              {/* Read status indicator */}
+                              {msg.status && (
+                                <span
+                                  className={`text-xs px-1.5 py-0.5 rounded ${
+                                    msg.status === 'read'
+                                      ? 'bg-green-500/20 text-green-400'
+                                      : msg.status === 'delivered'
+                                        ? 'bg-blue-500/20 text-blue-400'
+                                        : 'bg-gray-500/20 text-gray-400'
+                                  }`}
+                                  title={msg.readAt ? `Read at ${new Date(msg.readAt).toLocaleString()}` : undefined}
+                                >
+                                  {msg.status === 'read' ? '✓✓ Read' : msg.status === 'delivered' ? '✓ Delivered' : '○ Sent'}
+                                </span>
+                              )}
                               {/* Admin delete button */}
                               {!msg.isDeleted && (
                                 <button
