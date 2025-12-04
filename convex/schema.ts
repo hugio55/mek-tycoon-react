@@ -442,6 +442,101 @@ export default defineSchema({
     .index("by_seller", ["sellerId"])
     .index("by_timestamp", ["timestamp"]),
 
+  // Trade Abuse Detection - flags suspicious marketplace activity
+  tradeAbuseFlags: defineTable({
+    purchaseId: v.id("marketListingPurchases"),
+    listingId: v.id("marketListings"),
+    buyerId: v.id("users"),
+    sellerId: v.id("users"),
+    buyerCorpName: v.string(),
+    sellerCorpName: v.string(),
+    itemType: v.string(),
+    itemVariation: v.optional(v.string()),
+    purchasePrice: v.number(),
+    quantity: v.number(),
+    // Flag reasons - which detection rules triggered
+    flagReasons: v.array(v.union(
+      v.literal("repeated_pair"),        // Same buyer-seller traded 2+ times
+      v.literal("fast_purchase"),        // Purchase within 60 seconds of listing
+      v.literal("price_gap"),            // Resold for 10x+ the purchase price
+      v.literal("new_corp_buyer"),       // Buyer corp is less than 7 days old
+      v.literal("same_ip"),              // Buyer and seller share IP address
+      v.literal("same_fingerprint"),     // Same browser fingerprint
+      v.literal("same_wallet"),          // Both corps linked to same wallet
+      v.literal("session_overlap"),      // Same session accessed both corps
+      v.literal("manual_flag")           // Admin manually flagged
+    )),
+    riskScore: v.number(),               // Cumulative score based on flags
+    timeSinceListing: v.optional(v.number()), // Seconds between listing and purchase
+    resalePrice: v.optional(v.number()), // If buyer relisted, what price
+    resaleListingId: v.optional(v.id("marketListings")), // The resale listing
+    priceGapMultiplier: v.optional(v.number()), // e.g., 10x, 50x, 100x
+    previousTradeCount: v.optional(v.number()), // How many times these corps traded before
+    status: v.union(
+      v.literal("pending"),              // Awaiting admin review
+      v.literal("investigating"),        // Admin is looking into it
+      v.literal("confirmed_abuse"),      // Confirmed as abuse
+      v.literal("cleared"),              // Reviewed and cleared as legitimate
+      v.literal("auto_cleared")          // System auto-cleared (e.g., normal resale)
+    ),
+    adminNotes: v.optional(v.string()),
+    reviewedBy: v.optional(v.string()),  // Admin who reviewed
+    reviewedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_status", ["status"])
+    .index("by_buyer", ["buyerId"])
+    .index("by_seller", ["sellerId"])
+    .index("by_purchase", ["purchaseId"])
+    .index("by_created", ["createdAt"])
+    .index("by_risk_score", ["riskScore"]),
+
+  // Trade Session Data - tracks IP/fingerprint for abuse detection
+  tradeSessionData: defineTable({
+    purchaseId: v.id("marketListingPurchases"),
+    // Buyer info at time of purchase
+    buyerId: v.id("users"),
+    buyerIp: v.optional(v.string()),
+    buyerFingerprint: v.optional(v.string()),
+    buyerWalletAddress: v.string(),
+    // Seller info (captured from listing or user record)
+    sellerId: v.id("users"),
+    sellerIp: v.optional(v.string()),        // From their last activity
+    sellerFingerprint: v.optional(v.string()),
+    sellerWalletAddress: v.string(),
+    // Quick-check boolean flags
+    sameIp: v.boolean(),
+    sameFingerprint: v.boolean(),
+    sameWallet: v.boolean(),
+    // Session tracking
+    buyerSessionId: v.optional(v.string()),  // Browser session ID
+    sessionHadMultipleCorps: v.boolean(),    // Did this session auth as multiple corps?
+    timestamp: v.number(),
+  })
+    .index("by_purchase", ["purchaseId"])
+    .index("by_buyer", ["buyerId"])
+    .index("by_seller", ["sellerId"])
+    .index("by_same_ip", ["sameIp"])
+    .index("by_same_fingerprint", ["sameFingerprint"])
+    .index("by_timestamp", ["timestamp"]),
+
+  // Corp Trade Pairs - tracks how often two corps trade with each other
+  corpTradePairs: defineTable({
+    corp1Id: v.id("users"),              // Alphabetically first by ID
+    corp2Id: v.id("users"),              // Alphabetically second by ID
+    corp1Name: v.string(),
+    corp2Name: v.string(),
+    tradeCount: v.number(),              // Total trades between them
+    totalVolumeGold: v.number(),         // Total gold exchanged
+    firstTradeAt: v.number(),
+    lastTradeAt: v.number(),
+    flagged: v.boolean(),                // Has this pair been flagged?
+  })
+    .index("by_corp1", ["corp1Id"])
+    .index("by_corp2", ["corp2Id"])
+    .index("by_trade_count", ["tradeCount"])
+    .index("by_flagged", ["flagged"]),
+
   // Transaction history
   transactions: defineTable({
     type: v.union(
