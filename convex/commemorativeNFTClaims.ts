@@ -61,19 +61,78 @@ export const recordClaim = mutation({
 });
 
 // Check if a wallet has claimed (for button state)
+// Now checks BOTH claims table AND inventory table for robust detection
 export const checkClaimed = query({
   args: {
     walletAddress: v.string(),
   },
   handler: async (ctx, args) => {
+    // Check 1: Look in the claims table (populated by webhook)
     const claim = await ctx.db
       .query("commemorativeNFTClaims")
       .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
       .first();
 
+    if (claim) {
+      console.log('[🔨CLAIM-CHECK] Found claim in claims table for:', args.walletAddress);
+      return {
+        hasClaimed: true,
+        claim: claim,
+        source: 'claims_table' as const,
+      };
+    }
+
+    // Check 2: Look in inventory table for sold NFTs (also updated by webhook)
+    // This provides a second source of truth in case claims table wasn't updated
+    const soldNFT = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_status", (q) => q.eq("status", "sold"))
+      .filter((q) => q.eq(q.field("soldTo"), args.walletAddress))
+      .first();
+
+    if (soldNFT) {
+      console.log('[🔨CLAIM-CHECK] Found sold NFT in inventory for:', args.walletAddress, '- NFT:', soldNFT.name);
+      return {
+        hasClaimed: true,
+        claim: {
+          walletAddress: args.walletAddress,
+          nftName: soldNFT.name,
+          claimedAt: soldNFT.soldAt || Date.now(),
+          transactionHash: soldNFT.transactionHash || 'pending',
+          nftAssetId: soldNFT.nftUid,
+        },
+        source: 'inventory_table' as const,
+      };
+    }
+
+    // Check 3: Look for completed reservations (backup check)
+    const completedReservation = await ctx.db
+      .query("commemorativeNFTReservations")
+      .withIndex("by_reserved_by", (q) => q.eq("reservedBy", args.walletAddress))
+      .filter((q) => q.eq(q.field("status"), "completed"))
+      .first();
+
+    if (completedReservation) {
+      console.log('[🔨CLAIM-CHECK] Found completed reservation for:', args.walletAddress);
+      const nft = await ctx.db.get(completedReservation.nftInventoryId);
+      return {
+        hasClaimed: true,
+        claim: {
+          walletAddress: args.walletAddress,
+          nftName: nft?.name || `NFT #${completedReservation.nftNumber}`,
+          claimedAt: completedReservation.completedAt || Date.now(),
+          transactionHash: completedReservation.transactionHash || 'pending',
+          nftAssetId: completedReservation.nftUid,
+        },
+        source: 'reservation_table' as const,
+      };
+    }
+
+    console.log('[🔨CLAIM-CHECK] No claim found for:', args.walletAddress);
     return {
-      hasClaimed: !!claim,
-      claim: claim || null,
+      hasClaimed: false,
+      claim: null,
+      source: null,
     };
   },
 });
