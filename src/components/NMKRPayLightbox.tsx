@@ -1362,12 +1362,12 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
             {/* Wallet buttons */}
             {availableWallets.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3 mb-2">
+              <div className={availableWallets.length === 1 ? "flex justify-center mb-2" : "grid grid-cols-2 gap-3 mb-2"}>
                 {availableWallets.map(wallet => (
                   <button
                     key={wallet.name}
                     onClick={() => connectAndVerifyWallet(wallet)}
-                    className="group relative bg-black/30 border border-cyan-500/30 text-white px-4 py-3 rounded-xl transition-all hover:bg-cyan-500/10 hover:border-cyan-500/50 flex items-center justify-center overflow-hidden"
+                    className={`group relative bg-black/30 border border-cyan-500/30 text-white px-4 py-3 rounded-xl transition-all hover:bg-cyan-500/10 hover:border-cyan-500/50 flex items-center justify-center overflow-hidden ${availableWallets.length === 1 ? 'min-w-[180px]' : ''}`}
                   >
                     {/* Honeycomb hover effect */}
                     <div
