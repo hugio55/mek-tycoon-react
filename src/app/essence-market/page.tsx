@@ -3440,20 +3440,20 @@ export default function EssenceMarketPage() {
           {/* Search and Filters Row */}
           <div className="flex gap-3 flex-wrap items-center p-3">
             {/* Category Filter Dropdown - Floating Style */}
-            <div className="relative category-dropdown-container z-[100]">
+            <div className="relative category-dropdown-container" style={{ zIndex: categoryDropdownOpen ? 9999 : 100 }}>
               {/* Dropdown Button */}
               <button
                 onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
                 className="flex items-center gap-2 px-3 py-2 text-sm uppercase tracking-wider font-medium transition-all"
                 style={{
                   background: useSpaceAgeHeader
-                    ? 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)'
+                    ? 'rgba(15, 23, 42, 0.7)'
                     : 'rgba(0,0,0,0.6)',
-                  backdropFilter: useSpaceAgeHeader ? 'blur(20px)' : 'blur(8px)',
-                  WebkitBackdropFilter: useSpaceAgeHeader ? 'blur(20px)' : 'blur(8px)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
                   border: useSpaceAgeHeader
                     ? categoryDropdownOpen
-                      ? '1px solid rgba(34,211,238,0.3)'
+                      ? '1px solid rgba(34,211,238,0.4)'
                       : '1px solid rgba(255,255,255,0.15)'
                     : '1px solid rgba(107, 114, 128, 0.5)',
                   borderRadius: categoryDropdownOpen ? '8px 8px 0 0' : '8px',
@@ -3477,21 +3477,22 @@ export default function EssenceMarketPage() {
               {/* Floating Dropdown Menu */}
               {categoryDropdownOpen && (
                 <div
-                  className="absolute top-full left-0 z-[200] overflow-hidden"
+                  className="absolute top-full left-0 overflow-hidden"
                   style={{
+                    zIndex: 9999,
                     minWidth: '100%',
                     background: useSpaceAgeHeader
-                      ? 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 100%)'
-                      : 'rgba(0,0,0,0.85)',
-                    backdropFilter: useSpaceAgeHeader ? 'blur(24px)' : 'blur(12px)',
-                    WebkitBackdropFilter: useSpaceAgeHeader ? 'blur(24px)' : 'blur(12px)',
+                      ? 'rgba(15, 23, 42, 0.85)'
+                      : 'rgba(0,0,0,0.9)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
                     border: useSpaceAgeHeader
-                      ? '1px solid rgba(34,211,238,0.3)'
+                      ? '1px solid rgba(34,211,238,0.4)'
                       : '1px solid rgba(107, 114, 128, 0.5)',
                     borderTop: 'none',
                     borderRadius: '0 0 8px 8px',
                     boxShadow: useSpaceAgeHeader
-                      ? '0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(34,211,238,0.1)'
+                      ? '0 16px 48px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05)'
                       : '0 12px 32px rgba(0,0,0,0.5)',
                   }}
                 >
@@ -3506,7 +3507,7 @@ export default function EssenceMarketPage() {
                       style={{
                         background: selectedRarity === filter.id
                           ? useSpaceAgeHeader
-                            ? 'rgba(34,211,238,0.15)'
+                            ? 'rgba(34,211,238,0.2)'
                             : 'rgba(250,182,23,0.15)'
                           : 'transparent',
                         color: selectedRarity === filter.id
@@ -3514,7 +3515,7 @@ export default function EssenceMarketPage() {
                           : useSpaceAgeHeader ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.6)',
                         fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
                         borderBottom: index < currentFilters.length - 1
-                          ? '1px solid rgba(255,255,255,0.05)'
+                          ? '1px solid rgba(255,255,255,0.08)'
                           : 'none',
                       }}
                     >
@@ -3604,20 +3605,20 @@ export default function EssenceMarketPage() {
             </div>
 
             {/* Sort Dropdown - Floating Style */}
-            <div className="relative sort-dropdown-container ml-auto z-[100]">
+            <div className="relative sort-dropdown-container ml-auto" style={{ zIndex: sortDropdownOpen ? 9999 : 100 }}>
               {/* Dropdown Button */}
               <button
                 onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
                 className="flex items-center gap-2 px-3 py-2 text-sm uppercase tracking-wider font-medium transition-all"
                 style={{
                   background: useSpaceAgeHeader
-                    ? 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)'
+                    ? 'rgba(15, 23, 42, 0.7)'
                     : 'rgba(0,0,0,0.6)',
-                  backdropFilter: useSpaceAgeHeader ? 'blur(20px)' : 'blur(8px)',
-                  WebkitBackdropFilter: useSpaceAgeHeader ? 'blur(20px)' : 'blur(8px)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
                   border: useSpaceAgeHeader
                     ? sortDropdownOpen
-                      ? '1px solid rgba(34,211,238,0.3)'
+                      ? '1px solid rgba(34,211,238,0.4)'
                       : '1px solid rgba(255,255,255,0.15)'
                     : '1px solid rgba(107, 114, 128, 0.5)',
                   borderRadius: sortDropdownOpen ? '8px 8px 0 0' : '8px',
@@ -3639,21 +3640,22 @@ export default function EssenceMarketPage() {
               {/* Floating Dropdown Menu */}
               {sortDropdownOpen && (
                 <div
-                  className="absolute top-full right-0 z-[200] overflow-hidden"
+                  className="absolute top-full right-0 overflow-hidden"
                   style={{
+                    zIndex: 9999,
                     minWidth: '100%',
                     background: useSpaceAgeHeader
-                      ? 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 100%)'
-                      : 'rgba(0,0,0,0.85)',
-                    backdropFilter: useSpaceAgeHeader ? 'blur(24px)' : 'blur(12px)',
-                    WebkitBackdropFilter: useSpaceAgeHeader ? 'blur(24px)' : 'blur(12px)',
+                      ? 'rgba(15, 23, 42, 0.85)'
+                      : 'rgba(0,0,0,0.9)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
                     border: useSpaceAgeHeader
-                      ? '1px solid rgba(34,211,238,0.3)'
+                      ? '1px solid rgba(34,211,238,0.4)'
                       : '1px solid rgba(107, 114, 128, 0.5)',
                     borderTop: 'none',
                     borderRadius: '0 0 8px 8px',
                     boxShadow: useSpaceAgeHeader
-                      ? '0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(34,211,238,0.1)'
+                      ? '0 16px 48px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05)'
                       : '0 12px 32px rgba(0,0,0,0.5)',
                   }}
                 >
@@ -3668,7 +3670,7 @@ export default function EssenceMarketPage() {
                       style={{
                         background: sortBy === option.id
                           ? useSpaceAgeHeader
-                            ? 'rgba(34,211,238,0.15)'
+                            ? 'rgba(34,211,238,0.2)'
                             : 'rgba(250,182,23,0.15)'
                           : 'transparent',
                         color: sortBy === option.id
@@ -3676,7 +3678,7 @@ export default function EssenceMarketPage() {
                           : useSpaceAgeHeader ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.6)',
                         fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
                         borderBottom: index < SORT_OPTIONS.length - 1
-                          ? '1px solid rgba(255,255,255,0.05)'
+                          ? '1px solid rgba(255,255,255,0.08)'
                           : 'none',
                       }}
                     >
