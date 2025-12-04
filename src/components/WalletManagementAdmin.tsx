@@ -6,26 +6,22 @@ import { useQuery, ConvexProvider } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { restoreWalletSession } from '@/lib/walletSessionManager';
 import { sturgeonClient } from '@/lib/sturgeonClient';
-import StorageMonitoringDashboard from '@/components/StorageMonitoringDashboard';
 import SystemMonitoringDashboard from '@/components/SystemMonitoringDashboard';
-import ProductionLaunchCleaner from '@/components/ProductionLaunchCleaner';
 import WalletSnapshotDebug from '@/components/WalletSnapshotDebug';
 import MekLevelsViewer from '@/components/MekLevelsViewer';
 import ActivityLogViewer from '@/components/ActivityLogViewer';
 import SnapshotHealthDashboard from '@/components/SnapshotHealthDashboard';
-import DuplicateWalletDetector from '@/components/DuplicateWalletDetector';
 import EssenceBalancesViewer from '@/components/EssenceBalancesViewer';
 import BuffManagement from '@/components/BuffManagement';
 import BetaSignupsViewer from '@/components/BetaSignupsViewer';
 import VariationSpreadViewer from '@/components/VariationSpreadViewer';
-import ResetTimelineChecker from '@/components/ResetTimelineChecker';
 import { EssenceProvider } from '@/contexts/EssenceContext';
 import { DatabaseProvider, useDatabaseContext } from '@/contexts/DatabaseContext';
 
 // Lazy load heavy components
 const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryViewer'));
 
-type SubMenu = 'wallet-list' | 'storage-monitoring' | 'snapshot-history' | 'snapshot-health' | 'duplicate-detection' | 'production-launch-cleaner' | 'gold-repair' | 'variation-spread' | 'beta-signups' | 'reset-timeline';
+type SubMenu = 'wallet-list' | 'snapshot-history' | 'snapshot-health' | 'gold-repair' | 'variation-spread' | 'beta-signups';
 type SnapshotHealthTab = 'health' | 'logging';
 
 function WalletManagementAdminContent() {
@@ -745,16 +741,6 @@ Check console for full timeline.
           👛 Wallet List
         </button>
         <button
-          onClick={() => setActiveSubmenu('storage-monitoring')}
-          className={`px-4 py-2 text-sm font-semibold transition-colors ${
-            activeSubmenu === 'storage-monitoring'
-              ? 'text-yellow-400 border-b-2 border-yellow-400'
-              : 'text-gray-400 hover:text-gray-200'
-          }`}
-        >
-          💾 Storage Monitoring
-        </button>
-        <button
           onClick={() => setActiveSubmenu('snapshot-history')}
           className={`px-4 py-2 text-sm font-semibold transition-colors ${
             activeSubmenu === 'snapshot-history'
@@ -773,28 +759,6 @@ Check console for full timeline.
           }`}
         >
           📊 Convex Logging
-        </button>
-
-        <button
-          onClick={() => setActiveSubmenu('duplicate-detection')}
-          className={`px-4 py-2 text-sm font-semibold transition-colors ${
-            activeSubmenu === 'duplicate-detection'
-              ? 'text-yellow-400 border-b-2 border-yellow-400'
-              : 'text-gray-400 hover:text-gray-200'
-          }`}
-        >
-          🚨 Duplicate Detection
-        </button>
-
-        <button
-          onClick={() => setActiveSubmenu('production-launch-cleaner')}
-          className={`px-4 py-2 text-sm font-semibold transition-colors ${
-            activeSubmenu === 'production-launch-cleaner'
-              ? 'text-yellow-400 border-b-2 border-yellow-400'
-              : 'text-gray-400 hover:text-gray-200'
-          }`}
-        >
-          🧹 Production Launch Cleaner
         </button>
 
         <button
@@ -830,21 +794,9 @@ Check console for full timeline.
           🎮 Beta Signups
         </button>
 
-        <button
-          onClick={() => setActiveSubmenu('reset-timeline')}
-          className={`px-4 py-2 text-sm font-semibold transition-colors ${
-            activeSubmenu === 'reset-timeline'
-              ? 'text-yellow-400 border-b-2 border-yellow-400'
-              : 'text-gray-400 hover:text-gray-200'
-          }`}
-        >
-          🕐 Reset Timeline
-        </button>
       </div>
 
-      {activeSubmenu === 'storage-monitoring' ? (
-        <StorageMonitoringDashboard />
-      ) : activeSubmenu === 'snapshot-history' ? (
+      {activeSubmenu === 'snapshot-history' ? (
         <Suspense fallback={<div className="p-8 bg-gray-900/50 rounded-lg border border-gray-700 text-center"><div className="text-gray-400">Loading snapshot history...</div></div>}>
           <SnapshotHistoryViewer />
         </Suspense>
@@ -881,10 +833,6 @@ Check console for full timeline.
             <SystemMonitoringDashboard stakeAddress={stakeAddress} />
           )}
         </div>
-      ) : activeSubmenu === 'duplicate-detection' ? (
-        <DuplicateWalletDetector />
-      ) : activeSubmenu === 'production-launch-cleaner' ? (
-        <ProductionLaunchCleaner />
       ) : activeSubmenu === 'gold-repair' ? (
         <div className="space-y-6">
           {/* Gold Repair Tool */}
@@ -1013,8 +961,6 @@ Check console for full timeline.
         <VariationSpreadViewer />
       ) : activeSubmenu === 'beta-signups' ? (
         <BetaSignupsViewer />
-      ) : activeSubmenu === 'reset-timeline' ? (
-        <ResetTimelineChecker />
       ) : (
         <>
           {/* Database Selection Warning Banner */}
