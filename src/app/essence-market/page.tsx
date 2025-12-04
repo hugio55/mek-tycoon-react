@@ -3493,8 +3493,8 @@ export default function EssenceMarketPage() {
                     left: categoryDropdownRect.left,
                     width: categoryDropdownRect.width,
                     background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.08) 100%)',
-                    backdropFilter: 'blur(16px) brightness(1.1)',
-                    WebkitBackdropFilter: 'blur(16px) brightness(1.1)',
+                    backdropFilter: 'blur(8px) brightness(1.1)',
+                    WebkitBackdropFilter: 'blur(8px) brightness(1.1)',
                     border: useSpaceAgeHeader
                       ? '1px solid rgba(34,211,238,0.4)'
                       : '1px solid rgba(255,255,255,0.15)',
@@ -3510,7 +3510,7 @@ export default function EssenceMarketPage() {
                         setSelectedRarity(filter.id);
                         setCategoryDropdownOpen(false);
                       }}
-                      className="w-full px-3 py-2 text-left text-sm tracking-wide transition-all hover:bg-white/10 hover:pl-4"
+                      className="w-full px-3 py-2 text-left text-sm tracking-wide transition-all hover:bg-white/10 hover:pl-4 hover:brightness-125"
                       style={{
                         background: selectedRarity === filter.id
                           ? useSpaceAgeHeader
@@ -3660,8 +3660,8 @@ export default function EssenceMarketPage() {
                     left: sortDropdownRect.left,
                     width: sortDropdownRect.width,
                     background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.08) 100%)',
-                    backdropFilter: 'blur(16px) brightness(1.1)',
-                    WebkitBackdropFilter: 'blur(16px) brightness(1.1)',
+                    backdropFilter: 'blur(8px) brightness(1.1)',
+                    WebkitBackdropFilter: 'blur(8px) brightness(1.1)',
                     border: useSpaceAgeHeader
                       ? '1px solid rgba(34,211,238,0.4)'
                       : '1px solid rgba(255,255,255,0.15)',
@@ -3677,7 +3677,7 @@ export default function EssenceMarketPage() {
                         setSortBy(option.id);
                         setSortDropdownOpen(false);
                       }}
-                      className="w-full px-3 py-2 text-left text-sm tracking-wide transition-all whitespace-nowrap hover:bg-white/10 hover:pl-4"
+                      className="w-full px-3 py-2 text-left text-sm tracking-wide transition-all whitespace-nowrap hover:bg-white/10 hover:pl-4 hover:brightness-125"
                       style={{
                         background: sortBy === option.id
                           ? useSpaceAgeHeader

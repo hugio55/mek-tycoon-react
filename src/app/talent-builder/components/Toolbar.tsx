@@ -14,14 +14,32 @@ interface ToolbarProps {
 }
 
 export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
+  console.log('[🔧TOOLBAR] Toolbar component mounting...');
+
   const { state, dispatch, actions } = useTalentBuilder();
+  console.log('[🔧TOOLBAR] Context loaded, builderMode:', state?.builderMode);
+
   const { saveToLocalStorage, startNewTree, currentSaveName } = useSaveLoad();
+  console.log('[🔧TOOLBAR] useSaveLoad loaded');
+
   const { findDisconnectedAndDeadEndNodes, clearHighlights, highlightDisconnected } = useConnectionAnalysis();
+  console.log('[🔧TOOLBAR] useConnectionAnalysis loaded');
 
   // Convex mutations for Mek templates
   const templates = useQuery(api.mekTreeTemplates.getAllTemplates);
   const createTemplate = useMutation(api.mekTreeTemplates.createTemplate);
   const updateTemplate = useMutation(api.mekTreeTemplates.updateTemplate);
+  console.log('[🔧TOOLBAR] All hooks loaded successfully');
+
+  // Safety check - if state is undefined, show error
+  if (!state || !dispatch || !actions) {
+    console.error('[🔧TOOLBAR] Missing context values!', { state, dispatch, actions });
+    return (
+      <div className="bg-red-900 text-white p-4 border-b border-red-600">
+        Toolbar Error: Missing context values
+      </div>
+    );
+  }
 
   const handleBuilderModeChange = useCallback((newMode: BuilderMode) => {
     dispatch({ type: 'SET_BUILDER_MODE', payload: newMode });
@@ -190,8 +208,10 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
     }
   }, [state.templateName, state.templateDescription, state.nodes, state.connections, state.selectedTemplateId, state.viewportDimensions, dispatch, actions, createTemplate, updateTemplate]);
 
+  console.log('[🔧TOOLBAR] About to return JSX');
+
   return (
-    <div className="bg-gray-900 border-b border-gray-800">
+    <div className="bg-gray-900 border-b border-gray-800 min-h-[80px]">
       {/* Primary Toolbar */}
       <div className="flex items-center justify-between px-4 py-2">
         {/* Left - Builder Mode Selector */}
