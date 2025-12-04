@@ -34,94 +34,51 @@ function WhitelistManagerAdminContent() {
   const [selectedWhitelistData, setSelectedWhitelistData] = useState<any>(null);
   const [snapshots, setSnapshots] = useState<any[]>([]);
 
-  // Query data from selected database
+  // Combined data fetching - single polling interval for all queries
   useEffect(() => {
     if (!client) return;
 
     let cancelled = false;
 
-    const fetchData = async () => {
+    const fetchAllData = async () => {
       try {
-        const [whitelists, criteria, snaps] = await Promise.all([
+        // Build array of queries to run
+        const queries: Promise<any>[] = [
           client.query(api.whitelists.getAllWhitelists),
           client.query(api.whitelists.getAllCriteria),
           client.query(api.whitelists.getAllWhitelistSnapshots)
-        ]);
+        ];
+
+        // Add selected whitelist queries if one is selected
+        if (selectedWhitelist) {
+          queries.push(
+            client.query(api.whitelists.getWhitelistById, { whitelistId: selectedWhitelist }),
+            client.query(api.whitelists.getSnapshotsByWhitelist, { whitelistId: selectedWhitelist })
+          );
+        }
+
+        const results = await Promise.all(queries);
 
         if (!cancelled) {
-          setAllWhitelists(whitelists);
-          setAllCriteria(criteria);
-          setAllSnapshots(snaps);
+          setAllWhitelists(results[0]);
+          setAllCriteria(results[1]);
+          setAllSnapshots(results[2]);
+
+          if (selectedWhitelist) {
+            setSelectedWhitelistData(results[3]);
+            setSnapshots(results[4]);
+          } else {
+            setSelectedWhitelistData(null);
+            setSnapshots([]);
+          }
         }
       } catch (error) {
         console.error('[WhitelistManager] Error fetching data:', error);
       }
     };
 
-    fetchData();
-    const interval = setInterval(fetchData, 3000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [client]);
-
-  // Query selected whitelist details
-  useEffect(() => {
-    if (!client || !selectedWhitelist) {
-      setSelectedWhitelistData(null);
-      return;
-    }
-
-    let cancelled = false;
-
-    const fetchWhitelist = async () => {
-      try {
-        const data = await client.query(api.whitelists.getWhitelistById, {
-          whitelistId: selectedWhitelist
-        });
-        if (!cancelled) {
-          setSelectedWhitelistData(data);
-        }
-      } catch (error) {
-        console.error('[WhitelistManager] Error fetching whitelist:', error);
-      }
-    };
-
-    fetchWhitelist();
-    const interval = setInterval(fetchWhitelist, 3000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [client, selectedWhitelist]);
-
-  // Query snapshots for selected whitelist
-  useEffect(() => {
-    if (!client || !selectedWhitelist) {
-      setSnapshots([]);
-      return;
-    }
-
-    let cancelled = false;
-
-    const fetchSnapshots = async () => {
-      try {
-        const data = await client.query(api.whitelists.getSnapshotsByWhitelist, {
-          whitelistId: selectedWhitelist
-        });
-        if (!cancelled) {
-          setSnapshots(data);
-        }
-      } catch (error) {
-        console.error('[WhitelistManager] Error fetching snapshots:', error);
-      }
-    };
-
-    fetchSnapshots();
-    const interval = setInterval(fetchSnapshots, 3000);
+    fetchAllData();
+    const interval = setInterval(fetchAllData, 3000);
 
     return () => {
       cancelled = true;
@@ -590,7 +547,7 @@ function WhitelistManagerAdminContent() {
       </div>
 
       {/* Create/Edit Modal */}
-      {showCreateModal && (
+      {mounted && showCreateModal && (
         <WhitelistCreateModal
           allCriteria={allCriteria || []}
           editingWhitelist={editingWhitelist}
@@ -604,7 +561,7 @@ function WhitelistManagerAdminContent() {
       )}
 
       {/* View Table Modal */}
-      {viewingWhitelistTable && (
+      {mounted && viewingWhitelistTable && (
         <WhitelistTableModal
           whitelist={viewingWhitelistTable}
           client={client}
@@ -617,7 +574,7 @@ function WhitelistManagerAdminContent() {
       )}
 
       {/* Snapshot Creation Modal */}
-      {showSnapshotModal && (
+      {mounted && showSnapshotModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="bg-gray-900 border border-purple-500/50 rounded-lg w-full max-w-md p-6">
             <div className="flex justify-between items-center mb-6">
@@ -675,7 +632,7 @@ function WhitelistManagerAdminContent() {
       )}
 
       {/* Manual Whitelist Creation Modal */}
-      {showManualModal && (
+      {mounted && showManualModal && (
         <ManualWhitelistModal
           onClose={() => setShowManualModal(false)}
           createManualWhitelist={createManualWhitelist}

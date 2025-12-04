@@ -3490,10 +3490,10 @@ export default function EssenceMarketPage() {
                     zIndex: 99999,
                     top: categoryDropdownRect.bottom,
                     left: categoryDropdownRect.left,
-                    minWidth: categoryDropdownRect.width,
-                    background: 'linear-gradient(135deg, rgba(20, 30, 50, 0.85) 0%, rgba(10, 20, 40, 0.9) 100%)',
-                    backdropFilter: 'blur(20px) saturate(1.5)',
-                    WebkitBackdropFilter: 'blur(20px) saturate(1.5)',
+                    width: categoryDropdownRect.width,
+                    background: 'rgba(0, 0, 0, 0.6)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
                     border: useSpaceAgeHeader
                       ? '1px solid rgba(34,211,238,0.4)'
                       : '1px solid rgba(255,255,255,0.15)',
@@ -3611,11 +3611,17 @@ export default function EssenceMarketPage() {
               )}
             </div>
 
-            {/* Sort Dropdown - Glass Card Style */}
-            <div className="relative sort-dropdown-container ml-auto" style={{ zIndex: sortDropdownOpen ? 9999 : 100 }}>
+            {/* Sort Dropdown - Glass Card Style with Portal */}
+            <div className="relative sort-dropdown-container ml-auto">
               {/* Dropdown Button */}
               <button
-                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                ref={sortDropdownBtnRef}
+                onClick={() => {
+                  if (!sortDropdownOpen && sortDropdownBtnRef.current) {
+                    setSortDropdownRect(sortDropdownBtnRef.current.getBoundingClientRect());
+                  }
+                  setSortDropdownOpen(!sortDropdownOpen);
+                }}
                 className="flex items-center gap-2 px-3 py-2 text-sm uppercase tracking-wider font-medium transition-all"
                 style={{
                   background: 'linear-gradient(105deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0.06) 100%)',
@@ -3642,22 +3648,24 @@ export default function EssenceMarketPage() {
                 </svg>
               </button>
 
-              {/* Floating Dropdown Menu */}
-              {sortDropdownOpen && (
+              {/* Floating Dropdown Menu - Rendered via Portal for proper backdrop-filter */}
+              {mounted && sortDropdownOpen && sortDropdownRect && createPortal(
                 <div
-                  className="absolute top-full right-0"
+                  className="fixed"
                   style={{
-                    zIndex: 9999,
-                    minWidth: '100%',
-                    background: 'linear-gradient(105deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0.06) 100%)',
-                    backdropFilter: 'blur(4px) brightness(1.25)',
-                    WebkitBackdropFilter: 'blur(4px) brightness(1.25)',
+                    zIndex: 99999,
+                    top: sortDropdownRect.bottom,
+                    left: sortDropdownRect.left,
+                    width: sortDropdownRect.width,
+                    background: 'rgba(0, 0, 0, 0.6)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
                     border: useSpaceAgeHeader
                       ? '1px solid rgba(34,211,238,0.4)'
-                      : '1px solid rgba(255,255,255,0.12)',
+                      : '1px solid rgba(255,255,255,0.15)',
                     borderTop: 'none',
                     borderRadius: '0 0 8px 8px',
-                    boxShadow: '0 16px 48px rgba(0,0,0,0.5)',
+                    boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
                   }}
                 >
                   {SORT_OPTIONS.map((option, index) => (
@@ -3671,22 +3679,23 @@ export default function EssenceMarketPage() {
                       style={{
                         background: sortBy === option.id
                           ? useSpaceAgeHeader
-                            ? 'rgba(34,211,238,0.2)'
-                            : 'rgba(250,182,23,0.15)'
+                            ? 'rgba(34,211,238,0.25)'
+                            : 'rgba(250,182,23,0.2)'
                           : 'transparent',
                         color: sortBy === option.id
                           ? useSpaceAgeHeader ? '#22d3ee' : '#facc15'
-                          : useSpaceAgeHeader ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.6)',
+                          : 'rgba(255,255,255,0.8)',
                         fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
                         borderBottom: index < SORT_OPTIONS.length - 1
-                          ? '1px solid rgba(255,255,255,0.08)'
+                          ? '1px solid rgba(255,255,255,0.1)'
                           : 'none',
                       }}
                     >
                       {option.name}
                     </button>
                   ))}
-                </div>
+                </div>,
+                document.body
               )}
             </div>
           </div>

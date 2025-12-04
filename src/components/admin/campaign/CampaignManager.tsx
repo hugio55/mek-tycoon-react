@@ -864,6 +864,41 @@ export default function CampaignManager({
                     </span>
                   </div>
 
+                  {/* Eligibility Snapshot Selector */}
+                  <div className="mb-3 p-3 bg-black/40 rounded border border-purple-500/30">
+                    <label className="block text-xs text-gray-400 mb-2">
+                      Eligibility Snapshot
+                      <span className="text-purple-400 ml-2">(Who can claim from this campaign)</span>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={campaign.eligibilitySnapshotId || ""}
+                        onChange={(e) => handleSnapshotAssignment(campaign._id, e.target.value || null)}
+                        disabled={assigningSnapshotCampaignId === campaign._id}
+                        className="flex-1 bg-black/50 border border-gray-600 rounded p-2 text-sm text-white"
+                      >
+                        <option value="">-- No Snapshot (Claims Disabled) --</option>
+                        {allSnapshots?.map((snapshot: { _id: string; snapshotName: string; eligibleUsers?: { walletAddress: string }[] }) => (
+                          <option key={snapshot._id} value={snapshot._id}>
+                            {snapshot.snapshotName} ({snapshot.eligibleUsers?.length || 0} users)
+                          </option>
+                        ))}
+                      </select>
+                      {assigningSnapshotCampaignId === campaign._id && (
+                        <span className="text-xs text-purple-400 animate-pulse">Saving...</span>
+                      )}
+                    </div>
+                    {campaign.eligibilitySnapshotId ? (
+                      <p className="text-xs text-green-400 mt-2">
+                        ✓ Users in this snapshot can claim NFTs from this campaign
+                      </p>
+                    ) : (
+                      <p className="text-xs text-yellow-400 mt-2">
+                        ⚠ No snapshot assigned - nobody can claim from this campaign
+                      </p>
+                    )}
+                  </div>
+
               <div className="mb-3">
                 <div className="grid grid-cols-5 gap-2">
                   {(() => {
