@@ -519,7 +519,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
             {/* Show cube spinner when not in counting animation phase */}
             {loadingPhase !== 'animating' && loadingPhase !== 'complete' && (
               <div className="flex justify-center mb-6">
-                <CubeSpinner size={50} color="gold" />
+                <CubeSpinner size={40} color="cyan" speed="slow" />
               </div>
             )}
 
@@ -751,7 +751,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
               <div className="relative text-center py-4">
                 {/* 3D Cube indicator */}
                 <div className="flex justify-center mb-6">
-                  <CubeSpinner size={50} color="purple" />
+                  <CubeSpinner size={40} color="cyan" speed="slow" />
                 </div>
 
                 <div className="space-y-4">

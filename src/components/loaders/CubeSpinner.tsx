@@ -5,6 +5,7 @@ import React from 'react';
 interface CubeSpinnerProps {
   size?: number;
   color?: 'gold' | 'cyan' | 'lime' | 'purple' | 'blue';
+  speed?: 'normal' | 'slow';
 }
 
 const colorMap = {
@@ -15,14 +16,15 @@ const colorMap = {
   blue: { bg: 'rgba(0, 77, 255, 0.2)', border: '#004dff' },
 };
 
-export default function CubeSpinner({ size = 44, color = 'gold' }: CubeSpinnerProps) {
+export default function CubeSpinner({ size = 44, color = 'gold', speed = 'normal' }: CubeSpinnerProps) {
   const { bg, border } = colorMap[color];
   const halfSize = size / 2;
+  const animationDuration = speed === 'slow' ? '3s' : '2s';
 
   const spinnerStyle: React.CSSProperties = {
     width: size,
     height: size,
-    animation: 'cubeSpinAnimation 2s infinite ease',
+    animation: `cubeSpinAnimation ${animationDuration} infinite ease`,
     transformStyle: 'preserve-3d',
   };
 

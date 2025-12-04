@@ -6439,7 +6439,8 @@ function CampaignManagerWithDatabase({
   verifyingCampaignId,
   backfillRunning,
   backfillImagesRunning,
-  client
+  client,
+  mutationsEnabled
 }: {
   campaigns: any[];
   onToggleCleanup: (campaignId: string, enabled: boolean) => Promise<void>;
@@ -6454,6 +6455,7 @@ function CampaignManagerWithDatabase({
   backfillRunning: boolean;
   backfillImagesRunning: string | null;
   client: any;
+  mutationsEnabled: boolean;
 }) {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>();
   const [snapshots, setSnapshots] = useState<Array<{ _id: string; snapshotName: string; eligibleUsers?: any[] }>>([]);
@@ -6484,6 +6486,10 @@ function CampaignManagerWithDatabase({
   // Handle snapshot assignment
   const handleSnapshotAssignment = async (campaignId: string, snapshotId: string | null) => {
     if (!client) return;
+    if (!mutationsEnabled) {
+      alert('Please click "Enable Editing" first to modify campaign settings.');
+      return;
+    }
     setAssigningSnapshotCampaignId(campaignId);
     try {
       await client.mutation(api.campaigns.assignEligibilitySnapshot, {
@@ -6499,6 +6505,10 @@ function CampaignManagerWithDatabase({
 
   const handleMintLimitToggle = async (campaignId: string, allowMultipleMints: boolean) => {
     if (!client) return;
+    if (!mutationsEnabled) {
+      alert('Please click "Enable Editing" first to modify campaign settings.');
+      return;
+    }
     setUpdatingMintLimitCampaignId(campaignId);
     try {
       await client.mutation(api.campaigns.updateAllowMultipleMints, {
@@ -6552,17 +6562,18 @@ function CampaignManagerWithDatabase({
               </div>
 
               {/* Eligibility Snapshot Selector */}
-              <div className="mb-4 p-3 bg-black/40 rounded border border-purple-500/30" onClick={(e) => e.stopPropagation()}>
+              <div className={`mb-4 p-3 bg-black/40 rounded border ${mutationsEnabled ? 'border-purple-500/30' : 'border-gray-600/30 opacity-60'}`} onClick={(e) => e.stopPropagation()}>
                 <label className="block text-xs text-gray-400 mb-2">
                   Eligibility Snapshot
                   <span className="text-purple-400 ml-2">(Who can claim from this campaign)</span>
+                  {!mutationsEnabled && <span className="text-red-400 ml-2">(Enable editing first)</span>}
                 </label>
                 <div className="flex items-center gap-2">
                   <select
                     value={campaign.eligibilitySnapshotId || ""}
                     onChange={(e) => handleSnapshotAssignment(campaign._id, e.target.value || null)}
-                    disabled={assigningSnapshotCampaignId === campaign._id}
-                    className="flex-1 bg-black/50 border border-gray-600 rounded p-2 text-sm text-white"
+                    disabled={!mutationsEnabled || assigningSnapshotCampaignId === campaign._id}
+                    className={`flex-1 bg-black/50 border border-gray-600 rounded p-2 text-sm text-white ${!mutationsEnabled ? 'cursor-not-allowed' : ''}`}
                   >
                     <option value="">-- No Snapshot (Claims Disabled) --</option>
                     {snapshots.map((snapshot) => (
@@ -6587,16 +6598,18 @@ function CampaignManagerWithDatabase({
               </div>
 
               {/* Mint Limit Toggle */}
-              <div className="mb-4 p-3 bg-black/40 rounded border border-orange-500/30" onClick={(e) => e.stopPropagation()}>
+              <div className={`mb-4 p-3 bg-black/40 rounded border ${mutationsEnabled ? 'border-orange-500/30' : 'border-gray-600/30 opacity-60'}`} onClick={(e) => e.stopPropagation()}>
                 <label className="block text-xs text-gray-400 mb-2">
                   Mint Limit per Corporation
                   <span className="text-orange-400 ml-2">(How many times each corp can claim)</span>
+                  {!mutationsEnabled && <span className="text-red-400 ml-2">(Enable editing first)</span>}
                 </label>
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => handleMintLimitToggle(campaign._id, false)}
-                    disabled={updatingMintLimitCampaignId === campaign._id}
+                    disabled={!mutationsEnabled || updatingMintLimitCampaignId === campaign._id}
                     className={`px-4 py-2 rounded text-sm font-medium transition-all ${
+                      !mutationsEnabled ? 'opacity-50 cursor-not-allowed' :
                       !campaign.allowMultipleMints
                         ? 'bg-orange-600 text-white border-2 border-orange-400'
                         : 'bg-black/50 text-gray-400 border border-gray-600 hover:border-gray-500'
@@ -6606,8 +6619,9 @@ function CampaignManagerWithDatabase({
                   </button>
                   <button
                     onClick={() => handleMintLimitToggle(campaign._id, true)}
-                    disabled={updatingMintLimitCampaignId === campaign._id}
+                    disabled={!mutationsEnabled || updatingMintLimitCampaignId === campaign._id}
                     className={`px-4 py-2 rounded text-sm font-medium transition-all ${
+                      !mutationsEnabled ? 'opacity-50 cursor-not-allowed' :
                       campaign.allowMultipleMints
                         ? 'bg-green-600 text-white border-2 border-green-400'
                         : 'bg-black/50 text-gray-400 border border-gray-600 hover:border-gray-500'
@@ -7275,6 +7289,7 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
             backfillRunning={backfillRunning}
             backfillImagesRunning={backfillImagesRunning}
             client={client}
+            mutationsEnabled={mutationsEnabled}
           />
         </div>
       )}
