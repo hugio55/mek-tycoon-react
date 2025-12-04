@@ -33,12 +33,6 @@ export const getAllUsers = query({
           .filter((q) => q.eq(q.field("status"), "active"))
           .collect();
 
-        // Get bank account
-        const bankAccount = await ctx.db
-          .query("bankAccounts")
-          .withIndex("by_user", (q) => q.eq("userId", user._id))
-          .first();
-
         // Calculate total essence value
         const totalEssenceValue = Object.values(user.totalEssence).reduce((sum, val) => sum + val, 0);
 
@@ -46,7 +40,6 @@ export const getAllUsers = query({
           ...user,
           mekCount: meks.length,
           activeContractCount: activeContracts.length,
-          bankBalance: bankAccount?.balance || 0,
           totalEssenceValue,
         };
       })
@@ -127,11 +120,6 @@ export const getUserDetails = query({
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
-    const bankAccount = await ctx.db
-      .query("bankAccounts")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .first();
-
     const activeBuffs = await ctx.db
       .query("activeBuffs")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -152,7 +140,6 @@ export const getUserDetails = query({
       user,
       meks,
       contracts,
-      bankAccount,
       activeBuffs,
       inventory,
       recentTransactions: transactions,
@@ -225,14 +212,7 @@ export const updateGold = mutation({
       gold: args.gold,
     });
 
-    // Log the transaction
-    await ctx.db.insert("goldTransactions", {
-      userId: args.userId,
-      amount: args.gold - user.gold,
-      type: "admin_adjustment",
-      description: `Admin adjusted gold from ${user.gold} to ${args.gold}`,
-      timestamp: Date.now(),
-    });
+    // Note: goldTransactions table removed in Phase II cleanup
 
     return await ctx.db.get(args.userId);
   },

@@ -247,6 +247,156 @@ export const checkClaimEligibility = query({
 });
 
 /**
+ * Check if a stake address is eligible to claim from a SPECIFIC CAMPAIGN
+ * This is the new per-campaign eligibility system that replaces the global snapshot approach.
+ * Each campaign can have its own eligibility snapshot assigned.
+ */
+export const checkCampaignEligibility = query({
+  args: {
+    walletAddress: v.string(),
+    campaignId: v.id("commemorativeCampaigns"),
+  },
+  handler: async (ctx, args) => {
+    // 1. Get the campaign
+    const campaign = await ctx.db.get(args.campaignId);
+    if (!campaign) {
+      return {
+        eligible: false,
+        reason: "Campaign not found",
+      };
+    }
+
+    // 2. Check if campaign has an eligibility snapshot assigned
+    if (!campaign.eligibilitySnapshotId) {
+      return {
+        eligible: false,
+        reason: "No eligibility snapshot assigned to this campaign",
+        campaignName: campaign.name,
+      };
+    }
+
+    // 3. Get the campaign's assigned snapshot
+    const snapshot = await ctx.db.get(campaign.eligibilitySnapshotId);
+    if (!snapshot) {
+      return {
+        eligible: false,
+        reason: "Campaign's eligibility snapshot not found",
+        campaignName: campaign.name,
+      };
+    }
+
+    // TESTING BYPASS: Allow whitelisted addresses to mint multiple times
+    const isTestingWhitelisted = TESTING_MULTI_MINT_WHITELIST.includes(args.walletAddress);
+    if (isTestingWhitelisted) {
+      console.log('[TEST] Whitelisted address detected for campaign:', campaign.name, args.walletAddress);
+
+      // Still check if in snapshot
+      const isInSnapshot = snapshot.eligibleUsers?.some((user: any) => {
+        return user.stakeAddress === args.walletAddress || user.walletAddress === args.walletAddress;
+      });
+
+      if (!isInSnapshot) {
+        return {
+          eligible: false,
+          reason: "Stake address not in campaign's eligibility snapshot (testing whitelist still requires snapshot membership)",
+          campaignName: campaign.name,
+        };
+      }
+
+      // Get corporation name
+      const goldMiningRecord = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+        .first();
+
+      return {
+        eligible: true,
+        reason: "Testing whitelist - multiple mints allowed for this campaign",
+        campaignName: campaign.name,
+        snapshotName: snapshot.snapshotName,
+        corporationName: goldMiningRecord?.companyName || null,
+        testingMode: true,
+      };
+    }
+
+    // 4. Check if wallet is in the campaign's snapshot
+    const isInSnapshot = snapshot.eligibleUsers?.some((user: any) => {
+      return user.stakeAddress === args.walletAddress || user.walletAddress === args.walletAddress;
+    });
+
+    if (!isInSnapshot) {
+      return {
+        eligible: false,
+        reason: "Not eligible for this campaign",
+        campaignName: campaign.name,
+      };
+    }
+
+    // 5. Check if already has an ACTIVE reservation for THIS CAMPAIGN
+    const activeReservation = await ctx.db
+      .query("commemorativeNFTInventory")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("campaignId"), args.campaignId),
+          q.eq(q.field("reservedBy"), args.walletAddress),
+          q.eq(q.field("status"), "reserved")
+        )
+      )
+      .first();
+
+    if (activeReservation) {
+      return {
+        eligible: false,
+        reason: "You already have an NFT reservation in progress for this campaign. Please complete your payment or wait for it to expire.",
+        hasActiveReservation: true,
+        campaignName: campaign.name,
+      };
+    }
+
+    // 6. Check if already claimed FROM THIS CAMPAIGN
+    const soldNFT = await ctx.db
+      .query("commemorativeNFTInventory")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("campaignId"), args.campaignId),
+          q.eq(q.field("soldTo"), args.walletAddress),
+          q.eq(q.field("status"), "sold")
+        )
+      )
+      .first();
+
+    if (soldNFT) {
+      return {
+        eligible: false,
+        reason: "You have already claimed from this campaign",
+        alreadyClaimed: true,
+        campaignName: campaign.name,
+        claimedNFTDetails: {
+          name: soldNFT.name,
+          editionNumber: soldNFT.editionNumber,
+          imageUrl: soldNFT.imageUrl,
+          soldAt: soldNFT.soldAt,
+        },
+      };
+    }
+
+    // 7. All checks passed - user is eligible
+    const goldMiningRecord = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    return {
+      eligible: true,
+      reason: "Eligible for this campaign",
+      campaignName: campaign.name,
+      snapshotName: snapshot.snapshotName,
+      corporationName: goldMiningRecord?.companyName || null,
+    };
+  },
+});
+
+/**
  * Clear the active snapshot (deactivate eligibility)
  */
 export const clearActiveSnapshot = mutation({

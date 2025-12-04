@@ -3252,6 +3252,8 @@ export default defineSchema({
     soldNFTs: v.number(),      // Sold/completed
     // Cron job control
     enableReservationCleanup: v.optional(v.boolean()), // If false, cron skips cleanup for this campaign (defaults to true)
+    // Per-campaign eligibility - which snapshot controls who can claim from this campaign
+    eligibilitySnapshotId: v.optional(v.id("whitelistSnapshots")),
   })
     .index("by_name", ["name"])
     .index("by_status", ["status"])
