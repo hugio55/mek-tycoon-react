@@ -407,3 +407,77 @@ export const patchInventorySaleData = mutation({
     };
   },
 });
+
+// =============================================================================
+// PER-CAMPAIGN ELIGIBILITY SNAPSHOT ASSIGNMENT
+// =============================================================================
+
+/**
+ * Assign an eligibility snapshot to a campaign
+ * This controls which users can claim NFTs from this specific campaign
+ */
+export const assignEligibilitySnapshot = mutation({
+  args: {
+    campaignId: v.id("commemorativeCampaigns"),
+    snapshotId: v.optional(v.id("whitelistSnapshots")), // null/undefined to clear
+  },
+  handler: async (ctx, args) => {
+    const campaign = await ctx.db.get(args.campaignId);
+    if (!campaign) {
+      throw new Error("Campaign not found");
+    }
+
+    // Verify snapshot exists if provided
+    if (args.snapshotId) {
+      const snapshot = await ctx.db.get(args.snapshotId);
+      if (!snapshot) {
+        throw new Error("Snapshot not found");
+      }
+      console.log(
+        `[CAMPAIGNS] Assigning snapshot "${snapshot.snapshotName}" to campaign "${campaign.name}"`
+      );
+    } else {
+      console.log(
+        `[CAMPAIGNS] Clearing eligibility snapshot from campaign "${campaign.name}"`
+      );
+    }
+
+    await ctx.db.patch(args.campaignId, {
+      eligibilitySnapshotId: args.snapshotId,
+      updatedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Get campaign with its assigned snapshot details
+ */
+export const getCampaignWithSnapshot = query({
+  args: {
+    campaignId: v.id("commemorativeCampaigns"),
+  },
+  handler: async (ctx, args) => {
+    const campaign = await ctx.db.get(args.campaignId);
+    if (!campaign) {
+      return null;
+    }
+
+    let snapshot = null;
+    if (campaign.eligibilitySnapshotId) {
+      snapshot = await ctx.db.get(campaign.eligibilitySnapshotId);
+    }
+
+    return {
+      ...campaign,
+      eligibilitySnapshot: snapshot
+        ? {
+            _id: snapshot._id,
+            snapshotName: snapshot.snapshotName,
+            userCount: snapshot.eligibleUsers?.length || 0,
+          }
+        : null,
+    };
+  },
+});

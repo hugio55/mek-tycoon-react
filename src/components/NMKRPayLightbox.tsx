@@ -134,10 +134,12 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
     state === 'processing' && effectiveWalletAddress ? { walletAddress: effectiveWalletAddress } : "skip"
   );
 
-  // Query for eligibility checking
+  // Query for eligibility checking (per-campaign)
   const eligibility = useQuery(
-    api.nftEligibility.checkClaimEligibility,
-    state === 'checking_eligibility' && effectiveWalletAddress ? { walletAddress: effectiveWalletAddress } : "skip"
+    api.nftEligibility.checkCampaignEligibility,
+    state === 'checking_eligibility' && effectiveWalletAddress && activeCampaignId
+      ? { walletAddress: effectiveWalletAddress, campaignId: activeCampaignId }
+      : "skip"
   );
 
   useEffect(() => {

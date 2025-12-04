@@ -53,6 +53,9 @@ export default function CampaignManager({
   const [cleaningCampaignId, setCleaningCampaignId] = useState<string | null>(null);
   const [cleanupResult, setCleanupResult] = useState<{ campaignId: string; message: string } | null>(null);
 
+  // Snapshot assignment state
+  const [assigningSnapshotCampaignId, setAssigningSnapshotCampaignId] = useState<string | null>(null);
+
   // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -73,8 +76,12 @@ export default function CampaignManager({
   const syncCounters = useMutation(api.commemorativeCampaigns.syncCampaignCounters);
   const toggleCleanup = useMutation(api.commemorativeNFTReservationsCampaign.toggleCampaignReservationCleanup);
   const manualCleanup = useMutation(api.commemorativeNFTReservationsCampaign.cleanupExpiredCampaignReservationsMutation);
+  const assignEligibilitySnapshot = useMutation(api.campaigns.assignEligibilitySnapshot);
 
   const campaigns = useQuery(api.campaigns.getAllCampaigns);
+
+  // Query all eligibility snapshots for the dropdown
+  const allSnapshots = useQuery(api.whitelists.getAllSnapshots);
 
   // Query all inventory to calculate accurate counts
   const allInventory = useQuery(api.commemorativeCampaigns.getAllInventoryForDiagnostics);
@@ -244,6 +251,23 @@ export default function CampaignManager({
   const handleEditCancel = () => {
     setEditingCampaignId(null);
     clearForm();
+  };
+
+  // Handle eligibility snapshot assignment
+  const handleSnapshotAssignment = async (campaignId: string, snapshotId: string | null) => {
+    setAssigningSnapshotCampaignId(campaignId);
+    try {
+      await assignEligibilitySnapshot({
+        campaignId: campaignId as Id<"commemorativeCampaigns">,
+        snapshotId: snapshotId ? (snapshotId as Id<"whitelistSnapshots">) : undefined,
+      });
+      onCampaignUpdated?.();
+    } catch (error) {
+      console.error('Failed to assign snapshot:', error);
+      onError?.(`Failed to assign snapshot: ${error}`);
+    } finally {
+      setAssigningSnapshotCampaignId(null);
+    }
   };
 
   const clearForm = () => {
