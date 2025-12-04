@@ -3446,15 +3446,11 @@ export default function EssenceMarketPage() {
                 onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
                 className="flex items-center gap-2 px-3 py-2 text-sm uppercase tracking-wider font-medium transition-all"
                 style={{
-                  background: useSpaceAgeHeader
-                    ? 'rgba(15, 23, 42, 0.7)'
-                    : 'rgba(0,0,0,0.6)',
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
+                  background: 'rgba(0,0,0,0.8)',
                   border: useSpaceAgeHeader
                     ? categoryDropdownOpen
-                      ? '1px solid rgba(34,211,238,0.4)'
-                      : '1px solid rgba(255,255,255,0.15)'
+                      ? '1px solid rgba(34,211,238,0.5)'
+                      : '1px solid rgba(255,255,255,0.2)'
                     : '1px solid rgba(107, 114, 128, 0.5)',
                   borderRadius: categoryDropdownOpen ? '8px 8px 0 0' : '8px',
                   color: selectedRarity !== "all"
@@ -3477,23 +3473,17 @@ export default function EssenceMarketPage() {
               {/* Floating Dropdown Menu */}
               {categoryDropdownOpen && (
                 <div
-                  className="absolute top-full left-0 overflow-hidden"
+                  className="absolute top-full left-0"
                   style={{
                     zIndex: 9999,
                     minWidth: '100%',
-                    background: useSpaceAgeHeader
-                      ? 'rgba(15, 23, 42, 0.85)'
-                      : 'rgba(0,0,0,0.9)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
+                    background: 'rgba(0,0,0,0.95)',
                     border: useSpaceAgeHeader
-                      ? '1px solid rgba(34,211,238,0.4)'
+                      ? '1px solid rgba(34,211,238,0.5)'
                       : '1px solid rgba(107, 114, 128, 0.5)',
                     borderTop: 'none',
                     borderRadius: '0 0 8px 8px',
-                    boxShadow: useSpaceAgeHeader
-                      ? '0 16px 48px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05)'
-                      : '0 12px 32px rgba(0,0,0,0.5)',
+                    boxShadow: '0 16px 48px rgba(0,0,0,0.8)',
                   }}
                 >
                   {currentFilters.map((filter, index) => (
@@ -3611,15 +3601,11 @@ export default function EssenceMarketPage() {
                 onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
                 className="flex items-center gap-2 px-3 py-2 text-sm uppercase tracking-wider font-medium transition-all"
                 style={{
-                  background: useSpaceAgeHeader
-                    ? 'rgba(15, 23, 42, 0.7)'
-                    : 'rgba(0,0,0,0.6)',
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
+                  background: 'rgba(0,0,0,0.8)',
                   border: useSpaceAgeHeader
                     ? sortDropdownOpen
-                      ? '1px solid rgba(34,211,238,0.4)'
-                      : '1px solid rgba(255,255,255,0.15)'
+                      ? '1px solid rgba(34,211,238,0.5)'
+                      : '1px solid rgba(255,255,255,0.2)'
                     : '1px solid rgba(107, 114, 128, 0.5)',
                   borderRadius: sortDropdownOpen ? '8px 8px 0 0' : '8px',
                   color: useSpaceAgeHeader ? 'rgba(255,255,255,0.8)' : '#9ca3af',
@@ -3640,23 +3626,17 @@ export default function EssenceMarketPage() {
               {/* Floating Dropdown Menu */}
               {sortDropdownOpen && (
                 <div
-                  className="absolute top-full right-0 overflow-hidden"
+                  className="absolute top-full right-0"
                   style={{
                     zIndex: 9999,
                     minWidth: '100%',
-                    background: useSpaceAgeHeader
-                      ? 'rgba(15, 23, 42, 0.85)'
-                      : 'rgba(0,0,0,0.9)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
+                    background: 'rgba(0,0,0,0.95)',
                     border: useSpaceAgeHeader
-                      ? '1px solid rgba(34,211,238,0.4)'
+                      ? '1px solid rgba(34,211,238,0.5)'
                       : '1px solid rgba(107, 114, 128, 0.5)',
                     borderTop: 'none',
                     borderRadius: '0 0 8px 8px',
-                    boxShadow: useSpaceAgeHeader
-                      ? '0 16px 48px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05)'
-                      : '0 12px 32px rgba(0,0,0,0.5)',
+                    boxShadow: '0 16px 48px rgba(0,0,0,0.8)',
                   }}
                 >
                   {SORT_OPTIONS.map((option, index) => (
