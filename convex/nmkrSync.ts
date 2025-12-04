@@ -464,6 +464,11 @@ async function fetchAllNMKRNFTs(
 /**
  * Internal action called by cron job to automatically sync all active campaigns with NMKR
  * This catches any missed webhooks and ensures database stays in sync with NMKR's truth
+ *
+ * SMART SYNC: Only makes API calls when there's actually something to check:
+ * - NFTs currently in "reserved" status (someone started buying)
+ * - Recent payment activity (within last 30 minutes)
+ * - Skips API calls entirely during quiet periods to save quota
  */
 export const internalAutoSyncWithNMKR = internalAction({
   args: {},
@@ -471,9 +476,10 @@ export const internalAutoSyncWithNMKR = internalAction({
     success: boolean;
     campaignsSynced: number;
     totalDiscrepanciesFixed: number;
+    skippedCampaigns: number;
     errors: string[];
   }> => {
-    console.log('[🔄NMKR-AUTO-SYNC] Starting automatic NMKR synchronization...');
+    console.log('[🔄NMKR-AUTO-SYNC] Starting smart NMKR synchronization...');
 
     // Get NMKR API key from environment
     const apiKey = process.env.NMKR_API_KEY;
@@ -483,30 +489,32 @@ export const internalAutoSyncWithNMKR = internalAction({
         success: false,
         campaignsSynced: 0,
         totalDiscrepanciesFixed: 0,
+        skippedCampaigns: 0,
         errors: ['NMKR_API_KEY not configured in environment'],
       };
     }
 
-    // Get all active campaigns
-    const campaigns = await ctx.runQuery(internal.nmkrSync.getActiveCampaignsForSync);
+    // Get campaigns that actually need syncing (have at-risk NFTs)
+    const campaignsNeedingSync = await ctx.runQuery(internal.nmkrSync.getCampaignsNeedingSync);
 
-    if (campaigns.length === 0) {
-      console.log('[🔄NMKR-AUTO-SYNC] No active campaigns to sync');
+    if (campaignsNeedingSync.length === 0) {
+      console.log('[🔄NMKR-AUTO-SYNC] No campaigns need syncing (no reserved NFTs or recent activity) - skipping API calls');
       return {
         success: true,
         campaignsSynced: 0,
         totalDiscrepanciesFixed: 0,
+        skippedCampaigns: 0,
         errors: [],
       };
     }
 
-    console.log(`[🔄NMKR-AUTO-SYNC] Found ${campaigns.length} active campaign(s) to sync`);
+    console.log(`[🔄NMKR-AUTO-SYNC] Found ${campaignsNeedingSync.length} campaign(s) with active reservations or recent payments`);
 
     let campaignsSynced = 0;
     let totalDiscrepanciesFixed = 0;
     const errors: string[] = [];
 
-    for (const campaign of campaigns) {
+    for (const campaign of campaignsNeedingSync) {
       try {
         console.log(`[🔄NMKR-AUTO-SYNC] Syncing campaign: ${campaign.name} (${campaign.nmkrProjectUid})`);
 
@@ -545,12 +553,13 @@ export const internalAutoSyncWithNMKR = internalAction({
       }
     }
 
-    console.log(`[🔄NMKR-AUTO-SYNC] Completed. Synced ${campaignsSynced}/${campaigns.length} campaigns, fixed ${totalDiscrepanciesFixed} discrepancies`);
+    console.log(`[🔄NMKR-AUTO-SYNC] Completed. Synced ${campaignsSynced}/${campaignsNeedingSync.length} campaigns, fixed ${totalDiscrepanciesFixed} discrepancies`);
 
     return {
       success: errors.length === 0,
       campaignsSynced,
       totalDiscrepanciesFixed,
+      skippedCampaigns: 0,
       errors,
     };
   },
@@ -558,6 +567,7 @@ export const internalAutoSyncWithNMKR = internalAction({
 
 /**
  * Internal query to get active campaigns that need syncing
+ * (Used for manual/forced sync - returns ALL active campaigns)
  */
 export const getActiveCampaignsForSync = internalQuery({
   args: {},
@@ -575,6 +585,59 @@ export const getActiveCampaignsForSync = internalQuery({
         name: c.name,
         nmkrProjectUid: c.nmkrProjectUid!,
       }));
+  },
+});
+
+/**
+ * SMART SYNC: Only returns campaigns that actually need checking
+ *
+ * A campaign needs syncing if it has:
+ * 1. NFTs currently in "reserved" status (someone started a purchase)
+ * 2. Recent payment window activity (opened in last 30 minutes)
+ *
+ * This prevents wasteful API calls during quiet periods (weeks between sales)
+ */
+export const getCampaignsNeedingSync = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const thirtyMinutesAgo = Date.now() - (30 * 60 * 1000);
+
+    // Get all active campaigns with NMKR project UIDs
+    const campaigns = await ctx.db
+      .query("commemorativeCampaigns")
+      .filter((q) => q.eq(q.field("isActive"), true))
+      .collect();
+
+    const campaignsNeedingSync = [];
+
+    for (const campaign of campaigns) {
+      if (!campaign.nmkrProjectUid) continue;
+
+      // Check if this campaign has any "at-risk" NFTs
+      const inventory = await ctx.db
+        .query("commemorativeNFTInventory")
+        .withIndex("by_campaign", (q) => q.eq("campaignId", campaign._id))
+        .collect();
+
+      // Check for reserved NFTs (someone is in the middle of buying)
+      const hasReservedNFTs = inventory.some(nft => nft.status === 'reserved');
+
+      // Check for recent payment window activity (might have completed but webhook failed)
+      const hasRecentPaymentActivity = inventory.some(nft =>
+        nft.paymentWindowOpenedAt && nft.paymentWindowOpenedAt > thirtyMinutesAgo
+      );
+
+      if (hasReservedNFTs || hasRecentPaymentActivity) {
+        campaignsNeedingSync.push({
+          _id: campaign._id,
+          name: campaign.name,
+          nmkrProjectUid: campaign.nmkrProjectUid,
+          reason: hasReservedNFTs ? 'reserved_nfts' : 'recent_activity',
+        });
+      }
+    }
+
+    return campaignsNeedingSync;
   },
 });
 
