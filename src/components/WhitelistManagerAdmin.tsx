@@ -381,15 +381,18 @@ function WhitelistManagerAdminContent() {
                   </div>
 
                   <div className="flex gap-2 flex-wrap">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleGenerateWhitelist(whitelist._id);
-                      }}
-                      className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs px-3 py-1 rounded"
-                    >
-                      Regenerate
-                    </button>
+                    {/* Only show Regenerate for rule-based whitelists (not manual) */}
+                    {whitelist.rules.length > 0 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleGenerateWhitelist(whitelist._id);
+                        }}
+                        className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs px-3 py-1 rounded"
+                      >
+                        Regenerate
+                      </button>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
