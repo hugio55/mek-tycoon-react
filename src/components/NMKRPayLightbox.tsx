@@ -760,15 +760,19 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   }, [paymentWindow]);
 
   const attemptCancel = () => {
+    // Terminal states - safe to close without warning
     if (state === 'success' || state === 'error' || state === 'timeout' || state === 'no_campaign') {
       onClose();
       return;
     }
-    if (state === 'reserved' || state === 'payment' || state === 'processing' || state === 'payment_window_closed') {
-      setShowCancelConfirmation(true);
+    // Early states before user has committed - safe to close without warning
+    if (state === 'loading_campaign' || state === 'address_entry' || state === 'checking_eligibility' || state === 'ineligible' || state === 'already_claimed') {
+      onClose();
       return;
     }
-    onClose();
+    // All other states (user has invested effort) - show confirmation warning
+    // This includes: corporation_verified, creating, reserved, wallet_verification, payment, processing, payment_window_closed
+    setShowCancelConfirmation(true);
   };
 
   const handleConfirmCancel = async () => {
@@ -1576,7 +1580,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
       <div
         className="fixed inset-0 z-[9999] flex items-center justify-center overflow-auto p-4"
         onClick={() => {
-          if (state === 'payment') return;
+          // Always use attemptCancel - it handles showing warnings for all states appropriately
           attemptCancel();
         }}
       >
@@ -1635,11 +1639,15 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
             </div>
 
             <h3 className="text-2xl font-bold text-center mb-3" style={{ fontFamily: 'Inter, sans-serif', color: '#e0f2fe' }}>
-              Cancel Reservation?
+              {reservationId ? 'Cancel Reservation?' : 'Cancel Claim?'}
             </h3>
 
             <p className="text-center mb-6" style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', fontSize: '0.95rem', lineHeight: '1.6' }}>
-              Are you sure you want to cancel? Doing so will not guarantee the <span style={{ color: '#22d3ee', fontWeight: 600, textShadow: '0 0 12px rgba(34, 211, 238, 0.8), 0 0 24px rgba(34, 211, 238, 0.5)' }}>same edition number</span>.
+              {reservationId ? (
+                <>Are you sure you want to cancel? Doing so will not guarantee the <span style={{ color: '#22d3ee', fontWeight: 600, textShadow: '0 0 12px rgba(34, 211, 238, 0.8), 0 0 24px rgba(34, 211, 238, 0.5)' }}>same edition number</span>.</>
+              ) : (
+                <>Are you sure you want to cancel? You will lose your progress and have to start over.</>
+              )}
             </p>
 
             <div className="flex gap-3">
