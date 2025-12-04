@@ -354,10 +354,14 @@ export const sendMessage = mutation({
     } else {
       conversationId = conversation._id;
       // Update conversation with latest message info
+      // Also unhide conversation for both participants if either deleted it
+      // This allows users to restart conversations by sending a new message
       await ctx.db.patch(conversationId, {
         lastMessageAt: now,
         lastMessagePreview: content.slice(0, PREVIEW_LENGTH),
         lastMessageSender: args.senderWallet,
+        hiddenForParticipant1: false,
+        hiddenForParticipant2: false,
       });
     }
 

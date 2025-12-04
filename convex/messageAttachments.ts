@@ -137,8 +137,9 @@ export const validateUpload = mutation({
       // Check burst rate limit
       if (now - quota.lastUploadAt < MIN_UPLOAD_INTERVAL_MS) {
         await ctx.storage.delete(args.storageId);
+        const waitTimeSeconds = Math.ceil((MIN_UPLOAD_INTERVAL_MS - (now - quota.lastUploadAt)) / 1000);
         throw new Error(
-          `Please wait a moment before uploading again.`
+          `Please wait ${waitTimeSeconds} second${waitTimeSeconds > 1 ? 's' : ''} before uploading again.`
         );
       }
 

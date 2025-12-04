@@ -5,8 +5,9 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { COMPLETE_VARIATION_RARITY } from '@/lib/completeVariationRarity';
 import EssenceCapReductionWarning, { EssenceCapChange } from './EssenceCapReductionWarning';
+import TradeAbuseAdmin from './TradeAbuseAdmin';
 
-type View = 'stats' | 'aggregated' | 'detailed' | 'createListing';
+type View = 'stats' | 'aggregated' | 'detailed' | 'createListing' | 'tradeAbuse';
 type CreateMode = 'player' | 'market';
 
 export default function EssenceMarketAdmin() {
@@ -252,6 +253,16 @@ export default function EssenceMarketAdmin() {
           }`}
         >
           ➕ Create Listing
+        </button>
+        <button
+          onClick={() => setActiveView('tradeAbuse')}
+          className={`px-4 py-2 rounded-t text-xs font-bold transition-colors ${
+            activeView === 'tradeAbuse'
+              ? 'bg-red-600/30 border-2 border-red-500 text-red-300'
+              : 'bg-black/30 border border-gray-600 text-gray-400 hover:text-gray-300'
+          }`}
+        >
+          Trade Abuse
         </button>
       </div>
 
@@ -852,6 +863,11 @@ export default function EssenceMarketAdmin() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Trade Abuse View */}
+      {activeView === 'tradeAbuse' && (
+        <TradeAbuseAdmin />
       )}
 
       {/* Warning Modal */}
