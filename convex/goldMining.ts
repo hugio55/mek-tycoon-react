@@ -1215,6 +1215,73 @@ export const factoryResetForProduction = mutation({
   },
 });
 
+// PHASE II RESET: Clear only Phase I player data (targeted, safe)
+// Only clears: goldMining (corporations), users (profiles), mekLevels, levelUpgrades
+// Does NOT touch: commemorative campaigns, game config, recipes, story climb, etc.
+export const clearPhaseOnePlayerData = mutation({
+  args: {
+    confirmationCode: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Security check - must provide correct confirmation code
+    const expectedCode = "CLEAR_PHASE_ONE";
+    if (args.confirmationCode !== expectedCode) {
+      throw new Error("Invalid confirmation code. Operation cancelled for safety. Expected: CLEAR_PHASE_ONE");
+    }
+
+    let totalDeleted = 0;
+    const breakdown: Record<string, number> = {};
+
+    // 1. Clear goldMining (corporations - ~42 records)
+    const goldMining = await ctx.db.query("goldMining").collect();
+    for (const record of goldMining) {
+      await ctx.db.delete(record._id);
+      totalDeleted++;
+    }
+    breakdown.goldMining = goldMining.length;
+
+    // 2. Clear users (player profiles - ~42 records)
+    const users = await ctx.db.query("users").collect();
+    for (const user of users) {
+      await ctx.db.delete(user._id);
+      totalDeleted++;
+    }
+    breakdown.users = users.length;
+
+    // 3. Clear mekLevels (Mek level progression)
+    const mekLevels = await ctx.db.query("mekLevels").collect();
+    for (const level of mekLevels) {
+      await ctx.db.delete(level._id);
+      totalDeleted++;
+    }
+    breakdown.mekLevels = mekLevels.length;
+
+    // 4. Clear levelUpgrades (upgrade transaction logs)
+    const levelUpgrades = await ctx.db.query("levelUpgrades").collect();
+    for (const upgrade of levelUpgrades) {
+      await ctx.db.delete(upgrade._id);
+      totalDeleted++;
+    }
+    breakdown.levelUpgrades = levelUpgrades.length;
+
+    return {
+      success: true,
+      message: "Phase I player data cleared. Ready for Phase II!",
+      totalRecordsDeleted: totalDeleted,
+      deletedBreakdown: breakdown,
+      preserved: [
+        "commemorativeCampaigns",
+        "commemorativeNFTInventory",
+        "commemorativeNFTReservations",
+        "All game configuration",
+        "All recipes and variations",
+        "Story climb data",
+        "Admin tools and saves"
+      ]
+    };
+  },
+});
+
 // Get gold mining statistics
 export const getGoldMiningStats = query({
   args: {},
