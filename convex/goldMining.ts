@@ -726,14 +726,9 @@ export const initializeWithBlockfrost = action({
     try {
       devLog.log(`[GoldMining] Fetching NFTs from Blockfrost for ${args.stakeAddress}`);
 
-      // Verify wallet authentication first
-      const authCheck = await ctx.runQuery(api.walletAuthentication.checkAuthentication, {
-        stakeAddress: args.stakeAddress
-      });
-
-      if (!authCheck.authenticated) {
-        throw new Error("Wallet not authenticated. Please sign the verification message.");
-      }
+      // PHASE II: Authentication check removed
+      // Blockfrost queries public blockchain data - no auth needed
+      // Real authentication happens in corporationAuth.connectCorporation
 
       // Fetch NFTs from Blockfrost
       const nftResult = await ctx.runAction(api.blockfrostNftFetcher.fetchNFTsByStakeAddress, {

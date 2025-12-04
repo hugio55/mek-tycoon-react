@@ -486,6 +486,28 @@ export const removeUserFromWhitelist = mutation({
   },
 });
 
+export const clearAllUsersFromWhitelist = mutation({
+  args: {
+    whitelistId: v.id("whitelists"),
+  },
+  handler: async (ctx, args) => {
+    const whitelist = await ctx.db.get(args.whitelistId);
+    if (!whitelist) {
+      throw new Error("Whitelist not found");
+    }
+
+    const previousCount = whitelist.userCount;
+
+    await ctx.db.patch(args.whitelistId, {
+      eligibleUsers: [],
+      userCount: 0,
+      updatedAt: Date.now(),
+    });
+
+    return { success: true, deletedCount: previousCount };
+  },
+});
+
 export const addUserToWhitelistByCompanyName = mutation({
   args: {
     whitelistId: v.id("whitelists"),

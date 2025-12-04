@@ -107,6 +107,11 @@ function WhitelistManagerAdminContent() {
     return await client.mutation(api.whitelists.removeUserFromWhitelist, args);
   };
 
+  const clearAllUsersFromWhitelist = async (args: any) => {
+    if (!client || !canMutate()) throw new Error('Mutations disabled');
+    return await client.mutation(api.whitelists.clearAllUsersFromWhitelist, args);
+  };
+
   const addUserToWhitelistByCompanyName = async (args: any) => {
     if (!client || !canMutate()) throw new Error('Mutations disabled');
     return await client.mutation(api.whitelists.addUserToWhitelistByCompanyName, args);
@@ -595,6 +600,7 @@ function WhitelistManagerAdminContent() {
           onClose={() => setViewingWhitelistTable(null)}
           onExportCSV={handleExportCSV}
           removeUserFromWhitelist={removeUserFromWhitelist}
+          clearAllUsersFromWhitelist={clearAllUsersFromWhitelist}
           addUserToWhitelistByCompanyName={addUserToWhitelistByCompanyName}
           addUserToWhitelistByAddress={addUserToWhitelistByAddress}
         />
@@ -933,6 +939,7 @@ function WhitelistTableModal({
   onClose,
   onExportCSV,
   removeUserFromWhitelist,
+  clearAllUsersFromWhitelist,
   addUserToWhitelistByCompanyName,
   addUserToWhitelistByAddress,
 }: {
@@ -941,6 +948,7 @@ function WhitelistTableModal({
   onClose: () => void;
   onExportCSV: (whitelist: any) => void;
   removeUserFromWhitelist: any;
+  clearAllUsersFromWhitelist: any;
   addUserToWhitelistByCompanyName: any;
   addUserToWhitelistByAddress: any;
 }) {
