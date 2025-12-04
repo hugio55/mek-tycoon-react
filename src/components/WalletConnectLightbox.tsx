@@ -23,7 +23,7 @@ interface WalletInfo {
 interface WalletConnectLightboxProps {
   isOpen: boolean;
   onClose: () => void;
-  onConnected?: (walletAddress: string) => void;
+  onConnected?: (walletAddress: string, isNewCorporation?: boolean) => void;
 }
 
 export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: WalletConnectLightboxProps) {
@@ -293,17 +293,24 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       // PHASE II: Create/link corporation using stake address ONLY
       // Stake address is the sole identifier - no payment address stored
       setConnectionStatus('Linking corporation...');
+      let isNewCorporation = false;
       try {
         const corpResult = await connectCorporationMutation({
           stakeAddress: stakeAddress,
           walletType: wallet.name.toLowerCase(),
         });
         console.log('[WalletConnect] Corporation linked:', corpResult.isNew ? 'NEW CORPORATION' : 'EXISTING CORPORATION');
+        isNewCorporation = corpResult.isNew;
 
         // Store session token for authenticated mutations (disconnect, update name, etc.)
         if (corpResult.sessionToken && typeof window !== 'undefined') {
           localStorage.setItem('mek_session_token', corpResult.sessionToken);
           console.log('[WalletConnect] Session token stored for authenticated operations');
+        }
+
+        // Store stake address for corporation queries
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('mek_stake_address', stakeAddress);
         }
       } catch (corpLinkError) {
         // Non-fatal - log but continue
@@ -333,9 +340,9 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
 
       setConnectionStatus('Connection successful!');
 
-      // Notify parent component
+      // Notify parent component with new corporation flag
       if (onConnected) {
-        await onConnected(stakeAddress);
+        await onConnected(stakeAddress, isNewCorporation);
       }
 
       // Dispatch custom event to notify other components
