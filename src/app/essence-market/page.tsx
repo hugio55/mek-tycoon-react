@@ -3453,6 +3453,7 @@ export default function EssenceMarketPage() {
                     setCategoryDropdownRect(categoryDropdownBtnRef.current.getBoundingClientRect());
                   }
                   setCategoryDropdownOpen(!categoryDropdownOpen);
+                  setSortDropdownOpen(false);
                 }}
                 className="flex items-center gap-2 px-3 py-2 text-sm uppercase tracking-wider font-medium transition-all"
                 style={{
@@ -3509,7 +3510,7 @@ export default function EssenceMarketPage() {
                         setSelectedRarity(filter.id);
                         setCategoryDropdownOpen(false);
                       }}
-                      className="w-full px-3 py-2 text-left text-sm uppercase tracking-wider transition-all"
+                      className="w-full px-3 py-2 text-left text-sm tracking-wide transition-all hover:bg-white/10 hover:pl-4"
                       style={{
                         background: selectedRarity === filter.id
                           ? useSpaceAgeHeader
@@ -3621,6 +3622,7 @@ export default function EssenceMarketPage() {
                     setSortDropdownRect(sortDropdownBtnRef.current.getBoundingClientRect());
                   }
                   setSortDropdownOpen(!sortDropdownOpen);
+                  setCategoryDropdownOpen(false);
                 }}
                 className="flex items-center gap-2 px-3 py-2 text-sm uppercase tracking-wider font-medium transition-all"
                 style={{
@@ -3675,7 +3677,7 @@ export default function EssenceMarketPage() {
                         setSortBy(option.id);
                         setSortDropdownOpen(false);
                       }}
-                      className="w-full px-3 py-2 text-left text-sm tracking-wider transition-all whitespace-nowrap"
+                      className="w-full px-3 py-2 text-left text-sm tracking-wide transition-all whitespace-nowrap hover:bg-white/10 hover:pl-4"
                       style={{
                         background: sortBy === option.id
                           ? useSpaceAgeHeader

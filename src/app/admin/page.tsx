@@ -6429,6 +6429,7 @@ function CampaignManagerWithDatabase({
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>();
   const [snapshots, setSnapshots] = useState<Array<{ _id: string; snapshotName: string; eligibleUsers?: any[] }>>([]);
   const [assigningSnapshotCampaignId, setAssigningSnapshotCampaignId] = useState<string | null>(null);
+  const [updatingMintLimitCampaignId, setUpdatingMintLimitCampaignId] = useState<string | null>(null);
 
   // Auto-select first campaign when campaigns load or change
   useEffect(() => {
@@ -6464,6 +6465,21 @@ function CampaignManagerWithDatabase({
       console.error('[CampaignManagerWithDatabase] Error assigning snapshot:', error);
     } finally {
       setAssigningSnapshotCampaignId(null);
+    }
+  };
+
+  const handleMintLimitToggle = async (campaignId: string, allowMultipleMints: boolean) => {
+    if (!client) return;
+    setUpdatingMintLimitCampaignId(campaignId);
+    try {
+      await client.mutation(api.campaigns.updateAllowMultipleMints, {
+        campaignId,
+        allowMultipleMints,
+      });
+    } catch (error) {
+      console.error('[CampaignManagerWithDatabase] Error updating mint limit:', error);
+    } finally {
+      setUpdatingMintLimitCampaignId(null);
     }
   };
 
@@ -6537,6 +6553,50 @@ function CampaignManagerWithDatabase({
                 ) : (
                   <p className="text-xs text-yellow-400 mt-2">
                     ⚠ No snapshot assigned - nobody can claim from this campaign
+                  </p>
+                )}
+              </div>
+
+              {/* Mint Limit Toggle */}
+              <div className="mb-4 p-3 bg-black/40 rounded border border-orange-500/30" onClick={(e) => e.stopPropagation()}>
+                <label className="block text-xs text-gray-400 mb-2">
+                  Mint Limit per Corporation
+                  <span className="text-orange-400 ml-2">(How many times each corp can claim)</span>
+                </label>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => handleMintLimitToggle(campaign._id, false)}
+                    disabled={updatingMintLimitCampaignId === campaign._id}
+                    className={`px-4 py-2 rounded text-sm font-medium transition-all ${
+                      !campaign.allowMultipleMints
+                        ? 'bg-orange-600 text-white border-2 border-orange-400'
+                        : 'bg-black/50 text-gray-400 border border-gray-600 hover:border-gray-500'
+                    }`}
+                  >
+                    One per Corp
+                  </button>
+                  <button
+                    onClick={() => handleMintLimitToggle(campaign._id, true)}
+                    disabled={updatingMintLimitCampaignId === campaign._id}
+                    className={`px-4 py-2 rounded text-sm font-medium transition-all ${
+                      campaign.allowMultipleMints
+                        ? 'bg-green-600 text-white border-2 border-green-400'
+                        : 'bg-black/50 text-gray-400 border border-gray-600 hover:border-gray-500'
+                    }`}
+                  >
+                    Unlimited
+                  </button>
+                  {updatingMintLimitCampaignId === campaign._id && (
+                    <span className="text-xs text-orange-400 animate-pulse">Saving...</span>
+                  )}
+                </div>
+                {campaign.allowMultipleMints ? (
+                  <p className="text-xs text-green-400 mt-2">
+                    ✓ Corporations can mint multiple NFTs from this campaign (good for testing)
+                  </p>
+                ) : (
+                  <p className="text-xs text-orange-400 mt-2">
+                    ⚠ Each corporation can only mint once from this campaign
                   </p>
                 )}
               </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { useMutation } from 'convex/react';
+import { useMutation, useAction } from 'convex/react';
 import { api } from '@/../convex/_generated/api';
 import {
   saveWalletSession,
@@ -36,6 +36,9 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
 
   // PHASE II: Convex mutation to create/link corporation (stake-address-only)
   const connectCorporationMutation = useMutation(api.corporationAuth.connectCorporation);
+
+  // Blockfrost NFT verification action (server-side)
+  const initializeWithBlockfrostAction = useAction(api.goldMining.initializeWithBlockfrost);
 
   // Mount/unmount for portal rendering
   useEffect(() => {
@@ -265,10 +268,9 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       let meks: any[] = [];
 
       try {
-        // Import the initialization function
-        const { initializeWithBlockfrost } = await import('@/lib/blockfrostInit');
-
-        const initResult = await initializeWithBlockfrost({
+        // Call real Convex Blockfrost action (server-side NFT verification)
+        console.log('[WalletConnect] Calling Convex Blockfrost action...');
+        const initResult = await initializeWithBlockfrostAction({
           walletAddress: stakeAddress,
           stakeAddress,
           walletType: wallet.name.toLowerCase(),
@@ -279,23 +281,13 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
           console.log(`[WalletConnect] Successfully fetched ${initResult.mekCount} Meks from blockchain`);
           meks = initResult.meks || [];
         } else {
-          // Check if this is the expected stub response
-          const isStubResponse = initResult.error === 'Blockfrost integration not implemented';
-
-          if (isStubResponse) {
-            console.log('[WalletConnect] NFT fetching disabled - continuing without Meks');
-          } else {
-            throw new Error(initResult.error || 'Failed to fetch NFTs from blockchain');
-          }
+          console.error('[WalletConnect] Blockfrost initialization failed:', initResult.error);
+          throw new Error(initResult.error || 'Failed to fetch NFTs from blockchain');
         }
       } catch (blockfrostError: any) {
-        // Only log actual errors, not expected stub responses
-        if (blockfrostError.message !== 'Blockfrost integration not implemented') {
-          console.error('[WalletConnect] Blockfrost initialization failed:', blockfrostError);
-        }
-
-        // Client-side parsing fallback removed - not available in staging
-        console.log('[WalletConnect] No fallback available - continuing without Meks');
+        console.error('[WalletConnect] Blockfrost action error:', blockfrostError);
+        // Continue without Meks if Blockfrost fails - corporation can still be created
+        console.log('[WalletConnect] Continuing without Mek verification - check Blockfrost API');
       }
 
       // PHASE II: Create/link corporation using stake address ONLY
