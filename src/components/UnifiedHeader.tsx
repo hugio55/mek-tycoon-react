@@ -213,6 +213,19 @@ export default function UnifiedHeader() {
     return () => window.removeEventListener('openWalletConnect', handleOpenWalletConnect);
   }, []);
 
+  // Listen for new corporation created event - ensures modal shows on the connecting tab
+  useEffect(() => {
+    const handleNewCorporation = (event: CustomEvent) => {
+      console.log('[UnifiedHeader] newCorporationCreated event received:', event.detail);
+      // Immediately show the name modal when a new corporation is created
+      setCompanyNameModalMode('initial');
+      setShowCompanyNameModal(true);
+    };
+
+    window.addEventListener('newCorporationCreated', handleNewCorporation as EventListener);
+    return () => window.removeEventListener('newCorporationCreated', handleNewCorporation as EventListener);
+  }, []);
+
   // Get company name for current wallet
   const companyNameData = useQuery(
     api.goldMining.getCompanyName,

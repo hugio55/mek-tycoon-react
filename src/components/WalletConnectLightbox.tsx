@@ -506,6 +506,15 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
 
       setConnectionStatus('Connection successful!');
 
+      // Dispatch custom event for new corporation BEFORE calling onConnected
+      // This ensures the modal shows immediately on the connecting tab
+      if (isNewCorporation) {
+        console.log('[WalletConnect] Dispatching newCorporationCreated event');
+        window.dispatchEvent(new CustomEvent('newCorporationCreated', {
+          detail: { address: stakeAddress, isNew: true }
+        }));
+      }
+
       // Notify parent component with new corporation flag
       if (onConnected) {
         await onConnected(stakeAddress, isNewCorporation);
