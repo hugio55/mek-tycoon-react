@@ -34,6 +34,7 @@ export default function NavigationBar() {
   // - Landing page (/landing) which has its own custom UI
   // - Landing V2 page (/landing-v2) which has its own custom UI
   // - Maintenance page (/wen) which should be completely blank
+  // - Talent builder (/talent-builder) which has its own Toolbar
   //
   // TO RE-ENABLE NAVIGATION ON ROOT PAGE:
   // Simply comment out or delete the if statement below
@@ -41,7 +42,7 @@ export default function NavigationBar() {
 
   // More robust pathname checking (handles trailing slashes)
   const normalizedPath = pathname?.toLowerCase().replace(/\/$/, '') || '';
-  const shouldHide = normalizedPath === '' || normalizedPath === '/landing' || normalizedPath === '/landing-v2' || normalizedPath === '/wen';
+  const shouldHide = normalizedPath === '' || normalizedPath === '/landing' || normalizedPath === '/landing-v2' || normalizedPath === '/wen' || normalizedPath === '/talent-builder';
 
   // Get wallet address from session
   useEffect(() => {
@@ -164,6 +165,7 @@ export default function NavigationBar() {
 
   // Hide navigation on specific pages
   if (shouldHide) {
+    console.log('[🎯NAV] HIDING navigation on path:', normalizedPath);
     return null;
   }
 

@@ -191,7 +191,7 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
   }, [state.templateName, state.templateDescription, state.nodes, state.connections, state.selectedTemplateId, state.viewportDimensions, dispatch, actions, createTemplate, updateTemplate]);
 
   return (
-    <div className="bg-gray-900 border-b border-gray-800">
+    <div className="bg-gray-900 border-b border-gray-800" style={{ position: 'relative', zIndex: 100, background: 'red' }}>
       {/* Primary Toolbar */}
       <div className="flex items-center justify-between px-4 py-2">
         {/* Left - Builder Mode Selector */}
