@@ -122,11 +122,11 @@ export default function EssenceMarketPage() {
   // Market category tabs
   const [activeMarketCategory, setActiveMarketCategory] = useState<'essence' | 'merchandise' | 'cosmetics' | 'miscellaneous' | 'nft'>('essence');
   const marketCategories = [
-    { id: 'essence' as const, name: 'Essence', icon: '💎' },
-    { id: 'merchandise' as const, name: 'Merchandise', icon: '🛒' },
-    { id: 'cosmetics' as const, name: 'Cosmetics', icon: '✨' },
-    { id: 'miscellaneous' as const, name: 'Miscellaneous', icon: '📦' },
-    { id: 'nft' as const, name: 'NFT', icon: '🎨' },
+    { id: 'essence' as const, name: 'Essence' },
+    { id: 'merchandise' as const, name: 'Merchandise' },
+    { id: 'cosmetics' as const, name: 'Cosmetics' },
+    { id: 'miscellaneous' as const, name: 'Misc' },
+    { id: 'nft' as const, name: 'NFT' },
   ];
 
   // Get current filter options based on active market category

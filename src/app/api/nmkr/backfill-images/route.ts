@@ -62,10 +62,14 @@ export async function POST(request: NextRequest) {
       const detailsPromises = batch.map(async (nft) => {
         try {
           const details = await fetchNFTDetails(nft.uid, apiKey);
+          // DEBUG: Log full response to see what fields are available
+          console.log(`[NMKR Backfill Images] NFT ${nft.uid} details:`, JSON.stringify(details, null, 2));
           return {
             uid: nft.uid,
             name: nft.displayName || nft.name,
             ipfslink: details.ipfslink,
+            // Also capture previewimagenhash in case that's where the image is
+            previewHash: (details as any).previewimagenhash || (details as any).previewImageNftHash,
           };
         } catch (error) {
           console.warn(`[NMKR Backfill Images] Failed to fetch details for ${nft.uid}:`, error);
@@ -73,6 +77,7 @@ export async function POST(request: NextRequest) {
             uid: nft.uid,
             name: nft.displayName || nft.name,
             ipfslink: undefined,
+            previewHash: undefined,
           };
         }
       });
@@ -80,14 +85,23 @@ export async function POST(request: NextRequest) {
       const results = await Promise.all(detailsPromises);
 
       for (const result of results) {
-        if (result.ipfslink) {
+        // Try ipfslink first, then construct URL from previewHash if available
+        let imageUrl = result.ipfslink;
+        if (!imageUrl && result.previewHash) {
+          // Construct IPFS URL from hash
+          imageUrl = `https://ipfs.io/ipfs/${result.previewHash}`;
+          console.log(`[NMKR Backfill Images] Using previewHash for ${result.name}: ${imageUrl}`);
+        }
+
+        if (imageUrl) {
           imageMap.push({
             nftUid: result.uid,
             name: result.name,
-            imageUrl: result.ipfslink,
+            imageUrl: imageUrl,
           });
           withImages++;
         } else {
+          console.log(`[NMKR Backfill Images] No image found for ${result.name} (uid: ${result.uid})`);
           withoutImages++;
         }
       }
