@@ -299,6 +299,13 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
             code: signError?.code,
             info: signError?.info
           });
+          // Friendlier message for "user declined" (often accidental clicks away)
+          const isUserDeclined = signError?.message?.toLowerCase().includes('declined') ||
+                                  signError?.message?.toLowerCase().includes('cancelled') ||
+                                  signError?.message?.toLowerCase().includes('canceled');
+          if (isUserDeclined) {
+            throw new Error('Signature cancelled. Please click your wallet again and sign the message when prompted.');
+          }
           throw new Error(`Signature verification failed: ${signError?.message || 'Unknown error'}. You must sign the message to reconnect after disconnecting.`);
         }
       } else {
@@ -475,6 +482,10 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       setWalletError(error.message || 'Failed to connect to wallet');
       setIsConnecting(false);
       setConnectionStatus('');
+      // Auto-clear error after 5 seconds so user doesn't feel stuck
+      setTimeout(() => {
+        setWalletError(null);
+      }, 5000);
     } finally {
       // Always reset connecting state
       setIsConnecting(false);
