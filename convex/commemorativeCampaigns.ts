@@ -1345,3 +1345,56 @@ export const cleanupDuplicateNFTs = mutation({
     };
   },
 });
+
+/**
+ * Fix payment URLs for a campaign's NFT inventory
+ * Use this to correct wrong NMKR project IDs in payment URLs
+ */
+export const fixPaymentUrls = mutation({
+  args: {
+    campaignId: v.id("commemorativeCampaigns"),
+  },
+  handler: async (ctx, args) => {
+    const campaign = await ctx.db.get(args.campaignId);
+    if (!campaign) {
+      return { success: false, error: "Campaign not found" };
+    }
+
+    const correctProjectId = campaign.nmkrProjectId;
+    const basePaymentUrl = "https://pay.nmkr.io";
+
+    console.log('[FIX-URLS] Fixing payment URLs for campaign:', campaign.name);
+    console.log('[FIX-URLS] Correct NMKR Project ID:', correctProjectId);
+
+    const inventory = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .collect();
+
+    let fixedCount = 0;
+    for (const nft of inventory) {
+      const correctPaymentUrl = `${basePaymentUrl}/?p=${correctProjectId}&n=${nft.nftUid}`;
+
+      if (nft.paymentUrl !== correctPaymentUrl || nft.projectId !== correctProjectId) {
+        console.log('[FIX-URLS] Fixing', nft.name);
+        console.log('[FIX-URLS]   Old URL:', nft.paymentUrl);
+        console.log('[FIX-URLS]   New URL:', correctPaymentUrl);
+
+        await ctx.db.patch(nft._id, {
+          projectId: correctProjectId,
+          paymentUrl: correctPaymentUrl,
+        });
+        fixedCount++;
+      }
+    }
+
+    console.log('[FIX-URLS] Fixed', fixedCount, 'of', inventory.length, 'NFTs');
+
+    return {
+      success: true,
+      fixedCount,
+      totalNFTs: inventory.length,
+      correctProjectId,
+    };
+  },
+});
