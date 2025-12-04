@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useMutation, useAction } from 'convex/react';
@@ -35,11 +35,23 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
   const [availableWallets, setAvailableWallets] = useState<WalletInfo[]>([]);
   const [walletError, setWalletError] = useState<string | null>(null);
 
+  // Mek counting animation states
+  const [quickMekCount, setQuickMekCount] = useState<number | null>(null);
+  const [finalMekCount, setFinalMekCount] = useState<number | null>(null);
+  const [displayCount, setDisplayCount] = useState(0);
+  const [isCountingUp, setIsCountingUp] = useState(false);
+  const [showFinalFlourish, setShowFinalFlourish] = useState(false);
+  const [loadingPhase, setLoadingPhase] = useState<'connecting' | 'counting' | 'loading' | 'animating' | 'complete'>('connecting');
+  const countingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   // PHASE II: Convex mutation to create/link corporation (stake-address-only)
   const connectCorporationMutation = useMutation(api.corporationAuth.connectCorporation);
 
   // Blockfrost NFT verification action (server-side)
   const initializeWithBlockfrostAction = useAction(api.goldMining.initializeWithBlockfrost);
+
+  // Quick Mek count action (fast lookup without metadata)
+  const quickMekCountAction = useAction(api.blockfrostNftFetcher.quickMekCount);
 
   // Mount/unmount for portal rendering
   useEffect(() => {

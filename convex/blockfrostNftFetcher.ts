@@ -507,3 +507,145 @@ export const getBlockfrostCacheStats = action({
     };
   },
 });
+
+// Quick Mek count - fast lookup without metadata fetching
+// Used for immediate UI feedback before full data load
+export const quickMekCount = action({
+  args: {
+    stakeAddress: v.string(),
+  },
+  handler: async (ctx, args): Promise<{
+    success: boolean;
+    count: number;
+    error?: string;
+  }> => {
+    try {
+      console.log(`[Blockfrost-QuickCount] Starting fast Mek count for ${args.stakeAddress.substring(0, 20)}...`);
+      const startTime = Date.now();
+
+      // Convert hex stake address to bech32 format if needed
+      const stakeAddress = hexToBech32(args.stakeAddress);
+
+      // Check cache first - if we have cached data, return count immediately
+      const cacheKey = `stake_assets_${stakeAddress}`;
+      const cached = blockfrostCache.get(cacheKey);
+      if (cached) {
+        console.log(`[Blockfrost-QuickCount] Cache hit! Returning ${cached.meks.length} Meks in ${Date.now() - startTime}ms`);
+        return {
+          success: true,
+          count: cached.meks.length,
+        };
+      }
+
+      // Wait for rate limit slot
+      await rateLimiter.waitForSlot();
+
+      // Fetch account info to verify address exists
+      const accountUrl = `${BLOCKFROST_CONFIG.baseUrl}/accounts/${stakeAddress}`;
+      const accountResponse = await fetch(accountUrl, {
+        headers: getBlockfrostHeaders(),
+        signal: AbortSignal.timeout(BLOCKFROST_CONFIG.timeout),
+      });
+
+      if (!accountResponse.ok) {
+        if (accountResponse.status === 404) {
+          console.log(`[Blockfrost-QuickCount] Stake address not found`);
+          return { success: true, count: 0 };
+        }
+        await handleBlockfrostError(accountResponse);
+      }
+
+      // Fetch all addresses associated with this stake account
+      const addresses = [];
+      let addressPage = 1;
+      let hasMoreAddresses = true;
+
+      while (hasMoreAddresses) {
+        await rateLimiter.waitForSlot();
+        const addressesUrl = `${BLOCKFROST_CONFIG.baseUrl}/accounts/${stakeAddress}/addresses?page=${addressPage}&count=100`;
+        const addressesResponse = await fetch(addressesUrl, {
+          headers: getBlockfrostHeaders(),
+          signal: AbortSignal.timeout(BLOCKFROST_CONFIG.timeout),
+        });
+
+        if (!addressesResponse.ok) {
+          await handleBlockfrostError(addressesResponse);
+        }
+
+        const addressBatch = await addressesResponse.json();
+        addresses.push(...addressBatch);
+
+        hasMoreAddresses = addressBatch.length === 100;
+        addressPage++;
+      }
+
+      console.log(`[Blockfrost-QuickCount] Found ${addresses.length} addresses`);
+
+      // Quick count - just count Meks without fetching metadata
+      let mekCount = 0;
+      const seenAssets = new Set<string>(); // Avoid counting duplicates
+
+      for (const addressObj of addresses) {
+        const address = addressObj.address;
+        let page = 1;
+        let hasMore = true;
+
+        while (hasMore) {
+          await rateLimiter.waitForSlot();
+
+          const utxosUrl = `${BLOCKFROST_CONFIG.baseUrl}/addresses/${address}/utxos?page=${page}&count=100`;
+          const utxosResponse = await fetch(utxosUrl, {
+            headers: getBlockfrostHeaders(),
+            signal: AbortSignal.timeout(BLOCKFROST_CONFIG.timeout),
+          });
+
+          if (!utxosResponse.ok) {
+            if (utxosResponse.status === 404) {
+              hasMore = false;
+              continue;
+            }
+            await handleBlockfrostError(utxosResponse);
+          }
+
+          const utxos = await utxosResponse.json();
+
+          // Count Meks in UTXOs (NO metadata fetching - that's the slow part!)
+          for (const utxo of utxos) {
+            if (utxo.amount && Array.isArray(utxo.amount)) {
+              for (const asset of utxo.amount) {
+                if (asset.unit === "lovelace") continue;
+
+                // Check if this is a Mek NFT
+                if (asset.unit && asset.unit.startsWith(MEK_POLICY_ID)) {
+                  if (!seenAssets.has(asset.unit)) {
+                    seenAssets.add(asset.unit);
+                    mekCount++;
+                  }
+                }
+              }
+            }
+          }
+
+          hasMore = utxos.length === 100;
+          page++;
+        }
+      }
+
+      const elapsed = Date.now() - startTime;
+      console.log(`[Blockfrost-QuickCount] Found ${mekCount} Meks in ${elapsed}ms`);
+
+      return {
+        success: true,
+        count: mekCount,
+      };
+
+    } catch (error: any) {
+      console.error("[Blockfrost-QuickCount] Error:", error);
+      return {
+        success: false,
+        count: 0,
+        error: error.message || "Failed to count Meks",
+      };
+    }
+  },
+});

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { restoreWalletSession, clearWalletSession } from "@/lib/walletSessionManager";
@@ -227,6 +228,20 @@ export default function UnifiedHeader() {
   // Get owned Meks count
   const ownedMeksCount = goldMiningData?.ownedMeks?.length || 0;
   const cumulativeGold = goldMiningData?.accumulatedGold || 0;
+
+  // PHASE II: Mandatory corporation name enforcement
+  // If logged in but no corporation name, force the user to set one or disconnect
+  const [showMandatoryNameModal, setShowMandatoryNameModal] = useState(false);
+
+  useEffect(() => {
+    // Only check when we have a wallet address AND the query has completed
+    if (walletAddress && companyNameData !== undefined && !companyNameData?.hasCompanyName) {
+      console.log('[UnifiedHeader] ENFORCEMENT: Wallet connected but no corporation name - showing mandatory modal');
+      setShowMandatoryNameModal(true);
+    } else if (companyNameData?.hasCompanyName) {
+      setShowMandatoryNameModal(false);
+    }
+  }, [walletAddress, companyNameData]);
 
   // Click outside handler for wallet dropdown
   useEffect(() => {
