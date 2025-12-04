@@ -114,12 +114,13 @@ export async function fetchAllProjectNFTs(
 
 /**
  * Fetch detailed information about a specific NFT
+ * Note: NMKR API v2 uses "GetNftDetailsById" endpoint
  */
 export async function fetchNFTDetails(
   nftUid: string,
   apiKey: string
 ): Promise<NMKRNFTDetail> {
-  const url = `${NMKR_API_BASE}/GetNftDetails/${nftUid}`;
+  const url = `${NMKR_API_BASE}/GetNftDetailsById/${nftUid}`;
 
   const response = await fetch(url, {
     headers: {
