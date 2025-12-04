@@ -115,8 +115,8 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
       return;
     }
 
-    if (trimmedName.length > 25) {
-      setError('Corporation name must be 25 characters or less');
+    if (trimmedName.length > 30) {
+      setError('Corporation name must be 30 characters or less');
       return;
     }
 
@@ -261,7 +261,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="Enter corporation name..."
-                  maxLength={25}
+                  maxLength={30}
                   className="w-full px-4 py-3 rounded-xl text-white placeholder-white/30 focus:outline-none transition-all duration-300"
                   style={{
                     background: 'rgba(255,255,255,0.06)',
@@ -280,7 +280,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
                   autoFocus
                 />
                 <div className="absolute right-3 top-3 text-xs text-cyan-400/50">
-                  {companyName.length}/25
+                  {companyName.length}/30
                 </div>
               </div>
 
@@ -315,7 +315,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
             {/* Rules */}
             <div className="text-xs text-white/40 space-y-1 font-light tracking-wide">
               <p>Letters, numbers, and spaces allowed</p>
-              <p>2-25 characters required</p>
+              <p>2-30 characters required</p>
             </div>
 
             {/* Buttons */}

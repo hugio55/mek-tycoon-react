@@ -1474,29 +1474,45 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
       case 'processing':
         return (
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-yellow-400 mb-4 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+            {/* Space Age style header */}
+            <h2 className="text-2xl sm:text-3xl font-light text-white tracking-wide mb-3">
               Checking Payment...
             </h2>
-            <p className="text-gray-400 mb-6">Waiting for blockchain confirmation</p>
+            <p className="text-white/50 text-sm sm:text-base font-light tracking-wide mb-6">
+              Waiting for blockchain confirmation
+            </p>
 
+            {/* Subtle pulsing indicator */}
             <div className="flex items-center justify-center gap-2 mb-6">
               <div className="relative">
-                <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                <div className="absolute inset-0 w-2 h-2 bg-yellow-400 rounded-full animate-ping"></div>
+                <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                <div className="absolute inset-0 w-2 h-2 bg-cyan-400 rounded-full animate-ping opacity-75"></div>
               </div>
-              <span className="text-yellow-400/90 font-medium">Actively checking for payment</span>
+              <span className="text-white/70 font-light tracking-wide">Actively checking for payment</span>
             </div>
 
-            <div className="p-4 bg-yellow-500/10 border-2 border-yellow-500/30 rounded backdrop-blur-sm mb-8">
-              <p className="text-yellow-400 text-xs uppercase tracking-wider font-bold">
+            {/* Glass-style info box */}
+            <div
+              className="p-4 rounded-xl mb-8"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              }}
+            >
+              <p className="text-white/60 text-xs sm:text-sm font-light tracking-wide">
                 This may take 1-2 minutes. Please don't close this window.
               </p>
             </div>
 
+            {/* Glass-style cancel button */}
             <button
               onClick={attemptCancel}
-              className="w-full px-8 py-4 bg-yellow-500/20 border-3 border-yellow-500 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-all font-bold uppercase tracking-wider text-lg shadow-lg shadow-yellow-500/50 hover:shadow-yellow-500/70"
-              style={{ fontFamily: 'Orbitron, sans-serif' }}
+              className="w-full px-8 py-3 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/10 active:scale-[0.98]"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: 'rgba(255, 255, 255, 0.7)',
+              }}
             >
               Cancel Transaction
             </button>
