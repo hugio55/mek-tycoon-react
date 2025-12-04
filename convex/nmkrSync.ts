@@ -4,10 +4,13 @@
  * These functions help sync the Convex database with NMKR's actual NFT statuses.
  * Used by the admin panel to verify and fix discrepancies between what NMKR reports
  * and what our database shows.
+ *
+ * Includes automatic background sync via cron job to catch missed webhooks.
  */
 
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, action, internalAction } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 /**
  * Type definitions for sync operations
