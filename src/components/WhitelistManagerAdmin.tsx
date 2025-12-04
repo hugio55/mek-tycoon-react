@@ -228,14 +228,38 @@ function WhitelistManagerAdminContent() {
         </div>
         <div className="flex gap-3 items-center">
           <button
-            onClick={() => setShowManualModal(true)}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold transition-all"
+            onClick={() => {
+              if (!mutationsEnabled) {
+                alert('Please click "Enable Editing" first to create whitelists.');
+                return;
+              }
+              setShowManualModal(true);
+            }}
+            disabled={!mutationsEnabled}
+            className={`px-6 py-3 rounded-lg font-bold transition-all ${
+              mutationsEnabled
+                ? 'bg-green-600 hover:bg-green-700 text-white'
+                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+            }`}
+            title={!mutationsEnabled ? 'Enable editing first' : 'Create a manual whitelist by pasting addresses'}
           >
             📋 Manual Whitelist
           </button>
           <button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg font-bold transition-all"
+            onClick={() => {
+              if (!mutationsEnabled) {
+                alert('Please click "Enable Editing" first to create whitelists.');
+                return;
+              }
+              setShowCreateModal(true);
+            }}
+            disabled={!mutationsEnabled}
+            className={`px-6 py-3 rounded-lg font-bold transition-all ${
+              mutationsEnabled
+                ? 'bg-cyan-600 hover:bg-cyan-700 text-white'
+                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+            }`}
+            title={!mutationsEnabled ? 'Enable editing first' : 'Create a whitelist using eligibility rules'}
           >
             + Create Rule-Based Whitelist
           </button>

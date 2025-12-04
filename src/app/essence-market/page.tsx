@@ -3491,15 +3491,15 @@ export default function EssenceMarketPage() {
                     top: categoryDropdownRect.bottom,
                     left: categoryDropdownRect.left,
                     width: categoryDropdownRect.width,
-                    background: 'rgba(0, 0, 0, 0.6)',
-                    backdropFilter: 'blur(16px)',
-                    WebkitBackdropFilter: 'blur(16px)',
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.08) 100%)',
+                    backdropFilter: 'blur(16px) brightness(1.1)',
+                    WebkitBackdropFilter: 'blur(16px) brightness(1.1)',
                     border: useSpaceAgeHeader
                       ? '1px solid rgba(34,211,238,0.4)'
                       : '1px solid rgba(255,255,255,0.15)',
                     borderTop: 'none',
                     borderRadius: '0 0 8px 8px',
-                    boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
                   }}
                 >
                   {currentFilters.map((filter, index) => (
@@ -3657,15 +3657,15 @@ export default function EssenceMarketPage() {
                     top: sortDropdownRect.bottom,
                     left: sortDropdownRect.left,
                     width: sortDropdownRect.width,
-                    background: 'rgba(0, 0, 0, 0.6)',
-                    backdropFilter: 'blur(16px)',
-                    WebkitBackdropFilter: 'blur(16px)',
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.08) 100%)',
+                    backdropFilter: 'blur(16px) brightness(1.1)',
+                    WebkitBackdropFilter: 'blur(16px) brightness(1.1)',
                     border: useSpaceAgeHeader
                       ? '1px solid rgba(34,211,238,0.4)'
                       : '1px solid rgba(255,255,255,0.15)',
                     borderTop: 'none',
                     borderRadius: '0 0 8px 8px',
-                    boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
                   }}
                 >
                   {SORT_OPTIONS.map((option, index) => (

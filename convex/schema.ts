@@ -3254,6 +3254,9 @@ export default defineSchema({
     enableReservationCleanup: v.optional(v.boolean()), // If false, cron skips cleanup for this campaign (defaults to true)
     // Per-campaign eligibility - which snapshot controls who can claim from this campaign
     eligibilitySnapshotId: v.optional(v.id("whitelistSnapshots")),
+    // Mint limit control - if true, corporations can mint unlimited times from this campaign
+    // Default behavior (false/undefined): one mint per corporation
+    allowMultipleMints: v.optional(v.boolean()),
   })
     .index("by_name", ["name"])
     .index("by_status", ["status"])

@@ -353,31 +353,35 @@ export const checkCampaignEligibility = query({
       };
     }
 
-    // 6. Check if already claimed FROM THIS CAMPAIGN
-    const soldNFT = await ctx.db
-      .query("commemorativeNFTInventory")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("campaignId"), args.campaignId),
-          q.eq(q.field("soldTo"), args.walletAddress),
-          q.eq(q.field("status"), "sold")
+    // 6. Check if already claimed FROM THIS CAMPAIGN (unless campaign allows multiple mints)
+    if (!campaign.allowMultipleMints) {
+      const soldNFT = await ctx.db
+        .query("commemorativeNFTInventory")
+        .filter((q) =>
+          q.and(
+            q.eq(q.field("campaignId"), args.campaignId),
+            q.eq(q.field("soldTo"), args.walletAddress),
+            q.eq(q.field("status"), "sold")
+          )
         )
-      )
-      .first();
+        .first();
 
-    if (soldNFT) {
-      return {
-        eligible: false,
-        reason: "You have already claimed from this campaign",
-        alreadyClaimed: true,
-        campaignName: campaign.name,
-        claimedNFTDetails: {
-          name: soldNFT.name,
-          editionNumber: soldNFT.editionNumber,
-          imageUrl: soldNFT.imageUrl,
-          soldAt: soldNFT.soldAt,
-        },
-      };
+      if (soldNFT) {
+        return {
+          eligible: false,
+          reason: "You have already claimed from this campaign",
+          alreadyClaimed: true,
+          campaignName: campaign.name,
+          claimedNFTDetails: {
+            name: soldNFT.name,
+            editionNumber: soldNFT.editionNumber,
+            imageUrl: soldNFT.imageUrl,
+            soldAt: soldNFT.soldAt,
+          },
+        };
+      }
+    } else {
+      console.log('[CAMPAIGN] Multiple mints allowed for campaign:', campaign.name, '- skipping already claimed check');
     }
 
     // 7. All checks passed - user is eligible

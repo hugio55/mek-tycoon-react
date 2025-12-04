@@ -452,6 +452,35 @@ export const assignEligibilitySnapshot = mutation({
 });
 
 /**
+ * Update campaign's multiple mints setting
+ * When true, corporations can mint unlimited NFTs from this campaign
+ * When false/undefined, corporations can only mint once
+ */
+export const updateAllowMultipleMints = mutation({
+  args: {
+    campaignId: v.id("commemorativeCampaigns"),
+    allowMultipleMints: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const campaign = await ctx.db.get(args.campaignId);
+    if (!campaign) {
+      throw new Error("Campaign not found");
+    }
+
+    console.log(
+      `[CAMPAIGNS] Setting allowMultipleMints=${args.allowMultipleMints} for campaign "${campaign.name}"`
+    );
+
+    await ctx.db.patch(args.campaignId, {
+      allowMultipleMints: args.allowMultipleMints,
+      updatedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+/**
  * Get campaign with its assigned snapshot details
  */
 export const getCampaignWithSnapshot = query({
