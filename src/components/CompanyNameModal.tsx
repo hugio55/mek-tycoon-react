@@ -200,18 +200,15 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
       <div
         className="relative w-full max-w-md overflow-hidden rounded-2xl border border-cyan-500/20"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+          background: 'rgba(255,255,255,0.04)',
           boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset, 0 0 40px rgba(0, 200, 220, 0.08)',
           backdropFilter: 'blur(30px)',
           WebkitBackdropFilter: 'blur(30px)',
         }}
       >
-        {/* Decorative top accent bar */}
+        {/* Top accent bar */}
         <div
-          className="absolute top-0 left-0 right-0 h-1"
-          style={{
-            background: 'linear-gradient(90deg, transparent 0%, rgba(0, 220, 220, 0.6) 20%, rgba(250, 182, 23, 0.6) 50%, rgba(0, 220, 220, 0.6) 80%, transparent 100%)',
-          }}
+          className="absolute top-0 left-0 right-0 h-1 bg-cyan-500/60"
         />
         {/* Close button - only in edit mode */}
         {mode === 'edit' && (
@@ -228,44 +225,6 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
         )}
 
         <div className="px-6 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8">
-          {/* Decorative icon */}
-          <div className="flex justify-center mb-4">
-            <div
-              className="relative w-16 h-16 flex items-center justify-center"
-              style={{
-                background: 'linear-gradient(135deg, rgba(0, 220, 220, 0.15), rgba(0, 220, 220, 0.05))',
-                borderRadius: '50%',
-                border: '1px solid rgba(0, 220, 220, 0.3)',
-              }}
-            >
-              {/* Inner glow */}
-              <div
-                className="absolute inset-0 rounded-full animate-pulse"
-                style={{
-                  background: 'radial-gradient(circle, rgba(0, 220, 220, 0.2) 0%, transparent 70%)',
-                }}
-              />
-              {/* Corporation building icon */}
-              <svg
-                className="w-8 h-8 relative z-10"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="rgba(0, 220, 220, 0.9)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 21h18" />
-                <path d="M5 21V7l8-4v18" />
-                <path d="M19 21V11l-6-4" />
-                <path d="M9 9v.01" />
-                <path d="M9 12v.01" />
-                <path d="M9 15v.01" />
-                <path d="M9 18v.01" />
-              </svg>
-            </div>
-          </div>
-
           {/* Title with glow */}
           <div className="text-center mb-6">
             <h2
@@ -286,13 +245,8 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
             </p>
           </div>
 
-          {/* Subtle divider with color */}
-          <div
-            className="h-px mb-6"
-            style={{
-              background: 'linear-gradient(90deg, transparent 0%, rgba(0, 220, 220, 0.3) 50%, transparent 100%)',
-            }}
-          />
+          {/* Subtle divider */}
+          <div className="h-px bg-cyan-500/20 mb-6" />
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Input field */}
@@ -310,13 +264,13 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
                   maxLength={30}
                   className="w-full px-4 py-3 rounded-xl text-white placeholder-white/30 focus:outline-none transition-all duration-300"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))',
+                    background: 'rgba(255,255,255,0.06)',
                     border: '1px solid rgba(0, 220, 220, 0.25)',
                     boxShadow: '0 0 0 0 rgba(0, 220, 220, 0)',
                   }}
                   onFocus={(e) => {
                     e.target.style.border = '1px solid rgba(0, 220, 220, 0.5)';
-                    e.target.style.boxShadow = '0 0 20px rgba(0, 220, 220, 0.15), 0 0 40px rgba(0, 220, 220, 0.05)';
+                    e.target.style.boxShadow = '0 0 20px rgba(0, 220, 220, 0.15)';
                   }}
                   onBlur={(e) => {
                     e.target.style.border = '1px solid rgba(0, 220, 220, 0.25)';
@@ -372,8 +326,8 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
                 className="group relative w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden"
                 style={{
                   background: buttonDisabled
-                    ? 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))'
-                    : 'linear-gradient(135deg, rgba(0, 220, 220, 0.25), rgba(0, 180, 180, 0.15))',
+                    ? 'rgba(255,255,255,0.08)'
+                    : 'rgba(0, 220, 220, 0.2)',
                   border: buttonDisabled
                     ? '1px solid rgba(255, 255, 255, 0.1)'
                     : '1px solid rgba(0, 220, 220, 0.5)',
@@ -411,7 +365,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
                   disabled={isSubmitting}
                   className="w-full py-3 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/10 active:scale-[0.98] disabled:opacity-50"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))',
+                    background: 'rgba(255,255,255,0.06)',
                     border: '1px solid rgba(255, 255, 255, 0.2)',
                     color: 'rgba(255, 255, 255, 0.7)',
                   }}

@@ -22,6 +22,17 @@ async function getCardanoSerializationLib() {
   }
 }
 
+// Load the message signing library (contains COSESign1 class)
+async function getCardanoMessageSigningLib() {
+  try {
+    const module = await import('@emurgo/cardano-message-signing-nodejs');
+    return module.default || module;
+  } catch (e) {
+    console.error("[Signature Verification] Failed to load message signing library:", e);
+    return null;
+  }
+}
+
 /**
  * Verify a CIP-30 Cardano wallet signature
  * This implements proper cryptographic verification
@@ -40,18 +51,16 @@ export const verifyCardanoSignature = action({
     console.log("[Signature Verification] Message:", args.message.substring(0, 100) + "...");
 
     try {
-      // Load Cardano serialization library
+      // Load both libraries
       const CSL = await getCardanoSerializationLib();
+      const CMS = await getCardanoMessageSigningLib();
 
-      // Debug: Check what we got from the library
-      console.log("[Signature Verification] CSL type:", typeof CSL);
-      console.log("[Signature Verification] CSL has COSESign1:", !!CSL.COSESign1);
-      console.log("[Signature Verification] CSL has COSE_Sign1:", !!CSL.COSE_Sign1);
+      // Debug: Check what we got from the libraries
+      console.log("[Signature Verification] CSL loaded:", !!CSL);
+      console.log("[Signature Verification] CMS loaded:", !!CMS);
 
-      // If CSL doesn't have the expected properties, list what it does have
-      if (!CSL.COSESign1 && !CSL.COSE_Sign1) {
-        const availableKeys = Object.keys(CSL).slice(0, 20); // First 20 keys for debugging
-        console.log("[Signature Verification] Available CSL keys:", availableKeys);
+      if (CMS) {
+        console.log("[Signature Verification] CMS has COSESign1:", !!CMS.COSESign1);
       }
 
       // Step 1: Basic validation
@@ -71,30 +80,39 @@ export const verifyCardanoSignature = action({
         };
       }
 
-      // Step 2: Parse COSE_Sign1 structure
+      // Step 2: Parse COSE_Sign1 structure using message signing library
       console.log("[Signature Verification] Parsing COSE_Sign1 structure");
       let coseSign1;
       try {
         const signatureBytes = Buffer.from(args.signature, 'hex');
-        // Check if COSESign1 exists (different versions of the lib may structure it differently)
-        if (CSL.COSESign1 && CSL.COSESign1.from_bytes) {
+
+        // Use message signing library (CMS) for COSE operations
+        if (CMS && CMS.COSESign1 && CMS.COSESign1.from_bytes) {
+          coseSign1 = CMS.COSESign1.from_bytes(signatureBytes);
+          console.log("[Signature Verification] Successfully parsed COSESign1 from message signing lib");
+        } else if (CSL.COSESign1 && CSL.COSESign1.from_bytes) {
+          // Fallback to CSL if it has COSESign1
           coseSign1 = CSL.COSESign1.from_bytes(signatureBytes);
+          console.log("[Signature Verification] Using COSESign1 from serialization lib");
         } else if (CSL.COSE_Sign1 && CSL.COSE_Sign1.from_bytes) {
           // Try alternative naming convention
           coseSign1 = CSL.COSE_Sign1.from_bytes(signatureBytes);
+          console.log("[Signature Verification] Using COSE_Sign1 from serialization lib");
         } else {
           // Log available properties for debugging
-          console.error("[Signature Verification] CSL object properties:", Object.keys(CSL).filter(k => k.toLowerCase().includes('cose')));
+          const cslKeys = Object.keys(CSL || {}).filter(k => k.toLowerCase().includes('cose'));
+          const cmsKeys = Object.keys(CMS || {}).filter(k => k.toLowerCase().includes('cose'));
+          console.error("[Signature Verification] No COSE class found. CSL COSE keys:", cslKeys, "CMS COSE keys:", cmsKeys);
 
-          // Fallback to simplified verification for mobile compatibility
-          console.log("[Signature Verification] COSESign1 not found - using simplified verification for mobile");
+          // Fallback to simplified verification
+          console.log("[Signature Verification] COSESign1 not found - using simplified verification");
           return handleSimplifiedVerification(args);
         }
       } catch (parseError: any) {
         console.error("[Signature Verification] Failed to parse COSE_Sign1:", parseError);
 
-        // On parse error, try simplified verification (mobile fallback)
-        console.log("[Signature Verification] Parse failed - trying simplified verification for mobile");
+        // On parse error, try simplified verification
+        console.log("[Signature Verification] Parse failed - trying simplified verification");
         return handleSimplifiedVerification(args);
       }
 

@@ -16,6 +16,7 @@
     "fetch-source-keys": "node scripts/fetch_source_keys.js"
   },
   "dependencies": {
+    "@emurgo/cardano-message-signing-nodejs": "^1.1.0",
     "@emurgo/cardano-serialization-lib-browser": "^15.0.1",
     "@emurgo/cardano-serialization-lib-nodejs": "^15.0.1",
     "@headlessui/react": "^2.2.9",
