@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import { mutation, query, internalMutation } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
+import { mutation, query, internalMutation, MutationCtx, QueryCtx } from "./_generated/server";
+import { Id, Doc } from "./_generated/dataModel";
 
 // Configuration constants
 const FAST_PURCHASE_THRESHOLD_SECONDS = 60; // Flag if purchase within 60 seconds of listing
@@ -31,6 +31,22 @@ type FlagReason =
   | "same_wallet"
   | "session_overlap"
   | "manual_flag";
+
+// Helper to get corporation name from goldMining table
+async function getCorpName(ctx: MutationCtx | QueryCtx, user: Doc<"users">): Promise<string> {
+  // Try to get company name from goldMining table
+  const goldMining = await ctx.db
+    .query("goldMining")
+    .withIndex("by_wallet", (q) => q.eq("walletAddress", user.walletAddress))
+    .first();
+
+  if (goldMining?.companyName) {
+    return goldMining.companyName;
+  }
+
+  // Fall back to user fields
+  return user.displayName || user.username || user.walletAddress?.slice(0, 12) || "Unknown";
+}
 
 // ============================================
 // CORE DETECTION FUNCTION
@@ -68,8 +84,8 @@ export const analyzeTradeForAbuse = internalMutation({
       return null;
     }
 
-    const buyerCorpName = buyer.companyName || buyer.username || "Unknown";
-    const sellerCorpName = seller.companyName || seller.username || "Unknown";
+    const buyerCorpName = await getCorpName(ctx, buyer);
+    const sellerCorpName = await getCorpName(ctx, seller);
 
     // ---- CHECK 1: Repeated buyer-seller pair ----
     const previousTradeCount = await getTradeCountBetweenCorps(ctx, args.buyerId, args.sellerId);
@@ -298,13 +314,16 @@ export const detectResaleGap = internalMutation({
           const originalSeller = await ctx.db.get(purchase.sellerId);
 
           if (seller && originalSeller) {
+            const sellerCorpName = await getCorpName(ctx, seller);
+            const originalSellerCorpName = await getCorpName(ctx, originalSeller);
+
             await ctx.db.insert("tradeAbuseFlags", {
               purchaseId: purchase._id,
               listingId: purchase.listingId,
               buyerId: args.sellerId,
               sellerId: purchase.sellerId,
-              buyerCorpName: seller.companyName || seller.username || "Unknown",
-              sellerCorpName: originalSeller.companyName || originalSeller.username || "Unknown",
+              buyerCorpName: sellerCorpName,
+              sellerCorpName: originalSellerCorpName,
               itemType: args.itemType,
               itemVariation: args.itemVariation,
               purchasePrice: purchase.pricePerUnit,
@@ -470,6 +489,9 @@ export const getCorpTradeHistory = query({
     const corp1 = await ctx.db.get(args.corp1Id);
     const corp2 = await ctx.db.get(args.corp2Id);
 
+    const corp1Name = corp1 ? await getCorpName(ctx, corp1) : "Unknown";
+    const corp2Name = corp2 ? await getCorpName(ctx, corp2) : "Unknown";
+
     // Get any flags involving these corps
     const flags = await ctx.db
       .query("tradeAbuseFlags")
@@ -484,8 +506,8 @@ export const getCorpTradeHistory = query({
       .collect();
 
     return {
-      corp1Name: corp1?.companyName || corp1?.username || "Unknown",
-      corp2Name: corp2?.companyName || corp2?.username || "Unknown",
+      corp1Name,
+      corp2Name,
       totalTrades: allTrades.length,
       totalVolume: allTrades.reduce((sum, t) => sum + t.totalCost, 0),
       trades: allTrades.slice(0, 50), // Limit to 50 most recent
@@ -537,9 +559,12 @@ export const getCorporationRiskProfile = query({
     const corpAgeMs = Date.now() - (corp._creationTime || Date.now());
     const corpAgeDays = Math.floor(corpAgeMs / (1000 * 60 * 60 * 24));
 
+    // Get corp name from goldMining
+    const corpName = await getCorpName(ctx, corp);
+
     return {
       corpId: args.corpId,
-      corpName: corp.companyName || corp.username || "Unknown",
+      corpName,
       walletAddress: corp.walletAddress,
       corpAgeDays,
       totalFlags: allFlags.length,
@@ -670,14 +695,17 @@ export const manualFlagTransaction = mutation({
       throw new Error("Buyer or seller not found");
     }
 
+    const buyerCorpName = await getCorpName(ctx, buyer);
+    const sellerCorpName = await getCorpName(ctx, seller);
+
     // Create new flag
     const flagId = await ctx.db.insert("tradeAbuseFlags", {
       purchaseId: args.purchaseId,
       listingId: purchase.listingId,
       buyerId: purchase.buyerId,
       sellerId: purchase.sellerId,
-      buyerCorpName: buyer.companyName || buyer.username || "Unknown",
-      sellerCorpName: seller.companyName || seller.username || "Unknown",
+      buyerCorpName,
+      sellerCorpName,
       itemType: purchase.itemType,
       itemVariation: purchase.itemVariation,
       purchasePrice: purchase.pricePerUnit,
@@ -728,22 +756,47 @@ export const searchCorporations = query({
     const searchLower = args.searchTerm.toLowerCase();
     const limit = args.limit || 20;
 
-    // Search users by company name or username
-    const allUsers = await ctx.db.query("users").collect();
+    // Search goldMining for company names (that's where companyName lives)
+    const allGoldMining = await ctx.db.query("goldMining").collect();
 
-    const matches = allUsers
+    const matchingWallets = allGoldMining
+      .filter(gm =>
+        (gm.companyName?.toLowerCase().includes(searchLower)) ||
+        (gm.walletAddress?.toLowerCase().includes(searchLower))
+      )
+      .slice(0, limit);
+
+    // Get corresponding users
+    const results = await Promise.all(
+      matchingWallets.map(async (gm) => {
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", gm.walletAddress))
+          .first();
+
+        return user ? {
+          id: user._id,
+          name: gm.companyName || user.displayName || user.username || "Unknown",
+          walletAddress: gm.walletAddress,
+        } : null;
+      })
+    );
+
+    // Also search users by displayName/username for those without goldMining records
+    const allUsers = await ctx.db.query("users").collect();
+    const userMatches = allUsers
       .filter(u =>
-        (u.companyName?.toLowerCase().includes(searchLower)) ||
-        (u.username?.toLowerCase().includes(searchLower)) ||
-        (u.walletAddress?.toLowerCase().includes(searchLower))
+        !matchingWallets.some(gm => gm.walletAddress === u.walletAddress) &&
+        ((u.displayName?.toLowerCase().includes(searchLower)) ||
+         (u.username?.toLowerCase().includes(searchLower)))
       )
       .slice(0, limit)
       .map(u => ({
         id: u._id,
-        name: u.companyName || u.username || "Unknown",
+        name: u.displayName || u.username || "Unknown",
         walletAddress: u.walletAddress,
       }));
 
-    return matches;
+    return [...results.filter(r => r !== null), ...userMatches].slice(0, limit);
   },
 });

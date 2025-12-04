@@ -81,6 +81,16 @@ export default function EssenceMarketPage() {
   // Space Age styling toggle for header
   const [useSpaceAgeHeader, setUseSpaceAgeHeader] = useState(false);
 
+  // Market category tabs
+  const [activeMarketCategory, setActiveMarketCategory] = useState<'essence' | 'merchandise' | 'cosmetics' | 'miscellaneous' | 'nft'>('essence');
+  const marketCategories = [
+    { id: 'essence' as const, name: 'Essence', icon: '💎' },
+    { id: 'merchandise' as const, name: 'Merchandise', icon: '🛒' },
+    { id: 'cosmetics' as const, name: 'Cosmetics', icon: '✨' },
+    { id: 'miscellaneous' as const, name: 'Miscellaneous', icon: '📦' },
+    { id: 'nft' as const, name: 'NFT', icon: '🎨' },
+  ];
+
   // Purchase modal state
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [selectedListing, setSelectedListing] = useState<any>(null);
@@ -3301,6 +3311,60 @@ export default function EssenceMarketPage() {
             </div>
           </div>
         )}
+
+        {/* Market Category Tabs */}
+        <div className="mb-4">
+          <div
+            className="flex gap-1 p-1.5 rounded-xl"
+            style={{
+              background: useSpaceAgeHeader
+                ? 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)'
+                : 'rgba(0,0,0,0.4)',
+              backdropFilter: useSpaceAgeHeader ? 'blur(12px)' : 'none',
+              border: useSpaceAgeHeader
+                ? '1px solid rgba(255,255,255,0.1)'
+                : '1px solid rgba(107, 114, 128, 0.3)',
+            }}
+          >
+            {marketCategories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setActiveMarketCategory(category.id)}
+                className={`
+                  relative px-5 py-2.5 rounded-lg font-medium uppercase tracking-wider text-sm
+                  transition-all duration-300 overflow-hidden
+                  ${activeMarketCategory === category.id
+                    ? useSpaceAgeHeader
+                      ? 'text-cyan-400'
+                      : 'text-yellow-400'
+                    : 'text-gray-500 hover:text-gray-300'
+                  }
+                `}
+                style={{
+                  background: activeMarketCategory === category.id
+                    ? useSpaceAgeHeader
+                      ? 'linear-gradient(135deg, rgba(34,211,238,0.15) 0%, rgba(34,211,238,0.05) 100%)'
+                      : 'linear-gradient(135deg, rgba(250,182,23,0.15) 0%, rgba(250,182,23,0.05) 100%)'
+                    : 'transparent',
+                  border: activeMarketCategory === category.id
+                    ? useSpaceAgeHeader
+                      ? '1px solid rgba(34,211,238,0.3)'
+                      : '1px solid rgba(250,182,23,0.3)'
+                    : '1px solid transparent',
+                  fontFamily: useSpaceAgeHeader ? "'Play', sans-serif" : "'Orbitron', sans-serif",
+                  boxShadow: activeMarketCategory === category.id
+                    ? useSpaceAgeHeader
+                      ? '0 0 15px rgba(34,211,238,0.2)'
+                      : '0 0 15px rgba(250,182,23,0.2)'
+                    : 'none',
+                }}
+              >
+                <span className="mr-2">{category.icon}</span>
+                {category.name}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* OFFERS VIEW */}
         {showOffersView && (

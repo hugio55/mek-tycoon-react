@@ -196,6 +196,7 @@ export const populateCampaignInventory = mutation({
         nftUid: v.string(), // NMKR NFT UID
         nftNumber: v.number(), // Campaign-scoped number (1-N)
         name: v.string(), // Display name (e.g., "Lab Rat #1")
+        imageUrl: v.optional(v.string()), // IPFS image URL from NMKR (auto-populated)
       })
     ),
   },
@@ -247,10 +248,11 @@ export const populateCampaignInventory = mutation({
         status: "available",
         projectId: campaign.nmkrProjectId,
         paymentUrl,
+        imageUrl: nft.imageUrl, // Include IPFS image URL if provided
         createdAt: now,
       });
 
-      console.log('[CAMPAIGN] Added to', campaign.name, ':', nft.name, 'UID:', nft.nftUid);
+      console.log('[CAMPAIGN] Added to', campaign.name, ':', nft.name, 'UID:', nft.nftUid, nft.imageUrl ? '(with image)' : '(no image)');
     }
 
     // Update campaign counters

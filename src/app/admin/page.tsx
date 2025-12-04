@@ -1176,7 +1176,6 @@ export default function AdminMasterDataPage() {
   // Slot Configuration Save/Load State
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveName, setSaveName] = useState('');
-  const [mounted, setMounted] = useState(false);
 
   // Component demo states
   const [mechanicalToggleChecked, setMechanicalToggleChecked] = useState(false);

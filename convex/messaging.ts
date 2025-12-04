@@ -367,7 +367,10 @@ export const sendMessage = mutation({
       senderId: args.senderWallet,
       recipientId: args.recipientWallet,
       content,
-      status: "sent",
+      // Use "delivered" since Convex guarantees immediate persistence
+      // "sent" would imply pending/in-flight, but message is already stored
+      // "read" is set when recipient opens conversation via markConversationAsRead
+      status: "delivered",
       createdAt: now,
       isDeleted: false,
       attachments: args.attachments,
@@ -502,10 +505,53 @@ export const deleteMessage = mutation({
         throw new Error("Only the sender can delete for everyone");
       }
 
+      // Delete attachments from storage to prevent orphaned files
+      if (message.attachments && message.attachments.length > 0) {
+        for (const attachment of message.attachments) {
+          try {
+            await ctx.storage.delete(attachment.storageId);
+          } catch (e) {
+            // Storage file may already be deleted, continue
+            console.error("Failed to delete attachment:", attachment.storageId, e);
+          }
+        }
+      }
+
       await ctx.db.patch(args.messageId, {
         isDeleted: true,
         content: "", // Clear content for privacy
+        attachments: [], // Clear attachments array
       });
+
+      // Update conversation's lastMessagePreview if this was the last message
+      const conversation = await ctx.db.get(message.conversationId);
+      if (conversation) {
+        // Find the most recent non-deleted message
+        const messages = await ctx.db
+          .query("messages")
+          .withIndex("by_conversation", (q) => q.eq("conversationId", message.conversationId))
+          .filter((q) => q.neq(q.field("isDeleted"), true))
+          .order("desc")
+          .take(1);
+
+        if (messages.length > 0) {
+          const lastMsg = messages[0];
+          const preview = lastMsg.content
+            ? lastMsg.content.slice(0, 100)
+            : lastMsg.attachments?.length
+              ? "[Image]"
+              : "";
+          await ctx.db.patch(message.conversationId, {
+            lastMessageAt: lastMsg.createdAt,
+            lastMessagePreview: preview,
+          });
+        } else {
+          // No messages left, clear preview
+          await ctx.db.patch(message.conversationId, {
+            lastMessagePreview: "",
+          });
+        }
+      }
     } else {
       // Delete for self only
       if (message.senderId === args.walletAddress) {
@@ -622,6 +668,18 @@ export const deleteConversation = mutation({
       } else {
         await ctx.db.patch(msg._id, { deletedForRecipient: true });
       }
+    }
+
+    // Reset unread count for this user (prevent stale badge count)
+    const unreadRecord = await ctx.db
+      .query("messageUnreadCounts")
+      .withIndex("by_wallet_conversation", (q) =>
+        q.eq("walletAddress", args.walletAddress).eq("conversationId", args.conversationId)
+      )
+      .first();
+
+    if (unreadRecord) {
+      await ctx.db.delete(unreadRecord._id);
     }
 
     return { success: true };
