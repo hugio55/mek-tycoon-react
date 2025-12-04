@@ -128,10 +128,12 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
     }
   }, [state, activeReservation, reservationId, effectiveWalletAddress, activeCampaignId]);
 
-  // Query for payment completion
+  // Query for payment completion - runs during processing AND when window closes
   const claimStatus = useQuery(
     api.commemorativeNFTClaims.checkClaimed,
-    state === 'processing' && effectiveWalletAddress ? { walletAddress: effectiveWalletAddress } : "skip"
+    (state === 'processing' || state === 'payment_window_closed') && effectiveWalletAddress
+      ? { walletAddress: effectiveWalletAddress }
+      : "skip"
   );
 
   // Query for eligibility checking (per-campaign)
@@ -705,9 +707,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
     return () => clearInterval(interval);
   }, []);
 
-  // Check for payment completion
+  // Check for payment completion (works during processing AND after window closes)
   useEffect(() => {
-    if (state !== 'processing' || !claimStatus) return;
+    if ((state !== 'processing' && state !== 'payment_window_closed') || !claimStatus) return;
     if (claimStatus.hasClaimed && claimStatus.claim) {
       console.log('[VERIFY] Payment detected! Claim:', claimStatus.claim);
       setState('success');
