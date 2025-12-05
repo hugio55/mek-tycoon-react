@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useEffect } from 'react';
+import { getMediaUrl } from '@/lib/media-url';
 
 export const useClickSound = () => {
   const audioBufferRef = useRef<HTMLAudioElement[]>([]);
@@ -30,7 +31,7 @@ export const useClickSound = () => {
       // Create a pool of audio instances
       for (let i = 0; i < poolSize; i++) {
         // Use MP3 for universal mobile compatibility (WAV causes encoding errors on mobile)
-        const audio = new Audio('/sounds/main_click.mp3');
+        const audio = new Audio(getMediaUrl('/sounds/main_click.mp3'));
         audio.preload = 'auto';
         audio.volume = 0.3;
 

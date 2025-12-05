@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { getMediaUrl } from '@/lib/media-url';
 
 /**
  * Pro Mode Toggle - Transformed from external CSS component
@@ -56,8 +57,8 @@ export default function ProModeToggle({
   useEffect(() => {
     if (enableSounds) {
       // Create and preload audio objects
-      guardClickAudioRef.current = new Audio('/sounds/main_click.mp3');
-      switchClickAudioRef.current = new Audio('/sounds/click reverb 2.mp3');
+      guardClickAudioRef.current = new Audio(getMediaUrl('/sounds/main_click.mp3'));
+      switchClickAudioRef.current = new Audio(getMediaUrl('/sounds/click reverb 2.mp3'));
 
       // Set preload to auto for instant playback
       guardClickAudioRef.current.preload = 'auto';

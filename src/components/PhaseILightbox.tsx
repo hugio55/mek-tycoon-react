@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { getMediaUrl } from '@/lib/media-url';
 
 interface PhaseILightboxProps {
   isVisible: boolean;
@@ -243,7 +244,7 @@ export default function PhaseILightbox({
                   ) : (
                     <video
                       id="phase-i-video"
-                      src="/Phase 1 video/p1 vid webm 15q.webm"
+                      src={getMediaUrl('/Phase 1 video/p1 vid webm 15q.webm')}
                       autoPlay
                       loop
                       muted

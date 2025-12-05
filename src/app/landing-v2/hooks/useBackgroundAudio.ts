@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { getMediaUrl } from '@/lib/media-url';
 
 const STORAGE_KEY_AUDIO = 'mek-audio-consent';
 
@@ -9,7 +10,7 @@ export function useBackgroundAudio() {
 
   // Initialize audio element on mount
   useEffect(() => {
-    const audioUrl = '/audio/giggliest-girl-1.mp3';
+    const audioUrl = getMediaUrl('/audio/giggliest-girl-1.mp3');
     console.log('[🎵AUDIO-V2] Initializing audio with URL:', audioUrl);
 
     audioRef.current = new Audio(audioUrl);
