@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { getMediaUrl } from '@/lib/media-url';
 
 interface MekFlipCardProps {
   imageSrc?: string;
@@ -68,7 +69,7 @@ export default function MekFlipCard({
         >
           {/* Mek image - clear */}
           <img
-            src={imageSrc}
+            src={imageSrc.startsWith('/') ? getMediaUrl(imageSrc) : imageSrc}
             alt={title}
             className="absolute w-full h-full object-cover object-center"
           />
@@ -102,7 +103,7 @@ export default function MekFlipCard({
         >
           {/* Same Mek image but BLURRED */}
           <img
-            src={imageSrc}
+            src={imageSrc.startsWith('/') ? getMediaUrl(imageSrc) : imageSrc}
             alt={title}
             className="absolute w-full h-full object-cover object-center blur-[8px] scale-110"
           />

@@ -13,6 +13,7 @@ import {
 } from '@/lib/walletSessionManager';
 import { ensureBech32StakeAddress } from '@/lib/cardanoAddressConverter';
 import CubeSpinner from '@/components/loaders/CubeSpinner';
+import { getMediaUrl } from '@/lib/media-url';
 
 interface WalletInfo {
   name: string;

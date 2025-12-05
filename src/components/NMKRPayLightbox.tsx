@@ -6,6 +6,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { ensureBech32StakeAddress } from '@/lib/cardanoAddressConverter';
+import { getMediaUrl } from '@/lib/media-url';
 
 interface NMKRPayLightboxProps {
   walletAddress: string | null;
@@ -1076,10 +1077,10 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
                 {/* NFT Image - animated if it's a video/gif */}
                 <div className="relative w-full max-w-[280px] mx-auto mb-4 rounded-2xl overflow-hidden bg-black/50 backdrop-blur-md border border-yellow-400/30 shadow-2xl shadow-yellow-500/20">
                   <img
-                    src={claimedNFT.imageUrl || "/random-images/Lab%20Rat.jpg"}
+                    src={claimedNFT.imageUrl?.startsWith('/') ? getMediaUrl(claimedNFT.imageUrl) : (claimedNFT.imageUrl || getMediaUrl("/random-images/Lab%20Rat.jpg"))}
                     alt={claimedNFT.name || "Your NFT"}
                     className="w-full h-auto"
-                    onError={(e) => { e.currentTarget.src = '/logo-big.png'; }}
+                    onError={(e) => { e.currentTarget.src = getMediaUrl('/logo-big.png'); }}
                   />
                 </div>
 
@@ -1161,10 +1162,10 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
               <div className="relative w-full max-w-[300px] mx-auto mb-4 rounded-2xl overflow-hidden bg-black/50 backdrop-blur-md border border-cyan-400/30 shadow-2xl shadow-cyan-500/20">
                 <img
-                  src={activeReservation.nft?.imageUrl || "/random-images/Lab%20Rat.jpg"}
+                  src={activeReservation.nft?.imageUrl?.startsWith('/') ? getMediaUrl(activeReservation.nft.imageUrl) : (activeReservation.nft?.imageUrl || getMediaUrl("/random-images/Lab%20Rat.jpg"))}
                   alt={activeReservation.nft?.name || "NFT"}
                   className="w-full h-auto"
-                  onError={(e) => { e.currentTarget.src = '/logo-big.png'; }}
+                  onError={(e) => { e.currentTarget.src = getMediaUrl('/logo-big.png'); }}
                 />
               </div>
 
@@ -1394,7 +1395,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
                     <div
                       className="absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none group-hover:opacity-[0.15] z-[1]"
                       style={{
-                        backgroundImage: `url('/random-images/honey-png-big.webp')`,
+                        backgroundImage: `url('${getMediaUrl('/random-images/honey-png-big.webp')}')`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         borderRadius: '12px'
