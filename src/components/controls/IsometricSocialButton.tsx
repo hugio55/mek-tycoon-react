@@ -3,6 +3,7 @@
 import React from 'react';
 import './IsometricSocialButton.css';
 import Image from 'next/image';
+import { getMediaUrl } from '@/lib/media-url';
 
 interface IsometricSocialButtonProps {
   iconClass: string;
@@ -23,7 +24,7 @@ export default function IsometricSocialButton({
         {mekImage && (
           <div className="mek-image-container">
             <Image
-              src={mekImage}
+              src={mekImage.startsWith('/') ? getMediaUrl(mekImage) : mekImage}
               alt={`Mek for ${label}`}
               width={100}
               height={100}

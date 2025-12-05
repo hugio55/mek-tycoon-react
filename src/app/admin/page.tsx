@@ -28,6 +28,7 @@ import NewStylingAdmin from '@/components/NewStylingAdmin';
 import MessagingSystemAdmin from '@/components/MessagingSystemAdmin';
 import { ProductionDatabaseProvider, useProductionDatabase } from '@/contexts/ProductionDatabaseContext';
 import ProductionBanner from '@/components/admin/ProductionBanner';
+import { getMediaUrl } from '@/lib/media-url';
 import MutationConfirmDialog from '@/components/admin/MutationConfirmDialog';
 import NMKRJSONGenerator from '@/components/admin/nft/NMKRJSONGenerator';
 import CampaignManager from '@/components/admin/campaign/CampaignManager';
@@ -6032,7 +6033,7 @@ export default function AdminMasterDataPage() {
                         <span className="text-xs text-zinc-500">Bottom Blur (30%)</span>
                         <div className="relative w-full h-[150px] overflow-hidden rounded-lg">
                           <img
-                            src="/mek-images/500px/bc2-dm1-ap1.webp"
+                            src={getMediaUrl("/mek-images/500px/bc2-dm1-ap1.webp")}
                             alt="Demo"
                             className="w-full h-full object-cover"
                           />
@@ -6045,7 +6046,7 @@ export default function AdminMasterDataPage() {
                         <span className="text-xs text-zinc-500">Top Blur (25%)</span>
                         <div className="relative w-full h-[150px] overflow-hidden rounded-lg">
                           <img
-                            src="/mek-images/500px/dp2-bf4-il2.webp"
+                            src={getMediaUrl("/mek-images/500px/dp2-bf4-il2.webp")}
                             alt="Demo"
                             className="w-full h-full object-cover"
                           />
@@ -6058,7 +6059,7 @@ export default function AdminMasterDataPage() {
                         <span className="text-xs text-zinc-500">Both Edges</span>
                         <div className="relative w-full h-[150px] overflow-hidden rounded-lg">
                           <img
-                            src="/mek-images/500px/hb1-gn1-hn1.webp"
+                            src={getMediaUrl("/mek-images/500px/hb1-gn1-hn1.webp")}
                             alt="Demo"
                             className="w-full h-full object-cover"
                           />

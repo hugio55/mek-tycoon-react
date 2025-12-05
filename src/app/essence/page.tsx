@@ -7,6 +7,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import EssenceDonutChart from "@/components/essence-donut-chart";
 import EssenceDistributionLightbox from "@/components/EssenceDistributionLightbox";
 import "@/styles/global-design-system.css";
+import { getMediaUrl } from "@/lib/media-url";
 
 // Session Timer Component - Shows countdown to session expiration
 function SessionTimer({ expiresAt }: { expiresAt: number }) {
@@ -570,7 +571,7 @@ export default function EssenceDonutPage() {
                             {/* Mek image (when slotted) */}
                             {hasMek && (
                               <img
-                                src="/mek-images/150px/000-000-000.webp"
+                                src={getMediaUrl("/mek-images/150px/000-000-000.webp")}
                                 alt="Slotted Mek"
                                 className="w-full h-full object-cover"
                               />
