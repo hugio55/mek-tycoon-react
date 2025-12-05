@@ -818,7 +818,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
                       <div
                         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl"
                         style={{
-                          backgroundImage: `url('/random-images/honey-png1.webp')`,
+                          backgroundImage: `url('${getMediaUrl('/random-images/honey-png1.webp')}')`,
                           backgroundSize: '125%',
                           backgroundPosition: 'center',
                         }}

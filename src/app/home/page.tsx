@@ -7,6 +7,7 @@ import { COMPLETE_VARIATION_RARITY } from '@/lib/completeVariationRarity';
 import { OverlayRenderer } from '@/components/OverlayRenderer';
 import { restoreWalletSession } from '@/lib/walletSessionManager';
 import { getVariationInfoFromFullKey } from '@/lib/variationNameLookup';
+import { getMediaUrl } from '@/lib/media-url';
 
 export default function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -450,7 +451,7 @@ export default function HomePage() {
                           {slot.mekSourceKey && (
                             <div className="w-32 h-32 mx-auto mb-3 relative">
                               <img
-                                src={`/mek-images/150px/${slot.mekSourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`}
+                                src={getMediaUrl(`/mek-images/150px/${slot.mekSourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`)}
                                 alt={slot.headVariationName}
                                 className="w-full h-full object-contain rounded-lg"
                                 onError={(e) => {

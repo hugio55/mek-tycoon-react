@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
+import { getMediaUrl } from '@/lib/media-url';
 
 // Types for attachments
 interface PendingAttachment {
@@ -479,7 +480,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden">
                   <img
-                    src={`/mek-images/150px/${getMekImageForWallet(conv.otherParticipant.walletAddress)}`}
+                    src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(conv.otherParticipant.walletAddress)}`)}
                     alt={conv.otherParticipant.companyName}
                     className="w-full h-full object-cover"
                   />
@@ -546,10 +547,10 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
                   <img
-                    src={`/mek-images/150px/${getMekImageForWallet(
+                    src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(
                       selectedRecipient?.walletAddress ||
                       currentConversation?.otherParticipant?.walletAddress || ''
-                    )}`}
+                    )}`)}
                     alt=""
                     className="w-full h-full object-cover"
                   />
@@ -829,7 +830,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
                         <img
-                          src={`/mek-images/150px/${getMekImageForWallet(corp.walletAddress)}`}
+                          src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(corp.walletAddress)}`)}
                           alt=""
                           className="w-full h-full object-cover"
                         />
