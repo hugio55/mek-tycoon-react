@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import PhaseILightbox from './PhaseILightbox';
+import { getMediaUrl } from '@/lib/media-url';
 
 interface TimelineItem {
   phase: string;
@@ -532,7 +533,7 @@ export default function HorizontalTimeline({
               <div
                 className="absolute inset-0 bg-cover bg-center"
                 style={{
-                  backgroundImage: `url(${item.imageUrl})`,
+                  backgroundImage: `url(${item.imageUrl.startsWith('/') ? getMediaUrl(item.imageUrl) : item.imageUrl})`,
                   opacity: imageBlendMode === 'screen' ? 0.6 : 0.4,
                   maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,
                   WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) ${fadePosition - 10}%, rgba(0,0,0,0) ${fadePosition + 25}%)`,

@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import Image from 'next/image';
+import { getMediaUrl } from '@/lib/media-url';
 
 interface MekCarousel3DProps {
   images?: string[];
@@ -139,7 +140,7 @@ export default function MekCarousel3D({
             >
               {/* Image - preserves original colors */}
               <Image
-                src={src}
+                src={src.startsWith('/') ? getMediaUrl(src) : src}
                 alt={`Mek ${index + 1}`}
                 fill
                 style={{
