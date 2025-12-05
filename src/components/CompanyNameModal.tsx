@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { getMediaUrl } from '@/lib/media-url';
 
 interface CompanyNameModalProps {
   isOpen: boolean;
@@ -340,7 +341,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
                   <div
                     className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl"
                     style={{
-                      backgroundImage: `url('/random-images/honey-png1.webp')`,
+                      backgroundImage: `url('${getMediaUrl('/random-images/honey-png1.webp')}')`,
                       backgroundSize: '125%',
                       backgroundPosition: 'center',
                     }}

@@ -1,4 +1,5 @@
 import { ReactNode, useState, useEffect } from 'react';
+import { getMediaUrl } from '@/lib/media-url';
 
 interface LandingContainerProps {
   children: ReactNode;
@@ -123,7 +124,7 @@ export default function LandingContainer({
                 className="transition-all hover:scale-110"
               >
                 <img
-                  src="/random-images/OE logo.png"
+                  src={getMediaUrl('/random-images/OE logo.png')}
                   alt="OE Logo"
                   className="h-12 w-auto"
                 />

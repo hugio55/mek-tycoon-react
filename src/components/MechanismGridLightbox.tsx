@@ -6,6 +6,7 @@ import { MekCard } from './MekCard';
 import { MekAsset, AnimatedMekValues } from './MekCard/types';
 import { getVariationInfoFromFullKey } from '@/lib/variationNameLookup';
 import { getMekDataByNumber } from '@/lib/mekNumberToVariation';
+import { getMediaUrl } from '@/lib/media-url';
 
 export interface MechanismGridLightboxProps {
   ownedMeks: MekAsset[];
@@ -344,7 +345,7 @@ export default function MechanismGridLightbox({
                   >
                     {/* Mek image */}
                     <img
-                      src={imagePath}
+                      src={imagePath.startsWith('/') ? getMediaUrl(imagePath) : imagePath}
                       alt={`Mek #${mek.mekNumber}`}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />

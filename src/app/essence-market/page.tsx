@@ -9,6 +9,7 @@ import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
 import EssenceListingLightboxV6FullMarketMatch from "@/components/EssenceListingLightbox-V6-FullMarketMatch";
 import { renderHeaderButtons } from "@/lib/headerButtonVariations";
 import { Tooltip } from "@/components/ui/tooltip-card";
+import { getMediaUrl } from "@/lib/media-url";
 // Removed: restoreWalletSession - using localStorage directly like hub page
 
 // Dynamic filter options per market category
@@ -3299,7 +3300,7 @@ export default function EssenceMarketPage() {
                   <div
                     className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                     style={{
-                      backgroundImage: `url('/random-images/honey-png1.webp')`,
+                      backgroundImage: `url('${getMediaUrl('/random-images/honey-png1.webp')}')`,
                       backgroundSize: '150%',
                       backgroundPosition: 'center',
                     }}
@@ -3323,7 +3324,7 @@ export default function EssenceMarketPage() {
                   <div
                     className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                     style={{
-                      backgroundImage: `url('/random-images/honey-png1.webp')`,
+                      backgroundImage: `url('${getMediaUrl('/random-images/honey-png1.webp')}')`,
                       backgroundSize: '150%',
                       backgroundPosition: 'center',
                     }}

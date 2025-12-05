@@ -7,6 +7,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import Link from "next/link";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import UsernameModal from "@/components/UsernameModal";
+import { getMediaUrl } from "@/lib/media-url";
 
 export default function HubPage() {
   
@@ -721,8 +722,8 @@ export default function HubPage() {
                 <div key={emp.id} className="mb-2 p-1.5 bg-gray-900/50 rounded-lg flex items-center justify-between" style={{ minHeight: '72px' }}>
                   <div className="flex items-center gap-2.5 flex-1">
                     <div className="w-12 h-12 bg-gray-700 rounded-md flex items-center justify-center overflow-hidden">
-                      <img 
-                        src="/mek-images/150px/000-000-000.webp" 
+                      <img
+                        src={getMediaUrl('/mek-images/150px/000-000-000.webp')}
                         alt={`Mek #${emp.id}`}
                         className="w-full h-full object-cover"
                         onError={(e) => {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import PhaseOneIndicator, { LoadingSpinner } from './PhaseOneIndicator';
 import NMKRPayLightbox from '@/components/NMKRPayLightbox';
+import { getMediaUrl } from '@/lib/media-url';
 
 interface PhaseCardData {
   _id: string;
@@ -180,7 +181,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
               (isPhaseOne || isPhaseTwo) ? 'group-hover:opacity-[0.07]' : 'group-hover:opacity-[0.04]'
             }`}
             style={{
-              backgroundImage: `url('/random-images/honey-png-big.webp')`,
+              backgroundImage: `url('${getMediaUrl('/random-images/honey-png-big.webp')}')`,
               backgroundSize: '100%',
               backgroundPosition: 'center',
               borderRadius: '8px'
@@ -349,7 +350,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
                 <div
                   className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-lg"
                   style={{
-                    backgroundImage: `url('/random-images/honey-png1.webp')`,
+                    backgroundImage: `url('${getMediaUrl('/random-images/honey-png1.webp')}')`,
                     backgroundSize: '125%',
                     backgroundPosition: 'center'
                   }}
