@@ -324,26 +324,6 @@ export default function DeploymentsAdmin() {
     }
   };
 
-  const handleDeployDev = async () => {
-    setIsDeployingDev(true);
-    addLog('Deploy Dev', 'pending', 'Deploying to Trout (dev)...');
-
-    try {
-      const res = await fetch('/api/deployment/deploy-dev', { method: 'POST' });
-      const data = await res.json();
-
-      if (data.success) {
-        addLog('Deploy Dev', 'success', data.message);
-      } else {
-        addLog('Deploy Dev', 'error', data.error);
-      }
-    } catch (error) {
-      addLog('Deploy Dev', 'error', 'Failed to deploy to dev');
-    } finally {
-      setIsDeployingDev(false);
-    }
-  };
-
   const handleDeployProd = async () => {
     setIsDeployingProd(true);
     addLog('Deploy Prod', 'pending', 'Deploying to Sturgeon (PRODUCTION)...');
@@ -732,7 +712,7 @@ export default function DeploymentsAdmin() {
     );
   }
 
-  const anyActionRunning = isCommitting || isPushing || isDeployingDev || isDeployingProd || isFullDeploy || isBackingUp || isRollingBack || isSyncingR2;
+  const anyActionRunning = isCommitting || isPushing || isDeployingProd || isFullDeploy || isBackingUp || isRollingBack || isSyncingR2;
 
   const rollbackModal = showRollbackConfirm && selectedRollbackBackup && mounted && createPortal(
     <div
