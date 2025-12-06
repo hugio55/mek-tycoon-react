@@ -2264,7 +2264,7 @@ export const addGlobalCapBuff = mutation({
       // Check if buff already exists for this variation
       const existing = await ctx.db
         .query("essencePlayerBuffs")
-        .withIndex("", (q: any) =>
+        .withIndex("by_wallet_and_variation", (q: any) =>
           q.eq("walletAddress", walletAddress).eq("variationId", variationId)
         )
         .first();
@@ -2379,7 +2379,7 @@ export const testCleanupBuffSources = mutation({
   handler: async (ctx, args) => {
     const buffs = await ctx.db
       .query("essenceBuffSources")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .filter((q) => q.eq(q.field("grantedBy"), "test"))
       .collect();
 
@@ -2447,13 +2447,13 @@ export const getPlayerBuffBreakdown = query({
     // Query buff sources for this wallet
     let sourcesQuery = ctx.db
       .query("essenceBuffSources")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress));
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress));
 
     // Filter by variation if specified
     if (args.variationId !== undefined) {
       sourcesQuery = ctx.db
         .query("essenceBuffSources")
-        .withIndex("", (q: any) =>
+        .withIndex("by_wallet_and_variation", (q: any) =>
           q.eq("walletAddress", args.walletAddress).eq("variationId", args.variationId)
         );
     }
@@ -2513,7 +2513,7 @@ export const diagnosticCheckSlottedMeksInMeksTable = query({
     // Get all slotted Meks from essence slots
     const slots = await ctx.db
       .query("essenceSlots")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     const slottedSlots = slots.filter((s: any) => s.mekAssetId);
@@ -2523,13 +2523,13 @@ export const diagnosticCheckSlottedMeksInMeksTable = query({
       // Check if this Mek exists in meks table
       const mekRecord = await ctx.db
         .query("meks")
-        .withIndex("", (q: any) => q.eq("assetId", slot.mekAssetId!))
+        .withIndex("by_asset_id", (q: any) => q.eq("assetId", slot.mekAssetId!))
         .first();
 
       // Check if it exists in goldMining.ownedMeks
       const goldMining = await ctx.db
         .query("goldMining")
-        .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
         .first();
 
       const ownedMek = goldMining?.ownedMeks?.find((m: any) => m.assetId === slot.mekAssetId);
