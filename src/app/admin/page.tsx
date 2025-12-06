@@ -985,8 +985,15 @@ const DATA_SYSTEMS = [
 export default function AdminMasterDataPage() {
   const convex = useConvex();
 
-  // Single database client (SIMPLIFIED - now always Sturgeon via main URL)
+  // Single database client (SIMPLIFIED - uses main URL from env)
   const [httpClient] = useState(() => new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!));
+
+  // Detect which database we're connected to
+  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || '';
+  const deploymentName = convexUrl.split("//")[1]?.split(".")[0] || "unknown";
+  const isProduction = deploymentName === 'fabulous-sturgeon-691';
+  const isStaging = deploymentName === 'wry-trout-962';
+  const databaseLabel = isProduction ? 'Sturgeon' : isStaging ? 'Trout' : deploymentName;
 
   // Site settings (single database mode)
   const [dbSettings, setDbSettings] = useState<any>(null);
@@ -1841,19 +1848,19 @@ export default function AdminMasterDataPage() {
           </div>
         </div>
 
-        {/* 🐟 SINGLE DATABASE CONTROLS (Sturgeon/Production) 🐟 */}
+        {/* 🐟 SINGLE DATABASE CONTROLS 🐟 */}
         <div className="mb-4">
-          <div className="p-3 bg-green-900/20 border border-green-600/50 rounded-lg">
+          <div className={`p-3 ${isProduction ? 'bg-green-900/20 border-green-600/50' : 'bg-yellow-900/20 border-yellow-600/50'} border rounded-lg`}>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-bold text-green-400">🐟 PRODUCTION</span>
-              <span className="text-[10px] text-green-300">(Sturgeon - Single Database Mode)</span>
+              <span className={`text-sm font-bold ${isProduction ? 'text-green-400' : 'text-yellow-400'}`}>🐟 {isProduction ? 'PRODUCTION' : 'STAGING'}</span>
+              <span className={`text-[10px] ${isProduction ? 'text-green-300' : 'text-yellow-300'}`}>({databaseLabel} - Single Database Mode)</span>
             </div>
             {dbLoading ? (
               <p className="text-gray-400 text-xs">Loading...</p>
             ) : (
               <div className="grid grid-cols-3 gap-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-green-300">Landing Page</span>
+                  <span className={`text-xs ${isProduction ? 'text-green-300' : 'text-yellow-300'}`}>Landing Page</span>
                   <div className="flex items-center gap-2">
                     <Switch.Root
                       checked={dbSettings?.landingPageEnabled ?? false}
@@ -1872,7 +1879,7 @@ export default function AdminMasterDataPage() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-green-300">Localhost Bypass</span>
+                  <span className={`text-xs ${isProduction ? 'text-green-300' : 'text-yellow-300'}`}>Localhost Bypass</span>
                   <div className="flex items-center gap-2">
                     <Switch.Root
                       checked={dbSettings?.localhostBypass ?? true}
