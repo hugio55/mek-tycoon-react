@@ -869,7 +869,7 @@ export default function MessagingSystemAdmin() {
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-gray-700 overflow-hidden">
                             <img
-                              src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(block.blockedWallet)}`}
+                              src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(block.blockedWallet)}`)}
                               alt=""
                               className="w-full h-full object-cover opacity-50"
                             />
@@ -931,7 +931,7 @@ export default function MessagingSystemAdmin() {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden">
                       <img
-                        src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(conv.otherParticipant.walletAddress)}`}
+                        src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(conv.otherParticipant.walletAddress)}`)}
                         alt={conv.otherParticipant.companyName}
                         className="w-full h-full object-cover"
                       />
@@ -1008,7 +1008,7 @@ export default function MessagingSystemAdmin() {
                           selectedRecipient?.walletAddress ||
                           conversations?.find((c: any) => c._id === selectedConversationId)?.otherParticipant?.walletAddress ||
                           TEST_CORPORATIONS.find(c => c.id !== activeCorp.id)?.walletAddress || 'default'
-                        )}`}
+                        )}`)}
                         alt="Profile"
                         className="w-full h-full object-cover"
                       />
@@ -1345,14 +1345,14 @@ export default function MessagingSystemAdmin() {
                         <div className="flex -space-x-2 flex-shrink-0">
                           <div className="w-8 h-8 rounded-full bg-gray-700 overflow-hidden border-2 border-gray-800">
                             <img
-                              src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(conv.participant1)}`}
+                              src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(conv.participant1)}`)}
                               alt=""
                               className="w-full h-full object-cover"
                             />
                           </div>
                           <div className="w-8 h-8 rounded-full bg-gray-700 overflow-hidden border-2 border-gray-800">
                             <img
-                              src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(conv.participant2)}`}
+                              src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(conv.participant2)}`)}
                               alt=""
                               className="w-full h-full object-cover"
                             />
@@ -1402,14 +1402,14 @@ export default function MessagingSystemAdmin() {
                           <div className="flex -space-x-2">
                             <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden border-2 border-gray-800">
                               <img
-                                src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(selectedAdminConversation.participant1)}`}
+                                src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(selectedAdminConversation.participant1)}`)}
                                 alt=""
                                 className="w-full h-full object-cover"
                               />
                             </div>
                             <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden border-2 border-gray-800">
                               <img
-                                src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(selectedAdminConversation.participant2)}`}
+                                src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(selectedAdminConversation.participant2)}`)}
                                 alt=""
                                 className="w-full h-full object-cover"
                               />
@@ -1512,7 +1512,7 @@ export default function MessagingSystemAdmin() {
                               <div key={msg._id} className="flex items-start gap-3 p-2 bg-black/30 rounded-lg">
                                 <div className="w-6 h-6 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
                                   <img
-                                    src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(msg.senderId)}`}
+                                    src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(msg.senderId)}`)}
                                     alt=""
                                     className="w-full h-full object-cover opacity-50"
                                   />
@@ -1566,7 +1566,7 @@ export default function MessagingSystemAdmin() {
                           {/* Sender avatar */}
                           <div className="w-8 h-8 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
                             <img
-                              src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(msg.senderId)}`}
+                              src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(msg.senderId)}`)}
                               alt=""
                               className="w-full h-full object-cover"
                             />
@@ -1754,7 +1754,7 @@ export default function MessagingSystemAdmin() {
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden">
                         <img
-                          src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(corp.walletAddress)}`}
+                          src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(corp.walletAddress)}`)}
                           alt={corp.companyName}
                           className="w-full h-full object-cover"
                         />
