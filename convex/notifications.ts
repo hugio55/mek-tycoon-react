@@ -557,6 +557,11 @@ export const adminBroadcastNotification = mutation({
     linkParams: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Validate linkTo is internal path only (prevents open redirects)
+    if (!isValidInternalPath(args.linkTo)) {
+      return { success: false, error: "Invalid link - must be internal path", sentCount: 0 };
+    }
+
     // Get all users
     const users = await ctx.db.query("users").collect();
 

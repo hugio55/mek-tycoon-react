@@ -203,12 +203,12 @@ Global state management.
 
 ## Implementation Phases
 
-### Phase 1: Database Schema & Backend ← CURRENT
-- Add tables to `convex/schema.ts`
-- Create `convex/coachMarks.ts` (user queries/mutations)
-- Create `convex/coachMarksAdmin.ts` (admin CRUD)
+### Phase 1: Database Schema & Backend ✅ COMPLETE
+- ✅ Added tables to `convex/schema.ts` (coachMarkSteps, coachMarkProgress, coachMarkSequences)
+- ✅ Created `convex/coachMarks.ts` (user queries/mutations)
+- ✅ Created `convex/coachMarksAdmin.ts` (admin CRUD)
 
-### Phase 2: Core Components
+### Phase 2: Core Components ← NEXT
 - `CoachMarkOverlay.tsx` - main visual overlay
 - `CoachMarkArrow.tsx` - animated pointer
 - `CoachMarkTooltip.tsx` - instruction bubble

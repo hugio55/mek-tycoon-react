@@ -78,7 +78,7 @@ export default function NotificationLightbox({
 
   const handleNotificationClick = async (notification: Doc<'notifications'>) => {
     if (!notification.isRead) {
-      await markAsRead({ notificationId: notification._id });
+      await markAsRead({ notificationId: notification._id, userId });
     }
     onClose();
     if (notification.linkTo) {
