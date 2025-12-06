@@ -8,6 +8,7 @@ import { restoreWalletSession, clearWalletSession } from "@/lib/walletSessionMan
 import { CompanyNameModal } from "@/components/CompanyNameModal";
 import WalletConnectLightbox from "@/components/WalletConnectLightbox";
 import { getMediaUrl } from "@/lib/media-url";
+import { NotificationBell } from "@/components/notifications";
 
 // Session Timer Component - Shows countdown to session expiration
 function SessionTimer({ expiresAt }: { expiresAt: number }) {
@@ -238,6 +239,12 @@ export default function UnifiedHeader() {
     walletAddress ? { walletAddress } : "skip"
   );
 
+  // Get user ID for notifications
+  const userId = useQuery(
+    api.notifications.getUserIdByWallet,
+    walletAddress ? { walletAddress } : "skip"
+  );
+
   // Get owned Meks count
   const ownedMeksCount = goldMiningData?.ownedMeks?.length || 0;
   const cumulativeGold = goldMiningData?.accumulatedGold || 0;
@@ -444,8 +451,14 @@ export default function UnifiedHeader() {
         )}
       </div>
 
-      {/* Logo in top right corner */}
-      <div className="absolute right-4 md:right-6 lg:right-8 z-20 top-[-4px] md:top-[4px] lg:top-[12px]">
+      {/* Top right corner: Notification Bell + OE Logo */}
+      <div className="absolute right-4 md:right-6 lg:right-8 z-20 top-[8px] md:top-[12px] lg:top-[16px] flex items-center gap-3">
+        {/* Notification Bell - only show if user is logged in */}
+        {userId && (
+          <NotificationBell userId={userId} />
+        )}
+
+        {/* OE Logo */}
         <a
           href="https://overexposed.io"
           target="_blank"
@@ -454,7 +467,7 @@ export default function UnifiedHeader() {
           <img
             src={getMediaUrl('/random-images/OE logo.png')}
             alt="OE Logo"
-            className="h-10 sm:h-16 w-auto opacity-90 hover:opacity-100 transition-opacity cursor-pointer"
+            className="h-10 sm:h-14 w-auto opacity-90 hover:opacity-100 transition-opacity cursor-pointer"
           />
         </a>
       </div>
