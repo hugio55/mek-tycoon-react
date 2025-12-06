@@ -520,6 +520,27 @@ export default function DeploymentsAdmin() {
     setProdConfirmStep(1);
   };
 
+  const handleSyncR2 = async () => {
+    setIsSyncingR2(true);
+    addLog('R2 Sync', 'pending', 'Syncing public folder to Cloudflare R2...');
+
+    try {
+      const res = await fetch('/api/deployment/sync-r2', { method: 'POST' });
+      const data = await res.json();
+
+      if (data.success) {
+        addLog('R2 Sync', 'success', data.message || 'R2 sync completed successfully');
+      } else {
+        addLog('R2 Sync', 'error', data.error || 'R2 sync failed');
+      }
+    } catch (error) {
+      // If API doesn't exist yet, show manual instructions
+      addLog('R2 Sync', 'error', 'API not available. Run sync-to-r2.bat manually or use: rclone sync public r2:mek-tycoon-2 --progress');
+    } finally {
+      setIsSyncingR2(false);
+    }
+  };
+
   const confirmationModal = showProdConfirm && mounted && createPortal(
     <div
       className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]"
