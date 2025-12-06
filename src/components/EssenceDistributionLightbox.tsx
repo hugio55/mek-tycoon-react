@@ -1543,5 +1543,67 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
 
   if (!isOpen || !mounted) return null;
 
+  // If Space Age style is selected, render the Space Age component with debug overlay
+  if (lightboxStyle === 'spaceAge') {
+    return (
+      <>
+        <EssenceDistributionLightboxSpaceAge isOpen={isOpen} onClose={onClose} />
+        {/* Debug overlay for Space Age mode */}
+        {createPortal(
+          <>
+            {/* Debug Toggle Button */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowDebugPanel(!showDebugPanel); }}
+              className="fixed top-4 right-4 z-[10001] px-3 py-2 flex items-center justify-center bg-black/80 border-2 border-cyan-500/50 rounded hover:bg-cyan-500/20 hover:border-cyan-500 transition-all"
+            >
+              <span className="text-cyan-400 text-xs font-bold uppercase tracking-wider">Debug</span>
+            </button>
+
+            {/* Debug Panel */}
+            {showDebugPanel && (
+              <div className="fixed top-16 right-4 z-[10001] w-80 bg-black/95 border-2 border-cyan-500/50 rounded-lg p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <h3 className="text-cyan-400 text-sm font-bold uppercase tracking-wider mb-4 border-b border-cyan-500/30 pb-2">
+                  Visual Debug Controls
+                </h3>
+
+                {/* Lightbox Style Toggle */}
+                <div className="mb-5 pb-4 border-b border-cyan-500/20">
+                  <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-2">
+                    Lightbox Style
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setLightboxStyle('industrial')}
+                      className={`flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all rounded ${
+                        lightboxStyle === 'industrial'
+                          ? 'bg-yellow-500 text-black border-2 border-yellow-400 shadow-lg shadow-yellow-500/30'
+                          : 'bg-black/60 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/20'
+                      }`}
+                    >
+                      Industrial
+                    </button>
+                    <button
+                      onClick={() => setLightboxStyle('spaceAge')}
+                      className={`flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all rounded ${
+                        lightboxStyle === 'spaceAge'
+                          ? 'bg-cyan-500 text-black border-2 border-cyan-400 shadow-lg shadow-cyan-500/30'
+                          : 'bg-black/60 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/20'
+                      }`}
+                    >
+                      Space Age
+                    </button>
+                  </div>
+                </div>
+
+                <p className="text-gray-500 text-xs italic">Other debug controls only apply to Industrial style</p>
+              </div>
+            )}
+          </>,
+          document.body
+        )}
+      </>
+    );
+  }
+
   return createPortal(modalContent, document.body);
 }

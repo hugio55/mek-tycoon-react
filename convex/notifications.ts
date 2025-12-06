@@ -117,9 +117,24 @@ export const getAllNotifications = query({
 // ============================================================================
 
 // Mark a single notification as read
+// SECURITY: Requires userId to verify ownership before modifying
 export const markAsRead = mutation({
-  args: { notificationId: v.id("notifications") },
+  args: {
+    notificationId: v.id("notifications"),
+    userId: v.id("users"),
+  },
   handler: async (ctx, args) => {
+    // Get the notification first
+    const notification = await ctx.db.get(args.notificationId);
+    if (!notification) {
+      return { success: false, reason: "notification_not_found" };
+    }
+
+    // SECURITY: Verify the notification belongs to this user
+    if (notification.userId !== args.userId) {
+      return { success: false, reason: "unauthorized" };
+    }
+
     await ctx.db.patch(args.notificationId, {
       isRead: true,
     });
