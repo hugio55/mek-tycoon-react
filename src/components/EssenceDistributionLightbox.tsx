@@ -252,6 +252,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
   const [cardDarkness, setCardDarkness] = useState<20 | 30 | 40 | 50 | 70>(20);
   const [cardBlur, setCardBlur] = useState<'none' | 'sm' | 'md' | 'lg' | 'xl'>('md');
   const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const [lightboxStyle, setLightboxStyle] = useState<'industrial' | 'spaceAge'>('industrial');
 
   const searchRef = useRef<HTMLDivElement>(null);
 

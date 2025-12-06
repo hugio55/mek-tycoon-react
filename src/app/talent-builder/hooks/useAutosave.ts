@@ -4,6 +4,7 @@ import { api } from '../../../../convex/_generated/api';
 import { useTalentBuilder } from '../TalentBuilderContext';
 import { createSaveData } from '../saveMigrations';
 import { Id } from '../../../../convex/_generated/dataModel';
+import { TalentNode } from '../types';
 
 interface UseAutosaveOptions {
   localStorageDebounce?: number; // Default: 2 seconds
@@ -31,7 +32,8 @@ const DEFAULT_CONVEX_SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutes (only when a te
 const DEFAULT_MAX_AUTO_BACKUPS = 20;
 
 // Helper to sanitize nodes for Convex (remove fields not in schema)
-function sanitizeNodesForConvex(nodes: typeof import('../types').TalentNode[]): Parameters<typeof import('../../../../convex/_generated/api').api.mekTreeTemplates.updateTemplate>[0]['nodes'] {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function sanitizeNodesForConvex(nodes: TalentNode[]): any[] {
   return nodes.map(node => ({
     id: node.id,
     name: node.name,
@@ -41,13 +43,13 @@ function sanitizeNodesForConvex(nodes: typeof import('../types').TalentNode[]): 
     desc: node.desc,
     xp: node.xp,
     unlocked: node.unlocked,
-    nodeType: node.nodeType,
+    nodeType: node.nodeType as 'stat' | 'ability' | 'passive' | 'special' | undefined,
     statBonus: node.statBonus,
     abilityId: node.abilityId,
     passiveEffect: node.passiveEffect,
     buffGrant: node.buffGrant ? {
-      buffType: node.buffGrant.buffType || '',
-      baseValue: node.buffGrant.baseValue
+      buffType: String((node.buffGrant as { buffType?: string; baseValue?: number }).buffType || ''),
+      baseValue: (node.buffGrant as { buffType?: string; baseValue?: number }).baseValue
     } : undefined
   }));
 }
