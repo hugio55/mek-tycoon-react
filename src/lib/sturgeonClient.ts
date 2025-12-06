@@ -1,36 +1,22 @@
 /**
- * Sturgeon (Production) Database - READ ONLY Client
+ * sturgeonClient - SIMPLIFIED FOR SINGLE DATABASE
  *
- * 🚨 CRITICAL SAFETY RULES:
- * - This client is for MONITORING ONLY
- * - NO mutations allowed (no useMutation)
- * - NO actions allowed (no useAction)
- * - ONLY queries (useQuery for reading data)
- * - Used in admin panels to view real production player data
+ * Previously this created a separate ConvexReactClient for the Sturgeon (production)
+ * database. Now that we use a single database, this just exports the main client
+ * for backwards compatibility with components that still import sturgeonClient.
  *
- * Database: fabulous-sturgeon-691 (Production)
- * Contains: Real user data, 36+ active players
- * Purpose: Read-only monitoring from localhost
+ * The main NEXT_PUBLIC_CONVEX_URL now points to Sturgeon (fabulous-sturgeon-691),
+ * so window.convex IS the Sturgeon client.
  */
 
-import { ConvexReactClient } from "convex/react";
+import { ConvexReactClient } from 'convex/react';
 
-// Verify Sturgeon URL is configured
-const sturgeonUrl = process.env.NEXT_PUBLIC_STURGEON_URL;
+// For backwards compatibility, sturgeonClient references the main Convex client
+// which now points to Sturgeon via NEXT_PUBLIC_CONVEX_URL in .env.local
+export const sturgeonClient: ConvexReactClient | null =
+  typeof window !== 'undefined' ? window.convex : null;
 
-// Create read-only client for production monitoring (null if not configured)
-export const sturgeonClient = sturgeonUrl
-  ? new ConvexReactClient(sturgeonUrl)
-  : null;
-
-// Log client status (only in development)
+// Log status in development
 if (process.env.NODE_ENV === 'development') {
-  if (sturgeonUrl) {
-    console.log('[STURGEON CLIENT] Read-only client initialized for production monitoring');
-    console.log('[STURGEON CLIENT] Database:', sturgeonUrl);
-    console.log('[STURGEON CLIENT] ⚠️ READ ONLY MODE - No mutations allowed');
-  } else {
-    console.warn('[STURGEON CLIENT] Not configured - Sturgeon monitoring unavailable');
-    console.warn('[STURGEON CLIENT] Add NEXT_PUBLIC_STURGEON_URL to .env.local to enable production monitoring');
-  }
+  console.log('[STURGEON CLIENT] Single database mode - using main Convex client');
 }
