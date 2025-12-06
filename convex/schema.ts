@@ -75,13 +75,13 @@ export default defineSchema({
     .index("by_slotted", ["isSlotted"])
     .index("by_owner_slotted", ["owner", "isSlotted"]),
 
-  // Mek Talent Tree Templates
-  mekTreeTemplates: defineTable({
-    name: v.string(), // Template name (e.g., "Offensive Build", "Tank Build", "Speed Build")
-    description: v.string(), // Description of the template
-    category: v.optional(v.string()), // Category like "head-based", "body-based", "balanced"
-    
-    // Conditions for auto-assignment (which Meks get this template)
+  // Mek Tree Categories - Parent categories that get assigned to Meks
+  // Each category can have multiple template saves, with one "active" template
+  mekTreeCategories: defineTable({
+    name: v.string(), // Category name (e.g., "Fire Tree", "Ice Tree", "Tank Tree")
+    description: v.optional(v.string()), // Description of what this category is for
+
+    // Conditions for auto-assignment (which Meks get this category)
     conditions: v.optional(v.object({
       headVariations: v.optional(v.array(v.string())), // Apply to specific head types
       bodyVariations: v.optional(v.array(v.string())), // Apply to specific body types
@@ -92,7 +92,39 @@ export default defineSchema({
       rankMin: v.optional(v.number()), // Minimum rarity rank (1-4000)
       rankMax: v.optional(v.number()), // Maximum rarity rank (1-4000)
     })),
-    
+
+    // Which template is the "official" one for this category
+    activeTemplateId: v.optional(v.id("mekTreeTemplates")),
+
+    // Metadata
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_name", ["name"]),
+
+  // Mek Talent Tree Templates - Individual save files that belong to a category
+  mekTreeTemplates: defineTable({
+    name: v.string(), // Save file name (e.g., "fire1", "fire1b", "fire2")
+    description: v.optional(v.string()), // Description of this iteration
+
+    // Parent category this template belongs to
+    categoryId: v.optional(v.id("mekTreeCategories")),
+
+    // Legacy field - kept for backward compatibility
+    category: v.optional(v.string()),
+
+    // Legacy conditions - moved to mekTreeCategories, kept for backward compatibility
+    conditions: v.optional(v.object({
+      headVariations: v.optional(v.array(v.string())),
+      bodyVariations: v.optional(v.array(v.string())),
+      traitVariations: v.optional(v.array(v.string())),
+      rarityTiers: v.optional(v.array(v.string())),
+      powerScoreMin: v.optional(v.number()),
+      powerScoreMax: v.optional(v.number()),
+      rankMin: v.optional(v.number()),
+      rankMax: v.optional(v.number()),
+    })),
+
     // Tree structure (same as individual trees)
     nodes: v.array(v.object({
       id: v.string(),
@@ -148,7 +180,8 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_name", ["name"])
-    .index("by_category", ["category"]),
+    .index("by_category", ["category"])
+    .index("by_categoryId", ["categoryId"]),
 
   // Individual Mek Talent Trees (now references a template)
   mekTalentTrees: defineTable({

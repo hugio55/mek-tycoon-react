@@ -65,7 +65,7 @@ export const getAllSubmissions = query({
     if (args.campaignName) {
       submissions = await ctx.db
         .query("airdropSubmissions")
-        .withIndex("by_campaign", (q) => q.eq("campaignName", args.campaignName))
+        .withIndex("by_campaign", (q) => q.eq("campaignName", args.campaignName!))
         .collect();
     } else {
       submissions = await ctx.db

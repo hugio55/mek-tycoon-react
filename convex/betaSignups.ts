@@ -81,7 +81,7 @@ export const submitBetaSignup = mutation({
     if (args.ipAddress && args.ipAddress !== 'unknown') {
       const existingIP = await ctx.db
         .query("betaSignups")
-        .withIndex("by_ipAddress", (q) => q.eq("ipAddress", args.ipAddress))
+        .withIndex("by_ipAddress", (q) => q.eq("ipAddress", args.ipAddress ?? null))
         .first();
 
       if (existingIP) {

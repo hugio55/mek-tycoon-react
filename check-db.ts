@@ -13,7 +13,7 @@ async function checkPhaseCards() {
 
   console.log(`Found ${cards.length} phase cards:\n`);
 
-  cards.forEach((card, index) => {
+  cards.forEach((card: any, index: number) => {
     console.log(`${index + 1}. ${card.header || card.title}`);
     console.log(`   Order: ${card.order}`);
     console.log(`   Locked: ${card.locked}`);
