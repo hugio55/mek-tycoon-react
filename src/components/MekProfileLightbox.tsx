@@ -5549,12 +5549,12 @@ export default function MekProfileLightbox({
 
                     // Find the "Slotted Mek PFP" display zone
                     const displayZone = mekPfpOverlay.zones?.find(
-                      z => z.mode === 'zone' && z.type === 'display' && z.metadata?.displayType === 'slotted-mek-pfp'
+                      (z: any) => z.mode === 'zone' && z.type === 'display' && z.metadata?.displayType === 'slotted-mek-pfp'
                     );
 
                     // Find the "Mek Name" display zone
                     const nameZone = mekPfpOverlay.zones?.find(
-                      z => z.mode === 'zone' && z.type === 'display' && z.metadata?.displayType === 'mek-name'
+                      (z: any) => z.mode === 'zone' && z.type === 'display' && z.metadata?.displayType === 'mek-name'
                     );
 
                     // Mock Mek data for testing
