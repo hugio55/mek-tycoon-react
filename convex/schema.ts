@@ -3819,4 +3819,152 @@ export default defineSchema({
     .index("by_user_unread", ["userId", "isRead"])
     .index("by_user_created", ["userId", "createdAt"])
     .index("by_source", ["sourceType", "sourceId"]),
+
+  // =============================================================================
+  // COACH MARKS / SPOTLIGHT TUTORIAL SYSTEM
+  // =============================================================================
+  // Guided onboarding system that darkens the screen except for one highlighted
+  // element, with arrows and tooltips guiding users through features.
+  // See COACH_MARKS.md for full documentation.
+  // =============================================================================
+
+  // Individual tutorial steps - each step highlights one element
+  coachMarkSteps: defineTable({
+    // Identification
+    stepKey: v.string(), // Unique identifier (e.g., "onboard-forge-button")
+    name: v.string(), // Human-readable name for admin
+    description: v.optional(v.string()), // Admin notes about this step
+
+    // Location
+    pageRoute: v.string(), // Which page this appears on (e.g., "/home", "/forge")
+
+    // Sequence membership (linear sequences only)
+    sequenceId: v.optional(v.string()), // Which sequence this belongs to
+    sequenceOrder: v.number(), // Order within sequence (0-based)
+
+    // Target positioning - THREE modes supported
+    targetType: v.union(
+      v.literal("element"), // Use CSS selector to find element
+      v.literal("manual"),  // Use manual X/Y coordinates
+      v.literal("hybrid")   // Find element, then apply offsets
+    ),
+
+    // Element targeting (for targetType: "element" or "hybrid")
+    elementSelector: v.optional(v.string()), // CSS selector or [data-tutorial="name"]
+
+    // Manual positioning (for targetType: "manual" or "hybrid" offsets)
+    manualPosition: v.optional(v.object({
+      x: v.number(), // Percentage from left (0-100)
+      y: v.number(), // Percentage from top (0-100)
+      width: v.number(), // Spotlight width in pixels
+      height: v.number(), // Spotlight height in pixels
+    })),
+
+    // Fine-tune offsets (for targetType: "hybrid")
+    positionOffset: v.optional(v.object({
+      top: v.optional(v.number()),
+      left: v.optional(v.number()),
+      right: v.optional(v.number()),
+      bottom: v.optional(v.number()),
+    })),
+
+    // Spotlight appearance
+    spotlightShape: v.union(
+      v.literal("rectangle"),
+      v.literal("circle"),
+      v.literal("pill")
+    ),
+    spotlightPadding: v.number(), // Extra space around element (default: 8)
+
+    // Arrow configuration
+    arrowPosition: v.union(
+      v.literal("top"),
+      v.literal("bottom"),
+      v.literal("left"),
+      v.literal("right"),
+      v.literal("none")
+    ),
+    arrowOffset: v.optional(v.number()), // Fine-tune arrow position
+
+    // Tooltip content
+    tooltipText: v.string(), // Main instruction text
+    tooltipTitle: v.optional(v.string()), // Optional title above instruction
+    tooltipPosition: v.union(
+      v.literal("above"),
+      v.literal("below"),
+      v.literal("left"),
+      v.literal("right"),
+      v.literal("auto")
+    ),
+
+    // Interaction rules
+    isMandatory: v.boolean(), // Must click element to proceed (can't skip)
+    allowBackdropClick: v.boolean(), // Can click dark area to skip/close
+    showSkipButton: v.boolean(), // Show skip button in tooltip
+    showNextButton: v.boolean(), // Show next button for non-mandatory steps
+
+    // Trigger conditions
+    triggerCondition: v.union(
+      v.literal("first-login"),      // Runs on first login (part of onboarding)
+      v.literal("first-visit-page"), // First time visiting this page
+      v.literal("manual")            // Only triggered via code/admin
+    ),
+
+    // Status
+    isActive: v.boolean(), // Enable/disable this step
+
+    // Timestamps
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_step_key", ["stepKey"])
+    .index("by_page_route", ["pageRoute"])
+    .index("by_sequence", ["sequenceId", "sequenceOrder"])
+    .index("by_active", ["isActive"])
+    .index("by_trigger", ["triggerCondition"]),
+
+  // User progress tracking - which steps each user has completed
+  coachMarkProgress: defineTable({
+    // Ownership
+    corporationId: v.id("corporations"), // Which corporation/user
+
+    // Progress tracking
+    completedSteps: v.array(v.string()), // Array of completed stepKeys
+    skippedSteps: v.array(v.string()), // Array of skipped stepKeys
+
+    // Current sequence state (if in middle of a sequence)
+    currentSequence: v.optional(v.string()), // Active sequenceId
+    currentStepIndex: v.optional(v.number()), // Current position in sequence
+
+    // Overall status
+    tutorialCompleted: v.boolean(), // Finished all mandatory onboarding
+
+    // Timestamps
+    lastUpdated: v.number(),
+  })
+    .index("by_corporation", ["corporationId"])
+    .index("by_tutorial_completed", ["tutorialCompleted"]),
+
+  // Sequences - groups of steps that play in linear order
+  coachMarkSequences: defineTable({
+    // Identification
+    sequenceId: v.string(), // Unique identifier (e.g., "onboarding-tour")
+    name: v.string(), // Display name for admin
+    description: v.optional(v.string()), // Admin notes
+
+    // Step order (linear only - no branching)
+    stepOrder: v.array(v.string()), // Ordered array of stepKeys
+
+    // Trigger settings
+    isOnboarding: v.boolean(), // Auto-trigger on first login?
+
+    // Status
+    isActive: v.boolean(), // Enable/disable entire sequence
+
+    // Timestamps
+    createdAt: v.number(),
+  })
+    .index("by_sequence_id", ["sequenceId"])
+    .index("by_onboarding", ["isOnboarding"])
+    .index("by_active", ["isActive"]),
 });

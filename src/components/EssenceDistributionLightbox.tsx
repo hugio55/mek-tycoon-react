@@ -8,6 +8,7 @@ import EssenceDonutChart from "@/components/essence-donut-chart";
 import "@/styles/global-design-system.css";
 import { useEssence } from "@/contexts/EssenceContext";
 import { clampEssenceToCap, isEssenceFull, ESSENCE_CAP_EPSILON } from "../../convex/lib/essenceCalculations";
+import EssenceDistributionLightboxSpaceAge from "@/components/EssenceDistributionLightboxSpaceAge";
 
 // Custom styles for range sliders
 const sliderStyles = `
@@ -619,6 +620,35 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
             <h3 className="text-cyan-400 text-sm font-bold uppercase tracking-wider mb-4 border-b border-cyan-500/30 pb-2">
               Visual Debug Controls
             </h3>
+
+            {/* Lightbox Style Toggle - Most prominent control */}
+            <div className="mb-5 pb-4 border-b border-cyan-500/20">
+              <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-2">
+                Lightbox Style
+              </label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setLightboxStyle('industrial')}
+                  className={`flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all rounded ${
+                    lightboxStyle === 'industrial'
+                      ? 'bg-yellow-500 text-black border-2 border-yellow-400 shadow-lg shadow-yellow-500/30'
+                      : 'bg-black/60 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/20'
+                  }`}
+                >
+                  Industrial
+                </button>
+                <button
+                  onClick={() => setLightboxStyle('spaceAge')}
+                  className={`flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all rounded ${
+                    lightboxStyle === 'spaceAge'
+                      ? 'bg-cyan-500 text-black border-2 border-cyan-400 shadow-lg shadow-cyan-500/30'
+                      : 'bg-black/60 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/20'
+                  }`}
+                >
+                  Space Age
+                </button>
+              </div>
+            </div>
 
             {/* Backdrop Darkness */}
             <div className="mb-4">

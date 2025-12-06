@@ -985,56 +985,36 @@ const DATA_SYSTEMS = [
 export default function AdminMasterDataPage() {
   const convex = useConvex();
 
-  // Dual database clients
-  const [troutClient] = useState(() => new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!));
-  const [sturgeonClient] = useState(() => new ConvexHttpClient(process.env.NEXT_PUBLIC_STURGEON_URL!));
+  // Single database client (SIMPLIFIED - now always Sturgeon via main URL)
+  const [httpClient] = useState(() => new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!));
 
-  // Trout (dev) site settings
-  const [troutSettings, setTroutSettings] = useState<any>(null);
-  const [troutLoading, setTroutLoading] = useState(true);
-
-  // Sturgeon (production) site settings
-  const [sturgeonSettings, setSturgeonSettings] = useState<any>(null);
-  const [sturgeonLoading, setSturgeonLoading] = useState(true);
+  // Site settings (single database mode)
+  const [dbSettings, setDbSettings] = useState<any>(null);
+  const [dbLoading, setDbLoading] = useState(true);
 
   // Portal mounting state
   const [mounted, setMounted] = useState(false);
 
-  // Fetch settings from both databases
+  // Fetch settings from database (single database mode)
   useEffect(() => {
-    async function fetchTroutSettings() {
+    async function fetchSettings() {
       try {
-        const settings = await troutClient.query(api.siteSettings.getSiteSettings);
-        setTroutSettings(settings);
+        const settings = await httpClient.query(api.siteSettings.getSiteSettings);
+        setDbSettings(settings);
       } catch (error) {
-        console.error('[Trout] Error fetching settings:', error);
+        console.error('[Admin] Error fetching settings:', error);
       } finally {
-        setTroutLoading(false);
+        setDbLoading(false);
       }
     }
 
-    async function fetchSturgeonSettings() {
-      try {
-        const settings = await sturgeonClient.query(api.siteSettings.getSiteSettings);
-        setSturgeonSettings(settings);
-      } catch (error) {
-        console.error('[Sturgeon] Error fetching settings:', error);
-      } finally {
-        setSturgeonLoading(false);
-      }
-    }
-
-    fetchTroutSettings();
-    fetchSturgeonSettings();
+    fetchSettings();
 
     // Poll for updates every 5 seconds
-    const interval = setInterval(() => {
-      fetchTroutSettings();
-      fetchSturgeonSettings();
-    }, 5000);
+    const interval = setInterval(fetchSettings, 5000);
 
     return () => clearInterval(interval);
-  }, [troutClient, sturgeonClient]);
+  }, [httpClient]);
 
   // Set mounted state for portals
   useEffect(() => {

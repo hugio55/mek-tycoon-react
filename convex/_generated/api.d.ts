@@ -45,6 +45,7 @@ import type * as campaigns from "../campaigns.js";
 import type * as chipConfigurations from "../chipConfigurations.js";
 import type * as chips from "../chips.js";
 import type * as cleanupDifficultyConfigs from "../cleanupDifficultyConfigs.js";
+import type * as coachMarks from "../coachMarks.js";
 import type * as commemorative from "../commemorative.js";
 import type * as commemorativeCampaignMigration from "../commemorativeCampaignMigration.js";
 import type * as commemorativeCampaigns from "../commemorativeCampaigns.js";
@@ -288,6 +289,7 @@ declare const fullApi: ApiFromModules<{
   chipConfigurations: typeof chipConfigurations;
   chips: typeof chips;
   cleanupDifficultyConfigs: typeof cleanupDifficultyConfigs;
+  coachMarks: typeof coachMarks;
   commemorative: typeof commemorative;
   commemorativeCampaignMigration: typeof commemorativeCampaignMigration;
   commemorativeCampaigns: typeof commemorativeCampaigns;
