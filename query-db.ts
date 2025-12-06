@@ -1,7 +1,7 @@
 import { api } from "./convex/_generated/api";
 import { ConvexClient } from "convex/browser";
 
-const client = new ConvexClient(process.env.NEXT_PUBLIC_CONVEX_URL || "https://wry-trout-962.convex.cloud");
+const client = new ConvexClient(process.env.NEXT_PUBLIC_CONVEX_URL || "https://fabulous-sturgeon-691.convex.cloud");
 
 async function queryLabRats() {
   try {
