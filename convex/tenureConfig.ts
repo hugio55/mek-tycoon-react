@@ -76,7 +76,7 @@ export const getConfig = query({
   handler: async (ctx, args) => {
     const config = await ctx.db
       .query("tenureConfig")
-      .withIndex("", (q: any) => q.eq("key", args.key))
+      .withIndex("by_key", (q: any) => q.eq("key", args.key))
       .first();
 
     return config;
@@ -102,7 +102,7 @@ export const getBaseRate = query({
   handler: async (ctx) => {
     const config = await ctx.db
       .query("tenureConfig")
-      .withIndex("", (q: any) => q.eq("key", "baseRate"))
+      .withIndex("by_key", (q: any) => q.eq("key", "baseRate"))
       .first();
 
     if (!config) {
@@ -138,7 +138,7 @@ export const setConfig = mutation({
     // Check if config exists
     const existing = await ctx.db
       .query("tenureConfig")
-      .withIndex("", (q: any) => q.eq("key", args.key))
+      .withIndex("by_key", (q: any) => q.eq("key", args.key))
       .first();
 
     if (existing) {
@@ -203,7 +203,7 @@ export const deleteConfig = mutation({
   handler: async (ctx, args) => {
     const config = await ctx.db
       .query("tenureConfig")
-      .withIndex("", (q: any) => q.eq("key", args.key))
+      .withIndex("by_key", (q: any) => q.eq("key", args.key))
       .first();
 
     if (!config) {
@@ -235,7 +235,7 @@ export const initializeDefaultConfig = mutation({
     // Initialize baseRate config if it doesn't exist
     const existing = await ctx.db
       .query("tenureConfig")
-      .withIndex("", (q: any) => q.eq("key", "baseRate"))
+      .withIndex("by_key", (q: any) => q.eq("key", "baseRate"))
       .first();
 
     if (existing) {

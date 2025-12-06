@@ -7,7 +7,7 @@
     "dev:turbo": "next dev --turbo -p 3200 -H 0.0.0.0",
     "push": "npx convex deploy --typecheck=disable -y",
     "dev:convex": "echo ERROR: Do not use convex dev - it overwrites .env.local to Trout. Use 'npm run push' instead. && exit 1",
-    "dev:all": "echo Use 'npm run dev' for frontend and 'npm run push' for backend changes && npm run dev",
+    "dev:all": "npm run dev",
     "dev:stable": "next dev -p 3200",
     "tunnel": "cloudflared tunnel --url http://localhost:3200",
     "preview": "next build && next start",
