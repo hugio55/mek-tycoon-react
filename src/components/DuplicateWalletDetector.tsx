@@ -297,13 +297,13 @@ export default function DuplicateWalletDetector() {
             Duplicate wallets active in the last 7 days - highest priority for investigation
           </p>
           <div className="space-y-2">
-            {duplicates.recentlyActiveDuplicates.map((dup, idx) => (
+            {duplicates.recentlyActiveDuplicates.map((dup: any, idx: number) => (
               <div key={idx} className="bg-gray-950/50 p-3 rounded border border-orange-700">
                 <div className="text-sm text-gray-300 mb-2">
                   {dup.mekCount} MEKs @ {dup.goldPerHour.toFixed(2)} g/hr - {dup.walletCount} wallets
                 </div>
                 <div className="space-y-1">
-                  {dup.wallets.map((wallet, wIdx) => (
+                  {dup.wallets.map((wallet: any, wIdx: number) => (
                     <div key={wIdx} className="bg-gray-900 p-2 rounded text-xs flex items-center justify-between">
                       <span className="font-mono text-gray-400">{wallet.address.substring(0, 20)}...</span>
                       <div className="flex items-center gap-2">
@@ -349,7 +349,7 @@ export default function DuplicateWalletDetector() {
 
             {transferHistory.transferEvents.length > 0 ? (
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {transferHistory.transferEvents.map((event, idx) => (
+                {transferHistory.transferEvents.map((event: any, idx: number) => (
                   <div key={idx} className="bg-gray-950/50 p-3 rounded border border-gray-700">
                     <div className="text-xs text-gray-500 mb-2">
                       {new Date(event.timestamp).toLocaleString()}
@@ -360,7 +360,7 @@ export default function DuplicateWalletDetector() {
                           <div className="text-green-400 font-semibold mb-1">
                             Added ({event.meksAdded.length})
                           </div>
-                          {event.meksAdded.map((mek, mIdx) => (
+                          {event.meksAdded.map((mek: any, mIdx: number) => (
                             <div key={mIdx} className="text-gray-400">{mek.assetName}</div>
                           ))}
                         </div>
@@ -370,7 +370,7 @@ export default function DuplicateWalletDetector() {
                           <div className="text-red-400 font-semibold mb-1">
                             Removed ({event.meksRemoved.length})
                           </div>
-                          {event.meksRemoved.map((mek, mIdx) => (
+                          {event.meksRemoved.map((mek: any, mIdx: number) => (
                             <div key={mIdx} className="text-gray-400">{mek.assetName}</div>
                           ))}
                         </div>
@@ -472,7 +472,7 @@ export default function DuplicateWalletDetector() {
                   Shared MEKs ({comparison.sharedAssets.length})
                 </div>
                 <div className="space-y-1 max-h-48 overflow-y-auto">
-                  {comparison.sharedAssets.map((asset, idx) => (
+                  {comparison.sharedAssets.map((asset: any, idx: number) => (
                     <div key={idx} className="bg-gray-950/50 p-2 rounded text-xs text-gray-400">
                       {asset.assetName} - {asset.goldPerHour.toFixed(2)} g/hr
                     </div>
