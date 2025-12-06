@@ -432,7 +432,7 @@ export const getPlayerEssenceState = query({
     // Get config
     const config = await ctx.db
       .query("essenceConfig")
-      .withIndex("", (q: any) => q.eq("configType", "global"))
+      .withIndex("by_config_type", (q: any) => q.eq("configType", "global"))
       .first();
 
     // CRITICAL FIX: Return RAW balances as snapshots (like gold system)

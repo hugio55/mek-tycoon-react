@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3200 -H 0.0.0.0",
     "dev:turbo": "next dev --turbo -p 3200 -H 0.0.0.0",
-    "dev:convex": "convex dev --typecheck=disable --url https://fabulous-sturgeon-691.convex.cloud",
+    "dev:convex": "convex dev --typecheck=disable --env-file .env.sturgeon",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:convex\"",
     "dev:stable": "next dev -p 3200",
     "tunnel": "cloudflared tunnel --url http://localhost:3200",
