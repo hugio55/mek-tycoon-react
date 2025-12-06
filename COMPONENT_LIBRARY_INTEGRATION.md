@@ -57,7 +57,7 @@ Convex will automatically handle schema migrations. Since these are new tables, 
 
 ### Step 3: Verify Tables Created
 
-Check your Convex dashboard (wry-trout-962.convex.cloud) to verify:
+Check your Convex dashboard (fabulous-sturgeon-691.convex.cloud) to verify:
 - `components`
 - `componentVersions`
 - `transformationHistory`

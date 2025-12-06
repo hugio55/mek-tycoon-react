@@ -1,8 +1,16 @@
 # Mechanism Leveling System Redesign - UPDATED Strategic Analysis
 
+> ⚠️ **DATABASE ARCHITECTURE OUTDATED (December 2025)**
+> This document was written when we had separate staging/production databases.
+> **We now use a UNIFIED SINGLE DATABASE**: Sturgeon (fabulous-sturgeon-691.convex.cloud)
+> - Trout (wry-trout-962) is DEPRECATED and no longer used
+> - All backend changes affect production immediately
+> - The database migration/staging discussions in this document are obsolete
+> - The tenure system technical content remains accurate
+
 **Date**: November 3, 2025
 **Project**: Mek Tycoon
-**Database**: wry-trout-962.convex.cloud (SHARED - used by both live site and staging)
+**Database**: fabulous-sturgeon-691.convex.cloud (UNIFIED - single database for all environments)
 **Branch**: custom-minting-system
 **Status**: ✅ **BACKEND COMPLETE** | ⏳ **FRONTEND PENDING**
 
@@ -33,7 +41,7 @@
 **NEW REALITY**:
 1. ✅ **Tenure backend exists and works perfectly** (offline accumulation, per-Mek tracking, persistence)
 2. ⏳ **Only frontend UI is missing** (progress bars, level-up buttons)
-3. 🗄️ **Database situation clarified**: Both live + staging use wry-trout-962, fabulous-sturgeon-691 is UNUSED
+3. 🗄️ **Database situation**: Now unified on fabulous-sturgeon-691 (Sturgeon) - single database for all environments
 4. 🎯 **Phase II goal**: Replace gold-leveling UI with tenure UI, then reset all Meks to level 1
 
 ---
@@ -142,35 +150,25 @@ currentTenure = savedTenure + (elapsedSeconds × effectiveRate)
 
 ## 2. Database Reality Check
 
-### Current State (CORRECTED)
+> ⚠️ **SECTION OUTDATED**: This section described the old dual-database architecture.
+> As of December 2025, we use a **UNIFIED SINGLE DATABASE** (Sturgeon).
 
-**What user told us:**
-- Development database: wry-trout-962 (cloud)
-- Production database: fabulous-sturgeon-691 (COMPLETELY UNUSED - nothing points to it)
-- Both live website AND staging dev site use wry-trout-962
+### Current State (December 2025 Update)
+
+**Unified Database Architecture:**
+- **Single database**: fabulous-sturgeon-691.convex.cloud (Sturgeon)
+- **Trout (wry-trout-962)**: DEPRECATED - no longer used
+- All environments (dev + production) use Sturgeon
+- All backend changes affect production immediately
 
 **What .env.local shows:**
 ```bash
-NEXT_PUBLIC_CONVEX_URL=https://wry-trout-962.convex.cloud
+NEXT_PUBLIC_CONVEX_URL=https://fabulous-sturgeon-691.convex.cloud
 ```
 
-**Why fabulous-sturgeon-691 exists:**
-- Originally intended as production database
-- Migration attempt failed previously ("did not work out correctly")
-- Now sits empty and unused
-- Could potentially be repurposed for staging isolation
+### Historical Context (For Reference Only)
 
-### Historical Context
-
-**User's Previous Experience:**
-> "Attempted staging database approach before, did not work out correctly"
-
-**Question to Answer:** What specifically failed? Possible issues:
-- Schema sync problems between staging and production
-- Data migration complexity
-- Configuration errors (.env files pointing to wrong DB)
-- Convex deployment config issues
-- Authentication/permissions problems
+Previously we had a dual-database setup that didn't work well. The unified approach simplifies deployment but requires extra caution since all changes go to production.
 
 ---
 
@@ -184,46 +182,21 @@ NEXT_PUBLIC_CONVEX_URL=https://wry-trout-962.convex.cloud
 - Gold-based leveling UI replaced with tenure-based UI
 - Fresh start for all players with new progression system
 
-### Current Problem
+### Current Reality
 
-**Shared Database Risk:**
-- Both live players (mek.overexposed.io) and staging development use SAME database (wry-trout-962)
+**Unified Database (fabulous-sturgeon-691):**
+- All environments use the same Sturgeon database
 - Any schema changes affect live players immediately
-- Testing tenure UI could disrupt live gameplay
-- Can't safely experiment without production impact
+- Testing requires careful feature flagging
+- Changes go directly to production
 
 ---
 
 ## 4. Strategic Options Analysis
 
-### Option A: Migrate Staging to fabulous-sturgeon-691 (The Unused Database)
+### ~~Option A: Migrate Staging to fabulous-sturgeon-691~~ (OBSOLETE)
 
-**Approach:**
-1. Point staging site to fabulous-sturgeon-691
-2. Clone current data from wry-trout-962 for realistic testing
-3. Develop tenure UI on isolated database
-4. Test thoroughly without affecting live players
-5. When ready, deploy to production and apply changes to wry-trout-962
-
-**Pros:**
-- ✅ Clean separation: live vs dev
-- ✅ Safe testing without production impact
-- ✅ Can experiment freely
-- ✅ Database already exists (fabulous-sturgeon-691)
-- ✅ Realistic testing with cloned production data
-
-**Cons:**
-- ❌ User tried this before and "it did not work out"
-- ❌ Unknown why previous attempt failed
-- ❌ Data diverges over time (staging ≠ production)
-- ❌ More complex deployment (changes tested on different DB)
-- ❌ Risk of repeating previous failure
-
-**Critical Question:** What went wrong last time?
-- If configuration issue → Can be solved
-- If Convex limitation → May not be solvable
-- If schema sync problem → Can be managed with scripts
-- If user workflow issue → Can be improved
+> ⚠️ **This option is now obsolete.** As of December 2025, we're already on a unified Sturgeon database (fabulous-sturgeon-691). There's no separate staging database to migrate to.
 
 ---
 
@@ -279,28 +252,9 @@ NEXT_PUBLIC_CONVEX_URL=https://wry-trout-962.convex.cloud
 
 ---
 
-### Option D: Read-Only Staging Database (Clone Snapshots)
+### ~~Option D: Read-Only Staging Database (Clone Snapshots)~~ (OBSOLETE)
 
-**Approach:**
-1. Keep staging on wry-trout-962 (shared)
-2. Periodically export snapshots to fabulous-sturgeon-691
-3. Use fabulous-sturgeon-691 as read-only test environment
-4. Develop UI against read-only data
-5. Deploy to wry-trout-962 when ready
-
-**Pros:**
-- ✅ Realistic testing with actual production data
-- ✅ Safe (read-only, can't break production)
-- ✅ No schema sync issues (snapshots)
-- ✅ Avoids previous staging DB failures
-
-**Cons:**
-- ❌ Can't test mutations (read-only)
-- ❌ Manual snapshot process required
-- ❌ Data staleness (snapshots lag production)
-- ❌ Still need to test mutations on production eventually
-
-**Timeline:** 2 weeks development + 1 week production testing
+> ⚠️ **This option is now obsolete.** With the unified Sturgeon database architecture, there's no separate staging database to use for snapshots.
 
 ---
 
@@ -715,15 +669,10 @@ Thank you for your patience as we improve the game!
 
 ### IMMEDIATE (Need Answers Before Starting):
 
-1. **Database Strategy**: Given that previous staging database attempt "did not work out," what specifically went wrong?
-   - Configuration issue?
-   - Convex limitation?
-   - Schema sync problem?
-   - User workflow issue?
+1. ~~**Database Strategy**~~: *(RESOLVED - Now using unified Sturgeon database)*
 
 2. **Development Approach**: Which strategy do you prefer?
-   - **Option B**: Feature flag on shared database (recommended)
-   - **Option A**: Retry staging database migration (risky given previous failure)
+   - **Option B**: Feature flag on unified database (recommended)
    - **Option C**: Local development with mock data first
 
 3. **Level Reset Timing**: When do you want to execute the "all Meks to level 1" reset?
@@ -806,7 +755,7 @@ Thank you for your patience as we improve the game!
 
 1. ✅ **Backend is DONE** - Tenure system fully implemented and working
 2. ⏳ **Frontend is PENDING** - Only UI components need development
-3. 🗄️ **Database is SHARED** - Both live and staging use wry-trout-962
+3. 🗄️ **Database is UNIFIED** - Single Sturgeon database (fabulous-sturgeon-691) for all environments
 4. 🎯 **Goal is CLEAR** - Replace gold UI with tenure UI, reset to level 1
 5. ⚠️ **Risk is MANAGEABLE** - Feature flag provides safe development path
 

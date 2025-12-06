@@ -76,7 +76,7 @@ export const getStepsBySequence = query({
     // so results come back sorted by sequenceOrder automatically
     return await ctx.db
       .query("coachMarkSteps")
-      .withIndex("by_sequence_id", (q) => q.eq("sequenceId", args.sequenceId))
+      .withIndex("by_sequence", (q) => q.eq("sequenceId", args.sequenceId))
       .collect();
   },
 });

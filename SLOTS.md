@@ -2,7 +2,16 @@
 
 **Purpose:** Master documentation for Mek job slots, income system, progression, and buffs.
 **Status:** Design Complete
-**Last Updated:** 2025-12-03
+**Last Updated:** 2025-12-06
+
+---
+
+## Terminology
+
+**Slot = Job** - These terms are interchangeable throughout this document and the codebase.
+- "Slot" refers to the position a Mek occupies
+- "Job" refers to the work type being performed
+- When user says "slot" or "job", they mean the same thing
 
 ---
 
