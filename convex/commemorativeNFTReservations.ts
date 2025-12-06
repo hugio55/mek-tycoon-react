@@ -413,7 +413,7 @@ export const getActiveReservation = query({
 async function cleanupExpiredReservations(ctx: any, now: number) {
   const expiredReservations = await ctx.db
     .query("commemorativeNFTReservations")
-    .withIndex("by_status", (q) => q.eq("status", "active"))
+    .withIndex("by_status", (q: any) => q.eq("status", "active"))
     .filter((q: any) => q.lt(q.field("expiresAt"), now - GRACE_PERIOD)) // 5 minutes grace
     .collect();
 
