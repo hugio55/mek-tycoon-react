@@ -61,7 +61,7 @@ export const getRecentNotifications = query({
   },
 });
 
-// Get all notifications for lightbox (paginated)
+// Get all notifications for lightbox (paginated) - 10 per page, max 100 total
 export const getAllNotifications = query({
   args: {
     userId: v.id("users"),
@@ -69,7 +69,7 @@ export const getAllNotifications = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const limit = args.limit ?? 50;
+    const limit = args.limit ?? LIGHTBOX_PAGE_SIZE;
 
     let notificationsQuery = ctx.db
       .query("notifications")
@@ -154,6 +154,7 @@ export const clearAllNotifications = mutation({
 });
 
 // Create a notification (internal use - called by other systems)
+// Enforces 100-notification cap per user, auto-deletes oldest when exceeded
 export const createNotification = internalMutation({
   args: {
     userId: v.id("users"),
@@ -178,6 +179,21 @@ export const createNotification = internalMutation({
       if (existing) {
         // Don't create duplicate notification
         return { success: false, reason: "duplicate", existingId: existing._id };
+      }
+    }
+
+    // Enforce notification cap - delete oldest if at limit
+    const userNotifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_user_created", (q) => q.eq("userId", args.userId))
+      .order("asc") // Oldest first
+      .collect();
+
+    // If at or over cap, delete oldest to make room
+    if (userNotifications.length >= MAX_NOTIFICATIONS_PER_USER) {
+      const toDelete = userNotifications.slice(0, userNotifications.length - MAX_NOTIFICATIONS_PER_USER + 1);
+      for (const notification of toDelete) {
+        await ctx.db.delete(notification._id);
       }
     }
 
