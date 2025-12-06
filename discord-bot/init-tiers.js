@@ -1,7 +1,7 @@
 const { ConvexHttpClient } = require('convex/browser');
 require('dotenv').config();
 
-const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL || 'https://rare-dinosaur-331.convex.cloud';
+const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL || 'https://fabulous-sturgeon-691.convex.cloud';
 
 async function initializeTiers() {
   const convex = new ConvexHttpClient(CONVEX_URL);

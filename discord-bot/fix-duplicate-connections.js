@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { ConvexHttpClient } = require('convex/browser');
 
-const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL || 'https://rare-dinosaur-331.convex.cloud';
+const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL || 'https://fabulous-sturgeon-691.convex.cloud';
 const convex = new ConvexHttpClient(CONVEX_URL);
 
 const GUILD_ID = process.env.DISCORD_GUILD_ID;

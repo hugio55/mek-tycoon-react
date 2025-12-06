@@ -47,7 +47,7 @@ Permissions needed:
    DISCORD_BOT_TOKEN=your_actual_bot_token
    DISCORD_CLIENT_ID=your_client_id
    DISCORD_GUILD_ID=your_server_id
-   NEXT_PUBLIC_CONVEX_URL=https://rare-dinosaur-331.convex.cloud
+   NEXT_PUBLIC_CONVEX_URL=https://fabulous-sturgeon-691.convex.cloud
    ```
 
 ### 5. Install Dependencies
