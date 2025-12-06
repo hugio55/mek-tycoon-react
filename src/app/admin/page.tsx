@@ -26,6 +26,7 @@ import WhitelistManagerAdmin from '@/components/WhitelistManagerAdmin';
 import RouteVisualization from '@/components/RouteVisualization';
 import NewStylingAdmin from '@/components/NewStylingAdmin';
 import MessagingSystemAdmin from '@/components/MessagingSystemAdmin';
+import CoachMarksAdmin from '@/components/CoachMarksAdmin';
 import { getMediaUrl } from '@/lib/media-url';
 import MutationConfirmDialog from '@/components/admin/MutationConfirmDialog';
 import NMKRJSONGenerator from '@/components/admin/nft/NMKRJSONGenerator';
@@ -979,7 +980,8 @@ const DATA_SYSTEMS = [
   { id: 'new-styling', name: 'Space Age Style', icon: '🎨', implemented: true },
   { id: 'messaging-system', name: 'Messaging System', icon: '💬', implemented: true },
   { id: 'rarity-bias', name: 'Rarity Bias', icon: '📊', implemented: true },
-  { id: 'universal-background', name: 'Universal Background', icon: '🌌', implemented: true }
+  { id: 'universal-background', name: 'Universal Background', icon: '🌌', implemented: true },
+  { id: 'coach-marks', name: 'Coach Marks', icon: '🎯', implemented: true }
 ];
 
 export default function AdminMasterDataPage() {
@@ -6197,6 +6199,10 @@ export default function AdminMasterDataPage() {
 
           {activeTab === 'universal-background' && (
             <UniversalBackgroundAdmin />
+          )}
+
+          {activeTab === 'coach-marks' && (
+            <CoachMarksAdmin />
           )}
 
         </div>

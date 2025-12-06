@@ -68,7 +68,7 @@ export const runNightlySnapshot = internalAction({
           });
 
           const mekLevelsMap = new Map(
-            allMekLevels.map(level => [level.assetId, level])
+            allMekLevels.map((level: any) => [level.assetId, level])
           );
 
           console.log(`[Snapshot Debug] Wallet ${stakeAddress}:`, {
@@ -697,7 +697,7 @@ export const runManualSnapshot = internalAction({
           });
 
           const mekLevelsMap = new Map(
-            allMekLevels.map(level => [level.assetId, level])
+            allMekLevels.map((level: any) => [level.assetId, level])
           );
 
           console.log(`[Snapshot Debug] Wallet ${stakeAddress}:`, {
@@ -1029,7 +1029,7 @@ export const processSingleBatch = internalAction({
             walletAddress: miner.walletAddress
           });
 
-          const mekLevelsMap = new Map(allMekLevels.map(level => [level.assetId, level]));
+          const mekLevelsMap = new Map(allMekLevels.map((level: any) => [level.assetId, level]));
           const existingMeksMap = new Map(miner.ownedMeks.map(mek => [mek.assetId, mek]));
 
           // Build mek details
