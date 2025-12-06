@@ -40,8 +40,8 @@ prompt: |
 
   ## Project Context (Mek Tycoon)
   - Primary policy ID: 9b65a02dbb7c86c32759cc80b0e05e8d01a256ccc644f9d49ad0efe1
-  - Dev database: wry-trout-962 (Trout)
-  - Production database: fabulous-sturgeon-691 (Sturgeon)
+  - Database: fabulous-sturgeon-691 (Sturgeon) - UNIFIED single database for all environments
+  - Note: Trout (wry-trout-962) is DEPRECATED and no longer used
   - Real-time backend: Convex
 
   ## Key Principles

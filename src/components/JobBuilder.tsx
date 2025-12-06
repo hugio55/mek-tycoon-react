@@ -279,7 +279,7 @@ export default function JobBuilder() {
                         className="flex-1 px-4 py-3 bg-black/50 border-2 border-blue-500/50 rounded text-blue-300 focus:border-blue-500 focus:outline-none"
                       >
                         <option value="">Select a collection...</option>
-                        {umbrellas?.map((u) => (
+                        {umbrellas?.map((u: Doc<'jobUmbrellas'>) => (
                           <option key={u._id} value={u._id}>
                             {u.name}
                           </option>
@@ -428,7 +428,7 @@ export default function JobBuilder() {
             </div>
             {!formData.isOneOff && formData.umbrellaId && (
               <div className="mt-2 text-xs text-gray-400">
-                Collection: {umbrellas?.find(u => u._id === formData.umbrellaId)?.name || 'Unknown'}
+                Collection: {umbrellas?.find((u: Doc<'jobUmbrellas'>) => u._id === formData.umbrellaId)?.name || 'Unknown'}
               </div>
             )}
           </div>
@@ -471,7 +471,7 @@ export default function JobBuilder() {
             </div>
           ) : (
             <div className="space-y-3">
-              {jobs.map((job) => {
+              {jobs.map((job: JobWithUmbrella) => {
                 const colors = tierColors[job.tier || 'tier1'] || tierColors.tier1;
                 return (
                   <div

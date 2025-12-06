@@ -15,7 +15,7 @@ export const getTemplatesByCategory = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("mekTreeTemplates")
-      .withIndex("", (q: any) => q.eq("categoryId", args.categoryId))
+      .withIndex("by_categoryId", (q) => q.eq("categoryId", args.categoryId))
       .collect();
   },
 });
@@ -42,7 +42,7 @@ export const getTemplateByName = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("mekTreeTemplates")
-      .withIndex("", (q: any) => q.eq("name", args.name))
+      .withIndex("by_name", (q) => q.eq("name", args.name))
       .first();
   },
 });
@@ -111,7 +111,7 @@ export const createTemplate = mutation({
     // Check if template with this name already exists
     const existing = await ctx.db
       .query("mekTreeTemplates")
-      .withIndex("", (q: any) => q.eq("name", args.name))
+      .withIndex("by_name", (q) => q.eq("name", args.name))
       .first();
     
     if (existing) {

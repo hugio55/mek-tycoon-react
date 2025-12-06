@@ -99,7 +99,7 @@ export const createCategory = mutation({
     // Check if category with this name already exists
     const existing = await ctx.db
       .query("mekTreeCategories")
-      .withIndex("", (q: any) => q.eq("name", args.name))
+      .withIndex("by_name", (q) => q.eq("name", args.name))
       .first();
 
     if (existing) {
@@ -141,7 +141,7 @@ export const updateCategory = mutation({
     if (updates.name) {
       const existing = await ctx.db
         .query("mekTreeCategories")
-        .withIndex("", (q: any) => q.eq("name", updates.name!))
+        .withIndex("by_name", (q) => q.eq("name", updates.name!))
         .first();
 
       if (existing && existing._id !== categoryId) {
@@ -170,7 +170,7 @@ export const deleteCategory = mutation({
     // Get all templates in this category
     const templates = await ctx.db
       .query("mekTreeTemplates")
-      .withIndex("", (q: any) => q.eq("categoryId", categoryId))
+      .withIndex("by_categoryId", (q) => q.eq("categoryId", categoryId))
       .collect();
 
     if (deleteTemplates) {
