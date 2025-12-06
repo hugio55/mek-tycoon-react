@@ -1,5 +1,5 @@
 import React, { memo, useRef, useEffect, useCallback } from 'react';
-import { TalentNode, Connection, DragState, CanvasMode, BoxSelection, LassoSelection, BuilderMode, ViewportDimensions } from '@/app/talent-builder/types';
+import { TalentNode, Connection, DragState, CanvasMode, BoxSelection, LassoSelection, BuilderMode, ViewportDimensions, ViewportPosition } from '@/app/talent-builder/types';
 import { TalentAction } from './talentReducer';
 
 interface CanvasProps {
@@ -21,6 +21,8 @@ interface CanvasProps {
   lassoSelection: LassoSelection;
   showViewportBox: boolean;
   viewportDimensions: ViewportDimensions;
+  viewportPosition: ViewportPosition;
+  isDraggingViewport: boolean;
   unconnectedNodes: Set<string>;
   deadEndNodes: Set<string>;
   highlightDisconnected: boolean;
@@ -50,6 +52,8 @@ const Canvas: React.FC<CanvasProps> = memo(({
   lassoSelection,
   showViewportBox,
   viewportDimensions,
+  viewportPosition,
+  isDraggingViewport,
   unconnectedNodes,
   deadEndNodes,
   highlightDisconnected,
@@ -233,6 +237,21 @@ const Canvas: React.FC<CanvasProps> = memo(({
   }, [mode, panOffset, zoom, snapPosition, onAddNode, dispatch]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    // Handle viewport box dragging
+    if (isDraggingViewport) {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const x = (e.clientX - rect.left - panOffset.x) / zoom;
+      const y = (e.clientY - rect.top - panOffset.y) / zoom;
+
+      dispatch({
+        type: 'SET_VIEWPORT_POSITION',
+        payload: { x, y }
+      });
+      return;
+    }
+
     if (isPanning) {
       const deltaX = e.clientX - panStart.x;
       const deltaY = e.clientY - panStart.y;
@@ -538,18 +557,36 @@ const Canvas: React.FC<CanvasProps> = memo(({
             </div>
           )}
 
-          {/* Viewport Box */}
+          {/* Viewport Box - Draggable */}
           {showViewportBox && (
             <div
-              className="absolute pointer-events-none border-2 border-dashed border-yellow-500"
+              className={`absolute border-2 border-dashed border-yellow-500 ${isDraggingViewport ? 'cursor-grabbing' : 'cursor-grab'}`}
               style={{
-                left: `${3000 - viewportDimensions.width / 2}px`,
-                top: `${3000 - viewportDimensions.height / 2}px`,
+                left: `${viewportPosition.x - viewportDimensions.width / 2}px`,
+                top: `${viewportPosition.y - viewportDimensions.height / 2}px`,
                 width: `${viewportDimensions.width}px`,
                 height: `${viewportDimensions.height}px`,
-                zIndex: 5
+                zIndex: 50,
+                backgroundColor: isDraggingViewport ? 'rgba(251, 191, 36, 0.1)' : 'transparent',
+                transition: isDraggingViewport ? 'none' : 'background-color 0.2s'
               }}
-            />
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                dispatch({ type: 'SET_IS_DRAGGING_VIEWPORT', payload: true });
+              }}
+            >
+              {/* Viewport label */}
+              <div
+                className="absolute -top-6 left-0 bg-yellow-500 text-black text-xs px-2 py-0.5 rounded font-bold pointer-events-none"
+              >
+                VIEWPORT ({viewportDimensions.width}x{viewportDimensions.height})
+              </div>
+              {/* Center crosshair */}
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div className="w-4 h-0.5 bg-yellow-500/50" />
+                <div className="absolute w-0.5 h-4 bg-yellow-500/50" />
+              </div>
+            </div>
           )}
 
           {/* Connections */}
