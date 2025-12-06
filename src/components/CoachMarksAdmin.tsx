@@ -3,7 +3,11 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import { Id, Doc } from "@/convex/_generated/dataModel";
+
+type StepDoc = Doc<"coachMarkSteps">;
+type SequenceDoc = Doc<"coachMarkSequences">;
+type ProgressDoc = Doc<"coachMarkProgress">;
 
 type TargetType = "element" | "manual" | "hybrid";
 type SpotlightShape = "rectangle" | "circle" | "pill";
@@ -424,7 +428,7 @@ export default function CoachMarksAdmin() {
                     className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm focus:border-cyan-500 focus:outline-none"
                   >
                     <option value="">No Sequence</option>
-                    {allSequences?.map((seq) => (
+                    {allSequences?.map((seq: SequenceDoc) => (
                       <option key={seq._id} value={seq.sequenceId}>
                         {seq.name} ({seq.sequenceId})
                       </option>
@@ -673,7 +677,7 @@ export default function CoachMarksAdmin() {
             <h3 className="text-lg font-bold text-white mb-4">All Steps ({allSteps?.length || 0})</h3>
 
             <div className="space-y-2 max-h-[700px] overflow-y-auto">
-              {allSteps?.map((step) => (
+              {allSteps?.map((step: StepDoc) => (
                 <div
                   key={step._id}
                   className={`p-3 rounded-lg border transition-all ${
@@ -823,7 +827,7 @@ export default function CoachMarksAdmin() {
             <h3 className="text-lg font-bold text-white mb-4">All Sequences ({allSequences?.length || 0})</h3>
 
             <div className="space-y-3 max-h-[500px] overflow-y-auto">
-              {allSequences?.map((seq) => (
+              {allSequences?.map((seq: SequenceDoc) => (
                 <div
                   key={seq._id}
                   className={`p-4 rounded-lg border transition-all ${
@@ -882,7 +886,7 @@ export default function CoachMarksAdmin() {
           <h3 className="text-lg font-bold text-white mb-4">User Tutorial Progress</h3>
 
           <div className="space-y-2 max-h-[600px] overflow-y-auto">
-            {allProgress?.map((progress) => (
+            {allProgress?.map((progress: ProgressDoc) => (
               <div
                 key={progress._id}
                 className="p-4 rounded-lg border border-gray-600 bg-gray-700/30"

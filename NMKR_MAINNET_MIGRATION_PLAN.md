@@ -1,5 +1,10 @@
 # NMKR Mainnet Migration Plan
 
+> ⚠️ **DATABASE UPDATED (December 2025)**
+> This document originally referenced Trout (wry-trout-962).
+> **We now use a UNIFIED SINGLE DATABASE**: Sturgeon (fabulous-sturgeon-691.convex.cloud)
+> Database references below have been updated accordingly.
+
 **Date Created**: October 30, 2025
 **Status**: Ready to Execute
 **Estimated Cost**: ~30-40 ADA (2-3 test NFTs at 10 ADA each + fees)
@@ -21,7 +26,7 @@ This plan transitions the NMKR commemorative NFT system from preprod testnet to 
 
 ### 1.1 Environment Verification
 - [ ] Confirm branch: `custom-minting-system`
-- [ ] Verify Convex: `wry-trout-962.convex.cloud` (staging)
+- [ ] Verify Convex: `fabulous-sturgeon-691.convex.cloud` (unified database)
 - [ ] Check `convex/data/snapshot.json` exists
 - [ ] Verify wallet has ~50 ADA available
 - [ ] Confirm NMKR Studio mainnet access
@@ -94,7 +99,7 @@ NMKR_API_KEY=[from Phase 2.6]
 NMKR_WEBHOOK_SECRET=[from Phase 2.6]
 
 # Keep unchanged:
-NEXT_PUBLIC_CONVEX_URL=https://wry-trout-962.convex.cloud
+NEXT_PUBLIC_CONVEX_URL=https://fabulous-sturgeon-691.convex.cloud
 ```
 
 ### 3.2 Add Console Logging Tags
@@ -225,7 +230,7 @@ npm run dev:all
 - [ ] Verify all payloads received
 
 ### 6.2 Convex Database
-- [ ] Open: https://wry-trout-962.convex.cloud
+- [ ] Open: https://fabulous-sturgeon-691.convex.cloud
 - [ ] Check `commemorativeNFTClaims` table
 - [ ] Verify entries for each purchase
 - [ ] Confirm data is correct
@@ -340,7 +345,7 @@ npm run dev:all
 - **Time**: 3-5 hours total
 - **Risk**: Medium (real money, but small amounts)
 - **Reversibility**: Purchases non-refundable
-- **Database**: Staging (wry-trout-962)
+- **Database**: Unified (fabulous-sturgeon-691)
 - **Network**: Mainnet only
 
 ---

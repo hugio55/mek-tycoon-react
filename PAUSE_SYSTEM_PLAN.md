@@ -1,7 +1,12 @@
 # PAUSE SYSTEM PLAN - Mek Upgrading & Snapshot Systems
 
+> ⚠️ **DATABASE UPDATED (December 2025)**
+> This document originally referenced Trout (wry-trout-962) as the development environment.
+> **We now use a UNIFIED SINGLE DATABASE**: Sturgeon (fabulous-sturgeon-691.convex.cloud)
+> All deployments now go directly to the unified Sturgeon database.
+
 **Date:** December 1, 2025
-**Target Environment:** Trout (wry-trout-962) - Development
+**Target Environment:** Sturgeon (fabulous-sturgeon-691) - Unified Database
 **Purpose:** Disable gold mining snapshots, Blockfrost API calls, and related cron jobs
 
 ---
@@ -59,8 +64,8 @@ The Mekanism upgrading phase is complete. This plan disables all cron jobs relat
 ### Step 1: Edit crons.ts
 Comment out the 4 cron jobs listed above with a clear "PAUSED" comment explaining why.
 
-### Step 2: Deploy to Trout
-Run `npx convex dev` to deploy changes to the development environment.
+### Step 2: Deploy to Sturgeon (Unified Database)
+Run `npx convex deploy` to deploy changes. **Note**: With unified database, all changes affect production immediately.
 
 ### Step 3: Verify in Convex Dashboard
 Check the Convex dashboard to confirm:
@@ -77,8 +82,8 @@ Watch for 24 hours to ensure:
 
 ## EXPECTED RESULTS
 
-After deployment to Trout:
-- Blockfrost API calls from Trout: ~0 (down from thousands)
+After deployment to Sturgeon:
+- Blockfrost API calls: ~0 (down from thousands)
 - Database writes to goldMining table: Stopped
 - Database writes to mekOwnershipHistory: Stopped
 - Database writes to goldBackups: Stopped
@@ -96,11 +101,10 @@ If issues arise:
 
 ---
 
-## NEXT STEPS (After Trout Verification)
+## NEXT STEPS
 
-Once verified on Trout, the same changes can be deployed to:
-- **Sturgeon (production)** - This is where the actual 7,066 Blockfrost calls/day are happening
-- Production deployment requires triple confirmation per CLAUDE.md protocol
+> ⚠️ **Section Obsolete**: With unified database, there's no separate "Trout verification" step.
+> All deployments go directly to Sturgeon (production). Exercise caution and follow CLAUDE.md deployment protocol.
 
 ---
 

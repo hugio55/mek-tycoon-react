@@ -4017,4 +4017,62 @@ export default defineSchema({
     .index("by_sequence_id", ["sequenceId"])
     .index("by_onboarding", ["isOnboarding"])
     .index("by_active", ["isActive"]),
+
+  // ============================================
+  // JOB/SLOT SYSTEM
+  // ============================================
+  // Note: "Slot" and "Job" are interchangeable terms
+
+  // Job Umbrellas - Collections/categories that jobs can belong to
+  // Example: "Mining" umbrella contains jobs like "Excavator", "Digger", "Miner"
+  jobUmbrellas: defineTable({
+    name: v.string(), // Display name (e.g., "Mining", "Engineering", "Combat")
+    description: v.optional(v.string()), // Admin notes about this umbrella
+    icon: v.optional(v.string()), // Emoji or icon identifier
+    color: v.optional(v.string()), // Hex color for UI theming
+    sortOrder: v.optional(v.number()), // For ordering in dropdowns/lists
+    isActive: v.boolean(), // Enable/disable this umbrella
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_active", ["isActive"])
+    .index("by_sort", ["sortOrder"]),
+
+  // Job Types - Individual job definitions
+  // Each job can be standalone (one-off) or belong to an umbrella
+  jobTypes: defineTable({
+    // Basic identity
+    name: v.string(), // Display name (e.g., "Excavator", "Engineer", "Guard")
+    description: v.optional(v.string()), // Admin notes about this job
+
+    // Umbrella relationship
+    isOneOff: v.boolean(), // true = standalone job, false = part of umbrella
+    umbrellaId: v.optional(v.id("jobUmbrellas")), // Which umbrella (if not one-off)
+
+    // Income parameters
+    baseGoldPerHour: v.number(), // Guaranteed gold per hour
+    attaboyMin: v.number(), // Attaboy bonus range minimum
+    attaboyMax: v.number(), // Attaboy bonus range maximum
+
+    // Progression parameters
+    pitStopCount: v.number(), // Number of pit stops before level completion
+
+    // Display/UI
+    icon: v.optional(v.string()), // Emoji or icon identifier
+    color: v.optional(v.string()), // Hex color for UI theming
+    tier: v.optional(v.string()), // "tier1", "tier2", "tier3" for basic categorization
+
+    // Status
+    isActive: v.boolean(), // Enable/disable this job
+
+    // Timestamps
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_umbrella", ["umbrellaId"])
+    .index("by_one_off", ["isOneOff"])
+    .index("by_active", ["isActive"])
+    .index("by_tier", ["tier"]),
 });

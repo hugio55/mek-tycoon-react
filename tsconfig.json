@@ -44,6 +44,8 @@
     "tower-blocks",
     ".next",
     "dist",
-    "build"
+    "build",
+    "JUNK",
+    "src/app/scrap-yard"
   ]
 }

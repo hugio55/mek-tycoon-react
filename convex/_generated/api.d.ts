@@ -127,6 +127,7 @@ import type * as goldTrackingOptimized from "../goldTrackingOptimized.js";
 import type * as importFullMekCollection from "../importFullMekCollection.js";
 import type * as initializeCache from "../initializeCache.js";
 import type * as investigateFalseClaim from "../investigateFalseClaim.js";
+import type * as jobs from "../jobs.js";
 import type * as landingDebugSettings from "../landingDebugSettings.js";
 import type * as landingDebugSettingsMobile from "../landingDebugSettingsMobile.js";
 import type * as landingDebugUnified from "../landingDebugUnified.js";
@@ -373,6 +374,7 @@ declare const fullApi: ApiFromModules<{
   importFullMekCollection: typeof importFullMekCollection;
   initializeCache: typeof initializeCache;
   investigateFalseClaim: typeof investigateFalseClaim;
+  jobs: typeof jobs;
   landingDebugSettings: typeof landingDebugSettings;
   landingDebugSettingsMobile: typeof landingDebugSettingsMobile;
   landingDebugUnified: typeof landingDebugUnified;
