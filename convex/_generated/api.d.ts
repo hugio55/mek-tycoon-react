@@ -155,6 +155,7 @@ import type * as mekLeveling from "../mekLeveling.js";
 import type * as mekSuccessRates from "../mekSuccessRates.js";
 import type * as mekTalentTrees from "../mekTalentTrees.js";
 import type * as mekTreeBuffTables from "../mekTreeBuffTables.js";
+import type * as mekTreeCategories from "../mekTreeCategories.js";
 import type * as mekTreeTableSaves from "../mekTreeTableSaves.js";
 import type * as mekTreeTables from "../mekTreeTables.js";
 import type * as mekTreeTemplates from "../mekTreeTemplates.js";
@@ -400,6 +401,7 @@ declare const fullApi: ApiFromModules<{
   mekSuccessRates: typeof mekSuccessRates;
   mekTalentTrees: typeof mekTalentTrees;
   mekTreeBuffTables: typeof mekTreeBuffTables;
+  mekTreeCategories: typeof mekTreeCategories;
   mekTreeTableSaves: typeof mekTreeTableSaves;
   mekTreeTables: typeof mekTreeTables;
   mekTreeTemplates: typeof mekTreeTemplates;

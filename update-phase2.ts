@@ -12,12 +12,12 @@ async function updatePhaseII() {
   const cards = await client.query(api.phaseCards.getAllPhaseCards);
 
   console.log("All phase cards:");
-  cards.forEach(card => {
+  cards.forEach((card: any) => {
     console.log(`  - ${card.title} (order: ${card.order})`);
   });
 
   // Find Phase II by title
-  const phaseII = cards.find(card => card.title?.includes("Phase II") || card.header?.includes("Phase II"));
+  const phaseII = cards.find((card: any) => card.title?.includes("Phase II") || card.header?.includes("Phase II"));
 
   if (!phaseII) {
     console.error("Phase II not found!");

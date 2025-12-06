@@ -8,7 +8,7 @@ const client = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 async function updatePhase1() {
   const cards = await client.query(api.phaseCards.getAllPhaseCards);
-  const phaseI = cards.find(card => card.order === 1 && card.title === "Foundation");
+  const phaseI = cards.find((card: any) => card.order === 1 && card.title === "Foundation");
 
   if (!phaseI) {
     console.error("Phase I not found!");

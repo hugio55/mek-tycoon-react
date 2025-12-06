@@ -9,6 +9,25 @@ export const getAllTemplates = query({
   },
 });
 
+// Get templates by category
+export const getTemplatesByCategory = query({
+  args: { categoryId: v.id("mekTreeCategories") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("mekTreeTemplates")
+      .withIndex("by_categoryId", (q) => q.eq("categoryId", args.categoryId))
+      .collect();
+  },
+});
+
+// Get templates without a category (uncategorized)
+export const getUncategorizedTemplates = query({
+  handler: async (ctx) => {
+    const allTemplates = await ctx.db.query("mekTreeTemplates").collect();
+    return allTemplates.filter((t) => !t.categoryId);
+  },
+});
+
 // Get a single template by ID
 export const getTemplate = query({
   args: { templateId: v.id("mekTreeTemplates") },
@@ -32,8 +51,9 @@ export const getTemplateByName = query({
 export const createTemplate = mutation({
   args: {
     name: v.string(),
-    description: v.string(),
-    category: v.optional(v.string()),
+    description: v.optional(v.string()),
+    categoryId: v.optional(v.id("mekTreeCategories")), // Parent category
+    category: v.optional(v.string()), // Legacy field
     nodes: v.array(v.object({
       id: v.string(),
       name: v.string(),
@@ -112,7 +132,8 @@ export const updateTemplate = mutation({
     templateId: v.id("mekTreeTemplates"),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
-    category: v.optional(v.string()),
+    categoryId: v.optional(v.id("mekTreeCategories")), // Parent category
+    category: v.optional(v.string()), // Legacy field
     nodes: v.optional(v.array(v.object({
       id: v.string(),
       name: v.string(),
@@ -188,34 +209,34 @@ export const deleteTemplate = mutation({
 });
 
 // Find the best matching template for a Mek
+// NEW: First tries to find a matching category (with active template), then falls back to legacy template matching
 export const findTemplateForMek = query({
   args: { mekId: v.id("meks") },
   handler: async (ctx, args) => {
     const mek = await ctx.db.get(args.mekId);
     if (!mek) return null;
 
-    const templates = await ctx.db.query("mekTreeTemplates").collect();
+    // Helper function to score conditions against a Mek
+    const scoreConditions = (conditions: {
+      headVariations?: string[];
+      bodyVariations?: string[];
+      traitVariations?: string[];
+      rarityTiers?: string[];
+      powerScoreMin?: number;
+      powerScoreMax?: number;
+      rankMin?: number;
+      rankMax?: number;
+    } | undefined) => {
+      if (!conditions) return 0;
 
-    // Score each template based on how well it matches the Mek
-    let bestTemplate = null;
-    let bestScore = -1;
-
-    for (const template of templates) {
       let score = 0;
-      const conditions = template.conditions;
-
-      if (!conditions) {
-        // Template with no conditions is a fallback
-        if (score === 0) score = 1;
-        continue;
-      }
 
       // Check rarity rank range (highest priority - 100 points)
       if (mek.rank !== undefined && mek.rank !== null) {
         const rankMin = conditions.rankMin ?? 0;
         const rankMax = conditions.rankMax ?? Infinity;
         if (mek.rank >= rankMin && mek.rank <= rankMax) {
-          score += 100; // Rank match is the primary criteria
+          score += 100;
         }
       }
 
@@ -248,7 +269,44 @@ export const findTemplateForMek = query({
         }
       }
 
-      if (score > bestScore) {
+      return score;
+    };
+
+    // FIRST: Try to find a matching category with an active template
+    const categories = await ctx.db.query("mekTreeCategories").collect();
+    let bestCategory = null;
+    let bestCategoryScore = -1;
+
+    for (const category of categories) {
+      // Skip categories without an active template
+      if (!category.activeTemplateId) continue;
+
+      const score = scoreConditions(category.conditions);
+      if (score > bestCategoryScore) {
+        bestCategoryScore = score;
+        bestCategory = category;
+      }
+    }
+
+    // If we found a matching category with an active template, return that template
+    if (bestCategory && bestCategory.activeTemplateId) {
+      const activeTemplate = await ctx.db.get(bestCategory.activeTemplateId);
+      if (activeTemplate) {
+        return activeTemplate;
+      }
+    }
+
+    // FALLBACK: Legacy template matching (for templates not in categories)
+    const templates = await ctx.db.query("mekTreeTemplates").collect();
+    let bestTemplate = null;
+    let bestScore = -1;
+
+    for (const template of templates) {
+      // Skip templates that are in a category (they should be found via category matching)
+      if (template.categoryId) continue;
+
+      const score = scoreConditions(template.conditions);
+      if (score > bestScore || (score === 0 && bestScore < 0)) {
         bestScore = score;
         bestTemplate = template;
       }

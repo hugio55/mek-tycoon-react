@@ -2555,22 +2555,36 @@ export default defineSchema({
   commemorativePurchases: defineTable({
     userId: v.optional(v.id("users")), // Optional - user may not be logged in
     walletAddress: v.string(), // Cardano wallet address
-    nmkrProjectUid: v.string(), // NMKR project UID
+    nmkrProjectUid: v.string(), // NMKR project UID (legacy field)
+    nmkrProjectId: v.optional(v.string()), // NMKR project ID
     purchaseDate: v.number(), // Timestamp
     transactionHash: v.optional(v.string()), // Cardano transaction hash if available
     nftTokenId: v.optional(v.string()), // NFT token ID if available
     status: v.union(
       v.literal("pending"),
       v.literal("confirmed"),
-      v.literal("failed")
+      v.literal("completed"),
+      v.literal("failed"),
+      v.literal("refunded")
     ),
-    goldAmount: v.optional(v.number()), // User's gold at purchase time
-    mekCount: v.optional(v.number()), // User's mek count at purchase time
+    goldAmount: v.optional(v.number()), // User's gold at purchase time (legacy)
+    mekCount: v.optional(v.number()), // User's mek count at purchase time (legacy)
+    // Extended fields for full purchase tracking
+    paymentAddress: v.optional(v.string()), // Payment address for this purchase
+    campaignName: v.optional(v.string()), // Campaign identifier
+    goldSnapshot: v.optional(v.number()), // Gold at time of purchase
+    mekCountSnapshot: v.optional(v.number()), // Mek count at time of purchase
+    paymentAmount: v.optional(v.string()), // Payment amount
+    createdAt: v.optional(v.number()), // Creation timestamp
+    updatedAt: v.optional(v.number()), // Last update timestamp
+    completedAt: v.optional(v.number()), // Completion timestamp
+    failedAt: v.optional(v.number()), // Failure timestamp
   })
     .index("by_wallet", ["walletAddress"])
     .index("by_user", ["userId"])
     .index("by_date", ["purchaseDate"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_campaign", ["campaignName"]),
 
   // ==========================================
   // Story Climb Event NFT System

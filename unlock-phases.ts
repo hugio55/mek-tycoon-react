@@ -9,8 +9,8 @@ const client = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 async function unlockPhases() {
   const cards = await client.query(api.phaseCards.getAllPhaseCards);
 
-  const phaseIII = cards.find(card => card.title === "Phase III");
-  const phaseIV = cards.find(card => card.title === "Phase IV");
+  const phaseIII = cards.find((card: any) => card.title === "Phase III");
+  const phaseIV = cards.find((card: any) => card.title === "Phase IV");
 
   if (phaseIII) {
     await client.mutation(api.phaseCards.updatePhaseCard, {
