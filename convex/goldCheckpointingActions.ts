@@ -100,7 +100,7 @@ export const createGoldCheckpoint = action({
         txHash,
         timestamp: Date.now(),
         mekCount: args.mekData.length,
-        totalGoldRate: args.mekData.reduce((sum, m) => sum + m.goldRate, 0),
+        totalGoldRate: args.mekData.reduce((sum: any, m: any) => sum + m.goldRate, 0),
       });
 
       return {

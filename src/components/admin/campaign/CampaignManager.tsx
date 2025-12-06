@@ -111,7 +111,7 @@ export default function CampaignManager({
   // DEBUG: Log when campaign data changes
   useEffect(() => {
     if (campaigns && selectedCampaignId) {
-      const selectedCampaign = campaigns.find(c => c._id === selectedCampaignId);
+      const selectedCampaign = campaigns.find((c: any) => c._id === selectedCampaignId);
       const counts = campaignCounts.get(selectedCampaignId);
       if (selectedCampaign) {
         const timestamp = new Date().toISOString().split('T')[1].slice(0, -1);
@@ -354,7 +354,7 @@ export default function CampaignManager({
   // CSV Import handlers
   const parseCSV = (csvContent: string): CSVImportPreview => {
     const lines = csvContent.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const headers = lines[0].split(',').map((h: any) => h.trim().toLowerCase());
 
     const nfts: CSVImportPreview['nfts'] = [];
 
@@ -402,7 +402,7 @@ export default function CampaignManager({
     setIsDragging(false);
 
     const files = Array.from(e.dataTransfer.files);
-    const csvFile = files.find(f => f.name.endsWith('.csv'));
+    const csvFile = files.find((f: any) => f.name.endsWith('.csv'));
 
     if (!csvFile) {
       setImportMessage({ type: "error", text: "Please drop a CSV file" });
@@ -434,7 +434,7 @@ export default function CampaignManager({
     setIsImportingCSV(true);
 
     try {
-      const nfts = csvPreview.nfts.map(nft => ({
+      const nfts = csvPreview.nfts.map((nft: any) => ({
         nftUid: nft.uid,
         nftNumber: nft.number,
         name: nft.name,
@@ -1095,7 +1095,7 @@ export default function CampaignManager({
                         Found {csvPreview.nftCount} available NFT{csvPreview.nftCount !== 1 ? 's' : ''}
                       </p>
                       <div className="max-h-40 overflow-y-auto mb-3 text-xs space-y-1">
-                        {csvPreview.nfts.map((nft, idx) => (
+                        {csvPreview.nfts.map((nft: any, idx: number) => (
                           <div key={idx} className="text-gray-400">
                             #{nft.number} - {nft.name}
                           </div>

@@ -551,7 +551,7 @@ export default function TradeAbuseAdmin() {
 
           {/* Simulation Results */}
           <div className="space-y-4">
-            {allSimulations?.map((sim, index) => (
+            {allSimulations?.map((sim: any, index: number) => (
               <div
                 key={index}
                 className={`bg-black/30 border rounded-lg overflow-hidden ${

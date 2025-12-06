@@ -67,9 +67,9 @@ export const getTopGoldMiners = query({
 
     // Sort by current gold (highest first) and take top 3
     const topMiners = allEntries
-      .sort((a, b) => b.currentGold - a.currentGold)
+      .sort((a: any, b: any) => b.currentGold - a.currentGold)
       .slice(0, 3)
-      .map((entry, index) => ({
+      .map((entry: any, index: number) => ({
         ...entry,
         rank: index + 1,
       }));
@@ -111,7 +111,7 @@ export const getWalletMeksForDisplay = query({
     );
 
     // Format Meks with their levels
-    const meksWithLevels = goldMiningData.ownedMeks.map((mek, index) => {
+    const meksWithLevels = goldMiningData.ownedMeks.map((mek: any, index: number) => {
       // Extract Mek number from assetName (e.g., "Mek #2922" -> 2922)
       const mekNumberMatch = mek.assetName.match(/#(\d+)/);
       const mekNumber = mekNumberMatch ? parseInt(mekNumberMatch[1], 10) : null;
@@ -138,7 +138,7 @@ export const getWalletMeksForDisplay = query({
     });
 
     // Sort by level, then by gold rate
-    meksWithLevels.sort((a, b) => {
+    meksWithLevels.sort((a: any, b: any) => {
       if (b.level !== a.level) return b.level - a.level;
       return b.goldPerHour - a.goldPerHour;
     });
@@ -206,8 +206,8 @@ export const getAllCorporations = query({
 
     // Sort by current gold (highest first) and add rank
     const allCorporations = allEntries
-      .sort((a, b) => b.currentGold - a.currentGold)
-      .map((entry, index) => ({
+      .sort((a: any, b: any) => b.currentGold - a.currentGold)
+      .map((entry: any, index: number) => ({
         ...entry,
         rank: index + 1,
       }));
@@ -272,7 +272,7 @@ export const getTopGoldMinersCached = query({
 
     // Return top 3 sorted by rank with full display info
     return cachedLeaderboard
-      .sort((a, b) => a.rank - b.rank)
+      .sort((a: any, b: any) => a.rank - b.rank)
       .slice(0, 3)
       .map((entry: any) => ({
         walletAddress: entry.walletAddress,
@@ -303,7 +303,7 @@ export const getAllCorporationsCached = query({
     // Filter out entries with 0 gold and deduplicate by wallet address
     const seenWallets = new Set<string>();
     const filteredEntries = cachedLeaderboard
-      .sort((a, b) => a.rank - b.rank)
+      .sort((a: any, b: any) => a.rank - b.rank)
       .filter((entry: any) => {
         // Skip if 0 gold
         if (entry.value <= 0) return false;
@@ -343,7 +343,7 @@ export const subscribeToTopMiners = query({
 
     // Return top 3 sorted by rank
     return cachedLeaderboard
-      .sort((a, b) => a.rank - b.rank)
+      .sort((a: any, b: any) => a.rank - b.rank)
       .slice(0, 3)
       .map((entry: any) => ({
         walletAddress: entry.walletAddress,

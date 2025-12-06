@@ -31,7 +31,7 @@ export const checkSourceKeyData = query({
     }
 
     // Get first 5 Meks and their sourceKey status
-    const mekSamples = record.ownedMeks.slice(0, 5).map((mek, idx) => ({
+    const mekSamples = record.ownedMeks.slice(0, 5).map((mek: any, idx: number) => ({
       index: idx + 1,
       assetId: mek.assetId,
       assetName: mek.assetName,

@@ -306,7 +306,7 @@ export default function MekTalentTreeConfig() {
 
     if (interpolationDirection === "vertical") {
       // Interpolate vertically (across rank ranges for each talent tier)
-      TALENT_TIERS.forEach(talentTier => {
+      TALENT_TIERS.forEach((talentTier: any) => {
         const firstRankRange = `${RARITY_TIERS[0].min}-${RARITY_TIERS[0].max}`;
         const lastRankRange = `${RARITY_TIERS[RARITY_TIERS.length - 1].min}-${RARITY_TIERS[RARITY_TIERS.length - 1].max}`;
 
@@ -317,7 +317,7 @@ export default function MekTalentTreeConfig() {
         if (startValue === 0 && endValue === 0) return;
 
         const interpolatedValues = interpolateValues(startValue, endValue, RARITY_TIERS.length, interpolationCurve, interpolationStrength)
-          .map(v => applyRounding(v, roundingMode));
+          .map((v: any) => applyRounding(v, roundingMode));
 
         RARITY_TIERS.forEach((tier, index) => {
           const rankKey = `${tier.min}-${tier.max}`;
@@ -347,7 +347,7 @@ export default function MekTalentTreeConfig() {
       });
     } else {
       // Interpolate horizontally (across talent tiers for each rank range)
-      RARITY_TIERS.forEach(tier => {
+      RARITY_TIERS.forEach((tier: any) => {
         const rankKey = `${tier.min}-${tier.max}`;
         const firstTalent = "T1";
         const lastTalent = "T10";
@@ -359,7 +359,7 @@ export default function MekTalentTreeConfig() {
         if (startValue === 0 && endValue === 0) return;
 
         const interpolatedValues = interpolateValues(startValue, endValue, TALENT_TIERS.length, interpolationCurve, interpolationStrength)
-          .map(v => applyRounding(v, roundingMode));
+          .map((v: any) => applyRounding(v, roundingMode));
 
         TALENT_TIERS.forEach((talentTier, index) => {
           setTableData(prev => ({
@@ -443,9 +443,9 @@ export default function MekTalentTreeConfig() {
   const handleExportCSV = () => {
     let csv = `Rank Range,${TALENT_TIERS.join(',')}\n`;
 
-    RARITY_TIERS.forEach(tier => {
+    RARITY_TIERS.forEach((tier: any) => {
       const rankKey = `${tier.min}-${tier.max}`;
-      const values = TALENT_TIERS.map(talentTier =>
+      const values = TALENT_TIERS.map((talentTier: any) =>
         tableData[selectedCategory]?.[rankKey]?.[talentTier]?.value || 0
       );
       csv += `"${tier.label}",${values.join(',')}\n`;
@@ -538,10 +538,10 @@ export default function MekTalentTreeConfig() {
     setTableData(prev => {
       const updated = { ...prev };
       if (updated[selectedCategory]) {
-        RARITY_TIERS.forEach(tier => {
+        RARITY_TIERS.forEach((tier: any) => {
           const rankKey = `${tier.min}-${tier.max}`;
           if (updated[selectedCategory][rankKey]) {
-            TALENT_TIERS.forEach(talentTier => {
+            TALENT_TIERS.forEach((talentTier: any) => {
               updated[selectedCategory][rankKey][talentTier] = {
                 value: 0,
                 editing: false,
@@ -571,10 +571,10 @@ export default function MekTalentTreeConfig() {
     }> = [];
 
     // Collect all current table data
-    ALL_BUFF_CATEGORIES.forEach(category => {
-      RARITY_TIERS.forEach(tier => {
+    ALL_BUFF_CATEGORIES.forEach((category: any) => {
+      RARITY_TIERS.forEach((tier: any) => {
         const rankKey = `${tier.min}-${tier.max}`;
-        TALENT_TIERS.forEach(talentTier => {
+        TALENT_TIERS.forEach((talentTier: any) => {
           const value = tableData[category]?.[rankKey]?.[talentTier]?.value || 0;
           if (value !== 0) {
             dataToSave.push({
@@ -620,10 +620,10 @@ export default function MekTalentTreeConfig() {
     }> = [];
 
     // Collect all current table data
-    ALL_BUFF_CATEGORIES.forEach(category => {
-      RARITY_TIERS.forEach(tier => {
+    ALL_BUFF_CATEGORIES.forEach((category: any) => {
+      RARITY_TIERS.forEach((tier: any) => {
         const rankKey = `${tier.min}-${tier.max}`;
-        TALENT_TIERS.forEach(talentTier => {
+        TALENT_TIERS.forEach((talentTier: any) => {
           const value = tableData[category]?.[rankKey]?.[talentTier]?.value || 0;
           if (value !== 0) {
             dataToSave.push({
@@ -658,7 +658,7 @@ export default function MekTalentTreeConfig() {
       const result = await loadSave({ saveId: selectedSaveId });
       // Set the current config tracking
       setCurrentConfigId(selectedSaveId);
-      const selectedSave = savedConfigs?.find(s => s._id === selectedSaveId);
+      const selectedSave = savedConfigs?.find((s: any) => s._id === selectedSaveId);
       if (selectedSave) {
         setCurrentConfigName(selectedSave.saveName);
       }
@@ -1188,7 +1188,7 @@ export default function MekTalentTreeConfig() {
               <th className="px-4 py-2 text-left text-xs font-bold text-yellow-400 whitespace-nowrap sticky left-0 bg-gray-800/90 z-10">
                 Rank
               </th>
-              {TALENT_TIERS.map(tier => (
+              {TALENT_TIERS.map((tier: any) => (
                 <th key={tier} className="px-3 py-2 text-center text-xs font-bold text-yellow-400 min-w-[60px]">
                   {tier}
                 </th>
@@ -1196,7 +1196,7 @@ export default function MekTalentTreeConfig() {
             </tr>
           </thead>
           <tbody>
-            {RARITY_TIERS.map((tier, rowIndex) => {
+            {RARITY_TIERS.map((tier: any, rowIndex: number) => {
               const rankKey = `${tier.min}-${tier.max}`;
               const rowData = tableData[selectedCategory]?.[rankKey];
 
@@ -1214,7 +1214,7 @@ export default function MekTalentTreeConfig() {
                   } ${tier.color}`}>
                     {tier.label}
                   </td>
-                  {TALENT_TIERS.map(talentTier => {
+                  {TALENT_TIERS.map((talentTier: any) => {
                     const cellData = rowData[talentTier];
                     if (!cellData) return <td key={talentTier} />;
 

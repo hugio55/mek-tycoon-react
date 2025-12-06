@@ -291,7 +291,7 @@ export default function LandingDebugPage() {
   const handleMovePhaseUp = async (id: Id<"phaseCards">, currentOrder: number) => {
     if (!phaseCards || currentOrder <= 1) return;
 
-    const phaseToSwap = phaseCards.find(p => p.order === currentOrder - 1);
+    const phaseToSwap = phaseCards.find((p: any) => p.order === currentOrder - 1);
     if (!phaseToSwap) return;
 
     await reorderPhaseCards({
@@ -305,7 +305,7 @@ export default function LandingDebugPage() {
   const handleMovePhaseDown = async (id: Id<"phaseCards">, currentOrder: number) => {
     if (!phaseCards || currentOrder >= phaseCards.length) return;
 
-    const phaseToSwap = phaseCards.find(p => p.order === currentOrder + 1);
+    const phaseToSwap = phaseCards.find((p: any) => p.order === currentOrder + 1);
     if (!phaseToSwap) return;
 
     await reorderPhaseCards({

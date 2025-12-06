@@ -70,7 +70,7 @@ export const populateSourceKeys = internalMutation({
 
     for (const record of allRecords) {
       let needsUpdate = false;
-      const updatedOwnedMeks = record.ownedMeks.map((mek, idx) => {
+      const updatedOwnedMeks = record.ownedMeks.map((mek: any, idx: number) => {
         // Skip if already has sourceKey
         if (mek.sourceKey) {
           return mek;

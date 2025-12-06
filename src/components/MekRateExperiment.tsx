@@ -113,7 +113,7 @@ export default function MekRateExperiment() {
 
     // Use data from the query
     if (top50Data && top50Data.holders) {
-      const holders: Top50Holder[] = top50Data.holders.map(h => ({
+      const holders: Top50Holder[] = top50Data.holders.map((h: any) => ({
         stakeAddress: h.stakeAddress,
         mekCount: h.mekCount,
         theoreticalGoldPerHour: h.theoreticalGoldPerHour
@@ -139,7 +139,7 @@ export default function MekRateExperiment() {
   const connectedWithChanges = useMemo(() => {
     if (!goldMiningData) return [];
 
-    return goldMiningData.map(miner => ({
+    return goldMiningData.map((miner: any) => ({
       ...miner,
       mekChange: miner.snapshotMekCount !== undefined
         ? miner.mekCount - miner.snapshotMekCount
@@ -151,7 +151,7 @@ export default function MekRateExperiment() {
   const sortedData = useMemo(() => {
     const dataToSort = viewMode === 'connected' ? connectedWithChanges : [];
 
-    return [...dataToSort].sort((a, b) => {
+    return [...dataToSort].sort((a: any, b: any) => {
       let aVal = a[sortField as keyof typeof a];
       let bVal = b[sortField as keyof typeof b];
 
@@ -632,7 +632,7 @@ export default function MekRateExperiment() {
                   </thead>
 
                   <tbody className="divide-y divide-yellow-500/10">
-                    {top50Holders.map((holder, index) => (
+                    {top50Holders.map((holder: any, index: number) => (
                       <tr
                         key={holder.stakeAddress}
                         className="hover:bg-yellow-500/5 transition-all bg-black/10"
@@ -679,7 +679,7 @@ export default function MekRateExperiment() {
 
             {snapshotLogs && snapshotLogs.length > 0 ? (
               <div className="space-y-3">
-                {snapshotLogs.map((log, index) => (
+                {snapshotLogs.map((log: any, index: number) => (
                   <div key={index} className="bg-black/40 border border-yellow-500/10 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-yellow-400 font-mono">{log.date}</span>

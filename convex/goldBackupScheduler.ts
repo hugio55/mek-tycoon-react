@@ -80,7 +80,7 @@ export const runDailyBackup = internalMutation({
           const lastSnapshotTime = goldMining.lastSnapshotTime;
 
           // Find top mek
-          const topMek = goldMining.ownedMeks.reduce((best, mek) =>
+          const topMek = goldMining.ownedMeks.reduce((best: any, mek: any) =>
             mek.goldPerHour > (best?.goldPerHour || 0) ? mek : best,
             goldMining.ownedMeks[0]
           );
@@ -92,7 +92,7 @@ export const runDailyBackup = internalMutation({
             topMekAssetId = topMek.assetId;
           }
 
-          const totalMekGoldRate = goldMining.ownedMeks.reduce((sum, mek) => sum + mek.goldPerHour, 0);
+          const totalMekGoldRate = goldMining.ownedMeks.reduce((sum: any, mek: any) => sum + mek.goldPerHour, 0);
 
           // Create backup record
           await ctx.db.insert("goldBackupUserData", {

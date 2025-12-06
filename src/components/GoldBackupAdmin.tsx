@@ -109,7 +109,7 @@ export default function GoldBackupAdmin({}: GoldBackupAdminProps) {
     setIsRestoring(true);
     try {
       const targetWallets = restoreTargetWallets.trim()
-        ? restoreTargetWallets.split('\n').map(w => w.trim()).filter(w => w.length > 0)
+        ? restoreTargetWallets.split('\n').map((w: any) => w.trim()).filter((w: any) => w.length > 0)
         : undefined;
 
       const result = await restoreFromBackup({
@@ -514,7 +514,7 @@ export default function GoldBackupAdmin({}: GoldBackupAdminProps) {
               <div>
                 <div className="text-sm text-gray-400 mb-2">Top Users (by gold)</div>
                 <div className="space-y-1">
-                  {backupDetails.topUsers.map((user, i) => (
+                  {backupDetails.topUsers.map((user: any, i: number) => (
                     <div key={i} className="flex justify-between text-sm">
                       <span className="text-gray-300">{user.walletAddress}</span>
                       <span className="text-white">{user.currentGold.toLocaleString()} gold</span>

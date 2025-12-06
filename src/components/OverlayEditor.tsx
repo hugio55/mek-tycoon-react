@@ -346,7 +346,7 @@ export default function OverlayEditor() {
 
   // Remove from palette
   const removeFromPalette = (id: string) => {
-    const updated = overlayPalette.filter(item => item.id !== id);
+    const updated = overlayPalette.filter((item: any) => item.id !== id);
     setOverlayPalette(updated);
     localStorage.setItem("overlay-editor-palette", JSON.stringify(updated));
     if (activeOverlayId === id) {
@@ -543,7 +543,7 @@ export default function OverlayEditor() {
     const y = (e.clientY - rect.top) / scale;
 
     // Check if clicking on an existing sprite
-    const clickedSprite = zones.filter(z => z.mode === "sprite").find((sprite) => {
+    const clickedSprite = zones.filter((z: any) => z.mode === "sprite").find((sprite) => {
       const spriteScaleValue = sprite.metadata?.spriteScale || 1;
       // Get the actual dimensions from sprite metadata (if available) or use reasonable defaults
       // Default to 100x100 if dimensions aren't stored (for old sprites before this fix)
@@ -808,7 +808,7 @@ export default function OverlayEditor() {
   const handleDelete = async () => {
     if (selectedZoneId) {
       // Find the zone being deleted to check for variation tracking
-      const deletedZone = zones.find(z => z.id === selectedZoneId);
+      const deletedZone = zones.find((z: any) => z.id === selectedZoneId);
 
       // If this sprite had a variation assigned, remove it from usedVariations
       if (deletedZone?.metadata?.variationId) {
@@ -887,16 +887,16 @@ export default function OverlayEditor() {
 
   // Group variations by type for checklist (memoized - static data, never changes)
   const variationsByType = useMemo(() => ({
-    head: COMPLETE_VARIATION_RARITY.filter(v => v.type === "head").sort((a, b) => b.rank - a.rank),
-    body: COMPLETE_VARIATION_RARITY.filter(v => v.type === "body").sort((a, b) => b.rank - a.rank),
-    trait: COMPLETE_VARIATION_RARITY.filter(v => v.type === "trait").sort((a, b) => b.rank - a.rank),
+    head: COMPLETE_VARIATION_RARITY.filter((v: any) => v.type === "head").sort((a: any, b: any) => b.rank - a.rank),
+    body: COMPLETE_VARIATION_RARITY.filter((v: any) => v.type === "body").sort((a: any, b: any) => b.rank - a.rank),
+    trait: COMPLETE_VARIATION_RARITY.filter((v: any) => v.type === "trait").sort((a: any, b: any) => b.rank - a.rank),
   }), []);
 
   // Count used variations by type (memoized - only recalcs when usedVariations changes)
   const usedCountByType = useMemo(() => ({
-    head: variationsByType.head.filter(v => usedVariations.has(`${v.type}-${v.name}`)).length,
-    body: variationsByType.body.filter(v => usedVariations.has(`${v.type}-${v.name}`)).length,
-    trait: variationsByType.trait.filter(v => usedVariations.has(`${v.type}-${v.name}`)).length,
+    head: variationsByType.head.filter((v: any) => usedVariations.has(`${v.type}-${v.name}`)).length,
+    body: variationsByType.body.filter((v: any) => usedVariations.has(`${v.type}-${v.name}`)).length,
+    trait: variationsByType.trait.filter((v: any) => usedVariations.has(`${v.type}-${v.name}`)).length,
   }), [variationsByType, usedVariations]);
 
   // Selected zone lookup (memoized)
@@ -1130,7 +1130,7 @@ export default function OverlayEditor() {
                   }}
                 >
                   {/* Render zones */}
-                  {allZones.filter(z => z.mode === "zone").map((zone) => {
+                  {allZones.filter((z: any) => z.mode === "zone").map((zone) => {
                     const buttonStyle = zone.metadata?.buttonStyle || "none";
                     const isCustomImage = buttonStyle === "custom-image";
 
@@ -1240,7 +1240,7 @@ export default function OverlayEditor() {
                   })}
 
                   {/* Render sprites */}
-                  {allZones.filter(z => z.mode === "sprite").map((sprite) => {
+                  {allZones.filter((z: any) => z.mode === "sprite").map((sprite) => {
                     const spriteScaleValue = sprite.metadata?.spriteScale || 1;
                     // Hide sprite if it's being dragged to a new position
                     const isBeingDragged = isDraggingExisting && sprite.id === selectedZoneId;
@@ -1567,7 +1567,7 @@ export default function OverlayEditor() {
                     const newScale = parseInt(e.target.value) / 100;
                     if (selectedZone?.mode === "sprite") {
                       // Update selected sprite
-                      setZones(zones.map(z => z.id === selectedZoneId ? {
+                      setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                         ...z,
                         metadata: { ...z.metadata, spriteScale: newScale }
                       } : z));
@@ -1598,7 +1598,7 @@ export default function OverlayEditor() {
                     const newScale = Math.max(0.01, Math.min(3, value / 100));
                     if (selectedZone?.mode === "sprite") {
                       // Update selected sprite
-                      setZones(zones.map(z => z.id === selectedZoneId ? {
+                      setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                         ...z,
                         metadata: { ...z.metadata, spriteScale: newScale }
                       } : z));
@@ -1617,7 +1617,7 @@ export default function OverlayEditor() {
                 onClick={() => {
                   if (selectedZone?.mode === "sprite") {
                     // Reset selected sprite
-                    setZones(zones.map(z => z.id === selectedZoneId ? {
+                    setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                       ...z,
                       metadata: { ...z.metadata, spriteScale: 1 }
                     } : z));
@@ -1723,10 +1723,10 @@ export default function OverlayEditor() {
                   </div>
 
                   {/* Clear Variation button for existing sprites */}
-                  {selectedZoneId && zones.find(z => z.id === selectedZoneId)?.metadata?.variationId && (
+                  {selectedZoneId && zones.find((z: any) => z.id === selectedZoneId)?.metadata?.variationId && (
                     <button
                       onClick={() => {
-                        const selectedSprite = zones.find(z => z.id === selectedZoneId);
+                        const selectedSprite = zones.find((z: any) => z.id === selectedZoneId);
                         if (selectedSprite?.metadata?.variationId) {
                           // Remove from used variations
                           const newUsedVariations = new Set(usedVariations);
@@ -1734,7 +1734,7 @@ export default function OverlayEditor() {
                           setUsedVariations(newUsedVariations);
                         }
 
-                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                        setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                           ...z,
                           label: "",
                           metadata: {
@@ -1940,7 +1940,7 @@ export default function OverlayEditor() {
                         />
                         <div className="max-h-64 overflow-y-auto space-y-1">
                           {variationsByType.head
-                            .filter(v => v.name.toLowerCase().includes(checklistSearch.head.toLowerCase()))
+                            .filter((v: any) => v.name.toLowerCase().includes(checklistSearch.head.toLowerCase()))
                             .map((variation) => {
                               const uniqueId = `${variation.type}-${variation.name}`;
                               const isUsed = usedVariations.has(uniqueId);
@@ -1953,14 +1953,14 @@ export default function OverlayEditor() {
                                       commitSpritePosition(variation);
                                     }
                                     // If a sprite is selected, swap the variation (allow duplicates)
-                                    else if (selectedZoneId && zones.find(z => z.id === selectedZoneId)?.mode === "sprite") {
-                                      const selectedSprite = zones.find(z => z.id === selectedZoneId);
+                                    else if (selectedZoneId && zones.find((z: any) => z.id === selectedZoneId)?.mode === "sprite") {
+                                      const selectedSprite = zones.find((z: any) => z.id === selectedZoneId);
                                       if (selectedSprite) {
                                         const newUniqueId = `${variation.type}-${variation.name}`;
                                         const oldUniqueId = selectedSprite.metadata?.variationId;
 
                                         // Update the sprite with new variation
-                                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                                        setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                                           ...z,
                                           label: variation.name,
                                           metadata: {
@@ -2039,7 +2039,7 @@ export default function OverlayEditor() {
                         />
                         <div className="max-h-64 overflow-y-auto space-y-1">
                           {variationsByType.body
-                            .filter(v => v.name.toLowerCase().includes(checklistSearch.body.toLowerCase()))
+                            .filter((v: any) => v.name.toLowerCase().includes(checklistSearch.body.toLowerCase()))
                             .map((variation) => {
                               const uniqueId = `${variation.type}-${variation.name}`;
                               const isUsed = usedVariations.has(uniqueId);
@@ -2052,14 +2052,14 @@ export default function OverlayEditor() {
                                       commitSpritePosition(variation);
                                     }
                                     // If a sprite is selected, swap the variation (allow duplicates)
-                                    else if (selectedZoneId && zones.find(z => z.id === selectedZoneId)?.mode === "sprite") {
-                                      const selectedSprite = zones.find(z => z.id === selectedZoneId);
+                                    else if (selectedZoneId && zones.find((z: any) => z.id === selectedZoneId)?.mode === "sprite") {
+                                      const selectedSprite = zones.find((z: any) => z.id === selectedZoneId);
                                       if (selectedSprite) {
                                         const newUniqueId = `${variation.type}-${variation.name}`;
                                         const oldUniqueId = selectedSprite.metadata?.variationId;
 
                                         // Update the sprite with new variation
-                                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                                        setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                                           ...z,
                                           label: variation.name,
                                           metadata: {
@@ -2138,7 +2138,7 @@ export default function OverlayEditor() {
                         />
                         <div className="max-h-64 overflow-y-auto space-y-1">
                           {variationsByType.trait
-                            .filter(v => v.name.toLowerCase().includes(checklistSearch.trait.toLowerCase()))
+                            .filter((v: any) => v.name.toLowerCase().includes(checklistSearch.trait.toLowerCase()))
                             .map((variation) => {
                               const uniqueId = `${variation.type}-${variation.name}`;
                               const isUsed = usedVariations.has(uniqueId);
@@ -2151,14 +2151,14 @@ export default function OverlayEditor() {
                                       commitSpritePosition(variation);
                                     }
                                     // If a sprite is selected, swap the variation (allow duplicates)
-                                    else if (selectedZoneId && zones.find(z => z.id === selectedZoneId)?.mode === "sprite") {
-                                      const selectedSprite = zones.find(z => z.id === selectedZoneId);
+                                    else if (selectedZoneId && zones.find((z: any) => z.id === selectedZoneId)?.mode === "sprite") {
+                                      const selectedSprite = zones.find((z: any) => z.id === selectedZoneId);
                                       if (selectedSprite) {
                                         const newUniqueId = `${variation.type}-${variation.name}`;
                                         const oldUniqueId = selectedSprite.metadata?.variationId;
 
                                         // Update the sprite with new variation
-                                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                                        setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                                           ...z,
                                           label: variation.name,
                                           metadata: {
@@ -2295,7 +2295,7 @@ export default function OverlayEditor() {
                     value={Math.round(selectedZone.x)}
                     onChange={(e) => {
                       const newX = parseInt(e.target.value) || 0;
-                      setZones(zones.map(z => z.id === selectedZoneId ? {
+                      setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                         ...z,
                         x: newX
                       } : z));
@@ -2315,7 +2315,7 @@ export default function OverlayEditor() {
                     value={Math.round(selectedZone.y)}
                     onChange={(e) => {
                       const newY = parseInt(e.target.value) || 0;
-                      setZones(zones.map(z => z.id === selectedZoneId ? {
+                      setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                         ...z,
                         y: newY
                       } : z));
@@ -2344,7 +2344,7 @@ export default function OverlayEditor() {
                       value={Math.round((selectedZone.metadata?.spriteScale || 1) * 100)}
                       onChange={(e) => {
                         const newScale = parseInt(e.target.value) / 100;
-                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                        setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                           ...z,
                           metadata: { ...z.metadata, spriteScale: newScale }
                         } : z));
@@ -2367,7 +2367,7 @@ export default function OverlayEditor() {
                       onChange={(e) => {
                         const value = parseInt(e.target.value) || 100;
                         const newScale = Math.max(0.01, Math.min(3, value / 100));
-                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                        setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                           ...z,
                           metadata: { ...z.metadata, spriteScale: newScale }
                         } : z));
@@ -2378,7 +2378,7 @@ export default function OverlayEditor() {
 
                   <button
                     onClick={() => {
-                      setZones(zones.map(z => z.id === selectedZoneId ? {
+                      setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                         ...z,
                         metadata: { ...z.metadata, spriteScale: 1 }
                       } : z));
@@ -2402,7 +2402,7 @@ export default function OverlayEditor() {
                       value={selectedZone.metadata?.buttonStyle || "none"}
                       onChange={(e) => {
                         const newStyle = e.target.value;
-                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                        setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                           ...z,
                           metadata: {
                             ...z.metadata,
@@ -2432,7 +2432,7 @@ export default function OverlayEditor() {
                           type="text"
                           value={selectedZone.metadata?.buttonText || ""}
                           onChange={(e) => {
-                            setZones(zones.map(z => z.id === selectedZoneId ? {
+                            setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                               ...z,
                               metadata: { ...z.metadata, buttonText: e.target.value }
                             } : z));
@@ -2447,7 +2447,7 @@ export default function OverlayEditor() {
                         <select
                           value={selectedZone.metadata?.buttonFont || "orbitron"}
                           onChange={(e) => {
-                            setZones(zones.map(z => z.id === selectedZoneId ? {
+                            setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                               ...z,
                               metadata: { ...z.metadata, buttonFont: e.target.value }
                             } : z));
@@ -2467,7 +2467,7 @@ export default function OverlayEditor() {
                         <select
                           value={selectedZone.metadata?.buttonHoverEffect || "glow"}
                           onChange={(e) => {
-                            setZones(zones.map(z => z.id === selectedZoneId ? {
+                            setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                               ...z,
                               metadata: { ...z.metadata, buttonHoverEffect: e.target.value }
                             } : z));
@@ -2491,7 +2491,7 @@ export default function OverlayEditor() {
                         <select
                           value={selectedZone.metadata?.buttonHoverEffect || "glow"}
                           onChange={(e) => {
-                            setZones(zones.map(z => z.id === selectedZoneId ? {
+                            setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                               ...z,
                               metadata: { ...z.metadata, buttonHoverEffect: e.target.value }
                             } : z));
@@ -2524,7 +2524,7 @@ export default function OverlayEditor() {
                               const reader = new FileReader();
                               reader.onload = (event) => {
                                 const dataUrl = event.target?.result as string;
-                                setZones(zones.map(z => z.id === selectedZoneId ? {
+                                setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                                   ...z,
                                   metadata: { ...z.metadata, buttonImageUrl: dataUrl }
                                 } : z));
@@ -2543,7 +2543,7 @@ export default function OverlayEditor() {
                                 />
                                 <button
                                   onClick={() => {
-                                    setZones(zones.map(z => z.id === selectedZoneId ? {
+                                    setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                                       ...z,
                                       metadata: { ...z.metadata, buttonImageUrl: undefined }
                                     } : z));
@@ -2571,7 +2571,7 @@ export default function OverlayEditor() {
                                         const reader = new FileReader();
                                         reader.onload = (event) => {
                                           const dataUrl = event.target?.result as string;
-                                          setZones(zones.map(z => z.id === selectedZoneId ? {
+                                          setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                                             ...z,
                                             metadata: { ...z.metadata, buttonImageUrl: dataUrl }
                                           } : z));
@@ -2598,7 +2598,7 @@ export default function OverlayEditor() {
                           step="0.05"
                           value={selectedZone.metadata?.buttonImageScale || 1}
                           onChange={(e) => {
-                            setZones(zones.map(z => z.id === selectedZoneId ? {
+                            setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                               ...z,
                               metadata: { ...z.metadata, buttonImageScale: parseFloat(e.target.value) }
                             } : z));
@@ -2619,7 +2619,7 @@ export default function OverlayEditor() {
                         <select
                           value={selectedZone.metadata?.buttonAction || "none"}
                           onChange={(e) => {
-                            setZones(zones.map(z => z.id === selectedZoneId ? {
+                            setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                               ...z,
                               metadata: {
                                 ...z.metadata,
@@ -2644,7 +2644,7 @@ export default function OverlayEditor() {
                           <select
                             value={selectedZone.metadata?.buttonActionData || ""}
                             onChange={(e) => {
-                              setZones(zones.map(z => z.id === selectedZoneId ? {
+                              setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                                 ...z,
                                 metadata: { ...z.metadata, buttonActionData: e.target.value }
                               } : z));
@@ -2666,7 +2666,7 @@ export default function OverlayEditor() {
                             type="text"
                             value={selectedZone.metadata?.buttonActionData || ""}
                             onChange={(e) => {
-                              setZones(zones.map(z => z.id === selectedZoneId ? {
+                              setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                                 ...z,
                                 metadata: { ...z.metadata, buttonActionData: e.target.value }
                               } : z));
@@ -2695,7 +2695,7 @@ export default function OverlayEditor() {
                     <select
                       value={selectedZone.metadata?.displayType || "gold"}
                       onChange={(e) => {
-                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                        setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                           ...z,
                           metadata: {
                             ...z.metadata,
@@ -2725,7 +2725,7 @@ export default function OverlayEditor() {
                       <select
                         value={selectedZone.metadata?.essenceType || "Fire"}
                         onChange={(e) => {
-                          setZones(zones.map(z => z.id === selectedZoneId ? {
+                          setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                             ...z,
                             metadata: { ...z.metadata, essenceType: e.target.value }
                           } : z));
@@ -2756,7 +2756,7 @@ export default function OverlayEditor() {
                       step="2"
                       value={selectedZone.metadata?.displayFontSize || 32}
                       onChange={(e) => {
-                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                        setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                           ...z,
                           metadata: { ...z.metadata, displayFontSize: parseInt(e.target.value) }
                         } : z));
@@ -2771,7 +2771,7 @@ export default function OverlayEditor() {
                     <select
                       value={selectedZone.metadata?.displayColor || "yellow"}
                       onChange={(e) => {
-                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                        setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                           ...z,
                           metadata: { ...z.metadata, displayColor: e.target.value }
                         } : z));
@@ -2794,7 +2794,7 @@ export default function OverlayEditor() {
                     <select
                       value={selectedZone.metadata?.displayFont || "geist-mono"}
                       onChange={(e) => {
-                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                        setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                           ...z,
                           metadata: { ...z.metadata, displayFont: e.target.value }
                         } : z));
@@ -2821,7 +2821,7 @@ export default function OverlayEditor() {
                           id="isClickable"
                           checked={selectedZone.metadata?.isClickable || false}
                           onChange={(e) => {
-                            setZones(zones.map(z => z.id === selectedZoneId ? {
+                            setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                               ...z,
                               metadata: {
                                 ...z.metadata,
@@ -2845,7 +2845,7 @@ export default function OverlayEditor() {
                           <select
                             value={selectedZone.metadata?.clickAction || "openMekManagement"}
                             onChange={(e) => {
-                              setZones(zones.map(z => z.id === selectedZoneId ? {
+                              setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                                 ...z,
                                 metadata: { ...z.metadata, clickAction: e.target.value }
                               } : z));
@@ -2868,7 +2868,7 @@ export default function OverlayEditor() {
                     <select
                       value={selectedZone.metadata?.displayAlign || "center"}
                       onChange={(e) => {
-                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                        setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                           ...z,
                           metadata: { ...z.metadata, displayAlign: e.target.value }
                         } : z));
@@ -2893,7 +2893,7 @@ export default function OverlayEditor() {
                       step="1"
                       value={selectedZone.metadata?.decimalPlaces || 0}
                       onChange={(e) => {
-                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                        setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                           ...z,
                           metadata: { ...z.metadata, decimalPlaces: parseInt(e.target.value) }
                         } : z));
@@ -2915,7 +2915,7 @@ export default function OverlayEditor() {
                         step="5"
                         value={selectedZone.metadata?.decimalFontSizePercent || 50}
                         onChange={(e) => {
-                          setZones(zones.map(z => z.id === selectedZoneId ? {
+                          setZones(zones.map((z: any) => z.id === selectedZoneId ? {
                             ...z,
                             metadata: { ...z.metadata, decimalFontSizePercent: parseInt(e.target.value) }
                           } : z));
@@ -3030,7 +3030,7 @@ export default function OverlayEditor() {
               </div>
             ) : (
               <div className="space-y-2">
-                {autosaveHistoryFromDb.map((item, index) => (
+                {autosaveHistoryFromDb.map((item: any, index: number) => (
                   <div
                     key={item._id}
                     onClick={() => restoreFromHistory(item)}
