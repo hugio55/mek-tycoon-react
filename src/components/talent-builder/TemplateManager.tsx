@@ -103,21 +103,12 @@ const TemplateManager: React.FC<TemplateManagerProps> = memo(({
                   key={template._id}
                   className="bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition-all border border-gray-700"
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-bold text-yellow-400">{template.name}</h3>
-                    {template.conditions?.rankMin !== undefined && (
-                      <div className="bg-purple-900/50 border border-purple-500/30 rounded px-2 py-0.5 text-xs">
-                        <span className="text-purple-400 font-mono">
-                          Ranks {template.conditions.rankMin}-{template.conditions.rankMax || '∞'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                  <h3 className="font-bold text-yellow-400 mb-2">{template.name}</h3>
                   <p className="text-sm text-gray-400 mb-3">{template.description}</p>
                   <div className="text-xs text-gray-500 mb-3">
                     Nodes: {template.nodes.length} | Connections: {template.connections.length}
                     {template.updatedAt && (
-                      <span className="ml-2">| Updated: {new Date(template.updatedAt).toLocaleDateString()}</span>
+                      <span className="ml-2">| {new Date(template.updatedAt).toLocaleDateString()}</span>
                     )}
                   </div>
                   <div className="flex gap-2">

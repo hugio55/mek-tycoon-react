@@ -197,6 +197,28 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
     }
   }, [state.templateName, state.templateDescription, state.nodes, state.connections, state.viewportDimensions, dispatch, actions, createTemplate, updateTemplate]);
 
+  // Handle save button click - shows dialog if name exists
+  const handleSaveClick = useCallback(() => {
+    const name = state.templateName;
+    if (!name) {
+      alert('Please enter a template name');
+      return;
+    }
+
+    const existing = checkExistingTemplate(name);
+    if (existing && existing._id !== state.selectedTemplateId) {
+      // Name exists and it's not the current template - show dialog
+      setExistingTemplateId(existing._id);
+      setShowSaveDialog(true);
+    } else if (state.selectedTemplateId) {
+      // We're editing an existing template - just overwrite
+      handleSaveMekTemplate('overwrite', state.selectedTemplateId);
+    } else {
+      // New template with unique name - save directly
+      handleSaveMekTemplate('new', null);
+    }
+  }, [state.templateName, state.selectedTemplateId, checkExistingTemplate, handleSaveMekTemplate]);
+
   return (
     <div className="bg-gray-900 border-b border-gray-800 shrink-0">
       {/* Primary Toolbar */}
