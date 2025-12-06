@@ -40,6 +40,7 @@ import { createSeededRandomFromString } from '@/lib/seeded-random';
 import { calculateChipRewardsForEvent } from '@/lib/chipRewardCalculator';
 import { DifficultyLevel, DifficultyConfig, calculateRewards, calculateMekSlots } from '@/lib/difficultyModifiers';
 import { StoryModeTitleCard } from '@/components/StoryModeTitleCards';
+import { getMediaUrl } from '@/lib/media-url';
 import '@/styles/story-title-cards.css';
 import SuccessMeterV2 from '@/components/SuccessMeterV2';
 import HolographicButton from '@/components/ui/IndustrialButtons/HolographicButton';
@@ -1385,7 +1386,7 @@ export default function StoryClimbPage() {
   const getMekImage = useCallback((nodeOrId: string | StoryNode, isForDetails: boolean = false): string => {
     // In preview mode, return a simple placeholder
     if (previewMode) {
-      return '/mek-images/150px/000-000-000.webp';
+      return getMediaUrl('/mek-images/150px/000-000-000.webp');
     }
 
     // Get the node object
@@ -1520,7 +1521,7 @@ export default function StoryClimbPage() {
   const getNodeImage = useCallback((nodeId: string): string => {
     // This is a fallback for non-mechanism nodes
     // Just return a default image path
-    return '/mek-images/150px/000-000-000.webp';
+    return getMediaUrl('/mek-images/150px/000-000-000.webp');
   }, []);
   
   // Function to get a random event image for event nodes
