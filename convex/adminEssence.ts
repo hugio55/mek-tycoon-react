@@ -46,7 +46,7 @@ export const adminAddEssenceToPlayer = mutation({
     // Get updated balance to show in response
     const updatedBalance = await ctx.db
       .query("essenceBalances")
-      .withIndex("", (q: any) =>
+      .withIndex("by_wallet_and_name", (q: any) =>
         q.eq("walletAddress", walletAddress).eq("variationName", variationName)
       )
       .first();

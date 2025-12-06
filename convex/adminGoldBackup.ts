@@ -137,7 +137,7 @@ export const getBackupInfo = query({
     // Get sample records from this backup
     const sampleRecords = await ctx.db
       .query("goldBackupUserData")
-      .withIndex("", (q: any) => q.eq("backupId", args.backupId))
+      .withIndex("by_backup", (q: any) => q.eq("backupId", args.backupId))
       .take(10);
 
     return {
@@ -191,7 +191,7 @@ export const restoreFromBackup = mutation({
     // Get all backup records
     const backupRecords = await ctx.db
       .query("goldBackupUserData")
-      .withIndex("", (q: any) => q.eq("backupId", args.backupId))
+      .withIndex("by_backup", (q: any) => q.eq("backupId", args.backupId))
       .collect();
 
     if (backupRecords.length === 0) {
@@ -206,7 +206,7 @@ export const restoreFromBackup = mutation({
       // Find current gold mining record
       const currentMiner = await ctx.db
         .query("goldMining")
-        .withIndex("", (q: any) => q.eq("walletAddress", backupRecord.walletAddress))
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", backupRecord.walletAddress))
         .first();
 
       if (!currentMiner) {
@@ -265,7 +265,7 @@ export const verifyBackupIntegrity = query({
 
     const backupRecords = await ctx.db
       .query("goldBackupUserData")
-      .withIndex("", (q: any) => q.eq("backupId", args.backupId))
+      .withIndex("by_backup", (q: any) => q.eq("backupId", args.backupId))
       .collect();
 
     // Verify record count matches

@@ -10,7 +10,7 @@ export const investigateUserGold = query({
   handler: async (ctx, args) => {
     const goldData = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!goldData) {
@@ -142,7 +142,7 @@ export const fixCumulativeGoldInflation = mutation({
 
     const goldData = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!goldData) {
@@ -214,7 +214,7 @@ export const restoreLostGold = mutation({
 
     const goldData = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!goldData) {

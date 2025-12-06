@@ -133,7 +133,7 @@ export default function DuplicateWalletDetector() {
             Same wallet address appearing multiple times - this is a DATABASE BUG in the connection code
           </p>
           <div className="space-y-2">
-            {duplicates.exactDuplicates.map((dup, idx) => (
+            {duplicates.exactDuplicates.map((dup: any, idx: number) => (
               <div key={idx} className="bg-gray-950/50 p-3 rounded border border-gray-700">
                 <div className="flex items-center justify-between mb-2">
                   <div className="font-mono text-sm text-gray-300">
@@ -144,7 +144,7 @@ export default function DuplicateWalletDetector() {
                   </div>
                 </div>
                 <div className="grid grid-cols-4 gap-2 text-xs">
-                  {dup.records.map((rec, recIdx) => (
+                  {dup.records.map((rec: any, recIdx: number) => (
                     <div key={recIdx} className="bg-gray-900 p-2 rounded">
                       <div className="text-gray-500">Record {recIdx + 1}</div>
                       <div className="text-yellow-400">{rec.mekCount} MEKs</div>
@@ -203,7 +203,7 @@ export default function DuplicateWalletDetector() {
           )}
 
           <div className="space-y-2 max-h-96 overflow-y-auto">
-            {duplicates.assetOverlaps.map((overlap, idx) => (
+            {duplicates.assetOverlaps.map((overlap: any, idx: number) => (
               <div key={idx} className="bg-gray-950/50 p-3 rounded border border-red-700">
                 <div className="flex items-center justify-between mb-2">
                   <div>
@@ -215,7 +215,7 @@ export default function DuplicateWalletDetector() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  {overlap.wallets.map((wallet, wIdx) => (
+                  {overlap.wallets.map((wallet: any, wIdx: number) => (
                     <div key={wIdx} className="bg-gray-900 p-2 rounded text-xs flex items-center justify-between">
                       <span className="font-mono text-gray-400">
                         {wallet.address.substring(0, 15)}...
@@ -240,7 +240,7 @@ export default function DuplicateWalletDetector() {
             Different wallet addresses with identical MEK holdings - could be legitimate transfers OR cheating attempts
           </p>
           <div className="space-y-2 max-h-96 overflow-y-auto">
-            {duplicates.fingerprintDuplicates.map((dup, idx) => (
+            {duplicates.fingerprintDuplicates.map((dup: any, idx: number) => (
               <div key={idx} className="bg-gray-950/50 p-3 rounded border border-gray-700">
                 <div className="flex items-center justify-between mb-2">
                   <div>
@@ -254,7 +254,7 @@ export default function DuplicateWalletDetector() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  {dup.wallets.map((wallet, wIdx) => (
+                  {dup.wallets.map((wallet: any, wIdx: number) => (
                     <div key={wIdx} className="bg-gray-900 p-2 rounded text-xs">
                       <div className="flex items-center justify-between">
                         <span className="font-mono text-gray-400">

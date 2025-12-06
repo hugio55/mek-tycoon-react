@@ -147,6 +147,19 @@ export default function OverlayEditor() {
   );
   const autosaveHistoryFromDb = useQuery(api.overlays.getAutosaveHistory, { imageKey });
 
+  // Global mouseup listener to fix stuck drag state when mouse released outside canvas
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      isMouseDownRef.current = false;
+      if (isDraggingExisting) {
+        setIsDraggingExisting(false);
+      }
+    };
+
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, [isDraggingExisting]);
+
   // Load overlay data when it arrives from Convex (ONLY on initial load)
   // This prevents Convex reactivity from overwriting unsaved local changes
   useEffect(() => {
@@ -794,6 +807,18 @@ export default function OverlayEditor() {
   // Delete selected zone/sprite
   const handleDelete = async () => {
     if (selectedZoneId) {
+      // Find the zone being deleted to check for variation tracking
+      const deletedZone = zones.find(z => z.id === selectedZoneId);
+
+      // If this sprite had a variation assigned, remove it from usedVariations
+      if (deletedZone?.metadata?.variationId) {
+        setUsedVariations(prev => {
+          const next = new Set(prev);
+          next.delete(deletedZone.metadata.variationId);
+          return next;
+        });
+      }
+
       const updatedZones = zones.filter((z) => z.id !== selectedZoneId);
       setZones(updatedZones);
       setSelectedZoneId(null);
@@ -853,36 +878,40 @@ export default function OverlayEditor() {
     }
   };
 
-  // Filter variations by search
-  const filteredVariations = COMPLETE_VARIATION_RARITY.filter((v) =>
-    v.name.toLowerCase().includes(variationSearch.toLowerCase())
+  // Filter variations by search (memoized to prevent recalc on every render)
+  const filteredVariations = useMemo(() =>
+    COMPLETE_VARIATION_RARITY.filter((v) =>
+      v.name.toLowerCase().includes(variationSearch.toLowerCase())
+    ), [variationSearch]
   );
 
-  // Group variations by type for checklist (sorted from least rare to most rare)
-  const variationsByType = {
+  // Group variations by type for checklist (memoized - static data, never changes)
+  const variationsByType = useMemo(() => ({
     head: COMPLETE_VARIATION_RARITY.filter(v => v.type === "head").sort((a, b) => b.rank - a.rank),
     body: COMPLETE_VARIATION_RARITY.filter(v => v.type === "body").sort((a, b) => b.rank - a.rank),
     trait: COMPLETE_VARIATION_RARITY.filter(v => v.type === "trait").sort((a, b) => b.rank - a.rank),
-  };
+  }), []);
 
-  const usedCountByType = {
+  // Count used variations by type (memoized - only recalcs when usedVariations changes)
+  const usedCountByType = useMemo(() => ({
     head: variationsByType.head.filter(v => usedVariations.has(`${v.type}-${v.name}`)).length,
     body: variationsByType.body.filter(v => usedVariations.has(`${v.type}-${v.name}`)).length,
     trait: variationsByType.trait.filter(v => usedVariations.has(`${v.type}-${v.name}`)).length,
-  };
+  }), [variationsByType, usedVariations]);
 
-  // Debug logging
-  useEffect(() => {
-    if (usedVariations.size > 0) {
-      console.log('[Debug] Used variations set:', Array.from(usedVariations));
-      console.log('[Debug] Count by type:', usedCountByType);
-    }
-  }, [usedVariations, usedCountByType]);
+  // Selected zone lookup (memoized)
+  const selectedZone = useMemo(() =>
+    zones.find((z) => z.id === selectedZoneId),
+    [zones, selectedZoneId]
+  );
 
-  const selectedZone = zones.find((z) => z.id === selectedZoneId);
-  const allZones = editorMode === "zone" && dragState.currentZone
-    ? [...zones, dragState.currentZone]
-    : zones;
+  // All zones including current drawing zone (memoized)
+  const allZones = useMemo(() =>
+    editorMode === "zone" && dragState.currentZone
+      ? [...zones, dragState.currentZone]
+      : zones,
+    [editorMode, dragState.currentZone, zones]
+  );
 
   return (
     <div className="space-y-4">
