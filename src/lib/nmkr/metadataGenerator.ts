@@ -14,6 +14,7 @@ export interface NMKRMetadataParams {
   displayNameBase: string;      // "Bronze Token" (display name with spaces - shown on pool.pm)
   tokenBaseName: string;        // "MekBetaBronzeToken" (on-chain asset name - no spaces/special chars)
   numberOfNFTs: number;         // 5, 35, 100, etc.
+  startingNumber?: number;      // Starting edition number (default: 1). Use 4 to generate #4, #5, #6...
   phase: number;                // 1, 2, 3...
   description: string;          // Description template (max 64 chars)
   policyId: string;             // Cardano policy ID (hex string)
