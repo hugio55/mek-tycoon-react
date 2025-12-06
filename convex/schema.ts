@@ -3776,4 +3776,39 @@ export default defineSchema({
     .index("by_corporation_name_lower", ["corporationNameLower"]) // Case-insensitive search
     .index("by_level", ["level"]) // For leaderboards
     .index("by_gold", ["gold"]), // For gold leaderboards
+
+  // =============================================================================
+  // PLAYER NOTIFICATIONS SYSTEM
+  // =============================================================================
+  // In-game notifications for player alerts (job completion, level ups, pit stops, etc.)
+  // =============================================================================
+
+  // Player notifications - alerts displayed via bell icon in header
+  notifications: defineTable({
+    // Ownership
+    userId: v.id("users"), // Which player receives this notification
+
+    // Content
+    type: v.string(), // Notification type key: "pit_stop_ready", "job_level_up", "achievement_unlocked", etc.
+    title: v.string(), // Display title (e.g., "Pit Stop Ready!")
+    subtitle: v.optional(v.string()), // Supporting text (e.g., "Mek #1234 - Choose a buff")
+
+    // Navigation
+    linkTo: v.optional(v.string()), // URL path to navigate to (e.g., "/slots")
+    linkParams: v.optional(v.any()), // Additional params (e.g., { mekId: "xyz", openPitStop: true })
+
+    // State
+    isRead: v.boolean(), // Has user clicked/viewed this notification?
+
+    // Timestamps
+    createdAt: v.number(), // When notification was created
+
+    // Source reference (for deduplication - prevent duplicate notifications for same event)
+    sourceType: v.optional(v.string()), // "mek", "pit_stop", "achievement", etc.
+    sourceId: v.optional(v.string()), // Unique ID of source entity (e.g., mekId-pitStopNumber)
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_unread", ["userId", "isRead"])
+    .index("by_user_created", ["userId", "createdAt"])
+    .index("by_source", ["sourceType", "sourceId"]),
 });

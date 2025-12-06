@@ -1,0 +1,558 @@
+# NOTIFICATIONS - In-Game Notification System
+
+**Purpose:** Master documentation for the player notification system, alert types, and UI components.
+**Status:** Planning Phase
+**Last Updated:** 2025-12-06
+
+---
+
+## System Overview
+
+A notification system that alerts players to important in-game events. The system features:
+
+1. **Bell Icon** - Visible in the top-right corner of all pages
+2. **Notification Badge** - Glowing indicator showing unread count
+3. **Dropdown Panel** - Shows recent notifications (quick view)
+4. **"View All" Lightbox** - Full scrollable/paginated history of all notifications
+5. **Clear Button** - Allows user to clear all notifications
+6. **Deep Links** - Clicking a notification navigates to the relevant page/section
+
+**Key Design Decisions:**
+- **No sound effects** - Silent notifications only
+- **No grouping** - Each notification is individual, never combined
+- **Permanent lifespan** - Notifications persist until user manually clears them
+- **Persist after viewing** - Read notifications stay in the list (just lose the "new" indicator)
+- **Single color scheme** - No priority-based colors, keep it simple
+
+---
+
+## Part 1: UI Components
+
+### Header Layout
+
+The notification bell and messaging icon will sit together in the header:
+
+```
+[MEKS ▼] [Corporation Name]              [✉️] [🔔] [OE Logo]
+         (left side)                    (right side icons)
+```
+
+**Icon Order (left to right):**
+1. Messages icon (paper airplane) - links to existing messaging system
+2. Notifications bell - new notification system
+3. OE Logo
+
+### Bell Icon Design
+
+**Visual Style (Industrial Theme):**
+- Bell shape with sharp/angular design
+- Gold/yellow outline (`border-yellow-500/50`)
+- Semi-transparent background (`bg-black/60`)
+- Hover: Brighter glow, slight scale
+
+**States:**
+| State | Appearance |
+|-------|------------|
+| No unread | Bell outline only, muted |
+| Has unread | Bell with glowing badge |
+| Dropdown open | Bell highlighted/active |
+
+### Notification Badge
+
+**Badge Appearance:**
+- Small circle overlapping top-right of bell
+- Color: Yellow/gold (matches theme - `bg-yellow-400`)
+- Shows count (1-9, then "9+")
+- Hidden when unread count is 0
+- Subtle glow animation for unread
+
+### Dropdown Panel (Quick View)
+
+**Trigger:** Click on bell icon
+
+**Panel Design:**
+- Appears below bell icon, anchored to right edge
+- Width: ~320px
+- Max height: ~400px with internal scroll
+- Shows most recent 5-10 notifications
+- Background: `bg-black/95` with backdrop blur
+- Border: `border-yellow-500/30`
+
+**Panel Layout:**
+```
+┌─────────────────────────────────┐
+│ NOTIFICATIONS                   │ ← Header
+├─────────────────────────────────┤
+│ ● Pit Stop Ready!               │ ← Unread (yellow dot)
+│   Mek #1234 - Engineer          │
+│   2 minutes ago                 │
+├─────────────────────────────────┤
+│   Level Up Ready!               │ ← Read (no dot)
+│   Mek #5678 can advance         │
+│   1 hour ago                    │
+├─────────────────────────────────┤
+│ ● Job Complete                  │ ← Unread
+│   Mek #9012 finished shift      │
+│   5 minutes ago                 │
+├─────────────────────────────────┤
+│      [View All Notifications]   │ ← Opens lightbox
+│      [Clear All]                │ ← Clears everything
+└─────────────────────────────────┘
+```
+
+### "View All" Lightbox
+
+**Trigger:** Click "View All Notifications" button in dropdown
+
+**Lightbox Design:**
+- Full-screen modal (portal to body)
+- Dark backdrop with blur
+- Centered panel, ~600-800px wide, ~80vh tall
+- Scrollable list of ALL notifications ever
+- Paginated (load more as user scrolls, or explicit pagination)
+
+**Lightbox Layout:**
+```
+┌─────────────────────────────────────────────────────┐
+│  ALL NOTIFICATIONS                           [X]    │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  ● Pit Stop Ready!                    2 min ago     │
+│    Mek #1234 - Choose a buff for Engineer           │
+│    [Click to go to Slots]                           │
+│  ─────────────────────────────────────────────────  │
+│  ● Job Complete                       5 min ago     │
+│    Mek #9012 finished Janitor shift                 │
+│    [Click to go to Slots]                           │
+│  ─────────────────────────────────────────────────  │
+│    Level Up Ready!                    1 hour ago    │
+│    Mek #5678 can advance to Level 3                 │
+│    [Click to go to Slots]                           │
+│  ─────────────────────────────────────────────────  │
+│    Achievement Unlocked!              2 hours ago   │
+│    "Gold Hoarder" earned                            │
+│    [Click to go to Achievements]                    │
+│                                                     │
+│  ... (scrollable, paginated) ...                    │
+│                                                     │
+├─────────────────────────────────────────────────────┤
+│                    [Clear All Notifications]        │
+└─────────────────────────────────────────────────────┘
+```
+
+### Individual Notification Item
+
+**Components:**
+- **Unread indicator**: Yellow dot on left (only for unread)
+- **Title**: Bold, primary text (e.g., "Pit Stop Ready!")
+- **Subtitle**: Supporting details (e.g., "Mek #1234 - Choose a buff")
+- **Timestamp**: Relative time ("2 min ago", "1 hour ago", "Dec 5")
+- **Click action**: Navigate to relevant page, marks as read
+
+---
+
+## Part 2: Notification Types
+
+### Phase 1 Types (Initial Implementation)
+
+| Type | Trigger | Title | Subtitle | Links To |
+|------|---------|-------|----------|----------|
+| `pit_stop_ready` | Mek reaches pit stop milestone | "Pit Stop Ready!" | "Mek [name] - Choose a buff for [job]" | /slots |
+| `job_level_up` | Mek reaches next level threshold | "Level Up Ready!" | "Mek [name] can advance to Level X" | /slots |
+
+### Future Types (Phase 2+)
+
+| Type | Trigger | Title | Subtitle | Links To |
+|------|---------|-------|----------|----------|
+| `achievement_unlocked` | Achievement criteria met | "Achievement Unlocked!" | "[Achievement Name]" | /achievements |
+| `essence_milestone` | Essence threshold reached | "Essence Milestone!" | "Collected X [type] essence" | /essence |
+| `crafting_complete` | Crafting finishes | "Crafting Complete!" | "[Item] is ready to claim" | /crafting |
+| `daily_reward` | Daily login bonus | "Daily Reward!" | "Claim your X gold" | /home |
+| `system_announcement` | Admin broadcast | "[Custom Title]" | "[Custom message]" | varies |
+| `new_message` | Corp sends message | "New Message" | "[Corp name]: First 10-12 words..." | /messages |
+
+---
+
+## Part 3: Backend Schema (Convex)
+
+### Notifications Table
+
+```typescript
+notifications: defineTable({
+  // Ownership
+  userId: v.id("users"),           // Which player receives this
+
+  // Content
+  type: v.string(),                // Notification type key (pit_stop_ready, job_level_up, etc.)
+  title: v.string(),               // Display title
+  subtitle: v.optional(v.string()), // Supporting text
+
+  // Linking
+  linkTo: v.optional(v.string()),  // URL path to navigate to
+  linkParams: v.optional(v.any()), // Additional params (mekId, etc.)
+
+  // State
+  isRead: v.boolean(),             // Has user clicked/viewed this?
+
+  // Timestamps
+  createdAt: v.number(),           // When notification was created
+
+  // Source reference (for deduplication)
+  sourceType: v.optional(v.string()), // "mek", "pit_stop", "achievement", etc.
+  sourceId: v.optional(v.string()),   // ID of source entity
+})
+  .index("by_user", ["userId"])
+  .index("by_user_unread", ["userId", "isRead"])
+  .index("by_user_created", ["userId", "createdAt"])
+```
+
+**Note:** No `expiresAt` field - notifications are permanent until cleared.
+
+---
+
+## Part 4: Backend Functions
+
+### Queries
+
+```typescript
+// Get unread count for badge
+getUnreadNotificationCount(userId) → number
+
+// Get recent notifications for dropdown (last 10)
+getRecentNotifications(userId, limit: 10) → Notification[]
+
+// Get all notifications for lightbox (paginated)
+getAllNotifications(userId, cursor?, limit: 50) → {
+  notifications: Notification[],
+  nextCursor?: string,
+  hasMore: boolean
+}
+```
+
+### Mutations
+
+```typescript
+// Mark single notification as read (called when user clicks it)
+markNotificationAsRead(notificationId)
+
+// Mark all as read (optional - when user opens dropdown?)
+markAllNotificationsAsRead(userId)
+
+// Clear all notifications (user clicked "Clear All")
+clearAllNotifications(userId)
+
+// Create notification (internal - called by other systems)
+createNotification({
+  userId,
+  type,
+  title,
+  subtitle?,
+  linkTo?,
+  linkParams?,
+  sourceType?,
+  sourceId?,
+})
+```
+
+### Internal Triggers
+
+Called by other Convex functions when events occur:
+
+```typescript
+// When pit stop milestone is reached
+onPitStopReached(userId, mekId, mekName, jobKey, pitStopNumber) {
+  await createNotification({
+    userId,
+    type: "pit_stop_ready",
+    title: "Pit Stop Ready!",
+    subtitle: `${mekName} - Choose a buff for ${jobKey}`,
+    linkTo: "/slots",
+    linkParams: { mekId, openPitStop: true },
+    sourceType: "pit_stop",
+    sourceId: `${mekId}-${pitStopNumber}`,
+  });
+}
+
+// When Mek reaches level-up threshold
+onLevelUpReady(userId, mekId, mekName, newLevel) {
+  await createNotification({
+    userId,
+    type: "job_level_up",
+    title: "Level Up Ready!",
+    subtitle: `${mekName} can advance to Level ${newLevel}`,
+    linkTo: "/slots",
+    linkParams: { mekId },
+    sourceType: "mek_level",
+    sourceId: `${mekId}-level-${newLevel}`,
+  });
+}
+```
+
+---
+
+## Part 5: Frontend Components
+
+### Component Structure
+
+```
+src/components/notifications/
+├── NotificationBell.tsx           # Bell icon with badge
+├── NotificationDropdown.tsx       # Quick-view dropdown
+├── NotificationItem.tsx           # Individual notification row
+├── NotificationLightbox.tsx       # Full "View All" modal
+└── index.ts                       # Exports
+```
+
+### NotificationBell Component
+
+**Responsibilities:**
+- Render bell icon
+- Show/hide badge with unread count
+- Toggle dropdown on click
+- Subscribe to `getUnreadNotificationCount` query
+
+### NotificationDropdown Component
+
+**Responsibilities:**
+- Render dropdown panel when bell is clicked
+- Show recent notifications (limit 10)
+- "View All" button opens lightbox
+- "Clear All" button clears everything
+- Close when clicking outside
+
+### NotificationLightbox Component
+
+**Responsibilities:**
+- Full-screen modal (portal to document.body)
+- Paginated list of ALL notifications
+- Infinite scroll or "Load More" button
+- "Clear All" at bottom
+- Close button
+
+### NotificationItem Component
+
+**Responsibilities:**
+- Render single notification
+- Show unread dot indicator
+- Format relative timestamp
+- Handle click → navigate + mark as read
+
+---
+
+## Part 6: Real-Time Updates
+
+Convex provides built-in real-time reactivity:
+
+1. Backend mutation creates notification
+2. Convex pushes update to subscribed clients
+3. `useQuery` hook receives new data automatically
+4. Badge count updates immediately
+5. Dropdown/lightbox refresh if open
+
+**No polling required.**
+
+---
+
+## Part 7: Navigation & Deep Links
+
+### Click Flow
+
+When user clicks a notification:
+
+1. Mark notification as read (mutation)
+2. Close dropdown/lightbox
+3. Navigate to `linkTo` path
+4. Pass `linkParams` as query string or state
+
+### Page-Specific Actions
+
+Some notifications may trigger additional behavior:
+- `pit_stop_ready` with `openPitStop: true` → Could auto-open pit stop modal
+- `job_level_up` with `mekId` → Could highlight/scroll to that Mek's slot
+
+---
+
+## Part 8: Messaging System Integration (Future)
+
+### Shared UI Pattern
+
+The messaging system will use the **same UI pattern** as notifications:
+
+| Feature | Notifications | Messages |
+|---------|---------------|----------|
+| Icon | Bell (🔔) | Paper airplane (✉️) |
+| Badge | Unread notification count | Unread message count |
+| Dropdown | Recent notifications | Recent conversations |
+| Lightbox | All notifications | Full inbox |
+| Item display | Title + subtitle | Corp name + 10-12 word preview |
+
+### Messages Dropdown Preview
+
+```
+┌─────────────────────────────────────┐
+│ MESSAGES                            │
+├─────────────────────────────────────┤
+│ ● Titan Industries                  │
+│   "Hey, I wanted to ask about..."   │  ← First 10-12 words
+│   2 minutes ago                     │
+├─────────────────────────────────────┤
+│   Mek Corp                          │
+│   "Thanks for the trade! The..."    │
+│   1 hour ago                        │
+├─────────────────────────────────────┤
+│        [View All Messages]          │
+└─────────────────────────────────────┘
+```
+
+### Implementation Notes
+
+The messaging system already exists (`convex/messaging.ts`) with:
+- `getTotalUnreadCount` - For badge
+- `getConversations` - For inbox with `lastMessagePreview`
+- Company name lookups
+
+**For the messages icon, we will:**
+1. Reuse the dropdown/lightbox component patterns from notifications
+2. Connect to existing messaging queries
+3. Show `lastMessagePreview` truncated to ~10-12 words
+4. Link to `/messages` or specific conversation
+
+**This is FUTURE work** - build notifications first, then adapt the pattern.
+
+---
+
+## Part 9: Mobile Considerations
+
+### Responsive Design
+
+**Bell Icon:**
+- Same position on mobile
+- Larger touch target (min 44px)
+- Badge scales appropriately
+
+**Dropdown:**
+- Full-width on small screens
+- Adequate padding and touch targets
+- May anchor to top on mobile
+
+**Lightbox:**
+- Near full-screen on mobile
+- Large touch targets for items
+- Easy dismiss (X button, backdrop tap)
+
+---
+
+## Implementation Priority
+
+### Phase 1: Core System (MVP)
+
+1. **Database Schema**
+   - Add `notifications` table to Convex schema
+   - Add indexes
+
+2. **Backend Functions**
+   - `getUnreadNotificationCount` query
+   - `getRecentNotifications` query
+   - `getAllNotifications` query (paginated)
+   - `markNotificationAsRead` mutation
+   - `clearAllNotifications` mutation
+   - `createNotification` internal function
+
+3. **Frontend Components**
+   - `NotificationBell` with badge
+   - `NotificationDropdown` with item list
+   - `NotificationItem` component
+   - `NotificationLightbox` for "View All"
+   - Integration into UnifiedHeader
+
+4. **First Notification Triggers**
+   - Hook into tenure/pit stop system for `pit_stop_ready`
+   - Hook into level-up detection for `job_level_up`
+
+### Phase 2: Additional Types & Polish
+
+5. **More Notification Types**
+   - Achievement notifications
+   - Essence milestones
+   - System announcements
+
+6. **Deep Link Enhancements**
+   - Auto-open modals from notification params
+   - Scroll to/highlight specific elements
+
+### Phase 3: Messages Icon
+
+7. **Messages Quick-View**
+   - Reuse dropdown pattern for messages icon
+   - Show recent conversations with 10-12 word preview
+   - "View All" links to full messaging page
+
+---
+
+## Files to Create
+
+```
+convex/
+├── notifications.ts           # Queries and mutations
+
+src/components/notifications/
+├── NotificationBell.tsx
+├── NotificationDropdown.tsx
+├── NotificationItem.tsx
+├── NotificationLightbox.tsx
+└── index.ts
+```
+
+## Files to Modify
+
+```
+convex/schema.ts               # Add notifications table
+convex/tenure.ts               # Add notification triggers
+src/components/UnifiedHeader.tsx  # Add NotificationBell + Messages icon
+```
+
+---
+
+## Summary
+
+| Component | Description |
+|-----------|-------------|
+| NotificationBell | Bell icon with unread count badge |
+| NotificationDropdown | Quick-view of recent 10 notifications |
+| NotificationLightbox | Full paginated history (View All) |
+| NotificationItem | Single notification with dot, text, timestamp |
+| Clear All | Removes all notifications permanently |
+| Messages Icon | Future - same pattern for messaging quick-view |
+
+**Core Loop:**
+1. Event occurs (pit stop, level up, etc.)
+2. Backend creates notification
+3. Convex pushes to client in real-time
+4. Badge shows unread count
+5. User clicks bell → sees dropdown
+6. User clicks notification → navigates to page, marks as read
+7. User can "View All" for full history
+8. User can "Clear All" to remove everything
+
+---
+
+## Progress Tracking
+
+### Completed
+- [x] Planning document created
+
+### In Progress
+- [ ] (Nothing yet)
+
+### Up Next
+- [ ] Add `notifications` table to schema
+- [ ] Create backend queries and mutations
+- [ ] Build NotificationBell component
+- [ ] Build NotificationDropdown component
+- [ ] Build NotificationLightbox component
+- [ ] Integrate into UnifiedHeader
+- [ ] Hook into tenure system for first notification type
+
+---
+
+*This document tracks the notification system implementation. Update Progress Tracking as work proceeds.*
