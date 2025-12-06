@@ -447,6 +447,10 @@ export default function InventoryPage() {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(100%); }
         }
+        @keyframes employedPulse {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.6; }
+        }
       `}</style>
     </div>
   );
@@ -488,145 +492,250 @@ function MeksTab({ meks, selectedMek, onSelectMek, getMekImagePath }: MeksTabPro
     );
   }
 
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {meks.map((mek) => (
+  // Separate employed and unemployed Meks
+  const employedMeks = meks.filter(m => m.isSlotted);
+  const unemployedMeks = meks.filter(m => !m.isSlotted);
+
+  const renderMekCard = (mek: any, isEmployed: boolean) => (
+    <div
+      key={mek._id}
+      onClick={() => onSelectMek(selectedMek === mek._id ? null : mek._id)}
+      className={`relative group cursor-pointer rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.02] ${
+        isEmployed ? 'employed-mek' : ''
+      }`}
+      style={{
+        background: isEmployed
+          ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05))'
+          : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
+        border: selectedMek === mek._id
+          ? '2px solid rgba(34, 211, 238, 0.8)'
+          : isEmployed
+          ? '2px solid rgba(34, 197, 94, 0.5)'
+          : '1px solid rgba(255,255,255,0.1)',
+        boxShadow: selectedMek === mek._id
+          ? '0 0 30px rgba(34, 211, 238, 0.3)'
+          : isEmployed
+          ? '0 0 20px rgba(34, 197, 94, 0.2), inset 0 0 30px rgba(34, 197, 94, 0.05)'
+          : 'none',
+      }}
+    >
+      {/* Employed glow effect - animated pulse */}
+      {isEmployed && (
         <div
-          key={mek._id}
-          onClick={() => onSelectMek(selectedMek === mek._id ? null : mek._id)}
-          className="relative group cursor-pointer rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.02]"
+          className="absolute inset-0 pointer-events-none rounded-xl animate-pulse"
           style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
-            border: selectedMek === mek._id
-              ? '2px solid rgba(34, 211, 238, 0.6)'
-              : '1px solid rgba(255,255,255,0.1)',
-            boxShadow: selectedMek === mek._id
-              ? '0 0 30px rgba(34, 211, 238, 0.2)'
-              : 'none',
+            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), transparent)',
+            animation: 'employedPulse 3s ease-in-out infinite',
           }}
-        >
-          {/* Honeycomb hover */}
-          <div
-            className="absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none group-hover:opacity-[0.05]"
-            style={{
-              backgroundImage: `url('/random-images/honey-png-big.webp')`,
-              backgroundSize: '750px',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'repeat',
+        />
+      )}
+
+      {/* Honeycomb hover */}
+      <div
+        className="absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none group-hover:opacity-[0.05]"
+        style={{
+          backgroundImage: `url('/random-images/honey-png-big.webp')`,
+          backgroundSize: '750px',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'repeat',
+        }}
+      />
+
+      {/* Mek Image */}
+      <div className="relative aspect-square bg-black/30 flex items-center justify-center">
+        {mek.sourceKey ? (
+          <img
+            src={getMekImagePath(mek.sourceKey)}
+            alt={mek.assetName || 'Mek'}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
             }}
           />
+        ) : (
+          <span className="text-6xl">🤖</span>
+        )}
 
-          {/* Mek Image */}
-          <div className="relative aspect-square bg-black/30 flex items-center justify-center">
-            {mek.sourceKey ? (
-              <img
-                src={getMekImagePath(mek.sourceKey)}
-                alt={mek.assetName || 'Mek'}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            ) : (
-              <span className="text-6xl">🤖</span>
-            )}
+        {/* Rarity Badge */}
+        <div
+          className="absolute top-2 right-2 px-2 py-1 rounded text-xs font-bold uppercase"
+          style={{
+            background: 'rgba(0,0,0,0.7)',
+            color: mek.rarityTier === 'legendary' ? '#fab617'
+                 : mek.rarityTier === 'epic' ? '#a855f7'
+                 : mek.rarityTier === 'rare' ? '#3b82f6'
+                 : '#9ca3af',
+            fontFamily: 'Saira, sans-serif',
+          }}
+        >
+          {mek.rarityTier || 'Common'}
+        </div>
+      </div>
 
-            {/* Rarity Badge */}
-            <div
-              className="absolute top-2 right-2 px-2 py-1 rounded text-xs font-bold uppercase"
-              style={{
-                background: 'rgba(0,0,0,0.7)',
-                color: mek.rarityTier === 'legendary' ? '#fab617'
-                     : mek.rarityTier === 'epic' ? '#a855f7'
-                     : mek.rarityTier === 'rare' ? '#3b82f6'
-                     : '#9ca3af',
-                fontFamily: 'Saira, sans-serif',
-              }}
-            >
-              {mek.rarityTier || 'Common'}
-            </div>
+      {/* Employment Status Bar */}
+      <div
+        className="px-3 py-2 flex items-center justify-between"
+        style={{
+          background: isEmployed
+            ? 'linear-gradient(90deg, rgba(34, 197, 94, 0.3), rgba(34, 197, 94, 0.1))'
+            : 'linear-gradient(90deg, rgba(100, 100, 100, 0.3), rgba(100, 100, 100, 0.1))',
+          borderTop: isEmployed
+            ? '1px solid rgba(34, 197, 94, 0.3)'
+            : '1px solid rgba(255,255,255,0.05)',
+        }}
+      >
+        <div className="flex items-center gap-2">
+          {/* Status indicator dot */}
+          <div
+            className={`w-2.5 h-2.5 rounded-full ${isEmployed ? 'animate-pulse' : ''}`}
+            style={{
+              background: isEmployed ? '#22c55e' : '#6b7280',
+              boxShadow: isEmployed ? '0 0 8px rgba(34, 197, 94, 0.8)' : 'none',
+            }}
+          />
+          <span
+            className="text-xs font-bold uppercase tracking-wider"
+            style={{
+              fontFamily: 'Saira, sans-serif',
+              color: isEmployed ? '#22c55e' : '#6b7280',
+            }}
+          >
+            {isEmployed ? 'EMPLOYED' : 'AVAILABLE'}
+          </span>
+        </div>
+        {isEmployed && (
+          <span className="text-xs text-green-400/70" style={{ fontFamily: 'Play, sans-serif' }}>
+            Earning Essence
+          </span>
+        )}
+      </div>
 
-            {/* Slotted indicator */}
-            {mek.isSlotted && (
-              <div
-                className="absolute top-2 left-2 px-2 py-1 rounded text-xs font-bold"
-                style={{
-                  background: 'rgba(34, 211, 238, 0.2)',
-                  border: '1px solid rgba(34, 211, 238, 0.5)',
-                  color: '#22d3ee',
-                  fontFamily: 'Saira, sans-serif',
-                }}
-              >
-                SLOTTED
-              </div>
-            )}
+      {/* Mek Info */}
+      <div className="p-4 pt-3">
+        <h3
+          className="font-semibold text-white truncate mb-2"
+          style={{ fontFamily: 'Saira, sans-serif' }}
+        >
+          {mek.assetName || `Mek #${mek.assetId}`}
+        </h3>
+
+        <div className="space-y-1 text-sm">
+          <div className="flex justify-between">
+            <span className="text-white/50">Head</span>
+            <span className="text-white/80">{mek.headVariation || '-'}</span>
           </div>
+          <div className="flex justify-between">
+            <span className="text-white/50">Body</span>
+            <span className="text-white/80">{mek.bodyVariation || '-'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-white/50">Trait</span>
+            <span className="text-white/80">{mek.itemVariation || '-'}</span>
+          </div>
+        </div>
 
-          {/* Mek Info */}
-          <div className="p-4">
+        {/* Stats Row */}
+        <div className="mt-3 pt-3 border-t border-white/10 flex justify-between text-sm">
+          <div>
+            <span className="text-white/40 text-xs">Level</span>
+            <div className="text-cyan-400 font-bold">{mek.level || 1}</div>
+          </div>
+          <div className="text-right">
+            <span className="text-white/40 text-xs">Power</span>
+            <div className="text-yellow-400 font-bold">{(mek.powerScore || 0).toLocaleString()}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Expanded Actions */}
+      {selectedMek === mek._id && (
+        <div className="p-4 pt-0 space-y-2">
+          <button
+            className="w-full py-2 rounded-lg text-sm font-semibold transition-all"
+            style={{
+              background: 'linear-gradient(to right, #22d3ee, #06b6d4)',
+              color: 'black',
+              fontFamily: 'Inter, sans-serif',
+            }}
+          >
+            View Details
+          </button>
+          <button
+            className="w-full py-2 rounded-lg text-sm font-semibold transition-all"
+            style={{
+              background: isEmployed
+                ? 'rgba(239, 68, 68, 0.2)'
+                : 'rgba(34, 197, 94, 0.2)',
+              border: isEmployed
+                ? '1px solid rgba(239, 68, 68, 0.4)'
+                : '1px solid rgba(34, 197, 94, 0.4)',
+              color: isEmployed ? '#f87171' : '#4ade80',
+              fontFamily: 'Inter, sans-serif',
+            }}
+          >
+            {isEmployed ? 'Remove from Slot' : 'Slot for Essence'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="space-y-8">
+      {/* Employed Meks Section */}
+      {employedMeks.length > 0 && (
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div
+              className="w-3 h-3 rounded-full animate-pulse"
+              style={{ background: '#22c55e', boxShadow: '0 0 10px rgba(34, 197, 94, 0.8)' }}
+            />
             <h3
-              className="font-semibold text-white truncate mb-2"
+              className="text-lg font-semibold text-green-400 uppercase tracking-wider"
               style={{ fontFamily: 'Saira, sans-serif' }}
             >
-              {mek.assetName || `Mek #${mek.assetId}`}
+              Employed ({employedMeks.length})
             </h3>
-
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-white/50">Head</span>
-                <span className="text-white/80">{mek.headVariation || '-'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-white/50">Body</span>
-                <span className="text-white/80">{mek.bodyVariation || '-'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-white/50">Trait</span>
-                <span className="text-white/80">{mek.itemVariation || '-'}</span>
-              </div>
-            </div>
-
-            {/* Stats Row */}
-            <div className="mt-3 pt-3 border-t border-white/10 flex justify-between text-sm">
-              <div>
-                <span className="text-white/40 text-xs">Level</span>
-                <div className="text-cyan-400 font-bold">{mek.level || 1}</div>
-              </div>
-              <div className="text-right">
-                <span className="text-white/40 text-xs">Power</span>
-                <div className="text-yellow-400 font-bold">{(mek.powerScore || 0).toLocaleString()}</div>
-              </div>
-            </div>
+            <span className="text-sm text-green-400/60" style={{ fontFamily: 'Play, sans-serif' }}>
+              Currently earning essence
+            </span>
           </div>
-
-          {/* Expanded Actions */}
-          {selectedMek === mek._id && (
-            <div className="p-4 pt-0 space-y-2">
-              <button
-                className="w-full py-2 rounded-lg text-sm font-semibold transition-all"
-                style={{
-                  background: 'linear-gradient(to right, #22d3ee, #06b6d4)',
-                  color: 'black',
-                  fontFamily: 'Inter, sans-serif',
-                }}
-              >
-                View Details
-              </button>
-              <button
-                className="w-full py-2 rounded-lg text-sm font-semibold transition-all"
-                style={{
-                  background: 'rgba(255,255,255,0.1)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  color: 'white',
-                  fontFamily: 'Inter, sans-serif',
-                }}
-              >
-                {mek.isSlotted ? 'Unslot' : 'Slot for Essence'}
-              </button>
-            </div>
-          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {employedMeks.map((mek) => renderMekCard(mek, true))}
+          </div>
         </div>
-      ))}
+      )}
+
+      {/* Divider */}
+      {employedMeks.length > 0 && unemployedMeks.length > 0 && (
+        <div className="flex items-center gap-4">
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        </div>
+      )}
+
+      {/* Unemployed Meks Section */}
+      {unemployedMeks.length > 0 && (
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ background: '#6b7280' }}
+            />
+            <h3
+              className="text-lg font-semibold text-gray-400 uppercase tracking-wider"
+              style={{ fontFamily: 'Saira, sans-serif' }}
+            >
+              Available ({unemployedMeks.length})
+            </h3>
+            <span className="text-sm text-gray-500" style={{ fontFamily: 'Play, sans-serif' }}>
+              Ready to be slotted
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {unemployedMeks.map((mek) => renderMekCard(mek, false))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

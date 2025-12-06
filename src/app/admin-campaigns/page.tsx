@@ -1,24 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { DatabaseProvider, useDatabaseContext } from '@/contexts/DatabaseContext';
+import { useState } from 'react';
+import { useQuery, useMutation, useConvex } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
-import CampaignManager from '@/components/admin/campaign/CampaignManager';
-import NFTInventoryTable from '@/components/admin/campaign/NFTInventoryTable';
 import NMKRSyncModal from '@/components/admin/campaign/NMKRSyncModal';
 
-function AdminCampaignsContent() {
-  const {
-    selectedDatabase,
-    setSelectedDatabase,
-    client,
-    canMutate
-  } = useDatabaseContext();
+export default function AdminCampaignsPage() {
+  const convex = useConvex();
 
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>();
-  const [campaigns, setCampaigns] = useState<any[]>([]);
-  const [campaignUpdateTrigger, setCampaignUpdateTrigger] = useState(0);
   const [cleaningCampaignId, setCleaningCampaignId] = useState<string | null>(null);
   const [syncingCampaignId, setSyncingCampaignId] = useState<string | null>(null);
 
@@ -29,48 +20,18 @@ function AdminCampaignsContent() {
   const [isVerifyingNMKR, setIsVerifyingNMKR] = useState(false);
   const [isSyncingNMKR, setIsSyncingNMKR] = useState(false);
 
-  // Fetch campaigns from selected database
-  useEffect(() => {
-    if (!client) return;
+  // Standard Convex queries and mutations
+  const campaigns = useQuery(api.campaigns.getAllCampaigns, {}) || [];
 
-    let cancelled = false;
-
-    const fetchCampaigns = async () => {
-      try {
-        const data = await client.query(api.campaigns.getAllCampaigns, {});
-        if (!cancelled) {
-          setCampaigns(data || []);
-        }
-      } catch (error) {
-        console.error('[AdminCampaigns] Error fetching campaigns:', error);
-      }
-    };
-
-    fetchCampaigns();
-    const interval = setInterval(fetchCampaigns, 3000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [client, selectedDatabase, campaignUpdateTrigger]);
-
-  const handleCampaignUpdated = () => {
-    setCampaignUpdateTrigger(prev => prev + 1);
-  };
+  const toggleCleanup = useMutation(api.commemorativeNFTReservationsCampaign.toggleCampaignReservationCleanup);
+  const runCleanup = useMutation(api.commemorativeNFTReservationsCampaign.cleanupExpiredCampaignReservationsMutation);
+  const syncCounters = useMutation(api.commemorativeCampaigns.syncCampaignCounters);
+  const syncCampaignInventory = useMutation(api.nmkrSync.syncCampaignInventory);
+  const syncSingleNFT = useMutation(api.nmkrSync.syncSingleNFT);
 
   const handleToggleCleanup = async (campaignId: string, enabled: boolean) => {
-    if (!client || !canMutate()) {
-      alert('Mutations disabled for this database. Enable production mutations to make changes.');
-      return;
-    }
-
     try {
-      await client.mutation(api.commemorativeNFTReservationsCampaign.toggleCampaignReservationCleanup, {
-        campaignId,
-        enabled
-      });
-      handleCampaignUpdated();
+      await toggleCleanup({ campaignId, enabled });
     } catch (error: any) {
       console.error('[AdminCampaigns] Error toggling cleanup:', error);
       alert(`Error: ${error.message}`);
@@ -78,21 +39,10 @@ function AdminCampaignsContent() {
   };
 
   const handleRunCleanup = async (campaignId: string) => {
-    if (!client || !canMutate()) {
-      alert('Mutations disabled for this database. Enable production mutations to make changes.');
-      return;
-    }
-
     setCleaningCampaignId(campaignId);
     try {
-      await client.mutation(api.commemorativeNFTReservationsCampaign.cleanupExpiredCampaignReservationsMutation, {
-        campaignId
-      });
-      // Also sync counters after cleanup
-      await client.mutation(api.commemorativeCampaigns.syncCampaignCounters, {
-        campaignId
-      });
-      handleCampaignUpdated();
+      await runCleanup({ campaignId });
+      await syncCounters({ campaignId });
     } catch (error: any) {
       console.error('[AdminCampaigns] Error running cleanup:', error);
       alert(`Error: ${error.message}`);
@@ -102,17 +52,9 @@ function AdminCampaignsContent() {
   };
 
   const handleSyncCounters = async (campaignId: string) => {
-    if (!client || !canMutate()) {
-      alert('Mutations disabled for this database. Enable production mutations to make changes.');
-      return;
-    }
-
     setSyncingCampaignId(campaignId);
     try {
-      await client.mutation(api.commemorativeCampaigns.syncCampaignCounters, {
-        campaignId
-      });
-      handleCampaignUpdated();
+      await syncCounters({ campaignId });
     } catch (error: any) {
       console.error('[AdminCampaigns] Error syncing counters:', error);
       alert(`Error: ${error.message}`);
@@ -122,11 +64,6 @@ function AdminCampaignsContent() {
   };
 
   const handleVerifyWithNMKR = async (campaignId: string) => {
-    if (!client) {
-      alert('No database client available');
-      return;
-    }
-
     const campaign = campaigns.find((c) => c._id === campaignId);
     if (!campaign) {
       alert('Campaign not found');
@@ -140,7 +77,6 @@ function AdminCampaignsContent() {
       console.log('[NMKR Sync] Verifying campaign:', campaign.name);
       console.log('[NMKR Sync] Project ID:', campaign.nmkrProjectId);
 
-      // Call our API route to fetch NMKR data
       const response = await fetch('/api/nmkr/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -155,8 +91,7 @@ function AdminCampaignsContent() {
       const nmkrData = await response.json();
       console.log('[NMKR Sync] NMKR Summary:', nmkrData.summary);
 
-      // Get discrepancies from Convex
-      const discrepancies = await client.query(api.nmkrSync.getInventoryDiscrepancies, {
+      const discrepancies = await convex.query(api.nmkrSync.getInventoryDiscrepancies, {
         campaignId: campaignId as Id<"commemorativeCampaigns">,
         nmkrStatuses: nmkrData.statuses,
       });
@@ -174,8 +109,8 @@ function AdminCampaignsContent() {
   };
 
   const handleSyncAllNFTs = async () => {
-    if (!client || !canMutate() || !syncCampaignId) {
-      alert('Mutations disabled or no campaign selected');
+    if (!syncCampaignId) {
+      alert('No campaign selected');
       return;
     }
 
@@ -184,7 +119,6 @@ function AdminCampaignsContent() {
       const campaign = campaigns.find((c) => c._id === syncCampaignId);
       if (!campaign) throw new Error('Campaign not found');
 
-      // Fetch fresh NMKR data
       const response = await fetch('/api/nmkr/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -194,27 +128,24 @@ function AdminCampaignsContent() {
       if (!response.ok) throw new Error('Failed to fetch from NMKR');
       const nmkrData = await response.json();
 
-      // Sync all via Convex
-      const result = await client.mutation(api.nmkrSync.syncCampaignInventory, {
+      const result = await syncCampaignInventory({
         campaignId: syncCampaignId as Id<"commemorativeCampaigns">,
         nmkrStatuses: nmkrData.statuses,
       });
 
       console.log('[NMKR Sync] Sync result:', result);
 
-      // Refresh discrepancies (should be empty now)
-      const newDiscrepancies = await client.query(api.nmkrSync.getInventoryDiscrepancies, {
+      const newDiscrepancies = await convex.query(api.nmkrSync.getInventoryDiscrepancies, {
         campaignId: syncCampaignId as Id<"commemorativeCampaigns">,
         nmkrStatuses: nmkrData.statuses,
       });
 
       setSyncDiscrepancies(newDiscrepancies);
-      handleCampaignUpdated();
 
       if (result.errors && result.errors.length > 0) {
         alert(`Sync completed with errors:\n${result.errors.join('\n')}`);
       } else {
-        alert(`✅ Successfully synced ${result.syncedCount} NFT(s)`);
+        alert(`Successfully synced ${result.syncedCount} NFT(s)`);
       }
     } catch (error: any) {
       console.error('[NMKR Sync] Error syncing:', error);
@@ -225,8 +156,8 @@ function AdminCampaignsContent() {
   };
 
   const handleSyncSingleNFT = async (nftUid: string) => {
-    if (!client || !canMutate() || !syncCampaignId) {
-      alert('Mutations disabled or no campaign selected');
+    if (!syncCampaignId) {
+      alert('No campaign selected');
       return;
     }
 
@@ -234,7 +165,6 @@ function AdminCampaignsContent() {
       const campaign = campaigns.find((c) => c._id === syncCampaignId);
       if (!campaign) throw new Error('Campaign not found');
 
-      // Fetch fresh NMKR data
       const response = await fetch('/api/nmkr/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -244,25 +174,21 @@ function AdminCampaignsContent() {
       if (!response.ok) throw new Error('Failed to fetch from NMKR');
       const nmkrData = await response.json();
 
-      // Find the specific NFT status
       const nftStatus = nmkrData.statuses.find((s: any) => s.nftUid === nftUid);
       if (!nftStatus) throw new Error('NFT not found in NMKR data');
 
-      // Sync single NFT
-      await client.mutation(api.nmkrSync.syncSingleNFT, {
+      await syncSingleNFT({
         nftUid,
         nmkrStatus: nftStatus.nmkrStatus,
         soldTo: nftStatus.soldTo,
       });
 
-      // Refresh discrepancies
-      const newDiscrepancies = await client.query(api.nmkrSync.getInventoryDiscrepancies, {
-        campaignId: syncCampaignId,
+      const newDiscrepancies = await convex.query(api.nmkrSync.getInventoryDiscrepancies, {
+        campaignId: syncCampaignId as Id<"commemorativeCampaigns">,
         nmkrStatuses: nmkrData.statuses,
       });
 
       setSyncDiscrepancies(newDiscrepancies);
-      handleCampaignUpdated();
     } catch (error: any) {
       console.error('[NMKR Sync] Error syncing single NFT:', error);
       alert(`Error syncing NFT: ${error.message}`);
@@ -279,17 +205,10 @@ function AdminCampaignsContent() {
             <p className="text-gray-400">Manage NFT minting campaigns and reservations</p>
           </div>
 
-          {/* Database Selector */}
-          <div className="bg-gray-900 border border-yellow-500/30 rounded-lg p-3">
+          {/* Database indicator - single database now */}
+          <div className="bg-gray-900 border border-green-500/30 rounded-lg p-3">
             <div className="text-xs text-gray-400 mb-1">Database</div>
-            <select
-              value={selectedDatabase}
-              onChange={(e) => setSelectedDatabase(e.target.value as 'trout' | 'sturgeon')}
-              className="bg-black/50 border border-yellow-500/30 rounded px-3 py-1 text-white text-sm"
-            >
-              <option value="trout">Trout (Dev - localhost:3200)</option>
-              <option value="sturgeon">Sturgeon (Production - Live Site)</option>
-            </select>
+            <div className="text-green-400 font-bold">Production (Sturgeon)</div>
           </div>
         </div>
 
@@ -306,35 +225,17 @@ function AdminCampaignsContent() {
             </div>
           </div>
           <div className="bg-black/50 border border-green-500/30 rounded-lg p-4">
-            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Selected Database</div>
-            <div className="text-2xl font-bold text-green-400">
-              {selectedDatabase === 'trout' ? '🐟 Trout (Dev)' : '🐟 Sturgeon (Prod)'}
-            </div>
+            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Environment</div>
+            <div className="text-2xl font-bold text-green-400">Production</div>
           </div>
         </div>
 
-        {/* Warning for Production */}
-        {selectedDatabase === 'sturgeon' && !canMutate() && (
-          <div className="bg-red-900/20 border border-red-500 rounded-lg p-4 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="text-2xl">⚠️</div>
-              <div>
-                <div className="font-bold text-red-400">READ ONLY MODE</div>
-                <div className="text-sm text-gray-300">
-                  You are viewing Sturgeon (Production) in read-only mode.
-                  Toggle cleanup will not work unless you enable production mutations.
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Campaign Cards with Toggle Controls */}
+        {/* Campaign Cards */}
         <div className="space-y-6">
           {campaigns.length === 0 ? (
             <div className="bg-black/30 border border-yellow-500/30 rounded-lg p-12 text-center">
               <div className="text-4xl mb-3">📋</div>
-              <div className="text-gray-400">No campaigns found in {selectedDatabase === 'trout' ? 'Trout (Dev)' : 'Sturgeon (Production)'}.</div>
+              <div className="text-gray-400">No campaigns found.</div>
             </div>
           ) : (
             campaigns.map((campaign) => (
@@ -376,7 +277,7 @@ function AdminCampaignsContent() {
                   </div>
                 </div>
 
-                {/* Cleanup Toggle Button */}
+                {/* Action Buttons */}
                 <div className="flex items-center gap-3 flex-wrap">
                   <span className="text-xs text-gray-400">Auto-Cleanup:</span>
                   <button
@@ -393,42 +294,37 @@ function AdminCampaignsContent() {
                   >
                     {campaign.enableReservationCleanup !== false ? 'ON' : 'OFF'}
                   </button>
-                  <span className="text-xs text-gray-500">
-                    (Cron runs hourly)
-                  </span>
+                  <span className="text-xs text-gray-500">(Cron runs hourly)</span>
 
                   <span className="text-gray-600">|</span>
 
-                  {/* Run Cleanup Now Button */}
                   <button
                     onClick={() => handleRunCleanup(campaign._id)}
                     disabled={cleaningCampaignId === campaign._id}
                     className="px-3 py-1 rounded text-xs font-semibold transition-all bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 hover:bg-yellow-500/30 disabled:opacity-50"
                     title="Manually run cleanup to release any expired reservations now"
                   >
-                    {cleaningCampaignId === campaign._id ? '⏳ Cleaning...' : '🧹 Run Cleanup Now'}
+                    {cleaningCampaignId === campaign._id ? 'Cleaning...' : 'Run Cleanup Now'}
                   </button>
 
-                  {/* Sync Counters Button */}
                   <button
                     onClick={() => handleSyncCounters(campaign._id)}
                     disabled={syncingCampaignId === campaign._id}
                     className="px-3 py-1 rounded text-xs font-semibold transition-all bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 hover:bg-cyan-500/30 disabled:opacity-50"
                     title="Recalculate counters from actual inventory (fixes mismatched counts)"
                   >
-                    {syncingCampaignId === campaign._id ? '⏳ Syncing...' : '🔄 Sync Counters'}
+                    {syncingCampaignId === campaign._id ? 'Syncing...' : 'Sync Counters'}
                   </button>
 
                   <span className="text-gray-600">|</span>
 
-                  {/* Verify with NMKR Button */}
                   <button
                     onClick={() => handleVerifyWithNMKR(campaign._id)}
                     disabled={isVerifyingNMKR}
                     className="px-3 py-1 rounded text-xs font-semibold transition-all bg-purple-500/20 text-purple-400 border border-purple-500/50 hover:bg-purple-500/30 disabled:opacity-50"
                     title="Verify inventory status with NMKR (check for discrepancies)"
                   >
-                    {isVerifyingNMKR && syncCampaignId === campaign._id ? '⏳ Verifying...' : '🔍 Verify with NMKR'}
+                    {isVerifyingNMKR && syncCampaignId === campaign._id ? 'Verifying...' : 'Verify with NMKR'}
                   </button>
                 </div>
               </div>
@@ -456,13 +352,5 @@ function AdminCampaignsContent() {
         />
       </div>
     </div>
-  );
-}
-
-export default function AdminCampaignsPage() {
-  return (
-    <DatabaseProvider>
-      <AdminCampaignsContent />
-    </DatabaseProvider>
   );
 }
