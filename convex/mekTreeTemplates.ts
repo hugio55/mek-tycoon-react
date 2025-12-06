@@ -83,6 +83,8 @@ export const createTemplate = mutation({
       rarityTiers: v.optional(v.array(v.string())),
       powerScoreMin: v.optional(v.number()),
       powerScoreMax: v.optional(v.number()),
+      rankMin: v.optional(v.number()),
+      rankMax: v.optional(v.number()),
     })),
   },
   handler: async (ctx, args) => {
@@ -160,6 +162,8 @@ export const updateTemplate = mutation({
       rarityTiers: v.optional(v.array(v.string())),
       powerScoreMin: v.optional(v.number()),
       powerScoreMax: v.optional(v.number()),
+      rankMin: v.optional(v.number()),
+      rankMax: v.optional(v.number()),
     })),
   },
   handler: async (ctx, args) => {
@@ -191,7 +195,7 @@ export const findTemplateForMek = query({
     if (!mek) return null;
 
     const templates = await ctx.db.query("mekTreeTemplates").collect();
-    
+
     // Score each template based on how well it matches the Mek
     let bestTemplate = null;
     let bestScore = -1;
@@ -199,11 +203,20 @@ export const findTemplateForMek = query({
     for (const template of templates) {
       let score = 0;
       const conditions = template.conditions;
-      
+
       if (!conditions) {
         // Template with no conditions is a fallback
         if (score === 0) score = 1;
         continue;
+      }
+
+      // Check rarity rank range (highest priority - 100 points)
+      if (mek.rank !== undefined && mek.rank !== null) {
+        const rankMin = conditions.rankMin ?? 0;
+        const rankMax = conditions.rankMax ?? Infinity;
+        if (mek.rank >= rankMin && mek.rank <= rankMax) {
+          score += 100; // Rank match is the primary criteria
+        }
       }
 
       // Check head variation match
@@ -211,7 +224,7 @@ export const findTemplateForMek = query({
         score += 10;
       }
 
-      // Check body variation match  
+      // Check body variation match
       if (conditions.bodyVariations?.includes(mek.bodyVariation)) {
         score += 10;
       }
@@ -242,6 +255,28 @@ export const findTemplateForMek = query({
     }
 
     return bestTemplate;
+  },
+});
+
+// Find template by rank range (useful for debugging/admin)
+export const findTemplateByRank = query({
+  args: { rank: v.number() },
+  handler: async (ctx, args) => {
+    const templates = await ctx.db.query("mekTreeTemplates").collect();
+
+    for (const template of templates) {
+      const conditions = template.conditions;
+      if (!conditions) continue;
+
+      const rankMin = conditions.rankMin ?? 0;
+      const rankMax = conditions.rankMax ?? Infinity;
+
+      if (args.rank >= rankMin && args.rank <= rankMax) {
+        return template;
+      }
+    }
+
+    return null;
   },
 });
 
