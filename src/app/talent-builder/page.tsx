@@ -22,7 +22,10 @@ import PropertyPanel from '@/components/talent-builder/PropertyPanel';
 import TemplateManager from '@/components/talent-builder/TemplateManager';
 import ErrorBoundary from '@/components/talent-builder/ErrorBoundary';
 import Link from 'next/link';
-import { TalentNode } from './types';
+import { TalentNode, Connection } from './types';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import { Id } from '../../../convex/_generated/dataModel';
 
 // =============================================================================
 // INNER COMPONENT (uses context)
@@ -53,6 +56,41 @@ function TalentBuilderInner() {
   const { savedCiruTrees, loadTree, startNewTree, currentSaveName } = useSaveLoad();
 
   const { findDisconnectedAndDeadEndNodes, clearHighlights } = useConnectionAnalysis();
+
+  // ---------------------------------------------------------------------------
+  // Convex Queries & Mutations for Category System
+  // ---------------------------------------------------------------------------
+
+  const mekTemplates = useQuery(api.mekTreeTemplates.getAllTemplates);
+  const mekCategories = useQuery(api.mekTreeCategories.getAllCategoriesWithCounts);
+  const setActiveTemplateMutation = useMutation(api.mekTreeCategories.setActiveTemplate);
+  const deleteTemplateMutation = useMutation(api.mekTreeTemplates.deleteTemplate);
+
+  const handleSetActiveTemplate = useCallback(async (categoryId: string, templateId: string) => {
+    try {
+      await setActiveTemplateMutation({
+        categoryId: categoryId as Id<"mekTreeCategories">,
+        templateId: templateId as Id<"mekTreeTemplates">
+      });
+      actions.setSaveStatus('Template set as active', 2000);
+    } catch (error) {
+      console.error('Failed to set active template:', error);
+      actions.setSaveStatus('Failed to set active', 2000);
+    }
+  }, [setActiveTemplateMutation, actions]);
+
+  const handleDeleteTemplate = useCallback(async (templateId: string) => {
+    if (!confirm('Delete this template? This cannot be undone.')) return;
+    try {
+      await deleteTemplateMutation({
+        templateId: templateId as Id<"mekTreeTemplates">
+      });
+      actions.setSaveStatus('Template deleted', 2000);
+    } catch (error) {
+      console.error('Failed to delete template:', error);
+      actions.setSaveStatus('Failed to delete', 2000);
+    }
+  }, [deleteTemplateMutation, actions]);
 
   // Keyboard shortcuts with custom delete handler
   // Note: useKeyboardShortcuts already calls pushHistory() after onDelete
@@ -369,15 +407,22 @@ function TalentBuilderInner() {
       {state.showTemplateManager && (
         <TemplateManager
           show={state.showTemplateManager}
+          templates={mekTemplates}
+          categories={mekCategories}
           savedCiruTrees={savedCiruTrees}
           dispatch={dispatch}
           mode={state.builderMode === 'mek' ? 'mek' : 'cirutree'}
           onClose={() => dispatch({ type: 'SET_SHOW_TEMPLATE_MANAGER', payload: false })}
-          onLoadTemplate={(nodes, connections) => {
+          onLoadTemplate={(nodes, connections, templateId, categoryId) => {
             dispatch({ type: 'SET_SKIP_NEXT_HISTORY_PUSH', payload: true });
             loadTree(nodes, connections);
+            if (templateId) {
+              dispatch({ type: 'SET_SELECTED_TEMPLATE_ID', payload: templateId });
+            }
             pushHistory();
           }}
+          onDeleteTemplate={handleDeleteTemplate}
+          onSetActiveTemplate={handleSetActiveTemplate}
         />
       )}
     </div>
