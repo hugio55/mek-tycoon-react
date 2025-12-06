@@ -167,7 +167,33 @@ export default function CoachMarksAdmin() {
       };
 
       if (editingStepId) {
-        await updateStep({ id: editingStepId, ...stepData });
+        await updateStep({
+          stepKey: stepForm.stepKey,
+          updates: {
+            name: stepData.name,
+            description: stepData.description,
+            pageRoute: stepData.pageRoute,
+            sequenceId: stepData.sequenceId,
+            sequenceOrder: stepData.sequenceOrder,
+            targetType: stepData.targetType,
+            elementSelector: stepData.elementSelector,
+            manualPosition: stepData.manualPosition,
+            positionOffset: stepData.positionOffset,
+            spotlightShape: stepData.spotlightShape,
+            spotlightPadding: stepData.spotlightPadding,
+            arrowPosition: stepData.arrowPosition,
+            arrowOffset: stepData.arrowOffset,
+            tooltipText: stepData.tooltipText,
+            tooltipTitle: stepData.tooltipTitle,
+            tooltipPosition: stepData.tooltipPosition,
+            isMandatory: stepData.isMandatory,
+            allowBackdropClick: stepData.allowBackdropClick,
+            showSkipButton: stepData.showSkipButton,
+            showNextButton: stepData.showNextButton,
+            triggerCondition: stepData.triggerCondition,
+            isActive: stepData.isActive,
+          }
+        });
         setMessage({ type: "success", text: "Step updated successfully" });
       } else {
         await createStep(stepData);
@@ -193,7 +219,15 @@ export default function CoachMarksAdmin() {
       };
 
       if (editingSequenceId) {
-        await updateSequence({ id: editingSequenceId, ...sequenceData });
+        await updateSequence({
+          sequenceId: sequenceForm.sequenceId,
+          updates: {
+            name: sequenceData.name,
+            description: sequenceData.description,
+            isOnboarding: sequenceData.isOnboarding,
+            isActive: sequenceData.isActive,
+          }
+        });
         setMessage({ type: "success", text: "Sequence updated successfully" });
       } else {
         await createSequence(sequenceData);

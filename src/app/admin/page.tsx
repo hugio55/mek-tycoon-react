@@ -86,6 +86,7 @@ import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import PortMonitor from '@/components/PortMonitor';
 import DeploymentsAdmin from '@/components/DeploymentsAdmin';
 import StarField from '@/components/StarField';
+import JobBuilder from '@/components/JobBuilder';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
 import { getVariationTrueRank, VARIATION_MEK_RANKS } from '@/lib/variationRarityMekRanks';
@@ -1160,6 +1161,7 @@ export default function AdminMasterDataPage() {
   const [selectedVariation, setSelectedVariation] = useState<{ name: string; rank: number; category: string } | null>(null);
 
   // Slots System State
+  const [slotsSubTab, setSlotsSubTab] = useState<'job-builder' | 'tenure-config'>('job-builder');
   const [selectedSlotType, setSelectedSlotType] = useState<'basic' | 'advanced' | 'master'>('basic');
   const [slotsConfig, setSlotsConfig] = useState({
     basic: [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -3816,6 +3818,38 @@ export default function AdminMasterDataPage() {
             </button>
             {expandedSections.has('slots-system') && (
               <div className="p-4 border-t border-gray-700/50">
+                {/* Sub-Tab Navigation */}
+                <div className="flex gap-2 border-b border-gray-700/50 pb-3 mb-6">
+                  <button
+                    onClick={() => setSlotsSubTab('job-builder')}
+                    className={`px-4 py-2 font-bold uppercase tracking-wider transition-all ${
+                      slotsSubTab === 'job-builder'
+                        ? 'bg-yellow-500/20 border-2 border-yellow-500 text-yellow-400'
+                        : 'bg-black/50 border-2 border-gray-600/50 text-gray-400 hover:border-yellow-500/50'
+                    }`}
+                  >
+                    Job Builder
+                  </button>
+                  <button
+                    onClick={() => setSlotsSubTab('tenure-config')}
+                    className={`px-4 py-2 font-bold uppercase tracking-wider transition-all ${
+                      slotsSubTab === 'tenure-config'
+                        ? 'bg-yellow-500/20 border-2 border-yellow-500 text-yellow-400'
+                        : 'bg-black/50 border-2 border-gray-600/50 text-gray-400 hover:border-yellow-500/50'
+                    }`}
+                  >
+                    Tenure Config
+                  </button>
+                </div>
+
+                {/* Job Builder Sub-Tab */}
+                {slotsSubTab === 'job-builder' && (
+                  <JobBuilder />
+                )}
+
+                {/* Tenure Config Sub-Tab */}
+                {slotsSubTab === 'tenure-config' && (
+                  <>
                 <p className="text-gray-400 mb-4">Configure tenure requirements for slot leveling across all slot types</p>
 
                 {/* Slot Type Selector - Button Group */}
@@ -4002,6 +4036,8 @@ export default function AdminMasterDataPage() {
                     </div>
                   </div>
                 </div>
+                  </>
+                )}
               </div>
             )}
           </div>

@@ -218,9 +218,9 @@ export default function LandingPage() {
     return;
     if (!compositeCanvasRef.current || !colorVideoRef.current || !alphaVideoRef.current) return;
 
-    const canvas = compositeCanvasRef.current;
-    const colorVideo = colorVideoRef.current;
-    const alphaVideo = alphaVideoRef.current;
+    const canvas = compositeCanvasRef.current!;
+    const colorVideo = colorVideoRef.current!;
+    const alphaVideo = alphaVideoRef.current!;
 
     // Set canvas size to match video dimensions (will be set once videos load metadata)
     const initCanvas = () => {
