@@ -26,6 +26,34 @@ function isValidInternalPath(linkTo: string | undefined): boolean {
   return linkTo.startsWith('/') && !linkTo.startsWith('//') && !linkTo.includes(':');
 }
 
+/**
+ * Enforces the notification cap for a user.
+ * If user has MAX_NOTIFICATIONS_PER_USER or more, deletes oldest to make room for 1 new.
+ * @param ctx - Database context
+ * @param userId - The user ID to check
+ * @returns Number of notifications deleted
+ */
+async function enforceNotificationCap(
+  ctx: { db: { query: (table: "notifications") => any; delete: (id: Id<"notifications">) => Promise<void> } },
+  userId: Id<"users">
+): Promise<number> {
+  const userNotifications = await ctx.db
+    .query("notifications")
+    .withIndex("by_user_created", (q: any) => q.eq("userId", userId))
+    .order("asc") // Oldest first
+    .collect();
+
+  if (userNotifications.length >= MAX_NOTIFICATIONS_PER_USER) {
+    // Delete enough to make room for 1 new notification
+    const toDelete = userNotifications.slice(0, userNotifications.length - MAX_NOTIFICATIONS_PER_USER + 1);
+    for (const notification of toDelete) {
+      await ctx.db.delete(notification._id);
+    }
+    return toDelete.length;
+  }
+  return 0;
+}
+
 // ============================================================================
 // QUERIES
 // ============================================================================
@@ -249,19 +277,7 @@ export const createNotification = internalMutation({
     }
 
     // Enforce notification cap - delete oldest if at limit
-    const userNotifications = await ctx.db
-      .query("notifications")
-      .withIndex("by_user_created", (q) => q.eq("userId", args.userId))
-      .order("asc") // Oldest first
-      .collect();
-
-    // If at or over cap, delete oldest to make room
-    if (userNotifications.length >= MAX_NOTIFICATIONS_PER_USER) {
-      const toDelete = userNotifications.slice(0, userNotifications.length - MAX_NOTIFICATIONS_PER_USER + 1);
-      for (const notification of toDelete) {
-        await ctx.db.delete(notification._id);
-      }
-    }
+    await enforceNotificationCap(ctx, args.userId);
 
     const notificationId = await ctx.db.insert("notifications", {
       userId: args.userId,
@@ -320,18 +336,7 @@ export const createNotificationPublic = mutation({
     }
 
     // Enforce notification cap - delete oldest if at limit
-    const userNotifications = await ctx.db
-      .query("notifications")
-      .withIndex("by_user_created", (q) => q.eq("userId", args.userId))
-      .order("asc") // Oldest first
-      .collect();
-
-    if (userNotifications.length >= MAX_NOTIFICATIONS_PER_USER) {
-      const toDelete = userNotifications.slice(0, userNotifications.length - MAX_NOTIFICATIONS_PER_USER + 1);
-      for (const notification of toDelete) {
-        await ctx.db.delete(notification._id);
-      }
-    }
+    await enforceNotificationCap(ctx, args.userId);
 
     const notificationId = await ctx.db.insert("notifications", {
       userId: args.userId,
@@ -516,18 +521,7 @@ export const adminSendNotification = mutation({
     }
 
     // Enforce notification cap - delete oldest if at limit
-    const userNotifications = await ctx.db
-      .query("notifications")
-      .withIndex("by_user_created", (q) => q.eq("userId", user._id))
-      .order("asc")
-      .collect();
-
-    if (userNotifications.length >= MAX_NOTIFICATIONS_PER_USER) {
-      const toDelete = userNotifications.slice(0, userNotifications.length - MAX_NOTIFICATIONS_PER_USER + 1);
-      for (const notification of toDelete) {
-        await ctx.db.delete(notification._id);
-      }
-    }
+    await enforceNotificationCap(ctx, user._id);
 
     const notificationId = await ctx.db.insert("notifications", {
       userId: user._id,
@@ -570,16 +564,7 @@ export const adminBroadcastNotification = mutation({
 
     for (const user of users) {
       // Enforce notification cap for each user - delete oldest if at limit
-      const userNotifications = await ctx.db
-        .query("notifications")
-        .withIndex("by_user_created", (q) => q.eq("userId", user._id))
-        .order("asc")
-        .collect();
-
-      if (userNotifications.length >= MAX_NOTIFICATIONS_PER_USER) {
-        // Delete oldest notification to make room
-        await ctx.db.delete(userNotifications[0]._id);
-      }
+      await enforceNotificationCap(ctx, user._id);
 
       await ctx.db.insert("notifications", {
         userId: user._id,
