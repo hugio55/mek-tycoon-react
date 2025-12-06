@@ -1724,7 +1724,7 @@ export const getPlayerBuffs = query({
   handler: async (ctx, args) => {
     const buffs = await ctx.db
       .query("essencePlayerBuffs")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     return buffs;
@@ -1745,7 +1745,7 @@ export const addCapBuff = mutation({
     // Check if buff already exists for this variation
     const existing = await ctx.db
       .query("essencePlayerBuffs")
-      .withIndex("", (q: any) =>
+      .withIndex("by_wallet_and_variation", (q: any) =>
         q.eq("walletAddress", args.walletAddress).eq("variationId", args.variationId)
       )
       .first();
@@ -1801,7 +1801,7 @@ export const checkBuffRemovalImpact = query({
     // Get current balance for this variation
     const balance = await ctx.db
       .query("essenceBalances")
-      .withIndex("", (q: any) =>
+      .withIndex("by_wallet_and_variation", (q: any) =>
         q.eq("walletAddress", buff.walletAddress).eq("variationId", buff.variationId)
       )
       .first();
@@ -1862,7 +1862,7 @@ export const removeCapBuff = mutation({
 
     const balance = await ctx.db
       .query("essenceBalances")
-      .withIndex("", (q: any) =>
+      .withIndex("by_wallet_and_variation", (q: any) =>
         q.eq("walletAddress", buff.walletAddress).eq("variationId", buff.variationId)
       )
       .first();
@@ -1969,7 +1969,7 @@ export const fixAllMissingVariationIds = mutation({
         // Look up the variation ID by name
         const itemVar = await ctx.db
           .query("variationsReference")
-          .withIndex("", (q: any) => q.eq("name", slot.itemVariationName))
+          .withIndex("by_name", (q: any) => q.eq("name", slot.itemVariationName))
           .filter((q) => q.eq(q.field("type"), "item"))
           .first();
 
@@ -1985,7 +1985,7 @@ export const fixAllMissingVariationIds = mutation({
       if (slot.headVariationName && !slot.headVariationId) {
         const headVar = await ctx.db
           .query("variationsReference")
-          .withIndex("", (q: any) => q.eq("name", slot.headVariationName))
+          .withIndex("by_name", (q: any) => q.eq("name", slot.headVariationName))
           .filter((q) => q.eq(q.field("type"), "head"))
           .first();
 
@@ -1998,7 +1998,7 @@ export const fixAllMissingVariationIds = mutation({
       if (slot.bodyVariationName && !slot.bodyVariationId) {
         const bodyVar = await ctx.db
           .query("variationsReference")
-          .withIndex("", (q: any) => q.eq("name", slot.bodyVariationName))
+          .withIndex("by_name", (q: any) => q.eq("name", slot.bodyVariationName))
           .filter((q) => q.eq(q.field("type"), "body"))
           .first();
 
@@ -2039,7 +2039,7 @@ export const addMissingVariation = mutation({
     // Check if it already exists
     const existing = await ctx.db
       .query("variationsReference")
-      .withIndex("", (q: any) => q.eq("name", args.name))
+      .withIndex("by_name", (q: any) => q.eq("name", args.name))
       .filter((q) => q.eq(q.field("type"), args.type))
       .first();
 
@@ -2408,7 +2408,7 @@ export const cleanupOldAggregateBuffs = mutation({
   handler: async (ctx, args) => {
     const buffs = await ctx.db
       .query("essencePlayerBuffs")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     for (const buff of buffs) {
