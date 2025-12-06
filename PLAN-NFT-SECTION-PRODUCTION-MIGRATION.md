@@ -1,5 +1,12 @@
 # NFT Section Production Migration Plan
 
+> ⚠️ **DATABASE ARCHITECTURE NOTE (December 2025)**
+> This document was written during the dual-database era (Trout/Sturgeon).
+> **We now use a UNIFIED SINGLE DATABASE**: Sturgeon (fabulous-sturgeon-691.convex.cloud)
+> - Trout (wry-trout-962) is DEPRECATED and no longer used
+> - The migration goals in this document remain valid - remove Trout references from NFT code
+> - All new code should only reference Sturgeon
+
 ## Overview
 
 **Goal:** Make the entire NFT admin section (all 4 tabs) always use Sturgeon (production) database, removing the confusing dual-database selector system.

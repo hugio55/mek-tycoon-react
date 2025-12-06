@@ -1,5 +1,11 @@
 # Backup System Plan for Production Deployments
 
+> ⚠️ **DATABASE UPDATED (December 2025)**
+> This document references Sturgeon as the production database.
+> **We now use a UNIFIED SINGLE DATABASE**: Sturgeon (fabulous-sturgeon-691.convex.cloud)
+> - Trout (wry-trout-962) is DEPRECATED and no longer used
+> - All deployments target Sturgeon directly
+
 ## Overview
 
 This plan outlines a two-tier backup system integrated into the Deployment Control Center. The system ensures production safety by requiring a backup before any deploy, with options for quick routine backups or comprehensive full backups.
@@ -266,7 +272,7 @@ npx convex import --prod --replace ./backups/full/filename.zip
 npx convex deploy --prod
 ```
 
-Note: The `--prod` flag targets the production deployment (Sturgeon). Without it, commands target development (Trout).
+Note: With the unified database architecture, all commands target Sturgeon (fabulous-sturgeon-691). The `--prod` flag ensures production deployment.
 
 ---
 
