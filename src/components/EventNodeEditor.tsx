@@ -390,7 +390,7 @@ export default function EventNodeEditor() {
 
     if (lastConfigId && lastConfigName && !currentConfigId && savedConfigs) {
       // Validate that the stored config ID still exists in the database
-      const configExists = savedConfigs.some(config => config._id === lastConfigId);
+      const configExists = savedConfigs.some((config: any) => config._id === lastConfigId);
 
       if (configExists) {
         setCurrentConfigId(lastConfigId as Id<"eventNodeConfigs">);
@@ -401,7 +401,7 @@ export default function EventNodeEditor() {
         localStorage.removeItem('lastEventNodeConfigName');
 
         if (savedConfigs.length > 0) {
-          const mostRecent = savedConfigs.reduce((latest, current) => {
+          const mostRecent = savedConfigs.reduce((latest: any, current: any) => {
             return !latest || current._creationTime > latest._creationTime ? current : latest;
           }, savedConfigs[0]);
 
@@ -415,7 +415,7 @@ export default function EventNodeEditor() {
       }
     } else if (!currentConfigId && savedConfigs && savedConfigs.length > 0) {
       // If no last config but there are saved configs, load the most recent one
-      const mostRecent = savedConfigs.reduce((latest, current) => {
+      const mostRecent = savedConfigs.reduce((latest: any, current: any) => {
         return !latest || current._creationTime > latest._creationTime ? current : latest;
       }, savedConfigs[0]);
 
@@ -566,7 +566,7 @@ export default function EventNodeEditor() {
     const goldStep = (globalRanges.medium.maxGold - globalRanges.medium.minGold) / 199;
     const xpStep = (globalRanges.medium.maxXP - globalRanges.medium.minXP) / 199;
 
-    const newEventsData = eventsData.map((event, index) => ({
+    const newEventsData = eventsData.map((event: any, index: number) => ({
       ...event,
       goldReward: applyRewardRounding(globalRanges.medium.minGold + (goldStep * index)),
       xpReward: applyRewardRounding(globalRanges.medium.minXP + (xpStep * index))
@@ -577,10 +577,10 @@ export default function EventNodeEditor() {
 
   // Apply bulk names to all events
   const applyBulkNames = () => {
-    const names = bulkNames.split(',').map(name => name.trim());
+    const names = bulkNames.split(',').map((name: any) => name.trim());
     if (names.length === 0) return;
 
-    const newEventsData = eventsData.map((event, index) => ({
+    const newEventsData = eventsData.map((event: any, index: number) => ({
       ...event,
       name: names[index] || `Event ${index + 1}`
     }));
@@ -613,7 +613,7 @@ export default function EventNodeEditor() {
   // Batch assign images from folder
   const batchAssignImages = async () => {
     console.log('Starting batch assignment with folder:', eventImagesFolder);
-    const newEventsData = eventsData.map((event, index) => {
+    const newEventsData = eventsData.map((event: any, index: number) => {
       // Replace spaces with %20 for URL compatibility
       const encodedFolder = eventImagesFolder.replace(/ /g, '%20');
 
@@ -814,14 +814,14 @@ export default function EventNodeEditor() {
     const chapterEnd = deploymentChapter * 20;
 
     // DIAGNOSTIC: Check if eventsData has genesisBuffs before filtering
-    const eventsWithGenesisBuffs = eventsData.filter(e => e.genesisBuffs).length;
+    const eventsWithGenesisBuffs = eventsData.filter((e: any) => e.genesisBuffs).length;
     console.log('🔍 DEPLOYMENT DIAGNOSTIC - Before filtering:', {
       totalEvents: eventsData.length,
       eventsWithGenesisBuffs,
       firstEventSample: eventsData[0]?.genesisBuffs || 'No genesisBuffs'
     });
 
-    const filteredEvents = eventsData.filter(event => {
+    const filteredEvents = eventsData.filter((event: any) => {
       // Check if event is in selected chapter
       if (event.eventNumber < chapterStart || event.eventNumber > chapterEnd) {
         return false;
@@ -833,7 +833,7 @@ export default function EventNodeEditor() {
     });
 
     // DIAGNOSTIC: Check if filteredEvents has genesisBuffs after filtering
-    const filteredWithGenesisBuffs = filteredEvents.filter(e => e.genesisBuffs).length;
+    const filteredWithGenesisBuffs = filteredEvents.filter((e: any) => e.genesisBuffs).length;
     console.log('🔍 DEPLOYMENT DIAGNOSTIC - After filtering:', {
       filteredCount: filteredEvents.length,
       filteredWithGenesisBuffs,
@@ -853,13 +853,13 @@ export default function EventNodeEditor() {
 
     try {
       // Add chip rewards to filtered events before deployment
-      const eventsWithChips = filteredEvents.map(event => ({
+      const eventsWithChips = filteredEvents.map((event: any) => ({
         ...event,
         chipRewards: calculateChipRewardsForEvent(event.eventNumber).rewards
       }));
 
       // DIAGNOSTIC: Check if genesisBuffs survived the chip mapping
-      const chipsWithGenesisBuffs = eventsWithChips.filter(e => e.genesisBuffs).length;
+      const chipsWithGenesisBuffs = eventsWithChips.filter((e: any) => e.genesisBuffs).length;
       console.log('🔍 DEPLOYMENT DIAGNOSTIC - After adding chips:', {
         eventsWithChipsCount: eventsWithChips.length,
         chipsWithGenesisBuffs,
@@ -951,7 +951,7 @@ export default function EventNodeEditor() {
     const chapterMeks: MekData[] = [];
 
     ranges.forEach(([start, end]) => {
-      const rangeData = typedMekData.filter(mek => mek.rank >= start && mek.rank <= end);
+      const rangeData = typedMekData.filter((mek: any) => mek.rank >= start && mek.rank <= end);
       chapterMeks.push(...rangeData);
     });
 
@@ -960,7 +960,7 @@ export default function EventNodeEditor() {
     const chapterBodies = new Set<string>();
     const chapterTraits = new Set<string>();
 
-    chapterMeks.forEach(mek => {
+    chapterMeks.forEach((mek: any) => {
       chapterHeads.add(mek.head);
       chapterBodies.add(mek.body);
       chapterTraits.add(mek.trait);
@@ -971,7 +971,7 @@ export default function EventNodeEditor() {
     const globalBodyCounts: Record<string, number> = {};
     const globalTraitCounts: Record<string, number> = {};
 
-    typedMekData.forEach(mek => {
+    typedMekData.forEach((mek: any) => {
       globalHeadCounts[mek.head] = (globalHeadCounts[mek.head] || 0) + 1;
       globalBodyCounts[mek.body] = (globalBodyCounts[mek.body] || 0) + 1;
       globalTraitCounts[mek.trait] = (globalTraitCounts[mek.trait] || 0) + 1;
@@ -1010,7 +1010,7 @@ export default function EventNodeEditor() {
     ].sort((a, b) => a.count - b.count); // Sort by count ascending (rarest first)
 
     // Filter out boss variations (from top 10 final bosses)
-    const eligibleMissingVariations = allMissingVariations.filter(v => {
+    const eligibleMissingVariations = allMissingVariations.filter((v: any) => {
       if (v.type === 'head' && BOSS_VARIATIONS.heads.has(v.name)) return false;
       if (v.type === 'body' && BOSS_VARIATIONS.bodies.has(v.name)) return false;
       if (v.type === 'trait' && BOSS_VARIATIONS.traits.has(v.name)) return false;
@@ -1024,9 +1024,9 @@ export default function EventNodeEditor() {
     const chapterEvents = eventsData.slice(startIndex, startIndex + 20);
 
     // Apply the round-robin distribution
-    const updatedEvents = chapterEvents.map((event, index) => {
+    const updatedEvents = chapterEvents.map((event: any, index: number) => {
       const essenceRanks = ROUND_ROBIN_TABLE[index];
-      const essenceRewards = essenceRanks.map(rank => {
+      const essenceRewards = essenceRanks.map((rank: any) => {
         const variation = rarest80Missing[rank - 1];
         return variation ? {
           variation: variation.name,
@@ -1044,7 +1044,7 @@ export default function EventNodeEditor() {
 
     // Update the events data with the new essence rewards
     const newEventsData = [...eventsData];
-    updatedEvents.forEach((event, index) => {
+    updatedEvents.forEach((event: any, index: number) => {
       newEventsData[startIndex + index] = event;
     });
 
@@ -1055,11 +1055,11 @@ export default function EventNodeEditor() {
   };
 
   // Calculate total rewards
-  const totalGold = eventsData.reduce((sum, event) => sum + event.goldReward, 0);
-  const totalXP = eventsData.reduce((sum, event) => sum + event.xpReward, 0);
+  const totalGold = eventsData.reduce((sum: any, event: any) => sum + event.goldReward, 0);
+  const totalXP = eventsData.reduce((sum: any, event: any) => sum + event.xpReward, 0);
 
   // Filter events by selected chapter
-  const filteredEvents = eventsData.filter(event => {
+  const filteredEvents = eventsData.filter((event: any) => {
     const eventChapter = Math.ceil(event.eventNumber / 20);
     return eventChapter === selectedChapter;
   });
@@ -1254,7 +1254,7 @@ export default function EventNodeEditor() {
         <div className="mb-4 bg-black/30 rounded p-3">
           <h5 className="text-purple-400 text-sm font-bold mb-3">Event Names for Chapter {selectedChapter}</h5>
           <div className="space-y-3 max-h-96 overflow-y-auto">
-            {filteredEvents.map((event, idx) => (
+            {filteredEvents.map((event: any, idx: number) => (
               <div key={event.eventNumber} className="bg-black/50 border border-purple-500/20 rounded p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-yellow-400 font-bold text-sm">E{event.eventNumber}:</span>
@@ -1263,7 +1263,7 @@ export default function EventNodeEditor() {
                     value={event.name}
                     onChange={(e) => {
                       const newEvents = [...eventsData];
-                      const eventIndex = eventsData.findIndex(ev => ev.eventNumber === event.eventNumber);
+                      const eventIndex = eventsData.findIndex((ev: any) => ev.eventNumber === event.eventNumber);
                       newEvents[eventIndex].name = e.target.value;
                       setEventsData(newEvents);
                     }}
@@ -1279,7 +1279,7 @@ export default function EventNodeEditor() {
                       value={event.difficultyNames?.easy || ''}
                       onChange={(e) => {
                         const newEvents = [...eventsData];
-                        const eventIndex = eventsData.findIndex(ev => ev.eventNumber === event.eventNumber);
+                        const eventIndex = eventsData.findIndex((ev: any) => ev.eventNumber === event.eventNumber);
                         if (!newEvents[eventIndex].difficultyNames) {
                           newEvents[eventIndex].difficultyNames = { easy: '', medium: '', hard: '' };
                         }
@@ -1297,7 +1297,7 @@ export default function EventNodeEditor() {
                       value={event.difficultyNames?.medium || ''}
                       onChange={(e) => {
                         const newEvents = [...eventsData];
-                        const eventIndex = eventsData.findIndex(ev => ev.eventNumber === event.eventNumber);
+                        const eventIndex = eventsData.findIndex((ev: any) => ev.eventNumber === event.eventNumber);
                         if (!newEvents[eventIndex].difficultyNames) {
                           newEvents[eventIndex].difficultyNames = { easy: '', medium: '', hard: '' };
                         }
@@ -1315,7 +1315,7 @@ export default function EventNodeEditor() {
                       value={event.difficultyNames?.hard || ''}
                       onChange={(e) => {
                         const newEvents = [...eventsData];
-                        const eventIndex = eventsData.findIndex(ev => ev.eventNumber === event.eventNumber);
+                        const eventIndex = eventsData.findIndex((ev: any) => ev.eventNumber === event.eventNumber);
                         if (!newEvents[eventIndex].difficultyNames) {
                           newEvents[eventIndex].difficultyNames = { easy: '', medium: '', hard: '' };
                         }
@@ -1512,7 +1512,7 @@ export default function EventNodeEditor() {
                     (_, i) => chapterStartEvent + i
                   );
 
-                  return eventsToShow.map(eventNum => {
+                  return eventsToShow.map((eventNum: any) => {
                     const gold = calculateChapterGold(eventNum);
                     const xp = calculateChapterXP(eventNum);
                     const goldPercentage = ((gold - globalRanges.minGold) / (globalRanges.maxGold - globalRanges.minGold)) * 100;
@@ -1559,7 +1559,7 @@ export default function EventNodeEditor() {
                           (_, i) => chapterStartEvent + i
                         );
                         const avg = Math.round(
-                          events.map(calculateChapterGold).reduce((a,b) => a+b, 0) / events.length
+                          events.map(calculateChapterGold).reduce((a: any, b: any) => a+b, 0) / events.length
                         );
                         return avg.toLocaleString();
                       })()}g
@@ -1576,7 +1576,7 @@ export default function EventNodeEditor() {
                           (_, i) => chapterStartEvent + i
                         );
                         const avg = Math.round(
-                          events.map(calculateChapterXP).reduce((a,b) => a+b, 0) / events.length
+                          events.map(calculateChapterXP).reduce((a: any, b: any) => a+b, 0) / events.length
                         );
                         return avg.toLocaleString();
                       })()}
@@ -1747,7 +1747,7 @@ export default function EventNodeEditor() {
                     (_, i) => chapterStartEvent + i
                   );
 
-                  return eventsToShow.map(eventNum => {
+                  return eventsToShow.map((eventNum: any) => {
                     const fee = calculateDeploymentFee(eventNum);
                     const percentage = ((fee - deploymentFeeConfig.minFee) / (deploymentFeeConfig.maxFee - deploymentFeeConfig.minFee)) * 100;
 
@@ -1780,7 +1780,7 @@ export default function EventNodeEditor() {
                           (_, i) => chapterStartEvent + i
                         );
                         const avg = Math.round(
-                          events.map(calculateDeploymentFee).reduce((a,b) => a+b, 0) / events.length
+                          events.map(calculateDeploymentFee).reduce((a: any, b: any) => a+b, 0) / events.length
                         );
                         return avg.toLocaleString();
                       })()}g
@@ -1909,7 +1909,7 @@ export default function EventNodeEditor() {
                     (_, i) => chapterStartEvent + i
                   );
 
-                  return eventsToShow.map(eventNum => {
+                  return eventsToShow.map((eventNum: any) => {
                     const easyDur = calculateDuration(eventNum, 'easy');
                     const mediumDur = calculateDuration(eventNum, 'medium');
                     const hardDur = calculateDuration(eventNum, 'hard');
@@ -1947,7 +1947,7 @@ export default function EventNodeEditor() {
                           (_, i) => chapterStartEvent + i
                         );
                         const avg = Math.round(
-                          events.map(e => calculateDuration(e, 'easy')).reduce((a,b) => a+b, 0) / events.length
+                          events.map((e: any) => calculateDuration(e, 'easy')).reduce((a: any, b: any) => a+b, 0) / events.length
                         );
                         return formatDuration(avg);
                       })()}
@@ -1964,7 +1964,7 @@ export default function EventNodeEditor() {
                           (_, i) => chapterStartEvent + i
                         );
                         const avg = Math.round(
-                          events.map(e => calculateDuration(e, 'medium')).reduce((a,b) => a+b, 0) / events.length
+                          events.map((e: any) => calculateDuration(e, 'medium')).reduce((a: any, b: any) => a+b, 0) / events.length
                         );
                         return formatDuration(avg);
                       })()}
@@ -1981,7 +1981,7 @@ export default function EventNodeEditor() {
                           (_, i) => chapterStartEvent + i
                         );
                         const avg = Math.round(
-                          events.map(e => calculateDuration(e, 'hard')).reduce((a,b) => a+b, 0) / events.length
+                          events.map((e: any) => calculateDuration(e, 'hard')).reduce((a: any, b: any) => a+b, 0) / events.length
                         );
                         return formatDuration(avg);
                       })()}
@@ -2041,7 +2041,7 @@ export default function EventNodeEditor() {
                   <div className="text-green-400 text-[10px] font-bold mb-2">Easy</div>
                   <select className="w-full px-2 py-1 bg-black/50 border border-green-500/30 rounded text-[10px] text-gray-300 mb-2">
                     <option value="">Select Type...</option>
-                    {ESSENCE_TYPES.map(type => (
+                    {ESSENCE_TYPES.map((type: any) => (
                       <option key={type} value={type}>{type}</option>
                     ))}
                   </select>
@@ -2065,7 +2065,7 @@ export default function EventNodeEditor() {
                   <div className="text-yellow-400 text-[10px] font-bold mb-2">Medium</div>
                   <select className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-[10px] text-gray-300 mb-2">
                     <option value="">Select Type...</option>
-                    {ESSENCE_TYPES.map(type => (
+                    {ESSENCE_TYPES.map((type: any) => (
                       <option key={type} value={type}>{type}</option>
                     ))}
                   </select>
@@ -2089,7 +2089,7 @@ export default function EventNodeEditor() {
                   <div className="text-red-400 text-[10px] font-bold mb-2">Hard</div>
                   <select className="w-full px-2 py-1 bg-black/50 border border-red-500/30 rounded text-[10px] text-gray-300 mb-2">
                     <option value="">Select Type...</option>
-                    {ESSENCE_TYPES.map(type => (
+                    {ESSENCE_TYPES.map((type: any) => (
                       <option key={type} value={type}>{type}</option>
                     ))}
                   </select>
@@ -2118,7 +2118,7 @@ export default function EventNodeEditor() {
                   <div className="text-green-400 text-[10px] font-bold mb-1">Easy</div>
                   <select className="w-full px-2 py-1 bg-black/50 border border-green-500/30 rounded text-[10px] text-gray-300">
                     <option value="N/A">N/A</option>
-                    {POWER_CHIP_TYPES.map(type => (
+                    {POWER_CHIP_TYPES.map((type: any) => (
                       <option key={type} value={type}>{type}</option>
                     ))}
                   </select>
@@ -2127,7 +2127,7 @@ export default function EventNodeEditor() {
                   <div className="text-yellow-400 text-[10px] font-bold mb-1">Medium</div>
                   <select className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-[10px] text-gray-300">
                     <option value="N/A">N/A</option>
-                    {POWER_CHIP_TYPES.map(type => (
+                    {POWER_CHIP_TYPES.map((type: any) => (
                       <option key={type} value={type}>{type}</option>
                     ))}
                   </select>
@@ -2136,7 +2136,7 @@ export default function EventNodeEditor() {
                   <div className="text-red-400 text-[10px] font-bold mb-1">Hard</div>
                   <select className="w-full px-2 py-1 bg-black/50 border border-red-500/30 rounded text-[10px] text-gray-300">
                     <option value="N/A">N/A</option>
-                    {POWER_CHIP_TYPES.map(type => (
+                    {POWER_CHIP_TYPES.map((type: any) => (
                       <option key={type} value={type}>{type}</option>
                     ))}
                   </select>
@@ -2397,7 +2397,7 @@ export default function EventNodeEditor() {
                     (_, i) => chapterStartEvent + i
                   );
 
-                  return eventsToShow.map(eventNum => {
+                  return eventsToShow.map((eventNum: any) => {
                     return (
                       <div key={eventNum} className="bg-black/20 p-2 rounded border border-purple-500/10">
                         <div className="text-purple-300 text-xs font-bold mb-2">Event {eventNum}</div>
@@ -2488,7 +2488,7 @@ export default function EventNodeEditor() {
           <div className="p-3 bg-black/30 rounded border border-purple-500/20">
             <div className="grid grid-cols-2 gap-2">
               {/* Reorder events to be column-by-column instead of row-by-row */}
-              {[...Array(10)].map((_, rowIndex) => {
+              {[...Array(10)].map((_: any, rowIndex: number) => {
                 const leftIndex = rowIndex;
                 const rightIndex = rowIndex + 10;
                 const leftEvent = filteredEvents[leftIndex];
@@ -2551,7 +2551,7 @@ export default function EventNodeEditor() {
                                     <input
                                       type="text"
                                       value={leftEvent.name}
-                                      onChange={(e) => updateEventName(eventsData.findIndex(ev => ev.eventNumber === leftEvent.eventNumber), e.target.value)}
+                                      onChange={(e) => updateEventName(eventsData.findIndex((ev: any) => ev.eventNumber === leftEvent.eventNumber), e.target.value)}
                                       className="flex-1 px-1 py-0.5 bg-black/30 border border-purple-500/20 rounded text-xs text-gray-300"
                                       placeholder="Event name..."
                                     />
@@ -2561,13 +2561,13 @@ export default function EventNodeEditor() {
                                     <input
                                       type="text"
                                       value={leftEvent.goldReward.toLocaleString()}
-                                      onChange={(e) => updateEventRewards(eventsData.findIndex(ev => ev.eventNumber === leftEvent.eventNumber), Number(e.target.value.replace(/,/g, '')), leftEvent.xpReward)}
+                                      onChange={(e) => updateEventRewards(eventsData.findIndex((ev: any) => ev.eventNumber === leftEvent.eventNumber), Number(e.target.value.replace(/,/g, '')), leftEvent.xpReward)}
                                       className="w-20 px-1 py-0.5 bg-black/30 border border-yellow-400/20 rounded text-xs text-yellow-400"
                                     />
                                     <input
                                       type="text"
                                       value={leftEvent.xpReward.toLocaleString()}
-                                      onChange={(e) => updateEventRewards(eventsData.findIndex(ev => ev.eventNumber === leftEvent.eventNumber), leftEvent.goldReward, Number(e.target.value.replace(/,/g, '')))}
+                                      onChange={(e) => updateEventRewards(eventsData.findIndex((ev: any) => ev.eventNumber === leftEvent.eventNumber), leftEvent.goldReward, Number(e.target.value.replace(/,/g, '')))}
                                       className="w-20 px-1 py-0.5 bg-black/30 border border-blue-400/20 rounded text-xs text-blue-400"
                                     />
                                   </div>
@@ -2613,7 +2613,7 @@ export default function EventNodeEditor() {
                                           <span className="ml-1 text-[10px] text-purple-400/40">({chipData.distributionType})</span>
                                         </div>
                                         <div className="space-y-0.5">
-                                          {chipData.rewards.map((reward, idx) => (
+                                          {chipData.rewards.map((reward: any, idx: number) => (
                                             <div key={idx} className="flex items-center justify-between text-[10px]">
                                               <span className="text-gray-400">{reward.probability}%</span>
                                               <span className="font-mono">
@@ -2637,7 +2637,7 @@ export default function EventNodeEditor() {
                                           // Get full buff info if available, otherwise just show names
                                           const fullBuffs = variationBuffs[leftEvent.eventNumber];
                                           if (fullBuffs && fullBuffs.length > 0) {
-                                            return fullBuffs.map((buff, i) => (
+                                            return fullBuffs.map((buff: any, i: number) => (
                                               <span
                                                 key={i}
                                                 className="px-1 py-0.5 bg-black/50 border rounded text-[9px]"
@@ -2651,7 +2651,7 @@ export default function EventNodeEditor() {
                                             ));
                                           } else {
                                             // Fallback to just names
-                                            return leftEvent.variationBuffs.map((buff, i) => (
+                                            return leftEvent.variationBuffs.map((buff: any, i: number) => (
                                               <span key={i} className="px-1 py-0.5 bg-yellow-500/10 border border-yellow-500/30 rounded text-[10px] text-yellow-300">
                                                 {buff}
                                               </span>
@@ -2665,7 +2665,7 @@ export default function EventNodeEditor() {
                                   {leftEvent.essenceRewards && leftEvent.essenceRewards.length > 0 && (
                                     <div className="text-xs text-purple-400/80 mt-1">
                                       <div className="font-semibold">Essences:</div>
-                                      {leftEvent.essenceRewards.map((e, i) => (
+                                      {leftEvent.essenceRewards.map((e: any, i: number) => (
                                         <div key={i} className="ml-2">
                                           <span className={e.type === 'head' ? 'text-blue-400' : e.type === 'body' ? 'text-green-400' : 'text-purple-400'}>
                                             {e.variation} ({e.count})
@@ -2684,7 +2684,7 @@ export default function EventNodeEditor() {
                                             [{r.type}] {r.name}
                                           </span>
                                           <button
-                                            onClick={() => removeCustomReward(eventsData.findIndex(ev => ev.eventNumber === leftEvent.eventNumber), r.id)}
+                                            onClick={() => removeCustomReward(eventsData.findIndex((ev: any) => ev.eventNumber === leftEvent.eventNumber), r.id)}
                                             className="text-red-400 hover:text-red-300 text-xs"
                                           >
                                             ×
@@ -2696,7 +2696,7 @@ export default function EventNodeEditor() {
 
                                   <button
                                     onClick={() => {
-                                      setShowAddRewardModal(eventsData.findIndex(ev => ev.eventNumber === leftEvent.eventNumber));
+                                      setShowAddRewardModal(eventsData.findIndex((ev: any) => ev.eventNumber === leftEvent.eventNumber));
                                       setNewReward({ name: '', type: 'frame', description: '' });
                                     }}
                                     className="mt-1 px-2 py-0.5 bg-orange-600/30 hover:bg-orange-600/50 text-orange-400 rounded text-xs transition-colors"
@@ -2768,7 +2768,7 @@ export default function EventNodeEditor() {
                                     <input
                                       type="text"
                                       value={rightEvent.name}
-                                      onChange={(e) => updateEventName(eventsData.findIndex(ev => ev.eventNumber === rightEvent.eventNumber), e.target.value)}
+                                      onChange={(e) => updateEventName(eventsData.findIndex((ev: any) => ev.eventNumber === rightEvent.eventNumber), e.target.value)}
                                       className="flex-1 px-1 py-0.5 bg-black/30 border border-purple-500/20 rounded text-xs text-gray-300"
                                       placeholder="Event name..."
                                     />
@@ -2778,13 +2778,13 @@ export default function EventNodeEditor() {
                                     <input
                                       type="text"
                                       value={rightEvent.goldReward.toLocaleString()}
-                                      onChange={(e) => updateEventRewards(eventsData.findIndex(ev => ev.eventNumber === rightEvent.eventNumber), Number(e.target.value.replace(/,/g, '')), rightEvent.xpReward)}
+                                      onChange={(e) => updateEventRewards(eventsData.findIndex((ev: any) => ev.eventNumber === rightEvent.eventNumber), Number(e.target.value.replace(/,/g, '')), rightEvent.xpReward)}
                                       className="w-20 px-1 py-0.5 bg-black/30 border border-yellow-400/20 rounded text-xs text-yellow-400"
                                     />
                                     <input
                                       type="text"
                                       value={rightEvent.xpReward.toLocaleString()}
-                                      onChange={(e) => updateEventRewards(eventsData.findIndex(ev => ev.eventNumber === rightEvent.eventNumber), rightEvent.goldReward, Number(e.target.value.replace(/,/g, '')))}
+                                      onChange={(e) => updateEventRewards(eventsData.findIndex((ev: any) => ev.eventNumber === rightEvent.eventNumber), rightEvent.goldReward, Number(e.target.value.replace(/,/g, '')))}
                                       className="w-20 px-1 py-0.5 bg-black/30 border border-blue-400/20 rounded text-xs text-blue-400"
                                     />
                                   </div>
@@ -2830,7 +2830,7 @@ export default function EventNodeEditor() {
                                           <span className="ml-1 text-[10px] text-purple-400/40">({chipData.distributionType})</span>
                                         </div>
                                         <div className="space-y-0.5">
-                                          {chipData.rewards.map((reward, idx) => (
+                                          {chipData.rewards.map((reward: any, idx: number) => (
                                             <div key={idx} className="flex items-center justify-between text-[10px]">
                                               <span className="text-gray-400">{reward.probability}%</span>
                                               <span className="font-mono">
@@ -2854,7 +2854,7 @@ export default function EventNodeEditor() {
                                           // Get full buff info if available, otherwise just show names
                                           const fullBuffs = variationBuffs[rightEvent.eventNumber];
                                           if (fullBuffs && fullBuffs.length > 0) {
-                                            return fullBuffs.map((buff, i) => (
+                                            return fullBuffs.map((buff: any, i: number) => (
                                               <span
                                                 key={i}
                                                 className="px-1 py-0.5 bg-black/50 border rounded text-[9px]"
@@ -2868,7 +2868,7 @@ export default function EventNodeEditor() {
                                             ));
                                           } else {
                                             // Fallback to just names
-                                            return rightEvent.variationBuffs.map((buff, i) => (
+                                            return rightEvent.variationBuffs.map((buff: any, i: number) => (
                                               <span key={i} className="px-1 py-0.5 bg-yellow-500/10 border border-yellow-500/30 rounded text-[10px] text-yellow-300">
                                                 {buff}
                                               </span>
@@ -2882,7 +2882,7 @@ export default function EventNodeEditor() {
                                   {rightEvent.essenceRewards && rightEvent.essenceRewards.length > 0 && (
                                     <div className="text-xs text-purple-400/80 mt-1">
                                       <div className="font-semibold">Essences:</div>
-                                      {rightEvent.essenceRewards.map((e, i) => (
+                                      {rightEvent.essenceRewards.map((e: any, i: number) => (
                                         <div key={i} className="ml-2">
                                           <span className={e.type === 'head' ? 'text-blue-400' : e.type === 'body' ? 'text-green-400' : 'text-purple-400'}>
                                             {e.variation} ({e.count})
@@ -2901,7 +2901,7 @@ export default function EventNodeEditor() {
                                             [{r.type}] {r.name}
                                           </span>
                                           <button
-                                            onClick={() => removeCustomReward(eventsData.findIndex(ev => ev.eventNumber === rightEvent.eventNumber), r.id)}
+                                            onClick={() => removeCustomReward(eventsData.findIndex((ev: any) => ev.eventNumber === rightEvent.eventNumber), r.id)}
                                             className="text-red-400 hover:text-red-300 text-xs"
                                           >
                                             ×
@@ -2913,7 +2913,7 @@ export default function EventNodeEditor() {
 
                                   <button
                                     onClick={() => {
-                                      setShowAddRewardModal(eventsData.findIndex(ev => ev.eventNumber === rightEvent.eventNumber));
+                                      setShowAddRewardModal(eventsData.findIndex((ev: any) => ev.eventNumber === rightEvent.eventNumber));
                                       setNewReward({ name: '', type: 'frame', description: '' });
                                     }}
                                     className="mt-1 px-2 py-0.5 bg-orange-600/30 hover:bg-orange-600/50 text-orange-400 rounded text-xs transition-colors"

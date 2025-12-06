@@ -117,7 +117,7 @@ export default function AdminUsersPage() {
 
   // Count employee Meks
   const getEmployeeCount = (meks: any[]) => {
-    return meks.filter(mek => mek.isEmployee).length;
+    return meks.filter((mek: any) => mek.isEmployee).length;
   };
 
   return (
@@ -579,12 +579,12 @@ export default function AdminUsersPage() {
 
                   <div className="border-b border-gray-800 pb-3">
                     <h3 className="text-sm font-bold text-yellow-500/60 uppercase mb-2">
-                      Active Contracts ({userDetails.contracts.filter(c => c.status === 'active').length})
+                      Active Contracts ({userDetails.contracts.filter((c: any) => c.status === 'active').length})
                     </h3>
                     <div className="max-h-[200px] overflow-y-auto space-y-1">
-                      {userDetails.contracts.filter(c => c.status === 'active').length > 0 ? (
+                      {userDetails.contracts.filter((c: any) => c.status === 'active').length > 0 ? (
                         userDetails.contracts
-                          .filter(c => c.status === 'active')
+                          .filter((c: any) => c.status === 'active')
                           .map((contract) => (
                             <div key={contract._id} className="text-xs text-gray-400 py-1">
                               <div className="flex justify-between">

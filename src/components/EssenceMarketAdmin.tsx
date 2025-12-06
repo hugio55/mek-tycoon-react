@@ -190,21 +190,21 @@ export default function EssenceMarketAdmin() {
   };
 
   // Filter summary by search
-  const filteredSummary = essenceSummary?.filter(item =>
+  const filteredSummary = essenceSummary?.filter((item: any) =>
     item.variationName.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   // Filter and sort variations for Create Listing dropdown
   // Sort by rarity: least rare (highest rank) to most rare (lowest rank = 1)
   const filteredVariations = COMPLETE_VARIATION_RARITY
-    .filter(variation =>
+    .filter((variation: any) =>
       variation.name.toLowerCase().includes(variationSearchTerm.toLowerCase()) ||
       variation.type.toLowerCase().includes(variationSearchTerm.toLowerCase())
     )
     .sort((a, b) => b.rank - a.rank); // Reverse sort: 291 (least rare) to 1 (most rare)
 
   // Filter players for Add to Player dropdown
-  const filteredPlayers = (allPlayers || []).filter(player =>
+  const filteredPlayers = (allPlayers || []).filter((player: any) =>
     player.corporationName.toLowerCase().includes(playerSearchTerm.toLowerCase()) ||
     player.walletAddress.toLowerCase().includes(playerSearchTerm.toLowerCase()) ||
     (player.stakeAddress && player.stakeAddress.toLowerCase().includes(playerSearchTerm.toLowerCase()))
@@ -555,7 +555,7 @@ export default function EssenceMarketAdmin() {
                   <div className="mt-2 bg-green-900/20 border border-green-500/30 rounded px-3 py-2 flex justify-between items-center">
                     <div>
                       <span className="text-green-300 font-medium text-sm">
-                        {allPlayers?.find(p => p.walletAddress === selectedPlayer)?.corporationName || 'Unknown'}
+                        {allPlayers?.find((p: any) => p.walletAddress === selectedPlayer)?.corporationName || 'Unknown'}
                       </span>
                       <div className="text-xs text-gray-500 mt-0.5">
                         {selectedPlayer.slice(0, 20)}...
@@ -763,7 +763,7 @@ export default function EssenceMarketAdmin() {
                 <div className="text-xs text-gray-400 mb-2">Preview:</div>
                 <div className="text-sm">
                   <span className="text-green-300 font-bold">
-                    {allPlayers?.find(p => p.walletAddress === selectedPlayer)?.corporationName || 'Unknown'}
+                    {allPlayers?.find((p: any) => p.walletAddress === selectedPlayer)?.corporationName || 'Unknown'}
                   </span>
                   {' will receive '}
                   <span className="text-yellow-300 font-bold">{listingQuantity}</span>
@@ -807,13 +807,13 @@ export default function EssenceMarketAdmin() {
               <div className="grid grid-cols-3 gap-3 mb-4">
                 <div className="bg-black/30 rounded p-3 text-center">
                   <div className="text-2xl font-bold text-yellow-400">
-                    {listingHistory.reduce((sum, item) => sum + item.quantity, 0).toFixed(1)}
+                    {listingHistory.reduce((sum: any, item: any) => sum + item.quantity, 0).toFixed(1)}
                   </div>
                   <div className="text-xs text-gray-400 mt-1">Total Essence</div>
                 </div>
                 <div className="bg-black/30 rounded p-3 text-center">
                   <div className="text-2xl font-bold text-purple-400">
-                    {new Set(listingHistory.map(item => item.variation)).size}
+                    {new Set(listingHistory.map((item: any) => item.variation)).size}
                   </div>
                   <div className="text-xs text-gray-400 mt-1">Unique Types</div>
                 </div>

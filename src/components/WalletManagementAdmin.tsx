@@ -605,11 +605,11 @@ Check console for full timeline.
     // First, filter by WrenCo (user's wallet) if that filter is active
     let filtered = wallets;
     if (showOnlyWrenCo && stakeAddress) {
-      filtered = wallets.filter(wallet => wallet.walletAddress === stakeAddress);
+      filtered = wallets.filter((wallet: any) => wallet.walletAddress === stakeAddress);
     }
 
     // Then, filter by search term
-    filtered = filtered.filter(wallet =>
+    filtered = filtered.filter((wallet: any) =>
       wallet.walletAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
       wallet.walletType.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (wallet.companyName && wallet.companyName.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -622,7 +622,7 @@ Check console for full timeline.
     }> = [];
 
     // Add each wallet as individual item
-    filtered.forEach(wallet => {
+    filtered.forEach((wallet: any) => {
       displayItems.push({
         type: 'wallet',
         wallets: [wallet],
@@ -707,7 +707,7 @@ Check console for full timeline.
   // For backwards compatibility, keep filteredWallets for count
   const filteredWallets = useMemo(() => {
     if (!wallets) return [];
-    return wallets.filter(wallet =>
+    return wallets.filter((wallet: any) =>
       wallet.walletAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
       wallet.walletType.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (wallet.companyName && wallet.companyName.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -716,7 +716,7 @@ Check console for full timeline.
 
   const verifiedCount = useMemo(() => {
     if (!wallets) return 0;
-    return wallets.filter(w => w.isVerified).length;
+    return wallets.filter((w: any) => w.isVerified).length;
   }, [wallets]);
 
   // BANDWIDTH OPTIMIZATION: Don't show loading spinner when intentionally skipping query
@@ -1790,7 +1790,7 @@ Check console for full timeline.
                     </tr>
                   </thead>
                   <tbody>
-                    {boostDiagnostic.comparison.map((mek, index) => (
+                    {boostDiagnostic.comparison.map((mek: any, index: number) => (
                       <tr
                         key={index}
                         className={`border-b border-gray-800 ${

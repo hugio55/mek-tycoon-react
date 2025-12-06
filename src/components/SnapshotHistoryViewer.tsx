@@ -27,7 +27,7 @@ function SnapshotHistoryViewer() {
       console.log('[SnapshotHistoryViewer] Logs query updated:', {
         count: logs.length,
         latestTimestamp: logs[0]?.timestamp ? new Date(logs[0].timestamp).toISOString() : 'none',
-        allTimestamps: logs.map(l => new Date(l.timestamp).toISOString())
+        allTimestamps: logs.map((l: any) => new Date(l.timestamp).toISOString())
       });
     }
   }, [logs]);
@@ -296,7 +296,7 @@ function SnapshotHistoryViewer() {
                         MEKs Owned at This Snapshot ({snapshot.meks.length})
                       </h4>
                       <div className="grid grid-cols-1 gap-2 max-h-96 overflow-y-auto">
-                        {snapshot.meks.map((mek, index) => (
+                        {snapshot.meks.map((mek: any, index: number) => (
                           <div
                             key={mek.assetId}
                             className="flex items-center justify-between p-3 bg-gray-900/50 rounded border border-gray-700"
@@ -406,7 +406,7 @@ function SnapshotHistoryViewer() {
             </div>
             <div className="p-4">
               {(() => {
-                const snapshot = snapshots.find(s => s._id === viewingFullData);
+                const snapshot = snapshots.find((s: any) => s._id === viewingFullData);
                 if (!snapshot) return <div className="text-gray-400">Snapshot not found</div>;
 
                 return (

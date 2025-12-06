@@ -481,7 +481,7 @@ async function generateAnalyticsDashboard() {
   // Average iterations per component
   const sessions = await ctx.db.query("transformationSessions").collect();
   const avgIterations =
-    sessions.reduce((sum, s) => sum + s.totalIterations, 0) / sessions.length;
+    sessions.reduce((sum: any, s: any) => sum + s.totalIterations, 0) / sessions.length;
 
   // User preferences by type
   const preferences = await ctx.db.query("userPreferences").collect();

@@ -100,7 +100,7 @@ export default function MekTreePage() {
   // Center on start node when tree loads
   useEffect(() => {
     if (mekTree?.nodes) {
-      const startNode = mekTree.nodes.find(n => n.id === 'start');
+      const startNode = mekTree.nodes.find((n: any) => n.id === 'start');
       if (startNode && canvasRef.current) {
         const canvasRect = canvasRef.current.getBoundingClientRect();
         setPanOffset({
@@ -113,7 +113,7 @@ export default function MekTreePage() {
   
   const hasUnlockedPrerequisite = (node: TalentNode): boolean => {
     if (!mekTree) return false;
-    return mekTree.connections.some(conn => 
+    return mekTree.connections.some((conn: any) => 
       conn.to === node.id && mekTree.unlockedNodes.includes(conn.from)
     );
   };
@@ -299,9 +299,9 @@ export default function MekTreePage() {
             }}
           >
             {/* Connections */}
-            {mekTree.connections.map(conn => {
-              const fromNode = mekTree.nodes.find(n => n.id === conn.from);
-              const toNode = mekTree.nodes.find(n => n.id === conn.to);
+            {mekTree.connections.map((conn: any) => {
+              const fromNode = mekTree.nodes.find((n: any) => n.id === conn.from);
+              const toNode = mekTree.nodes.find((n: any) => n.id === conn.to);
               
               if (!fromNode || !toNode) return null;
               
@@ -335,7 +335,7 @@ export default function MekTreePage() {
             })}
             
             {/* Nodes */}
-            {mekTree.nodes.map(node => {
+            {mekTree.nodes.map((node: any) => {
               const isUnlocked = mekTree.unlockedNodes.includes(node.id);
               const isAvailable = canUnlockNode(node);
               const isRoot = node.id === 'start';

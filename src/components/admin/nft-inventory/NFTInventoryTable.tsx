@@ -39,7 +39,7 @@ export default function NFTInventoryTable({
 
       // Log first few items
       const sample = inventory.slice(0, 3);
-      console.log('[🎨UI] Sample items:', sample.map(nft => ({
+      console.log('[🎨UI] Sample items:', sample.map((nft: any) => ({
         name: nft.name,
         nftUid: nft.nftUid,
         status: nft.status,

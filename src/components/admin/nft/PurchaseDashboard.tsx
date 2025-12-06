@@ -33,7 +33,7 @@ export default function PurchaseDashboard() {
   });
 
   // Filter purchases by search term (client-side)
-  const filteredPurchases = purchases?.filter(purchase => {
+  const filteredPurchases = purchases?.filter((purchase: any) => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
     return (
@@ -74,7 +74,7 @@ export default function PurchaseDashboard() {
       'Status',
     ];
 
-    const rows = filteredPurchases.map(p => [
+    const rows = filteredPurchases.map((p: any) => [
       new Date(p.purchasedAt).toLocaleString(),
       p.eventName || '',
       p.variationName || '',
@@ -88,7 +88,7 @@ export default function PurchaseDashboard() {
 
     const csv = [
       headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
+      ...rows.map((row: any) => row.map((cell: any) => `"${cell}"`).join(',')),
     ].join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -258,7 +258,7 @@ export default function PurchaseDashboard() {
             {filteredPurchases.length > 0 && (
               <p className="text-gray-400">
                 Total Revenue: <span className="text-green-400 font-bold">
-                  {filteredPurchases.reduce((sum, p) => sum + p.priceAda, 0).toFixed(2)} ₳
+                  {filteredPurchases.reduce((sum: any, p: any) => sum + p.priceAda, 0).toFixed(2)} ₳
                 </span>
               </p>
             )}

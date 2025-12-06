@@ -35,7 +35,7 @@ export default function SearchPage() {
 
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter(mek => 
+      filtered = filtered.filter((mek: any) => 
         mek.assetName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         mek.assetId?.toString().includes(searchTerm) ||
         mek.owner?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -44,19 +44,19 @@ export default function SearchPage() {
 
     // Apply rarity filter
     if (filterRarity) {
-      filtered = filtered.filter(mek => mek.rarityTier === filterRarity);
+      filtered = filtered.filter((mek: any) => mek.rarityTier === filterRarity);
     }
 
     // Apply head filter
     if (filterHead) {
-      filtered = filtered.filter(mek => 
+      filtered = filtered.filter((mek: any) => 
         mek.headVariation?.toLowerCase().includes(filterHead.toLowerCase())
       );
     }
 
     // Apply body filter
     if (filterBody) {
-      filtered = filtered.filter(mek => 
+      filtered = filtered.filter((mek: any) => 
         mek.bodyVariation?.toLowerCase().includes(filterBody.toLowerCase())
       );
     }
@@ -93,15 +93,15 @@ export default function SearchPage() {
 
   // Get unique values for filters
   const uniqueRarities = useMemo(() => 
-    [...new Set((allMeksData || []).map(m => m.rarityTier).filter(Boolean))],
+    [...new Set((allMeksData || []).map((m: any) => m.rarityTier).filter(Boolean))],
     [allMeksData]
   );
   const uniqueHeads = useMemo(() => 
-    [...new Set((allMeksData || []).map(m => m.headVariation).filter(Boolean))].sort(),
+    [...new Set((allMeksData || []).map((m: any) => m.headVariation).filter(Boolean))].sort(),
     [allMeksData]
   );
   const uniqueBodies = useMemo(() => 
-    [...new Set((allMeksData || []).map(m => m.bodyVariation).filter(Boolean))].sort(),
+    [...new Set((allMeksData || []).map((m: any) => m.bodyVariation).filter(Boolean))].sort(),
     [allMeksData]
   );
 
@@ -131,7 +131,7 @@ export default function SearchPage() {
             className="px-4 py-2 bg-gray-700 rounded border border-gray-600 text-white"
           >
             <option value="">All Rarities</option>
-            {uniqueRarities.map(rarity => (
+            {uniqueRarities.map((rarity: any) => (
               <option key={rarity} value={rarity}>{rarity}</option>
             ))}
           </select>
@@ -154,7 +154,7 @@ export default function SearchPage() {
             className="px-4 py-2 bg-gray-700 rounded border border-gray-600 text-white"
           >
             <option value="">All Head Types</option>
-            {uniqueHeads.map(head => (
+            {uniqueHeads.map((head: any) => (
               <option key={head} value={head}>{head}</option>
             ))}
           </select>
@@ -165,7 +165,7 @@ export default function SearchPage() {
             className="px-4 py-2 bg-gray-700 rounded border border-gray-600 text-white"
           >
             <option value="">All Body Types</option>
-            {uniqueBodies.map(body => (
+            {uniqueBodies.map((body: any) => (
               <option key={body} value={body}>{body}</option>
             ))}
           </select>
@@ -213,7 +213,7 @@ export default function SearchPage() {
                 
                 {/* Item Slot Indicators - Overlay on image */}
                 <div className="absolute bottom-2 right-2 flex gap-1 bg-black/50 p-1 rounded">
-                  {hasItems.map((hasItem, idx) => (
+                  {hasItems.map((hasItem: any, idx: number) => (
                     <div
                       key={idx}
                       className={`w-2 h-2 rounded-full ${
@@ -255,7 +255,7 @@ export default function SearchPage() {
           </button>
           
           <div className="flex items-center gap-2">
-            {[...Array(Math.min(5, totalPages))].map((_, idx) => {
+            {[...Array(Math.min(5, totalPages))].map((_: any, idx: number) => {
               let pageNum;
               if (totalPages <= 5) {
                 pageNum = idx + 1;

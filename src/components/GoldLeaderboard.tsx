@@ -109,7 +109,7 @@ function CorporationRow({
       {/* Expanded individual wallets */}
       {isExpanded && walletDetails && walletDetails.length > 1 && (
         <div className="border-t border-yellow-500/20 bg-black/40">
-          {walletDetails.map((wallet, index) => (
+          {walletDetails.map((wallet: any, index: number) => (
             <div
               key={wallet.walletAddress}
               className={`flex items-center justify-between px-3 sm:px-2 py-2 hover:bg-yellow-500/5 transition-colors ${
@@ -178,7 +178,7 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
 
     // Set gold values directly from database
     const goldMap = new Map();
-    topMiners.forEach(miner => {
+    topMiners.forEach((miner: any) => {
       goldMap.set(miner.walletAddress, miner.currentGold);
     });
     setRealtimeGold(goldMap);
@@ -188,7 +188,7 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
   useEffect(() => {
     if (realtimeData) {
       const goldMap = new Map();
-      realtimeData.forEach(miner => {
+      realtimeData.forEach((miner: any) => {
         goldMap.set(miner.walletAddress, miner.currentGold);
       });
       setRealtimeGold(goldMap);
@@ -249,7 +249,7 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
 
           {/* Company slots */}
           <div className={`relative px-2 pt-2 bg-black/80 backdrop-blur-sm ${showMoreButton ? 'pb-[0px]' : 'pb-[10px]'}`}>
-            {displayData.map((miner, index) => {
+            {displayData.map((miner: any, index: number) => {
               const rank = index + 1;
               // Display database value directly (no animation)
               const displayGold = miner ? miner.currentGold : 0;

@@ -55,7 +55,7 @@ export default function ActiveBuffs({ userId }: ActiveBuffsProps) {
   }
 
   // Group buffs by type for better display
-  const buffsByType = activeBuffs.reduce((acc, buff) => {
+  const buffsByType = activeBuffs.reduce((acc: any, buff: any) => {
     const type = buff.buffType.buffType;
     if (!acc[type]) {
       acc[type] = [];
@@ -96,7 +96,7 @@ export default function ActiveBuffs({ userId }: ActiveBuffsProps) {
         <div className="space-y-2">
           {Object.entries(buffsByType).map(([type, buffs]) => {
             // Combine stacks for same buff type
-            const totalValue = buffs.reduce((sum, buff) => {
+            const totalValue = buffs.reduce((sum: any, buff: any) => {
               if (buff.buffType.valueType === 'percentage') {
                 return sum + (buff.buffType.baseValue * buff.stacks);
               }
@@ -130,7 +130,7 @@ export default function ActiveBuffs({ userId }: ActiveBuffsProps) {
                     </p>
                     {buffs.length > 1 && (
                       <p className="text-xs text-yellow-400">
-                        x{buffs.reduce((sum, b) => sum + b.stacks, 0)}
+                        x{buffs.reduce((sum: any, b: any) => sum + b.stacks, 0)}
                       </p>
                     )}
                   </div>

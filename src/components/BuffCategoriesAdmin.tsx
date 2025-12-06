@@ -252,7 +252,7 @@ export default function BuffCategoriesAdmin() {
               className="w-full bg-black/50 border border-yellow-500/30 rounded px-2 py-1 text-white text-sm"
               required
             >
-              {categoryOptions.map(opt => (
+              {categoryOptions.map((opt: any) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
@@ -266,7 +266,7 @@ export default function BuffCategoriesAdmin() {
               className="w-full bg-black/50 border border-yellow-500/30 rounded px-2 py-1 text-white text-sm"
               required
             >
-              {unitTypeOptions.map(opt => (
+              {unitTypeOptions.map((opt: any) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
@@ -280,7 +280,7 @@ export default function BuffCategoriesAdmin() {
               className="w-full bg-black/50 border border-yellow-500/30 rounded px-2 py-1 text-white text-sm"
               required
             >
-              {applicationTypeOptions.map(opt => (
+              {applicationTypeOptions.map((opt: any) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
@@ -403,11 +403,11 @@ export default function BuffCategoriesAdmin() {
                 {/* Group categories by type */}
                 {(() => {
                   const groupedCategories = {
-                    success: categories.filter(c => c.category === "success"),
-                    gold: categories.filter(c => c.category === "gold" || c.category === "market"),
-                    essence: categories.filter(c => c.category === "essence"),
-                    looter: categories.filter(c => c.category === "rarity_bias" || c.category === "reward_chance" || c.category === "xp"),
-                    other: categories.filter(c => c.category === "mek_slot"),
+                    success: categories.filter((c: any) => c.category === "success"),
+                    gold: categories.filter((c: any) => c.category === "gold" || c.category === "market"),
+                    essence: categories.filter((c: any) => c.category === "essence"),
+                    looter: categories.filter((c: any) => c.category === "rarity_bias" || c.category === "reward_chance" || c.category === "xp"),
+                    other: categories.filter((c: any) => c.category === "mek_slot"),
                   };
 
                   return (
@@ -442,7 +442,7 @@ export default function BuffCategoriesAdmin() {
                                 <span className="px-2 py-1 bg-green-700/30 rounded text-xs text-green-400">Success</span>
                               </td>
                               <td className="py-2 px-3 text-sm">
-                                <span className="text-yellow-500">{unitTypeOptions.find(u => u.value === category.unitType)?.label}</span>
+                                <span className="text-yellow-500">{unitTypeOptions.find((u: any) => u.value === category.unitType)?.label}</span>
                               </td>
                               <td className="py-2 px-3">
                                 <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">
@@ -499,11 +499,11 @@ export default function BuffCategoriesAdmin() {
                               </td>
                               <td className="py-2 px-3">
                                 <span className="px-2 py-1 bg-gray-700 rounded text-xs">
-                                  {categoryOptions.find(c => c.value === category.category)?.label}
+                                  {categoryOptions.find((c: any) => c.value === category.category)?.label}
                                 </span>
                               </td>
                               <td className="py-2 px-3 text-sm">
-                                <span className="text-yellow-500">{unitTypeOptions.find(u => u.value === category.unitType)?.label}</span>
+                                <span className="text-yellow-500">{unitTypeOptions.find((u: any) => u.value === category.unitType)?.label}</span>
                               </td>
                               <td className="py-2 px-3">
                                 <span className={`px-2 py-1 rounded text-xs ${
@@ -564,11 +564,11 @@ export default function BuffCategoriesAdmin() {
                               </td>
                               <td className="py-2 px-3">
                                 <span className="px-2 py-1 bg-gray-700 rounded text-xs">
-                                  {categoryOptions.find(c => c.value === category.category)?.label}
+                                  {categoryOptions.find((c: any) => c.value === category.category)?.label}
                                 </span>
                               </td>
                               <td className="py-2 px-3 text-sm">
-                                <span className="text-yellow-500">{unitTypeOptions.find(u => u.value === category.unitType)?.label}</span>
+                                <span className="text-yellow-500">{unitTypeOptions.find((u: any) => u.value === category.unitType)?.label}</span>
                               </td>
                               <td className="py-2 px-3">
                                 <span className={`px-2 py-1 rounded text-xs ${
@@ -629,11 +629,11 @@ export default function BuffCategoriesAdmin() {
                               </td>
                               <td className="py-2 px-3">
                                 <span className="px-2 py-1 bg-gray-700 rounded text-xs">
-                                  {categoryOptions.find(c => c.value === category.category)?.label}
+                                  {categoryOptions.find((c: any) => c.value === category.category)?.label}
                                 </span>
                               </td>
                               <td className="py-2 px-3 text-sm">
-                                <span className="text-yellow-500">{unitTypeOptions.find(u => u.value === category.unitType)?.label}</span>
+                                <span className="text-yellow-500">{unitTypeOptions.find((u: any) => u.value === category.unitType)?.label}</span>
                               </td>
                               <td className="py-2 px-3">
                                 <span className={`px-2 py-1 rounded text-xs ${
@@ -694,11 +694,11 @@ export default function BuffCategoriesAdmin() {
                               </td>
                               <td className="py-2 px-3">
                                 <span className="px-2 py-1 bg-gray-700 rounded text-xs">
-                                  {categoryOptions.find(c => c.value === category.category)?.label}
+                                  {categoryOptions.find((c: any) => c.value === category.category)?.label}
                                 </span>
                               </td>
                               <td className="py-2 px-3 text-sm">
-                                <span className="text-yellow-500">{unitTypeOptions.find(u => u.value === category.unitType)?.label}</span>
+                                <span className="text-yellow-500">{unitTypeOptions.find((u: any) => u.value === category.unitType)?.label}</span>
                               </td>
                               <td className="py-2 px-3">
                                 <span className={`px-2 py-1 rounded text-xs ${

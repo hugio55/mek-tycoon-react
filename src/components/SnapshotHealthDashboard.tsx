@@ -124,7 +124,7 @@ export default function SnapshotHealthDashboard() {
             <div className="text-xs text-gray-500">✓ All wallets have been snapshotted</div>
           ) : (
             <div className="space-y-1 max-h-32 overflow-y-auto">
-              {health.walletsNeverSnapshotted.wallets.map(wallet => (
+              {health.walletsNeverSnapshotted.wallets.map((wallet: any) => (
                 <div
                   key={wallet}
                   className="text-xs font-mono text-gray-400 hover:text-yellow-400 cursor-pointer"
@@ -151,7 +151,7 @@ export default function SnapshotHealthDashboard() {
             <div className="text-xs text-gray-500">✓ All active wallets have recent snapshots</div>
           ) : (
             <div className="space-y-1 max-h-32 overflow-y-auto">
-              {health.walletsStaleSnapshots.wallets.map(item => (
+              {health.walletsStaleSnapshots.wallets.map((item: any) => (
                 <div
                   key={item.wallet}
                   className="flex justify-between items-center hover:bg-gray-800/50 p-1 rounded cursor-pointer"
@@ -183,7 +183,7 @@ export default function SnapshotHealthDashboard() {
             <div className="text-xs text-gray-500">✓ No wallets with consecutive failures</div>
           ) : (
             <div className="space-y-1 max-h-32 overflow-y-auto">
-              {health.walletsWithFailures.wallets.map(item => (
+              {health.walletsWithFailures.wallets.map((item: any) => (
                 <div
                   key={item.wallet}
                   className="flex justify-between items-center hover:bg-gray-800/50 p-1 rounded cursor-pointer"
@@ -210,7 +210,7 @@ export default function SnapshotHealthDashboard() {
             <div className="text-xs text-gray-500">All wallets are active</div>
           ) : (
             <div className="space-y-1 max-h-32 overflow-y-auto">
-              {health.inactiveWalletsInfo.wallets.map(item => (
+              {health.inactiveWalletsInfo.wallets.map((item: any) => (
                 <div
                   key={item.wallet}
                   className="flex justify-between items-center hover:bg-gray-800/50 p-1 rounded cursor-pointer"
@@ -238,7 +238,7 @@ export default function SnapshotHealthDashboard() {
       <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700">
         <h4 className="text-lg font-semibold text-yellow-400 mb-3">Recent Snapshot Executions</h4>
         <div className="space-y-2">
-          {health.recentLogs.map((log, index) => (
+          {health.recentLogs.map((log: any, index: number) => (
             <div
               key={index}
               className="flex items-center justify-between p-2 bg-gray-950/50 rounded border border-gray-700"
@@ -333,7 +333,7 @@ export default function SnapshotHealthDashboard() {
                   MEK Transfers ({walletHealth.mekTransfers.count})
                 </h5>
                 <div className="space-y-1 max-h-48 overflow-y-auto">
-                  {walletHealth.mekTransfers.transfers.map((transfer, index) => (
+                  {walletHealth.mekTransfers.transfers.map((transfer: any, index: number) => (
                     <div
                       key={index}
                       className="flex items-center justify-between p-2 bg-gray-950/50 rounded border border-gray-700 text-xs"
@@ -365,7 +365,7 @@ export default function SnapshotHealthDashboard() {
                   ⚠️ Snapshot Gaps Detected ({walletHealth.snapshotGaps.count})
                 </h5>
                 <div className="space-y-1 text-xs">
-                  {walletHealth.snapshotGaps.gaps.map((gap, index) => (
+                  {walletHealth.snapshotGaps.gaps.map((gap: any, index: number) => (
                     <div key={index} className="text-gray-400">
                       {gap.gapHours}h gap from {new Date(gap.from).toLocaleString()} to {new Date(gap.to).toLocaleString()}
                     </div>

@@ -188,7 +188,7 @@ export default function InvestigateClaimPage() {
                   <ul className="list-disc list-inside text-gray-300">
                     <li>{data.summary.totalClaims} claim(s)</li>
                     <li>{data.summary.totalReservations} reservation(s)</li>
-                    <li>{data.inventory.filter(inv => inv.status === "available").length} available, {data.inventory.filter(inv => inv.status === "reserved").length} reserved, {data.inventory.filter(inv => inv.status === "sold").length} sold</li>
+                    <li>{data.inventory.filter((inv: any) => inv.status === "available").length} available, {data.inventory.filter((inv: any) => inv.status === "reserved").length} reserved, {data.inventory.filter((inv: any) => inv.status === "sold").length} sold</li>
                   </ul>
                 </div>
               </div>

@@ -101,7 +101,7 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
   useEffect(() => {
     if (buffCategories && buffCategories.length > 0) {
       // Check if any categories don't have enabledForUniversalChips set
-      const needsMigration = buffCategories.some(cat => cat.enabledForUniversalChips === undefined);
+      const needsMigration = buffCategories.some((cat: any) => cat.enabledForUniversalChips === undefined);
       if (needsMigration) {
         setDefaultEnabledStatus();
       }
@@ -114,7 +114,7 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
       const newPowers = { ...curvePowers };
       let hasChanges = false;
       
-      buffCategories.forEach(category => {
+      buffCategories.forEach((category: any) => {
         if (!(category._id in newPowers)) {
           newPowers[category._id] = 1; // Default to linear
           hasChanges = true;
@@ -207,10 +207,10 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
     const configs: any[] = [];
     
     for (let tier = 1; tier <= 10; tier++) {
-      CHIP_RANKS.forEach((rarity, rarityIndex) => {
+      CHIP_RANKS.forEach((rarity: any, rarityIndex: number) => {
         const chipBuffs: any[] = [];
         
-        buffCategories.forEach(category => {
+        buffCategories.forEach((category: any) => {
           if (!category.isActive) return; // Skip inactive categories
           if (category.enabledForUniversalChips === false) return; // Skip disabled for universal chips
           
@@ -336,7 +336,7 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
         {/* Master Range Charts */}
         <div className="space-y-8">
           {buffCategories && buffCategories
-            .filter(cat => {
+            .filter((cat: any) => {
               // Filter by active status
               if (cat.isActive === false) return false;
               
@@ -350,7 +350,7 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
               }
               return false;
             })
-            .map(category => {
+            .map((category: any) => {
               const masterRange = masterRanges[category._id] || { min: 1, max: 100 };
               const icon = getCategoryIcon(category.category || 'gold');
               const unit = getUnitDisplay(category.unitType || 'flat_number');
@@ -530,7 +530,7 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
                     <thead>
                       <tr className="border-b border-gray-600">
                         <th className="p-2 text-left text-gray-400">Rank</th>
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(tier => (
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((tier: any) => (
                           <th key={tier} className="p-2 text-center text-gray-400">T{tier}</th>
                         ))}
                       </tr>
@@ -541,11 +541,11 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
                         
                         return (
                           <>
-                            {CHIP_RANKS.map((rank, rankIndex) => {
+                            {CHIP_RANKS.map((rank: any, rankIndex: number) => {
                               return (
                                 <tr key={rank} className="border-b border-gray-700 hover:bg-gray-800/50">
                                   <td className="p-2 font-bold text-yellow-400">{rank}</td>
-                                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(tier => {
+                                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((tier: any) => {
                                     const values = calculateValueFromMasterRange(
                                       masterRange.min,
                                       masterRange.max,
@@ -602,7 +602,7 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
           <div className="mt-6 p-4 bg-black/50 border border-gray-700">
             <div className="text-sm text-gray-400">
               {(() => {
-                const filteredCount = buffCategories.filter(cat => {
+                const filteredCount = buffCategories.filter((cat: any) => {
                   if (cat.isActive === false) return false;
                   if (selectedCategoryTab === 'gold') {
                     return cat.category === 'gold' || cat.category === 'market';

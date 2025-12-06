@@ -319,7 +319,7 @@ export default function BuffCategoriesPage() {
                 className="w-full bg-black/50 border border-yellow-500/30 rounded px-2 py-1 text-white text-sm"
                 required
               >
-                {categoryOptions.map(opt => (
+                {categoryOptions.map((opt: any) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
@@ -333,7 +333,7 @@ export default function BuffCategoriesPage() {
                 className="w-full bg-black/50 border border-yellow-500/30 rounded px-2 py-1 text-white text-sm"
                 required
               >
-                {unitTypeOptions.map(opt => (
+                {unitTypeOptions.map((opt: any) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
@@ -347,7 +347,7 @@ export default function BuffCategoriesPage() {
                 className="w-full bg-black/50 border border-yellow-500/30 rounded px-2 py-1 text-white text-sm"
                 required
               >
-                {applicationTypeOptions.map(opt => (
+                {applicationTypeOptions.map((opt: any) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
@@ -479,11 +479,11 @@ export default function BuffCategoriesPage() {
                   {/* Group categories by type */}
                   {(() => {
                     const groupedCategories = {
-                      success: categories.filter(c => c.category === "success"),
-                      gold: categories.filter(c => c.category === "gold" || c.category === "market"),
-                      essence: categories.filter(c => c.category === "essence"),
-                      looter: categories.filter(c => c.category === "rarity_bias" || c.category === "reward_chance" || c.category === "xp"),
-                      other: categories.filter(c => c.category === "mek_slot"),
+                      success: categories.filter((c: any) => c.category === "success"),
+                      gold: categories.filter((c: any) => c.category === "gold" || c.category === "market"),
+                      essence: categories.filter((c: any) => c.category === "essence"),
+                      looter: categories.filter((c: any) => c.category === "rarity_bias" || c.category === "reward_chance" || c.category === "xp"),
+                      other: categories.filter((c: any) => c.category === "mek_slot"),
                     };
 
                     return (
@@ -505,9 +505,9 @@ export default function BuffCategoriesPage() {
                               </td>
                             </tr>
                             {groupedCategories.success.map((category) => {
-                              const categoryLabel = categoryOptions.find(c => c.value === category.category)?.label || category.category || "-";
-                              const unitTypeLabel = unitTypeOptions.find(u => u.value === category.unitType)?.label || category.unitType || "-";
-                              const applicationLabel = applicationTypeOptions.find(a => a.value === category.applicationType)?.label || category.applicationType || "Universal";
+                              const categoryLabel = categoryOptions.find((c: any) => c.value === category.category)?.label || category.category || "-";
+                              const unitTypeLabel = unitTypeOptions.find((u: any) => u.value === category.unitType)?.label || category.unitType || "-";
+                              const applicationLabel = applicationTypeOptions.find((a: any) => a.value === category.applicationType)?.label || category.applicationType || "Universal";
 
                               return (
                                 <tr key={category._id} className="border-b border-gray-800 hover:bg-gray-800/30">
@@ -601,9 +601,9 @@ export default function BuffCategoriesPage() {
                               </td>
                             </tr>
                             {groupedCategories.gold.map((category) => {
-                              const categoryLabel = categoryOptions.find(c => c.value === category.category)?.label || category.category || "-";
-                              const unitTypeLabel = unitTypeOptions.find(u => u.value === category.unitType)?.label || category.unitType || "-";
-                              const applicationLabel = applicationTypeOptions.find(a => a.value === category.applicationType)?.label || category.applicationType || "Universal";
+                              const categoryLabel = categoryOptions.find((c: any) => c.value === category.category)?.label || category.category || "-";
+                              const unitTypeLabel = unitTypeOptions.find((u: any) => u.value === category.unitType)?.label || category.unitType || "-";
+                              const applicationLabel = applicationTypeOptions.find((a: any) => a.value === category.applicationType)?.label || category.applicationType || "Universal";
                               
                               return (
                       <tr key={category._id} className="border-b border-gray-800 hover:bg-gray-800/30">
@@ -688,9 +688,9 @@ export default function BuffCategoriesPage() {
                               </td>
                             </tr>
                             {groupedCategories.essence.map((category) => {
-                              const categoryLabel = categoryOptions.find(c => c.value === category.category)?.label || category.category || "-";
-                              const unitTypeLabel = unitTypeOptions.find(u => u.value === category.unitType)?.label || category.unitType || "-";
-                              const applicationLabel = applicationTypeOptions.find(a => a.value === category.applicationType)?.label || category.applicationType || "Universal";
+                              const categoryLabel = categoryOptions.find((c: any) => c.value === category.category)?.label || category.category || "-";
+                              const unitTypeLabel = unitTypeOptions.find((u: any) => u.value === category.unitType)?.label || category.unitType || "-";
+                              const applicationLabel = applicationTypeOptions.find((a: any) => a.value === category.applicationType)?.label || category.applicationType || "Universal";
                               
                               return (
                                 <tr key={category._id} className="border-b border-gray-800 hover:bg-gray-800/30">
@@ -775,9 +775,9 @@ export default function BuffCategoriesPage() {
                               </td>
                             </tr>
                             {groupedCategories.looter.map((category) => {
-                              const categoryLabel = categoryOptions.find(c => c.value === category.category)?.label || category.category || "-";
-                              const unitTypeLabel = unitTypeOptions.find(u => u.value === category.unitType)?.label || category.unitType || "-";
-                              const applicationLabel = applicationTypeOptions.find(a => a.value === category.applicationType)?.label || category.applicationType || "Universal";
+                              const categoryLabel = categoryOptions.find((c: any) => c.value === category.category)?.label || category.category || "-";
+                              const unitTypeLabel = unitTypeOptions.find((u: any) => u.value === category.unitType)?.label || category.unitType || "-";
+                              const applicationLabel = applicationTypeOptions.find((a: any) => a.value === category.applicationType)?.label || category.applicationType || "Universal";
                               
                               return (
                                 <tr key={category._id} className="border-b border-gray-800 hover:bg-gray-800/30">
@@ -862,9 +862,9 @@ export default function BuffCategoriesPage() {
                               </td>
                             </tr>
                             {groupedCategories.other.map((category) => {
-                              const categoryLabel = categoryOptions.find(c => c.value === category.category)?.label || category.category || "-";
-                              const unitTypeLabel = unitTypeOptions.find(u => u.value === category.unitType)?.label || category.unitType || "-";
-                              const applicationLabel = applicationTypeOptions.find(a => a.value === category.applicationType)?.label || category.applicationType || "Universal";
+                              const categoryLabel = categoryOptions.find((c: any) => c.value === category.category)?.label || category.category || "-";
+                              const unitTypeLabel = unitTypeOptions.find((u: any) => u.value === category.unitType)?.label || category.unitType || "-";
+                              const applicationLabel = applicationTypeOptions.find((a: any) => a.value === category.applicationType)?.label || category.applicationType || "Universal";
                               
                               return (
                                 <tr key={category._id} className="border-b border-gray-800 hover:bg-gray-800/30">
