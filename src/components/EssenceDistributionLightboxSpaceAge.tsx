@@ -1009,12 +1009,68 @@ export default function EssenceDistributionLightboxSpaceAge({ isOpen, onClose }:
                             <h2 className="text-2xl text-white/30" style={{ fontFamily: 'Orbitron, sans-serif' }}>ESSENCE</h2>
                           </div>
 
+                          {/* Ownership Section Placeholder */}
                           <div className="rounded-xl p-4 mb-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
                             <div className="flex justify-between items-center mb-3">
                               <span className="text-xs text-white/20 uppercase tracking-widest">OWNERSHIP</span>
-                              <span className="text-3xl font-bold text-white/20">--/10</span>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-3xl font-bold text-white/20">--</span>
+                                <span className="text-xl font-normal text-white/20">/10</span>
+                              </div>
                             </div>
                             <div className="relative h-5 bg-black/40 rounded-full overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.05)' }} />
+
+                            {/* Real-Time Accumulation Placeholder */}
+                            <div className="mt-3 pt-3 border-t border-white/10">
+                              <div className="text-center">
+                                <div className="text-[10px] text-white/20 uppercase tracking-[0.2em] mb-1 font-bold" style={{ fontFamily: 'Play, sans-serif' }}>
+                                  Real-Time Accumulation
+                                </div>
+                                <div className="text-xl font-mono text-white/20 tracking-tight tabular-nums" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                  --.--------
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Stats Grid Placeholder */}
+                          <div
+                            className="rounded-xl p-4"
+                            style={{
+                              background: 'rgba(255,255,255,0.02)',
+                              border: '1px solid rgba(255,255,255,0.05)'
+                            }}
+                          >
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                              <div>
+                                <p className="text-[10px] text-white/20 uppercase tracking-widest mb-1" style={{ fontFamily: 'Play, sans-serif' }}>MARKET PRICE</p>
+                                <p className="text-lg text-white/20">
+                                  <span className="font-semibold">--</span>
+                                  <span className="font-light">g/ea</span>
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-white/20 uppercase tracking-widest mb-1" style={{ fontFamily: 'Play, sans-serif' }}>BASE RATE</p>
+                                <p className="text-lg text-white/20">
+                                  <span className="font-semibold">--</span>
+                                  <span className="font-light">/d</span>
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-white/20 uppercase tracking-widest mb-1" style={{ fontFamily: 'Play, sans-serif' }}>TOTAL VALUE</p>
+                                <p className="text-lg text-white/20">
+                                  <span className="font-semibold">--</span>
+                                  <span className="font-light">g</span>
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-white/20 uppercase tracking-widest mb-1" style={{ fontFamily: 'Play, sans-serif' }}>BONUS RATE</p>
+                                <p className="text-lg text-white/20">
+                                  <span className="font-semibold">--</span>
+                                  <span className="font-light">/d</span>
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         </div>
 
