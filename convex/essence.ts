@@ -598,7 +598,7 @@ async function calculateRealTimeEssenceBalances(
       // Calculate its accumulated amount
       const buff = await ctx.db
         .query("essencePlayerBuffs")
-        .withIndex("", (q: any) =>
+        .withIndex("by_wallet_and_variation", (q: any) =>
           q.eq("walletAddress", walletAddress).eq("variationId", variationId)
         )
         .first();
@@ -667,14 +667,14 @@ export const slotMek_ORIGINAL = mutation({
     // Try to get Mek from meks table first
     let mek = await ctx.db
       .query("meks")
-      .withIndex("", (q: any) => q.eq("assetId", mekAssetId))
+      .withIndex("by_asset_id", (q: any) => q.eq("assetId", mekAssetId))
       .first();
 
     // If not in meks table, check goldMining.ownedMeks
     if (!mek) {
       const goldMining = await ctx.db
         .query("goldMining")
-        .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
         .first();
 
       if (goldMining) {
@@ -698,7 +698,7 @@ export const slotMek_ORIGINAL = mutation({
     // Check if Mek is already slotted
     const existingSlot = await ctx.db
       .query("essenceSlots")
-      .withIndex("", (q: any) => q.eq("mekAssetId", mekAssetId))
+      .withIndex("by_mek", (q: any) => q.eq("mekAssetId", mekAssetId))
       .first();
 
     if (existingSlot) {
@@ -708,7 +708,7 @@ export const slotMek_ORIGINAL = mutation({
     // Get the slot
     const slot = await ctx.db
       .query("essenceSlots")
-      .withIndex("", (q: any) =>
+      .withIndex("by_wallet_and_slot", (q: any) =>
         q.eq("walletAddress", walletAddress).eq("slotNumber", slotNumber)
       )
       .first();
@@ -940,7 +940,7 @@ export const unslotMek_ORIGINAL = mutation({
     // Get the slot
     const slot = await ctx.db
       .query("essenceSlots")
-      .withIndex("", (q: any) =>
+      .withIndex("by_wallet_and_slot", (q: any) =>
         q.eq("walletAddress", walletAddress).eq("slotNumber", slotNumber)
       )
       .first();
@@ -1920,7 +1920,7 @@ export const fixSlotVariationId = mutation({
     // Get the slot
     const slot = await ctx.db
       .query("essenceSlots")
-      .withIndex("", (q: any) =>
+      .withIndex("by_wallet_and_slot", (q: any) =>
         q.eq("walletAddress", walletAddress).eq("slotNumber", slotNumber)
       )
       .first();
