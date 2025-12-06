@@ -1,15 +1,21 @@
 'use client';
 
+/**
+ * WhitelistManagerAdmin - SIMPLIFIED FOR SINGLE DATABASE
+ *
+ * Previously used ProductionDatabaseContext for Sturgeon access.
+ * Now uses the main DatabaseContext which always points to Sturgeon.
+ */
+
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
-import { ProductionDatabaseProvider, useProductionDatabase } from '@/contexts/ProductionDatabaseContext';
-import ProductionBanner from '@/components/admin/ProductionBanner';
+import { useDatabaseContext } from '@/contexts/DatabaseContext';
 
 function WhitelistManagerAdminContent() {
-  // Get production database context (always Sturgeon)
-  const { client, canMutate, mutationsEnabled } = useProductionDatabase();
+  // Get database context (always Sturgeon now - single database mode)
+  const { client, canMutate, productionMutationsEnabled: mutationsEnabled } = useDatabaseContext();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
@@ -223,9 +229,6 @@ function WhitelistManagerAdminContent() {
 
   return (
     <div>
-      {/* Production Banner */}
-      <ProductionBanner title="Whitelist Manager - Production" />
-
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>

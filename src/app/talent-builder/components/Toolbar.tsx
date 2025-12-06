@@ -94,7 +94,7 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
     }
   }, [dispatch]);
 
-  const handleSaveClick = useCallback(() => {
+  const handleCiruTreeSaveClick = useCallback(() => {
     dispatch({ type: 'SET_SHOW_SAVE_DIALOG', payload: true });
   }, [dispatch]);
 
@@ -359,7 +359,7 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
         {state.builderMode === 'circutree' && (
           <>
             <button
-              onClick={handleSaveClick}
+              onClick={handleCiruTreeSaveClick}
               className="px-3 py-1 text-sm rounded bg-green-600 hover:bg-green-700 text-white"
             >
               Save

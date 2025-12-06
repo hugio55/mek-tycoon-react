@@ -26,8 +26,6 @@ import WhitelistManagerAdmin from '@/components/WhitelistManagerAdmin';
 import RouteVisualization from '@/components/RouteVisualization';
 import NewStylingAdmin from '@/components/NewStylingAdmin';
 import MessagingSystemAdmin from '@/components/MessagingSystemAdmin';
-import { ProductionDatabaseProvider, useProductionDatabase } from '@/contexts/ProductionDatabaseContext';
-import ProductionBanner from '@/components/admin/ProductionBanner';
 import { getMediaUrl } from '@/lib/media-url';
 import MutationConfirmDialog from '@/components/admin/MutationConfirmDialog';
 import NMKRJSONGenerator from '@/components/admin/nft/NMKRJSONGenerator';
