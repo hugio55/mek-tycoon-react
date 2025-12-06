@@ -212,11 +212,14 @@ notifications: defineTable({
 
 ## Part 4: Backend Functions
 
-### Queries
+### Player Queries
 
 ```typescript
+// Get user ID by wallet address
+getUserIdByWallet(walletAddress) → userId | null
+
 // Get unread count for badge
-getUnreadNotificationCount(userId) → number
+getUnreadCount(userId) → number
 
 // Get recent notifications for dropdown (last 10)
 getRecentNotifications(userId, limit: 10) → Notification[]
@@ -224,19 +227,19 @@ getRecentNotifications(userId, limit: 10) → Notification[]
 // Get all notifications for lightbox (paginated)
 getAllNotifications(userId, cursor?, limit: 50) → {
   notifications: Notification[],
-  nextCursor?: string,
+  nextCursor?: number,
   hasMore: boolean
 }
 ```
 
-### Mutations
+### Player Mutations
 
 ```typescript
 // Mark single notification as read (called when user clicks it)
-markNotificationAsRead(notificationId)
+markAsRead(notificationId)
 
-// Mark all as read (optional - when user opens dropdown?)
-markAllNotificationsAsRead(userId)
+// Mark all as read
+markAllAsRead(userId)
 
 // Clear all notifications (user clicked "Clear All")
 clearAllNotifications(userId)
@@ -252,6 +255,67 @@ createNotification({
   sourceType?,
   sourceId?,
 })
+
+// Create notification (public - for testing)
+createNotificationPublic({ ...same args... })
+```
+
+### Admin Queries
+
+```typescript
+// Get all notifications system-wide (paginated, enriched with user data)
+adminGetAllNotifications(limit?, cursor?) → {
+  notifications: EnrichedNotification[],
+  nextCursor?: number,
+  hasMore: boolean,
+  totalCount: number
+}
+
+// Get notifications for specific player by wallet address
+adminGetPlayerNotifications(walletAddress, limit?) → {
+  notifications: Notification[],
+  user: { id, walletAddress, companyName } | null,
+  totalCount: number
+}
+
+// Get notification statistics for dashboard
+adminGetNotificationStats() → {
+  totalCount: number,
+  unreadCount: number,
+  readCount: number,
+  typeCounts: Record<string, number>,
+  recentCount: number,  // Last 24 hours
+  uniqueUsers: number
+}
+```
+
+### Admin Mutations
+
+```typescript
+// Send notification to specific player
+adminSendNotification({
+  walletAddress,
+  type,
+  title,
+  subtitle?,
+  linkTo?,
+  linkParams?
+})
+
+// Broadcast notification to ALL players
+adminBroadcastNotification({
+  type,
+  title,
+  subtitle?,
+  linkTo?,
+  linkParams?
+}) → { success, sentCount, broadcastId }
+
+// Delete specific notification
+adminDeleteNotification(notificationId)
+
+// Clear all notifications for a player
+adminClearPlayerNotifications(walletAddress)
 ```
 
 ### Internal Triggers
@@ -541,20 +605,27 @@ src/components/UnifiedHeader.tsx  # Add NotificationBell + Messages icon
 ### Completed
 - [x] Planning document created
 - [x] Add `notifications` table to schema (convex/schema.ts:3786-3813)
-- [x] Create backend queries and mutations (convex/notifications.ts)
+- [x] Create player backend queries and mutations (convex/notifications.ts)
+- [x] Create admin backend queries and mutations (convex/notifications.ts:237-483)
+  - `adminGetAllNotifications` - View all notifications system-wide
+  - `adminGetPlayerNotifications` - View notifications for specific player
+  - `adminGetNotificationStats` - Dashboard statistics
+  - `adminSendNotification` - Send to specific player
+  - `adminBroadcastNotification` - Send to all players
+  - `adminDeleteNotification` - Delete specific notification
+  - `adminClearPlayerNotifications` - Clear all for a player
 - [x] Build NotificationItem component (src/components/notifications/NotificationItem.tsx)
 - [x] Build NotificationDropdown component (src/components/notifications/NotificationDropdown.tsx)
 - [x] Build NotificationLightbox component (src/components/notifications/NotificationLightbox.tsx)
 - [x] Build NotificationBell component (src/components/notifications/NotificationBell.tsx)
 - [x] Integrate into UnifiedHeader (src/components/UnifiedHeader.tsx:458)
 
-### In Progress
-- [ ] Visual testing and refinement
-
-### Up Next
+### Not Yet Built (Future)
+- [ ] Admin UI page to view/manage notifications (backend ready, needs frontend)
 - [ ] Hook into tenure/pit stop system for `pit_stop_ready` notifications
 - [ ] Hook into level-up system for `job_level_up` notifications
 - [ ] Add more notification types as needed
+- [ ] Messages icon integration (Phase 3)
 
 ---
 
