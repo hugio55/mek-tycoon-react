@@ -177,6 +177,12 @@ export const createNotification = internalMutation({
     sourceId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Validate user exists
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      return { success: false, reason: "user_not_found" };
+    }
+
     // Check for duplicate notification if sourceType and sourceId provided
     if (args.sourceType && args.sourceId) {
       const existing = await ctx.db
@@ -238,6 +244,12 @@ export const createNotificationPublic = mutation({
     sourceId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Validate user exists
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      return { success: false, reason: "user_not_found" };
+    }
+
     // Check for duplicate notification if sourceType and sourceId provided
     if (args.sourceType && args.sourceId) {
       const existing = await ctx.db

@@ -135,12 +135,15 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
     }
   }, [highlightDisconnected, findDisconnectedAndDeadEndNodes, clearHighlights]);
 
-  const handleSaveMekTemplate = useCallback(async () => {
+  // Check if template name already exists
+  const checkExistingTemplate = useCallback((name: string) => {
+    if (!templates) return null;
+    return templates.find(t => t.name.toLowerCase() === name.toLowerCase());
+  }, [templates]);
+
+  const handleSaveMekTemplate = useCallback(async (mode: 'new' | 'overwrite', templateId: Id<"mekTreeTemplates"> | null) => {
     const name = state.templateName;
-    if (!name) {
-      alert('Please enter a template name');
-      return;
-    }
+    if (!name) return;
 
     const description = state.templateDescription || 'Custom Mek template';
 
@@ -164,21 +167,17 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
         return cleaned;
       });
 
-      // Build conditions with rank range
-      const conditions = {
-        rankMin: rankMin,
-        rankMax: rankMax
-      };
-
-      if (state.selectedTemplateId) {
+      if (mode === 'overwrite' && templateId) {
         await updateTemplate({
-          templateId: state.selectedTemplateId,
+          templateId: templateId,
+          name: name,
+          description: description,
           nodes: cleanedNodes,
           connections: state.connections,
-          viewportDimensions: state.viewportDimensions,
-          conditions: conditions
+          viewportDimensions: state.viewportDimensions
         });
-        actions.setSaveStatus(`Template updated! (Ranks ${rankMin}-${rankMax})`, 3000);
+        dispatch({ type: 'SET_SELECTED_TEMPLATE_ID', payload: templateId });
+        actions.setSaveStatus(`Template "${name}" updated!`, 3000);
       } else {
         const id = await createTemplate({
           name: name,
@@ -186,22 +185,17 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
           category: 'custom',
           nodes: cleanedNodes,
           connections: state.connections,
-          viewportDimensions: state.viewportDimensions,
-          conditions: conditions
+          viewportDimensions: state.viewportDimensions
         });
         dispatch({ type: 'SET_SELECTED_TEMPLATE_ID', payload: id });
-        actions.setSaveStatus(`Template "${name}" created for ranks ${rankMin}-${rankMax}`, 3000);
+        actions.setSaveStatus(`Template "${name}" saved!`, 3000);
       }
-      setShowSaveModal(false);
+      setShowSaveDialog(false);
     } catch (e: unknown) {
       const errorMsg = e instanceof Error ? e.message : String(e);
-      if (errorMsg.includes('already exists')) {
-        alert('A template with this name already exists. Please choose a different name.');
-      } else {
-        alert('Error saving template: ' + errorMsg);
-      }
+      alert('Error saving template: ' + errorMsg);
     }
-  }, [state.templateName, state.templateDescription, state.nodes, state.connections, state.selectedTemplateId, state.viewportDimensions, rankMin, rankMax, dispatch, actions, createTemplate, updateTemplate]);
+  }, [state.templateName, state.templateDescription, state.nodes, state.connections, state.viewportDimensions, dispatch, actions, createTemplate, updateTemplate]);
 
   return (
     <div className="bg-gray-900 border-b border-gray-800 shrink-0">
@@ -375,64 +369,19 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
         {/* File Operations - Mek Template Mode */}
         {state.builderMode === 'mek' && (
           <>
-            {/* Template Name & Description */}
+            {/* Template Name */}
             <div className="flex items-center gap-2">
               <input
                 type="text"
                 placeholder="Template name..."
                 value={state.templateName}
                 onChange={(e) => dispatch({ type: 'SET_TEMPLATE_NAME', payload: e.target.value })}
-                className="w-32 px-2 py-1 text-sm rounded bg-gray-800 text-white border border-gray-600 placeholder-gray-500"
+                className="w-40 px-2 py-1 text-sm rounded bg-gray-800 text-white border border-gray-600 placeholder-gray-500"
               />
             </div>
-
-            {/* Rank Range */}
-            <div className="flex items-center gap-1 border-l border-gray-700 pl-2 ml-2">
-              <span className="text-xs text-gray-400">Ranks:</span>
-              <input
-                type="number"
-                value={rankMin}
-                onChange={(e) => setRankMin(parseInt(e.target.value) || 1)}
-                className="w-16 px-1 py-1 text-sm rounded bg-gray-800 text-purple-400 border border-purple-500/30 font-mono text-center"
-                min="1"
-                max="4000"
-              />
-              <span className="text-gray-500">-</span>
-              <input
-                type="number"
-                value={rankMax}
-                onChange={(e) => setRankMax(parseInt(e.target.value) || 1000)}
-                className="w-16 px-1 py-1 text-sm rounded bg-gray-800 text-purple-400 border border-purple-500/30 font-mono text-center"
-                min="1"
-                max="4000"
-              />
-            </div>
-
-            {/* Quick Rank Presets */}
-            <select
-              value="presets"
-              onChange={(e) => {
-                if (e.target.value !== 'presets') {
-                  const [min, max] = e.target.value.split('-').map(Number);
-                  setRankMin(min);
-                  setRankMax(max);
-                }
-              }}
-              className="px-2 py-1 text-sm rounded bg-gray-700 text-gray-400 border border-gray-600"
-            >
-              <option value="presets">Presets</option>
-              <option value="1-1000">Ranks 1-1000</option>
-              <option value="1001-2000">Ranks 1001-2000</option>
-              <option value="2001-3000">Ranks 2001-3000</option>
-              <option value="3001-4000">Ranks 3001-4000</option>
-              <option value="1-500">Legendary (1-500)</option>
-              <option value="501-1500">Epic (501-1500)</option>
-              <option value="1501-3000">Rare (1501-3000)</option>
-              <option value="3001-4000">Common (3001-4000)</option>
-            </select>
 
             <button
-              onClick={handleSaveMekTemplate}
+              onClick={handleSaveClick}
               disabled={!state.templateName}
               className={`px-3 py-1 text-sm rounded ${
                 state.templateName
@@ -452,10 +401,58 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
             {/* Template count indicator */}
             {templates && templates.length > 0 && (
               <span className="text-xs text-gray-500 ml-2">
-                {templates.length} template{templates.length !== 1 ? 's' : ''} saved
+                {templates.length} saved
+              </span>
+            )}
+
+            {/* Editing indicator */}
+            {state.selectedTemplateId && (
+              <span className="text-xs text-yellow-500 ml-1">
+                (editing)
               </span>
             )}
           </>
+        )}
+
+        {/* Save Confirmation Dialog */}
+        {showSaveDialog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+            <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-600">
+              <h3 className="text-lg font-bold text-yellow-400 mb-4">
+                Template Already Exists
+              </h3>
+              <p className="text-gray-300 mb-6">
+                A template named "<span className="text-white font-medium">{state.templateName}</span>" already exists. What would you like to do?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    if (existingTemplateId) {
+                      handleSaveMekTemplate('overwrite', existingTemplateId);
+                    }
+                  }}
+                  className="flex-1 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded font-medium"
+                >
+                  Overwrite
+                </button>
+                <button
+                  onClick={() => {
+                    dispatch({ type: 'SET_TEMPLATE_NAME', payload: state.templateName + ' (copy)' });
+                    setShowSaveDialog(false);
+                  }}
+                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium"
+                >
+                  Save as New
+                </button>
+                <button
+                  onClick={() => setShowSaveDialog(false)}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* File Operations - Story Mode */}

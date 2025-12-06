@@ -1,114 +1,41 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useConvex } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
-import { DatabaseProvider, useDatabaseContext } from '@/contexts/DatabaseContext';
 
-function AdminWhitelistManagerContent() {
-  // Get database context
-  const {
-    selectedDatabase,
-    setSelectedDatabase,
-    client,
-    canMutate
-  } = useDatabaseContext();
+export default function AdminWhitelistManager() {
+  const convex = useConvex();
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingWhitelist, setEditingWhitelist] = useState<any | null>(null);
   const [selectedWhitelist, setSelectedWhitelist] = useState<Id<"whitelists"> | null>(null);
   const [viewingWhitelistTable, setViewingWhitelistTable] = useState<any | null>(null);
-  const [allWhitelists, setAllWhitelists] = useState<any[]>([]);
-  const [allCriteria, setAllCriteria] = useState<any[]>([]);
-  const [selectedWhitelistData, setSelectedWhitelistData] = useState<any>(null);
 
-  // Query data from selected database
-  useEffect(() => {
-    if (!client) return;
+  // Standard Convex queries
+  const allWhitelists = useQuery(api.whitelists.getAllWhitelists) || [];
+  const allCriteria = useQuery(api.whitelists.getAllCriteria) || [];
+  const selectedWhitelistData = useQuery(
+    api.whitelists.getWhitelistById,
+    selectedWhitelist ? { whitelistId: selectedWhitelist } : "skip"
+  );
 
-    let cancelled = false;
-
-    const fetchData = async () => {
-      try {
-        const [whitelists, criteria] = await Promise.all([
-          client.query(api.whitelists.getAllWhitelists),
-          client.query(api.whitelists.getAllCriteria)
-        ]);
-
-        if (!cancelled) {
-          setAllWhitelists(whitelists);
-          setAllCriteria(criteria);
-        }
-      } catch (error) {
-        console.error('[WhitelistManager] Error fetching data:', error);
-      }
-    };
-
-    fetchData();
-    const interval = setInterval(fetchData, 3000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [client, selectedDatabase]);
-
-  // Query selected whitelist details
-  useEffect(() => {
-    if (!client || !selectedWhitelist) {
-      setSelectedWhitelistData(null);
-      return;
-    }
-
-    let cancelled = false;
-
-    const fetchWhitelist = async () => {
-      try {
-        const data = await client.query(api.whitelists.getWhitelistById, {
-          whitelistId: selectedWhitelist
-        });
-        if (!cancelled) {
-          setSelectedWhitelistData(data);
-        }
-      } catch (error) {
-        console.error('[WhitelistManager] Error fetching whitelist:', error);
-      }
-    };
-
-    fetchWhitelist();
-    const interval = setInterval(fetchWhitelist, 3000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [client, selectedWhitelist]);
-
-  // Mutation helpers using client
-  const initializeCriteria = async () => {
-    if (!client || !canMutate()) throw new Error('Mutations disabled');
-    return await client.mutation(api.whitelists.initializeDefaultCriteria, {});
-  };
-
-  const deleteWhitelist = async (args: any) => {
-    if (!client || !canMutate()) throw new Error('Mutations disabled');
-    return await client.mutation(api.whitelists.deleteWhitelist, args);
-  };
-
-  const generateWhitelist = async (args: any) => {
-    if (!client || !canMutate()) throw new Error('Mutations disabled');
-    return await client.mutation(api.whitelists.generateWhitelist, args);
-  };
+  // Standard Convex mutations
+  const initializeCriteriaMutation = useMutation(api.whitelists.initializeDefaultCriteria);
+  const deleteWhitelistMutation = useMutation(api.whitelists.deleteWhitelist);
+  const generateWhitelistMutation = useMutation(api.whitelists.generateWhitelist);
 
   // Initialize default criteria on mount
   useEffect(() => {
     if (allCriteria && allCriteria.length === 0) {
-      initializeCriteria({});
+      initializeCriteriaMutation({});
     }
-  }, [allCriteria, initializeCriteria]);
+  }, [allCriteria, initializeCriteriaMutation]);
 
   const handleGenerateWhitelist = async (whitelistId: Id<"whitelists">) => {
     try {
-      const result = await generateWhitelist({ whitelistId });
+      const result = await generateWhitelistMutation({ whitelistId });
       alert(`Whitelist generated! ${result.userCount} eligible users found.`);
     } catch (error: any) {
       alert(`Error generating whitelist: ${error.message}`);
@@ -118,7 +45,7 @@ function AdminWhitelistManagerContent() {
   const handleDeleteWhitelist = async (whitelistId: Id<"whitelists">) => {
     if (!confirm('Are you sure you want to delete this whitelist?')) return;
     try {
-      await deleteWhitelist({ whitelistId });
+      await deleteWhitelistMutation({ whitelistId });
       if (selectedWhitelist === whitelistId) {
         setSelectedWhitelist(null);
       }
@@ -161,17 +88,10 @@ function AdminWhitelistManagerContent() {
             <p className="text-gray-400">Create and manage NFT whitelist eligibility rules</p>
           </div>
           <div className="flex gap-4 items-center">
-            {/* Database Selector */}
-            <div className="bg-gray-900 border border-cyan-500/30 rounded-lg p-3">
+            {/* Database indicator - single database now */}
+            <div className="bg-gray-900 border border-green-500/30 rounded-lg p-3">
               <div className="text-xs text-gray-400 mb-1">Database</div>
-              <select
-                value={selectedDatabase}
-                onChange={(e) => setSelectedDatabase(e.target.value as 'trout' | 'sturgeon')}
-                className="bg-black/50 border border-cyan-500/30 rounded px-3 py-1 text-white text-sm"
-              >
-                <option value="trout">Trout (Dev - localhost:3200)</option>
-                <option value="sturgeon">Sturgeon (Production - Live Site)</option>
-              </select>
+              <div className="text-green-400 font-bold">Production (Sturgeon)</div>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
@@ -325,7 +245,7 @@ function AdminWhitelistManagerContent() {
                   <h4 className="text-sm font-bold text-cyan-400 mb-3">
                     Eligibility Rules ({selectedWhitelistData.ruleLogic})
                   </h4>
-                  {selectedWhitelistData.rules.map((rule, index) => (
+                  {selectedWhitelistData.rules.map((rule: any, index: number) => (
                     <div key={index} className="flex justify-between items-center py-2 border-b border-gray-700 last:border-0">
                       <div className="text-sm">
                         <span className="text-cyan-300">
@@ -360,7 +280,7 @@ function AdminWhitelistManagerContent() {
                   ) : (
                     <div className="max-h-96 overflow-y-auto">
                       <div className="space-y-2">
-                        {selectedWhitelistData.eligibleUsers.map((user, index) => (
+                        {selectedWhitelistData.eligibleUsers.map((user: any, index: number) => (
                           <div
                             key={index}
                             className="bg-black/30 rounded p-3 text-sm"
@@ -388,8 +308,6 @@ function AdminWhitelistManagerContent() {
         <WhitelistCreateModal
           allCriteria={allCriteria || []}
           editingWhitelist={editingWhitelist}
-          client={client}
-          canMutate={canMutate}
           onClose={() => {
             setShowCreateModal(false);
             setEditingWhitelist(null);
@@ -498,14 +416,10 @@ function AdminWhitelistManagerContent() {
 function WhitelistCreateModal({
   allCriteria,
   editingWhitelist,
-  client,
-  canMutate,
   onClose,
 }: {
   allCriteria: any[];
   editingWhitelist: any | null;
-  client: any;
-  canMutate: () => boolean;
   onClose: () => void;
 }) {
   const [name, setName] = useState(editingWhitelist?.name || '');
@@ -519,16 +433,9 @@ function WhitelistCreateModal({
 
   const [isSaving, setIsSaving] = useState(false);
 
-  // Mutation helpers
-  const createWhitelist = async (args: any) => {
-    if (!client || !canMutate()) throw new Error('Mutations disabled');
-    return await client.mutation(api.whitelists.createWhitelist, args);
-  };
-
-  const updateWhitelist = async (args: any) => {
-    if (!client || !canMutate()) throw new Error('Mutations disabled');
-    return await client.mutation(api.whitelists.updateWhitelist, args);
-  };
+  // Standard Convex mutations
+  const createWhitelist = useMutation(api.whitelists.createWhitelist);
+  const updateWhitelist = useMutation(api.whitelists.updateWhitelist);
 
   const handleAddRule = () => {
     setRules([...rules, { criteriaField: '', operator: 'greater_than', value: '' }]);
@@ -739,14 +646,5 @@ function WhitelistCreateModal({
         </div>
       </div>
     </div>
-  );
-}
-
-// Outer wrapper component with DatabaseProvider
-export default function AdminWhitelistManager() {
-  return (
-    <DatabaseProvider>
-      <AdminWhitelistManagerContent />
-    </DatabaseProvider>
   );
 }

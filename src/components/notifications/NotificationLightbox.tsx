@@ -38,16 +38,26 @@ export default function NotificationLightbox({
     return () => setMounted(false);
   }, []);
 
+  // Lock body scroll and handle Escape key when open
   useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      document.addEventListener('keydown', handleEscapeKey);
     } else {
       document.body.style.overflow = '';
     }
+
     return () => {
       document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleEscapeKey);
     };
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (isOpen) {
