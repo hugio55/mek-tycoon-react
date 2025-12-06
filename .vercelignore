@@ -1,2 +1,58 @@
 # Admin-only debug pages (localhost only, skip in production builds)
 src/app/landing-debug
+
+# ============================================
+# MEDIA FILES - Served from Cloudflare R2
+# ============================================
+# These files are excluded from Vercel deployment to:
+# - Reduce deployment time (no uploading 900MB of media)
+# - Lower Vercel bandwidth usage
+# - Use R2 as single source of truth for media
+#
+# All code uses getMediaUrl() which points to R2 bucket
+
+# Mek images (10,000+ files, ~500MB)
+public/mek-images/
+
+# Variation images (multiple sizes)
+public/variation-images/
+public/variation-images-800px/
+public/variation-images-art-400px/
+public/variation-images-art-full/
+
+# Essence images
+public/essence-images/
+
+# Event images and NFTs
+public/event-images/
+public/event-nfts/
+
+# Audio files
+public/sounds/
+public/audio/
+
+# Video files
+public/Phase 1 video/
+
+# Other media folders
+public/random-images/
+public/random - pure/
+public/genesis-art/
+public/frame-images/
+public/gold/
+public/item-images/
+public/logo/
+public/oe-items/
+public/chip-images/
+public/slots/
+public/triangle/
+public/wallet-icons/
+public/temp/
+
+# ============================================
+# KEEP these essential files (NOT excluded):
+# - favicon.ico, fav2.png
+# - file.svg, globe.svg, next.svg, vercel.svg, window.svg
+# - colored-bg-1.webp (background - for SSR initial load)
+# - logo-big.png, logo-first-frame.webp (og:image/social)
+# ============================================
