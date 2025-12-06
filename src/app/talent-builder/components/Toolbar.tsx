@@ -6,6 +6,7 @@ import { api } from '../../../../convex/_generated/api';
 import { useTalentBuilder } from '../TalentBuilderContext';
 import { useSaveLoad, useConnectionAnalysis } from '../hooks';
 import { BuilderMode, CanvasMode, TalentNode } from '../types';
+import { Id } from '../../../../convex/_generated/dataModel';
 
 interface ToolbarProps {
   onExport: () => void;
@@ -18,10 +19,10 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
   const { saveToLocalStorage, startNewTree, currentSaveName } = useSaveLoad();
   const { findDisconnectedAndDeadEndNodes, clearHighlights, highlightDisconnected } = useConnectionAnalysis();
 
-  // Rank range state for Mek templates
-  const [rankMin, setRankMin] = useState<number>(1);
-  const [rankMax, setRankMax] = useState<number>(1000);
-  const [showSaveModal, setShowSaveModal] = useState(false);
+  // Save dialog state
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [saveMode, setSaveMode] = useState<'new' | 'overwrite'>('new');
+  const [existingTemplateId, setExistingTemplateId] = useState<Id<"mekTreeTemplates"> | null>(null);
 
   // Convex mutations for Mek templates
   const templates = useQuery(api.mekTreeTemplates.getAllTemplates);

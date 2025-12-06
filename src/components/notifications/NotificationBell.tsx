@@ -18,6 +18,7 @@ export default function NotificationBell({ userId }: NotificationBellProps) {
 
   const unreadCount = useQuery(api.notifications.getUnreadCount, { userId });
 
+  // Close dropdown when clicking outside or pressing Escape
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (bellRef.current && !bellRef.current.contains(event.target as Node)) {
@@ -25,12 +26,20 @@ export default function NotificationBell({ userId }: NotificationBellProps) {
       }
     };
 
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsDropdownOpen(false);
+      }
+    };
+
     if (isDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscapeKey);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
     };
   }, [isDropdownOpen]);
 

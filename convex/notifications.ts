@@ -422,6 +422,7 @@ export const adminGetNotificationStats = query({
 });
 
 // Send notification to a specific player (admin)
+// Enforces 100-notification cap per user
 export const adminSendNotification = mutation({
   args: {
     walletAddress: v.string(),
@@ -442,6 +443,20 @@ export const adminSendNotification = mutation({
       return { success: false, error: "User not found" };
     }
 
+    // Enforce notification cap - delete oldest if at limit
+    const userNotifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_user_created", (q) => q.eq("userId", user._id))
+      .order("asc")
+      .collect();
+
+    if (userNotifications.length >= MAX_NOTIFICATIONS_PER_USER) {
+      const toDelete = userNotifications.slice(0, userNotifications.length - MAX_NOTIFICATIONS_PER_USER + 1);
+      for (const notification of toDelete) {
+        await ctx.db.delete(notification._id);
+      }
+    }
+
     const notificationId = await ctx.db.insert("notifications", {
       userId: user._id,
       type: args.type,
@@ -460,6 +475,7 @@ export const adminSendNotification = mutation({
 });
 
 // Broadcast notification to all players (admin)
+// Enforces 100-notification cap per user
 export const adminBroadcastNotification = mutation({
   args: {
     type: v.string(),
@@ -476,6 +492,18 @@ export const adminBroadcastNotification = mutation({
     let successCount = 0;
 
     for (const user of users) {
+      // Enforce notification cap for each user - delete oldest if at limit
+      const userNotifications = await ctx.db
+        .query("notifications")
+        .withIndex("by_user_created", (q) => q.eq("userId", user._id))
+        .order("asc")
+        .collect();
+
+      if (userNotifications.length >= MAX_NOTIFICATIONS_PER_USER) {
+        // Delete oldest notification to make room
+        await ctx.db.delete(userNotifications[0]._id);
+      }
+
       await ctx.db.insert("notifications", {
         userId: user._id,
         type: args.type,
