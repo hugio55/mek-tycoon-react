@@ -72,6 +72,10 @@ export const createTemplate = mutation({
       width: v.number(),
       height: v.number(),
     })),
+    viewportPosition: v.optional(v.object({
+      x: v.number(),
+      y: v.number(),
+    })),
     conditions: v.optional(v.object({
       headVariations: v.optional(v.array(v.string())),
       bodyVariations: v.optional(v.array(v.string())),

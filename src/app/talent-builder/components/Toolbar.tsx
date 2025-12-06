@@ -52,6 +52,8 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
       };
       dispatch({ type: 'SET_NODES', payload: [startNode] });
       dispatch({ type: 'SET_CONNECTIONS', payload: [] });
+      // Center viewport for Mek mode (center of 3000x3000 canvas)
+      dispatch({ type: 'SET_VIEWPORT_POSITION', payload: { x: 1500, y: 1500 } });
     } else if (newMode === 'story') {
       // Initialize Story mode with start node at bottom center
       const startNode: TalentNode = {
@@ -165,7 +167,8 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
           templateId: state.selectedTemplateId,
           nodes: cleanedNodes,
           connections: state.connections,
-          viewportDimensions: state.viewportDimensions
+          viewportDimensions: state.viewportDimensions,
+          viewportPosition: state.viewportPosition
         });
         actions.setSaveStatus('Template updated!', 3000);
       } else {
@@ -175,7 +178,8 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
           category: 'custom',
           nodes: cleanedNodes,
           connections: state.connections,
-          viewportDimensions: state.viewportDimensions
+          viewportDimensions: state.viewportDimensions,
+          viewportPosition: state.viewportPosition
         });
         dispatch({ type: 'SET_SELECTED_TEMPLATE_ID', payload: id });
         actions.setSaveStatus('Template created: ' + name, 3000);
@@ -320,6 +324,14 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
               <option value="1280x720">1280x720 (HD)</option>
               <option value="375x667">375x667 (Phone)</option>
             </select>
+
+            <button
+              onClick={() => dispatch({ type: 'CENTER_VIEWPORT' })}
+              className="px-2 py-1 text-sm rounded bg-yellow-600/50 hover:bg-yellow-600 text-yellow-200 border border-yellow-500/50"
+              title="Center viewport box on canvas"
+            >
+              Center
+            </button>
           </div>
         </div>
       </div>

@@ -338,9 +338,15 @@ const Canvas: React.FC<CanvasProps> = memo(({
         }
       });
     }
-  }, [isPanning, panStart, panOffset, boxSelection, lassoSelection, dragState, zoom, snapPosition, nodes, selectedNodes, dispatch]);
+  }, [isPanning, panStart, panOffset, boxSelection, lassoSelection, dragState, zoom, snapPosition, nodes, selectedNodes, dispatch, isDraggingViewport]);
 
   const handleMouseUp = useCallback(() => {
+    // Stop viewport dragging
+    if (isDraggingViewport) {
+      dispatch({ type: 'SET_IS_DRAGGING_VIEWPORT', payload: false });
+      return;
+    }
+
     // Finish box selection
     if (boxSelection.isSelecting) {
       const minX = Math.min(boxSelection.startX, boxSelection.endX);
@@ -389,7 +395,7 @@ const Canvas: React.FC<CanvasProps> = memo(({
     dispatch({ type: 'SET_IS_PANNING', payload: false });
     dispatch({ type: 'SET_BOX_SELECTION', payload: { isSelecting: false, startX: 0, startY: 0, endX: 0, endY: 0, addToSelection: false } });
     dispatch({ type: 'SET_LASSO_SELECTION', payload: { isSelecting: false, points: [] } });
-  }, [boxSelection, lassoSelection, nodes, selectedNodes, dispatch]);
+  }, [boxSelection, lassoSelection, nodes, selectedNodes, dispatch, isDraggingViewport]);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
