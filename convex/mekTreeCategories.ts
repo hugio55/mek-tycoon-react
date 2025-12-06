@@ -27,7 +27,7 @@ export const getCategoryByName = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("mekTreeCategories")
-      .withIndex("", (q: any) => q.eq("name", args.name))
+      .withIndex("by_name", (q) => q.eq("name", args.name))
       .first();
   },
 });
@@ -41,7 +41,7 @@ export const getCategoryWithTemplates = query({
 
     const templates = await ctx.db
       .query("mekTreeTemplates")
-      .withIndex("", (q: any) => q.eq("categoryId", args.categoryId))
+      .withIndex("by_categoryId", (q) => q.eq("categoryId", args.categoryId))
       .collect();
 
     return {
@@ -60,7 +60,7 @@ export const getAllCategoriesWithCounts = query({
       categories.map(async (category) => {
         const templates = await ctx.db
           .query("mekTreeTemplates")
-          .withIndex("", (q: any) => q.eq("categoryId", category._id))
+          .withIndex("by_categoryId", (q) => q.eq("categoryId", category._id))
           .collect();
 
         return {

@@ -46,6 +46,11 @@
     "dist",
     "build",
     "JUNK",
-    "src/app/scrap-yard"
+    "src/app/scrap-yard",
+    "src/app/shop-wow",
+    "src/app/page-backup.tsx",
+    "src/components/EssenceListingLightbox-V6-FullMarketMatch.tsx",
+    "src/app/contracts/layout-option-11-temp.tsx",
+    "src/app/landing-debug"
   ]
 }
