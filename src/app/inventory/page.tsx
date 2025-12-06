@@ -269,8 +269,9 @@ export default function InventoryPage() {
                   className="absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none group-hover:opacity-[0.07]"
                   style={{
                     backgroundImage: `url('/random-images/honey-png-big.webp')`,
-                    backgroundSize: '100%',
+                    backgroundSize: '250px',
                     backgroundPosition: 'center',
+                    backgroundRepeat: 'repeat',
                   }}
                 />
                 {/* Sliding particles for active tab */}
@@ -509,8 +510,9 @@ function MeksTab({ meks, selectedMek, onSelectMek, getMekImagePath }: MeksTabPro
             className="absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none group-hover:opacity-[0.05]"
             style={{
               backgroundImage: `url('/random-images/honey-png-big.webp')`,
-              backgroundSize: 'cover',
+              backgroundSize: '250px',
               backgroundPosition: 'center',
+              backgroundRepeat: 'repeat',
             }}
           />
 
@@ -741,7 +743,9 @@ function EssenceTab({ balances, getEssenceImagePath, getVariationRarity }: Essen
                 className="absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none group-hover:opacity-[0.05]"
                 style={{
                   backgroundImage: `url('/random-images/honey-png-big.webp')`,
-                  backgroundSize: 'cover',
+                  backgroundSize: '250px',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'repeat',
                 }}
               />
 

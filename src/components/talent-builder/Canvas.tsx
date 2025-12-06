@@ -70,7 +70,7 @@ const Canvas: React.FC<CanvasProps> = memo(({
 
     const preventScroll = (e: WheelEvent) => {
       e.preventDefault();
-      e.stopPropagation();
+      // Don't stopPropagation - we want React's onWheel handler to still receive the event
       return false;
     };
 
