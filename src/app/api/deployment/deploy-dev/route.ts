@@ -10,8 +10,8 @@ export async function POST(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    // Deploy to Trout (dev database)
-    // This uses the default CONVEX_URL from .env.local which points to Trout
+    // Deploy to Sturgeon (single database mode)
+    // NEXT_PUBLIC_CONVEX_URL points to fabulous-sturgeon-691 (production)
     const { stdout, stderr } = await execAsync('npx convex deploy', {
       timeout: 120000, // 2 minute timeout
       env: {
@@ -30,17 +30,17 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success,
-      message: success ? 'Deployed to Trout (dev database)' : 'Deployment may have failed',
+      message: success ? 'Deployed to Sturgeon (production)' : 'Deployment may have failed',
       output: output.substring(0, 1000), // Limit output size
-      database: 'Trout (wry-trout-962)',
+      database: 'Sturgeon (fabulous-sturgeon-691)',
     });
   } catch (error) {
-    console.error('Dev deploy error:', error);
+    console.error('Deploy error:', error);
     return NextResponse.json(
       {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-        database: 'Trout (wry-trout-962)'
+        database: 'Sturgeon (fabulous-sturgeon-691)'
       },
       { status: 500 }
     );
