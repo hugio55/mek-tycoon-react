@@ -30,15 +30,15 @@ export const getPurchases = query({
 
     // Apply index-based filters
     if (args.eventId) {
-      query = query.withIndex("by_event", (q) => q.eq("eventId", args.eventId));
+      query = query.withIndex("", (q: any) => q.eq("eventId", args.eventId));
     } else if (args.variationId) {
-      query = query.withIndex("by_variation", (q) => q.eq("variationId", args.variationId));
+      query = query.withIndex("", (q: any) => q.eq("variationId", args.variationId));
     } else if (args.walletAddress) {
-      query = query.withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress));
+      query = query.withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress));
     } else if (args.companyName) {
-      query = query.withIndex("by_company", (q) => q.eq("companyName", args.companyName));
+      query = query.withIndex("", (q: any) => q.eq("companyName", args.companyName));
     } else if (args.status) {
-      query = query.withIndex("by_status", (q) => q.eq("status", args.status));
+      query = query.withIndex("", (q: any) => q.eq("status", args.status));
     }
 
     let purchases = await query.collect();
@@ -87,7 +87,7 @@ export const getPurchaseByTxHash = query({
   handler: async (ctx, args) => {
     const purchase = await ctx.db
       .query("nftPurchases")
-      .withIndex("by_txHash", (q) => q.eq("transactionHash", args.transactionHash))
+      .withIndex("", (q: any) => q.eq("transactionHash", args.transactionHash))
       .first();
 
     if (!purchase) return null;
@@ -115,7 +115,7 @@ export const getPurchasesByUser = query({
   handler: async (ctx, args) => {
     let query = ctx.db
       .query("nftPurchases")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId));
+      .withIndex("", (q: any) => q.eq("userId", args.userId));
 
     let purchases = await query.collect();
 
@@ -138,7 +138,7 @@ export const getPurchasesByWallet = query({
   handler: async (ctx, args) => {
     let query = ctx.db
       .query("nftPurchases")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress));
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress));
 
     let purchases = await query.collect();
 
@@ -162,9 +162,9 @@ export const getPurchaseStats = query({
     let query = ctx.db.query("nftPurchases");
 
     if (args.eventId) {
-      query = query.withIndex("by_event", (q) => q.eq("eventId", args.eventId));
+      query = query.withIndex("", (q: any) => q.eq("eventId", args.eventId));
     } else if (args.variationId) {
-      query = query.withIndex("by_variation", (q) => q.eq("variationId", args.variationId));
+      query = query.withIndex("", (q: any) => q.eq("variationId", args.variationId));
     }
 
     const purchases = await query.collect();
@@ -210,7 +210,7 @@ export const getRevenueAnalytics = query({
     let query = ctx.db.query("nftPurchases");
 
     if (args.eventId) {
-      query = query.withIndex("by_event", (q) => q.eq("eventId", args.eventId));
+      query = query.withIndex("", (q: any) => q.eq("eventId", args.eventId));
     }
 
     let purchases = await query.collect();
@@ -341,7 +341,7 @@ export const recordPurchase = mutation({
     // Check if purchase already exists (prevent duplicates)
     const existing = await ctx.db
       .query("nftPurchases")
-      .withIndex("by_txHash", (q) => q.eq("transactionHash", args.transactionHash))
+      .withIndex("", (q: any) => q.eq("transactionHash", args.transactionHash))
       .first();
 
     if (existing) {

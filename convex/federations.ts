@@ -10,7 +10,7 @@ export const getFederation = query({
   handler: async (ctx, args) => {
     const federation = await ctx.db
       .query("federations")
-      .withIndex("by_federation_id", (q) => q.eq("federationId", args.federationId))
+      .withIndex("", (q: any) => q.eq("federationId", args.federationId))
       .first();
 
     if (!federation) return null;
@@ -18,7 +18,7 @@ export const getFederation = query({
     // Get members
     const memberships = await ctx.db
       .query("federationMemberships")
-      .withIndex("by_federation", (q) => q.eq("federationId", args.federationId))
+      .withIndex("", (q: any) => q.eq("federationId", args.federationId))
       .collect();
 
     return {
@@ -45,14 +45,14 @@ export const getFederationByWallet = query({
   handler: async (ctx, args) => {
     const membership = await ctx.db
       .query("federationMemberships")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!membership) return null;
 
     const federation = await ctx.db
       .query("federations")
-      .withIndex("by_federation_id", (q) => q.eq("federationId", membership.federationId))
+      .withIndex("", (q: any) => q.eq("federationId", membership.federationId))
       .first();
 
     return federation;
@@ -65,7 +65,7 @@ export const getFederationVariations = query({
   handler: async (ctx, args) => {
     const variations = await ctx.db
       .query("federationVariationCollection")
-      .withIndex("by_federation", (q) => q.eq("federationId", args.federationId))
+      .withIndex("", (q: any) => q.eq("federationId", args.federationId))
       .collect();
 
     return variations;
@@ -78,7 +78,7 @@ export const getPendingInvites = query({
   handler: async (ctx, args) => {
     const invites = await ctx.db
       .query("federationInvites")
-      .withIndex("by_invited_wallet", (q) => q.eq("invitedWalletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("invitedWalletAddress", args.walletAddress))
       .filter((q) => q.eq(q.field("status"), "pending"))
       .collect();
 
@@ -87,7 +87,7 @@ export const getPendingInvites = query({
       invites.map(async (invite) => {
         const federation = await ctx.db
           .query("federations")
-          .withIndex("by_federation_id", (q) => q.eq("federationId", invite.federationId))
+          .withIndex("", (q: any) => q.eq("federationId", invite.federationId))
           .first();
 
         return {
@@ -156,7 +156,7 @@ export const inviteToFederation = mutation({
     // Check if inviter is a member with permission
     const inviterMembership = await ctx.db
       .query("federationMemberships")
-      .withIndex("by_federation_and_wallet", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("federationId", args.federationId).eq("walletAddress", args.invitedByWalletAddress)
       )
       .first();
@@ -168,7 +168,7 @@ export const inviteToFederation = mutation({
     // Check if wallet is already a member
     const existingMembership = await ctx.db
       .query("federationMemberships")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.invitedWalletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.invitedWalletAddress))
       .first();
 
     if (existingMembership) {
@@ -178,7 +178,7 @@ export const inviteToFederation = mutation({
     // Check for existing pending invite
     const existingInvite = await ctx.db
       .query("federationInvites")
-      .withIndex("by_invited_wallet", (q) => q.eq("invitedWalletAddress", args.invitedWalletAddress))
+      .withIndex("", (q: any) => q.eq("invitedWalletAddress", args.invitedWalletAddress))
       .filter((q) =>
         q.and(
           q.eq(q.field("federationId"), args.federationId),
@@ -252,7 +252,7 @@ export const acceptInvite = mutation({
     // Update federation member count
     const federation = await ctx.db
       .query("federations")
-      .withIndex("by_federation_id", (q) => q.eq("federationId", invite.federationId))
+      .withIndex("", (q: any) => q.eq("federationId", invite.federationId))
       .first();
 
     if (federation) {
@@ -300,7 +300,7 @@ export const leaveFederation = mutation({
   handler: async (ctx, args) => {
     const membership = await ctx.db
       .query("federationMemberships")
-      .withIndex("by_federation_and_wallet", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("federationId", args.federationId).eq("walletAddress", args.walletAddress)
       )
       .first();
@@ -319,7 +319,7 @@ export const leaveFederation = mutation({
     // Update federation member count
     const federation = await ctx.db
       .query("federations")
-      .withIndex("by_federation_id", (q) => q.eq("federationId", args.federationId))
+      .withIndex("", (q: any) => q.eq("federationId", args.federationId))
       .first();
 
     if (federation) {
@@ -341,7 +341,7 @@ async function updateFederationVariations(ctx: any, federationId: string) {
   // Get all members of the federation (now each membership IS a wallet/corporation)
   const memberships = await ctx.db
     .query("federationMemberships")
-    .withIndex("by_federation", (q) => q.eq("federationId", federationId))
+    .withIndex("", (q: any) => q.eq("federationId", federationId))
     .collect();
 
   // Get all wallet addresses directly from memberships (1 wallet = 1 corp)
@@ -380,7 +380,7 @@ async function updateFederationVariations(ctx: any, federationId: string) {
   // Clear existing variation collection
   const existingVariations = await ctx.db
     .query("federationVariationCollection")
-    .withIndex("by_federation", (q) => q.eq("federationId", federationId))
+    .withIndex("", (q: any) => q.eq("federationId", federationId))
     .collect();
 
   for (const existing of existingVariations) {
@@ -402,7 +402,7 @@ async function updateFederationVariations(ctx: any, federationId: string) {
   // Update federation stats
   const federation = await ctx.db
     .query("federations")
-    .withIndex("by_federation_id", (q) => q.eq("federationId", federationId))
+    .withIndex("", (q: any) => q.eq("federationId", federationId))
     .first();
 
   if (federation) {
@@ -432,7 +432,7 @@ export const getActiveMining = query({
   handler: async (ctx, args) => {
     const mining = await ctx.db
       .query("planetMining")
-      .withIndex("by_federation", (q) => q.eq("federationId", args.federationId))
+      .withIndex("", (q: any) => q.eq("federationId", args.federationId))
       .filter((q) => q.eq(q.field("status"), "active"))
       .collect();
 
@@ -446,7 +446,7 @@ export const getMiningHistory = query({
   handler: async (ctx, args) => {
     const mining = await ctx.db
       .query("planetMining")
-      .withIndex("by_federation", (q) => q.eq("federationId", args.federationId))
+      .withIndex("", (q: any) => q.eq("federationId", args.federationId))
       .filter((q) => q.eq(q.field("status"), "completed"))
       .collect();
 
@@ -465,7 +465,7 @@ export const startMining = mutation({
     // Check if federation exists
     const federation = await ctx.db
       .query("federations")
-      .withIndex("by_federation_id", (q) => q.eq("federationId", args.federationId))
+      .withIndex("", (q: any) => q.eq("federationId", args.federationId))
       .first();
 
     if (!federation) {
@@ -475,7 +475,7 @@ export const startMining = mutation({
     // Check if there's already an active mining operation
     const activeMining = await ctx.db
       .query("planetMining")
-      .withIndex("by_federation", (q) => q.eq("federationId", args.federationId))
+      .withIndex("", (q: any) => q.eq("federationId", args.federationId))
       .filter((q) => q.eq(q.field("status"), "active"))
       .first();
 

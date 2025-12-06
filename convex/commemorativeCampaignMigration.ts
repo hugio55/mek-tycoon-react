@@ -85,7 +85,7 @@ export const checkLabRatCampaignExists = query({
   handler: async (ctx) => {
     const campaign = await ctx.db
       .query("commemorativeCampaigns")
-      .withIndex("by_name", (q) => q.eq("name", "Lab Rat"))
+      .withIndex("", (q: any) => q.eq("name", "Lab Rat"))
       .first();
 
     return {
@@ -116,7 +116,7 @@ export const createLabRatCampaign = mutation({
     // Check if already exists
     const existing = await ctx.db
       .query("commemorativeCampaigns")
-      .withIndex("by_name", (q) => q.eq("name", "Lab Rat"))
+      .withIndex("", (q: any) => q.eq("name", "Lab Rat"))
       .first();
 
     if (existing) {
@@ -416,7 +416,7 @@ export const rollbackLabRatMigration = mutation({
     // Remove campaignId from inventory
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     for (const item of inventory) {
@@ -428,7 +428,7 @@ export const rollbackLabRatMigration = mutation({
     // Remove campaignId from reservations
     const reservations = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     for (const reservation of reservations) {
@@ -440,7 +440,7 @@ export const rollbackLabRatMigration = mutation({
     // Remove campaignId from claims
     const claims = await ctx.db
       .query("commemorativeNFTClaims")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     for (const claim of claims) {

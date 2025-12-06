@@ -64,7 +64,7 @@ export const importMeksFromJSON = mutation({
     for (const mek of args.meksData) {
       const existing = await ctx.db
         .query("meks")
-        .withIndex("by_asset_id", (q) => q.eq("assetId", mek.assetId))
+        .withIndex("", (q: any) => q.eq("assetId", mek.assetId))
         .first();
       
       const mekDocument = {

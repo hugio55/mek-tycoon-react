@@ -53,7 +53,7 @@ export const updateChecksum = mutation({
     // Check if checksum record exists
     const existing = await ctx.db
       .query("syncChecksums")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (existing) {
@@ -100,7 +100,7 @@ export const getChecksum = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("syncChecksums")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
   },
 });
@@ -304,7 +304,7 @@ export const getDesyncedWallets = query({
   handler: async (ctx) => {
     return await ctx.db
       .query("syncChecksums")
-      .withIndex("by_status", (q) => q.eq("status", "desynced"))
+      .withIndex("", (q: any) => q.eq("status", "desynced"))
       .collect();
   },
 });
@@ -355,7 +355,7 @@ export const autoUpdateChecksum = mutation({
     // Get current goldMining state
     const dbState = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!dbState) {
@@ -367,7 +367,7 @@ export const autoUpdateChecksum = mutation({
     // Update checksum
     const existing = await ctx.db
       .query("syncChecksums")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (existing) {

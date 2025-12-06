@@ -73,7 +73,7 @@ export const updateSagaStep = mutation({
   handler: async (ctx, args) => {
     const saga = await ctx.db
       .query("sagaExecutions")
-      .withIndex("by_saga_id", (q) => q.eq("sagaId", args.sagaId))
+      .withIndex("", (q: any) => q.eq("sagaId", args.sagaId))
       .first();
 
     if (!saga) {
@@ -115,7 +115,7 @@ export const completeSagaExecution = mutation({
   handler: async (ctx, args) => {
     const saga = await ctx.db
       .query("sagaExecutions")
-      .withIndex("by_saga_id", (q) => q.eq("sagaId", args.sagaId))
+      .withIndex("", (q: any) => q.eq("sagaId", args.sagaId))
       .first();
 
     if (!saga) {
@@ -491,7 +491,7 @@ export const getSagaExecution = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("sagaExecutions")
-      .withIndex("by_saga_id", (q) => q.eq("sagaId", args.sagaId))
+      .withIndex("", (q: any) => q.eq("sagaId", args.sagaId))
       .first();
   },
 });
@@ -507,7 +507,7 @@ export const getRecentSagas = query({
 
     return await ctx.db
       .query("sagaExecutions")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .order("desc")
       .take(limit);
   },

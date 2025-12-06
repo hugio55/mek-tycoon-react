@@ -16,7 +16,7 @@ export const getUserBuffs = query({
   handler: async (ctx, args) => {
     const activeBuffs = await ctx.db
       .query("activeBuffs")
-      .withIndex("by_user_active", (q) => 
+      .withIndex("", (q: any) => 
         q.eq("userId", args.userId).eq("isActive", true)
       )
       .collect();
@@ -42,7 +42,7 @@ export const calculateUserBuffTotals = query({
   handler: async (ctx, args) => {
     const activeBuffs = await ctx.db
       .query("activeBuffs")
-      .withIndex("by_user_active", (q) => 
+      .withIndex("", (q: any) => 
         q.eq("userId", args.userId).eq("isActive", true)
       )
       .collect();

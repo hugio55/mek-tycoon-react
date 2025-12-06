@@ -44,7 +44,7 @@ export const getStep = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("coachMarkSteps")
-      .withIndex("by_step_key", (q) => q.eq("stepKey", args.stepKey))
+      .withIndex("", (q: any) => q.eq("stepKey", args.stepKey))
       .first();
   },
 });
@@ -59,7 +59,7 @@ export const getStepsByPage = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("coachMarkSteps")
-      .withIndex("by_page_route", (q) => q.eq("pageRoute", args.pageRoute))
+      .withIndex("", (q: any) => q.eq("pageRoute", args.pageRoute))
       .collect();
   },
 });
@@ -76,7 +76,7 @@ export const getStepsBySequence = query({
     // so results come back sorted by sequenceOrder automatically
     return await ctx.db
       .query("coachMarkSteps")
-      .withIndex("by_sequence", (q) => q.eq("sequenceId", args.sequenceId))
+      .withIndex("", (q: any) => q.eq("sequenceId", args.sequenceId))
       .collect();
   },
 });
@@ -163,7 +163,7 @@ export const createStep = mutation({
     // Check for duplicate stepKey
     const existing = await ctx.db
       .query("coachMarkSteps")
-      .withIndex("by_step_key", (q) => q.eq("stepKey", args.stepKey))
+      .withIndex("", (q: any) => q.eq("stepKey", args.stepKey))
       .first();
 
     if (existing) {
@@ -182,7 +182,7 @@ export const createStep = mutation({
     if (args.sequenceId) {
       const sequence = await ctx.db
         .query("coachMarkSequences")
-        .withIndex("by_sequence_id", (q) => q.eq("sequenceId", args.sequenceId!))
+        .withIndex("", (q: any) => q.eq("sequenceId", args.sequenceId!))
         .first();
 
       if (sequence) {
@@ -266,7 +266,7 @@ export const updateStep = mutation({
   handler: async (ctx, args) => {
     const step = await ctx.db
       .query("coachMarkSteps")
-      .withIndex("by_step_key", (q) => q.eq("stepKey", args.stepKey))
+      .withIndex("", (q: any) => q.eq("stepKey", args.stepKey))
       .first();
 
     if (!step) {
@@ -292,7 +292,7 @@ export const deleteStep = mutation({
   handler: async (ctx, args) => {
     const step = await ctx.db
       .query("coachMarkSteps")
-      .withIndex("by_step_key", (q) => q.eq("stepKey", args.stepKey))
+      .withIndex("", (q: any) => q.eq("stepKey", args.stepKey))
       .first();
 
     if (!step) {
@@ -303,7 +303,7 @@ export const deleteStep = mutation({
     if (step.sequenceId) {
       const sequence = await ctx.db
         .query("coachMarkSequences")
-        .withIndex("by_sequence_id", (q) => q.eq("sequenceId", step.sequenceId!))
+        .withIndex("", (q: any) => q.eq("sequenceId", step.sequenceId!))
         .first();
 
       if (sequence) {
@@ -342,7 +342,7 @@ export const getSequence = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("coachMarkSequences")
-      .withIndex("by_sequence_id", (q) => q.eq("sequenceId", args.sequenceId))
+      .withIndex("", (q: any) => q.eq("sequenceId", args.sequenceId))
       .first();
   },
 });
@@ -357,7 +357,7 @@ export const getSequenceWithSteps = query({
   handler: async (ctx, args) => {
     const sequence = await ctx.db
       .query("coachMarkSequences")
-      .withIndex("by_sequence_id", (q) => q.eq("sequenceId", args.sequenceId))
+      .withIndex("", (q: any) => q.eq("sequenceId", args.sequenceId))
       .first();
 
     if (!sequence) {
@@ -369,7 +369,7 @@ export const getSequenceWithSteps = query({
     for (const stepKey of sequence.stepOrder) {
       const step = await ctx.db
         .query("coachMarkSteps")
-        .withIndex("by_step_key", (q) => q.eq("stepKey", stepKey))
+        .withIndex("", (q: any) => q.eq("stepKey", stepKey))
         .first();
 
       if (step) {
@@ -401,7 +401,7 @@ export const createSequence = mutation({
     // Check for duplicate sequenceId
     const existing = await ctx.db
       .query("coachMarkSequences")
-      .withIndex("by_sequence_id", (q) => q.eq("sequenceId", args.sequenceId))
+      .withIndex("", (q: any) => q.eq("sequenceId", args.sequenceId))
       .first();
 
     if (existing) {
@@ -412,7 +412,7 @@ export const createSequence = mutation({
     if (args.isOnboarding) {
       const existingOnboarding = await ctx.db
         .query("coachMarkSequences")
-        .withIndex("by_onboarding", (q) => q.eq("isOnboarding", true))
+        .withIndex("", (q: any) => q.eq("isOnboarding", true))
         .first();
 
       if (existingOnboarding) {
@@ -448,7 +448,7 @@ export const updateSequence = mutation({
   handler: async (ctx, args) => {
     const sequence = await ctx.db
       .query("coachMarkSequences")
-      .withIndex("by_sequence_id", (q) => q.eq("sequenceId", args.sequenceId))
+      .withIndex("", (q: any) => q.eq("sequenceId", args.sequenceId))
       .first();
 
     if (!sequence) {
@@ -459,7 +459,7 @@ export const updateSequence = mutation({
     if (args.updates.isOnboarding === true && !sequence.isOnboarding) {
       const existingOnboarding = await ctx.db
         .query("coachMarkSequences")
-        .withIndex("by_onboarding", (q) => q.eq("isOnboarding", true))
+        .withIndex("", (q: any) => q.eq("isOnboarding", true))
         .first();
 
       if (existingOnboarding && existingOnboarding._id !== sequence._id) {
@@ -483,7 +483,7 @@ export const deleteSequence = mutation({
   handler: async (ctx, args) => {
     const sequence = await ctx.db
       .query("coachMarkSequences")
-      .withIndex("by_sequence_id", (q) => q.eq("sequenceId", args.sequenceId))
+      .withIndex("", (q: any) => q.eq("sequenceId", args.sequenceId))
       .first();
 
     if (!sequence) {
@@ -494,7 +494,7 @@ export const deleteSequence = mutation({
     for (const stepKey of sequence.stepOrder) {
       const step = await ctx.db
         .query("coachMarkSteps")
-        .withIndex("by_step_key", (q) => q.eq("stepKey", stepKey))
+        .withIndex("", (q: any) => q.eq("stepKey", stepKey))
         .first();
 
       if (step) {
@@ -522,7 +522,7 @@ export const reorderSequence = mutation({
   handler: async (ctx, args) => {
     const sequence = await ctx.db
       .query("coachMarkSequences")
-      .withIndex("by_sequence_id", (q) => q.eq("sequenceId", args.sequenceId))
+      .withIndex("", (q: any) => q.eq("sequenceId", args.sequenceId))
       .first();
 
     if (!sequence) {
@@ -537,7 +537,7 @@ export const reorderSequence = mutation({
     for (let i = 0; i < args.newStepOrder.length; i++) {
       const step = await ctx.db
         .query("coachMarkSteps")
-        .withIndex("by_step_key", (q) => q.eq("stepKey", args.newStepOrder[i]))
+        .withIndex("", (q: any) => q.eq("stepKey", args.newStepOrder[i]))
         .first();
 
       if (step) {
@@ -576,7 +576,7 @@ export const getProgressByCorporation = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("coachMarkProgress")
-      .withIndex("by_corporation", (q) => q.eq("corporationId", args.corporationId))
+      .withIndex("", (q: any) => q.eq("corporationId", args.corporationId))
       .first();
   },
 });
@@ -592,7 +592,7 @@ export const resetProgress = mutation({
   handler: async (ctx, args) => {
     const progress = await ctx.db
       .query("coachMarkProgress")
-      .withIndex("by_corporation", (q) => q.eq("corporationId", args.corporationId))
+      .withIndex("", (q: any) => q.eq("corporationId", args.corporationId))
       .first();
 
     if (!progress) {
@@ -607,7 +607,7 @@ export const resetProgress = mutation({
     // Find onboarding sequence to restart it
     const onboardingSequence = await ctx.db
       .query("coachMarkSequences")
-      .withIndex("by_onboarding", (q) => q.eq("isOnboarding", true))
+      .withIndex("", (q: any) => q.eq("isOnboarding", true))
       .filter((q) => q.eq(q.field("isActive"), true))
       .first();
 

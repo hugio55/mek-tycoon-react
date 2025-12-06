@@ -23,7 +23,7 @@ export const compareMekDataSources = query({
     // Get mekLevels data (source of truth for upgrades)
     const mekLevelsData = await ctx.db
       .query("mekLevels")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     // Build comparison

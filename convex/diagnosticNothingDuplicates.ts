@@ -10,19 +10,19 @@ export const findNothingDuplicates = query({
     // Check if essence system is initialized
     const tracking = await ctx.db
       .query("essenceTracking")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .first();
 
     // Get all essence balances for this wallet (stored in DB)
     const allBalances = await ctx.db
       .query("essenceBalances")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .collect();
 
     // Get slotted Meks to check what variations are being generated
     const slots = await ctx.db
       .query("essenceSlots")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .collect();
 
     const slottedMeks = slots.filter((s) => s.mekAssetId);

@@ -163,7 +163,7 @@ export const getWalletSnapshotHealth = query({
     // Get wallet's gold mining record
     const miner = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!miner) {
@@ -173,7 +173,7 @@ export const getWalletSnapshotHealth = query({
     // Get all snapshots for this wallet
     const snapshots = await ctx.db
       .query("mekOwnershipHistory")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .order("desc")
       .collect();
 

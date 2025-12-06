@@ -53,7 +53,7 @@ export const getInventoryDiscrepancies = query({
     // Get all inventory items for this campaign
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", campaignId))
       .collect();
 
     const discrepancies: SyncDiscrepancy[] = [];
@@ -115,7 +115,7 @@ export const syncSingleNFT = mutation({
     // Check for ALL records with this nftUid (detect duplicates/orphans)
     const allMatchingByUid = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_uid", (q) => q.eq("nftUid", nftUid))
+      .withIndex("", (q: any) => q.eq("nftUid", nftUid))
       .collect();
 
     console.log(`[🔄SYNC-MUTATION] Found ${allMatchingByUid.length} records with nftUid ${nftUid}`);
@@ -241,7 +241,7 @@ export const syncCampaignInventory = mutation({
     // Get discrepancies first (call the query handler directly)
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", campaignId))
       .collect();
 
     type NMKRStatusEntry = { nftUid: string; nmkrStatus: string; soldTo?: string };
@@ -290,7 +290,7 @@ export const syncCampaignInventory = mutation({
         // Find the NFT in inventory
         const nft = await ctx.db
           .query("commemorativeNFTInventory")
-          .withIndex("by_uid", (q) => q.eq("nftUid", discrepancy.nftUid))
+          .withIndex("", (q: any) => q.eq("nftUid", discrepancy.nftUid))
           .first();
 
         if (!nft) {
@@ -331,7 +331,7 @@ export const syncCampaignInventory = mutation({
     if (campaign) {
       const inventory = await ctx.db
         .query("commemorativeNFTInventory")
-        .withIndex("by_campaign", (q) => q.eq("campaignId", campaignId))
+        .withIndex("", (q: any) => q.eq("campaignId", campaignId))
         .collect();
 
       const availableNFTs = inventory.filter((i) => i.status === "available").length;
@@ -382,7 +382,7 @@ export const getCampaignInventorySummary = query({
   handler: async (ctx, args) => {
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     const available = inventory.filter((i) => i.status === "available");
@@ -614,7 +614,7 @@ export const getCampaignsNeedingSync = internalQuery({
       // Check if this campaign has any reserved NFTs (at-risk of missed webhook)
       const inventory = await ctx.db
         .query("commemorativeNFTInventory")
-        .withIndex("by_campaign", (q) => q.eq("campaignId", campaign._id))
+        .withIndex("", (q: any) => q.eq("campaignId", campaign._id))
         .collect();
 
       const reservedCount = inventory.filter(nft => nft.status === 'reserved').length;
@@ -654,7 +654,7 @@ export const internalSyncCampaignInventory = internalMutation({
     // Get all inventory items for this campaign
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", campaignId))
       .collect();
 
     type NMKRStatusEntry = { nftUid: string; nmkrStatus: string; soldTo?: string };
@@ -724,7 +724,7 @@ export const internalSyncCampaignInventory = internalMutation({
     if (campaign) {
       const updatedInventory = await ctx.db
         .query("commemorativeNFTInventory")
-        .withIndex("by_campaign", (q) => q.eq("campaignId", campaignId))
+        .withIndex("", (q: any) => q.eq("campaignId", campaignId))
         .collect();
 
       await ctx.db.patch(campaignId, {

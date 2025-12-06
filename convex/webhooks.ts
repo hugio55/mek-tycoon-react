@@ -17,7 +17,7 @@ export const checkProcessedWebhook = query({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("processedWebhooks")
-      .withIndex("by_tx_hash", (q) => q.eq("transactionHash", args.transactionHash))
+      .withIndex("", (q: any) => q.eq("transactionHash", args.transactionHash))
       .first();
 
     return existing;
@@ -41,7 +41,7 @@ export const recordProcessedWebhook = mutation({
     // Check if already recorded (defensive)
     const existing = await ctx.db
       .query("processedWebhooks")
-      .withIndex("by_tx_hash", (q) => q.eq("transactionHash", args.transactionHash))
+      .withIndex("", (q: any) => q.eq("transactionHash", args.transactionHash))
       .first();
 
     if (existing) {
@@ -72,7 +72,7 @@ export const cleanupOldWebhooks = mutation({
 
     const oldWebhooks = await ctx.db
       .query("processedWebhooks")
-      .withIndex("by_processed_at", (q) => q.lt("processedAt", thirtyDaysAgo))
+      .withIndex("", (q: any) => q.lt("processedAt", thirtyDaysAgo))
       .collect();
 
     for (const webhook of oldWebhooks) {

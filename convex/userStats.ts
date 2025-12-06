@@ -20,7 +20,7 @@ export const getUserStats = query({
     // Get the goldMining record for this wallet
     const goldMiner = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!goldMiner) {

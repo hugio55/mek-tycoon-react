@@ -9,7 +9,7 @@ export const getAllUsersWithDiscordEmojis = query({
   handler: async (ctx, args) => {
     const connections = await ctx.db
       .query("discordConnections")
-      .withIndex("by_guild", (q) => q.eq("guildId", args.guildId))
+      .withIndex("", (q: any) => q.eq("guildId", args.guildId))
       .filter((q) => q.eq(q.field("active"), true))
       .collect();
 
@@ -20,14 +20,14 @@ export const getAllUsersWithDiscordEmojis = query({
       // Get gold directly from the wallet
       const goldMining = await ctx.db
         .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", connection.walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", connection.walletAddress))
         .first();
 
       const totalGold = goldMining?.accumulatedGold || 0;
 
       const tiers = await ctx.db
         .query("discordGoldTiers")
-        .withIndex("by_active", (q) => q.eq("active", true))
+        .withIndex("", (q: any) => q.eq("active", true))
         .collect();
 
       const sortedTiers = tiers.sort((a, b) => b.order - a.order);

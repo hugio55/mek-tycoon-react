@@ -35,7 +35,7 @@ export const cleanupOldSnapshots = internalMutation({
         // Use the new by_snapshotTime index for efficient filtering
         const oldSnapshots = await ctx.db
           .query("mekOwnershipHistory")
-          .withIndex("by_snapshotTime", (q) => q.lt("snapshotTime", cutoffTime))
+          .withIndex("", (q: any) => q.lt("snapshotTime", cutoffTime))
           .take(BATCH_SIZE);
 
         if (oldSnapshots.length === 0) {

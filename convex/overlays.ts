@@ -21,7 +21,7 @@ export const getOverlay = query({
   handler: async (ctx, args) => {
     const overlay = await ctx.db
       .query("overlays")
-      .withIndex("by_imageKey", (q) => q.eq("imageKey", args.imageKey))
+      .withIndex("", (q: any) => q.eq("imageKey", args.imageKey))
       .first();
     return overlay;
   },
@@ -40,7 +40,7 @@ export const saveOverlay = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("overlays")
-      .withIndex("by_imageKey", (q) => q.eq("imageKey", args.imageKey))
+      .withIndex("", (q: any) => q.eq("imageKey", args.imageKey))
       .first();
 
     const now = Date.now();
@@ -97,7 +97,7 @@ export const deleteOverlay = mutation({
   handler: async (ctx, args) => {
     const overlay = await ctx.db
       .query("overlays")
-      .withIndex("by_imageKey", (q) => q.eq("imageKey", args.imageKey))
+      .withIndex("", (q: any) => q.eq("imageKey", args.imageKey))
       .first();
 
     if (overlay) {
@@ -141,7 +141,7 @@ export const saveAutosave = mutation({
     // Keep only the last 20 autosaves for this imageKey
     const allAutosaves = await ctx.db
       .query("overlayAutosaves")
-      .withIndex("by_imageKey_and_timestamp", (q) => q.eq("imageKey", args.imageKey))
+      .withIndex("", (q: any) => q.eq("imageKey", args.imageKey))
       .order("desc")
       .collect();
 
@@ -163,7 +163,7 @@ export const getAutosaveHistory = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("overlayAutosaves")
-      .withIndex("by_imageKey_and_timestamp", (q) => q.eq("imageKey", args.imageKey))
+      .withIndex("", (q: any) => q.eq("imageKey", args.imageKey))
       .order("desc")
       .take(20);
   },

@@ -87,7 +87,7 @@ export const getMekLevels = query({
   handler: async (ctx, args) => {
     const levels = await ctx.db
       .query("mekLevels")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .filter((q) => q.neq(q.field("ownershipStatus"), "transferred"))
       .collect();
 
@@ -104,7 +104,7 @@ export const getGroupMekLevels = query({
     // Find the wallet group for this wallet
     const membership = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     let walletsToQuery = [args.walletAddress]; // Default to just this wallet
@@ -113,7 +113,7 @@ export const getGroupMekLevels = query({
       // Get all wallets in the group
       const allMemberships = await ctx.db
         .query("walletGroupMemberships")
-        .withIndex("by_group", (q) => q.eq("groupId", membership.groupId))
+        .withIndex("", (q: any) => q.eq("groupId", membership.groupId))
         .collect();
 
       walletsToQuery = allMemberships.map(m => m.walletAddress);
@@ -124,7 +124,7 @@ export const getGroupMekLevels = query({
     for (const wallet of walletsToQuery) {
       const levels = await ctx.db
         .query("mekLevels")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", wallet))
+        .withIndex("", (q: any) => q.eq("walletAddress", wallet))
         .filter((q) => q.neq(q.field("ownershipStatus"), "transferred"))
         .collect();
 
@@ -144,7 +144,7 @@ export const getMekLevel = query({
   handler: async (ctx, args) => {
     const level = await ctx.db
       .query("mekLevels")
-      .withIndex("by_wallet_asset", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", args.walletAddress).eq("assetId", args.assetId)
       )
       .first();
@@ -161,7 +161,7 @@ export const getMekLevelHistory = query({
   handler: async (ctx, args) => {
     const levels = await ctx.db
       .query("mekLevels")
-      .withIndex("by_asset", (q) => q.eq("assetId", args.assetId))
+      .withIndex("", (q: any) => q.eq("assetId", args.assetId))
       .collect();
 
     return levels;
@@ -181,7 +181,7 @@ export const upgradeMekLevel = mutation({
     // 1. Get the current gold mining data for the wallet
     const goldMiningData = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!goldMiningData) {
@@ -229,7 +229,7 @@ export const upgradeMekLevel = mutation({
     // 3. Get or create the level record for this wallet+mek
     let mekLevel = await ctx.db
       .query("mekLevels")
-      .withIndex("by_wallet_asset", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", args.walletAddress).eq("assetId", args.assetId)
       )
       .first();
@@ -254,7 +254,7 @@ export const upgradeMekLevel = mutation({
 
       mekLevel = await ctx.db
         .query("mekLevels")
-        .withIndex("by_wallet_asset", (q) =>
+        .withIndex("", (q: any) =>
           q.eq("walletAddress", args.walletAddress).eq("assetId", args.assetId)
         )
         .first();
@@ -604,7 +604,7 @@ export const checkAndResetTransferredMeks = mutation({
     // Get gold mining data with current Meks
     const goldMiningData = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!goldMiningData) {
@@ -618,7 +618,7 @@ export const checkAndResetTransferredMeks = mutation({
     // Get all level records for this wallet
     const mekLevels = await ctx.db
       .query("mekLevels")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     let checkedCount = 0;
@@ -681,7 +681,7 @@ export const initializeMekLevels = mutation({
       // Check if level record already exists
       const existing = await ctx.db
         .query("mekLevels")
-        .withIndex("by_wallet_asset", (q) =>
+        .withIndex("", (q: any) =>
           q.eq("walletAddress", args.walletAddress).eq("assetId", mek.assetId)
         )
         .first();
@@ -690,7 +690,7 @@ export const initializeMekLevels = mutation({
         // Check if this Mek was previously owned by this wallet and transferred out
         const history = await ctx.db
           .query("mekLevels")
-          .withIndex("by_asset", (q) => q.eq("assetId", mek.assetId))
+          .withIndex("", (q: any) => q.eq("assetId", mek.assetId))
           .filter((q) =>
             q.and(
               q.eq(q.field("walletAddress"), args.walletAddress),
@@ -711,7 +711,7 @@ export const initializeMekLevels = mutation({
           // Get base rate from goldMining for this Mek
           const goldMiningData = await ctx.db
             .query("goldMining")
-            .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+            .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
             .first();
 
           const mekBaseRate = goldMiningData?.ownedMeks.find(
@@ -752,7 +752,7 @@ export const getUpgradeHistory = query({
   handler: async (ctx, args) => {
     const query = ctx.db
       .query("levelUpgrades")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .order("desc");
 
     if (args.limit) {
@@ -791,7 +791,7 @@ export const resetAllMekLevels = mutation({
     // Get all level records for this wallet
     const mekLevels = await ctx.db
       .query("mekLevels")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .filter((q) => q.eq(q.field("ownershipStatus"), "verified"))
       .collect();
 
@@ -813,7 +813,7 @@ export const resetAllMekLevels = mutation({
     // Update goldMining record to remove all boosts
     const goldMiningData = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (goldMiningData) {

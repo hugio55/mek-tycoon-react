@@ -98,7 +98,7 @@ export const populateSourceKeys = mutation({
       // Use index to find the mek efficiently by asset name
       const mek = await ctx.db
         .query("meks")
-        .withIndex("by_asset_name", (q) => q.eq("assetName", mapping.assetName))
+        .withIndex("", (q: any) => q.eq("assetName", mapping.assetName))
         .first();
       
       if (mek) {
@@ -139,7 +139,7 @@ export const updateSingleMekSourceKey = mutation({
     // Find the mek by asset name using index
     const mek = await ctx.db
       .query("meks")
-      .withIndex("by_asset_name", (q) => q.eq("assetName", args.assetName))
+      .withIndex("", (q: any) => q.eq("assetName", args.assetName))
       .first();
 
     if (!mek) {
@@ -174,7 +174,7 @@ export const syncMeksFromGoldMining = mutation({
     // Get goldMining record
     const goldMining = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!goldMining) {
@@ -199,7 +199,7 @@ export const syncMeksFromGoldMining = mutation({
       // Check if Mek already exists in meks table
       const existingMek = await ctx.db
         .query("meks")
-        .withIndex("by_asset_id", (q) => q.eq("assetId", ownedMek.assetId))
+        .withIndex("", (q: any) => q.eq("assetId", ownedMek.assetId))
         .first();
 
       if (existingMek) {
@@ -279,7 +279,7 @@ export const syncIsSlottedFromEssenceSlots = mutation({
       // Find corresponding Mek in meks table
       const mek = await ctx.db
         .query("meks")
-        .withIndex("by_asset_id", (q) => q.eq("assetId", slot.mekAssetId!))
+        .withIndex("", (q: any) => q.eq("assetId", slot.mekAssetId!))
         .first();
 
       if (!mek) {

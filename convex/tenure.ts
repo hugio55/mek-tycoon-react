@@ -158,7 +158,7 @@ export const getTenureLevelThreshold = query({
   handler: async (ctx, args) => {
     const threshold = await ctx.db
       .query("tenureLevels")
-      .withIndex("by_level", (q) => q.eq("level", args.level))
+      .withIndex("", (q: any) => q.eq("level", args.level))
       .first();
 
     return threshold;
@@ -207,7 +207,7 @@ export const getWalletTenureStats = query({
   handler: async (ctx, args) => {
     const meks = await ctx.db
       .query("meks")
-      .withIndex("by_owner", (q) => q.eq("owner", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("owner", args.walletAddress))
       .collect();
 
     const now = Date.now();
@@ -286,7 +286,7 @@ export const slotMek = mutation({
     // Also update essenceSlots table if it exists
     const slot = await ctx.db
       .query("essenceSlots")
-      .withIndex("by_wallet_slot", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", args.walletAddress).eq("slotNumber", args.slotNumber)
       )
       .first();
@@ -353,7 +353,7 @@ export const unslotMek = mutation({
     if (mek.slotNumber) {
       const slot = await ctx.db
         .query("essenceSlots")
-        .withIndex("by_wallet_slot", (q) =>
+        .withIndex("", (q: any) =>
           q.eq("walletAddress", args.walletAddress).eq("slotNumber", mek.slotNumber!)
         )
         .first();
@@ -409,7 +409,7 @@ export const levelUpMek = mutation({
     // Get tenure requirement for next level
     const levelThreshold = await ctx.db
       .query("tenureLevels")
-      .withIndex("by_level", (q) => q.eq("level", nextLevel))
+      .withIndex("", (q: any) => q.eq("level", nextLevel))
       .first();
 
     if (!levelThreshold) {
@@ -494,7 +494,7 @@ export const batchLevelUpMek = mutation({
       // Get threshold for next level
       const levelThreshold = await ctx.db
         .query("tenureLevels")
-        .withIndex("by_level", (q) => q.eq("level", nextLevel))
+        .withIndex("", (q: any) => q.eq("level", nextLevel))
         .first();
 
       // No more levels configured
@@ -630,7 +630,7 @@ export const setTenureLevelThreshold = mutation({
     // Check if level already exists
     const existing = await ctx.db
       .query("tenureLevels")
-      .withIndex("by_level", (q) => q.eq("level", args.level))
+      .withIndex("", (q: any) => q.eq("level", args.level))
       .first();
 
     if (existing) {
@@ -685,7 +685,7 @@ export const batchSetTenureLevelThresholds = mutation({
       // Check if exists
       const existing = await ctx.db
         .query("tenureLevels")
-        .withIndex("by_level", (q) => q.eq("level", levelData.level))
+        .withIndex("", (q: any) => q.eq("level", levelData.level))
         .first();
 
       if (existing) {
@@ -727,7 +727,7 @@ export const deleteTenureLevelThreshold = mutation({
   handler: async (ctx, args) => {
     const threshold = await ctx.db
       .query("tenureLevels")
-      .withIndex("by_level", (q) => q.eq("level", args.level))
+      .withIndex("", (q: any) => q.eq("level", args.level))
       .first();
 
     if (!threshold) {
@@ -760,7 +760,7 @@ export const getMekTenureData = query({
     // Get all Meks owned by this wallet from the meks table
     const meks = await ctx.db
       .query("meks")
-      .withIndex("by_owner", (q) => q.eq("owner", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("owner", args.walletAddress))
       .collect();
 
     // Return tenure data mapped by assetId for fast lookup

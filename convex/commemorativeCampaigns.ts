@@ -45,7 +45,7 @@ export const createCampaign = mutation({
     // Check if campaign with this name already exists
     const existing = await ctx.db
       .query("commemorativeCampaigns")
-      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .withIndex("", (q: any) => q.eq("name", args.name))
       .first();
 
     if (existing) {
@@ -212,7 +212,7 @@ export const populateCampaignInventory = mutation({
     // Check if this campaign already has inventory
     const existingInventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     if (existingInventory.length > 0) {
@@ -291,7 +291,7 @@ export const clearCampaignInventory = mutation({
     // Delete all inventory for this campaign
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     for (const item of inventory) {
@@ -303,7 +303,7 @@ export const clearCampaignInventory = mutation({
     // Delete all reservations for this campaign
     const reservations = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     for (const reservation of reservations) {
@@ -350,7 +350,7 @@ export const getCampaignStats = query({
     // Real-time count from inventory (counters are for quick reference)
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     const stats = {
@@ -388,7 +388,7 @@ export const listActiveCampaigns = query({
   handler: async (ctx) => {
     const campaigns = await ctx.db
       .query("commemorativeCampaigns")
-      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .withIndex("", (q: any) => q.eq("status", "active"))
       .collect();
 
     return campaigns;
@@ -417,7 +417,7 @@ export const getCampaignByName = query({
   handler: async (ctx, args) => {
     const campaign = await ctx.db
       .query("commemorativeCampaigns")
-      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .withIndex("", (q: any) => q.eq("name", args.name))
       .first();
 
     return campaign;
@@ -434,7 +434,7 @@ export const getCampaignAvailableCount = query({
   handler: async (ctx, args) => {
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign_and_status", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("campaignId", args.campaignId).eq("status", "available")
       )
       .collect();
@@ -455,7 +455,7 @@ export const hasUserClaimedFromCampaign = query({
     // Check completed reservations
     const completedReservation = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("by_campaign_and_wallet", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("campaignId", args.campaignId).eq("reservedBy", args.walletAddress)
       )
       .filter((q) => q.eq(q.field("status"), "completed"))
@@ -475,7 +475,7 @@ export const getUserClaimHistory = query({
   handler: async (ctx, args) => {
     const completedReservations = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("by_wallet_and_status", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("reservedBy", args.walletAddress).eq("status", "completed")
       )
       .collect();
@@ -517,7 +517,7 @@ export const getCampaignInventory = query({
 
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
       .order("asc") // Sort by nftNumber ascending
       .collect();
 
@@ -560,7 +560,7 @@ export const getCompanyNamesForWallets = query({
 
       const goldMiningRecord = await ctx.db
         .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
         .first();
 
       results[walletAddress] = goldMiningRecord?.companyName || null;
@@ -632,7 +632,7 @@ export const backfillInventoryImages = mutation({
     // Get all inventory for this campaign
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     // Create a map for quick lookup
@@ -730,7 +730,7 @@ export const backfillSoldNFTData = mutation({
         // Look up company name
         const goldMiningRecord = await ctx.db
           .query("goldMining")
-          .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+          .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
           .first();
 
         const companyNameAtSale = goldMiningRecord?.companyName || undefined;
@@ -799,7 +799,7 @@ export const manuallySetSoldTo = mutation({
     // Look up company name
     const goldMiningRecord = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     const companyNameAtSale = goldMiningRecord?.companyName || undefined;
@@ -839,7 +839,7 @@ export const updateNFTStatus = mutation({
 
     const nft = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_uid", (q) => q.eq("nftUid", args.nftUid))
+      .withIndex("", (q: any) => q.eq("nftUid", args.nftUid))
       .first();
 
     console.log('[🔄SYNC-MUTATION] NFT found in DB:', nft ? 'YES' : 'NO');
@@ -898,7 +898,7 @@ export const syncCampaignCounters = mutation({
   handler: async (ctx, args) => {
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     const counters = {
@@ -964,7 +964,7 @@ export const linkOrphanedNFTsToCampaign = mutation({
     for (const nftUid of args.nftUids) {
       const nft = await ctx.db
         .query("commemorativeNFTInventory")
-        .withIndex("by_uid", (q) => q.eq("nftUid", nftUid))
+        .withIndex("", (q: any) => q.eq("nftUid", nftUid))
         .first();
 
       if (!nft) {
@@ -992,7 +992,7 @@ export const linkOrphanedNFTsToCampaign = mutation({
     // Refresh campaign counters
     await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     return {
@@ -1017,7 +1017,7 @@ export const diagnoseNFTByUid = query({
 
     const nft = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_uid", (q) => q.eq("nftUid", args.nftUid))
+      .withIndex("", (q: any) => q.eq("nftUid", args.nftUid))
       .first();
 
     if (!nft) {
@@ -1078,7 +1078,7 @@ export const analyzeDuplicateNFTs = query({
 
     const allRecords = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     console.log('[🔍ANALYZE] Total records found:', allRecords.length);
@@ -1192,7 +1192,7 @@ export const cleanupDuplicateNFTs = mutation({
 
     const allRecords = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     console.log('[🧹CLEANUP] Total records found:', allRecords.length);
@@ -1287,7 +1287,7 @@ export const cleanupDuplicateNFTs = mutation({
     if (!dryRun && totalDeleted > 0) {
       const remainingInventory = await ctx.db
         .query("commemorativeNFTInventory")
-        .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+        .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
         .collect();
 
       await ctx.db.patch(args.campaignId, {
@@ -1337,7 +1337,7 @@ export const fixPaymentUrls = mutation({
 
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     let fixedCount = 0;

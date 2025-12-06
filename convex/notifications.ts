@@ -66,14 +66,14 @@ export const getUserIdByWallet = query({
     // First try by walletAddress
     let user = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     // If not found, try by walletStakeAddress
     if (!user) {
       user = await ctx.db
         .query("users")
-        .withIndex("by_stake_address", (q) => q.eq("walletStakeAddress", args.walletAddress))
+        .withIndex("", (q: any) => q.eq("walletStakeAddress", args.walletAddress))
         .first();
     }
 
@@ -87,7 +87,7 @@ export const getUnreadCount = query({
   handler: async (ctx, args) => {
     const notifications = await ctx.db
       .query("notifications")
-      .withIndex("by_user_unread", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("userId", args.userId).eq("isRead", false)
       )
       .collect();
@@ -107,7 +107,7 @@ export const getRecentNotifications = query({
 
     const notifications = await ctx.db
       .query("notifications")
-      .withIndex("by_user_created", (q) => q.eq("userId", args.userId))
+      .withIndex("", (q: any) => q.eq("userId", args.userId))
       .order("desc")
       .take(limit);
 
@@ -127,7 +127,7 @@ export const getAllNotifications = query({
 
     let notificationsQuery = ctx.db
       .query("notifications")
-      .withIndex("by_user_created", (q) => q.eq("userId", args.userId))
+      .withIndex("", (q: any) => q.eq("userId", args.userId))
       .order("desc");
 
     // If cursor provided, filter to notifications older than cursor
@@ -199,7 +199,7 @@ export const markAllAsRead = mutation({
 
     const unreadNotifications = await ctx.db
       .query("notifications")
-      .withIndex("by_user_unread", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("userId", args.userId).eq("isRead", false)
       )
       .collect();
@@ -225,7 +225,7 @@ export const clearAllNotifications = mutation({
 
     const notifications = await ctx.db
       .query("notifications")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("", (q: any) => q.eq("userId", args.userId))
       .collect();
 
     for (const notification of notifications) {
@@ -265,7 +265,7 @@ export const createNotification = internalMutation({
     if (args.sourceType && args.sourceId) {
       const existing = await ctx.db
         .query("notifications")
-        .withIndex("by_source", (q) =>
+        .withIndex("", (q: any) =>
           q.eq("sourceType", args.sourceType!).eq("sourceId", args.sourceId!)
         )
         .first();
@@ -325,7 +325,7 @@ export const createNotificationPublic = mutation({
     if (args.sourceType && args.sourceId) {
       const existing = await ctx.db
         .query("notifications")
-        .withIndex("by_source", (q) =>
+        .withIndex("", (q: any) =>
           q.eq("sourceType", args.sourceType!).eq("sourceId", args.sourceId!)
         )
         .first();
@@ -428,7 +428,7 @@ export const adminGetPlayerNotifications = query({
     // Find the user
     const user = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!user) {
@@ -442,7 +442,7 @@ export const adminGetPlayerNotifications = query({
     // Get their notifications
     const notifications = await ctx.db
       .query("notifications")
-      .withIndex("by_user_created", (q) => q.eq("userId", user._id))
+      .withIndex("", (q: any) => q.eq("userId", user._id))
       .order("desc")
       .take(limit);
 
@@ -513,7 +513,7 @@ export const adminSendNotification = mutation({
     // Find the user
     const user = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!user) {
@@ -601,7 +601,7 @@ export const adminClearPlayerNotifications = mutation({
     // Find the user
     const user = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!user) {
@@ -610,7 +610,7 @@ export const adminClearPlayerNotifications = mutation({
 
     const notifications = await ctx.db
       .query("notifications")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("", (q: any) => q.eq("userId", user._id))
       .collect();
 
     for (const notification of notifications) {

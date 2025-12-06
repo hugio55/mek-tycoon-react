@@ -25,7 +25,7 @@ export const getByNodeAndDifficulty = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("difficultyConfigs")
-      .withIndex("by_node_and_difficulty", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("nodeType", args.nodeType).eq("difficulty", args.difficulty)
       )
       .first();
@@ -61,7 +61,7 @@ export const upsert = mutation({
     // Check if configuration already exists
     const existing = await ctx.db
       .query("difficultyConfigs")
-      .withIndex("by_node_and_difficulty", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("nodeType", args.nodeType).eq("difficulty", args.difficulty)
       )
       .first();
@@ -169,7 +169,7 @@ export const initializeDefaults = mutation({
       // Check if this config already exists
       const existing = await ctx.db
         .query("difficultyConfigs")
-        .withIndex("by_node_and_difficulty", (q) =>
+        .withIndex("", (q: any) =>
           q.eq("nodeType", config.nodeType).eq("difficulty", config.difficulty)
         )
         .first();
@@ -209,7 +209,7 @@ export const updateField = mutation({
   handler: async (ctx, args) => {
     const config = await ctx.db
       .query("difficultyConfigs")
-      .withIndex("by_node_and_difficulty", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("nodeType", args.nodeType).eq("difficulty", args.difficulty)
       )
       .first();

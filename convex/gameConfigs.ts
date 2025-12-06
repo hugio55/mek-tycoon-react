@@ -94,7 +94,7 @@ export const getNodeConfig = query({
     const [difficultyConfig, activeDurationConfig] = await Promise.all([
       ctx.db
         .query("difficultyConfigs")
-        .withIndex("by_node_and_difficulty", (q) =>
+        .withIndex("", (q: any) =>
           q.eq("nodeType", args.nodeType).eq("difficulty", args.difficulty)
         )
         .first(),

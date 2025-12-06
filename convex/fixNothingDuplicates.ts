@@ -10,7 +10,7 @@ export const fixNothingDuplicates = mutation({
     // Get all essence balances for this wallet
     const allBalances = await ctx.db
       .query("essenceBalances")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .collect();
 
     // Filter for "Nothing" variations

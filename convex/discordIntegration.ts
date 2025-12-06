@@ -82,14 +82,14 @@ export const linkDiscordToWallet = mutation({
     // Check if this wallet already exists for this user
     const existingConnection = await ctx.db
       .query("discordConnections")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .first();
 
     // Check how many active wallets this user has
     const userActiveWallets = await ctx.db
       .query("discordConnections")
-      .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
+      .withIndex("", (q: any) => q.eq("discordUserId", args.discordUserId))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .filter((q) => q.eq(q.field("active"), true))
       .collect();
@@ -134,7 +134,7 @@ export const linkDiscordToWallet = mutation({
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (user) {
@@ -157,7 +157,7 @@ export const unlinkDiscordFromWallet = mutation({
   handler: async (ctx, args) => {
     const connection = await ctx.db
       .query("discordConnections")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .first();
 
@@ -177,7 +177,7 @@ export const unlinkDiscordFromWallet = mutation({
     if (wasPrimary) {
       const remainingWallets = await ctx.db
         .query("discordConnections")
-        .withIndex("by_discord_user", (q) => q.eq("discordUserId", discordUserId))
+        .withIndex("", (q: any) => q.eq("discordUserId", discordUserId))
         .filter((q) => q.eq(q.field("guildId"), args.guildId))
         .filter((q) => q.eq(q.field("active"), true))
         .collect();
@@ -217,7 +217,7 @@ export const getDiscordConnectionByWallet = query({
   handler: async (ctx, args) => {
     const connection = await ctx.db
       .query("discordConnections")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .filter((q) => q.eq(q.field("active"), true))
       .first();
@@ -234,7 +234,7 @@ export const getDiscordConnectionByDiscordUser = query({
   handler: async (ctx, args) => {
     const connections = await ctx.db
       .query("discordConnections")
-      .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
+      .withIndex("", (q: any) => q.eq("discordUserId", args.discordUserId))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .filter((q) => q.eq(q.field("active"), true))
       .collect();
@@ -256,7 +256,7 @@ export const getAllActiveDiscordConnections = query({
   handler: async (ctx, args) => {
     const connections = await ctx.db
       .query("discordConnections")
-      .withIndex("by_guild", (q) => q.eq("guildId", args.guildId))
+      .withIndex("", (q: any) => q.eq("guildId", args.guildId))
       .filter((q) => q.eq(q.field("active"), true))
       .collect();
 
@@ -269,7 +269,7 @@ export const getGoldTiers = query({
   handler: async (ctx) => {
     const tiers = await ctx.db
       .query("discordGoldTiers")
-      .withIndex("by_active", (q) => q.eq("active", true))
+      .withIndex("", (q: any) => q.eq("active", true))
       .order("desc")
       .collect();
 
@@ -365,7 +365,7 @@ export const getEmojiForGoldAmount = query({
   handler: async (ctx, args) => {
     const tiers = await ctx.db
       .query("discordGoldTiers")
-      .withIndex("by_active", (q) => q.eq("active", true))
+      .withIndex("", (q: any) => q.eq("active", true))
       .collect();
 
     const sortedTiers = tiers.sort((a, b) => b.order - a.order);
@@ -390,7 +390,7 @@ export const getUserGoldAndEmoji = query({
   handler: async (ctx, args) => {
     const wallets = await ctx.db
       .query("discordConnections")
-      .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
+      .withIndex("", (q: any) => q.eq("discordUserId", args.discordUserId))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .filter((q) => q.eq(q.field("active"), true))
       .collect();
@@ -413,7 +413,7 @@ export const getUserGoldAndEmoji = query({
     for (const wallet of wallets) {
       const goldMining = await ctx.db
         .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", wallet.walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", wallet.walletAddress))
         .first();
 
       if (goldMining) {
@@ -441,7 +441,7 @@ export const getUserGoldAndEmoji = query({
 
     const tiers = await ctx.db
       .query("discordGoldTiers")
-      .withIndex("by_active", (q) => q.eq("active", true))
+      .withIndex("", (q: any) => q.eq("active", true))
       .collect();
 
     const sortedTiers = tiers.sort((a, b) => b.order - a.order);
@@ -481,7 +481,7 @@ export const updateNicknameTimestamp = mutation({
   handler: async (ctx, args) => {
     const connection = await ctx.db
       .query("discordConnections")
-      .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
+      .withIndex("", (q: any) => q.eq("discordUserId", args.discordUserId))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .first();
 
@@ -504,7 +504,7 @@ export const getUserWallets = query({
   handler: async (ctx, args) => {
     const wallets = await ctx.db
       .query("discordConnections")
-      .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
+      .withIndex("", (q: any) => q.eq("discordUserId", args.discordUserId))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .filter((q) => q.eq(q.field("active"), true))
       .collect();
@@ -526,7 +526,7 @@ export const setPrimaryWallet = mutation({
   handler: async (ctx, args) => {
     const allWallets = await ctx.db
       .query("discordConnections")
-      .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
+      .withIndex("", (q: any) => q.eq("discordUserId", args.discordUserId))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .filter((q) => q.eq(q.field("active"), true))
       .collect();
@@ -557,7 +557,7 @@ export const setWalletNickname = mutation({
   handler: async (ctx, args) => {
     const connection = await ctx.db
       .query("discordConnections")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .first();
 

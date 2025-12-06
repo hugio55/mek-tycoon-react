@@ -17,14 +17,14 @@ export const getConversations = query({
     // Get conversations where user is participant1
     const asParticipant1 = await ctx.db
       .query("conversations")
-      .withIndex("by_participant1", (q) => q.eq("participant1", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("participant1", args.walletAddress))
       .order("desc")
       .collect();
 
     // Get conversations where user is participant2
     const asParticipant2 = await ctx.db
       .query("conversations")
-      .withIndex("by_participant2", (q) => q.eq("participant2", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("participant2", args.walletAddress))
       .order("desc")
       .collect();
 
@@ -56,7 +56,7 @@ export const getConversations = query({
     // Batch fetch: Get all unread counts for this user in one query
     const unreadRecords = await ctx.db
       .query("messageUnreadCounts")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
     const unreadMap = new Map(unreadRecords.map(r => [r.conversationId.toString(), r.count]));
 
@@ -65,7 +65,7 @@ export const getConversations = query({
     for (const wallet of otherWallets) {
       const user = await ctx.db
         .query("users")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", wallet))
+        .withIndex("", (q: any) => q.eq("walletAddress", wallet))
         .first();
       userMap.set(wallet, {
         companyName: user?.companyName ?? "Unknown Corporation",
@@ -76,14 +76,14 @@ export const getConversations = query({
     // Batch fetch: Get all blocks where I am the blocker
     const myBlocks = await ctx.db
       .query("messageBlocks")
-      .withIndex("by_blocker", (q) => q.eq("blockerWallet", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("blockerWallet", args.walletAddress))
       .collect();
     const iBlockedSet = new Set(myBlocks.map(b => b.blockedWallet));
 
     // Batch fetch: Get all blocks where I am the blocked
     const blocksAgainstMe = await ctx.db
       .query("messageBlocks")
-      .withIndex("by_blocked", (q) => q.eq("blockedWallet", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("blockedWallet", args.walletAddress))
       .collect();
     const theyBlockedMeSet = new Set(blocksAgainstMe.map(b => b.blockerWallet));
 
@@ -130,7 +130,7 @@ export const getMessages = query({
 
     let messagesQuery = ctx.db
       .query("messages")
-      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId));
+      .withIndex("", (q: any) => q.eq("conversationId", args.conversationId));
 
     // If we have a cursor, only get messages before it
     if (args.cursor) {
@@ -184,7 +184,7 @@ export const getTotalUnreadCount = query({
   handler: async (ctx, args) => {
     const unreadRecords = await ctx.db
       .query("messageUnreadCounts")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     return unreadRecords.reduce((sum, record) => sum + record.count, 0);
@@ -201,7 +201,7 @@ export const getConversationBetween = query({
     // Check both orderings
     const conv1 = await ctx.db
       .query("conversations")
-      .withIndex("by_participant1", (q) => q.eq("participant1", args.wallet1))
+      .withIndex("", (q: any) => q.eq("participant1", args.wallet1))
       .filter((q) => q.eq(q.field("participant2"), args.wallet2))
       .first();
 
@@ -209,7 +209,7 @@ export const getConversationBetween = query({
 
     const conv2 = await ctx.db
       .query("conversations")
-      .withIndex("by_participant1", (q) => q.eq("participant1", args.wallet2))
+      .withIndex("", (q: any) => q.eq("participant1", args.wallet2))
       .filter((q) => q.eq(q.field("participant2"), args.wallet1))
       .first();
 
@@ -225,7 +225,7 @@ export const getTypingIndicators = query({
 
     const indicators = await ctx.db
       .query("typingIndicators")
-      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .withIndex("", (q: any) => q.eq("conversationId", args.conversationId))
       .filter((q) => q.gt(q.field("expiresAt"), now))
       .collect();
 
@@ -297,7 +297,7 @@ export const sendMessage = mutation({
     // Check if either user has blocked the other
     const senderBlockedRecipient = await ctx.db
       .query("messageBlocks")
-      .withIndex("by_blocker_blocked", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("blockerWallet", args.senderWallet).eq("blockedWallet", args.recipientWallet)
       )
       .first();
@@ -308,7 +308,7 @@ export const sendMessage = mutation({
 
     const recipientBlockedSender = await ctx.db
       .query("messageBlocks")
-      .withIndex("by_blocker_blocked", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("blockerWallet", args.recipientWallet).eq("blockedWallet", args.senderWallet)
       )
       .first();
@@ -323,7 +323,7 @@ export const sendMessage = mutation({
     // Find or create conversation
     let conversation = await ctx.db
       .query("conversations")
-      .withIndex("by_participant1", (q) => q.eq("participant1", args.senderWallet))
+      .withIndex("", (q: any) => q.eq("participant1", args.senderWallet))
       .filter((q) => q.eq(q.field("participant2"), args.recipientWallet))
       .first();
 
@@ -331,7 +331,7 @@ export const sendMessage = mutation({
       // Check reverse order
       conversation = await ctx.db
         .query("conversations")
-        .withIndex("by_participant1", (q) => q.eq("participant1", args.recipientWallet))
+        .withIndex("", (q: any) => q.eq("participant1", args.recipientWallet))
         .filter((q) => q.eq(q.field("participant2"), args.senderWallet))
         .first();
     }
@@ -383,7 +383,7 @@ export const sendMessage = mutation({
     // Update unread count for recipient
     const existingUnread = await ctx.db
       .query("messageUnreadCounts")
-      .withIndex("by_wallet_conversation", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", args.recipientWallet).eq("conversationId", conversationId)
       )
       .first();
@@ -416,7 +416,7 @@ export const markConversationAsRead = mutation({
     // Get all unread messages for this user in this conversation
     const unreadMessages = await ctx.db
       .query("messages")
-      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .withIndex("", (q: any) => q.eq("conversationId", args.conversationId))
       .filter((q) =>
         q.and(
           q.eq(q.field("recipientId"), args.walletAddress),
@@ -436,7 +436,7 @@ export const markConversationAsRead = mutation({
     // Reset unread count
     const unreadRecord = await ctx.db
       .query("messageUnreadCounts")
-      .withIndex("by_wallet_conversation", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", args.walletAddress).eq("conversationId", args.conversationId)
       )
       .first();
@@ -459,7 +459,7 @@ export const setTypingIndicator = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("typingIndicators")
-      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .withIndex("", (q: any) => q.eq("conversationId", args.conversationId))
       .filter((q) => q.eq(q.field("walletAddress"), args.walletAddress))
       .first();
 
@@ -533,7 +533,7 @@ export const deleteMessage = mutation({
         // Find the most recent non-deleted message
         const messages = await ctx.db
           .query("messages")
-          .withIndex("by_conversation", (q) => q.eq("conversationId", message.conversationId))
+          .withIndex("", (q: any) => q.eq("conversationId", message.conversationId))
           .filter((q) => q.neq(q.field("isDeleted"), true))
           .order("desc")
           .take(1);
@@ -624,7 +624,7 @@ export const cleanupExpiredTypingIndicators = mutation({
 
     const expired = await ctx.db
       .query("typingIndicators")
-      .withIndex("by_expires", (q) => q.lt("expiresAt", now))
+      .withIndex("", (q: any) => q.lt("expiresAt", now))
       .collect();
 
     for (const indicator of expired) {
@@ -668,7 +668,7 @@ export const deleteConversation = mutation({
     // Also mark all messages as deleted for this user
     const messages = await ctx.db
       .query("messages")
-      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .withIndex("", (q: any) => q.eq("conversationId", args.conversationId))
       .collect();
 
     for (const msg of messages) {
@@ -682,7 +682,7 @@ export const deleteConversation = mutation({
     // Reset unread count for this user (prevent stale badge count)
     const unreadRecord = await ctx.db
       .query("messageUnreadCounts")
-      .withIndex("by_wallet_conversation", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", args.walletAddress).eq("conversationId", args.conversationId)
       )
       .first();
@@ -709,7 +709,7 @@ export const isUserBlocked = query({
     // Check if I blocked them
     const iBlockedThem = await ctx.db
       .query("messageBlocks")
-      .withIndex("by_blocker_blocked", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("blockerWallet", args.myWallet).eq("blockedWallet", args.otherWallet)
       )
       .first();
@@ -717,7 +717,7 @@ export const isUserBlocked = query({
     // Check if they blocked me
     const theyBlockedMe = await ctx.db
       .query("messageBlocks")
-      .withIndex("by_blocker_blocked", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("blockerWallet", args.otherWallet).eq("blockedWallet", args.myWallet)
       )
       .first();
@@ -737,7 +737,7 @@ export const getBlockedUsers = query({
   handler: async (ctx, args) => {
     const blocks = await ctx.db
       .query("messageBlocks")
-      .withIndex("by_blocker", (q) => q.eq("blockerWallet", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("blockerWallet", args.walletAddress))
       .order("desc")
       .collect();
 
@@ -746,7 +746,7 @@ export const getBlockedUsers = query({
       blocks.map(async (block) => {
         const user = await ctx.db
           .query("users")
-          .withIndex("by_wallet", (q) => q.eq("walletAddress", block.blockedWallet))
+          .withIndex("", (q: any) => q.eq("walletAddress", block.blockedWallet))
           .first();
 
         return {
@@ -770,7 +770,7 @@ export const getUsersWhoBlockedMe = query({
   handler: async (ctx, args) => {
     const blocks = await ctx.db
       .query("messageBlocks")
-      .withIndex("by_blocked", (q) => q.eq("blockedWallet", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("blockedWallet", args.walletAddress))
       .collect();
 
     return blocks;
@@ -798,7 +798,7 @@ export const blockUser = mutation({
     // Check if already blocked
     const existingBlock = await ctx.db
       .query("messageBlocks")
-      .withIndex("by_blocker_blocked", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("blockerWallet", args.blockerWallet).eq("blockedWallet", args.blockedWallet)
       )
       .first();
@@ -829,7 +829,7 @@ export const unblockUser = mutation({
     // Find the block
     const existingBlock = await ctx.db
       .query("messageBlocks")
-      .withIndex("by_blocker_blocked", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("blockerWallet", args.blockerWallet).eq("blockedWallet", args.blockedWallet)
       )
       .first();
@@ -913,7 +913,7 @@ export const getAllConversationsAdmin = query({
     for (const wallet of walletAddresses) {
       const user = await ctx.db
         .query("users")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", wallet))
+        .withIndex("", (q: any) => q.eq("walletAddress", wallet))
         .first();
       userMap.set(wallet, {
         companyName: user?.companyName ?? "Unknown",
@@ -980,7 +980,7 @@ export const getConversationMessageCount = query({
   handler: async (ctx, args) => {
     const messages = await ctx.db
       .query("messages")
-      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .withIndex("", (q: any) => q.eq("conversationId", args.conversationId))
       .collect();
 
     return {
@@ -1003,7 +1003,7 @@ export const getMessagesAdmin = query({
 
     let query = ctx.db
       .query("messages")
-      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .withIndex("", (q: any) => q.eq("conversationId", args.conversationId))
       .order("asc");
 
     // Apply cursor if provided (skip messages before cursor)
@@ -1015,7 +1015,7 @@ export const getMessagesAdmin = query({
       messages.map(async (msg) => {
         const senderUser = await ctx.db
           .query("users")
-          .withIndex("by_wallet", (q) => q.eq("walletAddress", msg.senderId))
+          .withIndex("", (q: any) => q.eq("walletAddress", msg.senderId))
           .first();
 
         // Get attachment URLs if any
@@ -1108,7 +1108,7 @@ export const deleteConversationAdmin = mutation({
     // Delete all messages in the conversation
     const messages = await ctx.db
       .query("messages")
-      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .withIndex("", (q: any) => q.eq("conversationId", args.conversationId))
       .collect();
 
     for (const msg of messages) {
@@ -1138,7 +1138,7 @@ export const deleteConversationAdmin = mutation({
     // Delete typing indicators for this conversation
     const typingIndicators = await ctx.db
       .query("typingIndicators")
-      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .withIndex("", (q: any) => q.eq("conversationId", args.conversationId))
       .collect();
 
     for (const indicator of typingIndicators) {
@@ -1183,7 +1183,7 @@ export const getDeletedMessagesAdmin = query({
     // Get all deleted messages in this conversation
     const deletedMessages = await ctx.db
       .query("messages")
-      .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
+      .withIndex("", (q: any) => q.eq("conversationId", args.conversationId))
       .filter((q) => q.eq(q.field("isDeleted"), true))
       .order("asc")
       .collect();
@@ -1193,7 +1193,7 @@ export const getDeletedMessagesAdmin = query({
       deletedMessages.map(async (msg) => {
         const senderUser = await ctx.db
           .query("users")
-          .withIndex("by_wallet", (q) => q.eq("walletAddress", msg.senderId))
+          .withIndex("", (q: any) => q.eq("walletAddress", msg.senderId))
           .first();
 
         // Get attachment URLs if any

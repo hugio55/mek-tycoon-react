@@ -6,7 +6,7 @@ export const fixMek3412Image = mutation({
     // Find Mek #3412
     const mek3412 = await ctx.db
       .query("meks")
-      .withIndex("by_asset_id", (q) => q.eq("assetId", "3412"))
+      .withIndex("", (q: any) => q.eq("assetId", "3412"))
       .first();
     
     if (mek3412) {

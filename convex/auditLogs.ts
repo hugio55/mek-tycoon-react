@@ -180,7 +180,7 @@ export const getLastVerification = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("auditLogs")
-      .withIndex("by_stake_address", (q) => q.eq("stakeAddress", args.stakeAddress))
+      .withIndex("", (q: any) => q.eq("stakeAddress", args.stakeAddress))
       .filter(q => q.eq(q.field("type"), "verification"))
       .order("desc")
       .first();

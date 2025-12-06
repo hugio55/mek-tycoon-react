@@ -27,7 +27,7 @@ export const getCategoryByName = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("mekTreeCategories")
-      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .withIndex("", (q: any) => q.eq("name", args.name))
       .first();
   },
 });
@@ -41,7 +41,7 @@ export const getCategoryWithTemplates = query({
 
     const templates = await ctx.db
       .query("mekTreeTemplates")
-      .withIndex("by_categoryId", (q) => q.eq("categoryId", args.categoryId))
+      .withIndex("", (q: any) => q.eq("categoryId", args.categoryId))
       .collect();
 
     return {
@@ -60,7 +60,7 @@ export const getAllCategoriesWithCounts = query({
       categories.map(async (category) => {
         const templates = await ctx.db
           .query("mekTreeTemplates")
-          .withIndex("by_categoryId", (q) => q.eq("categoryId", category._id))
+          .withIndex("", (q: any) => q.eq("categoryId", category._id))
           .collect();
 
         return {
@@ -99,7 +99,7 @@ export const createCategory = mutation({
     // Check if category with this name already exists
     const existing = await ctx.db
       .query("mekTreeCategories")
-      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .withIndex("", (q: any) => q.eq("name", args.name))
       .first();
 
     if (existing) {
@@ -141,7 +141,7 @@ export const updateCategory = mutation({
     if (updates.name) {
       const existing = await ctx.db
         .query("mekTreeCategories")
-        .withIndex("by_name", (q) => q.eq("name", updates.name!))
+        .withIndex("", (q: any) => q.eq("name", updates.name!))
         .first();
 
       if (existing && existing._id !== categoryId) {
@@ -170,7 +170,7 @@ export const deleteCategory = mutation({
     // Get all templates in this category
     const templates = await ctx.db
       .query("mekTreeTemplates")
-      .withIndex("by_categoryId", (q) => q.eq("categoryId", categoryId))
+      .withIndex("", (q: any) => q.eq("categoryId", categoryId))
       .collect();
 
     if (deleteTemplates) {

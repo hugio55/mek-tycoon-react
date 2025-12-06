@@ -19,7 +19,7 @@ export const getUserMekCount = query({
     // Use cached stats if available and recent (less than 5 mins old)
     const cachedStats = await ctx.db
       .query("userStatsCache")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("", (q: any) => q.eq("userId", user._id))
       .first();
     
     if (cachedStats && Date.now() - cachedStats.lastUpdated < 5 * 60 * 1000) {
@@ -29,7 +29,7 @@ export const getUserMekCount = query({
     // Otherwise count directly (but this should be rare)
     const meks = await ctx.db
       .query("meks")
-      .withIndex("by_owner", (q) => q.eq("owner", user.walletAddress))
+      .withIndex("", (q: any) => q.eq("owner", user.walletAddress))
       .collect();
     
     return meks.length;
@@ -58,7 +58,7 @@ export const getUserMeksPaginated = query({
     // Get meks with pagination
     let query = ctx.db
       .query("meks")
-      .withIndex("by_owner", (q) => q.eq("owner", user.walletAddress));
+      .withIndex("", (q: any) => q.eq("owner", user.walletAddress));
     
     // Apply cursor if provided
     if (args.cursor) {
@@ -97,7 +97,7 @@ export const getUserStats = query({
     // Try to get from cache first
     const cachedStats = await ctx.db
       .query("userStatsCache")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("", (q: any) => q.eq("userId", user._id))
       .first();
     
     // If cache is recent (< 5 mins), use it
@@ -118,19 +118,19 @@ export const getUserStats = query({
     // Otherwise calculate (this should be rare)
     const meks = await ctx.db
       .query("meks")
-      .withIndex("by_owner", (q) => q.eq("owner", user.walletAddress))
+      .withIndex("", (q: any) => q.eq("owner", user.walletAddress))
       .collect();
     
     const totalEssence = Object.values(user.totalEssence).reduce((sum, val) => sum + val, 0);
     
     const bankAccount = await ctx.db
       .query("bankAccounts")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("", (q: any) => q.eq("userId", user._id))
       .first();
     
     const stockHoldings = await ctx.db
       .query("stockHoldings")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("", (q: any) => q.eq("userId", user._id))
       .collect();
     
     const stockValue = stockHoldings.reduce((sum, holding) => sum + holding.currentValue, 0);
@@ -160,7 +160,7 @@ export const getTopMeksByRarity = query({
     
     const meks = await ctx.db
       .query("meks")
-      .withIndex("by_rarity", (q) => q.eq("rarityTier", args.rarityTier))
+      .withIndex("", (q: any) => q.eq("rarityTier", args.rarityTier))
       .take(limit);
     
     return meks;
@@ -183,14 +183,14 @@ export const getUserMeksByRarity = query({
     // Try cache first
     const cachedStats = await ctx.db
       .query("userStatsCache")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("", (q: any) => q.eq("userId", user._id))
       .first();
     
     if (cachedStats && Date.now() - cachedStats.lastUpdated < 5 * 60 * 1000) {
       // Get from leaderboard cache which has mek details
       const leaderboardEntry = await ctx.db
         .query("leaderboardCache")
-        .withIndex("by_user_category", (q) => 
+        .withIndex("", (q: any) => 
           q.eq("userId", user._id).eq("category", "meks")
         )
         .first();
@@ -203,7 +203,7 @@ export const getUserMeksByRarity = query({
     // Fallback to counting (should be rare)
     const meks = await ctx.db
       .query("meks")
-      .withIndex("by_owner", (q) => q.eq("owner", user.walletAddress))
+      .withIndex("", (q: any) => q.eq("owner", user.walletAddress))
       .collect();
     
     const rarityCount = {
@@ -252,7 +252,7 @@ export const getBatchUserStats = query({
       // Get cached stats
       const cachedStats = await ctx.db
         .query("userStatsCache")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .withIndex("", (q: any) => q.eq("userId", userId))
         .first();
       
       results.push({

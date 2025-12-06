@@ -17,7 +17,7 @@ export const linkDiscordToCorporation = mutation({
     // Find the wallet group for this wallet
     let membership = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     // If wallet doesn't have a group yet, create one
@@ -29,7 +29,7 @@ export const linkDiscordToCorporation = mutation({
       // PRESERVE ORIGINAL NAME: Get the wallet's current company name before creating group
       const goldMining = await ctx.db
         .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
         .first();
 
       const originalCompanyName = goldMining?.companyName || null;
@@ -55,7 +55,7 @@ export const linkDiscordToCorporation = mutation({
     // Check if this Discord user is already linked to ANY group
     const existingConnection = await ctx.db
       .query("discordConnections")
-      .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
+      .withIndex("", (q: any) => q.eq("discordUserId", args.discordUserId))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .filter((q) => q.eq(q.field("active"), true))
       .first();
@@ -100,7 +100,7 @@ export const unlinkDiscordFromCorporation = mutation({
   handler: async (ctx, args) => {
     const connection = await ctx.db
       .query("discordConnections")
-      .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
+      .withIndex("", (q: any) => q.eq("discordUserId", args.discordUserId))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .first();
 
@@ -126,7 +126,7 @@ export const getDiscordConnectionByWallet = query({
     // Find the group this wallet belongs to
     const membership = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!membership) {
@@ -136,7 +136,7 @@ export const getDiscordConnectionByWallet = query({
     // Find Discord connection for this group
     const connection = await ctx.db
       .query("discordConnections")
-      .withIndex("by_group", (q) => q.eq("groupId", membership.groupId))
+      .withIndex("", (q: any) => q.eq("groupId", membership.groupId))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .filter((q) => q.eq(q.field("active"), true))
       .first();
@@ -148,7 +148,7 @@ export const getDiscordConnectionByWallet = query({
     // Get all wallets in this group
     const wallets = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_group", (q) => q.eq("groupId", membership.groupId))
+      .withIndex("", (q: any) => q.eq("groupId", membership.groupId))
       .collect();
 
     return {
@@ -167,7 +167,7 @@ export const getDiscordConnectionByDiscordUser = query({
   handler: async (ctx, args) => {
     const connection = await ctx.db
       .query("discordConnections")
-      .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
+      .withIndex("", (q: any) => q.eq("discordUserId", args.discordUserId))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .filter((q) => q.eq(q.field("active"), true))
       .first();
@@ -179,13 +179,13 @@ export const getDiscordConnectionByDiscordUser = query({
     // Get all wallets in this group
     const wallets = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_group", (q) => q.eq("groupId", connection.groupId))
+      .withIndex("", (q: any) => q.eq("groupId", connection.groupId))
       .collect();
 
     // Get group info
     const group = await ctx.db
       .query("walletGroups")
-      .withIndex("by_groupId", (q) => q.eq("groupId", connection.groupId))
+      .withIndex("", (q: any) => q.eq("groupId", connection.groupId))
       .first();
 
     return {
@@ -209,7 +209,7 @@ export const getUserGoldAndEmoji = query({
   handler: async (ctx, args) => {
     const connection = await ctx.db
       .query("discordConnections")
-      .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
+      .withIndex("", (q: any) => q.eq("discordUserId", args.discordUserId))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .filter((q) => q.eq(q.field("active"), true))
       .first();
@@ -228,7 +228,7 @@ export const getUserGoldAndEmoji = query({
     // Get all wallets in this group
     const wallets = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_group", (q) => q.eq("groupId", connection.groupId))
+      .withIndex("", (q: any) => q.eq("groupId", connection.groupId))
       .collect();
 
     let totalGold = 0;
@@ -238,7 +238,7 @@ export const getUserGoldAndEmoji = query({
     for (const wallet of wallets) {
       const goldMining = await ctx.db
         .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", wallet.walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", wallet.walletAddress))
         .first();
 
       if (goldMining) {
@@ -266,7 +266,7 @@ export const getUserGoldAndEmoji = query({
 
     const tiers = await ctx.db
       .query("discordGoldTiers")
-      .withIndex("by_active", (q) => q.eq("active", true))
+      .withIndex("", (q: any) => q.eq("active", true))
       .collect();
 
     const sortedTiers = tiers.sort((a, b) => b.order - a.order);
@@ -307,7 +307,7 @@ export const updateNicknameTimestamp = mutation({
   handler: async (ctx, args) => {
     const connection = await ctx.db
       .query("discordConnections")
-      .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
+      .withIndex("", (q: any) => q.eq("discordUserId", args.discordUserId))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .first();
 

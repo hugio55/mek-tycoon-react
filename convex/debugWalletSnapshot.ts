@@ -44,7 +44,7 @@ export const addPaymentAddresses = mutation({
   handler: async (ctx, args) => {
     const record = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!record) {

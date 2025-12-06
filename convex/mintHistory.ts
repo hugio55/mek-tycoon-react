@@ -79,7 +79,7 @@ export const getMintByNftUid = query({
   handler: async (ctx, args) => {
     const record = await ctx.db
       .query("mintHistory")
-      .withIndex("by_nft_uid", (q) => q.eq("nftUid", args.nftUid))
+      .withIndex("", (q: any) => q.eq("nftUid", args.nftUid))
       .first();
 
     return record;
@@ -98,7 +98,7 @@ export const updatePolicyId = mutation({
   handler: async (ctx, args) => {
     const record = await ctx.db
       .query("mintHistory")
-      .withIndex("by_nft_uid", (q) => q.eq("nftUid", args.nftUid))
+      .withIndex("", (q: any) => q.eq("nftUid", args.nftUid))
       .first();
 
     if (!record) {

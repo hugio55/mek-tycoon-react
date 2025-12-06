@@ -17,7 +17,7 @@ export const activateEssenceForSlottedMeks = mutation({
     // Get tracking
     const tracking = await ctx.db
       .query("essenceTracking")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .first();
 
     if (!tracking) {
@@ -27,7 +27,7 @@ export const activateEssenceForSlottedMeks = mutation({
     // Get all slots
     const slots = await ctx.db
       .query("essenceSlots")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .collect();
 
     // Find slots with Meks
@@ -42,7 +42,7 @@ export const activateEssenceForSlottedMeks = mutation({
     // Get config
     const config = await ctx.db
       .query("essenceConfig")
-      .withIndex("by_config_type", (q) => q.eq("configType", "global"))
+      .withIndex("", (q: any) => q.eq("configType", "global"))
       .first();
 
     if (!config) {
@@ -89,7 +89,7 @@ export const activateEssenceForSlottedMeks = mutation({
       // Check if balance already exists
       const existing = await ctx.db
         .query("essenceBalances")
-        .withIndex("by_wallet_and_variation", (q) =>
+        .withIndex("", (q: any) =>
           q.eq("walletAddress", walletAddress).eq("variationId", variationId)
         )
         .first();

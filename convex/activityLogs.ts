@@ -53,7 +53,7 @@ export const getActivityLogs = query({
 
     const logs = await ctx.db
       .query("activityLogs")
-      .withIndex("by_wallet_and_timestamp", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", args.walletAddress)
       )
       .order("desc")
@@ -92,7 +92,7 @@ export const getActivityByType = query({
 
     const logs = await ctx.db
       .query("activityLogs")
-      .withIndex("by_action_type", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("actionType", args.actionType)
       )
       .order("desc")

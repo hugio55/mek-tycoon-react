@@ -12,7 +12,7 @@ export const getOrCreateMekTree = mutation({
     // Check if tree already exists
     const existingTree = await ctx.db
       .query("mekTalentTrees")
-      .withIndex("by_mek_owner", (q) => 
+      .withIndex("", (q: any) => 
         q.eq("mekId", args.mekId).eq("ownerId", args.ownerId)
       )
       .first();
@@ -55,7 +55,7 @@ export const getMekTree = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("mekTalentTrees")
-      .withIndex("by_mek", (q) => q.eq("mekId", args.mekId))
+      .withIndex("", (q: any) => q.eq("mekId", args.mekId))
       .first();
   },
 });
@@ -342,7 +342,7 @@ export const getUserMekTrees = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("mekTalentTrees")
-      .withIndex("by_owner", (q) => q.eq("ownerId", args.userId))
+      .withIndex("", (q: any) => q.eq("ownerId", args.userId))
       .collect();
   },
 });

@@ -12,7 +12,7 @@ export const resetVerificationStatus = mutation({
     const now = Date.now();
     const goldMiningRecord = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (goldMiningRecord) {
@@ -67,7 +67,7 @@ export const deleteWallet = mutation({
     // 1. Delete from goldMining table
     const goldMiningRecord = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (goldMiningRecord) {
@@ -78,7 +78,7 @@ export const deleteWallet = mutation({
     // 2. Delete ALL ownership history snapshots
     const ownershipHistory = await ctx.db
       .query("mekOwnershipHistory")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     for (const snapshot of ownershipHistory) {
@@ -103,7 +103,7 @@ export const deleteWallet = mutation({
     try {
       const discordConnection = await ctx.db
         .query("discordConnections")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
         .first();
 
       if (discordConnection) {
@@ -135,7 +135,7 @@ export const mergeDuplicateWallets = mutation({
     // Find all records for this wallet address
     const allRecords = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     if (allRecords.length <= 1) {
@@ -302,7 +302,7 @@ export const updateWalletGold = mutation({
   handler: async (ctx, args) => {
     const goldMiningRecord = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!goldMiningRecord) {
@@ -523,7 +523,7 @@ export const fixCumulativeGold = mutation({
   handler: async (ctx, args) => {
     const goldMiningRecord = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!goldMiningRecord) {
@@ -585,7 +585,7 @@ export const reconstructCumulativeFromSnapshots = mutation({
   handler: async (ctx, args) => {
     const goldMiningRecord = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!goldMiningRecord) {
@@ -598,7 +598,7 @@ export const reconstructCumulativeFromSnapshots = mutation({
     // Get the most recent snapshot
     const mostRecentSnapshot = await ctx.db
       .query("mekOwnershipHistory")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .order("desc")
       .first();
 
@@ -674,7 +674,7 @@ export const resetAllGoldToZero = mutation({
   handler: async (ctx, args) => {
     const goldMiningRecord = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!goldMiningRecord) {
@@ -714,7 +714,7 @@ export const reconstructCumulativeGoldExact = mutation({
   handler: async (ctx, args) => {
     const goldMiningRecord = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!goldMiningRecord) {
@@ -727,7 +727,7 @@ export const reconstructCumulativeGoldExact = mutation({
     // Get ALL snapshots for this wallet, ordered chronologically
     const snapshots = await ctx.db
       .query("mekOwnershipHistory")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .order("asc")
       .collect();
 
@@ -741,7 +741,7 @@ export const reconstructCumulativeGoldExact = mutation({
     // Get ALL level upgrades for this wallet, ordered chronologically
     const allUpgrades = await ctx.db
       .query("mekLevels")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     const now = Date.now();
@@ -800,7 +800,7 @@ export const reconstructCumulativeGoldExact = mutation({
         // Get the levelUpgrades records to determine when each level was acquired
         const upgrades = await ctx.db
           .query("levelUpgrades")
-          .withIndex("by_wallet_asset", (q) =>
+          .withIndex("", (q: any) =>
             q.eq("walletAddress", args.walletAddress).eq("assetId", mek.assetId)
           )
           .filter((q) => q.eq(q.field("status"), "completed"))

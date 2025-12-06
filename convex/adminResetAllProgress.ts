@@ -35,7 +35,7 @@ export const resetAllProgress = mutation({
       // 2. Reset all mek levels to 1
       const mekLevels = await ctx.db
         .query("mekLevels")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", wallet.walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", wallet.walletAddress))
         .filter((q) => q.eq(q.field("ownershipStatus"), "verified"))
         .collect();
 

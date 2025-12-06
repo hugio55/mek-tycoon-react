@@ -184,7 +184,7 @@ export const getWalletMekTransferHistory = query({
     // Get all snapshots for this wallet
     const snapshots = await ctx.db
       .query("mekOwnershipHistory")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .order("asc")
       .collect();
 
@@ -241,12 +241,12 @@ export const compareTwoWallets = query({
   handler: async (ctx, args) => {
     const miner1 = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.wallet1))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.wallet1))
       .first();
 
     const miner2 = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.wallet2))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.wallet2))
       .first();
 
     if (!miner1 || !miner2) {
@@ -263,13 +263,13 @@ export const compareTwoWallets = query({
     // Get snapshot history to see if MEKs were transferred
     const snapshots1 = await ctx.db
       .query("mekOwnershipHistory")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.wallet1))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.wallet1))
       .order("desc")
       .take(5);
 
     const snapshots2 = await ctx.db
       .query("mekOwnershipHistory")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.wallet2))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.wallet2))
       .order("desc")
       .take(5);
 
@@ -398,7 +398,7 @@ export const getWalletDatabaseRecord = query({
   handler: async (ctx, args) => {
     const record = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!record) return null;
@@ -478,7 +478,7 @@ export const autoFixAssetOverlaps = internalMutation({
         overlap.wallets.map(async (walletAddress) => {
           const snapshot = await ctx.db
             .query("mekOwnershipHistory")
-            .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+            .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
             .order("desc")
             .first();
 
@@ -508,7 +508,7 @@ export const autoFixAssetOverlaps = internalMutation({
         if (walletAddress !== correctWallet) {
           const miner = await ctx.db
             .query("goldMining")
-            .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+            .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
             .first();
 
           if (miner) {
@@ -640,7 +640,7 @@ export const removeMekFromWallet = internalMutation({
   handler: async (ctx, args) => {
     const miner = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!miner) {

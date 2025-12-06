@@ -193,7 +193,7 @@ export const runWeeklyCleanup = internalMutation({
           // Delete all user data for this backup
           const userData = await ctx.db
             .query("goldBackupUserData")
-            .withIndex("by_backup", (q) => q.eq("backupId", backup._id))
+            .withIndex("", (q: any) => q.eq("backupId", backup._id))
             .collect();
 
           for (const data of userData) {

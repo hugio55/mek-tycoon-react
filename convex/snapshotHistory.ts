@@ -13,7 +13,7 @@ export const getSnapshotHistory = query({
     let query = ctx.db.query("mekOwnershipHistory");
 
     if (args.walletAddress) {
-      query = query.withIndex("by_wallet", (q) =>
+      query = query.withIndex("", (q: any) =>
         q.eq("walletAddress", args.walletAddress)
       );
     }
@@ -27,7 +27,7 @@ export const getSnapshotHistory = query({
       snapshots.map(async (snapshot) => {
         const miner = await ctx.db
           .query("goldMining")
-          .withIndex("by_wallet", (q) => q.eq("walletAddress", snapshot.walletAddress))
+          .withIndex("", (q: any) => q.eq("walletAddress", snapshot.walletAddress))
           .first();
 
         return {
@@ -91,7 +91,7 @@ export const getWalletSnapshotTimeline = query({
   handler: async (ctx, args) => {
     const snapshots = await ctx.db
       .query("mekOwnershipHistory")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .order("desc")
       .collect();
 
@@ -157,7 +157,7 @@ export const restoreFromSnapshot = mutation({
     // Get the wallet's goldMining record
     const miner = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", snapshot.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", snapshot.walletAddress))
       .first();
 
     if (!miner) {
@@ -206,7 +206,7 @@ export const restoreFromSnapshot = mutation({
     // Step 1: Get all existing mekLevels for this wallet
     const existingLevels = await ctx.db
       .query("mekLevels")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", snapshot.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", snapshot.walletAddress))
       .collect();
 
     // Step 2: Create a Set of assetIds in the snapshot

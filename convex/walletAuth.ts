@@ -43,7 +43,7 @@ export const connectWallet = mutation({
     // Check if user exists by payment address
     let existingUser = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     // If not found by payment address and stake address provided,
@@ -51,7 +51,7 @@ export const connectWallet = mutation({
     if (!existingUser && args.stakeAddress) {
       existingUser = await ctx.db
         .query("users")
-        .withIndex("by_stake_address", (q) => q.eq("walletStakeAddress", args.stakeAddress))
+        .withIndex("", (q: any) => q.eq("walletStakeAddress", args.stakeAddress))
         .first();
 
       // If found by stake address, update their payment address to link the accounts
@@ -160,7 +160,7 @@ export const disconnectWallet = mutation({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
     
     if (user) {
@@ -188,26 +188,26 @@ export const getUserByWallet = query({
     // Get user's Meks
     const meks = await ctx.db
       .query("meks")
-      .withIndex("by_owner", (q) => q.eq("owner", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("owner", args.walletAddress))
       .collect();
     
     // Get user's inventory
     const inventory = await ctx.db
       .query("inventory")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("", (q: any) => q.eq("userId", user._id))
       .collect();
     
     // Get active crafting sessions
     const activeCrafting = await ctx.db
       .query("craftingSessions")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("", (q: any) => q.eq("userId", user._id))
       .filter((q) => q.eq(q.field("status"), "crafting"))
       .collect();
     
     // Get achievements
     const achievements = await ctx.db
       .query("achievements")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("", (q: any) => q.eq("userId", user._id))
       .collect();
     
     return {
@@ -246,7 +246,7 @@ export const verifyWalletOwnership = mutation({
     
     const user = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
     
     if (!user) {

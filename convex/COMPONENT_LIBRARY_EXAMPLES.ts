@@ -521,7 +521,7 @@ async function viewVersionHistoryAndRollback(componentId: Id<"components">) {
   // Get all versions
   const versions = await ctx.db
     .query("componentVersions")
-    .withIndex("by_component", (q) => q.eq("componentId", componentId))
+    .withIndex("", (q: any) => q.eq("componentId", componentId))
     .order("desc")
     .collect();
 

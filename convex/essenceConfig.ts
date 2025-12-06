@@ -76,7 +76,7 @@ export const getConfig = query({
   handler: async (ctx, args) => {
     const config = await ctx.db
       .query("essenceBuffConfig")
-      .withIndex("by_key", (q) => q.eq("key", args.key))
+      .withIndex("", (q: any) => q.eq("key", args.key))
       .first();
 
     return config;
@@ -102,7 +102,7 @@ export const getBaseEssenceRate = query({
   handler: async (ctx) => {
     const config = await ctx.db
       .query("essenceBuffConfig")
-      .withIndex("by_key", (q) => q.eq("key", "baseEssencePerHour"))
+      .withIndex("", (q: any) => q.eq("key", "baseEssencePerHour"))
       .first();
 
     if (!config) {
@@ -141,7 +141,7 @@ export const setConfig = mutation({
     // Check if config exists
     const existing = await ctx.db
       .query("essenceBuffConfig")
-      .withIndex("by_key", (q) => q.eq("key", args.key))
+      .withIndex("", (q: any) => q.eq("key", args.key))
       .first();
 
     if (existing) {
@@ -206,7 +206,7 @@ export const deleteConfig = mutation({
   handler: async (ctx, args) => {
     const config = await ctx.db
       .query("essenceBuffConfig")
-      .withIndex("by_key", (q) => q.eq("key", args.key))
+      .withIndex("", (q: any) => q.eq("key", args.key))
       .first();
 
     if (!config) {
@@ -238,7 +238,7 @@ export const initializeDefaultEssenceConfig = mutation({
     // Initialize baseEssencePerHour config if it doesn't exist
     const existing = await ctx.db
       .query("essenceBuffConfig")
-      .withIndex("by_key", (q) => q.eq("key", "baseEssencePerHour"))
+      .withIndex("", (q: any) => q.eq("key", "baseEssencePerHour"))
       .first();
 
     if (existing) {

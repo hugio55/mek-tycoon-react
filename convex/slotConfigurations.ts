@@ -31,7 +31,7 @@ export const getActiveSlotConfiguration = query({
   handler: async (ctx) => {
     const activeConfig = await ctx.db
       .query("slotConfigurations")
-      .withIndex("by_active", (q) => q.eq("isActive", true))
+      .withIndex("", (q: any) => q.eq("isActive", true))
       .first();
 
     return activeConfig || null;

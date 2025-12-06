@@ -29,7 +29,7 @@ async function advanceSequence(
 
   const sequence = await ctx.db
     .query("coachMarkSequences")
-    .withIndex("by_sequence_id", (q) => q.eq("sequenceId", step.sequenceId!))
+    .withIndex("", (q: any) => q.eq("sequenceId", step.sequenceId!))
     .first();
 
   if (!sequence) {
@@ -78,7 +78,7 @@ export const getActiveStep = query({
     // Get user's progress
     const progress = await ctx.db
       .query("coachMarkProgress")
-      .withIndex("by_corporation", (q) => q.eq("corporationId", args.corporationId!))
+      .withIndex("", (q: any) => q.eq("corporationId", args.corporationId!))
       .first();
 
     // If user has completed all tutorials, return null
@@ -91,7 +91,7 @@ export const getActiveStep = query({
       // Get the sequence
       const sequence = await ctx.db
         .query("coachMarkSequences")
-        .withIndex("by_sequence_id", (q) => q.eq("sequenceId", progress.currentSequence!))
+        .withIndex("", (q: any) => q.eq("sequenceId", progress.currentSequence!))
         .first();
 
       if (sequence && sequence.isActive) {
@@ -102,7 +102,7 @@ export const getActiveStep = query({
           // Get the step
           const step = await ctx.db
             .query("coachMarkSteps")
-            .withIndex("by_step_key", (q) => q.eq("stepKey", currentStepKey))
+            .withIndex("", (q: any) => q.eq("stepKey", currentStepKey))
             .first();
 
           // Only return if step is on current page and active
@@ -137,7 +137,7 @@ export const getActiveStep = query({
       // New user - find onboarding sequence
       const onboardingSequence = await ctx.db
         .query("coachMarkSequences")
-        .withIndex("by_onboarding", (q) => q.eq("isOnboarding", true))
+        .withIndex("", (q: any) => q.eq("isOnboarding", true))
         .filter((q) => q.eq(q.field("isActive"), true))
         .first();
 
@@ -145,7 +145,7 @@ export const getActiveStep = query({
         const firstStepKey = onboardingSequence.stepOrder[0];
         const firstStep = await ctx.db
           .query("coachMarkSteps")
-          .withIndex("by_step_key", (q) => q.eq("stepKey", firstStepKey))
+          .withIndex("", (q: any) => q.eq("stepKey", firstStepKey))
           .first();
 
         if (firstStep && firstStep.isActive && firstStep.pageRoute === args.currentRoute) {
@@ -182,7 +182,7 @@ export const getActiveStep = query({
 
     const pageSteps = await ctx.db
       .query("coachMarkSteps")
-      .withIndex("by_page_route", (q) => q.eq("pageRoute", args.currentRoute))
+      .withIndex("", (q: any) => q.eq("pageRoute", args.currentRoute))
       .filter((q) =>
         q.and(
           q.eq(q.field("isActive"), true),
@@ -216,7 +216,7 @@ export const getUserProgress = query({
 
     return await ctx.db
       .query("coachMarkProgress")
-      .withIndex("by_corporation", (q) => q.eq("corporationId", args.corporationId!))
+      .withIndex("", (q: any) => q.eq("corporationId", args.corporationId!))
       .first();
   },
 });
@@ -237,7 +237,7 @@ export const markStepComplete = mutation({
     // Get or create progress record
     let progress = await ctx.db
       .query("coachMarkProgress")
-      .withIndex("by_corporation", (q) => q.eq("corporationId", args.corporationId))
+      .withIndex("", (q: any) => q.eq("corporationId", args.corporationId))
       .first();
 
     const now = Date.now();
@@ -255,14 +255,14 @@ export const markStepComplete = mutation({
       // Check if this was part of onboarding sequence
       const step = await ctx.db
         .query("coachMarkSteps")
-        .withIndex("by_step_key", (q) => q.eq("stepKey", args.stepKey))
+        .withIndex("", (q: any) => q.eq("stepKey", args.stepKey))
         .first();
 
       if (step?.sequenceId) {
         // Start tracking sequence progress
         const sequence = await ctx.db
           .query("coachMarkSequences")
-          .withIndex("by_sequence_id", (q) => q.eq("sequenceId", step.sequenceId!))
+          .withIndex("", (q: any) => q.eq("sequenceId", step.sequenceId!))
           .first();
 
         if (sequence) {
@@ -272,7 +272,7 @@ export const markStepComplete = mutation({
           // Update with sequence info
           const newProgress = await ctx.db
             .query("coachMarkProgress")
-            .withIndex("by_corporation", (q) => q.eq("corporationId", args.corporationId))
+            .withIndex("", (q: any) => q.eq("corporationId", args.corporationId))
             .first();
 
           if (newProgress) {
@@ -312,14 +312,14 @@ export const markStepComplete = mutation({
     // Advance sequence if in one
     const step = await ctx.db
       .query("coachMarkSteps")
-      .withIndex("by_step_key", (q) => q.eq("stepKey", args.stepKey))
+      .withIndex("", (q: any) => q.eq("stepKey", args.stepKey))
       .first();
 
     if (step) {
       // Re-fetch progress since we just patched it
       const updatedProgress = await ctx.db
         .query("coachMarkProgress")
-        .withIndex("by_corporation", (q) => q.eq("corporationId", args.corporationId))
+        .withIndex("", (q: any) => q.eq("corporationId", args.corporationId))
         .first();
 
       if (updatedProgress) {
@@ -343,7 +343,7 @@ export const skipStep = mutation({
     // Get the step to check if skipping is allowed
     const step = await ctx.db
       .query("coachMarkSteps")
-      .withIndex("by_step_key", (q) => q.eq("stepKey", args.stepKey))
+      .withIndex("", (q: any) => q.eq("stepKey", args.stepKey))
       .first();
 
     if (!step) {
@@ -358,7 +358,7 @@ export const skipStep = mutation({
     // Get or create progress record
     let progress = await ctx.db
       .query("coachMarkProgress")
-      .withIndex("by_corporation", (q) => q.eq("corporationId", args.corporationId))
+      .withIndex("", (q: any) => q.eq("corporationId", args.corporationId))
       .first();
 
     const now = Date.now();
@@ -387,7 +387,7 @@ export const skipStep = mutation({
     // Advance sequence if in one
     const updatedProgress = await ctx.db
       .query("coachMarkProgress")
-      .withIndex("by_corporation", (q) => q.eq("corporationId", args.corporationId))
+      .withIndex("", (q: any) => q.eq("corporationId", args.corporationId))
       .first();
 
     if (updatedProgress) {
@@ -409,7 +409,7 @@ export const skipSequence = mutation({
   handler: async (ctx, args) => {
     const sequence = await ctx.db
       .query("coachMarkSequences")
-      .withIndex("by_sequence_id", (q) => q.eq("sequenceId", args.sequenceId))
+      .withIndex("", (q: any) => q.eq("sequenceId", args.sequenceId))
       .first();
 
     if (!sequence) {
@@ -420,7 +420,7 @@ export const skipSequence = mutation({
     for (const stepKey of sequence.stepOrder) {
       const step = await ctx.db
         .query("coachMarkSteps")
-        .withIndex("by_step_key", (q) => q.eq("stepKey", stepKey))
+        .withIndex("", (q: any) => q.eq("stepKey", stepKey))
         .first();
 
       if (step?.isMandatory && !step.showSkipButton && !step.allowBackdropClick) {
@@ -431,7 +431,7 @@ export const skipSequence = mutation({
     // Get or create progress record
     let progress = await ctx.db
       .query("coachMarkProgress")
-      .withIndex("by_corporation", (q) => q.eq("corporationId", args.corporationId))
+      .withIndex("", (q: any) => q.eq("corporationId", args.corporationId))
       .first();
 
     const now = Date.now();
@@ -471,7 +471,7 @@ export const startSequence = mutation({
   handler: async (ctx, args) => {
     const sequence = await ctx.db
       .query("coachMarkSequences")
-      .withIndex("by_sequence_id", (q) => q.eq("sequenceId", args.sequenceId))
+      .withIndex("", (q: any) => q.eq("sequenceId", args.sequenceId))
       .first();
 
     if (!sequence || !sequence.isActive) {
@@ -484,7 +484,7 @@ export const startSequence = mutation({
 
     let progress = await ctx.db
       .query("coachMarkProgress")
-      .withIndex("by_corporation", (q) => q.eq("corporationId", args.corporationId))
+      .withIndex("", (q: any) => q.eq("corporationId", args.corporationId))
       .first();
 
     const now = Date.now();
@@ -522,7 +522,7 @@ export const initializeProgress = mutation({
     // Check if progress already exists
     const existing = await ctx.db
       .query("coachMarkProgress")
-      .withIndex("by_corporation", (q) => q.eq("corporationId", args.corporationId))
+      .withIndex("", (q: any) => q.eq("corporationId", args.corporationId))
       .first();
 
     if (existing) {
@@ -532,7 +532,7 @@ export const initializeProgress = mutation({
     // Find onboarding sequence
     const onboardingSequence = await ctx.db
       .query("coachMarkSequences")
-      .withIndex("by_onboarding", (q) => q.eq("isOnboarding", true))
+      .withIndex("", (q: any) => q.eq("isOnboarding", true))
       .filter((q) => q.eq(q.field("isActive"), true))
       .first();
 

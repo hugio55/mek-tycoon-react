@@ -22,9 +22,9 @@ export const getAllEvents = query({
 
     // Apply filters
     if (args.status) {
-      query = query.withIndex("by_status", (q) => q.eq("status", args.status));
+      query = query.withIndex("", (q: any) => q.eq("status", args.status));
     } else if (args.isActive !== undefined) {
-      query = query.withIndex("by_active", (q) => q.eq("isActive", args.isActive));
+      query = query.withIndex("", (q: any) => q.eq("isActive", args.isActive));
     }
 
     const events = await query.collect();
@@ -49,7 +49,7 @@ export const getEventByNumber = query({
   handler: async (ctx, args) => {
     const event = await ctx.db
       .query("nftEvents")
-      .withIndex("by_eventNumber", (q) => q.eq("eventNumber", args.eventNumber))
+      .withIndex("", (q: any) => q.eq("eventNumber", args.eventNumber))
       .first();
 
     return event;
@@ -62,7 +62,7 @@ export const getEventBySlug = query({
   handler: async (ctx, args) => {
     const event = await ctx.db
       .query("nftEvents")
-      .withIndex("by_slug", (q) => q.eq("eventSlug", args.slug))
+      .withIndex("", (q: any) => q.eq("eventSlug", args.slug))
       .first();
 
     return event;
@@ -78,7 +78,7 @@ export const getEventWithVariations = query({
 
     const variations = await ctx.db
       .query("nftVariations")
-      .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
+      .withIndex("", (q: any) => q.eq("eventId", args.eventId))
       .collect();
 
     // Sort by display order (easy, medium, hard)
@@ -98,13 +98,13 @@ export const getEventStats = query({
     // Get all variations for this event
     const variations = await ctx.db
       .query("nftVariations")
-      .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
+      .withIndex("", (q: any) => q.eq("eventId", args.eventId))
       .collect();
 
     // Get all purchases for this event
     const purchases = await ctx.db
       .query("nftPurchases")
-      .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
+      .withIndex("", (q: any) => q.eq("eventId", args.eventId))
       .collect();
 
     // Calculate statistics
@@ -150,7 +150,7 @@ export const createEvent = mutation({
     // Check if event number already exists
     const existing = await ctx.db
       .query("nftEvents")
-      .withIndex("by_eventNumber", (q) => q.eq("eventNumber", args.eventNumber))
+      .withIndex("", (q: any) => q.eq("eventNumber", args.eventNumber))
       .first();
 
     if (existing) {
@@ -268,7 +268,7 @@ export const deleteEvent = mutation({
     // Check if there are any purchases
     const purchases = await ctx.db
       .query("nftPurchases")
-      .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
+      .withIndex("", (q: any) => q.eq("eventId", args.eventId))
       .first();
 
     if (purchases) {
@@ -278,7 +278,7 @@ export const deleteEvent = mutation({
     // Delete all variations
     const variations = await ctx.db
       .query("nftVariations")
-      .withIndex("by_event", (q) => q.eq("eventId", args.eventId))
+      .withIndex("", (q: any) => q.eq("eventId", args.eventId))
       .collect();
 
     for (const variation of variations) {

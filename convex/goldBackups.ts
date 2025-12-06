@@ -177,7 +177,7 @@ export const getBackupDetails = query({
     // Get user data count and sample
     const userData = await ctx.db
       .query("goldBackupUserData")
-      .withIndex("by_backup", (q) => q.eq("backupId", args.backupId))
+      .withIndex("", (q: any) => q.eq("backupId", args.backupId))
       .take(1000); // Take first 1000 for stats
 
     const totalGold = userData.reduce((sum, user) => sum + user.currentGold, 0);
@@ -220,7 +220,7 @@ export const getUserBackupHistory = query({
 
     const userBackups = await ctx.db
       .query("goldBackupUserData")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .order("desc")
       .take(limit);
 
@@ -282,7 +282,7 @@ export const cleanupOldBackups = mutation({
         // Delete all user data for this backup
         const userData = await ctx.db
           .query("goldBackupUserData")
-          .withIndex("by_backup", (q) => q.eq("backupId", backup._id))
+          .withIndex("", (q: any) => q.eq("backupId", backup._id))
           .collect();
 
         for (const data of userData) {
@@ -331,7 +331,7 @@ export const restoreFromBackup = mutation({
     // Get all user data from the backup
     let backupUserData = await ctx.db
       .query("goldBackupUserData")
-      .withIndex("by_backup", (q) => q.eq("backupId", args.backupId))
+      .withIndex("", (q: any) => q.eq("backupId", args.backupId))
       .collect();
 
     // Filter by target wallets if specified
@@ -366,7 +366,7 @@ export const restoreFromBackup = mutation({
         // Find and restore gold mining data
         const goldMining = await ctx.db
           .query("goldMining")
-          .withIndex("by_wallet", (q) => q.eq("walletAddress", userData.walletAddress))
+          .withIndex("", (q: any) => q.eq("walletAddress", userData.walletAddress))
           .first();
 
         if (goldMining) {

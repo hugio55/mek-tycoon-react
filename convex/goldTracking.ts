@@ -12,7 +12,7 @@ export const calculateGoldRate = query({
     // Get all user's meks
     const userMeks = await ctx.db
       .query("meks")
-      .withIndex("by_owner", (q) => q.eq("owner", user.walletAddress))
+      .withIndex("", (q: any) => q.eq("owner", user.walletAddress))
       .collect();
     
     // Calculate base gold rate from meks
@@ -26,7 +26,7 @@ export const calculateGoldRate = query({
     // Get active buffs that affect gold rate
     const activeBuffs = await ctx.db
       .query("activeBuffs")
-      .withIndex("by_user_active", (q) => 
+      .withIndex("", (q: any) => 
         q.eq("userId", args.userId).eq("isActive", true)
       )
       .collect();
@@ -104,7 +104,7 @@ export const updateGoldRate = mutation({
     // Get all user's meks
     const userMeks = await ctx.db
       .query("meks")
-      .withIndex("by_owner", (q) => q.eq("owner", user.walletAddress))
+      .withIndex("", (q: any) => q.eq("owner", user.walletAddress))
       .collect();
     
     // Calculate new base gold rate from meks
@@ -117,7 +117,7 @@ export const updateGoldRate = mutation({
     // Get active buffs
     const activeBuffs = await ctx.db
       .query("activeBuffs")
-      .withIndex("by_user_active", (q) => 
+      .withIndex("", (q: any) => 
         q.eq("userId", args.userId).eq("isActive", true)
       )
       .collect();
@@ -180,7 +180,7 @@ export const collectGold = mutation({
     // Apply XP buffs
     const activeBuffs = await ctx.db
       .query("activeBuffs")
-      .withIndex("by_user_active", (q) => 
+      .withIndex("", (q: any) => 
         q.eq("userId", args.userId).eq("isActive", true)
       )
       .collect();

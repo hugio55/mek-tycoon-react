@@ -22,7 +22,7 @@ export const getCachedLeaderboard = query({
       // OPTIMIZATION: Only fetch entries we'll display
       const entries = await ctx.db
         .query("leaderboardCache")
-        .withIndex("by_category_rank", (q) => q.eq("category", args.category))
+        .withIndex("", (q: any) => q.eq("category", args.category))
         .take(Math.min(offset + limit + 10, 200)); // Fetch a bit extra for sorting
       
       // Re-sort by gold per hour
@@ -42,7 +42,7 @@ export const getCachedLeaderboard = query({
     if (args.category === 'topMeks' && args.sortBy && args.sortBy !== 'goldPerHour') {
       const entries = await ctx.db
         .query("leaderboardCache")
-        .withIndex("by_category_rank", (q) => q.eq("category", args.category))
+        .withIndex("", (q: any) => q.eq("category", args.category))
         .take(Math.min(offset + limit + 10, 200));
       
       // Re-sort based on the requested field
@@ -68,7 +68,7 @@ export const getCachedLeaderboard = query({
     // Default: Get from cache with pagination
     const cachedEntries = await ctx.db
       .query("leaderboardCache")
-      .withIndex("by_category_rank", (q) => q.eq("category", args.category))
+      .withIndex("", (q: any) => q.eq("category", args.category))
       .take(offset + limit)
       .then(entries => entries.slice(offset)); // Skip first 'offset' entries
     
@@ -76,7 +76,7 @@ export const getCachedLeaderboard = query({
     if (args.includeCurrentUser && args.currentUserId) {
       const userEntry = await ctx.db
         .query("leaderboardCache")
-        .withIndex("by_user_category", (q) => 
+        .withIndex("", (q: any) => 
           q.eq("userId", args.currentUserId!).eq("category", args.category)
         )
         .first();
@@ -108,7 +108,7 @@ export const getUserRank = query({
     
     const userEntry = await ctx.db
       .query("leaderboardCache")
-      .withIndex("by_user_category", (q) => 
+      .withIndex("", (q: any) => 
         q.eq("userId", args.userId!).eq("category", args.category)
       )
       .first();
@@ -167,7 +167,7 @@ export const updateLeaderboardCache = internalMutation({
               // OPTIMIZATION: Use cached mek count if available
               const userStats = await ctx.db
                 .query("userStatsCache")
-                .withIndex("by_user", (q) => q.eq("userId", user._id))
+                .withIndex("", (q: any) => q.eq("userId", user._id))
                 .first();
               
               const mekCount = userStats?.mekCount || 0;
@@ -195,7 +195,7 @@ export const updateLeaderboardCache = internalMutation({
               // OPTIMIZATION: Only get top mek, not all meks
               const topMek = await ctx.db
                 .query("meks")
-                .withIndex("by_owner", (q) => q.eq("owner", user.walletAddress))
+                .withIndex("", (q: any) => q.eq("owner", user.walletAddress))
                 .take(10) // Only check first 10 meks
                 .then(meks => {
                   if (meks.length === 0) return null;
@@ -228,7 +228,7 @@ export const updateLeaderboardCache = internalMutation({
               // OPTIMIZATION: Count achievements without fetching all data
               const achievementCount = await ctx.db
                 .query("achievements")
-                .withIndex("by_user", (q) => q.eq("userId", user._id))
+                .withIndex("", (q: any) => q.eq("userId", user._id))
                 .take(100) // Limit achievements
                 .then(achievements => achievements.length);
               
@@ -258,7 +258,7 @@ export const updateLeaderboardCache = internalMutation({
     // OPTIMIZATION: Batch delete existing cache entries
     const existingCache = await ctx.db
       .query("leaderboardCache")
-      .withIndex("by_category_rank", (q) => q.eq("category", args.category))
+      .withIndex("", (q: any) => q.eq("category", args.category))
       .take(1000); // Limit to prevent timeout
     
     // Delete in batches
@@ -328,7 +328,7 @@ export const updateUserStatsCache = internalMutation({
     // OPTIMIZATION: Count meks without fetching all data
     const mekCount = await ctx.db
       .query("meks")
-      .withIndex("by_owner", (q) => q.eq("owner", user.walletAddress))
+      .withIndex("", (q: any) => q.eq("owner", user.walletAddress))
       .take(500) // Limit to 500 meks
       .then(meks => meks.length);
     
@@ -338,14 +338,14 @@ export const updateUserStatsCache = internalMutation({
     // Get bank balance
     const bankAccount = await ctx.db
       .query("bankAccounts")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("", (q: any) => q.eq("userId", user._id))
       .first();
     const bankBalance = bankAccount?.balance || 0;
     
     // OPTIMIZATION: Limit stock holdings query
     const stockHoldings = await ctx.db
       .query("stockHoldings")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("", (q: any) => q.eq("userId", user._id))
       .take(50) // Limit to 50 holdings
       .then(holdings => holdings.reduce((sum, holding) => sum + holding.currentValue, 0));
     
@@ -355,7 +355,7 @@ export const updateUserStatsCache = internalMutation({
     // Check if cache exists
     const existingCache = await ctx.db
       .query("userStatsCache")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("", (q: any) => q.eq("userId", args.userId))
       .first();
     
     const cacheData = {
@@ -383,7 +383,7 @@ export const getCachedUserStats = query({
   handler: async (ctx, args) => {
     const cached = await ctx.db
       .query("userStatsCache")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("", (q: any) => q.eq("userId", args.userId))
       .first();
     
     return cached;

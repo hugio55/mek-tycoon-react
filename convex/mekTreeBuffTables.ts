@@ -19,7 +19,7 @@ export const getBuffTable = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("mekTreeBuffTables")
-      .withIndex("by_category", (q) => q.eq("category", args.category))
+      .withIndex("", (q: any) => q.eq("category", args.category))
       .first();
   },
 });
@@ -55,7 +55,7 @@ export const saveBuffTable = mutation({
     // Check if this category already exists
     const existing = await ctx.db
       .query("mekTreeBuffTables")
-      .withIndex("by_category", (q) => q.eq("category", args.category))
+      .withIndex("", (q: any) => q.eq("category", args.category))
       .first();
     
     if (existing) {
@@ -99,7 +99,7 @@ export const getBuffValue = query({
   handler: async (ctx, args) => {
     const table = await ctx.db
       .query("mekTreeBuffTables")
-      .withIndex("by_category", (q) => q.eq("category", args.category))
+      .withIndex("", (q: any) => q.eq("category", args.category))
       .first();
     
     if (!table || !table.isActive) {

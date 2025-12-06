@@ -94,7 +94,7 @@ export const createGoldSnapshot = mutation({
     // Get existing gold mining record
     const existing = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!existing) {
@@ -133,7 +133,7 @@ export const getGoldSnapshots = query({
 
     const snapshots = await ctx.db
       .query("goldSnapshots")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .order("desc")
       .take(limit);
 
@@ -149,7 +149,7 @@ export const calculateOfflineGold = query({
   handler: async (ctx, args) => {
     const goldMiningData = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!goldMiningData) {
@@ -262,7 +262,7 @@ export const saveGoldCheckpoint = mutation({
     // Also update the main gold mining record
     const existing = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (existing) {
@@ -292,7 +292,7 @@ export const restoreFromCheckpoint = mutation({
       // Get the latest checkpoint
       checkpoint = await ctx.db
         .query("goldCheckpoints")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
         .order("desc")
         .first();
     }
@@ -304,7 +304,7 @@ export const restoreFromCheckpoint = mutation({
     // Restore the gold mining record
     const existing = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!existing) {
@@ -334,7 +334,7 @@ export const getSnapshotsByWallet = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("goldSnapshots")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .order("desc")
       .collect();
   },
@@ -359,7 +359,7 @@ export const getCheckpointsByWallet = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("goldCheckpoints")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .order("desc")
       .collect();
   },

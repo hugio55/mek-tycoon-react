@@ -102,7 +102,7 @@ export const fixSpecialMekImages = mutation({
     for (const override of args.overrides) {
       const mek = await ctx.db
         .query("meks")
-        .withIndex("by_asset_id", (q) => q.eq("assetId", override.assetId))
+        .withIndex("", (q: any) => q.eq("assetId", override.assetId))
         .first();
       
       if (mek) {
@@ -147,7 +147,7 @@ export const updateGenesisRanks = mutation({
     for (const assetId of args.genesisAssetIds) {
       const mek = await ctx.db
         .query("meks")
-        .withIndex("by_asset_id", (q) => q.eq("assetId", assetId))
+        .withIndex("", (q: any) => q.eq("assetId", assetId))
         .first();
       
       if (mek) {
@@ -260,7 +260,7 @@ export const populateVariationData = mutation({
       for (const mapping of batch) {
         const mek = await ctx.db
           .query("meks")
-          .withIndex("by_asset_id", (q) => q.eq("assetId", mapping.assetId))
+          .withIndex("", (q: any) => q.eq("assetId", mapping.assetId))
           .first();
         
         if (mek) {
@@ -328,7 +328,7 @@ export const updateGoldRates = mutation({
     for (const update of args.updates) {
       const mek = await ctx.db
         .query("meks")
-        .withIndex("by_asset_id", (q) => q.eq("assetId", update.assetId))
+        .withIndex("", (q: any) => q.eq("assetId", update.assetId))
         .first();
       
       if (mek) {

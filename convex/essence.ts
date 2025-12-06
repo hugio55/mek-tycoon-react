@@ -121,7 +121,7 @@ export const initializeEssenceSystem = mutation({
     // Check if already initialized
     const existingTracking = await ctx.db
       .query("essenceTracking")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .first();
 
     if (existingTracking) {
@@ -131,7 +131,7 @@ export const initializeEssenceSystem = mutation({
     // Ensure global config exists - create default if missing
     let config = await ctx.db
       .query("essenceConfig")
-      .withIndex("by_config_type", (q) => q.eq("configType", "global"))
+      .withIndex("", (q: any) => q.eq("configType", "global"))
       .first();
 
     if (!config) {
@@ -198,7 +198,7 @@ async function generateSlotRequirements(ctx: any, walletAddress: string) {
   // Get config
   const config = await ctx.db
     .query("essenceConfig")
-    .withIndex("by_config_type", (q) => q.eq("configType", "global"))
+    .withIndex("", (q: any) => q.eq("configType", "global"))
     .first();
 
   if (!config) {
@@ -345,7 +345,7 @@ async function calculateEssenceMetadata(
   // Get all buff sources for this wallet (granular system)
   const buffSources = await ctx.db
     .query("essenceBuffSources")
-    .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+    .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
     .filter((q) => q.eq(q.field("isActive"), true))
     .collect();
 
@@ -408,31 +408,31 @@ export const getPlayerEssenceState = query({
     // Get tracking
     const tracking = await ctx.db
       .query("essenceTracking")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .first();
 
     // Get slots
     const slots = await ctx.db
       .query("essenceSlots")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .collect();
 
     // Get slot requirements
     const requirements = await ctx.db
       .query("essenceSlotRequirements")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .collect();
 
     // Get essence balances (RAW snapshots from DB)
     const rawBalances = await ctx.db
       .query("essenceBalances")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .collect();
 
     // Get config
     const config = await ctx.db
       .query("essenceConfig")
-      .withIndex("by_config_type", (q) => q.eq("configType", "global"))
+      .withIndex("", (q: any) => q.eq("configType", "global"))
       .first();
 
     // CRITICAL FIX: Return RAW balances as snapshots (like gold system)
@@ -488,7 +488,7 @@ async function calculateRealTimeEssenceBalances(
 
   const config = await ctx.db
     .query("essenceConfig")
-    .withIndex("by_config_type", (q) => q.eq("configType", "global"))
+    .withIndex("", (q: any) => q.eq("configType", "global"))
     .first();
 
   if (!config) {
@@ -498,7 +498,7 @@ async function calculateRealTimeEssenceBalances(
   // Get all slotted Meks to calculate current production rates
   const slots = await ctx.db
     .query("essenceSlots")
-    .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+    .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
     .collect();
 
   const slottedMeks = slots.filter((s) => s.mekAssetId);
@@ -598,7 +598,7 @@ async function calculateRealTimeEssenceBalances(
       // Calculate its accumulated amount
       const buff = await ctx.db
         .query("essencePlayerBuffs")
-        .withIndex("by_wallet_and_variation", (q) =>
+        .withIndex("", (q: any) =>
           q.eq("walletAddress", walletAddress).eq("variationId", variationId)
         )
         .first();
@@ -667,14 +667,14 @@ export const slotMek_ORIGINAL = mutation({
     // Try to get Mek from meks table first
     let mek = await ctx.db
       .query("meks")
-      .withIndex("by_asset_id", (q) => q.eq("assetId", mekAssetId))
+      .withIndex("", (q: any) => q.eq("assetId", mekAssetId))
       .first();
 
     // If not in meks table, check goldMining.ownedMeks
     if (!mek) {
       const goldMining = await ctx.db
         .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
         .first();
 
       if (goldMining) {
@@ -698,7 +698,7 @@ export const slotMek_ORIGINAL = mutation({
     // Check if Mek is already slotted
     const existingSlot = await ctx.db
       .query("essenceSlots")
-      .withIndex("by_mek", (q) => q.eq("mekAssetId", mekAssetId))
+      .withIndex("", (q: any) => q.eq("mekAssetId", mekAssetId))
       .first();
 
     if (existingSlot) {
@@ -708,7 +708,7 @@ export const slotMek_ORIGINAL = mutation({
     // Get the slot
     const slot = await ctx.db
       .query("essenceSlots")
-      .withIndex("by_wallet_and_slot", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", walletAddress).eq("slotNumber", slotNumber)
       )
       .first();
@@ -739,7 +739,7 @@ export const slotMek_ORIGINAL = mutation({
     if (!headVariationId && headVariationName) {
       const headVar = await ctx.db
         .query("variationsReference")
-        .withIndex("by_name", (q) => q.eq("name", headVariationName))
+        .withIndex("", (q: any) => q.eq("name", headVariationName))
         .filter((q) => q.eq(q.field("type"), "head"))
         .first();
       headVariationId = headVar?.variationId;
@@ -748,7 +748,7 @@ export const slotMek_ORIGINAL = mutation({
     if (!bodyVariationId && bodyVariationName) {
       const bodyVar = await ctx.db
         .query("variationsReference")
-        .withIndex("by_name", (q) => q.eq("name", bodyVariationName))
+        .withIndex("", (q: any) => q.eq("name", bodyVariationName))
         .filter((q) => q.eq(q.field("type"), "body"))
         .first();
       bodyVariationId = bodyVar?.variationId;
@@ -757,7 +757,7 @@ export const slotMek_ORIGINAL = mutation({
     if (!itemVariationId && itemVariationName) {
       const itemVar = await ctx.db
         .query("variationsReference")
-        .withIndex("by_name", (q) => q.eq("name", itemVariationName))
+        .withIndex("", (q: any) => q.eq("name", itemVariationName))
         .filter((q) => q.eq(q.field("type"), "item"))
         .first();
       itemVariationId = itemVar?.variationId;
@@ -803,7 +803,7 @@ export const slotMek_ORIGINAL = mutation({
     // Activate essence generation if this is the first Mek slotted
     const tracking = await ctx.db
       .query("essenceTracking")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .first();
 
     if (tracking && !tracking.isActive) {
@@ -827,7 +827,7 @@ export const slotMek_ORIGINAL = mutation({
     try {
       const mekRecord = await ctx.db
         .query("meks")
-        .withIndex("by_asset_id", (q) => q.eq("assetId", mekAssetId))
+        .withIndex("", (q: any) => q.eq("assetId", mekAssetId))
         .first();
 
       console.log(`[🔒TENURE-DEBUG] Step 2: Query completed. mekRecord is ${mekRecord ? 'FOUND' : 'NULL'}`);
@@ -847,7 +847,7 @@ export const slotMek_ORIGINAL = mutation({
         try {
           const goldMiningRecord = await ctx.db
             .query("goldMining")
-            .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+            .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
             .first();
 
           if (goldMiningRecord && goldMiningRecord.ownedMeks) {
@@ -940,7 +940,7 @@ export const unslotMek_ORIGINAL = mutation({
     // Get the slot
     const slot = await ctx.db
       .query("essenceSlots")
-      .withIndex("by_wallet_and_slot", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", walletAddress).eq("slotNumber", slotNumber)
       )
       .first();
@@ -972,7 +972,7 @@ export const unslotMek_ORIGINAL = mutation({
     if (mekAssetId) {
       const mekRecord = await ctx.db
         .query("meks")
-        .withIndex("by_asset_id", (q) => q.eq("assetId", mekAssetId))
+        .withIndex("", (q: any) => q.eq("assetId", mekAssetId))
         .first();
 
       if (mekRecord) {
@@ -1007,7 +1007,7 @@ export const unslotMek_ORIGINAL = mutation({
     // Check if all slots are now empty - if so, deactivate
     const allSlots = await ctx.db
       .query("essenceSlots")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .collect();
 
     const hasSlottedMek = allSlots.some((s) => s.mekAssetId);
@@ -1015,7 +1015,7 @@ export const unslotMek_ORIGINAL = mutation({
     if (!hasSlottedMek) {
       const tracking = await ctx.db
         .query("essenceTracking")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
         .first();
 
       if (tracking) {
@@ -1174,7 +1174,7 @@ export const swapMek = mutation({
     // Get tracking for swap cost
     const tracking = await ctx.db
       .query("essenceTracking")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .first();
 
     if (!tracking) {
@@ -1184,7 +1184,7 @@ export const swapMek = mutation({
     // Get config for swap costs
     const config = await ctx.db
       .query("essenceConfig")
-      .withIndex("by_config_type", (q) => q.eq("configType", "global"))
+      .withIndex("", (q: any) => q.eq("configType", "global"))
       .first();
 
     if (!config) {
@@ -1203,7 +1203,7 @@ export const swapMek = mutation({
     // Get player's gold
     const goldMining = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .first();
 
     if (!goldMining || goldMining.cumulativeGold < swapCost) {
@@ -1249,7 +1249,7 @@ export const unlockSlot = mutation({
     // Get slot
     const slot = await ctx.db
       .query("essenceSlots")
-      .withIndex("by_wallet_and_slot", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", walletAddress).eq("slotNumber", slotNumber)
       )
       .first();
@@ -1265,7 +1265,7 @@ export const unlockSlot = mutation({
     // Get requirements
     const requirements = await ctx.db
       .query("essenceSlotRequirements")
-      .withIndex("by_wallet_and_slot", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", walletAddress).eq("slotNumber", slotNumber)
       )
       .first();
@@ -1277,7 +1277,7 @@ export const unlockSlot = mutation({
     // Check gold
     const goldMining = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .first();
 
     if (!goldMining || goldMining.cumulativeGold < requirements.goldCost) {
@@ -1288,7 +1288,7 @@ export const unlockSlot = mutation({
     for (const req of requirements.requiredEssences) {
       const balance = await ctx.db
         .query("essenceBalances")
-        .withIndex("by_wallet_and_variation", (q) =>
+        .withIndex("", (q: any) =>
           q.eq("walletAddress", walletAddress).eq("variationId", req.variationId)
         )
         .first();
@@ -1307,7 +1307,7 @@ export const unlockSlot = mutation({
     for (const req of requirements.requiredEssences) {
       const balance = await ctx.db
         .query("essenceBalances")
-        .withIndex("by_wallet_and_variation", (q) =>
+        .withIndex("", (q: any) =>
           q.eq("walletAddress", walletAddress).eq("variationId", req.variationId)
         )
         .first();
@@ -1348,7 +1348,7 @@ export const triggerManualEssenceCheckpoint = mutation({
 async function calculateAndUpdateEssence(ctx: any, walletAddress: string) {
   const tracking = await ctx.db
     .query("essenceTracking")
-    .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+    .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
     .first();
 
   if (!tracking || !tracking.isActive) {
@@ -1357,7 +1357,7 @@ async function calculateAndUpdateEssence(ctx: any, walletAddress: string) {
 
   const config = await ctx.db
     .query("essenceConfig")
-    .withIndex("by_config_type", (q) => q.eq("configType", "global"))
+    .withIndex("", (q: any) => q.eq("configType", "global"))
     .first();
 
   if (!config) {
@@ -1367,7 +1367,7 @@ async function calculateAndUpdateEssence(ctx: any, walletAddress: string) {
   // Get all slotted Meks
   const slots = await ctx.db
     .query("essenceSlots")
-    .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+    .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
     .collect();
 
   const slottedMeks = slots.filter((s) => s.mekAssetId);
@@ -1416,7 +1416,7 @@ async function calculateAndUpdateEssence(ctx: any, walletAddress: string) {
   // This reduces N queries to 1 query
   const allBuffSources = await ctx.db
     .query("essenceBuffSources")
-    .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+    .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
     .filter((q) => q.eq(q.field("isActive"), true))
     .collect();
 
@@ -1440,7 +1440,7 @@ async function calculateAndUpdateEssence(ctx: any, walletAddress: string) {
     // Get current balance - query by NAME to prevent duplicates with different IDs
     let balance = await ctx.db
       .query("essenceBalances")
-      .withIndex("by_wallet_and_name", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", walletAddress).eq("variationName", data.name)
       )
       .first();
@@ -1488,7 +1488,7 @@ export const getEssenceConfig = query({
   handler: async (ctx) => {
     return await ctx.db
       .query("essenceConfig")
-      .withIndex("by_config_type", (q) => q.eq("configType", "global"))
+      .withIndex("", (q: any) => q.eq("configType", "global"))
       .first();
   },
 });
@@ -1519,7 +1519,7 @@ export const updateEssenceConfig = mutation({
   handler: async (ctx, args) => {
     let config = await ctx.db
       .query("essenceConfig")
-      .withIndex("by_config_type", (q) => q.eq("configType", "global"))
+      .withIndex("", (q: any) => q.eq("configType", "global"))
       .first();
 
     const updates = {
@@ -1577,7 +1577,7 @@ export const adminAddEssence = mutation({
     // Try to find existing balance
     const existingBalance = await ctx.db
       .query("essenceBalances")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .collect();
 
     const balance = existingBalance.find(b => b.variationName === variationName);
@@ -1613,7 +1613,7 @@ export const dailyEssenceCheckpoint = internalMutation({
     // Get all active players
     const activeTracking = await ctx.db
       .query("essenceTracking")
-      .withIndex("by_active", (q) => q.eq("isActive", true))
+      .withIndex("", (q: any) => q.eq("isActive", true))
       .collect();
 
     let updatedCount = 0;
@@ -1724,7 +1724,7 @@ export const getPlayerBuffs = query({
   handler: async (ctx, args) => {
     const buffs = await ctx.db
       .query("essencePlayerBuffs")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     return buffs;
@@ -1745,7 +1745,7 @@ export const addCapBuff = mutation({
     // Check if buff already exists for this variation
     const existing = await ctx.db
       .query("essencePlayerBuffs")
-      .withIndex("by_wallet_and_variation", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", args.walletAddress).eq("variationId", args.variationId)
       )
       .first();
@@ -1791,7 +1791,7 @@ export const checkBuffRemovalImpact = query({
     // Get essence config
     const config = await ctx.db
       .query("essenceConfig")
-      .withIndex("by_config_type", (q) => q.eq("configType", "global"))
+      .withIndex("", (q: any) => q.eq("configType", "global"))
       .first();
 
     if (!config) {
@@ -1801,7 +1801,7 @@ export const checkBuffRemovalImpact = query({
     // Get current balance for this variation
     const balance = await ctx.db
       .query("essenceBalances")
-      .withIndex("by_wallet_and_variation", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", buff.walletAddress).eq("variationId", buff.variationId)
       )
       .first();
@@ -1857,12 +1857,12 @@ export const removeCapBuff = mutation({
     // Get config and balance to check for loss
     const config = await ctx.db
       .query("essenceConfig")
-      .withIndex("by_config_type", (q) => q.eq("configType", "global"))
+      .withIndex("", (q: any) => q.eq("configType", "global"))
       .first();
 
     const balance = await ctx.db
       .query("essenceBalances")
-      .withIndex("by_wallet_and_variation", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", buff.walletAddress).eq("variationId", buff.variationId)
       )
       .first();
@@ -1920,7 +1920,7 @@ export const fixSlotVariationId = mutation({
     // Get the slot
     const slot = await ctx.db
       .query("essenceSlots")
-      .withIndex("by_wallet_and_slot", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", walletAddress).eq("slotNumber", slotNumber)
       )
       .first();
@@ -1969,7 +1969,7 @@ export const fixAllMissingVariationIds = mutation({
         // Look up the variation ID by name
         const itemVar = await ctx.db
           .query("variationsReference")
-          .withIndex("by_name", (q) => q.eq("name", slot.itemVariationName))
+          .withIndex("", (q: any) => q.eq("name", slot.itemVariationName))
           .filter((q) => q.eq(q.field("type"), "item"))
           .first();
 
@@ -1985,7 +1985,7 @@ export const fixAllMissingVariationIds = mutation({
       if (slot.headVariationName && !slot.headVariationId) {
         const headVar = await ctx.db
           .query("variationsReference")
-          .withIndex("by_name", (q) => q.eq("name", slot.headVariationName))
+          .withIndex("", (q: any) => q.eq("name", slot.headVariationName))
           .filter((q) => q.eq(q.field("type"), "head"))
           .first();
 
@@ -1998,7 +1998,7 @@ export const fixAllMissingVariationIds = mutation({
       if (slot.bodyVariationName && !slot.bodyVariationId) {
         const bodyVar = await ctx.db
           .query("variationsReference")
-          .withIndex("by_name", (q) => q.eq("name", slot.bodyVariationName))
+          .withIndex("", (q: any) => q.eq("name", slot.bodyVariationName))
           .filter((q) => q.eq(q.field("type"), "body"))
           .first();
 
@@ -2039,7 +2039,7 @@ export const addMissingVariation = mutation({
     // Check if it already exists
     const existing = await ctx.db
       .query("variationsReference")
-      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .withIndex("", (q: any) => q.eq("name", args.name))
       .filter((q) => q.eq(q.field("type"), args.type))
       .first();
 
@@ -2215,7 +2215,7 @@ export const fixZeroVariationIds = mutation({
       // Look up the correct variation ID by name and type
       const variation = await ctx.db
         .query("variationsReference")
-        .withIndex("by_name", (q) => q.eq("name", balance.variationName))
+        .withIndex("", (q: any) => q.eq("name", balance.variationName))
         .filter((q) => q.eq(q.field("type"), balance.variationType))
         .first();
 
@@ -2264,7 +2264,7 @@ export const addGlobalCapBuff = mutation({
       // Check if buff already exists for this variation
       const existing = await ctx.db
         .query("essencePlayerBuffs")
-        .withIndex("by_wallet_and_variation", (q) =>
+        .withIndex("", (q: any) =>
           q.eq("walletAddress", walletAddress).eq("variationId", variationId)
         )
         .first();
@@ -2379,7 +2379,7 @@ export const testCleanupBuffSources = mutation({
   handler: async (ctx, args) => {
     const buffs = await ctx.db
       .query("essenceBuffSources")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .filter((q) => q.eq(q.field("grantedBy"), "test"))
       .collect();
 
@@ -2408,7 +2408,7 @@ export const cleanupOldAggregateBuffs = mutation({
   handler: async (ctx, args) => {
     const buffs = await ctx.db
       .query("essencePlayerBuffs")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     for (const buff of buffs) {
@@ -2447,13 +2447,13 @@ export const getPlayerBuffBreakdown = query({
     // Query buff sources for this wallet
     let sourcesQuery = ctx.db
       .query("essenceBuffSources")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress));
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress));
 
     // Filter by variation if specified
     if (args.variationId !== undefined) {
       sourcesQuery = ctx.db
         .query("essenceBuffSources")
-        .withIndex("by_wallet_and_variation", (q) =>
+        .withIndex("", (q: any) =>
           q.eq("walletAddress", args.walletAddress).eq("variationId", args.variationId)
         );
     }
@@ -2513,7 +2513,7 @@ export const diagnosticCheckSlottedMeksInMeksTable = query({
     // Get all slotted Meks from essence slots
     const slots = await ctx.db
       .query("essenceSlots")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     const slottedSlots = slots.filter(s => s.mekAssetId);
@@ -2523,13 +2523,13 @@ export const diagnosticCheckSlottedMeksInMeksTable = query({
       // Check if this Mek exists in meks table
       const mekRecord = await ctx.db
         .query("meks")
-        .withIndex("by_asset_id", (q) => q.eq("assetId", slot.mekAssetId!))
+        .withIndex("", (q: any) => q.eq("assetId", slot.mekAssetId!))
         .first();
 
       // Check if it exists in goldMining.ownedMeks
       const goldMining = await ctx.db
         .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
         .first();
 
       const ownedMek = goldMining?.ownedMeks?.find((m: any) => m.assetId === slot.mekAssetId);

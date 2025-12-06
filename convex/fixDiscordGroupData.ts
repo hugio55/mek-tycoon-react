@@ -11,7 +11,7 @@ export const fixGroupData = mutation({
     // 1. Find the Discord connection
     const connection = await ctx.db
       .query("discordConnections")
-      .withIndex("by_discord_user", (q) => q.eq("discordUserId", discordUserId))
+      .withIndex("", (q: any) => q.eq("discordUserId", discordUserId))
       .filter((q) => q.eq(q.field("guildId"), guildId))
       .filter((q) => q.eq(q.field("active"), true))
       .first();
@@ -35,7 +35,7 @@ export const fixGroupData = mutation({
     // 2. Check if walletGroups exists
     const group = await ctx.db
       .query("walletGroups")
-      .withIndex("by_groupId", (q) => q.eq("groupId", groupId))
+      .withIndex("", (q: any) => q.eq("groupId", groupId))
       .first();
 
     if (!group) {
@@ -52,7 +52,7 @@ export const fixGroupData = mutation({
     // 3. Check if walletGroupMemberships exists
     const membership = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .first();
 
     if (!membership) {
@@ -61,7 +61,7 @@ export const fixGroupData = mutation({
       // Get company name from goldMining
       const goldMining = await ctx.db
         .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
         .first();
 
       await ctx.db.insert("walletGroupMemberships", {

@@ -207,7 +207,7 @@ export const checkWalletStatus = query({
   handler: async (ctx, args) => {
     const wallet = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.stakeAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.stakeAddress))
       .first();
 
     if (!wallet) {

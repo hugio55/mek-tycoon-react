@@ -85,7 +85,7 @@ export const createCampaignReservation = mutation({
     // PHASE 2: Check inventory table for active reservation (NEW - single source of truth)
     const existingInventoryReservation = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign_and_wallet", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("campaignId", args.campaignId).eq("reservedBy", args.walletAddress)
       )
       .filter((q) => q.eq(q.field("status"), "reserved"))
@@ -119,7 +119,7 @@ export const createCampaignReservation = mutation({
     // Since we don't have a by_campaign_and_soldTo index, we query by campaign+status then filter
     const hasCompleted = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign_and_status", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("campaignId", args.campaignId).eq("status", "sold")
       )
       .filter((q) => q.eq(q.field("soldTo"), args.walletAddress))
@@ -143,7 +143,7 @@ export const createCampaignReservation = mutation({
     // Find the lowest available NFT in this campaign
     const availableNFT = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign_and_status", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("campaignId", args.campaignId).eq("status", "available")
       )
       .order("asc") // Get lowest number first
@@ -244,7 +244,7 @@ export const completeCampaignReservation = mutation({
       if (walletAddress) {
         const goldMiningRecord = await ctx.db
           .query("goldMining")
-          .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+          .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
           .first();
         companyNameAtSale = goldMiningRecord?.companyName || undefined;
       }
@@ -273,7 +273,7 @@ export const completeCampaignReservation = mutation({
       // PHASE 2: Dual-write to old table if exists
       const legacyReservation = await ctx.db
         .query("commemorativeNFTReservations")
-        .withIndex("by_inventory_id", (q) => q.eq("nftInventoryId", inventoryRow._id))
+        .withIndex("", (q: any) => q.eq("nftInventoryId", inventoryRow._id))
         .filter((q) => q.eq(q.field("status"), "active"))
         .first();
 
@@ -300,7 +300,7 @@ export const completeCampaignReservation = mutation({
     if (walletAddress) {
       const goldMiningRecord = await ctx.db
         .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
         .first();
       companyNameAtSale = goldMiningRecord?.companyName || undefined;
     }
@@ -352,7 +352,7 @@ export const completeCampaignReservationByWallet = mutation({
     // PHASE 2: Find active reservation in inventory table
     const inventoryRow = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign_and_wallet", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("campaignId", args.campaignId).eq("reservedBy", args.walletAddress)
       )
       .filter((q) => q.eq(q.field("status"), "reserved"))
@@ -369,7 +369,7 @@ export const completeCampaignReservationByWallet = mutation({
     let companyNameAtSale: string | undefined;
     const goldMiningRecord = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
     companyNameAtSale = goldMiningRecord?.companyName || undefined;
 
@@ -394,7 +394,7 @@ export const completeCampaignReservationByWallet = mutation({
     // PHASE 2: Dual-write to old table if exists
     const legacyReservation = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("by_campaign_and_wallet", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("campaignId", args.campaignId).eq("reservedBy", args.walletAddress)
       )
       .filter((q) => q.eq(q.field("status"), "active"))
@@ -456,7 +456,7 @@ export const releaseCampaignReservation = mutation({
       // PHASE 2: Dual-write to old table if exists
       const legacyReservation = await ctx.db
         .query("commemorativeNFTReservations")
-        .withIndex("by_inventory_id", (q) => q.eq("nftInventoryId", inventoryRow._id))
+        .withIndex("", (q: any) => q.eq("nftInventoryId", inventoryRow._id))
         .filter((q) => q.eq(q.field("status"), "active"))
         .first();
 
@@ -531,7 +531,7 @@ export const getActiveCampaignReservation = query({
     // PHASE 2: Find active reservation in inventory table
     const inventoryRow = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_campaign_and_wallet", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("campaignId", args.campaignId).eq("reservedBy", args.walletAddress)
       )
       .filter((q) => q.eq(q.field("status"), "reserved"))
@@ -611,7 +611,7 @@ export const getCampaignReservations = query({
   handler: async (ctx, args) => {
     let reservationsQuery = ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId));
+      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId));
 
     const reservations = await reservationsQuery.collect();
 
@@ -655,7 +655,7 @@ export const markPaymentWindowOpened = mutation({
       // PHASE 2: Dual-write to old table if exists
       const legacyReservation = await ctx.db
         .query("commemorativeNFTReservations")
-        .withIndex("by_inventory_id", (q) => q.eq("nftInventoryId", inventoryRow._id))
+        .withIndex("", (q: any) => q.eq("nftInventoryId", inventoryRow._id))
         .filter((q) => q.eq(q.field("status"), "active"))
         .first();
 
@@ -717,7 +717,7 @@ export const markPaymentWindowClosed = mutation({
       // PHASE 2: Dual-write to old table if exists
       const legacyReservation = await ctx.db
         .query("commemorativeNFTReservations")
-        .withIndex("by_inventory_id", (q) => q.eq("nftInventoryId", inventoryRow._id))
+        .withIndex("", (q: any) => q.eq("nftInventoryId", inventoryRow._id))
         .filter((q) => q.eq(q.field("status"), "active"))
         .first();
 
@@ -766,7 +766,7 @@ async function cleanupExpiredCampaignReservations(ctx: any, campaignId: Id<"comm
   // PHASE 2: First, get ALL reserved items for this campaign (before expiration filter)
   const allReservedForCampaign = await ctx.db
     .query("commemorativeNFTInventory")
-    .withIndex("by_campaign_and_status", (q) =>
+    .withIndex("", (q: any) =>
       q.eq("campaignId", campaignId).eq("status", "reserved")
     )
     .collect();
@@ -811,7 +811,7 @@ async function cleanupExpiredCampaignReservations(ctx: any, campaignId: Id<"comm
   // PHASE 2: Find expired reservations in inventory table
   const expiredInventoryRows = await ctx.db
     .query("commemorativeNFTInventory")
-    .withIndex("by_campaign_and_status", (q) =>
+    .withIndex("", (q: any) =>
       q.eq("campaignId", campaignId).eq("status", "reserved")
     )
     .filter((q: any) =>
@@ -845,7 +845,7 @@ async function cleanupExpiredCampaignReservations(ctx: any, campaignId: Id<"comm
     // PHASE 2: Dual-write to old table if exists
     const legacyReservation = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("by_inventory_id", (q) => q.eq("nftInventoryId", inventoryRow._id))
+      .withIndex("", (q: any) => q.eq("nftInventoryId", inventoryRow._id))
       .filter((q: any) => q.eq(q.field("status"), "active"))
       .first();
 
@@ -968,7 +968,7 @@ export const internalCleanupExpiredReservations = internalMutation({
     // ALSO check inventory items without campaignId (might be orphaned)
     const allReservedInventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_status", (q) => q.eq("status", "reserved"))
+      .withIndex("", (q: any) => q.eq("status", "reserved"))
       .collect();
 
     console.log('[CRON CLEANUP] Found', allReservedInventory.length, 'total reserved inventory items');
@@ -1010,7 +1010,7 @@ export const internalCleanupExpiredReservations = internalMutation({
     const LEGACY_GRACE_PERIOD = 5 * 1000; // 5 seconds
     const legacyExpiredReservations = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .withIndex("", (q: any) => q.eq("status", "active"))
       .filter((q) => q.lt(q.field("expiresAt"), now - LEGACY_GRACE_PERIOD))
       .collect();
 

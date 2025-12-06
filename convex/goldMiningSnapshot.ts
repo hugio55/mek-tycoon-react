@@ -278,7 +278,7 @@ export const getMekLevelsForWallet = internalQuery({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("mekLevels")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
   },
 });
@@ -305,7 +305,7 @@ export const updateMinerAfterSnapshot = internalMutation({
   handler: async (ctx, args) => {
     const miner = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!miner) {
@@ -496,7 +496,7 @@ export const incrementSnapshotFailure = internalMutation({
   handler: async (ctx, args) => {
     const miner = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!miner) {
@@ -1146,7 +1146,7 @@ export const updateSnapshotSession = internalMutation({
   handler: async (ctx, args) => {
     const session = await ctx.db
       .query("snapshotSessions")
-      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .withIndex("", (q: any) => q.eq("sessionId", args.sessionId))
       .first();
 
     if (session) {
@@ -1167,7 +1167,7 @@ export const finalizeSnapshotSession = internalMutation({
   handler: async (ctx, args) => {
     const session = await ctx.db
       .query("snapshotSessions")
-      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .withIndex("", (q: any) => q.eq("sessionId", args.sessionId))
       .first();
 
     if (session) {
@@ -1249,7 +1249,7 @@ export const calculateGoldFromHistory = query({
     // Get the goldMining record
     const miner = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!miner) {
@@ -1259,7 +1259,7 @@ export const calculateGoldFromHistory = query({
     // Get all snapshots for this wallet, ordered by time
     const snapshots = await ctx.db
       .query("mekOwnershipHistory")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     // Sort by time

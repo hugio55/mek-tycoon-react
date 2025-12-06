@@ -73,7 +73,7 @@ export const analyzeVariationCoverage = query({
       // Get all meks for this corporation
       const corpMeks = await ctx.db
         .query("meks")
-        .withIndex("by_owner", (q) => q.eq("owner", corp.walletAddress))
+        .withIndex("", (q: any) => q.eq("owner", corp.walletAddress))
         .collect();
 
       // Skip corporations with no meks

@@ -12,7 +12,7 @@ export const seedShopListings = mutation({
     for (const name of sellerNames) {
       let user = await ctx.db
         .query("users")
-        .withIndex("by_username", (q) => q.eq("username", name))
+        .withIndex("", (q: any) => q.eq("username", name))
         .first();
       
       if (!user) {
@@ -53,7 +53,7 @@ export const seedShopListings = mutation({
     // Clear existing active listings (optional)
     const existingListings = await ctx.db
       .query("marketListings")
-      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .withIndex("", (q: any) => q.eq("status", "active"))
       .collect();
     
     for (const listing of existingListings) {

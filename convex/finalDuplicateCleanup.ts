@@ -51,7 +51,7 @@ export const mergeUserDuplicates = mutation({
     // Find the stake address wallet
     const stakeWallet = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.stakeAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.stakeAddress))
       .first();
 
     // Find ALL other wallets that might be duplicates

@@ -8,7 +8,7 @@ export const seedMarketplaceListings = mutation({
     // Get or create demo seller user
     let demoSeller = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", "marketplace_demo_seller"))
+      .withIndex("", (q: any) => q.eq("walletAddress", "marketplace_demo_seller"))
       .first();
     
     if (!demoSeller) {

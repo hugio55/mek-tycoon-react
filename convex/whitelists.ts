@@ -17,7 +17,7 @@ export const getCriteriaByCategory = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("whitelistCriteria")
-      .withIndex("by_category", (q) => q.eq("category", args.category))
+      .withIndex("", (q: any) => q.eq("category", args.category))
       .collect();
   },
 });
@@ -38,7 +38,7 @@ export const addCriteria = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("whitelistCriteria")
-      .withIndex("by_field", (q) => q.eq("field", args.field))
+      .withIndex("", (q: any) => q.eq("field", args.field))
       .first();
 
     if (existing) {
@@ -88,7 +88,7 @@ export const getWhitelistByName = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("whitelists")
-      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .withIndex("", (q: any) => q.eq("name", args.name))
       .first();
   },
 });
@@ -116,7 +116,7 @@ export const createWhitelist = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("whitelists")
-      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .withIndex("", (q: any) => q.eq("name", args.name))
       .first();
 
     if (existing) {
@@ -213,7 +213,7 @@ export const createManualWhitelist = mutation({
     // Check for duplicate name
     const existing = await ctx.db
       .query("whitelists")
-      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .withIndex("", (q: any) => q.eq("name", args.name))
       .first();
 
     if (existing) {
@@ -742,7 +742,7 @@ export const getSnapshotsByWhitelist = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("whitelistSnapshots")
-      .withIndex("by_whitelist", (q) => q.eq("whitelistId", args.whitelistId))
+      .withIndex("", (q: any) => q.eq("whitelistId", args.whitelistId))
       .order("desc")
       .collect();
   },

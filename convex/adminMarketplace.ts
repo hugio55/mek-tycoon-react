@@ -10,7 +10,7 @@ export const getEssenceMarketSummary = query({
     // Get all active essence listings
     const listings = await ctx.db
       .query("marketListings")
-      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .withIndex("", (q: any) => q.eq("status", "active"))
       .filter((q) => q.eq(q.field("itemType"), "essence"))
       .collect();
 
@@ -64,7 +64,7 @@ export const getEssenceListingsDetailed = query({
     // Get all active essence listings
     let listings = await ctx.db
       .query("marketListings")
-      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .withIndex("", (q: any) => q.eq("status", "active"))
       .filter((q) => q.eq(q.field("itemType"), "essence"))
       .collect();
 
@@ -119,7 +119,7 @@ export const adminAddEssenceToPlayer = mutation({
     // Get updated balance for response
     const updatedBalance = await ctx.db
       .query("essenceBalances")
-      .withIndex("by_wallet_and_name", (q) =>
+      .withIndex("", (q: any) =>
         q.eq("walletAddress", walletAddress).eq("variationName", variationName)
       )
       .first();
@@ -183,7 +183,7 @@ export const getMarketEssenceByVariation = query({
   handler: async (ctx, args) => {
     const listings = await ctx.db
       .query("marketListings")
-      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .withIndex("", (q: any) => q.eq("status", "active"))
       .filter((q) =>
         q.and(
           q.eq(q.field("itemType"), "essence"),
@@ -220,7 +220,7 @@ export const getPlayerEssenceBalances = query({
   handler: async (ctx, args) => {
     const balances = await ctx.db
       .query("essenceBalances")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     // Sort by variation name
@@ -264,7 +264,7 @@ export const getMarketStats = query({
   handler: async (ctx) => {
     const allListings = await ctx.db
       .query("marketListings")
-      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .withIndex("", (q: any) => q.eq("status", "active"))
       .filter((q) => q.eq(q.field("itemType"), "essence"))
       .collect();
 
@@ -308,7 +308,7 @@ export const adminCreateCompanyListing = mutation({
     // Ensure company account exists
     let companySeller = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", "company_overexposed"))
+      .withIndex("", (q: any) => q.eq("walletAddress", "company_overexposed"))
       .first();
 
     if (!companySeller) {

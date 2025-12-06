@@ -72,7 +72,7 @@ export const deactivateNavigation = mutation({
     // Get the active config
     const config = await ctx.db
       .query("navigationConfig")
-      .withIndex("by_active", (q) => q.eq("isActive", true))
+      .withIndex("", (q: any) => q.eq("isActive", true))
       .first();
 
     if (!config) {
@@ -107,7 +107,7 @@ export const getActiveNavigationConfig = query({
   handler: async (ctx) => {
     const config = await ctx.db
       .query("navigationConfig")
-      .withIndex("by_active", (q) => q.eq("isActive", true))
+      .withIndex("", (q: any) => q.eq("isActive", true))
       .first();
 
     return config || null;

@@ -157,7 +157,7 @@ export const resetInventoryToAvailable = mutation({
   handler: async (ctx, args) => {
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_uid", (q) => q.eq("nftUid", args.nftUid))
+      .withIndex("", (q: any) => q.eq("nftUid", args.nftUid))
       .first();
 
     if (!inventory) {
@@ -312,7 +312,7 @@ export const fixBrokenReservations = mutation({
     // Find all reserved items with undefined expiresAt
     const allReserved = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_status", (q) => q.eq("status", "reserved"))
+      .withIndex("", (q: any) => q.eq("status", "reserved"))
       .collect();
 
     const brokenReservations = allReserved.filter(inv => !inv.expiresAt);

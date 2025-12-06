@@ -12,7 +12,7 @@ export const createOrUpdate = mutation({
     // Check if user exists
     const existingUser = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
     
     if (existingUser) {
@@ -78,7 +78,7 @@ export const getOrCreateUser = mutation({
     // Check if user exists
     const existingUser = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
     
     if (existingUser) {
@@ -142,7 +142,7 @@ export const getCurrentUser = query({
     
     const user = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress!))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress!))
       .first();
     
     return user;
@@ -155,7 +155,7 @@ export const getUserProfile = query({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
     
     if (!user) {
@@ -165,26 +165,26 @@ export const getUserProfile = query({
     // Get user's Meks
     const meks = await ctx.db
       .query("meks")
-      .withIndex("by_owner", (q) => q.eq("owner", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("owner", args.walletAddress))
       .collect();
     
     // Get user's inventory
     const inventory = await ctx.db
       .query("inventory")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("", (q: any) => q.eq("userId", user._id))
       .collect();
     
     // Get active crafting sessions
     const activeSessions = await ctx.db
       .query("craftingSessions")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("", (q: any) => q.eq("userId", user._id))
       .filter((q) => q.eq(q.field("status"), "crafting"))
       .collect();
     
     // Get achievements
     const achievements = await ctx.db
       .query("achievements")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("", (q: any) => q.eq("userId", user._id))
       .collect();
     
     return {
@@ -241,7 +241,7 @@ export const updateUserGold = mutation({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
     
     if (!user) {
@@ -347,7 +347,7 @@ export const getTransactionHistory = query({
 
     const transactions = await ctx.db
       .query("transactions")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("", (q: any) => q.eq("userId", args.userId))
       .order("desc")
       .take(limit);
 

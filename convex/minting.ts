@@ -44,7 +44,7 @@ export const storeMintingPolicy = mutation({
     // Check if policy already exists
     const existing = await ctx.db
       .query("mintingPolicies")
-      .withIndex("by_policy_id", (q) => q.eq("policyId", args.policyId))
+      .withIndex("", (q: any) => q.eq("policyId", args.policyId))
       .first();
 
     if (existing) {
@@ -97,7 +97,7 @@ export const getMintingPolicies = query({
     let policies = ctx.db.query("mintingPolicies");
 
     if (args.network) {
-      policies = policies.withIndex("by_network", (q) =>
+      policies = policies.withIndex("", (q: any) =>
         q.eq("network", args.network as "mainnet" | "preprod" | "preview")
       );
     }
@@ -114,7 +114,7 @@ export const getPolicyById = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("mintingPolicies")
-      .withIndex("by_policy_id", (q) => q.eq("policyId", args.policyId))
+      .withIndex("", (q: any) => q.eq("policyId", args.policyId))
       .first();
   },
 });
@@ -130,7 +130,7 @@ export const updatePolicyStatus = mutation({
   handler: async (ctx, args) => {
     const policy = await ctx.db
       .query("mintingPolicies")
-      .withIndex("by_policy_id", (q) => q.eq("policyId", args.policyId))
+      .withIndex("", (q: any) => q.eq("policyId", args.policyId))
       .first();
 
     if (!policy) {
@@ -151,7 +151,7 @@ export const deleteMintingPolicy = mutation({
   handler: async (ctx, args) => {
     const policy = await ctx.db
       .query("mintingPolicies")
-      .withIndex("by_policy_id", (q) => q.eq("policyId", args.policyId))
+      .withIndex("", (q: any) => q.eq("policyId", args.policyId))
       .first();
 
     if (!policy) {
@@ -229,7 +229,7 @@ export const confirmTestMint = mutation({
   handler: async (ctx, args) => {
     const mint = await ctx.db
       .query("testMints")
-      .withIndex("by_tx_hash", (q) => q.eq("txHash", args.txHash))
+      .withIndex("", (q: any) => q.eq("txHash", args.txHash))
       .first();
 
     if (!mint) {
@@ -255,11 +255,11 @@ export const getTestMints = query({
     let mints = ctx.db.query("testMints");
 
     if (args.network) {
-      mints = mints.withIndex("by_network", (q) => q.eq("network", args.network!));
+      mints = mints.withIndex("", (q: any) => q.eq("network", args.network!));
     }
 
     if (args.walletAddress) {
-      mints = mints.withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress!));
+      mints = mints.withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress!));
     }
 
     return await mints.order("desc").collect();
@@ -274,7 +274,7 @@ export const getMintsForPolicy = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("testMints")
-      .withIndex("by_policy_id", (q) => q.eq("policyId", args.policyId))
+      .withIndex("", (q: any) => q.eq("policyId", args.policyId))
       .order("desc")
       .collect();
   },
@@ -288,7 +288,7 @@ export const getMintByTxHash = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("testMints")
-      .withIndex("by_tx_hash", (q) => q.eq("txHash", args.txHash))
+      .withIndex("", (q: any) => q.eq("txHash", args.txHash))
       .first();
   },
 });
@@ -311,7 +311,7 @@ export const getBatchMintingHistory = query({
 
     // Apply filters
     if (args.network) {
-      query = query.withIndex("by_network", (q) => q.eq("network", args.network!));
+      query = query.withIndex("", (q: any) => q.eq("network", args.network!));
     }
 
     if (args.tokenType) {
@@ -345,7 +345,7 @@ export const getBatchMintingStats = query({
     let query = ctx.db.query("batchMintedTokens");
 
     if (args.network) {
-      query = query.withIndex("by_network", (q) => q.eq("network", args.network!));
+      query = query.withIndex("", (q: any) => q.eq("network", args.network!));
     }
 
     const allMints = await query.collect();
@@ -375,7 +375,7 @@ export const getBatchMintsByRecipient = query({
   handler: async (ctx, args) => {
     let query = ctx.db
       .query("batchMintedTokens")
-      .withIndex("by_recipient", (q) => q.eq("recipientAddress", args.recipientAddress));
+      .withIndex("", (q: any) => q.eq("recipientAddress", args.recipientAddress));
 
     const results = await query.order("desc").collect();
 

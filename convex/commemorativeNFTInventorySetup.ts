@@ -249,7 +249,7 @@ export const repairPaymentUrls = mutation({
     let inventoryQuery = ctx.db.query("commemorativeNFTInventory");
 
     if (args.campaignId) {
-      inventoryQuery = inventoryQuery.withIndex("by_campaign", (q) =>
+      inventoryQuery = inventoryQuery.withIndex("", (q: any) =>
         q.eq("campaignId", args.campaignId)
       );
     }
@@ -478,7 +478,7 @@ export const markInventoryAsSoldByUid = mutation({
     // Query inventory by nftUid using the index
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("by_uid", (q) => q.eq("nftUid", args.nftUid))
+      .withIndex("", (q: any) => q.eq("nftUid", args.nftUid))
       .first();
 
     // NFT not found in inventory
@@ -512,7 +512,7 @@ export const markInventoryAsSoldByUid = mutation({
     if (inventory.status === "reserved") {
       const activeReservation = await ctx.db
         .query("commemorativeNFTReservations")
-        .withIndex("by_inventory_id", (q) => q.eq("nftInventoryId", inventory._id))
+        .withIndex("", (q: any) => q.eq("nftInventoryId", inventory._id))
         .filter((q) => q.eq(q.field("status"), "active"))
         .first();
 
@@ -579,7 +579,7 @@ export const markInventoryAsSoldByName = mutation({
     if (inventory.status === "reserved") {
       const activeReservation = await ctx.db
         .query("commemorativeNFTReservations")
-        .withIndex("by_inventory_id", (q) => q.eq("nftInventoryId", inventory._id))
+        .withIndex("", (q: any) => q.eq("nftInventoryId", inventory._id))
         .filter((q) => q.eq(q.field("status"), "active"))
         .first();
 

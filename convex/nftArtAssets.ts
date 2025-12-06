@@ -23,7 +23,7 @@ export const getArtLibrary = query({
     let query = ctx.db.query("nftArtAssets");
 
     if (args.category) {
-      query = query.withIndex("by_category", (q) => q.eq("category", args.category));
+      query = query.withIndex("", (q: any) => q.eq("category", args.category));
     }
 
     let assets = await query.collect();
@@ -72,7 +72,7 @@ export const searchArtAssets = query({
     let query = ctx.db.query("nftArtAssets");
 
     if (args.category) {
-      query = query.withIndex("by_category", (q) => q.eq("category", args.category));
+      query = query.withIndex("", (q: any) => q.eq("category", args.category));
     }
 
     const assets = await query.collect();

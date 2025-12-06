@@ -27,7 +27,7 @@ export const saveTalentTree = mutation({
     // Find or create user
     const user = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .first();
     
     if (!user) {

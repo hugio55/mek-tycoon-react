@@ -18,7 +18,7 @@ export const getVariationsByType = query({
   handler: async (ctx, args) => {
     const variations = await ctx.db
       .query("variationsReference")
-      .withIndex("by_type", (q) => q.eq("type", args.type))
+      .withIndex("", (q: any) => q.eq("type", args.type))
       .collect();
 
     return variations;
@@ -31,7 +31,7 @@ export const getVariationById = query({
   handler: async (ctx, args) => {
     const variation = await ctx.db
       .query("variationsReference")
-      .withIndex("by_variation_id", (q) => q.eq("variationId", args.variationId))
+      .withIndex("", (q: any) => q.eq("variationId", args.variationId))
       .first();
 
     return variation;

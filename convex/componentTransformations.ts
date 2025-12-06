@@ -18,7 +18,7 @@ export const saveComponent = mutation({
     // Check if component already exists
     const existing = await ctx.db
       .query("transformedComponents")
-      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .withIndex("", (q: any) => q.eq("name", args.name))
       .first();
 
     if (existing) {
@@ -49,7 +49,7 @@ export const getComponent = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("transformedComponents")
-      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .withIndex("", (q: any) => q.eq("name", args.name))
       .first();
   },
 });
@@ -76,7 +76,7 @@ export const deleteComponent = mutation({
   handler: async (ctx, args) => {
     const component = await ctx.db
       .query("transformedComponents")
-      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .withIndex("", (q: any) => q.eq("name", args.name))
       .first();
 
     if (component) {
@@ -105,7 +105,7 @@ export const savePreference = mutation({
     // Check if preference already exists
     const existing = await ctx.db
       .query("designPreferences")
-      .withIndex("by_key", (q) => q.eq("key", args.key))
+      .withIndex("", (q: any) => q.eq("key", args.key))
       .first();
 
     if (existing) {
@@ -139,7 +139,7 @@ export const getPreference = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("designPreferences")
-      .withIndex("by_key", (q) => q.eq("key", args.key))
+      .withIndex("", (q: any) => q.eq("key", args.key))
       .first();
   },
 });
@@ -156,7 +156,7 @@ export const getPreferencesByCategory = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("designPreferences")
-      .withIndex("by_category", (q) => q.eq("category", args.category))
+      .withIndex("", (q: any) => q.eq("category", args.category))
       .collect();
   },
 });
@@ -179,7 +179,7 @@ export const saveRule = mutation({
     // Check if rule already exists
     const existing = await ctx.db
       .query("transformationRules")
-      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .withIndex("", (q: any) => q.eq("name", args.name))
       .first();
 
     if (existing) {
@@ -213,7 +213,7 @@ export const getRule = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("transformationRules")
-      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .withIndex("", (q: any) => q.eq("name", args.name))
       .first();
   },
 });
@@ -223,7 +223,7 @@ export const getAutoApplyRules = query({
   handler: async (ctx) => {
     return await ctx.db
       .query("transformationRules")
-      .withIndex("by_autoApply", (q) => q.eq("autoApply", true))
+      .withIndex("", (q: any) => q.eq("autoApply", true))
       .collect();
   },
 });
@@ -240,7 +240,7 @@ export const incrementRuleUsage = mutation({
   handler: async (ctx, args) => {
     const rule = await ctx.db
       .query("transformationRules")
-      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .withIndex("", (q: any) => q.eq("name", args.name))
       .first();
 
     if (rule) {
@@ -259,7 +259,7 @@ export const deleteRule = mutation({
   handler: async (ctx, args) => {
     const rule = await ctx.db
       .query("transformationRules")
-      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .withIndex("", (q: any) => q.eq("name", args.name))
       .first();
 
     if (rule) {

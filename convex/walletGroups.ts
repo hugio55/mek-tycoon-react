@@ -47,7 +47,7 @@ export const createWalletGroup = mutation({
     // Check if wallet is already in a group
     const existing = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (existing) {
@@ -64,7 +64,7 @@ export const createWalletGroup = mutation({
     // PRESERVE ORIGINAL NAME: Get the wallet's current company name before creating group
     const goldMining = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     const originalCompanyName = goldMining?.companyName || null;
@@ -188,7 +188,7 @@ export const addWalletToGroupVerified = mutation({
     // Find the group via the existing wallet
     let membership = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.existingWalletInGroup))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.existingWalletInGroup))
       .first();
 
     // If the existing wallet doesn't have a group yet, create one
@@ -202,7 +202,7 @@ export const addWalletToGroupVerified = mutation({
       // PRESERVE ORIGINAL NAME: Get the existing wallet's current company name before creating group
       const existingWalletGoldMining = await ctx.db
         .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", args.existingWalletInGroup))
+        .withIndex("", (q: any) => q.eq("walletAddress", args.existingWalletInGroup))
         .first();
 
       const existingOriginalCompanyName = existingWalletGoldMining?.companyName || null;
@@ -238,7 +238,7 @@ export const addWalletToGroupVerified = mutation({
     // Check if new wallet is already in a group
     const existingNew = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.newWalletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.newWalletAddress))
       .first();
 
     if (existingNew) {
@@ -263,7 +263,7 @@ export const addWalletToGroupVerified = mutation({
       // Wallet is in a different group - check if it's a single-wallet group
       const oldGroupMembers = await ctx.db
         .query("walletGroupMemberships")
-        .withIndex("by_group", (q) => q.eq("groupId", existingNew.groupId))
+        .withIndex("", (q: any) => q.eq("groupId", existingNew.groupId))
         .collect();
 
       if (oldGroupMembers.length === 1) {
@@ -276,7 +276,7 @@ export const addWalletToGroupVerified = mutation({
         // Delete the old group
         const oldGroup = await ctx.db
           .query("walletGroups")
-          .withIndex("by_groupId", (q) => q.eq("groupId", existingNew.groupId))
+          .withIndex("", (q: any) => q.eq("groupId", existingNew.groupId))
           .first();
 
         if (oldGroup) {
@@ -315,7 +315,7 @@ export const addWalletToGroupVerified = mutation({
     // SECURITY: Check group size limit
     const groupWallets = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_group", (q) => q.eq("groupId", groupId))
+      .withIndex("", (q: any) => q.eq("groupId", groupId))
       .collect();
 
     if (groupWallets.length >= MAX_WALLETS_PER_GROUP) {
@@ -335,7 +335,7 @@ export const addWalletToGroupVerified = mutation({
     // PRESERVE ORIGINAL NAME: Get the wallet's current company name before merging
     const newWalletGoldMining = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.newWalletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.newWalletAddress))
       .first();
 
     const originalCompanyName = newWalletGoldMining?.companyName || null;
@@ -387,7 +387,7 @@ export const logAddWalletFailure = mutation({
     // Try to find the group to log properly
     const membership = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.existingWallet))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.existingWallet))
       .first();
 
     await logAuditEvent(ctx, {
@@ -410,7 +410,7 @@ export const removeWalletFromGroup = mutation({
     // Find the membership
     const membership = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!membership) {
@@ -422,7 +422,7 @@ export const removeWalletFromGroup = mutation({
     // Get all wallets in this group
     const allWallets = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_group", (q) => q.eq("groupId", groupId))
+      .withIndex("", (q: any) => q.eq("groupId", groupId))
       .collect();
 
     // If this is the only wallet, delete the entire group
@@ -434,7 +434,7 @@ export const removeWalletFromGroup = mutation({
 
       const group = await ctx.db
         .query("walletGroups")
-        .withIndex("by_groupId", (q) => q.eq("groupId", groupId))
+        .withIndex("", (q: any) => q.eq("groupId", groupId))
         .first();
 
       if (group) {
@@ -445,7 +445,7 @@ export const removeWalletFromGroup = mutation({
       if (originalCompanyName) {
         const goldMining = await ctx.db
           .query("goldMining")
-          .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+          .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
           .first();
 
         if (goldMining) {
@@ -481,7 +481,7 @@ export const removeWalletFromGroup = mutation({
     if (originalCompanyName) {
       const goldMining = await ctx.db
         .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
         .first();
 
       if (goldMining) {
@@ -495,7 +495,7 @@ export const removeWalletFromGroup = mutation({
     // If this was the primary wallet, promote the next one
     const group = await ctx.db
       .query("walletGroups")
-      .withIndex("by_groupId", (q) => q.eq("groupId", groupId))
+      .withIndex("", (q: any) => q.eq("groupId", groupId))
       .first();
 
     let primaryTransferred = false;
@@ -545,7 +545,7 @@ export const getWalletGroup = query({
   handler: async (ctx, args) => {
     const membership = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!membership) {
@@ -554,7 +554,7 @@ export const getWalletGroup = query({
 
     const group = await ctx.db
       .query("walletGroups")
-      .withIndex("by_groupId", (q) => q.eq("groupId", membership.groupId))
+      .withIndex("", (q: any) => q.eq("groupId", membership.groupId))
       .first();
 
     return group;
@@ -569,12 +569,12 @@ export const getGroupWallets = query({
   handler: async (ctx, args) => {
     const wallets = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_group", (q) => q.eq("groupId", args.groupId))
+      .withIndex("", (q: any) => q.eq("groupId", args.groupId))
       .collect();
 
     const group = await ctx.db
       .query("walletGroups")
-      .withIndex("by_groupId", (q) => q.eq("groupId", args.groupId))
+      .withIndex("", (q: any) => q.eq("groupId", args.groupId))
       .first();
 
     // Sort by addedAt, with primary wallet first
@@ -603,7 +603,7 @@ export const getMyGroupWallets = query({
   handler: async (ctx, args) => {
     const membership = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!membership) {
@@ -618,12 +618,12 @@ export const getMyGroupWallets = query({
 
     const group = await ctx.db
       .query("walletGroups")
-      .withIndex("by_groupId", (q) => q.eq("groupId", membership.groupId))
+      .withIndex("", (q: any) => q.eq("groupId", membership.groupId))
       .first();
 
     const wallets = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_group", (q) => q.eq("groupId", membership.groupId))
+      .withIndex("", (q: any) => q.eq("groupId", membership.groupId))
       .collect();
 
     // Sort by addedAt, with primary wallet first
@@ -653,7 +653,7 @@ export const setWalletNickname = mutation({
   handler: async (ctx, args) => {
     const membership = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!membership) {
@@ -676,7 +676,7 @@ export const getWalletCompanyName = query({
   handler: async (ctx, args) => {
     const goldMining = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     return goldMining?.companyName || null;
@@ -693,14 +693,14 @@ export const updateGroupCompanyName = mutation({
     // Get all wallets in the group
     const wallets = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("by_group", (q) => q.eq("groupId", args.groupId))
+      .withIndex("", (q: any) => q.eq("groupId", args.groupId))
       .collect();
 
     // Update company name for each wallet's goldMining record
     for (const wallet of wallets) {
       const goldMining = await ctx.db
         .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", wallet.walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", wallet.walletAddress))
         .first();
 
       if (goldMining) {

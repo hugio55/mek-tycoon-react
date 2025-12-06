@@ -13,7 +13,7 @@ export const checkUsernameAvailability = query({
     const normalized = normalizeUsername(args.username);
     const existing = await ctx.db
       .query("users")
-      .withIndex("by_display_name_lower", (q) => q.eq("displayNameLower", normalized))
+      .withIndex("", (q: any) => q.eq("displayNameLower", normalized))
       .first();
 
     return { 
@@ -38,7 +38,7 @@ export const setDisplayName = mutation({
     // Find the user
     const user = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!user) {
@@ -51,7 +51,7 @@ export const setDisplayName = mutation({
     const normalized = normalizeUsername(args.displayName);
     const existing = await ctx.db
       .query("users")
-      .withIndex("by_display_name_lower", (q) => q.eq("displayNameLower", normalized))
+      .withIndex("", (q: any) => q.eq("displayNameLower", normalized))
       .first();
 
     if (existing && existing._id !== user._id) {
@@ -74,7 +74,7 @@ export const getUserDisplayName = query({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!user) {

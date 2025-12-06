@@ -19,7 +19,7 @@ export const checkEligibility = query({
     // Get user's gold mining data
     const goldMiningData = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     // Check if wallet is verified
@@ -42,7 +42,7 @@ export const checkEligibility = query({
     // Check if user already purchased
     const existingPurchase = await ctx.db
       .query("commemorativePurchases")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("", (q: any) => q.eq("userId", args.userId))
       .filter((q) => q.eq(q.field("status"), "completed"))
       .first();
 
@@ -78,7 +78,7 @@ export const recordPurchase = mutation({
     // Check for existing pending purchase
     const existingPurchase = await ctx.db
       .query("commemorativePurchases")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("", (q: any) => q.eq("userId", args.userId))
       .filter((q) => q.eq(q.field("status"), "pending"))
       .first();
 
@@ -173,7 +173,7 @@ export const getUserPurchases = query({
   handler: async (ctx, args) => {
     const purchases = await ctx.db
       .query("commemorativePurchases")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("", (q: any) => q.eq("userId", args.userId))
       .collect();
 
     return purchases;
@@ -188,7 +188,7 @@ export const getCampaignPurchases = query({
   handler: async (ctx, args) => {
     const purchases = await ctx.db
       .query("commemorativePurchases")
-      .withIndex("by_campaign", (q) => q.eq("campaignName", args.campaignName))
+      .withIndex("", (q: any) => q.eq("campaignName", args.campaignName))
       .collect();
 
     return purchases;
@@ -206,7 +206,7 @@ export const getPurchaseStats = query({
     if (args.campaignName) {
       purchases = await ctx.db
         .query("commemorativePurchases")
-        .withIndex("by_campaign", (q) => q.eq("campaignName", args.campaignName))
+        .withIndex("", (q: any) => q.eq("campaignName", args.campaignName))
         .collect();
     } else {
       purchases = await ctx.db

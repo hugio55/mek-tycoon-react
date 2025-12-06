@@ -18,7 +18,7 @@ export const getActiveListings = query({
     
     let q = ctx.db
       .query("marketListings")
-      .withIndex("by_status", (q) => q.eq("status", "active"));
+      .withIndex("", (q: any) => q.eq("status", "active"));
 
     const listings = await q.collect();
 
@@ -51,7 +51,7 @@ export const getActiveListings = query({
         if (listing.itemType === "essence" && listing.itemVariation && seller?.walletAddress) {
           const essenceBalance = await ctx.db
             .query("essenceBalances")
-            .withIndex("by_wallet", (q) => q.eq("walletAddress", seller.walletAddress))
+            .withIndex("", (q: any) => q.eq("walletAddress", seller.walletAddress))
             .filter((q) => q.eq(q.field("variationName"), listing.itemVariation))
             .first();
 
@@ -82,7 +82,7 @@ export const getUserListings = query({
   handler: async (ctx, args) => {
     const listings = await ctx.db
       .query("marketListings")
-      .withIndex("by_seller", (q) => q.eq("sellerId", args.userId))
+      .withIndex("", (q: any) => q.eq("sellerId", args.userId))
       .filter((q) => q.eq(q.field("status"), "active"))
       .collect();
 
@@ -294,7 +294,7 @@ export const getListings = query({
   handler: async (ctx, args) => {
     let query = ctx.db
       .query("marketListings")
-      .withIndex("by_status", (q) => q.eq("status", "active"));
+      .withIndex("", (q: any) => q.eq("status", "active"));
     
     // Filter by item type if specified
     if (args.itemType) {
@@ -376,7 +376,7 @@ export const createListing = mutation({
     // Get seller's REAL gold from goldMining table (not users.gold)
     const goldMining = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", seller.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", seller.walletAddress))
       .first();
 
     if (!goldMining) {
@@ -405,7 +405,7 @@ export const createListing = mutation({
       // Check if user has enough essence using essenceBalances
       const existingBalances = await ctx.db
         .query("essenceBalances")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", seller.walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", seller.walletAddress))
         .collect();
 
       const balance = existingBalances.find(b => b.variationName === variationName);
@@ -445,7 +445,7 @@ export const createListing = mutation({
       // Check inventory
       const inventoryItem = await ctx.db
         .query("inventory")
-        .withIndex("by_user", (q) => q.eq("userId", args.sellerId))
+        .withIndex("", (q: any) => q.eq("userId", args.sellerId))
         .filter((q) => 
           q.and(
             q.eq(q.field("itemType"), args.itemType),
@@ -589,7 +589,7 @@ export const purchaseListing = mutation({
       // Add to buyer's inventory
       const existingItem = await ctx.db
         .query("inventory")
-        .withIndex("by_user", (q) => q.eq("userId", args.buyerId))
+        .withIndex("", (q: any) => q.eq("userId", args.buyerId))
         .filter((q) => 
           q.and(
             q.eq(q.field("itemType"), listing.itemType),
@@ -745,7 +745,7 @@ export const getListingPurchaseHistory = query({
   handler: async (ctx, args) => {
     const purchases = await ctx.db
       .query("marketListingPurchases")
-      .withIndex("by_listing", (q) => q.eq("listingId", args.listingId))
+      .withIndex("", (q: any) => q.eq("listingId", args.listingId))
       .order("desc")
       .collect();
 
@@ -804,7 +804,7 @@ export const cancelListing = mutation({
       // Return to inventory
       const existingItem = await ctx.db
         .query("inventory")
-        .withIndex("by_user", (q) => q.eq("userId", listing.sellerId))
+        .withIndex("", (q: any) => q.eq("userId", listing.sellerId))
         .filter((q) => 
           q.and(
             q.eq(q.field("itemType"), listing.itemType),

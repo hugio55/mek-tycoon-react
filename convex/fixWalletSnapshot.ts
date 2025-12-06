@@ -11,7 +11,7 @@ export const fixWalletAddressFormat = mutation({
     // Find the wallet record
     const record = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.oldAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.oldAddress))
       .first();
 
     if (!record) {
@@ -46,7 +46,7 @@ export const manualSetMekOwnership = mutation({
   handler: async (ctx, args) => {
     const record = await ctx.db
       .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!record) {

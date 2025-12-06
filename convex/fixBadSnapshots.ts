@@ -13,7 +13,7 @@ export const identifyBadSnapshots = query({
       // Get the goldMining record at the time (or current if still exists)
       const miner = await ctx.db
         .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", snapshot.walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", snapshot.walletAddress))
         .first();
 
       // Mark snapshots with 0 MEKs as suspicious if:
@@ -63,7 +63,7 @@ export const deleteBadSnapshots = mutation({
         // Check if wallet currently has MEKs
         const miner = await ctx.db
           .query("goldMining")
-          .withIndex("by_wallet", (q) => q.eq("walletAddress", snapshot.walletAddress))
+          .withIndex("", (q: any) => q.eq("walletAddress", snapshot.walletAddress))
           .first();
 
         if (miner && miner.ownedMeks && miner.ownedMeks.length > 0) {
@@ -119,7 +119,7 @@ export const fixAllSnapshots = mutation({
     for (const snapshot of allSnapshots) {
       const miner = await ctx.db
         .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", snapshot.walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", snapshot.walletAddress))
         .first();
 
       // Delete if: 0 MEKs in snapshot but wallet currently has MEKs

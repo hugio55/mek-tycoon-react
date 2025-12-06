@@ -37,7 +37,7 @@ async function getCorpName(ctx: MutationCtx | QueryCtx, user: Doc<"users">): Pro
   // Try to get company name from goldMining table
   const goldMining = await ctx.db
     .query("goldMining")
-    .withIndex("by_wallet", (q) => q.eq("walletAddress", user.walletAddress))
+    .withIndex("", (q: any) => q.eq("walletAddress", user.walletAddress))
     .first();
 
   if (goldMining?.companyName) {
@@ -273,7 +273,7 @@ export const detectResaleGap = internalMutation({
     // Look for recent purchases of this item by this seller
     const recentPurchases = await ctx.db
       .query("marketListingPurchases")
-      .withIndex("by_buyer", (q) => q.eq("buyerId", args.sellerId))
+      .withIndex("", (q: any) => q.eq("buyerId", args.sellerId))
       .filter((q) =>
         q.and(
           q.eq(q.field("itemType"), args.itemType),
@@ -290,7 +290,7 @@ export const detectResaleGap = internalMutation({
         // Check if there's already a flag for this purchase
         const existingFlag = await ctx.db
           .query("tradeAbuseFlags")
-          .withIndex("by_purchase", (q) => q.eq("purchaseId", purchase._id))
+          .withIndex("", (q: any) => q.eq("purchaseId", purchase._id))
           .first();
 
         if (existingFlag) {
@@ -369,7 +369,7 @@ export const getFlaggedTransactions = query({
     let query = ctx.db.query("tradeAbuseFlags");
 
     if (args.status) {
-      query = query.withIndex("by_status", (q) => q.eq("status", args.status!));
+      query = query.withIndex("", (q: any) => q.eq("status", args.status!));
     } else {
       query = query.withIndex("by_created");
     }
@@ -411,7 +411,7 @@ export const getAbuseStats = query({
     // Get flagged corp pairs
     const flaggedPairs = await ctx.db
       .query("corpTradePairs")
-      .withIndex("by_flagged", (q) => q.eq("flagged", true))
+      .withIndex("", (q: any) => q.eq("flagged", true))
       .collect();
 
     // Most flagged corps (by appearance in flags)
@@ -470,14 +470,14 @@ export const getCorpTradeHistory = query({
     // Get all purchases where corp1 bought from corp2
     const purchases1to2 = await ctx.db
       .query("marketListingPurchases")
-      .withIndex("by_buyer", (q) => q.eq("buyerId", args.corp1Id))
+      .withIndex("", (q: any) => q.eq("buyerId", args.corp1Id))
       .filter((q) => q.eq(q.field("sellerId"), args.corp2Id))
       .collect();
 
     // Get all purchases where corp2 bought from corp1
     const purchases2to1 = await ctx.db
       .query("marketListingPurchases")
-      .withIndex("by_buyer", (q) => q.eq("buyerId", args.corp2Id))
+      .withIndex("", (q: any) => q.eq("buyerId", args.corp2Id))
       .filter((q) => q.eq(q.field("sellerId"), args.corp1Id))
       .collect();
 
@@ -495,13 +495,13 @@ export const getCorpTradeHistory = query({
     // Get any flags involving these corps
     const flags = await ctx.db
       .query("tradeAbuseFlags")
-      .withIndex("by_buyer", (q) => q.eq("buyerId", args.corp1Id))
+      .withIndex("", (q: any) => q.eq("buyerId", args.corp1Id))
       .filter((q) => q.eq(q.field("sellerId"), args.corp2Id))
       .collect();
 
     const flags2 = await ctx.db
       .query("tradeAbuseFlags")
-      .withIndex("by_buyer", (q) => q.eq("buyerId", args.corp2Id))
+      .withIndex("", (q: any) => q.eq("buyerId", args.corp2Id))
       .filter((q) => q.eq(q.field("sellerId"), args.corp1Id))
       .collect();
 
@@ -528,24 +528,24 @@ export const getCorporationRiskProfile = query({
     // Flags where this corp was the buyer
     const flagsAsBuyer = await ctx.db
       .query("tradeAbuseFlags")
-      .withIndex("by_buyer", (q) => q.eq("buyerId", args.corpId))
+      .withIndex("", (q: any) => q.eq("buyerId", args.corpId))
       .collect();
 
     // Flags where this corp was the seller
     const flagsAsSeller = await ctx.db
       .query("tradeAbuseFlags")
-      .withIndex("by_seller", (q) => q.eq("sellerId", args.corpId))
+      .withIndex("", (q: any) => q.eq("sellerId", args.corpId))
       .collect();
 
     // Trade pairs involving this corp
     const tradePairs1 = await ctx.db
       .query("corpTradePairs")
-      .withIndex("by_corp1", (q) => q.eq("corp1Id", args.corpId))
+      .withIndex("", (q: any) => q.eq("corp1Id", args.corpId))
       .collect();
 
     const tradePairs2 = await ctx.db
       .query("corpTradePairs")
-      .withIndex("by_corp2", (q) => q.eq("corp2Id", args.corpId))
+      .withIndex("", (q: any) => q.eq("corp2Id", args.corpId))
       .collect();
 
     const allTradePairs = [...tradePairs1, ...tradePairs2];
@@ -665,7 +665,7 @@ export const manualFlagTransaction = mutation({
     // Check if already flagged
     const existingFlag = await ctx.db
       .query("tradeAbuseFlags")
-      .withIndex("by_purchase", (q) => q.eq("purchaseId", args.purchaseId))
+      .withIndex("", (q: any) => q.eq("purchaseId", args.purchaseId))
       .first();
 
     if (existingFlag) {
@@ -732,7 +732,7 @@ export const getFlaggedCorpPairs = query({
   handler: async (ctx, args) => {
     const pairs = await ctx.db
       .query("corpTradePairs")
-      .withIndex("by_flagged", (q) => q.eq("flagged", true))
+      .withIndex("", (q: any) => q.eq("flagged", true))
       .collect();
 
     // Sort by trade count (most suspicious first)
@@ -1000,7 +1000,7 @@ export const searchCorporations = query({
       matchingWallets.map(async (gm) => {
         const user = await ctx.db
           .query("users")
-          .withIndex("by_wallet", (q) => q.eq("walletAddress", gm.walletAddress))
+          .withIndex("", (q: any) => q.eq("walletAddress", gm.walletAddress))
           .first();
 
         return user ? {

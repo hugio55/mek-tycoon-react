@@ -389,7 +389,7 @@ export const markWalletAsVerified = mutation({
       console.log('[markWalletAsVerified] Querying goldMining table...');
       const goldMiningRecord = await ctx.db
         .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+        .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
         .first();
 
       if (goldMiningRecord) {

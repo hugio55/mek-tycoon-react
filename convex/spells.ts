@@ -16,7 +16,7 @@ export const getActiveSpells = query({
   handler: async (ctx) => {
     return await ctx.db
       .query("spells")
-      .withIndex("by_active", (q) => q.eq("isActive", true))
+      .withIndex("", (q: any) => q.eq("isActive", true))
       .collect();
   },
 });
@@ -34,7 +34,7 @@ export const getSpellsByCategory = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("spells")
-      .withIndex("by_category", (q) => q.eq("category", args.category))
+      .withIndex("", (q: any) => q.eq("category", args.category))
       .collect();
   },
 });
@@ -158,7 +158,7 @@ export const getSpellsForLevel = query({
   handler: async (ctx, args) => {
     const allSpells = await ctx.db
       .query("spells")
-      .withIndex("by_active", (q) => q.eq("isActive", true))
+      .withIndex("", (q: any) => q.eq("isActive", true))
       .collect();
     
     // Filter spells that the player can use at this level
