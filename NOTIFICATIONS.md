@@ -540,18 +540,21 @@ src/components/UnifiedHeader.tsx  # Add NotificationBell + Messages icon
 
 ### Completed
 - [x] Planning document created
+- [x] Add `notifications` table to schema (convex/schema.ts:3786-3813)
+- [x] Create backend queries and mutations (convex/notifications.ts)
+- [x] Build NotificationItem component (src/components/notifications/NotificationItem.tsx)
+- [x] Build NotificationDropdown component (src/components/notifications/NotificationDropdown.tsx)
+- [x] Build NotificationLightbox component (src/components/notifications/NotificationLightbox.tsx)
+- [x] Build NotificationBell component (src/components/notifications/NotificationBell.tsx)
+- [x] Integrate into UnifiedHeader (src/components/UnifiedHeader.tsx:458)
 
 ### In Progress
-- [ ] (Nothing yet)
+- [ ] Visual testing and refinement
 
 ### Up Next
-- [ ] Add `notifications` table to schema
-- [ ] Create backend queries and mutations
-- [ ] Build NotificationBell component
-- [ ] Build NotificationDropdown component
-- [ ] Build NotificationLightbox component
-- [ ] Integrate into UnifiedHeader
-- [ ] Hook into tenure system for first notification type
+- [ ] Hook into tenure/pit stop system for `pit_stop_ready` notifications
+- [ ] Hook into level-up system for `job_level_up` notifications
+- [ ] Add more notification types as needed
 
 ---
 

@@ -82,7 +82,7 @@ export default function NotificationDropdown({
             No notifications yet
           </div>
         ) : (
-          notifications.map((notification) => (
+          notifications.map((notification: Doc<'notifications'>) => (
             <NotificationItem
               key={notification._id}
               notification={notification}
