@@ -56,6 +56,8 @@ export default function EnvironmentDebugPanel() {
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || '';
   const deploymentName = convexUrl.split("//")[1]?.split(".")[0] || "unknown";
   const isProduction = deploymentName === 'fabulous-sturgeon-691';
+  const isStaging = deploymentName === 'wry-trout-962';
+  const databaseLabel = isProduction ? 'Sturgeon (Production)' : isStaging ? 'Trout (Staging)' : deploymentName;
 
   return (
     <div
@@ -135,8 +137,8 @@ export default function EnvironmentDebugPanel() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Database Mode:</span>
-                <span className="font-mono text-sm font-bold text-green-400">
-                  SINGLE DATABASE (Production)
+                <span className={`font-mono text-sm font-bold ${isProduction ? 'text-green-400' : 'text-yellow-400'}`}>
+                  SINGLE DATABASE ({isProduction ? 'Production' : 'Staging'})
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -166,8 +168,8 @@ export default function EnvironmentDebugPanel() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Database:</span>
-                <span className="font-mono text-sm text-green-400">
-                  Sturgeon (Production - Single Database Mode)
+                <span className={`font-mono text-sm ${isProduction ? 'text-green-400' : 'text-yellow-400'}`}>
+                  {databaseLabel} (Single Database Mode)
                 </span>
               </div>
             </div>
@@ -202,11 +204,13 @@ export default function EnvironmentDebugPanel() {
               <span>📋</span> Database Configuration
             </h3>
             <div className="bg-gray-800/50 rounded border border-gray-700 p-4">
-              <div className="bg-green-900/30 border border-green-600/50 rounded p-4">
-                <div className="text-green-400 font-bold mb-2">🐟 PRODUCTION (fabulous-sturgeon-691)</div>
+              <div className={`${isProduction ? 'bg-green-900/30 border-green-600/50' : 'bg-yellow-900/30 border-yellow-600/50'} border rounded p-4`}>
+                <div className={`${isProduction ? 'text-green-400' : 'text-yellow-400'} font-bold mb-2`}>
+                  🐟 {isProduction ? 'PRODUCTION' : 'STAGING'} ({deploymentName})
+                </div>
                 <div className="ml-4 space-y-1 text-sm">
-                  <div className="text-gray-300 font-mono">URL: https://fabulous-sturgeon-691.convex.cloud</div>
-                  <div className="text-gray-400">Single database mode - all environments use this database</div>
+                  <div className="text-gray-300 font-mono">URL: {convexUrl}</div>
+                  <div className="text-gray-400">Single database mode - code uses this database only</div>
                 </div>
               </div>
             </div>
