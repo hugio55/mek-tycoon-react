@@ -3,6 +3,14 @@ import { mutation, query, internalMutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
 // ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const MAX_NOTIFICATIONS_PER_USER = 100; // Cap at 100 notifications per player
+const DROPDOWN_LIMIT = 5; // Show 5 most recent in dropdown
+const LIGHTBOX_PAGE_SIZE = 10; // Show 10 per page in "View All"
+
+// ============================================================================
 // QUERIES
 // ============================================================================
 
@@ -34,14 +42,14 @@ export const getUnreadCount = query({
   },
 });
 
-// Get recent notifications for dropdown (quick view)
+// Get recent notifications for dropdown (quick view) - shows 5 most recent
 export const getRecentNotifications = query({
   args: {
     userId: v.id("users"),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const limit = args.limit ?? 10;
+    const limit = args.limit ?? DROPDOWN_LIMIT;
 
     const notifications = await ctx.db
       .query("notifications")
