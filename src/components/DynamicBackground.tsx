@@ -5,6 +5,7 @@ import { api } from "@/convex/_generated/api";
 import GlobalBackground from "./GlobalBackground";
 import StarField from "./StarField";
 import { useState, useEffect } from "react";
+import { getMediaUrl } from "@/lib/media-url";
 
 /**
  * DynamicBackground - Renders the appropriate global background based on site settings
@@ -39,7 +40,7 @@ export default function DynamicBackground() {
         <div
           className="fixed inset-0 pointer-events-none transition-opacity ease-out"
           style={{
-            backgroundImage: 'url(/colored-bg-1.webp)',
+            backgroundImage: `url(${getMediaUrl('/colored-bg-1.webp')})`,
             backgroundSize: effectiveIsMobile ? '180%' : 'cover',
             backgroundPosition: effectiveIsMobile ? 'center calc(50% + 80px)' : 'center',
             opacity: 0.77,

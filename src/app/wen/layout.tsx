@@ -1,3 +1,5 @@
+import { getMediaUrl } from "@/lib/media-url";
+
 /**
  * Maintenance Page Layout
  * Removes all navigation elements and shows only the maintenance message
@@ -14,7 +16,7 @@ export default function MaintenanceLayout({
       <div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: 'url(/colored-bg-1.webp)',
+          backgroundImage: `url(${getMediaUrl('/colored-bg-1.webp')})`,
           opacity: 0.82, // +7% brightness boost
           zIndex: 0,
         }}

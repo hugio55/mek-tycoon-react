@@ -357,6 +357,7 @@ export default function NMKRJSONGenerator() {
       displayNameBase,
       tokenBaseName,
       numberOfNFTs,
+      startingNumber,
       phase,
       description,
       policyId,
@@ -378,34 +379,37 @@ export default function NMKRJSONGenerator() {
     // Store all files for navigation
     setAllMetadataFiles(parsedFiles);
 
-    // Show first token
-    setPreviewTokenNumber(1);
+    // Show first token (using starting number)
+    setPreviewTokenNumber(startingNumber);
     setPreviewMetadata(parsedFiles[0]);
     setShowPreview(true);
     setMessage(null);
   };
 
   // Navigate between tokens in preview
+  const endNumber = startingNumber + numberOfNFTs - 1;
+
   const handlePreviewNext = () => {
-    if (previewTokenNumber < numberOfNFTs) {
+    if (previewTokenNumber < endNumber) {
       const nextNum = previewTokenNumber + 1;
       setPreviewTokenNumber(nextNum);
-      setPreviewMetadata(allMetadataFiles[nextNum - 1]);
+      // Index in array is (tokenNumber - startingNumber)
+      setPreviewMetadata(allMetadataFiles[nextNum - startingNumber]);
     }
   };
 
   const handlePreviewPrevious = () => {
-    if (previewTokenNumber > 1) {
+    if (previewTokenNumber > startingNumber) {
       const prevNum = previewTokenNumber - 1;
       setPreviewTokenNumber(prevNum);
-      setPreviewMetadata(allMetadataFiles[prevNum - 1]);
+      setPreviewMetadata(allMetadataFiles[prevNum - startingNumber]);
     }
   };
 
   const handlePreviewJumpTo = (tokenNum: number) => {
-    if (tokenNum >= 1 && tokenNum <= numberOfNFTs) {
+    if (tokenNum >= startingNumber && tokenNum <= endNumber) {
       setPreviewTokenNumber(tokenNum);
-      setPreviewMetadata(allMetadataFiles[tokenNum - 1]);
+      setPreviewMetadata(allMetadataFiles[tokenNum - startingNumber]);
     }
   };
 
@@ -469,7 +473,8 @@ export default function NMKRJSONGenerator() {
       const imageBuffer = await uploadedImage.arrayBuffer();
 
       // Create N copies with display name - must match metadata filename pattern
-      for (let i = 1; i <= numberOfNFTs; i++) {
+      const endNum = startingNumber + numberOfNFTs - 1;
+      for (let i = startingNumber; i <= endNum; i++) {
         const filename = `${displayNameBase} #${i}.${extension}`;
         zip.file(filename, imageBuffer);
       }
@@ -502,6 +507,7 @@ export default function NMKRJSONGenerator() {
       displayNameBase,
       tokenBaseName,
       numberOfNFTs,
+      startingNumber,
       phase,
       description,
       policyId,
@@ -638,6 +644,29 @@ export default function NMKRJSONGenerator() {
             <p className="text-xs text-gray-500 mt-1">
               Test with 5, production: 35, 100, 150, etc.
             </p>
+          </div>
+
+          {/* Starting Number */}
+          <div>
+            <label className="block text-xs uppercase text-gray-400 mb-2">Starting Number</label>
+            <input
+              type="number"
+              min="1"
+              max="9999"
+              value={startingNumber}
+              onChange={(e) => setStartingNumber(parseInt(e.target.value) || 1)}
+              className="w-full bg-black/50 border border-yellow-500/30 rounded px-4 py-2 text-white focus:border-yellow-400 focus:outline-none"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Start at #{startingNumber} → Generate #{startingNumber} through #{startingNumber + numberOfNFTs - 1}
+            </p>
+            {startingNumber > 1 && (
+              <div className="mt-2 p-2 bg-blue-900/30 border border-blue-500/30 rounded">
+                <p className="text-xs text-blue-300">
+                  Will create: {displayNameBase} #{startingNumber}, {displayNameBase} #{startingNumber + 1}, ... {displayNameBase} #{startingNumber + numberOfNFTs - 1}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1150,14 +1179,14 @@ export default function NMKRJSONGenerator() {
           {/* Navigation Header */}
           <div className="flex items-center justify-between mb-6">
             <h4 className="text-xl font-bold text-blue-400 uppercase">
-              Preview: Token {previewTokenNumber} of {numberOfNFTs}
+              Preview: Token #{previewTokenNumber} ({previewTokenNumber - startingNumber + 1} of {numberOfNFTs})
             </h4>
 
             {/* Navigation Controls */}
             <div className="flex items-center gap-3">
               <button
                 onClick={handlePreviewPrevious}
-                disabled={previewTokenNumber === 1}
+                disabled={previewTokenNumber === startingNumber}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-bold rounded transition-all"
               >
                 ← Previous
@@ -1168,14 +1197,14 @@ export default function NMKRJSONGenerator() {
                 onChange={(e) => handlePreviewJumpTo(parseInt(e.target.value))}
                 className="px-4 py-2 bg-black border border-blue-500/50 text-white rounded focus:border-blue-400 focus:outline-none"
               >
-                {Array.from({ length: numberOfNFTs }, (_, i) => i + 1).map(num => (
+                {Array.from({ length: numberOfNFTs }, (_, i) => startingNumber + i).map(num => (
                   <option key={num} value={num}>Token #{num}</option>
                 ))}
               </select>
 
               <button
                 onClick={handlePreviewNext}
-                disabled={previewTokenNumber === numberOfNFTs}
+                disabled={previewTokenNumber === endNumber}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-bold rounded transition-all"
               >
                 Next →

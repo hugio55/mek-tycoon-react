@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getMediaUrl } from "@/lib/media-url";
 
 interface ResponsiveBackgroundImageAdvancedProps {
   verticalPosition: number; // 0-100 percentage
@@ -38,16 +39,16 @@ export default function ResponsiveBackgroundImageAdvanced({
   // Select appropriate image size based on viewport width
   const getBackgroundImageUrl = () => {
     if (!enableResponsiveLoading) {
-      return '/colored-bg-1.webp';
+      return getMediaUrl('/colored-bg-1.webp');
     }
 
     // Responsive image selection
     if (viewportWidth < 768) {
-      return '/colored-bg-1-mobile.webp'; // 750w, ~100KB
+      return getMediaUrl('/colored-bg-1-mobile.webp'); // 750w, ~100KB
     } else if (viewportWidth < 1280) {
-      return '/colored-bg-1-tablet.webp'; // 1536w, ~200KB
+      return getMediaUrl('/colored-bg-1-tablet.webp'); // 1536w, ~200KB
     } else {
-      return '/colored-bg-1-desktop.webp'; // 1920w, ~305KB
+      return getMediaUrl('/colored-bg-1-desktop.webp'); // 1920w, ~305KB
     }
   };
 

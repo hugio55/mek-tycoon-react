@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getMediaUrl } from "@/lib/media-url";
 
 interface ResponsiveBackgroundImageProps {
   verticalPosition: number; // 0-100 percentage
@@ -38,7 +39,7 @@ export default function ResponsiveBackgroundImage({
     <div
       className="fixed inset-0 z-0 pointer-events-none"
       style={{
-        backgroundImage: 'url(/colored-bg-1.webp)',
+        backgroundImage: `url(${getMediaUrl('/colored-bg-1.webp')})`,
         backgroundSize: 'cover', // Mobile: Full width coverage
         backgroundPosition: `center ${backgroundPositionY}`, // Adjustable vertical position
         backgroundRepeat: 'no-repeat',

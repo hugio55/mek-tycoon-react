@@ -48,7 +48,7 @@ export default function LandingContainer({
       <div
         className="fixed inset-0 pointer-events-none transition-opacity ease-out"
         style={{
-          backgroundImage: 'url(/colored-bg-1.webp)',
+          backgroundImage: `url(${getMediaUrl('/colored-bg-1.webp')})`,
           backgroundSize: effectiveIsMobile ? '180%' : 'cover',
           backgroundPosition: effectiveIsMobile ? 'center calc(50% + 80px)' : 'center',
           opacity: isLoading ? 0 : backgroundOpacity,
