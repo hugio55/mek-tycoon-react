@@ -134,6 +134,12 @@ export default defineSchema({
       height: v.number(),
     })),
 
+    // Viewport position - where the viewport box is centered on the canvas
+    viewportPosition: v.optional(v.object({
+      x: v.number(),
+      y: v.number(),
+    })),
+
     // Metadata
     isDefault: v.optional(v.boolean()), // Is this a default template?
     createdAt: v.number(),

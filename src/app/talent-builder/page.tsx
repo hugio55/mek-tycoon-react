@@ -134,7 +134,8 @@ function TalentBuilderInner() {
     const data = {
       nodes: state.nodes,
       connections: state.connections,
-      viewportDimensions: state.viewportDimensions
+      viewportDimensions: state.viewportDimensions,
+      viewportPosition: state.viewportPosition
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -143,7 +144,7 @@ function TalentBuilderInner() {
     a.download = 'talent-tree.json';
     a.click();
     URL.revokeObjectURL(url);
-  }, [state.nodes, state.connections, state.viewportDimensions]);
+  }, [state.nodes, state.connections, state.viewportDimensions, state.viewportPosition]);
 
   const importTree = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -157,6 +158,9 @@ function TalentBuilderInner() {
         loadTree(data.nodes || [], data.connections || []);
         if (data.viewportDimensions) {
           dispatch({ type: 'SET_VIEWPORT_DIMENSIONS', payload: data.viewportDimensions });
+        }
+        if (data.viewportPosition) {
+          dispatch({ type: 'SET_VIEWPORT_POSITION', payload: data.viewportPosition });
         }
       } catch {
         alert('Invalid file format');
