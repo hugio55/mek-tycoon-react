@@ -1,12 +1,19 @@
 "use client";
 
+/**
+ * EnvironmentDebugPanel - SIMPLIFIED FOR SINGLE DATABASE
+ *
+ * Previously showed dual-database (Trout/Sturgeon) configuration.
+ * Now shows single production database (Sturgeon) status.
+ */
+
 import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
 /**
  * Comprehensive environment debugging panel
- * Shows ALL environment variables, connection status, and database info
+ * Shows environment variables, connection status, and database info
  * Access via window.showEnvDebug() in console
  */
 export default function EnvironmentDebugPanel() {
@@ -48,7 +55,6 @@ export default function EnvironmentDebugPanel() {
 
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || '';
   const deploymentName = convexUrl.split("//")[1]?.split(".")[0] || "unknown";
-  const isStaging = deploymentName === 'wry-trout-962';
   const isProduction = deploymentName === 'fabulous-sturgeon-691';
 
   return (
@@ -97,8 +103,8 @@ export default function EnvironmentDebugPanel() {
                     </>
                   ) : userGold === null ? (
                     <>
-                      <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
-                      <span className="text-red-400 font-mono text-sm">ERROR</span>
+                      <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                      <span className="text-green-400 font-mono text-sm">ONLINE (no wallet)</span>
                     </>
                   ) : (
                     <>
@@ -128,27 +134,15 @@ export default function EnvironmentDebugPanel() {
                 <span className="text-white font-mono text-sm">{detectedHost}:{detectedPort}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Detected Environment:</span>
-                <span className={`font-mono text-sm font-bold ${isStaging ? 'text-green-400' : isProduction ? 'text-red-400' : 'text-yellow-400'}`}>
-                  {isStaging ? 'STAGING (Safe to break)' : isProduction ? 'PRODUCTION (LIVE DATA)' : 'UNKNOWN'}
+                <span className="text-gray-400">Database Mode:</span>
+                <span className="font-mono text-sm font-bold text-green-400">
+                  SINGLE DATABASE (Production)
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Expected Port:</span>
-                <span className="text-white font-mono text-sm">
-                  {isStaging ? '3200' : isProduction ? '3100' : 'N/A'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Port Match:</span>
-                <span className={`font-mono text-sm ${
-                  (isStaging && detectedPort === 3200) || (isProduction && detectedPort === 3100)
-                    ? 'text-green-400'
-                    : 'text-yellow-400'
-                }`}>
-                  {(isStaging && detectedPort === 3200) || (isProduction && detectedPort === 3100)
-                    ? '✓ Correct'
-                    : '⚠ Unexpected port'}
+                <span className="text-gray-400">Deployment:</span>
+                <span className={`font-mono text-sm ${isProduction ? 'text-green-400' : 'text-yellow-400'}`}>
+                  {isProduction ? 'fabulous-sturgeon-691 (Sturgeon)' : deploymentName}
                 </span>
               </div>
             </div>
@@ -171,9 +165,9 @@ export default function EnvironmentDebugPanel() {
                 <span className="text-white font-mono text-sm">{deploymentName}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Database Type:</span>
-                <span className={`font-mono text-sm ${isStaging ? 'text-green-400' : 'text-red-400'}`}>
-                  {isStaging ? 'wry-trout-962 (Staging)' : 'fabulous-sturgeon-691 (Production)'}
+                <span className="text-gray-400">Database:</span>
+                <span className="font-mono text-sm text-green-400">
+                  Sturgeon (Production - Single Database Mode)
                 </span>
               </div>
             </div>
@@ -202,26 +196,17 @@ export default function EnvironmentDebugPanel() {
             </div>
           </section>
 
-          {/* Expected Configuration */}
+          {/* Configuration Info */}
           <section>
             <h3 className="text-lg font-bold text-yellow-400 mb-3 flex items-center gap-2">
-              <span>📋</span> Expected Configuration
+              <span>📋</span> Database Configuration
             </h3>
-            <div className="bg-gray-800/50 rounded border border-gray-700 p-4 space-y-4">
-              <div>
-                <div className="text-green-400 font-bold mb-2">🟢 STAGING (wry-trout-962)</div>
+            <div className="bg-gray-800/50 rounded border border-gray-700 p-4">
+              <div className="bg-green-900/30 border border-green-600/50 rounded p-4">
+                <div className="text-green-400 font-bold mb-2">🐟 PRODUCTION (fabulous-sturgeon-691)</div>
                 <div className="ml-4 space-y-1 text-sm">
-                  <div className="text-gray-300 font-mono">Port: 3200</div>
-                  <div className="text-gray-300 font-mono">URL: https://wry-trout-962.convex.cloud</div>
-                  <div className="text-gray-400">Safe to break, experiment, reset data</div>
-                </div>
-              </div>
-              <div>
-                <div className="text-red-400 font-bold mb-2">🔴 PRODUCTION (fabulous-sturgeon-691)</div>
-                <div className="ml-4 space-y-1 text-sm">
-                  <div className="text-gray-300 font-mono">Port: 3100</div>
                   <div className="text-gray-300 font-mono">URL: https://fabulous-sturgeon-691.convex.cloud</div>
-                  <div className="text-gray-400">LIVE DATA - Used by Vercel deployment</div>
+                  <div className="text-gray-400">Single database mode - all environments use this database</div>
                 </div>
               </div>
             </div>
