@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import EssenceDonutChart from "@/components/essence-donut-chart";
 import "@/styles/global-design-system.css";
+import { getMediaUrl } from "@/lib/media-url";
 
 // Generate more essence types with varying quantities (using deterministic values)
 const generateEssenceData = () => {
@@ -920,7 +921,7 @@ export default function EssenceDonutPage() {
                     <div className="relative mb-4 mek-slot-empty rounded-lg p-4 flex items-center justify-center border-2 border-gray-700/30" style={{ minHeight: '200px' }}>
                       <div className="absolute inset-0 mek-overlay-glass opacity-30 pointer-events-none"></div>
                       <img 
-                        src="/essence-images/bumblebee 1.png"
+                        src={getMediaUrl("/essence-images/bumblebee 1.png")}
                         alt="Essence placeholder"
                         className="relative z-10 w-full h-full object-contain opacity-30"
                         style={{ maxHeight: '180px' }}
