@@ -57,7 +57,6 @@ export default function DeploymentsAdmin() {
   const [commitMessage, setCommitMessage] = useState('');
   const [isCommitting, setIsCommitting] = useState(false);
   const [isPushing, setIsPushing] = useState(false);
-  const [isDeployingDev, setIsDeployingDev] = useState(false);
   const [isDeployingProd, setIsDeployingProd] = useState(false);
   const [isFullDeploy, setIsFullDeploy] = useState(false);
   const [showProdConfirm, setShowProdConfirm] = useState(false);
