@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev -p 3200 -H 0.0.0.0",
     "dev:turbo": "next dev --turbo -p 3200 -H 0.0.0.0",
-    "dev:convex": "convex dev --typecheck=disable",
-    "dev:all": "concurrently \"npm run dev\" \"npm run dev:convex\"",
+    "push": "npx convex deploy --typecheck=disable -y",
+    "dev:all": "echo Use 'npm run dev' for frontend and 'npm run push' for backend changes && npm run dev",
     "dev:stable": "next dev -p 3200",
     "tunnel": "cloudflared tunnel --url http://localhost:3200",
     "preview": "next build && next start",
