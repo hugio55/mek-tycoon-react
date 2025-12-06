@@ -1004,14 +1004,6 @@ export default function DeploymentsAdmin() {
           </button>
 
           <button
-            onClick={handleDeployDev}
-            disabled={anyActionRunning}
-            className="px-4 py-3 bg-green-700 hover:bg-green-600 disabled:bg-gray-800 disabled:text-gray-600 rounded-lg transition-colors"
-          >
-            {isDeployingDev ? 'Deploying...' : 'Deploy Dev (Trout)'}
-          </button>
-
-          <button
             onClick={() => openProdConfirm(false)}
             disabled={anyActionRunning}
             className="px-4 py-3 bg-red-700 hover:bg-red-600 disabled:bg-gray-800 disabled:text-gray-600 rounded-lg transition-colors"
@@ -1231,8 +1223,7 @@ export default function DeploymentsAdmin() {
         <ul className="list-disc list-inside space-y-2">
           <li><span className="text-gray-400">Commit</span> - Saves your code changes to git history (local only)</li>
           <li><span className="text-gray-400">Push to GitHub</span> - Uploads commits to your current branch (creates Vercel preview)</li>
-          <li><span className="text-gray-400">Deploy Dev (Trout)</span> - Updates Convex database functions for localhost testing</li>
-          <li><span className="text-gray-400">Deploy Prod (Sturgeon)</span> - Updates Convex database functions for the live site</li>
+          <li><span className="text-gray-400">Deploy Prod (Sturgeon)</span> - Updates Convex database functions (single database mode)</li>
         </ul>
         <div className="mt-3 pt-3 border-t border-gray-700">
           <div className="font-bold text-gray-400 mb-1">What the Big Button Does (5 Steps):</div>
