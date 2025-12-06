@@ -1,11 +1,17 @@
 'use client';
 
+/**
+ * WalletManagementAdmin - SIMPLIFIED FOR SINGLE DATABASE
+ *
+ * Previously supported dual-database selection (Trout/Sturgeon).
+ * Now uses single database (Sturgeon) via main Convex client.
+ */
+
 import { useState, lazy, Suspense, useMemo, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, ConvexProvider } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { restoreWalletSession } from '@/lib/walletSessionManager';
-import { sturgeonClient } from '@/lib/sturgeonClient';
 import SystemMonitoringDashboard from '@/components/SystemMonitoringDashboard';
 import WalletSnapshotDebug from '@/components/WalletSnapshotDebug';
 import MekLevelsViewer from '@/components/MekLevelsViewer';
@@ -67,40 +73,33 @@ function WalletManagementAdminContent() {
   const [walletsLoaded, setWalletsLoaded] = useState(false);
   const [showOnlyWrenCo, setShowOnlyWrenCo] = useState(false);
 
-  // Load wallets from selected database
+  // Load wallets from database (single database mode - always uses main client)
   useEffect(() => {
     if (!walletsLoaded) {
       setWalletsData(null);
       return;
     }
 
-    // Auto-switch to Trout if Sturgeon selected but not configured
-    if (selectedDatabase === 'sturgeon' && !sturgeonClient) {
-      console.warn('[Player Management] Sturgeon not configured, switching to Trout');
-      setSelectedDatabase('trout');
-      return;
-    }
-
     setIsLoadingWallets(true);
-    const client = selectedDatabase === 'sturgeon' ? sturgeonClient : window.convex;
+    const dbClient = client || window.convex;
 
-    if (!client) {
+    if (!dbClient) {
       console.error('[Player Management] Convex client not initialized');
       setIsLoadingWallets(false);
       return;
     }
 
-    // PHASE II: Query users table instead of goldMining
-    client.query(api.adminUsers.getAllUsersForAdmin)
+    // Query users table
+    dbClient.query(api.adminUsers.getAllUsersForAdmin)
       .then((data: any) => {
         setWalletsData(data);
         setIsLoadingWallets(false);
       })
       .catch((error: Error) => {
-        console.error(`[Player Management] Error loading from ${selectedDatabase}:`, error);
+        console.error('[Player Management] Error loading wallets:', error);
         setIsLoadingWallets(false);
       });
-  }, [walletsLoaded, selectedDatabase]);
+  }, [walletsLoaded, client]);
 
   const wallets = walletsData;
 
@@ -1100,32 +1099,12 @@ Check console for full timeline.
                 </p>
               </div>
 
-              {/* Database Selector */}
-              <div className="flex items-center gap-2 px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg">
+              {/* Database Indicator (Single Database Mode) */}
+              <div className="flex items-center gap-2 px-3 py-2 bg-green-900/30 border border-green-600/50 rounded-lg">
                 <span className="text-sm text-gray-400">Database:</span>
-                <select
-                  value={selectedDatabase}
-                  onChange={(e) => {
-                    setSelectedDatabase(e.target.value as 'trout' | 'sturgeon');
-                    setWalletsLoaded(false); // Reset to require reload
-                  }}
-                  className="bg-gray-800 border border-gray-600 rounded px-3 py-1 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                  style={{ fontFamily: "'Orbitron', sans-serif" }}
-                >
-                  <option
-                    value="sturgeon"
-                    className="bg-gray-800"
-                    disabled={!sturgeonClient}
-                  >
-                    🔴 Sturgeon (Production - READ ONLY){!sturgeonClient ? ' - Not Configured' : ''}
-                  </option>
-                  <option value="trout" className="bg-gray-800">🔹 Trout (Development)</option>
-                </select>
-                {!sturgeonClient && (
-                  <span className="text-xs text-gray-500" title="Add NEXT_PUBLIC_STURGEON_URL to .env.local to enable production monitoring">
-                    ⓘ
-                  </span>
-                )}
+                <span className="text-sm font-bold text-green-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                  🐟 Production (Sturgeon)
+                </span>
               </div>
             </div>
 
