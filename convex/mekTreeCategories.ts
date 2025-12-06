@@ -263,10 +263,10 @@ export const findCategoryForMek = query({
       }
 
       // Check rarity rank range (highest priority - 100 points)
-      if (mek.rank !== undefined && mek.rank !== null) {
+      if (mek.rarityRank !== undefined && mek.rarityRank !== null) {
         const rankMin = conditions.rankMin ?? 0;
         const rankMax = conditions.rankMax ?? Infinity;
-        if (mek.rank >= rankMin && mek.rank <= rankMax) {
+        if (mek.rarityRank >= rankMin && mek.rarityRank <= rankMax) {
           score += 100;
         }
       }

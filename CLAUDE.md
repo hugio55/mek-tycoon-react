@@ -8,10 +8,12 @@ The directory `mek-tycoon-react-staging` is the PRIMARY and MAIN working directo
 
 - **Primary Directory**: `C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react-staging`
 - **Do NOT use**: The `mek-tycoon-react` directory exists but is NOT used for current work
-- **Database**: `wry-trout-962.convex.cloud` (isolated staging database)
+- **Database**: `fabulous-sturgeon-691.convex.cloud` (UNIFIED PRODUCTION DATABASE)
 - **Port**: localhost:3200
 
 **Naming note**: Despite the word "staging" in the directory name, this is our primary development environment where ALL current work happens.
+
+**⚠️ UNIFIED DATABASE**: As of December 2024, we use a SINGLE database (Sturgeon/Production) for both localhost development and live site. There is no separate dev database. All changes to the backend affect real users immediately.
 
 ## Dev Server Management
 **CRITICAL: User starts their own dev servers. DO NOT automatically run background dev server tasks.**
@@ -71,139 +73,73 @@ npm run dev:all
 
 ---
 
-## 🚨 CRITICAL: PRODUCTION DEPLOYMENT PROTECTION 🚨
-**NEVER DEPLOY TO PRODUCTION WITHOUT EXPLICIT USER INSTRUCTION AND CONFIRMATION**
+## 🚨 CRITICAL: UNIFIED DATABASE - ALL CHANGES ARE PRODUCTION 🚨
+**EVERY BACKEND CHANGE AFFECTS REAL USERS IMMEDIATELY**
 
-### Database Architecture
+### Database Architecture (UNIFIED - December 2024)
 
-**This project has TWO completely separate Convex databases:**
+**This project uses a SINGLE unified Convex database:**
 
-**Trout (wry-trout-962.convex.cloud)** = **DEVELOPMENT DATABASE**
-- Used for localhost:3200 development and testing
-- Connected via `.env.local` configuration
-- Safe to break, test, and experiment
-- Where ALL daily work happens
-
-**Sturgeon (fabulous-sturgeon-691.convex.cloud)** = **PRODUCTION DATABASE**
-- Used by the live website (mek.overexposed.io)
+**Sturgeon (fabulous-sturgeon-691.convex.cloud)** = **THE ONLY DATABASE**
+- Used by BOTH localhost:3200 development AND the live website (mek.overexposed.io)
 - Contains REAL user data and 36+ active players
-- Changes immediately affect live users
-- **EXTREMELY DANGEROUS - Requires explicit user permission**
+- All backend changes (schema, queries, mutations, cron jobs) affect live users immediately
+- **There is NO separate dev/staging database**
 
-**CRITICAL**: These are COMPLETELY SEPARATE databases. Changes to one do NOT affect the other. Cron jobs run independently on each.
-
----
-
-### 🛑 ABSOLUTE RULE: ALWAYS ASSUME DEV (TROUT) UNLESS EXPLICITLY TOLD OTHERWISE
-
-**Default Assumption for ALL Operations:**
-- Target: **Trout (dev database)**
-- Environment: **localhost:3200**
-- Purpose: **Testing and development**
-- Risk Level: **Low - safe to experiment**
-
-**🎯 DEPLOYMENT DEFAULT: ALWAYS TROUT**
-- **ALL deployments target Trout (dev) unless user explicitly says otherwise**
-- If user says "deploy", "push changes", or similar → ASSUME TROUT
-- User will ALWAYS explicitly say "production" or "Sturgeon" when needed
-- When in doubt → ASK, but default assumption is ALWAYS Trout
-
-**User will ALWAYS explicitly say when to deploy to production. Never assume production.**
+**Trout (wry-trout-962.convex.cloud)** = **DEPRECATED/UNUSED**
+- Previously used as a separate dev database
+- No longer in use as of December 2024
+- Do NOT point `.env.local` to Trout
 
 ---
 
-### Production Deployment Protocol (SINGLE CONFIRMATION)
+### 🛑 IMPORTANT: UNIFIED DATABASE IMPLICATIONS
 
-**Before running ANY command that deploys to backend (npx convex deploy, etc.):**
+**What this means for development:**
+- ✅ Frontend changes (React components, styling, UI) are safe - only affect localhost until deployed
+- ⚠️ Backend changes (Convex functions, schema) affect production immediately when you run `npx convex dev`
+- ⚠️ Schema changes, new indexes, mutations all go live instantly
+- ⚠️ Cron job changes affect the live scheduled tasks
 
-#### Step 1: ASK TARGET ENVIRONMENT
-```
-"Should I deploy these changes to:
-A) Trout (dev - localhost:3200)
-B) Sturgeon (production - live site with real users)?"
-```
-
-**Wait for explicit answer. Do NOT proceed without user response.**
-
-#### Step 2: IF USER SAYS PRODUCTION - Confirm and Execute
-```
-⚠️ Deploying to PRODUCTION (Sturgeon - fabulous-sturgeon-691)
-This affects the live site with real users. Proceeding...
-
-[Execute deployment]
-✓ Deployed successfully to production
-```
-
-**No additional confirmations needed after user explicitly says "production" or "Sturgeon".**
+**When running `npm run dev:all` or `npx convex dev`:**
+- The Convex dev server syncs your local `/convex` folder to the production database
+- Any changes to `.ts` files in `/convex` are deployed immediately
+- This is by design for the unified workflow
 
 ---
 
-### Dev Deployment Protocol (ONE QUESTION ONLY)
+### Backend Change Protocol
 
-**If user says deploy without specifying target:**
+**Before modifying ANY file in the `/convex` folder:**
 
-```
-"Deploying to Trout (dev - localhost:3200)? Or did you want Sturgeon (production)?"
-```
+1. **Consider the impact**: Will this break existing functionality for live users?
+2. **Schema changes**: Be extra careful - adding fields is safe, removing/renaming can break things
+3. **Test mentally first**: Think through edge cases before the code syncs
+4. **Announce risky changes**: Tell the user "This backend change will affect production immediately"
 
-**If Trout (dev) confirmed:**
-- Proceed immediately (low risk)
-- No additional warnings needed
-- Just execute and confirm completion
+**Safe operations:**
+- Adding new optional fields to schema
+- Adding new queries/mutations (existing code won't call them yet)
+- Bug fixes that don't change data structure
 
----
-
-### Environmental Context Checks
-
-**Before ANY deployment, check these signals:**
-
-**Indicators This is DEV Context (assume Trout):**
-- ✅ `.env.local` points to `wry-trout-962.convex.cloud`
-- ✅ Dev server running on localhost:3200
-- ✅ User hasn't mentioned "production" or "Sturgeon" or "live site"
-- ✅ User is testing or developing features
-- ✅ User said "right now" or "urgently" (urgency ≠ production!)
-
-**Indicators This is PRODUCTION Context (require confirmation):**
-- 🚨 User explicitly said "production" or "Sturgeon" or "live site"
-- 🚨 User said "deploy to production" or "push to live"
-- 🚨 User mentioned "real users" or "live players"
-- 🚨 User said "make this live" or "go live with this"
-
-**If ALL signals point to dev → Deploy to dev (Trout) after single confirmation**
-**If ANY signal suggests production → Ask which environment, then proceed after single confirmation**
+**Risky operations (announce first):**
+- Changing existing query/mutation signatures
+- Modifying schema field types
+- Removing or renaming fields
+- Changing cron job schedules or logic
 
 ---
 
-### Red Flags That ALWAYS Require Questions
+### Key Principles (Unified Database)
 
-**STOP and ASK before executing if:**
-- ❌ Running `npx convex deploy` or any deployment command
-- ❌ Command affects backend systems, databases, or cron jobs
-- ❌ User hasn't explicitly named target environment
-- ❌ Changes could impact live users or data
-- ❌ "Deploy" instruction without specifying dev or production
-- ❌ Ambiguity about which database is the target
-- ❌ Any uncertainty whatsoever about dev vs production
+1. **All Backend = Production**: Every Convex change affects real users
+2. **Frontend is Safe**: UI changes only affect localhost until deployed to Vercel
+3. **Think Before Saving**: Convex auto-syncs on file save
+4. **No Safety Net**: There's no dev database to test on first
+5. **Announce Risky Changes**: Let user know before backend changes that could break things
+6. **Schema Caution**: Be especially careful with schema modifications
 
-**When in doubt, ASK. Better to ask unnecessarily than destroy production.**
-
----
-
-### Key Principles
-
-1. **Default to Dev**: All work targets Trout unless explicitly told otherwise
-2. **User Controls Production**: Only deploy to production when user explicitly says so
-3. **Urgency ≠ Production**: "Right now" means do it now, NOT push to production
-4. **Single Confirm Production**: Ask target environment once, then proceed
-5. **One Question for Dev**: Dev deployments need only one confirmation
-6. **When in Doubt, Ask**: Better to ask unnecessarily than break production
-7. **Environmental Context**: `.env.local` = Trout, localhost = dev, no mention of production = dev
-8. **User Will Tell You**: User will ALWAYS explicitly say when it's time for production
-
-**Real Incident Note (Nov 4, 2025)**: Previously deployed to production by assuming "right now" meant production. User's `.env.local` pointed to Trout, was working on localhost, never mentioned production - all signals pointed to dev. Lesson: NEVER assume production from urgency. Always ask target environment first.
-
-**REMEMBER**: Production deployments affect REAL USERS with REAL DATA. Treat them with extreme caution and ceremony. Never rush. Never assume. Always confirm.
+**REMEMBER**: With a unified database, the traditional "test in dev, deploy to prod" workflow doesn't apply to backend changes. Be thoughtful and deliberate with Convex modifications.
 
 ---
 
