@@ -126,7 +126,7 @@ export default function FederationPage() {
             <div className="mek-card-industrial mek-border-sharp-gold p-6 mb-8">
               <h2 className="mek-text-industrial text-2xl mb-4">PENDING INVITATIONS</h2>
               <div className="space-y-4">
-                {pendingInvites.map((invite) => (
+                {pendingInvites.map((invite: any) => (
                   <div key={invite._id} className="bg-black/40 border border-yellow-500/30 p-4 rounded">
                     <div className="flex items-center justify-between">
                       <div>
@@ -277,7 +277,7 @@ export default function FederationPage() {
           <div className="mek-card-industrial mek-border-sharp-gold p-6">
             <h2 className="mek-text-industrial text-2xl mb-4">FEDERATION MEMBERS</h2>
             <div className="space-y-2">
-              {federationDetails?.members?.map((member) => (
+              {federationDetails?.members?.map((member: any) => (
                 <div
                   key={member._id}
                   className="bg-black/40 border border-yellow-500/20 p-3 rounded flex items-center justify-between"
@@ -349,7 +349,7 @@ export default function FederationPage() {
 
           {showVariationGrid && (
             <div className="flex gap-2">
-              {(['all', 'heads', 'bodies', 'items'] as const).map((filter) => (
+              {(['all', 'heads', 'bodies', 'items'] as const).map((filter: any) => (
                 <button
                   key={filter}
                   onClick={() => setVariationFilter(filter)}

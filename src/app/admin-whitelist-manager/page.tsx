@@ -67,7 +67,7 @@ export default function AdminWhitelistManager() {
         u.displayName || 'N/A',
         u.userId || 'N/A'
       ])
-    ].map(row => row.join(',')).join('\n');
+    ].map((row: any) => row.join(',')).join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -115,7 +115,7 @@ export default function AdminWhitelistManager() {
           <div className="bg-black/50 border border-green-500/30 rounded-lg p-4">
             <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Total Eligible Users</div>
             <div className="text-3xl font-bold text-green-400">
-              {allWhitelists?.reduce((sum, w) => sum + (w.userCount || 0), 0) || 0}
+              {allWhitelists?.reduce((sum: any, w: any) => sum + (w.userCount || 0), 0) || 0}
             </div>
           </div>
         </div>
@@ -134,7 +134,7 @@ export default function AdminWhitelistManager() {
               </div>
             ) : (
               <div className="space-y-3">
-                {allWhitelists.map((whitelist) => (
+                {allWhitelists.map((whitelist: any) => (
                   <div
                     key={whitelist._id}
                     className={`bg-black/50 border rounded-lg p-4 cursor-pointer transition-all ${
@@ -249,7 +249,7 @@ export default function AdminWhitelistManager() {
                     <div key={index} className="flex justify-between items-center py-2 border-b border-gray-700 last:border-0">
                       <div className="text-sm">
                         <span className="text-cyan-300">
-                          {allCriteria?.find(c => c.field === rule.criteriaField)?.displayName || rule.criteriaField}
+                          {allCriteria?.find((c: any) => c.field === rule.criteriaField)?.displayName || rule.criteriaField}
                         </span>
                         <span className="text-gray-500 mx-2">{rule.operator.replace(/_/g, ' ')}</span>
                         <span className="text-yellow-400">{rule.value}</span>
@@ -442,7 +442,7 @@ function WhitelistCreateModal({
   };
 
   const handleRemoveRule = (index: number) => {
-    setRules(rules.filter((_, i) => i !== index));
+    setRules(rules.filter((_: any, i: number) => i !== index));
   };
 
   const handleSave = async () => {
@@ -451,7 +451,7 @@ function WhitelistCreateModal({
       return;
     }
 
-    if (rules.some(r => !r.criteriaField || r.value === '')) {
+    if (rules.some((r: any) => !r.criteriaField || r.value === '')) {
       alert('Please complete all rules');
       return;
     }
@@ -553,7 +553,7 @@ function WhitelistCreateModal({
           </div>
 
           <div className="space-y-3">
-            {rules.map((rule, index) => (
+            {rules.map((rule: any, index: number) => (
               <div key={index} className="bg-black/30 border border-gray-700 rounded p-3">
                 <div className="grid grid-cols-12 gap-2 mb-2">
                   <div className="col-span-4">
@@ -567,7 +567,7 @@ function WhitelistCreateModal({
                       className="w-full bg-black/50 border border-cyan-500/30 rounded px-2 py-1 text-sm text-white"
                     >
                       <option value="">Select field...</option>
-                      {allCriteria.map((criteria) => (
+                      {allCriteria.map((criteria: any) => (
                         <option key={criteria._id} value={criteria.field}>
                           {criteria.displayName}
                         </option>
@@ -619,7 +619,7 @@ function WhitelistCreateModal({
                 </div>
                 {rule.criteriaField && (
                   <div className="text-xs text-gray-500">
-                    {allCriteria.find(c => c.field === rule.criteriaField)?.description}
+                    {allCriteria.find((c: any) => c.field === rule.criteriaField)?.description}
                   </div>
                 )}
               </div>

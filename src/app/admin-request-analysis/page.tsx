@@ -201,7 +201,7 @@ export default function AdminRequestAnalysisPage() {
           <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-6">
             <h2 className="text-2xl font-bold mb-4 text-red-400">⚠️ Potential Issues</h2>
             <ul className="space-y-2">
-              {analysis.potentialIssues.map((issue, idx) => (
+              {analysis.potentialIssues.map((issue: any, idx: number) => (
                 <li key={idx} className="text-red-300">• {issue}</li>
               ))}
             </ul>
@@ -213,7 +213,7 @@ export default function AdminRequestAnalysisPage() {
           <div className="bg-blue-900/20 border border-blue-500/50 rounded-lg p-6">
             <h2 className="text-2xl font-bold mb-4 text-blue-400">💡 Recommendations</h2>
             <ul className="space-y-2">
-              {analysis.recommendations.map((rec, idx) => (
+              {analysis.recommendations.map((rec: any, idx: number) => (
                 <li key={idx} className="text-blue-300">• {rec}</li>
               ))}
             </ul>

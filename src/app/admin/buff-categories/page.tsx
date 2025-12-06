@@ -504,7 +504,7 @@ export default function BuffCategoriesPage() {
                                 </div>
                               </td>
                             </tr>
-                            {groupedCategories.success.map((category) => {
+                            {groupedCategories.success.map((category: any) => {
                               const categoryLabel = categoryOptions.find((c: any) => c.value === category.category)?.label || category.category || "-";
                               const unitTypeLabel = unitTypeOptions.find((u: any) => u.value === category.unitType)?.label || category.unitType || "-";
                               const applicationLabel = applicationTypeOptions.find((a: any) => a.value === category.applicationType)?.label || category.applicationType || "Universal";
@@ -600,7 +600,7 @@ export default function BuffCategoriesPage() {
                                 <span className="text-yellow-500 font-bold text-xs uppercase">Gold & Market</span>
                               </td>
                             </tr>
-                            {groupedCategories.gold.map((category) => {
+                            {groupedCategories.gold.map((category: any) => {
                               const categoryLabel = categoryOptions.find((c: any) => c.value === category.category)?.label || category.category || "-";
                               const unitTypeLabel = unitTypeOptions.find((u: any) => u.value === category.unitType)?.label || category.unitType || "-";
                               const applicationLabel = applicationTypeOptions.find((a: any) => a.value === category.applicationType)?.label || category.applicationType || "Universal";
@@ -687,7 +687,7 @@ export default function BuffCategoriesPage() {
                                 <span className="text-purple-500 font-bold text-xs uppercase">Essence</span>
                               </td>
                             </tr>
-                            {groupedCategories.essence.map((category) => {
+                            {groupedCategories.essence.map((category: any) => {
                               const categoryLabel = categoryOptions.find((c: any) => c.value === category.category)?.label || category.category || "-";
                               const unitTypeLabel = unitTypeOptions.find((u: any) => u.value === category.unitType)?.label || category.unitType || "-";
                               const applicationLabel = applicationTypeOptions.find((a: any) => a.value === category.applicationType)?.label || category.applicationType || "Universal";
@@ -774,7 +774,7 @@ export default function BuffCategoriesPage() {
                                 <span className="text-blue-500 font-bold text-xs uppercase">Looter & Rewards</span>
                               </td>
                             </tr>
-                            {groupedCategories.looter.map((category) => {
+                            {groupedCategories.looter.map((category: any) => {
                               const categoryLabel = categoryOptions.find((c: any) => c.value === category.category)?.label || category.category || "-";
                               const unitTypeLabel = unitTypeOptions.find((u: any) => u.value === category.unitType)?.label || category.unitType || "-";
                               const applicationLabel = applicationTypeOptions.find((a: any) => a.value === category.applicationType)?.label || category.applicationType || "Universal";
@@ -861,7 +861,7 @@ export default function BuffCategoriesPage() {
                                 <span className="text-gray-400 font-bold text-xs uppercase">Other</span>
                               </td>
                             </tr>
-                            {groupedCategories.other.map((category) => {
+                            {groupedCategories.other.map((category: any) => {
                               const categoryLabel = categoryOptions.find((c: any) => c.value === category.category)?.label || category.category || "-";
                               const unitTypeLabel = unitTypeOptions.find((u: any) => u.value === category.unitType)?.label || category.unitType || "-";
                               const applicationLabel = applicationTypeOptions.find((a: any) => a.value === category.applicationType)?.label || category.applicationType || "Universal";
@@ -969,7 +969,7 @@ export default function BuffCategoriesPage() {
               </p>
               
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3">
-                {mechanismTiers.map((tier) => {
+                {mechanismTiers.map((tier: any) => {
                   const isEditing = editingTierId === tier._id;
                   return (
                     <div key={tier._id} className="bg-black/50 border border-yellow-500/30 rounded p-2">
@@ -1079,7 +1079,7 @@ export default function BuffCategoriesPage() {
                     onChange={(e) => setFormData({ ...formData, category: e.target.value as BuffCategory["category"] })}
                     className="w-full bg-black/50 border border-gray-700 rounded px-3 py-2 text-white focus:border-yellow-500 transition-colors"
                   >
-                    {categoryOptions.map((opt) => (
+                    {categoryOptions.map((opt: any) => (
                       <option key={opt.value} value={opt.value}>
                         {opt.label}
                       </option>
@@ -1094,7 +1094,7 @@ export default function BuffCategoriesPage() {
                     onChange={(e) => setFormData({ ...formData, unitType: e.target.value as BuffCategory["unitType"] })}
                     className="w-full bg-black/50 border border-gray-700 rounded px-3 py-2 text-white focus:border-yellow-500 transition-colors"
                   >
-                    {unitTypeOptions.map((opt) => (
+                    {unitTypeOptions.map((opt: any) => (
                       <option key={opt.value} value={opt.value}>
                         {opt.label}
                       </option>
@@ -1109,7 +1109,7 @@ export default function BuffCategoriesPage() {
                     onChange={(e) => setFormData({ ...formData, applicationType: e.target.value as BuffCategory["applicationType"] })}
                     className="w-full bg-black/50 border border-gray-700 rounded px-3 py-2 text-white focus:border-yellow-500 transition-colors"
                   >
-                    {applicationTypeOptions.map((opt) => (
+                    {applicationTypeOptions.map((opt: any) => (
                       <option key={opt.value} value={opt.value}>
                         {opt.label}
                       </option>
@@ -1124,7 +1124,7 @@ export default function BuffCategoriesPage() {
                     onChange={(e) => setFormData({ ...formData, tierStart: Number(e.target.value) })}
                     className="w-full bg-black/50 border border-gray-700 rounded px-3 py-2 text-white focus:border-yellow-500 transition-colors"
                   >
-                    {tierOptions.map((opt) => (
+                    {tierOptions.map((opt: any) => (
                       <option key={opt.value} value={opt.value}>
                         {opt.label}
                       </option>
@@ -1139,7 +1139,7 @@ export default function BuffCategoriesPage() {
                     onChange={(e) => setFormData({ ...formData, tierEnd: Number(e.target.value) })}
                     className="w-full bg-black/50 border border-gray-700 rounded px-3 py-2 text-white focus:border-yellow-500 transition-colors"
                   >
-                    {tierOptions.map((opt) => (
+                    {tierOptions.map((opt: any) => (
                       <option key={opt.value} value={opt.value}>
                         {opt.label}
                       </option>

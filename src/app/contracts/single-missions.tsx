@@ -247,7 +247,7 @@ export default function ContractsLayoutOption11() {
     
     // Calculate and animate new success rate
     const mekSlotCount = missionId === 'global' ? 6 : 2;
-    const actualMekCount = newMeks.filter(m => m !== null && m !== undefined).length;
+    const actualMekCount = newMeks.filter((m: any) => m !== null && m !== undefined).length;
     const baseRate = (actualMekCount / mekSlotCount) * 70;
     const bonusRate = hasMatch ? 10 : 0; // Add bonus if this mek has matching traits
     const newSuccessRate = Math.min(100, baseRate + bonusRate);
@@ -305,8 +305,8 @@ export default function ContractsLayoutOption11() {
     
     // Calculate matched bonuses
     const matched = matchedBonuses[contractId] || [];
-    const bonusPercentage = matched.reduce((acc, id) => {
-      const mult = successMultipliers.find(m => m.id === id);
+    const bonusPercentage = matched.reduce((acc: any, id: any) => {
+      const mult = successMultipliers.find((m: any) => m.id === id);
       return acc + parseInt(mult?.bonus.replace('+', '').replace('%', '') || '0');
     }, 0);
     
@@ -337,7 +337,7 @@ export default function ContractsLayoutOption11() {
                 
                 {/* Weaknesses */}
                 <div className="flex gap-2">
-                  {missionWeaknesses.map(weakness => (
+                  {missionWeaknesses.map((weakness: any) => (
                     <div 
                       key={weakness}
                       className="relative group/tooltip"
@@ -386,7 +386,7 @@ export default function ContractsLayoutOption11() {
 
               {/* Squad Grid */}
               <div className="grid grid-cols-6 gap-1.5 mb-3">
-                {Array.from({ length: 6 }).map((_, i) => {
+                {Array.from({ length: 6 }).map((_: any, i: number) => {
                   const isLocked = i >= mekSlotCount;
                   return (
                     <div key={i} className={`aspect-square ${isLocked ? 'bg-gray-900/30' : 'bg-gray-800/30'} rounded-lg border ${isLocked ? 'border-gray-800' : 'border-yellow-500/15'} flex items-center justify-center`}>
@@ -437,7 +437,7 @@ export default function ContractsLayoutOption11() {
                 <div className="text-xs text-gray-500">Expires: {formatCountdown(missionEndTime)}</div>
               </div>
               <div className="flex gap-1">
-                {missionWeaknesses.map(w => (
+                {missionWeaknesses.map((w: any) => (
                   <span key={w} className="text-sm">{missionAilments[w as keyof typeof missionAilments].icon}</span>
                 ))}
               </div>
@@ -450,7 +450,7 @@ export default function ContractsLayoutOption11() {
                 <span className="text-sm text-blue-400">+{xpReward.toLocaleString()} <span className="text-blue-300">XP</span></span>
               </div>
               <div className="text-xs text-gray-400 space-y-1">
-                {missionRewards.slice(0, 3).map((r, i) => (
+                {missionRewards.slice(0, 3).map((r: any, i: number) => (
                   <div key={i} className="flex justify-between">
                     <span>{r.name}</span>
                     <span className="text-yellow-400">{r.dropChance}%</span>
@@ -470,7 +470,7 @@ export default function ContractsLayoutOption11() {
             {/* Squad & Deploy */}
             <div className="flex items-center gap-3">
               <div className="flex gap-1 flex-1">
-                {Array.from({ length: 6 }).map((_, i) => (
+                {Array.from({ length: 6 }).map((_: any, i: number) => (
                   <div key={i} className={`flex-1 aspect-square ${i >= mekSlotCount ? 'bg-black/20' : 'bg-black/40'} rounded border ${i >= mekSlotCount ? 'border-gray-800' : 'border-gray-700'}`} />
                 ))}
               </div>
@@ -509,7 +509,7 @@ export default function ContractsLayoutOption11() {
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-xs text-white/50 uppercase">Ailments:</span>
                 <div className="flex gap-2">
-                  {missionWeaknesses.map(w => (
+                  {missionWeaknesses.map((w: any) => (
                     <div key={w} className="px-3 py-1 bg-black/30 rounded-full border border-white/20 flex items-center gap-1">
                       <span>{missionAilments[w as keyof typeof missionAilments].icon}</span>
                       <span className="text-xs text-white/70">{missionAilments[w as keyof typeof missionAilments].name}</span>
@@ -533,7 +533,7 @@ export default function ContractsLayoutOption11() {
 
               {/* Rewards Grid */}
               <div className="grid grid-cols-3 gap-2 mb-4">
-                {missionRewards.slice(0, 6).map((r, i) => (
+                {missionRewards.slice(0, 6).map((r: any, i: number) => (
                   <div key={i} className="bg-black/30 rounded-lg p-2 text-center">
                     <div className="text-[10px] text-white/60">{r.name}</div>
                     <div className="text-sm font-bold text-yellow-400">{r.dropChance}%</div>
@@ -544,7 +544,7 @@ export default function ContractsLayoutOption11() {
               {/* Squad & Action */}
               <div className="flex gap-2">
                 <div className="flex gap-1 flex-1">
-                  {Array.from({ length: 6 }).map((_, i) => (
+                  {Array.from({ length: 6 }).map((_: any, i: number) => (
                     <div key={i} className={`flex-1 aspect-square ${i >= mekSlotCount ? 'bg-black/20' : 'bg-white/10'} rounded-lg`} />
                   ))}
                 </div>
@@ -588,7 +588,7 @@ export default function ContractsLayoutOption11() {
               <div className="text-2xl font-bold text-yellow-400 mb-1">{formatGoldAmount(goldReward)}</div>
               <div className="text-xs text-blue-400 mb-3">+{xpReward.toLocaleString()} <span className="text-blue-300">XP</span></div>
               <div className="space-y-1">
-                {missionRewards.slice(0, 3).map((r, i) => (
+                {missionRewards.slice(0, 3).map((r: any, i: number) => (
                   <div key={i} className="text-xs text-gray-400">
                     {r.name} · {r.dropChance}%
                   </div>
@@ -599,7 +599,7 @@ export default function ContractsLayoutOption11() {
             {/* Right: Weaknesses & Success */}
             <div>
               <div className="flex gap-2 mb-3">
-                {missionWeaknesses.map(w => (
+                {missionWeaknesses.map((w: any) => (
                   <span key={w} className="text-lg">{missionAilments[w as keyof typeof missionAilments].icon}</span>
                 ))}
               </div>
@@ -615,7 +615,7 @@ export default function ContractsLayoutOption11() {
           {/* Bottom Action */}
           <div className="flex items-center gap-2">
             <div className="flex gap-1 flex-1">
-              {Array.from({ length: 6 }).map((_, i) => (
+              {Array.from({ length: 6 }).map((_: any, i: number) => (
                 <div key={i} className={`flex-1 h-8 ${i >= mekSlotCount ? 'bg-gray-800' : 'bg-gray-700'} rounded`} />
               ))}
             </div>
@@ -660,7 +660,7 @@ export default function ContractsLayoutOption11() {
 
                 {/* Rewards with percentages */}
                 <div className="grid grid-cols-2 gap-2 mb-4">
-                  {missionRewards.slice(0, 4).map((r, i) => (
+                  {missionRewards.slice(0, 4).map((r: any, i: number) => (
                     <div key={i} className="flex items-center justify-between bg-black/20 rounded-lg px-3 py-2">
                       <span className="text-xs text-gray-300">{r.name}</span>
                       <span className={`text-xs font-bold ${r.dropChance > 50 ? 'text-green-400' : 'text-gray-400'}`}>{r.dropChance}%</span>
@@ -670,7 +670,7 @@ export default function ContractsLayoutOption11() {
 
                 {/* Squad slots */}
                 <div className="flex gap-1.5">
-                  {Array.from({ length: 6 }).map((_, i) => (
+                  {Array.from({ length: 6 }).map((_: any, i: number) => (
                     <div key={i} className={`flex-1 aspect-square ${i >= mekSlotCount ? 'bg-black/20' : 'bg-black/40'} rounded-lg border-2 ${i >= mekSlotCount ? 'border-gray-600 opacity-60' : 'border-yellow-500/10'}`} />
                   ))}
                 </div>
@@ -682,7 +682,7 @@ export default function ContractsLayoutOption11() {
                 <div className="mb-6">
                   <div className="text-xs text-gray-500 uppercase mb-2">Ailments</div>
                   <div className="space-y-2">
-                    {missionWeaknesses.map(w => (
+                    {missionWeaknesses.map((w: any) => (
                       <div key={w} className="flex items-center gap-2">
                         <span className="text-lg">{missionAilments[w as keyof typeof missionAilments].icon}</span>
                         <span className="text-xs text-gray-400">{missionAilments[w as keyof typeof missionAilments].name}</span>
@@ -738,7 +738,7 @@ export default function ContractsLayoutOption11() {
               <div className="flex items-center gap-2">
                 <h4 className="text-sm text-yellow-400">{isGlobal ? 'global' : contract?.name?.toLowerCase() || 'mission'}</h4>
                 <div className="flex gap-1">
-                  {missionWeaknesses.map(w => (
+                  {missionWeaknesses.map((w: any) => (
                     <span key={w} className="text-xs">{missionAilments[w as keyof typeof missionAilments].icon}</span>
                   ))}
                 </div>
@@ -757,7 +757,7 @@ export default function ContractsLayoutOption11() {
 
             {/* Mini Rewards */}
             <div className="flex gap-2 mb-2 overflow-x-auto">
-              {missionRewards.slice(0, 4).map((r, i) => (
+              {missionRewards.slice(0, 4).map((r: any, i: number) => (
                 <div key={i} className="bg-black/40 rounded px-2 py-1 flex-shrink-0">
                   <div className="text-[9px] text-gray-400">{r.name}</div>
                   <div className="text-[10px] text-yellow-400">{r.dropChance}%</div>
@@ -768,7 +768,7 @@ export default function ContractsLayoutOption11() {
             {/* Action Row */}
             <div className="flex items-center gap-2">
               <div className="flex gap-0.5 flex-1">
-                {Array.from({ length: 6 }).map((_, i) => (
+                {Array.from({ length: 6 }).map((_: any, i: number) => (
                   <div key={i} className={`flex-1 h-6 ${i >= mekSlotCount ? 'bg-gray-800' : 'bg-gray-700'} rounded-sm`} />
                 ))}
               </div>
@@ -811,7 +811,7 @@ export default function ContractsLayoutOption11() {
                 </div>
               </div>
               <div className="flex gap-2">
-                {missionRewards.slice(0, 3).map((r, i) => (
+                {missionRewards.slice(0, 3).map((r: any, i: number) => (
                   <div key={i} className="text-[10px] text-gray-400">
                     {r.name} ({r.dropChance}%)
                   </div>
@@ -822,7 +822,7 @@ export default function ContractsLayoutOption11() {
             {/* Right: Weaknesses & Deploy */}
             <div className="p-4 flex items-center gap-3">
               <div className="flex flex-col gap-1">
-                {missionWeaknesses.map(w => (
+                {missionWeaknesses.map((w: any) => (
                   <span key={w} className="text-sm">{missionAilments[w as keyof typeof missionAilments].icon}</span>
                 ))}
               </div>
@@ -871,7 +871,7 @@ export default function ContractsLayoutOption11() {
               <div className="bg-black/30 rounded-lg p-2">
                 <div className="text-[9px] text-gray-500 mb-1">AILMENTS</div>
                 <div className="flex gap-1">
-                  {missionWeaknesses.map(w => (
+                  {missionWeaknesses.map((w: any) => (
                     <span key={w} className="text-sm">{missionAilments[w as keyof typeof missionAilments].icon}</span>
                   ))}
                 </div>
@@ -893,7 +893,7 @@ export default function ContractsLayoutOption11() {
             {/* Squad & Deploy */}
             <div className="flex items-center gap-2">
               <div className="flex gap-1 flex-1">
-                {Array.from({ length: 6 }).map((_, i) => (
+                {Array.from({ length: 6 }).map((_: any, i: number) => (
                   <div key={i} className={`flex-1 h-7 ${i >= mekSlotCount ? 'bg-black/20' : 'bg-black/40'} rounded border ${i >= mekSlotCount ? 'border-gray-800' : 'border-gray-700'}`} />
                 ))}
               </div>
@@ -920,7 +920,7 @@ export default function ContractsLayoutOption11() {
                     {isGlobal ? `global ${dailyVariation.toLowerCase()}` : contract?.name?.toLowerCase() || 'depot'}
                   </h3>
                   <div className="flex gap-1.5">
-                    {missionWeaknesses.map(w => (
+                    {missionWeaknesses.map((w: any) => (
                       <div key={w} className="w-6 h-6 bg-black/50 rounded flex items-center justify-center">
                         <span className="text-xs">{missionAilments[w as keyof typeof missionAilments].icon}</span>
                       </div>
@@ -947,7 +947,7 @@ export default function ContractsLayoutOption11() {
               {/* Clean Rewards List */}
               <div className="bg-black/30 rounded-lg p-3 mb-4">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                  {missionRewards.slice(0, 4).map((r, i) => (
+                  {missionRewards.slice(0, 4).map((r: any, i: number) => (
                     <div key={i} className="flex items-center justify-between">
                       <span className="text-xs text-gray-400">{r.name}</span>
                       <span className="text-xs text-yellow-400">{r.dropChance}%</span>
@@ -959,7 +959,7 @@ export default function ContractsLayoutOption11() {
               {/* Action Section */}
               <div className="flex items-center gap-3">
                 <div className="grid grid-cols-6 gap-1 flex-1">
-                  {Array.from({ length: 6 }).map((_, i) => (
+                  {Array.from({ length: 6 }).map((_: any, i: number) => (
                     <div key={i} className={`aspect-square ${i >= mekSlotCount ? 'bg-gray-800/50' : 'bg-gray-700/50'} rounded`} />
                   ))}
                 </div>
@@ -1029,7 +1029,7 @@ export default function ContractsLayoutOption11() {
                 <div>
                   <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Mission Ailments</div>
                   <div className="flex gap-2">
-                    {missionWeaknesses.map(w => {
+                    {missionWeaknesses.map((w: any) => {
                       const ailment = missionAilments[w as keyof typeof missionAilments];
                       return (
                         <div key={w} className="relative group/ailment">
@@ -1062,7 +1062,7 @@ export default function ContractsLayoutOption11() {
               <div className="bg-black/40 rounded-xl p-4 mb-4">
                 <div className="text-xs text-gray-500 uppercase tracking-wider mb-3">Additional Rewards</div>
                 <div className="space-y-2">
-                  {missionRewards.map((reward, i) => (
+                  {missionRewards.map((reward: any, i: number) => (
                     <div key={i} className="flex items-center justify-between bg-gray-800/30 rounded-lg px-3 py-2 hover:bg-gray-800/50 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-gray-900/60 rounded-lg flex items-center justify-center">
@@ -1083,7 +1083,7 @@ export default function ContractsLayoutOption11() {
 
               {/* Squad Grid */}
               <div className="grid grid-cols-6 gap-2 mb-4">
-                {Array.from({ length: 6 }).map((_, i) => {
+                {Array.from({ length: 6 }).map((_: any, i: number) => {
                   const isLocked = i >= mekSlotCount;
                   return (
                     <div key={i} className="aspect-square">
@@ -1298,7 +1298,7 @@ export default function ContractsLayoutOption11() {
               <div className="mb-4">
                 <div className="mek-label-uppercase mb-2">Ailments</div>
                 <div className="flex gap-2">
-                  {missionWeaknesses.map(w => (
+                  {missionWeaknesses.map((w: any) => (
                     <div key={w} className="bg-black/40 mek-border-sharp-gray px-3 py-2 flex items-center gap-2">
                       <span className="text-lg">{missionAilments[w as keyof typeof missionAilments].icon}</span>
                       <span className="text-xs text-gray-400">{missionAilments[w as keyof typeof missionAilments].name}</span>
@@ -1311,7 +1311,7 @@ export default function ContractsLayoutOption11() {
               <div className="mb-4">
                 <div className="mek-label-uppercase mb-3">Deploy Meks ({meks.length}/{mekSlotCount})</div>
                 <div className="grid grid-cols-4 gap-2">
-                  {Array.from({ length: Math.max(mekSlotCount, 8) }).map((_, i) => (
+                  {Array.from({ length: Math.max(mekSlotCount, 8) }).map((_: any, i: number) => (
                     <div
                       key={i}
                       className={`mek-slot-empty aspect-square border-2 border-dashed border-yellow-500/40 bg-black/40 rounded-lg flex items-center justify-center cursor-pointer hover:border-yellow-500/70 hover:shadow-[0_0_10px_rgba(250,182,23,0.3)] transition-all ${meks[i] ? 'bg-yellow-900/20' : ''} shadow-[0_0_5px_rgba(250,182,23,0.2)]`}
@@ -1445,7 +1445,7 @@ export default function ContractsLayoutOption11() {
               {/* Compact Rewards List */}
               <div className="bg-black/50 rounded-lg p-3 mb-4">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                  {missionRewards.slice(0, 4).map((reward, i) => (
+                  {missionRewards.slice(0, 4).map((reward: any, i: number) => (
                     <div key={i} className="flex items-center justify-between">
                       <span className="text-xs text-gray-400">{reward.name}</span>
                       <span className={`text-xs font-bold ${getRewardColor(reward.dropChance)}`}>
@@ -1458,7 +1458,7 @@ export default function ContractsLayoutOption11() {
 
               {/* Ailments Row */}
               <div className="flex gap-2 justify-center mb-4">
-                {missionWeaknesses.map(w => {
+                {missionWeaknesses.map((w: any) => {
                   const ailment = missionAilments[w as keyof typeof missionAilments];
                   return (
                     <div key={w} className="relative group/ailment">
@@ -1476,7 +1476,7 @@ export default function ContractsLayoutOption11() {
 
               {/* 2x3 Mek Grid */}
               <div className="grid grid-cols-3 gap-3 mb-4 max-w-xs mx-auto">
-                {Array.from({ length: 6 }).map((_, i) => {
+                {Array.from({ length: 6 }).map((_: any, i: number) => {
                   const isLocked = i >= mekSlotCount;
                   return (
                     <div key={i} className="aspect-square">
@@ -1563,7 +1563,7 @@ export default function ContractsLayoutOption11() {
                 <div className="flex-1">
                   <div className="bg-black/60 rounded-lg p-3 mb-3">
                     <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Rewards</div>
-                    {missionRewards.slice(0, 3).map((r, i) => (
+                    {missionRewards.slice(0, 3).map((r: any, i: number) => (
                       <div key={i} className="flex justify-between items-center py-1">
                         <span className="text-sm text-gray-300">{r.name}</span>
                         <span className={`text-sm font-bold ${getRewardColor(r.dropChance)}`}>{r.dropChance}%</span>
@@ -1572,7 +1572,7 @@ export default function ContractsLayoutOption11() {
                   </div>
                   
                   <div className="flex gap-2">
-                    {missionWeaknesses.map(w => (
+                    {missionWeaknesses.map((w: any) => (
                       <div key={w} className="w-10 h-10 rounded bg-black/60 border border-yellow-500/40 flex items-center justify-center">
                         <span className="text-lg">{missionAilments[w as keyof typeof missionAilments].icon}</span>
                       </div>
@@ -1583,7 +1583,7 @@ export default function ContractsLayoutOption11() {
                 {/* Right: Mek Grid & Action */}
                 <div>
                   <div className="grid grid-cols-3 gap-2 mb-3">
-                    {Array.from({ length: 6 }).map((_, i) => {
+                    {Array.from({ length: 6 }).map((_: any, i: number) => {
                       const isLocked = i >= mekSlotCount;
                       return (
                         <div key={i} className={`
@@ -1682,7 +1682,7 @@ export default function ContractsLayoutOption11() {
               <div className="bg-black/20 rounded-lg p-3 mb-4">
                 <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Rewards</div>
                 <div className="space-y-1.5">
-                  {missionRewards.map((reward, i) => (
+                  {missionRewards.map((reward: any, i: number) => (
                     <div key={i} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-300">{reward.name}</span>
@@ -1698,7 +1698,7 @@ export default function ContractsLayoutOption11() {
 
               {/* Mission Ailments */}
               <div className="flex gap-2 justify-center mb-4">
-                {missionWeaknesses.map(w => {
+                {missionWeaknesses.map((w: any) => {
                   const ailment = missionAilments[w as keyof typeof missionAilments];
                   return (
                     <div key={w} className="relative group/ailment">
@@ -1716,7 +1716,7 @@ export default function ContractsLayoutOption11() {
 
               {/* Mek Slots - Clean grid */}
               <div className="grid grid-cols-6 gap-2 mb-4">
-                {Array.from({ length: 6 }).map((_, i) => {
+                {Array.from({ length: 6 }).map((_: any, i: number) => {
                   const isLocked = i >= mekSlotCount;
                   return (
                     <div key={i} className="aspect-square">
@@ -1774,12 +1774,12 @@ export default function ContractsLayoutOption11() {
   
   // Helper function to calculate new success rate with animation
   const calculateNewSuccessRate = (missionId: string, meks: any[]) => {
-    const mekCount = meks.filter(m => m).length;
+    const mekCount = meks.filter((m: any) => m).length;
     const mekSlotCount = missionId === 'global' ? 6 : 3; // Average slot count
     const baseRate = (mekCount / mekSlotCount) * 70;
     
     // Calculate bonus from matched traits
-    const bonusRate = meks.reduce((acc, mek) => {
+    const bonusRate = meks.reduce((acc: any, mek: any) => {
       if (mek?.matchedTraits) {
         return acc + mek.matchedTraits.reduce((sum: number, trait: any) => 
           sum + parseInt(trait.bonus.replace("+", "").replace("%", "")), 0
@@ -1793,7 +1793,7 @@ export default function ContractsLayoutOption11() {
   
   // Helper function to calculate reward buff percentage
   const calculateRewardBuff = (meks: any[]) => {
-    const totalBuff = meks.reduce((acc, mek) => {
+    const totalBuff = meks.reduce((acc: any, mek: any) => {
       if (mek?.matchedTraits?.length > 0) {
         // Each matched trait gives 1-5% reward buff based on rarity
         const rarityBuff = mek.matchedTraits.reduce((sum: number, trait: any) => {
@@ -1809,7 +1809,7 @@ export default function ContractsLayoutOption11() {
   
   // Animate success rate changes
   useEffect(() => {
-    Object.keys(animatedSuccessRate).forEach(missionId => {
+    Object.keys(animatedSuccessRate).forEach((missionId: any) => {
       const targetRate = animatedSuccessRate[missionId];
       const currentRate = animatingSuccess[missionId] || 0;
       
@@ -1892,7 +1892,7 @@ export default function ContractsLayoutOption11() {
             { id: 'c3', name: 'defense grid omega', mekSlots: 4 },
             { id: 'c4', name: 'trade depot alpha', mekSlots: 2 },
             { id: 'c5', name: 'salvage yard beta', mekSlots: 3 },
-          ].map(contract => (
+          ].map((contract: any) => (
             <div key={contract.id} className="min-w-0">
               {renderContract(contract, false)}
             </div>

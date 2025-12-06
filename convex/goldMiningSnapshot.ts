@@ -1263,7 +1263,7 @@ export const calculateGoldFromHistory = query({
       .collect();
 
     // Sort by time
-    const sortedSnapshots = snapshots.sort((a, b) => a.snapshotTime - b.snapshotTime);
+    const sortedSnapshots = snapshots.sort((a: any, b: any) => a.snapshotTime - b.snapshotTime);
 
     let totalGold = 0;
 
@@ -1293,7 +1293,7 @@ export const calculateGoldFromHistory = query({
         const continuousMeks = snapshot.meks.filter((m: any) => previousMekIds.has(m.assetId));
 
         // Calculate rate only for continuous Meks
-        const continuousRate = continuousMeks.reduce((sum, mek) => sum + mek.goldPerHour, 0);
+        const continuousRate = continuousMeks.reduce((sum: any, mek: any) => sum + mek.goldPerHour, 0);
         totalGold += continuousRate * hours;
       }
     }
@@ -1386,7 +1386,7 @@ export const runBatchAntiCheat = internalMutation({
       // Sort by last active time (most recent first)
       const sortedWallets = walletRecords
         .filter((w: any) => w !== null)
-        .sort((a, b) => (b!.lastActiveTime || 0) - (a!.lastActiveTime || 0));
+        .sort((a: any, b: any) => (b!.lastActiveTime || 0) - (a!.lastActiveTime || 0));
 
       if (sortedWallets.length === 0) continue;
 
@@ -1398,7 +1398,7 @@ export const runBatchAntiCheat = internalMutation({
       // Remove from other wallets
       for (const wallet of removeWallets) {
         const filteredMeks = wallet.ownedMeks.filter((m: any) => m.assetId !== conflict.assetId);
-        const newRate = filteredMeks.reduce((sum, m) => sum + (m.goldPerHour || 0), 0);
+        const newRate = filteredMeks.reduce((sum: any, m: any) => sum + (m.goldPerHour || 0), 0);
 
         await ctx.db.patch(wallet._id, {
           ownedMeks: filteredMeks,

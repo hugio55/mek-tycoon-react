@@ -247,7 +247,7 @@ export default function ChipBuilderPage() {
                         onChange={(e) => setSelectedTier(Number(e.target.value))}
                         className="w-full px-4 py-2 bg-black/50 border border-gray-700 text-white focus:border-yellow-500 outline-none"
                       >
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(tier => (
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((tier: any) => (
                           <option key={tier} value={tier}>Tier {tier}</option>
                         ))}
                       </select>
@@ -260,7 +260,7 @@ export default function ChipBuilderPage() {
                         onChange={(e) => setSelectedRarity(e.target.value)}
                         className="w-full px-4 py-2 bg-black/50 border border-gray-700 text-white focus:border-yellow-500 outline-none"
                       >
-                        {CHIP_RANKS.map(rank => (
+                        {CHIP_RANKS.map((rank: any) => (
                           <option key={rank} value={rank}>{rank}</option>
                         ))}
                       </select>
@@ -286,8 +286,8 @@ export default function ChipBuilderPage() {
                   
                   <div className="space-y-3">
                     {buffCategories && buffCategories
-                      .filter(cat => cat.isActive !== false)
-                      .map(category => {
+                      .filter((cat: any) => cat.isActive !== false)
+                      .map((category: any) => {
                         const config = currentChip?.buffs[category._id];
                         if (!config) return null;
                         const icon = getCategoryIcon(category.category || 'gold');
@@ -355,9 +355,9 @@ export default function ChipBuilderPage() {
                     <tr className="border-b border-gray-700">
                       <th className="p-2 text-left">Chip</th>
                       {buffCategories && buffCategories
-                        .filter(cat => cat.isActive !== false)
+                        .filter((cat: any) => cat.isActive !== false)
                         .slice(0, 8)
-                        .map(category => (
+                        .map((category: any) => (
                           <th key={category._id} className="p-2 text-center" title={category.name}>
                             <span className="text-lg">{getCategoryIcon(category.category || 'gold')}</span>
                           </th>
@@ -365,8 +365,8 @@ export default function ChipBuilderPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(tier => (
-                      CHIP_RANKS.map(rarity => {
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((tier: any) => (
+                      CHIP_RANKS.map((rarity: any) => {
                         const chip = chipConfigs[getChipKey(tier, rarity)];
                         if (!chip) return null;
                         
@@ -377,9 +377,9 @@ export default function ChipBuilderPage() {
                               <span className="ml-2 text-white">{rarity}</span>
                             </td>
                             {buffCategories && buffCategories
-                              .filter(cat => cat.isActive !== false)
+                              .filter((cat: any) => cat.isActive !== false)
                               .slice(0, 8)
-                              .map(category => {
+                              .map((category: any) => {
                                 const config = chip.buffs[category._id];
                                 return (
                                   <td key={category._id} className="p-2 text-center text-xs">
@@ -413,10 +413,10 @@ export default function ChipBuilderPage() {
               
               {/* Universal Chips Grid */}
               <div className="grid grid-cols-10 gap-4">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(tier => (
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((tier: any) => (
                   <div key={tier} className="space-y-4">
                     <h3 className="text-center text-sm font-bold text-gray-400 uppercase">Tier {tier}</h3>
-                    {['a', 'b', 'c', 'd', 's', 'ss', 'sss', 'x', 'xx', 'xxx'].map(rarity => {
+                    {['a', 'b', 'c', 'd', 's', 'ss', 'sss', 'x', 'xx', 'xxx'].map((rarity: any) => {
                       const fileName = tier === 10 ? `10${rarity}.webp` : `${tier}${rarity}.webp`;
                       const imagePath = `/chip-images/uni-chips/uni chips 120px webp/${fileName}`;
                       

@@ -64,7 +64,7 @@ export default function AdminCampaignsPage() {
   };
 
   const handleVerifyWithNMKR = async (campaignId: string) => {
-    const campaign = campaigns.find((c) => c._id === campaignId);
+    const campaign = campaigns.find((c: any) => c._id === campaignId);
     if (!campaign) {
       alert('Campaign not found');
       return;
@@ -116,7 +116,7 @@ export default function AdminCampaignsPage() {
 
     setIsSyncingNMKR(true);
     try {
-      const campaign = campaigns.find((c) => c._id === syncCampaignId);
+      const campaign = campaigns.find((c: any) => c._id === syncCampaignId);
       if (!campaign) throw new Error('Campaign not found');
 
       const response = await fetch('/api/nmkr/sync', {
@@ -162,7 +162,7 @@ export default function AdminCampaignsPage() {
     }
 
     try {
-      const campaign = campaigns.find((c) => c._id === syncCampaignId);
+      const campaign = campaigns.find((c: any) => c._id === syncCampaignId);
       if (!campaign) throw new Error('Campaign not found');
 
       const response = await fetch('/api/nmkr/sync', {
@@ -221,7 +221,7 @@ export default function AdminCampaignsPage() {
           <div className="bg-black/50 border border-cyan-500/30 rounded-lg p-4">
             <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Active Campaigns</div>
             <div className="text-3xl font-bold text-cyan-400">
-              {campaigns.filter((c) => c.status === 'active').length}
+              {campaigns.filter((c: any) => c.status === 'active').length}
             </div>
           </div>
           <div className="bg-black/50 border border-green-500/30 rounded-lg p-4">
@@ -238,7 +238,7 @@ export default function AdminCampaignsPage() {
               <div className="text-gray-400">No campaigns found.</div>
             </div>
           ) : (
-            campaigns.map((campaign) => (
+            campaigns.map((campaign: any) => (
               <div
                 key={campaign._id}
                 className="bg-black/30 border border-yellow-500/30 rounded-lg p-6"
@@ -342,7 +342,7 @@ export default function AdminCampaignsPage() {
           }}
           campaignName={
             syncCampaignId
-              ? campaigns.find((c) => c._id === syncCampaignId)?.name || 'Unknown Campaign'
+              ? campaigns.find((c: any) => c._id === syncCampaignId)?.name || 'Unknown Campaign'
               : 'Unknown Campaign'
           }
           discrepancies={syncDiscrepancies}

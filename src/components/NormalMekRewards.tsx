@@ -515,7 +515,7 @@ export default function NormalMekRewards({ mekSlotsConfig }: Props) {
                 Essence Drop Probabilities {mekBySearch?.mek ? `for Mek #${mekBySearch.mek.assetId} (Rank ${mekBySearch.mek.rank})` : ''}:
               </div>
               {essenceProbabilities.length > 0 ? (
-                essenceProbabilities.map((essence, idx) => (
+                essenceProbabilities.map((essence: any, idx: number) => (
                   <div key={idx} className="flex justify-between text-xs">
                     <span className="text-gray-300">
                       {essence.type}: {essence.name}
@@ -559,7 +559,7 @@ export default function NormalMekRewards({ mekSlotsConfig }: Props) {
                   { ch: 5, range: '2251-2600', minRank: 2600, maxRank: 2251 },
                   { ch: 8, range: '1201-1550', minRank: 1550, maxRank: 1201 },
                   { ch: 10, range: '501-850', minRank: 850, maxRank: 501 },
-                ].map((chapter) => (
+                ].map((chapter: any) => (
                   <tr key={chapter.ch} className="border-b border-gray-800">
                     <td className="py-1 font-bold text-yellow-500">{chapter.ch}</td>
                     <td className="py-1 text-gray-300">{chapter.range}</td>
@@ -622,7 +622,7 @@ export default function NormalMekRewards({ mekSlotsConfig }: Props) {
             <div>
               <div className="text-xs text-gray-400 mb-2">Saved Configurations:</div>
               <div className="flex flex-wrap gap-2">
-                {savedConfigs.map((cfg) => (
+                {savedConfigs.map((cfg: any) => (
                   <button
                     key={cfg._id}
                     onClick={() => {
@@ -648,7 +648,7 @@ export default function NormalMekRewards({ mekSlotsConfig }: Props) {
               {selectedConfigId && (
                 <div className="text-xs text-gray-400 mt-2">
                   Currently loaded: <span className="text-purple-400 font-semibold">
-                    {savedConfigs.find(c => c._id === selectedConfigId)?.name}
+                    {savedConfigs.find((c: any) => c._id === selectedConfigId)?.name}
                   </span>
                 </div>
               )}
@@ -705,7 +705,7 @@ export default function NormalMekRewards({ mekSlotsConfig }: Props) {
                     onChange={(e) => setSelectedDeployChapter(parseInt(e.target.value))}
                     className="px-3 py-2 bg-black/50 border border-cyan-400/30 rounded text-sm text-cyan-300"
                   >
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(ch => (
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((ch: any) => (
                       <option key={ch} value={ch}>Chapter {ch}</option>
                     ))}
                   </select>

@@ -64,7 +64,7 @@ export function getAllVariations() {
   const variations = [];
   
   // Add heads with type and xp
-  headVariations.forEach((name, index) => {
+  headVariations.forEach((name: any, index: number) => {
     variations.push({
       name,
       type: 'head',
@@ -73,7 +73,7 @@ export function getAllVariations() {
   });
   
   // Add bodies with type and xp
-  bodyVariations.forEach((name, index) => {
+  bodyVariations.forEach((name: any, index: number) => {
     variations.push({
       name,
       type: 'body',
@@ -82,7 +82,7 @@ export function getAllVariations() {
   });
   
   // Add traits with type and xp
-  traitVariations.forEach((name, index) => {
+  traitVariations.forEach((name: any, index: number) => {
     variations.push({
       name,
       type: 'trait',
@@ -108,12 +108,12 @@ export function searchVariations(query: string, type?: 'heads' | 'bodies' | 'tra
   const searchLower = query.toLowerCase();
   
   if (type) {
-    return allVariations[type].filter(v => v.toLowerCase().includes(searchLower));
+    return allVariations[type].filter((v: any) => v.toLowerCase().includes(searchLower));
   }
   
   return {
-    heads: allVariations.heads.filter(v => v.toLowerCase().includes(searchLower)),
-    bodies: allVariations.bodies.filter(v => v.toLowerCase().includes(searchLower)),
-    traits: allVariations.traits.filter(v => v.toLowerCase().includes(searchLower))
+    heads: allVariations.heads.filter((v: any) => v.toLowerCase().includes(searchLower)),
+    bodies: allVariations.bodies.filter((v: any) => v.toLowerCase().includes(searchLower)),
+    traits: allVariations.traits.filter((v: any) => v.toLowerCase().includes(searchLower))
   };
 }

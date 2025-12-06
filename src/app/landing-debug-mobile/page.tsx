@@ -452,7 +452,7 @@ export default function LandingDebugPage() {
   const handleMovePhaseUp = async (id: Id<"phaseCards">, currentOrder: number) => {
     if (!phaseCards || currentOrder <= 1) return;
 
-    const phaseToSwap = phaseCards.find(p => p.order === currentOrder - 1);
+    const phaseToSwap = phaseCards.find((p: any) => p.order === currentOrder - 1);
     if (!phaseToSwap) return;
 
     await reorderPhaseCards({
@@ -466,7 +466,7 @@ export default function LandingDebugPage() {
   const handleMovePhaseDown = async (id: Id<"phaseCards">, currentOrder: number) => {
     if (!phaseCards || currentOrder >= phaseCards.length) return;
 
-    const phaseToSwap = phaseCards.find(p => p.order === currentOrder + 1);
+    const phaseToSwap = phaseCards.find((p: any) => p.order === currentOrder + 1);
     if (!phaseToSwap) return;
 
     await reorderPhaseCards({
@@ -486,7 +486,7 @@ export default function LandingDebugPage() {
   // Handle phase selection in text editor
   useEffect(() => {
     if (selectedPhaseForEdit && phaseCards) {
-      const phase = phaseCards.find(p => p._id === selectedPhaseForEdit);
+      const phase = phaseCards.find((p: any) => p._id === selectedPhaseForEdit);
       if (phase) {
         setPhaseEditForm({
           header: phase.header || '',
@@ -533,7 +533,7 @@ export default function LandingDebugPage() {
 
   // Missing function referenced in UI
   const handleMovePhase = async (id: Id<"phaseCards">, direction: 'up' | 'down') => {
-    const phase = phaseCards?.find(p => p._id === id);
+    const phase = phaseCards?.find((p: any) => p._id === id);
     if (!phase) return;
 
     if (direction === 'up') {
@@ -658,7 +658,7 @@ export default function LandingDebugPage() {
 
         {/* Tab Navigation */}
         <div className="flex flex-wrap gap-2 mb-4 border-b border-gray-700 pb-2">
-          {tabs.map(tab => (
+          {tabs.map((tab: any) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -1432,7 +1432,7 @@ export default function LandingDebugPage() {
                              config.soundLabelFont
                 }}
               >
-                {fonts.map((font) => (
+                {fonts.map((font: any) => (
                   <option key={font} value={font} style={{ fontFamily: font }}>
                     {font}
                   </option>
@@ -1521,7 +1521,7 @@ export default function LandingDebugPage() {
                 )}
                 className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-gray-500"
               >
-                {colorOptions.map((color) => (
+                {colorOptions.map((color: any) => (
                   <option key={color.class} value={color.class}>
                     {color.name}
                   </option>
@@ -1709,7 +1709,7 @@ export default function LandingDebugPage() {
                     className="w-full bg-gray-800/50 border border-gray-600 rounded px-2 py-1 text-gray-200 text-sm focus:outline-none focus:border-gray-500"
                   >
                     <option value="">Choose a phase...</option>
-                    {phaseCards?.map((phase) => (
+                    {phaseCards?.map((phase: any) => (
                       <option key={phase._id} value={phase._id}>
                         {phase.title}
                       </option>
@@ -1854,7 +1854,7 @@ export default function LandingDebugPage() {
               ) : phaseCards.length === 0 ? (
                 <div className="text-gray-400 text-sm">No phase cards yet. Add one above or initialize defaults.</div>
               ) : (
-                phaseCards.map((phase) => (
+                phaseCards.map((phase: any) => (
                   <div key={phase._id} className="bg-gray-900 border border-gray-700 rounded p-3">
                     {editingPhaseId === phase._id ? (
                       // Edit mode
@@ -2353,7 +2353,7 @@ export default function LandingDebugPage() {
                 Image Blend Mode
               </label>
               <div className="grid grid-cols-2 gap-1">
-                {(['normal', 'screen', 'lighten', 'lighter'] as const).map((mode) => (
+                {(['normal', 'screen', 'lighten', 'lighter'] as const).map((mode: any) => (
                   <button
                     key={mode}
                     onClick={() => updateConfig('phaseImageBlendMode', mode)}

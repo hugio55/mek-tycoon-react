@@ -511,7 +511,7 @@ function UniversalBackgroundAdmin() {
 
         {/* Sub-tab navigation */}
         <div className="flex gap-2 mb-6">
-          {BACKGROUND_SUB_TABS.map((tab) => {
+          {BACKGROUND_SUB_TABS.map((tab: any) => {
             const isCurrentlyActive = tab.id === currentBackgroundType;
             return (
               <button
@@ -562,7 +562,7 @@ function UniversalBackgroundAdmin() {
             />
 
             {/* Stars with twinkling */}
-            {[...Array(50)].map((_, i) => (
+            {[...Array(50)].map((_: any, i: number) => (
               <div
                 key={i}
                 className="absolute rounded-full bg-white"
@@ -579,7 +579,7 @@ function UniversalBackgroundAdmin() {
             ))}
 
             {/* Yellow particles with proper drift animation using CSS variables */}
-            {PREVIEW_PARTICLES.map((particle) => (
+            {PREVIEW_PARTICLES.map((particle: any) => (
               <div
                 key={`particle-${particle.id}`}
                 className="absolute bg-yellow-400 rounded-full"
@@ -601,7 +601,7 @@ function UniversalBackgroundAdmin() {
             ))}
 
             {/* Satellites with proper edge-to-edge movement using CSS variables */}
-            {PREVIEW_SATELLITES.map((satellite) => {
+            {PREVIEW_SATELLITES.map((satellite: any) => {
               const startX = parseFloat(satellite.startX);
               const startY = parseFloat(satellite.startY);
               const endX = parseFloat(satellite.endX);
@@ -1044,7 +1044,7 @@ export default function AdminMasterDataPage() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showGameDataLightbox, setShowGameDataLightbox] = useState(false);
   const [minimizedTabs, setMinimizedTabs] = useState<Set<string>>(new Set());
-  const [tabOrder, setTabOrder] = useState<string[]>(DATA_SYSTEMS.map(sys => sys.id));
+  const [tabOrder, setTabOrder] = useState<string[]>(DATA_SYSTEMS.map((sys: any) => sys.id));
   const [draggedTabId, setDraggedTabId] = useState<string | null>(null);
   const [systemCompletion, setSystemCompletion] = useState<Record<string, 'incomplete' | 'in-progress' | 'complete'>>({});
 
@@ -1274,7 +1274,7 @@ export default function AdminMasterDataPage() {
   // Handle load configuration
   const handleLoadConfiguration = async (configId: any) => {
     try {
-      const config = savedConfigurations?.find(c => c._id === configId);
+      const config = savedConfigurations?.find((c: any) => c._id === configId);
       if (!config) {
         alert('Configuration not found');
         return;
@@ -1326,7 +1326,7 @@ export default function AdminMasterDataPage() {
   // Create ordered DATA_SYSTEMS array based on saved order
   const orderedDataSystems = useMemo(() => {
     return tabOrder
-      .map(id => DATA_SYSTEMS.find(sys => sys.id === id))
+      .map((id: any) => DATA_SYSTEMS.find((sys: any) => sys.id === id))
       .filter((sys): sys is typeof DATA_SYSTEMS[0] => sys !== undefined);
   }, [tabOrder]);
 
@@ -1416,10 +1416,10 @@ export default function AdminMasterDataPage() {
       try {
         const parsed = JSON.parse(savedOrder);
         // Validate that all current tabs are in the saved order
-        const currentTabIds = DATA_SYSTEMS.map(sys => sys.id);
+        const currentTabIds = DATA_SYSTEMS.map((sys: any) => sys.id);
         const validOrder = parsed.filter((id: string) => currentTabIds.includes(id));
         // Add any new tabs that weren't in the saved order
-        const missingTabs = currentTabIds.filter(id => !validOrder.includes(id));
+        const missingTabs = currentTabIds.filter((id: any) => !validOrder.includes(id));
         setTabOrder([...validOrder, ...missingTabs]);
       } catch (e) {
         console.error('Failed to parse tab order:', e);
@@ -1442,7 +1442,7 @@ export default function AdminMasterDataPage() {
 
     // If we're minimizing the active tab, switch to the first non-minimized tab
     if (activeTab === tabId) {
-      const firstVisibleTab = orderedDataSystems.find(sys => !newMinimized.has(sys.id));
+      const firstVisibleTab = orderedDataSystems.find((sys: any) => !newMinimized.has(sys.id));
       if (firstVisibleTab) {
         setActiveTab(firstVisibleTab.id);
       }
@@ -1816,12 +1816,12 @@ export default function AdminMasterDataPage() {
                   <span className="text-xs text-gray-500 ml-2">(click to copy URL)</span>
                 </div>
                 <div className="max-h-[80vh] overflow-y-auto">
-                  {['Main', 'Contracts', 'Systems', 'Admin'].map(category => (
+                  {['Main', 'Contracts', 'Systems', 'Admin'].map((category: any) => (
                     <div key={category}>
                       <div className="px-3 py-1.5 bg-gray-800/50 text-xs text-gray-500 uppercase tracking-wider font-bold">
                         {category}
                       </div>
-                      {QUICK_ACCESS_PAGES.filter(p => p.category === category).map(page => (
+                      {QUICK_ACCESS_PAGES.filter((p: any) => p.category === category).map((page: any) => (
                         <button
                           key={page.path}
                           onClick={() => copyPageUrl(page.path)}
@@ -2000,7 +2000,7 @@ export default function AdminMasterDataPage() {
         {/* Tab Navigation for All Systems */}
         <div className="bg-black/50 backdrop-blur border-2 border-yellow-500/30 rounded-lg p-4 mb-4">
           <div className="flex flex-wrap gap-2">
-            {orderedDataSystems.filter(system => !minimizedTabs.has(system.id)).map((system) => (
+            {orderedDataSystems.filter((system: any) => !minimizedTabs.has(system.id)).map((system: any) => (
               <button
                 key={system.id}
                 draggable
@@ -2059,7 +2059,7 @@ export default function AdminMasterDataPage() {
                 <span className="text-xs text-gray-500 uppercase tracking-wider">Minimized:</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {orderedDataSystems.filter(system => minimizedTabs.has(system.id)).map((system) => (
+                {orderedDataSystems.filter((system: any) => minimizedTabs.has(system.id)).map((system: any) => (
                   <button
                     key={system.id}
                     onClick={() => handleRestoreTab(system.id)}
@@ -2262,7 +2262,7 @@ export default function AdminMasterDataPage() {
                 {/* Story Climb Sub-Tab Navigation */}
                 <div className="bg-black/70 border-2 border-blue-500/30 rounded-lg p-3 mb-4">
                   <div className="flex flex-wrap gap-2">
-                    {STORY_CLIMB_SUBSECTIONS.map((subsection) => (
+                    {STORY_CLIMB_SUBSECTIONS.map((subsection: any) => (
                       <button
                         key={subsection.id}
                         onClick={() => setStoryClimbSubTab(subsection.id)}
@@ -2307,7 +2307,7 @@ export default function AdminMasterDataPage() {
                             { id: 'miniboss', name: 'Mini Bosses', icon: '👹' },
                             { id: 'event', name: 'Events', icon: '✨' },
                             { id: 'finalboss', name: 'Final Bosses', icon: '🐲' }
-                          ].map((type) => (
+                          ].map((type: any) => (
                             <button
                               key={type.id}
                               onClick={() => setSelectedNodeType(type.id as any)}
@@ -2543,7 +2543,7 @@ export default function AdminMasterDataPage() {
                         <div className="bg-blue-900/20 rounded p-3 border border-blue-500/20">
                           <p className="text-xs text-blue-300 mb-2">Duration Progression Preview:</p>
                           <div className="space-y-1">
-                            {[0, 0.25, 0.5, 0.75, 1].map((progress) => {
+                            {[0, 0.25, 0.5, 0.75, 1].map((progress: any) => {
                               const settings = durationSettings[selectedNodeType];
                               const minSeconds = timeToSeconds(settings.min);
                               const maxSeconds = timeToSeconds(settings.max);
@@ -2650,7 +2650,7 @@ export default function AdminMasterDataPage() {
                                 className="flex-1 px-3 py-2 bg-gray-800 border border-blue-500/30 rounded text-blue-400 text-sm"
                               >
                                 <option value="">Select a configuration to load...</option>
-                                {durationConfigsList?.map(config => (
+                                {durationConfigsList?.map((config: any) => (
                                   <option key={config.name} value={config.name}>
                                     {config.name}
                                     {config.isActive && ' (Active)'}
@@ -2939,7 +2939,7 @@ export default function AdminMasterDataPage() {
                 <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
                   <h4 className="text-sm font-bold text-yellow-400 mb-3">Listing Duration Options & Fees</h4>
                   <div className="grid grid-cols-5 gap-3">
-                    {['1', '3', '7', '14', '30'].map((days) => (
+                    {['1', '3', '7', '14', '30'].map((days: any) => (
                       <div key={days} className="bg-black/30 rounded p-3">
                         <div className="text-yellow-300 font-bold mb-2 text-center text-xs">
                           {days} DAY{days !== '1' ? 'S' : ''}
@@ -3315,7 +3315,7 @@ export default function AdminMasterDataPage() {
                           Interpolation Curve
                         </label>
                         <div className="grid grid-cols-3 gap-2">
-                          {['linear', 'exponential', 'logarithmic'].map((curve) => (
+                          {['linear', 'exponential', 'logarithmic'].map((curve: any) => (
                             <button
                               key={curve}
                               onClick={() => setBuffPercentages(prev => ({ ...prev, curveType: curve as any }))}
@@ -3374,7 +3374,7 @@ export default function AdminMasterDataPage() {
                                 const allVariationsData: any[] = [];
 
                                 // Add all heads
-                                VARIATIONS_BY_TYPE.heads.forEach((v, i) => {
+                                VARIATIONS_BY_TYPE.heads.forEach((v: any, i: number) => {
                                   allVariationsData.push({
                                     ...v,
                                     category: 'head',
@@ -3383,7 +3383,7 @@ export default function AdminMasterDataPage() {
                                 });
 
                                 // Add all bodies
-                                VARIATIONS_BY_TYPE.bodies.forEach((v, i) => {
+                                VARIATIONS_BY_TYPE.bodies.forEach((v: any, i: number) => {
                                   allVariationsData.push({
                                     ...v,
                                     category: 'body',
@@ -3392,7 +3392,7 @@ export default function AdminMasterDataPage() {
                                 });
 
                                 // Add all traits
-                                VARIATIONS_BY_TYPE.traits.forEach((v, i) => {
+                                VARIATIONS_BY_TYPE.traits.forEach((v: any, i: number) => {
                                   allVariationsData.push({
                                     ...v,
                                     category: 'item',
@@ -3404,26 +3404,26 @@ export default function AdminMasterDataPage() {
                                 const copyCountMap: Record<string, number> = {};
 
                                 // Add all heads with their copy counts
-                                variationsData.heads.forEach((v, index) => {
+                                variationsData.heads.forEach((v: any, index: number) => {
                                   copyCountMap[v.name] = v.copies;
                                 });
 
                                 // Add bodies with their copy counts if available
                                 if (variationsData.bodies) {
-                                  variationsData.bodies.forEach((v) => {
+                                  variationsData.bodies.forEach((v: any) => {
                                     copyCountMap[v.name] = v.copies;
                                   });
                                 }
 
                                 // Add items with their copy counts if available
                                 if (variationsData.items) {
-                                  variationsData.items.forEach((v) => {
+                                  variationsData.items.forEach((v: any) => {
                                     copyCountMap[v.name] = v.copies;
                                   });
                                 }
 
                                 // Assign ranks based on copy count (fewer copies = lower rank = rarer)
-                                allVariationsData.forEach((v) => {
+                                allVariationsData.forEach((v: any) => {
                                   const copies = copyCountMap[v.name] || 50; // Default to 50 if not found
                                   // Invert: fewer copies = lower rank
                                   // 1 copy = rank ~1-10
@@ -3436,9 +3436,9 @@ export default function AdminMasterDataPage() {
                                 });
 
                                 // Sort by rank (lower rank = rarer)
-                                allVariationsData.sort((a, b) => a.rank - b.rank);
+                                allVariationsData.sort((a: any, b: any) => a.rank - b.rank);
 
-                                const filtered = allVariationsData.filter(v =>
+                                const filtered = allVariationsData.filter((v: any) =>
                                   v.name.toLowerCase().includes(variationSearch.toLowerCase())
                                 ).slice(0, 10); // Show max 10 results
 
@@ -3450,7 +3450,7 @@ export default function AdminMasterDataPage() {
                                   );
                                 }
 
-                                return filtered.map((variation) => (
+                                return filtered.map((variation: any) => (
                                   <button
                                     key={`${variation.category}-${variation.name}`}
                                     onClick={() => {
@@ -3576,7 +3576,7 @@ export default function AdminMasterDataPage() {
 
                             // Add all heads from variationsData
                             if (variationsData.heads) {
-                              variationsData.heads.forEach(v => {
+                              variationsData.heads.forEach((v: any) => {
                                 allVariationsWithCounts.push({
                                   name: v.name,
                                   copies: v.copies,
@@ -3587,7 +3587,7 @@ export default function AdminMasterDataPage() {
 
                             // Add all bodies from variationsData
                             if (variationsData.bodies) {
-                              variationsData.bodies.forEach(v => {
+                              variationsData.bodies.forEach((v: any) => {
                                 allVariationsWithCounts.push({
                                   name: v.name,
                                   copies: v.copies,
@@ -3598,7 +3598,7 @@ export default function AdminMasterDataPage() {
 
                             // Add all traits (items) from variationsData
                             if (variationsData.traits) {
-                              variationsData.traits.forEach(v => {
+                              variationsData.traits.forEach((v: any) => {
                                 allVariationsWithCounts.push({
                                   name: v.name,
                                   copies: v.copies,
@@ -3609,7 +3609,7 @@ export default function AdminMasterDataPage() {
 
                             // Sort primarily by copies (ascending = rarest first)
                             // For 1-of-1s, use Mek rank for tiebreaking
-                            const sampleVariations = allVariationsWithCounts.sort((a, b) => {
+                            const sampleVariations = allVariationsWithCounts.sort((a: any, b: any) => {
                               if (a.copies !== b.copies) {
                                 return a.copies - b.copies;
                               }
@@ -3620,10 +3620,10 @@ export default function AdminMasterDataPage() {
                             });
 
                             // Sort by copies (fewer = rarer = should appear first)
-                            sampleVariations.sort((a, b) => a.copies - b.copies);
+                            sampleVariations.sort((a: any, b: any) => a.copies - b.copies);
 
                             // Calculate rank based on copies and Mek ranks for tiebreaking
-                            const variationsWithRanks = sampleVariations.map((v) => {
+                            const variationsWithRanks = sampleVariations.map((v: any) => {
                               // Use the true rank function if available in our mapping
                               const trueRank = getVariationTrueRank(v.name);
 
@@ -3637,16 +3637,16 @@ export default function AdminMasterDataPage() {
                             });
 
                             // Sort variations by rank for proper ordering
-                            variationsWithRanks.sort((a, b) => a.rank - b.rank);
+                            variationsWithRanks.sort((a: any, b: any) => a.rank - b.rank);
 
                             // Re-assign sequential ranks from 1 to N
-                            variationsWithRanks.forEach((v, index) => {
+                            variationsWithRanks.forEach((v: any, index: number) => {
                               v.rank = index + 1;
                             });
 
                             const totalVariations = variationsWithRanks.length;
 
-                            return variationsWithRanks.map((variation) => {
+                            return variationsWithRanks.map((variation: any) => {
                               // INVERTED: Lower rank (rarer) = HIGHER percentage
                               // Normalize rank: 0 = rarest, 1 = most common
                               const normalizedRank = (variation.rank - 1) / (totalVariations - 1);
@@ -3967,7 +3967,7 @@ export default function AdminMasterDataPage() {
                   <p className="text-xs text-gray-400 mb-4">Tenure cost required to upgrade each level</p>
 
                   <div className="grid grid-cols-3 gap-4">
-                    {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((index) => (
+                    {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((index: any) => (
                       <div key={index} className="bg-black/50 border border-gray-600/50 rounded p-3">
                         <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">
                           Level {index + 1} → {index + 2}
@@ -3982,7 +3982,7 @@ export default function AdminMasterDataPage() {
                             if (rawValue === '') {
                               setSlotsConfig(prev => ({
                                 ...prev,
-                                [selectedSlotType]: prev[selectedSlotType].map((val, i) =>
+                                [selectedSlotType]: prev[selectedSlotType].map((val: any, i: number) =>
                                   i === index ? 0 : val
                                 )
                               }));
@@ -3997,7 +3997,7 @@ export default function AdminMasterDataPage() {
                             if (!isNaN(numValue)) {
                               setSlotsConfig(prev => ({
                                 ...prev,
-                                [selectedSlotType]: prev[selectedSlotType].map((val, i) =>
+                                [selectedSlotType]: prev[selectedSlotType].map((val: any, i: number) =>
                                   i === index ? numValue : val
                                 )
                               }));
@@ -4029,10 +4029,10 @@ export default function AdminMasterDataPage() {
                     <h5 className="text-sm font-bold text-yellow-400 mb-2 uppercase tracking-wider">Total Tenure Required</h5>
                     <p className="text-xs text-gray-400 mb-2">To reach Level 10 from Level 1 (assumes Mek slotted entire time)</p>
                     <div className="text-2xl font-bold text-yellow-300 text-center">
-                      {slotsConfig[selectedSlotType].reduce((sum, val) => sum + val, 0).toLocaleString()} Tenure
+                      {slotsConfig[selectedSlotType].reduce((sum: any, val: any) => sum + val, 0).toLocaleString()} Tenure
                     </div>
                     <div className="text-lg font-bold text-blue-400 text-center mt-2">
-                      {formatTenureDuration(slotsConfig[selectedSlotType].reduce((sum, val) => sum + val, 0), tenurePerSecond)}
+                      {formatTenureDuration(slotsConfig[selectedSlotType].reduce((sum: any, val: any) => sum + val, 0), tenurePerSecond)}
                     </div>
                   </div>
                 </div>
@@ -4202,7 +4202,7 @@ export default function AdminMasterDataPage() {
                       className="w-full px-3 py-2 bg-black/50 border border-blue-500/50 rounded text-white"
                     >
                       <option value="">-- Select an overlay --</option>
-                      {allOverlays?.map((overlay) => (
+                      {allOverlays?.map((overlay: any) => (
                         <option key={overlay._id} value={overlay.imageKey}>
                           {overlay.imageKey} ({overlay.zones.length} zones)
                         </option>
@@ -4420,7 +4420,7 @@ export default function AdminMasterDataPage() {
                       <div className="mek-label-uppercase text-gray-400 mb-2">Scroll Test Area</div>
                       <div className="text-sm text-gray-500 space-y-2">
                         <p>Scroll down to see the sticky navigation stay at the top of the page.</p>
-                        {Array.from({ length: 20 }).map((_, i) => (
+                        {Array.from({ length: 20 }).map((_: any, i: number) => (
                           <p key={i}>Test content line {i + 1}...</p>
                         ))}
                       </div>
@@ -6322,7 +6322,7 @@ export default function AdminMasterDataPage() {
               Click the copy icon to copy URL with bypass parameter
             </p>
             <div className="space-y-2">
-              {BYPASS_LINKS.map((link) => {
+              {BYPASS_LINKS.map((link: any) => {
                 const fullUrl = `${PRODUCTION_URL}${link.path}?bypass=${BYPASS_SECRET}`;
                 return (
                   <div
@@ -6460,7 +6460,7 @@ function CampaignManagerWithDatabase({
     }
   };
 
-  const selectedCampaign = campaigns.find(c => c._id === selectedCampaignId);
+  const selectedCampaign = campaigns.find((c: any) => c._id === selectedCampaignId);
 
   return (
     <div className="space-y-6">
@@ -6473,7 +6473,7 @@ function CampaignManagerWithDatabase({
           </div>
         </div>
       ) : (
-        campaigns.map((campaign) => (
+        campaigns.map((campaign: any) => (
           <div key={campaign._id}>
             <div
               className={`bg-black/30 border rounded-lg p-6 cursor-pointer transition-all ${
@@ -6514,7 +6514,7 @@ function CampaignManagerWithDatabase({
                     className={`flex-1 bg-black/50 border border-gray-600 rounded p-2 text-sm text-white ${!mutationsEnabled ? 'cursor-not-allowed' : ''}`}
                   >
                     <option value="">-- No Snapshot (Claims Disabled) --</option>
-                    {snapshots.map((snapshot) => (
+                    {snapshots.map((snapshot: any) => (
                       <option key={snapshot._id} value={snapshot._id}>
                         {snapshot.snapshotName} ({snapshot.eligibleUsers?.length || 0} users)
                       </option>
@@ -6774,7 +6774,7 @@ function NFTAdminTabs({ client }: { client: any }) {
       return;
     }
 
-    const campaign = campaigns.find(c => c._id === campaignId);
+    const campaign = campaigns.find((c: any) => c._id === campaignId);
     setConfirmDialog({
       isOpen: true,
       title: enabled ? 'Enable Reservation Cleanup' : 'Disable Reservation Cleanup',
@@ -6806,7 +6806,7 @@ function NFTAdminTabs({ client }: { client: any }) {
       return;
     }
 
-    const campaign = campaigns.find(c => c._id === campaignId);
+    const campaign = campaigns.find((c: any) => c._id === campaignId);
     setConfirmDialog({
       isOpen: true,
       title: 'Run Cleanup Now',
@@ -6843,7 +6843,7 @@ function NFTAdminTabs({ client }: { client: any }) {
       return;
     }
 
-    const campaign = campaigns.find(c => c._id === campaignId);
+    const campaign = campaigns.find((c: any) => c._id === campaignId);
     setConfirmDialog({
       isOpen: true,
       title: 'Sync Campaign Counters',
@@ -6922,7 +6922,7 @@ function NFTAdminTabs({ client }: { client: any }) {
 
     try {
       // Find the discrepancy for this NFT
-      const discrepancy = nmkrDiscrepancies.find(d => d.nftUid === nftUid);
+      const discrepancy = nmkrDiscrepancies.find((d: any) => d.nftUid === nftUid);
       if (!discrepancy) return;
 
       console.log('[🔄NMKR] Attempting to sync NFT:', {
@@ -6977,7 +6977,7 @@ function NFTAdminTabs({ client }: { client: any }) {
         }
 
         // Only remove from discrepancies if actually successful
-        setNmkrDiscrepancies(prev => prev.filter(d => d.nftUid !== nftUid));
+        setNmkrDiscrepancies(prev => prev.filter((d: any) => d.nftUid !== nftUid));
         setCampaignUpdateTrigger(prev => prev + 1);
       } else {
         console.error('[🔄NMKR] ❌ Sync returned but was not successful:', result);

@@ -28,7 +28,7 @@ export default function BetaSignupsViewer() {
           <div className="flex gap-3">
             <button
               onClick={() => {
-                const addresses = signups.map(s => s.stakeAddress).join('\n');
+                const addresses = signups.map((s: any) => s.stakeAddress).join('\n');
                 navigator.clipboard.writeText(addresses);
                 alert('All stake addresses copied to clipboard!');
               }}
@@ -40,7 +40,7 @@ export default function BetaSignupsViewer() {
               onClick={() => {
                 const csv = [
                   'Stake Address,Submitted At',
-                  ...signups.map(s => `${s.stakeAddress},${formatDate(s.submittedAt)}`)
+                  ...signups.map((s: any) => `${s.stakeAddress},${formatDate(s.submittedAt)}`)
                 ].join('\n');
                 const blob = new Blob([csv], { type: 'text/csv' });
                 const url = URL.createObjectURL(blob);
@@ -80,7 +80,7 @@ export default function BetaSignupsViewer() {
                 </td>
               </tr>
             ) : (
-              signups.map((signup, index) => (
+              signups.map((signup: any, index: number) => (
                 <tr
                   key={signup._id}
                   className="border-b border-white/5 hover:bg-white/5 transition-colors"

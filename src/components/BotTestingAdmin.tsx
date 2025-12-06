@@ -95,13 +95,13 @@ export default function BotTestingAdmin() {
   };
 
   // Calculate totals for behavior distribution
-  const behaviorTotal = Object.values(botConfig.behaviorPresets).reduce((a, b) => a + b, 0);
+  const behaviorTotal = Object.values(botConfig.behaviorPresets).reduce((a: any, b: any) => a + b, 0);
 
   return (
     <div className="p-6">
       {/* Tab Navigation */}
       <div className="flex space-x-4 mb-8 border-b border-yellow-500/30">
-        {['snapshot', 'bots', 'monitor'].map((tab) => (
+        {['snapshot', 'bots', 'monitor'].map((tab: any) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
@@ -175,19 +175,19 @@ export default function BotTestingAdmin() {
                     <div>
                       <span className="text-gray-500">Whales (50+ Meks):</span>
                       <span className="ml-2 text-blue-500 font-bold">
-                        {activeWallets.filter(w => w.mekCount > 50).length}
+                        {activeWallets.filter((w: any) => w.mekCount > 50).length}
                       </span>
                     </div>
                     <div>
                       <span className="text-gray-500">Medium (10-50):</span>
                       <span className="ml-2 text-green-500 font-bold">
-                        {activeWallets.filter(w => w.mekCount >= 10 && w.mekCount <= 50).length}
+                        {activeWallets.filter((w: any) => w.mekCount >= 10 && w.mekCount <= 50).length}
                       </span>
                     </div>
                     <div>
                       <span className="text-gray-500">Small (1-10):</span>
                       <span className="ml-2 text-purple-500 font-bold">
-                        {activeWallets.filter(w => w.mekCount < 10).length}
+                        {activeWallets.filter((w: any) => w.mekCount < 10).length}
                       </span>
                     </div>
                   </div>
@@ -363,7 +363,7 @@ export default function BotTestingAdmin() {
                 <div className="bg-black/50 p-4 rounded border border-gray-700">
                   <p className="text-sm text-gray-400 mb-3">Recent Activity</p>
                   <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {testBots?.slice(0, 20).map((bot) => (
+                    {testBots?.slice(0, 20).map((bot: any) => (
                       <div key={bot._id} className="flex items-center justify-between py-2 border-b border-gray-800">
                         <div className="flex items-center space-x-3">
                           <div className={`w-2 h-2 rounded-full ${
@@ -475,8 +475,8 @@ export default function BotTestingAdmin() {
                   <div className="bg-black/50 p-4 rounded border border-gray-700">
                     <p className="text-sm text-gray-400 mb-3">Behavior Distribution</p>
                     <div className="space-y-2">
-                      {['active', 'moderate', 'casual', 'dormant'].map(behavior => {
-                        const count = testBots.filter(b => b.behaviorType === behavior).length;
+                      {['active', 'moderate', 'casual', 'dormant'].map((behavior: any) => {
+                        const count = testBots.filter((b: any) => b.behaviorType === behavior).length;
                         const percentage = (count / testBots.length) * 100;
 
                         return (

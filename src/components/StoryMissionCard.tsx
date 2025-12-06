@@ -192,7 +192,7 @@ export default function StoryMissionCard({
     if (!allDifficultiesCompleted && completedDifficulties.has(currentDifficulty)) {
       // Try to select the next available difficulty
       const difficulties: Array<'easy' | 'medium' | 'hard'> = ['easy', 'medium', 'hard'];
-      const availableDifficulty = difficulties.find(d => !completedDifficulties.has(d));
+      const availableDifficulty = difficulties.find((d: any) => !completedDifficulties.has(d));
       if (availableDifficulty && onDifficultyChange) {
         onDifficultyChange(availableDifficulty);
       }
@@ -278,7 +278,7 @@ export default function StoryMissionCard({
           {/* Difficulty Selector - Empty State */}
           <div className="bg-black/80 border-b border-gray-700/30 px-2 py-2">
             <div className="flex gap-1.5 justify-center">
-              {['EASY', 'MEDIUM', 'HARD'].map((diff) => (
+              {['EASY', 'MEDIUM', 'HARD'].map((diff: any) => (
                 <button
                   key={diff}
                   disabled
@@ -314,7 +314,7 @@ export default function StoryMissionCard({
             <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700/30">
               <div className="mek-label-uppercase mb-2 text-[10px] text-gray-600">Potential Rewards</div>
               <div className="space-y-1">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
+                {[1, 2, 3, 4, 5, 6].map((i: any) => (
                   <div key={i} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 bg-gray-800/30 rounded" />
@@ -330,7 +330,7 @@ export default function StoryMissionCard({
             <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700/30">
               <div className="text-xs text-gray-600 uppercase tracking-wider text-center mb-3">Variation Buffs</div>
               <div className="flex items-center justify-center gap-4">
-                {[1, 2, 3].map((i) => (
+                {[1, 2, 3].map((i: any) => (
                   <div key={i} className="flex flex-col items-center flex-1 max-w-[100px]">
                     <div className="relative w-[80px] h-[80px] bg-gray-800/30 border border-gray-700/30 rounded-md flex items-center justify-center" />
                     <span className="text-[13px] text-gray-700 uppercase mt-2 font-medium">----</span>
@@ -345,7 +345,7 @@ export default function StoryMissionCard({
             <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700/30">
               <div className="text-xs text-gray-600 uppercase tracking-wider text-center mb-2">Mek Deployment Slots</div>
               <div className="grid grid-cols-2 gap-2">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((slot) => (
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((slot: any) => (
                   <div
                     key={slot}
                     className="aspect-square p-1 mek-slot-empty opacity-30 flex items-center justify-center"
@@ -889,7 +889,7 @@ export default function StoryMissionCard({
         {showDifficultySelector && (
           <div className="bg-black/80 border-b border-yellow-500/30 px-2 py-2 relative">
             <div className="flex gap-1.5 justify-center">
-              {(['easy', 'medium', 'hard'] as const).map(difficulty => {
+              {(['easy', 'medium', 'hard'] as const).map((difficulty: any) => {
                 const isSelected = currentDifficulty === difficulty;
                 const isCompleted = completedDifficulties.has(difficulty);
                 // Pass active mission end time only if this difficulty is deployed
@@ -1182,7 +1182,7 @@ export default function StoryMissionCard({
             <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700">
               <div className="mek-label-uppercase mb-2 text-[10px]">Potential Rewards</div>
               <div className="space-y-1">
-                {potentialRewards.slice(0, 6).map((reward, i) => {
+                {potentialRewards.slice(0, 6).map((reward: any, i: number) => {
                 // Check if this is a chip reward (format: "T[tier] [modifier] Power Chip")
                 const chipMatch = reward.name.match(/T(\d+)\s+(\w+)\s+Power Chip/);
                 const isChipReward = !!chipMatch;
@@ -1283,7 +1283,7 @@ export default function StoryMissionCard({
                   </div>
                   <div className="w-px h-10 bg-gray-600/50" />
                   <div className="flex items-center gap-2">
-                    {variationBuffs.map((buff, index) => {
+                    {variationBuffs.map((buff: any, index: number) => {
                       return (
                         <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
                           <div
@@ -1335,7 +1335,7 @@ export default function StoryMissionCard({
                       {/* Top row - first 2 tokens */}
                       {variationBuffs.length >= 2 && (
                         <div className="flex gap-4 justify-center">
-                          {variationBuffs.slice(0, 2).map((buff, index) => (
+                          {variationBuffs.slice(0, 2).map((buff: any, index: number) => (
                             <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
                               <div
                                 className="relative w-[68px] h-[68px] rounded-full cursor-pointer transition-all hover:scale-105 overflow-hidden flex items-center justify-center bg-black/40"
@@ -1371,7 +1371,7 @@ export default function StoryMissionCard({
                       {/* Bottom row - remaining tokens (up to 3) */}
                       {variationBuffs.length > 2 && (
                         <div className="flex gap-4 justify-center">
-                          {variationBuffs.slice(2, 5).map((buff, index) => (
+                          {variationBuffs.slice(2, 5).map((buff: any, index: number) => (
                             <div key={`${buff.id}-${index + 2}`} className="flex flex-col items-center">
                               <div
                                 className="relative w-[68px] h-[68px] rounded-full cursor-pointer transition-all hover:scale-105 overflow-hidden flex items-center justify-center bg-black/40"
@@ -1411,7 +1411,7 @@ export default function StoryMissionCard({
                   <>
                     <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-3">Variation Buffs</div>
                     <div className="flex items-center justify-center gap-4">
-                      {variationBuffs.map((buff, index) => (
+                      {variationBuffs.map((buff: any, index: number) => (
                         <div key={`${buff.id}-${index}`} className="flex flex-col items-center flex-1 max-w-[100px]">
                           <div
                             className="relative w-[80px] h-[80px] cursor-pointer transition-all hover:scale-105 flex items-center justify-center"
@@ -1455,7 +1455,7 @@ export default function StoryMissionCard({
                   <div className="text-[10px] text-gray-400 mt-1">Hold tokens for success bonuses</div>
                 </div>
                 <div className="flex justify-center gap-2">
-                  {variationBuffs.map((buff, index) => {
+                  {variationBuffs.map((buff: any, index: number) => {
                     return (
                       <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
                         <div
@@ -1491,7 +1491,7 @@ export default function StoryMissionCard({
                   {isEventNode ? 'Genesis Buffs' : 'Variation Buffs'}
                 </div>
                 <div className="flex flex-wrap justify-center gap-1.5">
-                  {variationBuffs.map((buff, index) => {
+                  {variationBuffs.map((buff: any, index: number) => {
                     return (
                       <div
                         key={`${buff.id}-${index}`}
@@ -1537,7 +1537,7 @@ export default function StoryMissionCard({
                   <div className="text-[10px] text-gray-400 mt-1 max-w-[100px]">Hold tokens for success bonuses</div>
                 </div>
                 <div className="flex gap-1.5">
-                  {variationBuffs.map((buff, index) => {
+                  {variationBuffs.map((buff: any, index: number) => {
                     return (
                       <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
                         <div
@@ -1571,7 +1571,7 @@ export default function StoryMissionCard({
           <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700">
             <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-2">Mek Deployment Slots</div>
             <div className="grid grid-cols-2 gap-2">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((slot) => {
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((slot: any) => {
                 const isAvailable = slot <= availableSlots;
                 const selectedMek = selectedMeks[slot - 1];
 
@@ -1650,7 +1650,7 @@ export default function StoryMissionCard({
                 <div className="mb-2">
                   <div className="text-[9px] text-gray-500 mb-1">Meter Design:</div>
                   <div className="grid grid-cols-5 gap-1 mb-2">
-                    {[1, 2, 3, 4, 5].map((variant) => (
+                    {[1, 2, 3, 4, 5].map((variant: any) => (
                       <button
                         key={variant}
                         onClick={() => setMeterVariantState(variant as 1 | 2 | 3 | 4 | 5)}
@@ -1686,7 +1686,7 @@ export default function StoryMissionCard({
 
                 {/* Main Layout Selector */}
                 <div className="grid grid-cols-5 gap-1 mb-2">
-                  {[1, 2, 3, 4, 5].map((layout) => (
+                  {[1, 2, 3, 4, 5].map((layout: any) => (
                     <button
                       key={layout}
                       onClick={() => {
@@ -1721,7 +1721,7 @@ export default function StoryMissionCard({
                   <>
                     <div className="text-[9px] text-gray-500 mb-1">Vertical Stack Variations:</div>
                     <div className="grid grid-cols-5 gap-1 mb-2">
-                      {[1.1, 1.2, 1.3, 1.4, 1.5].map((subLayout, index) => (
+                      {[1.1, 1.2, 1.3, 1.4, 1.5].map((subLayout: any, index: number) => (
                         <button
                           key={subLayout}
                           onClick={() => setSuccessBarSubLayout(subLayout as 1.1 | 1.2 | 1.3 | 1.4 | 1.5)}

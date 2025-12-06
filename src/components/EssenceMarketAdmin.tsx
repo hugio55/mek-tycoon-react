@@ -201,7 +201,7 @@ export default function EssenceMarketAdmin() {
       variation.name.toLowerCase().includes(variationSearchTerm.toLowerCase()) ||
       variation.type.toLowerCase().includes(variationSearchTerm.toLowerCase())
     )
-    .sort((a, b) => b.rank - a.rank); // Reverse sort: 291 (least rare) to 1 (most rare)
+    .sort((a: any, b: any) => b.rank - a.rank); // Reverse sort: 291 (least rare) to 1 (most rare)
 
   // Filter players for Add to Player dropdown
   const filteredPlayers = (allPlayers || []).filter((player: any) =>
@@ -358,7 +358,7 @@ export default function EssenceMarketAdmin() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredSummary.map((item) => (
+                  {filteredSummary.map((item: any) => (
                     <tr key={item.variationName} className="hover:bg-gray-800/30 transition-colors">
                       <td className="p-2 border-b border-gray-800 text-yellow-300 font-medium">
                         {item.variationName}
@@ -439,7 +439,7 @@ export default function EssenceMarketAdmin() {
                   </tr>
                 </thead>
                 <tbody>
-                  {detailedListings?.map((listing) => (
+                  {detailedListings?.map((listing: any) => (
                     <tr key={listing._id} className="hover:bg-gray-800/30 transition-colors">
                       <td className="p-2 border-b border-gray-800">
                         <div className="text-blue-300 font-medium cursor-pointer hover:underline" title={listing.sellerWallet}>
@@ -581,7 +581,7 @@ export default function EssenceMarketAdmin() {
                         <div className="sticky top-0 bg-green-900/40 px-3 py-2 text-xs text-gray-400 border-b border-gray-700">
                           Showing {filteredPlayers.length} of {allPlayers?.length || 0} players
                         </div>
-                        {filteredPlayers.map((player) => (
+                        {filteredPlayers.map((player: any) => (
                           <button
                             key={player.walletAddress}
                             onClick={() => {
@@ -654,7 +654,7 @@ export default function EssenceMarketAdmin() {
                       <div className="sticky top-0 bg-purple-900/40 px-3 py-2 text-xs text-gray-400 border-b border-gray-700">
                         Showing {filteredVariations.length} of 291 variations (least rare → most rare)
                       </div>
-                      {filteredVariations.map((variation) => (
+                      {filteredVariations.map((variation: any) => (
                         <button
                           key={`${variation.name}-${variation.type}`}
                           onClick={() => {
@@ -838,7 +838,7 @@ export default function EssenceMarketAdmin() {
                     </tr>
                   </thead>
                   <tbody>
-                    {listingHistory.map((item) => (
+                    {listingHistory.map((item: any) => (
                       <tr key={item._id} className="hover:bg-blue-900/20 transition-colors">
                         <td className="p-2 border-b border-gray-800 text-gray-400">
                           {new Date(item.timestamp).toLocaleString()}

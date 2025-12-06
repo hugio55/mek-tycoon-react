@@ -79,7 +79,7 @@ export default function VariationSpreadViewer() {
               </tr>
             </thead>
             <tbody>
-              {userBreakdown.map((user, index) => {
+              {userBreakdown.map((user: any, index: number) => {
                 const ratio = user.uniqueVariations > 0
                   ? (user.mekCount / user.uniqueVariations).toFixed(2)
                   : '0.00';
@@ -109,7 +109,7 @@ export default function VariationSpreadViewer() {
         </h2>
         <div className="max-h-96 overflow-y-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-            {variationList.map((variation) => (
+            {variationList.map((variation: any) => (
               <div
                 key={variation}
                 className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-300 hover:border-yellow-500/50 hover:text-white transition-colors"
@@ -129,7 +129,7 @@ export default function VariationSpreadViewer() {
           </h2>
           <div className="max-h-96 overflow-y-auto">
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-              {missingVariationsList.map((variation) => (
+              {missingVariationsList.map((variation: any) => (
                 <div
                   key={variation}
                   className="bg-gray-800 border border-red-700 rounded px-3 py-2 text-sm text-red-300 hover:border-red-500/50 hover:text-red-100 transition-colors"

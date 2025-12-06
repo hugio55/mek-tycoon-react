@@ -54,7 +54,7 @@ export default function RevenueAnalytics() {
               className="w-full bg-black/70 border border-yellow-500/30 rounded px-3 py-2 text-white text-sm focus:border-yellow-500 focus:outline-none"
             >
               <option value="all">All Events</option>
-              {allEvents?.map((event) => (
+              {allEvents?.map((event: any) => (
                 <option key={event._id} value={event._id}>
                   #{event.eventNumber} - {event.eventName}
                 </option>
@@ -137,7 +137,7 @@ export default function RevenueAnalytics() {
           </h3>
           <div className="space-y-2">
             {Object.entries(revenueData.revenueByDate)
-              .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
+              .sort((a: any, b: any) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
               .slice(0, 10)
               .map(([date, revenue]) => {
                 const maxRevenue = Math.max(...Object.values(revenueData.revenueByDate));
@@ -175,7 +175,7 @@ export default function RevenueAnalytics() {
           </h3>
           {topBuyers && topBuyers.length > 0 ? (
             <div className="space-y-3">
-              {topBuyers.map((buyer, index) => (
+              {topBuyers.map((buyer: any, index: number) => (
                 <div
                   key={buyer.key}
                   className="bg-gradient-to-r from-blue-900/20 to-black/50 border border-blue-500/30 rounded-lg p-4"
@@ -217,7 +217,7 @@ export default function RevenueAnalytics() {
           </h3>
           {topBuyersByWallet && topBuyersByWallet.length > 0 ? (
             <div className="space-y-3">
-              {topBuyersByWallet.map((buyer, index) => (
+              {topBuyersByWallet.map((buyer: any, index: number) => (
                 <div
                   key={buyer.key}
                   className="bg-gradient-to-r from-purple-900/20 to-black/50 border border-purple-500/30 rounded-lg p-4"

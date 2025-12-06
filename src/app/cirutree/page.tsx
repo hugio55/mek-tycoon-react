@@ -247,7 +247,7 @@ export default function TalentsPage() {
 
   // Function to position view on a node
   const centerOnNode = (nodeId: string, nodes: TalentNode[], positionAtBottom: boolean = false) => {
-    const node = nodes.find(n => n.id === nodeId);
+    const node = nodes.find((n: any) => n.id === nodeId);
     if (node && canvasRef.current) {
       const canvasRect = canvasRef.current.getBoundingClientRect();
       const centerX = canvasRect.width / 2;
@@ -361,7 +361,7 @@ export default function TalentsPage() {
           // If no tree found, use default and position start at bottom
           setTalentData(defaultTalentData);
           setUnlockedNodes(new Set(['start']));
-          const startNode = defaultTalentData.nodes.find(n => n.id === 'start');
+          const startNode = defaultTalentData.nodes.find((n: any) => n.id === 'start');
           if (startNode) setHighestUnlockedY(startNode.y);
           setTimeout(() => centerOnNode('start', defaultTalentData.nodes, true), 100);
           setLoadStatus("No talent tree found - create one in the builder!");
@@ -371,7 +371,7 @@ export default function TalentsPage() {
         // Use default talent tree and position start at bottom
         setTalentData(defaultTalentData);
         setUnlockedNodes(new Set(['start']));
-        const startNode = defaultTalentData.nodes.find(n => n.id === 'start');
+        const startNode = defaultTalentData.nodes.find((n: any) => n.id === 'start');
         if (startNode) setHighestUnlockedY(startNode.y);
         setTimeout(() => centerOnNode('start', defaultTalentData.nodes, true), 100);
         setLoadStatus("No talent tree found - create one in the builder!");
@@ -381,7 +381,7 @@ export default function TalentsPage() {
 
   const hasUnlockedPrerequisite = (node: TalentNode): boolean => {
     // Check if any parent node is unlocked
-    return talentData.connections.some(conn => 
+    return talentData.connections.some((conn: any) => 
       conn.to === node.id && unlockedNodes.has(conn.from)
     );
   };
@@ -435,7 +435,7 @@ export default function TalentsPage() {
       setUnlockedNodes(new Set(['start']));
       setXpAvailable(1500);
       // Reset the highest unlocked Y position
-      const startNode = talentData.nodes.find(n => n.id === 'start');
+      const startNode = talentData.nodes.find((n: any) => n.id === 'start');
       if (startNode) {
         setHighestUnlockedY(startNode.y);
       } else {
@@ -446,8 +446,8 @@ export default function TalentsPage() {
 
   const getMaxTier = (): number => {
     let maxTier = 1;
-    unlockedNodes.forEach(nodeId => {
-      const node = talentData.nodes.find(n => n.id === nodeId);
+    unlockedNodes.forEach((nodeId: any) => {
+      const node = talentData.nodes.find((n: any) => n.id === nodeId);
       if (node && node.tier > maxTier) {
         maxTier = node.tier;
       }
@@ -508,9 +508,9 @@ export default function TalentsPage() {
   };
 
   // Calculate progress stats (excluding label nodes)
-  const totalNodes = talentData.nodes.filter(n => !n.isLabel).length;
-  const unlockedCount = Array.from(unlockedNodes).filter(nodeId => {
-    const node = talentData.nodes.find(n => n.id === nodeId);
+  const totalNodes = talentData.nodes.filter((n: any) => !n.isLabel).length;
+  const unlockedCount = Array.from(unlockedNodes).filter((nodeId: any) => {
+    const node = talentData.nodes.find((n: any) => n.id === nodeId);
     return node && !node.isLabel;
   }).length;
   const progressPercentage = totalNodes > 0 ? Math.round((unlockedCount / totalNodes) * 100) : 0;
@@ -523,8 +523,8 @@ export default function TalentsPage() {
       visited.add(startId);
 
       talentData.connections
-        .filter(conn => conn.from === startId)
-        .forEach(conn => getPathNodes(conn.to, visited));
+        .filter((conn: any) => conn.from === startId)
+        .forEach((conn: any) => getPathNodes(conn.to, visited));
 
       return visited;
     };
@@ -534,12 +534,12 @@ export default function TalentsPage() {
     pathNodes.delete(pathId); // Remove the path root itself
 
     // Filter out label nodes from the path
-    const nonLabelPathNodes = Array.from(pathNodes).filter(nodeId => {
-      const node = talentData.nodes.find(n => n.id === nodeId);
+    const nonLabelPathNodes = Array.from(pathNodes).filter((nodeId: any) => {
+      const node = talentData.nodes.find((n: any) => n.id === nodeId);
       return node && !node.isLabel;
     });
 
-    const unlockedInPath = nonLabelPathNodes.filter(nodeId =>
+    const unlockedInPath = nonLabelPathNodes.filter((nodeId: any) =>
       unlockedNodes.has(nodeId) && nodeId !== 'start' && nodeId !== pathId
     ).length;
 
@@ -686,7 +686,7 @@ export default function TalentsPage() {
                 { position: 85, name: "Enlightened", rewards: ["5 Ambassador Power Chips", "Cosmic Essence x20"] },
                 { position: 92, name: "Transcendent", rewards: ["10,000,000 gold", "Ultimate Mek Blueprint"] },
                 { position: 98, name: "Legendary", rewards: ["Infinite Gold Generator", "Divine Spark"] }
-              ].map((milestone, index) => {
+              ].map((milestone: any, index: number) => {
                 const isReached = progressPercentage >= milestone.position;
                 const isHovered = hoveredMilestone === index;
                 
@@ -734,7 +734,7 @@ export default function TalentsPage() {
                         <div className="bg-gray-900/95 backdrop-blur border-2 border-yellow-400/60 rounded-lg p-3 shadow-2xl min-w-[200px] pointer-events-auto">
                           <div className="text-yellow-400 font-bold text-sm mb-2">{milestone.name}</div>
                           <ul className="text-gray-300 text-xs space-y-1">
-                            {milestone.rewards.map((reward, idx) => (
+                            {milestone.rewards.map((reward: any, idx: number) => (
                               <li key={idx} className="flex items-start">
                                 <span className="text-yellow-400/70 mr-1.5">•</span>
                                 <span>{reward}</span>
@@ -874,9 +874,9 @@ export default function TalentsPage() {
             }}
           >
           {/* Render connections */}
-          {talentData.connections.map(conn => {
-            const fromNode = talentData.nodes.find(n => n.id === conn.from);
-            const toNode = talentData.nodes.find(n => n.id === conn.to);
+          {talentData.connections.map((conn: any) => {
+            const fromNode = talentData.nodes.find((n: any) => n.id === conn.from);
+            const toNode = talentData.nodes.find((n: any) => n.id === conn.to);
 
             if (!fromNode || !toNode) return null;
 
@@ -1062,7 +1062,7 @@ export default function TalentsPage() {
                         zIndex: 1
                       }}
                     />
-                    {isFromVariation && [0, 45, 90, 135, 180, 225, 270, 315].map(deg => {
+                    {isFromVariation && [0, 45, 90, 135, 180, 225, 270, 315].map((deg: any) => {
                       const rad = (deg * Math.PI) / 180;
                       const px = fromX + Math.cos(rad) * 25;
                       const py = fromY + Math.sin(rad) * 25;
@@ -1081,7 +1081,7 @@ export default function TalentsPage() {
                         />
                       );
                     })}
-                    {isToVariation && [0, 45, 90, 135, 180, 225, 270, 315].map(deg => {
+                    {isToVariation && [0, 45, 90, 135, 180, 225, 270, 315].map((deg: any) => {
                       const rad = (deg * Math.PI) / 180;
                       const px = toX + Math.cos(rad) * 25;
                       const py = toY + Math.sin(rad) * 25;
@@ -1160,7 +1160,7 @@ export default function TalentsPage() {
           })}
           
           {/* Render nodes */}
-          {talentData.nodes.map(node => {
+          {talentData.nodes.map((node: any) => {
             const isUnlocked = unlockedNodes.has(node.id);
             const isAvailable = canUnlockNode(node);
             const isRoot = node.id === 'start';
@@ -1357,7 +1357,7 @@ export default function TalentsPage() {
                     lineHeight: '1.1'
                   }}
                 >
-                  {node.name.split('\n').map((line, i) => (
+                  {node.name.split('\n').map((line: any, i: number) => (
                     <div key={i}>{line}</div>
                   ))}
                 </div>
@@ -1384,7 +1384,7 @@ export default function TalentsPage() {
                 const isAvailable = canUnlockNode(hoveredNode);
                 
                 // Check if this node is connected to any unlocked node (next in line)
-                const isNextInLine = talentData.connections.some(conn => {
+                const isNextInLine = talentData.connections.some((conn: any) => {
                   // Check if this node is the 'to' and the 'from' is unlocked
                   if (conn.to === hoveredNode.id && unlockedNodes.has(conn.from)) {
                     return true;
@@ -1444,7 +1444,7 @@ export default function TalentsPage() {
                         {hoveredNode.essences && hoveredNode.essences.length > 0 && (
                           <div className="bg-gray-800/50 rounded p-2">
                             <div className="text-xs text-gray-400 mb-1">ESSENCE REQUIRED:</div>
-                            {hoveredNode.essences.map((essence, idx) => (
+                            {hoveredNode.essences.map((essence: any, idx: number) => (
                               <div key={idx} className="text-sm text-purple-300">
                                 • {essence.amount}x {essence.attribute} Essence
                               </div>

@@ -31,9 +31,9 @@ export default function NFTInventoryTable({
       console.log('[🎨UI] Total items:', inventory.length);
 
       const statusCounts = {
-        available: inventory.filter((item) => item.isAvailable).length,
-        reserved: inventory.filter((item) => item.status === "reserved").length,
-        sold: inventory.filter((item) => item.status === "sold").length,
+        available: inventory.filter((item: any) => item.isAvailable).length,
+        reserved: inventory.filter((item: any) => item.status === "reserved").length,
+        sold: inventory.filter((item: any) => item.status === "sold").length,
       };
       console.log('[🎨UI] Status breakdown from useQuery data:', statusCounts);
 
@@ -77,13 +77,13 @@ export default function NFTInventoryTable({
   const filteredInventory =
     filterStatus === "all"
       ? inventory
-      : inventory.filter((item) => item.status === filterStatus);
+      : inventory.filter((item: any) => item.status === filterStatus);
 
   const stats = {
     total: inventory.length,
-    available: inventory.filter((item) => item.isAvailable).length,
-    reserved: inventory.filter((item) => item.status === "reserved").length,
-    sold: inventory.filter((item) => item.status === "sold").length,
+    available: inventory.filter((item: any) => item.isAvailable).length,
+    reserved: inventory.filter((item: any) => item.status === "reserved").length,
+    sold: inventory.filter((item: any) => item.status === "sold").length,
   };
 
   const getStatusColor = (status: string) => {
@@ -251,7 +251,7 @@ export default function NFTInventoryTable({
                 </tr>
               </thead>
               <tbody>
-                {filteredInventory.map((item) => (
+                {filteredInventory.map((item: any) => (
                   <tr
                     key={item._id}
                     className="border-b border-gray-800 hover:bg-yellow-500/5"

@@ -159,12 +159,12 @@ export default function ShopPage() {
   // Filter for user's listings if needed
   const filteredListings = listings ? (
     showOnlyMyListings 
-      ? listings.filter(l => l.sellerId === userId)
+      ? listings.filter((l: any) => l.sellerId === userId)
       : listings
   ) : [];
   
   // Sort listings
-  const sortedListings = filteredListings.sort((a, b) => {
+  const sortedListings = filteredListings.sort((a: any, b: any) => {
     switch (sortBy) {
       case "price_asc":
         return a.pricePerUnit - b.pricePerUnit;
@@ -335,7 +335,7 @@ export default function ShopPage() {
           
           {/* Category Filters - Tactical Selector */}
           <div className="flex gap-2 flex-wrap items-center p-3 bg-black/40 border border-gray-800 rounded-lg mek-overlay-metal-texture">
-            {CATEGORIES.map((cat) => {
+            {CATEGORIES.map((cat: any) => {
               const isMekChips = cat.id === 'mek-chips';
               const isActive = isMekChips 
                 ? ['head', 'body', 'trait'].includes(selectedCategory)
@@ -373,7 +373,7 @@ export default function ShopPage() {
                           {/* Options */}
                           <div className="relative">
                             <div className="absolute inset-0 mek-overlay-diagonal-stripes opacity-10 pointer-events-none" />
-                            {cat.subcategories?.map((sub, index) => (
+                            {cat.subcategories?.map((sub: any, index: number) => (
                               <button
                                 key={sub.id}
                                 onClick={() => {
@@ -439,7 +439,7 @@ export default function ShopPage() {
             <div className="flex items-center gap-3">
               <span className="mek-label-uppercase text-yellow-400/70">SORT PROTOCOL:</span>
               <div className="flex gap-1">
-                {SORT_OPTIONS.map((option) => (
+                {SORT_OPTIONS.map((option: any) => (
                   <button
                     key={option.id}
                     onClick={() => setSortBy(option.id)}
@@ -496,7 +496,7 @@ export default function ShopPage() {
               </button>
             </div>
           ) : (
-            sortedListings.map((listing) => {
+            sortedListings.map((listing: any) => {
               const isOwn = listing.sellerId === userId;
               const canAfford = userProfile && userProfile.gold >= listing.pricePerUnit;
               const isOverexposed = listing.itemType === 'overexposed';
@@ -788,7 +788,7 @@ export default function ShopPage() {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {myListings.map((listing) => (
+              {myListings.map((listing: any) => (
                 <div
                   key={listing._id}
                   className="relative mek-card-industrial mek-border-sharp-gold p-4 mek-corner-cut"

@@ -299,9 +299,9 @@ export const variationsData = {
 
 export const getAllVariations = () => {
   const all = [
-    ...variationsData.heads.map(v => ({ ...v, type: 'head' })),
-    ...variationsData.bodies.map(v => ({ ...v, type: 'body' })),
-    ...variationsData.traits.map(v => ({ ...v, type: 'trait' }))
+    ...variationsData.heads.map((v: any) => ({ ...v, type: 'head' })),
+    ...variationsData.bodies.map((v: any) => ({ ...v, type: 'body' })),
+    ...variationsData.traits.map((v: any) => ({ ...v, type: 'trait' }))
   ];
-  return all.sort((a, b) => a.name.localeCompare(b.name));
+  return all.sort((a: any, b: any) => a.name.localeCompare(b.name));
 };

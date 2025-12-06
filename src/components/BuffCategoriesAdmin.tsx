@@ -428,7 +428,7 @@ export default function BuffCategoriesAdmin() {
                               </div>
                             </td>
                           </tr>
-                          {groupedCategories.success.map((category) => (
+                          {groupedCategories.success.map((category: any) => (
                             <tr key={category._id} className="border-b border-gray-800 hover:bg-gray-800/30">
                               <td className="py-2 px-3 font-semibold text-sm">
                                 <button
@@ -487,7 +487,7 @@ export default function BuffCategoriesAdmin() {
                               <span className="text-yellow-500 font-bold text-xs uppercase">Gold & Market</span>
                             </td>
                           </tr>
-                          {groupedCategories.gold.map((category) => (
+                          {groupedCategories.gold.map((category: any) => (
                             <tr key={category._id} className="border-b border-gray-800 hover:bg-gray-800/30">
                               <td className="py-2 px-3 font-semibold text-sm">
                                 <button
@@ -552,7 +552,7 @@ export default function BuffCategoriesAdmin() {
                               <span className="text-purple-500 font-bold text-xs uppercase">Essence</span>
                             </td>
                           </tr>
-                          {groupedCategories.essence.map((category) => (
+                          {groupedCategories.essence.map((category: any) => (
                             <tr key={category._id} className="border-b border-gray-800 hover:bg-gray-800/30">
                               <td className="py-2 px-3 font-semibold text-sm">
                                 <button
@@ -617,7 +617,7 @@ export default function BuffCategoriesAdmin() {
                               <span className="text-blue-500 font-bold text-xs uppercase">Looter & Rewards</span>
                             </td>
                           </tr>
-                          {groupedCategories.looter.map((category) => (
+                          {groupedCategories.looter.map((category: any) => (
                             <tr key={category._id} className="border-b border-gray-800 hover:bg-gray-800/30">
                               <td className="py-2 px-3 font-semibold text-sm">
                                 <button
@@ -682,7 +682,7 @@ export default function BuffCategoriesAdmin() {
                               <span className="text-gray-400 font-bold text-xs uppercase">Other</span>
                             </td>
                           </tr>
-                          {groupedCategories.other.map((category) => (
+                          {groupedCategories.other.map((category: any) => (
                             <tr key={category._id} className="border-b border-gray-800 hover:bg-gray-800/30">
                               <td className="py-2 px-3 font-semibold text-sm">
                                 <button

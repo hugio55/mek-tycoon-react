@@ -32,13 +32,13 @@ export default function AdminBetaSignups() {
   };
 
   // Calculate IP statistics
-  const ipCounts = signups.reduce((acc, signup) => {
+  const ipCounts = signups.reduce((acc: any, signup: any) => {
     const ip = signup.ipAddress || 'unknown';
     acc[ip] = (acc[ip] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const uniqueIPs = Object.keys(ipCounts).filter(ip => ip !== 'unknown').length;
+  const uniqueIPs = Object.keys(ipCounts).filter((ip: any) => ip !== 'unknown').length;
   const duplicateIPs = Object.entries(ipCounts).filter(([ip, count]) => count > 1 && ip !== 'unknown');
 
   return (
@@ -105,7 +105,7 @@ export default function AdminBetaSignups() {
                   </td>
                 </tr>
               ) : (
-                signups.map((signup, index) => (
+                signups.map((signup: any, index: number) => (
                   <tr
                     key={signup._id}
                     className="border-b border-white/5 hover:bg-white/5 transition-colors"
@@ -141,7 +141,7 @@ export default function AdminBetaSignups() {
           <div className="mt-6 space-y-4">
             <button
               onClick={() => {
-                const addresses = signups.map(s => s.stakeAddress).join('\n');
+                const addresses = signups.map((s: any) => s.stakeAddress).join('\n');
                 navigator.clipboard.writeText(addresses);
                 alert('All stake addresses copied to clipboard!');
               }}
@@ -154,7 +154,7 @@ export default function AdminBetaSignups() {
               onClick={() => {
                 const csv = [
                   'Stake Address,IP Address,Submitted At',
-                  ...signups.map(s => `${s.stakeAddress},${s.ipAddress || 'N/A'},${formatDate(s.submittedAt)}`)
+                  ...signups.map((s: any) => `${s.stakeAddress},${s.ipAddress || 'N/A'},${formatDate(s.submittedAt)}`)
                 ].join('\n');
                 const blob = new Blob([csv], { type: 'text/csv' });
                 const url = URL.createObjectURL(blob);

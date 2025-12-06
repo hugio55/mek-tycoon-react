@@ -199,7 +199,7 @@ async function updateComponentSafely() {
   // Step 2: Check where it's used
   const usages = await getComponentUsages({ componentId: button._id });
   console.log(`⚠️ This component is used in ${usages.length} places:`);
-  usages.forEach((usage) => {
+  usages.forEach((usage: any) => {
     console.log(`  - ${usage.pageRoute} (${usage.pageSection})`);
   });
 
@@ -301,7 +301,7 @@ async function componentLibraryPageQueries() {
     .query("components")
     .withIndex("by_created")
     .order("desc")
-    .filter((q) => q.eq(q.field("isArchived"), false))
+    .filter((q: any) => q.eq(q.field("isArchived"), false))
     .take(10);
 
   // Get recently used
@@ -329,8 +329,8 @@ async function extractLearningPatterns() {
   // Analyze color preferences
   const colorPatterns = new Map<string, { count: number; target: string }>();
 
-  successful.forEach((transformation) => {
-    transformation.colorMappings?.forEach((mapping) => {
+  successful.forEach((transformation: any) => {
+    transformation.colorMappings?.forEach((mapping: any) => {
       const key = mapping.sourceColor;
       const existing = colorPatterns.get(key) || { count: 0, target: "" };
       colorPatterns.set(key, {
@@ -373,7 +373,7 @@ async function createIndustrialCollection() {
   const industrialComponents = await ctx.db
     .query("components")
     .withSearchIndex("search_tags", (q) => q.search("tags", "industrial"))
-    .filter((q) => q.eq(q.field("isArchived"), false))
+    .filter((q: any) => q.eq(q.field("isArchived"), false))
     .collect();
 
   // Create collection
@@ -381,7 +381,7 @@ async function createIndustrialCollection() {
     name: "Industrial Theme",
     slug: "industrial-theme",
     description: "Yellow and black industrial-styled components for Mek Tycoon",
-    componentIds: industrialComponents.map((c) => c._id),
+    componentIds: industrialComponents.map((c: any) => c._id),
     isSystem: true, // System-defined collection
     order: 1,
     primaryColor: "#fab617",
@@ -454,7 +454,7 @@ async function generateAnalyticsDashboard() {
   // Total components
   const totalComponents = await ctx.db
     .query("components")
-    .filter((q) => q.eq(q.field("isArchived"), false))
+    .filter((q: any) => q.eq(q.field("isArchived"), false))
     .collect();
 
   // Most used
@@ -465,7 +465,7 @@ async function generateAnalyticsDashboard() {
     .query("components")
     .withIndex("by_usage")
     .order("asc")
-    .filter((q) => q.eq(q.field("isArchived"), false))
+    .filter((q: any) => q.eq(q.field("isArchived"), false))
     .take(5);
 
   // Transformation success rate
@@ -474,7 +474,7 @@ async function generateAnalyticsDashboard() {
     .collect();
 
   const successRate =
-    (allTransformations.filter((t) => t.isSuccessful).length /
+    (allTransformations.filter((t: any) => t.isSuccessful).length /
       allTransformations.length) *
     100;
 
@@ -498,11 +498,11 @@ async function generateAnalyticsDashboard() {
     totalTransformations: allTransformations.length,
     successRate: successRate.toFixed(1) + "%",
     avgIterations: avgIterations.toFixed(1),
-    mostUsed: mostUsed.map((c) => ({
+    mostUsed: mostUsed.map((c: any) => ({
       name: c.name,
       usageCount: c.usageCount,
     })),
-    leastUsed: leastUsed.map((c) => ({
+    leastUsed: leastUsed.map((c: any) => ({
       name: c.name,
       usageCount: c.usageCount,
     })),
@@ -526,14 +526,14 @@ async function viewVersionHistoryAndRollback(componentId: Id<"components">) {
     .collect();
 
   console.log(`Component has ${versions.length} versions:`);
-  versions.forEach((v) => {
+  versions.forEach((v: any) => {
     console.log(
       `  v${v.versionNumber}: ${v.changeType} - ${v.changeDescription}`
     );
   });
 
   // Rollback to version 2 (for example)
-  const targetVersion = versions.find((v) => v.versionNumber === 2);
+  const targetVersion = versions.find((v: any) => v.versionNumber === 2);
   if (!targetVersion) throw new Error("Version not found");
 
   const component = await ctx.db.get(componentId);

@@ -498,7 +498,7 @@ export const autoFixAssetOverlaps = internalMutation({
         continue;
       }
 
-      validWallets.sort((a, b) => b.lastSnapshotTime - a.lastSnapshotTime);
+      validWallets.sort((a: any, b: any) => b.lastSnapshotTime - a.lastSnapshotTime);
       const correctWallet = validWallets[0].walletAddress;
 
       console.log(`[Auto-Fix Asset Overlaps] Keeping ${overlap.assetName} in ${correctWallet.substring(0, 15)}... (most recent snapshot)`);
@@ -513,7 +513,7 @@ export const autoFixAssetOverlaps = internalMutation({
 
           if (miner) {
             const filteredMeks = miner.ownedMeks.filter((m: any) => m.assetId !== overlap.assetId);
-            const newRate = filteredMeks.reduce((sum, m) => sum + (m.goldPerHour || 0), 0);
+            const newRate = filteredMeks.reduce((sum: any, m: any) => sum + (m.goldPerHour || 0), 0);
 
             await ctx.db.patch(miner._id, {
               ownedMeks: filteredMeks,
@@ -658,7 +658,7 @@ export const removeMekFromWallet = internalMutation({
     }
 
     // Recalculate total gold per hour
-    const newTotalGoldPerHour = filteredMeks.reduce((sum, m) => sum + (m.goldPerHour || 0), 0);
+    const newTotalGoldPerHour = filteredMeks.reduce((sum: any, m: any) => sum + (m.goldPerHour || 0), 0);
     const goldRateDifference = miner.totalGoldPerHour - newTotalGoldPerHour;
 
     console.log(`[Remove MEK] Removing ${args.assetName} from ${args.walletAddress.substring(0, 15)}...`);

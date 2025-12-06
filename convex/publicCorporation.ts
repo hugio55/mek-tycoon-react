@@ -103,14 +103,14 @@ export const getCorporationData = query({
     });
 
     // Sort by level, then by gold rate
-    meksWithLevels.sort((a, b) => {
+    meksWithLevels.sort((a: any, b: any) => {
       if (b.level !== a.level) return b.level - a.level;
       return b.goldPerHour - a.goldPerHour;
     });
 
     // Calculate average employee level
     const avgLevel = meksWithLevels.length > 0
-      ? meksWithLevels.reduce((sum, mek) => sum + mek.level, 0) / meksWithLevels.length
+      ? meksWithLevels.reduce((sum: any, mek: any) => sum + mek.level, 0) / meksWithLevels.length
       : 0;
 
     // Calculate corporation age

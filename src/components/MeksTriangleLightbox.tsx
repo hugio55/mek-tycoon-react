@@ -39,9 +39,9 @@ export default function MeksTriangleLightbox({ onClose, ownedMeks }: MeksTriangl
       console.log('🔺 [TRIANGLE] Data is NULL - overlay not found in database!');
     } else {
       console.log('🔺 [TRIANGLE] Total zones:', triangleOverlayData.zones?.length || 0);
-      const allSprites = triangleOverlayData.zones?.filter(zone => zone.mode === "sprite") || [];
+      const allSprites = triangleOverlayData.zones?.filter((zone: any) => zone.mode === "sprite") || [];
       console.log('🔺 [TRIANGLE] Total sprites:', allSprites.length);
-      const traitSprites = allSprites.filter(s => s.metadata?.variationType === "trait");
+      const traitSprites = allSprites.filter((s: any) => s.metadata?.variationType === "trait");
       console.log('🔺 [TRIANGLE] Trait sprites:', traitSprites.length);
       if (traitSprites.length > 0) {
         console.log('🔺 [TRIANGLE] Trait details:', traitSprites);
@@ -56,7 +56,7 @@ export default function MeksTriangleLightbox({ onClose, ownedMeks }: MeksTriangl
   const ownedVariationNames = useMemo(() => {
     const variationSet = new Set<string>();
 
-    ownedMeks.forEach(mek => {
+    ownedMeks.forEach((mek: any) => {
       // Extract individual variations from sourceKey (format: "head-body-item")
       if (mek.sourceKey) {
         const parts = mek.sourceKey.split('-');
@@ -64,7 +64,7 @@ export default function MeksTriangleLightbox({ onClose, ownedMeks }: MeksTriangl
           // Map each sourceKey code to its variation name with type
           // parts[0] = head, parts[1] = body, parts[2] = item
           const types = ['head', 'body', 'item'];
-          parts.forEach((sourceKeyCode, index) => {
+          parts.forEach((sourceKeyCode: any, index: number) => {
             if (sourceKeyCode) {
               // Find the variation in COMPLETE_VARIATION_RARITY by sourceKey
               const variation = COMPLETE_VARIATION_RARITY.find(
@@ -89,10 +89,10 @@ export default function MeksTriangleLightbox({ onClose, ownedMeks }: MeksTriangl
   }, [ownedMeks]);
 
   // Get sprites from overlay data
-  const sprites = triangleOverlayData?.zones?.filter(zone => zone.mode === "sprite") || [];
+  const sprites = triangleOverlayData?.zones?.filter((zone: any) => zone.mode === "sprite") || [];
 
   // Count owned sprites (check both name AND type to prevent confusion with same-named variations)
-  const ownedCount = sprites.filter(sprite => {
+  const ownedCount = sprites.filter((sprite: any) => {
     const variationName = sprite.metadata?.variationName?.toUpperCase();
     const variationType = sprite.metadata?.variationType;
     if (!variationName || !variationType) return false;
@@ -134,7 +134,7 @@ export default function MeksTriangleLightbox({ onClose, ownedMeks }: MeksTriangl
             />
 
             {/* Positioned sprites from database */}
-            {sprites.map((sprite) => {
+            {sprites.map((sprite: any) => {
               const variationName = sprite.metadata?.variationName?.toUpperCase();
               const variationType = sprite.metadata?.variationType;
               // Check for exact match of "NAME-TYPE" to prevent showing wrong sprites for same-named variations

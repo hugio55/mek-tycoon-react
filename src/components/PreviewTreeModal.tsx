@@ -55,9 +55,9 @@ interface PreviewTreeModalProps {
 export default function PreviewTreeModal({ isOpen, onClose, seed, chapter }: PreviewTreeModalProps) {
   // Load actual story trees from database
   const storyTrees = useQuery(api.storyTrees.getAllStoryTrees);
-  const v2Tree = storyTrees?.find(tree => tree.name === "V2");
-  const v1Tree = storyTrees?.find(tree => tree.name === "V1");
-  const test5Tree = storyTrees?.find(tree => tree.name === "test 5");
+  const v2Tree = storyTrees?.find((tree: any) => tree.name === "V2");
+  const v1Tree = storyTrees?.find((tree: any) => tree.name === "V1");
+  const test5Tree = storyTrees?.find((tree: any) => tree.name === "test 5");
 
   // Use actual tree data if available, otherwise generate preview
   const databaseTree = v2Tree || v1Tree || test5Tree;
@@ -133,15 +133,15 @@ export default function PreviewTreeModal({ isOpen, onClose, seed, chapter }: Pre
     if (!treeData || !treeData.nodes) return [];
 
     // Find bounds to normalize coordinates
-    const minX = Math.min(...treeData.nodes.map(n => n.x));
-    const maxX = Math.max(...treeData.nodes.map(n => n.x));
-    const minY = Math.min(...treeData.nodes.map(n => n.y));
-    const maxY = Math.max(...treeData.nodes.map(n => n.y));
+    const minX = Math.min(...treeData.nodes.map((n: any) => n.x));
+    const maxX = Math.max(...treeData.nodes.map((n: any) => n.x));
+    const minY = Math.min(...treeData.nodes.map((n: any) => n.y));
+    const maxY = Math.max(...treeData.nodes.map((n: any) => n.y));
 
     const xRange = maxX - minX || 1;
     const yRange = maxY - minY || 1;
 
-    return treeData.nodes.map(node => {
+    return treeData.nodes.map((node: any) => {
       // Normalize coordinates to fit in preview window
       const normalizedX = ((node.x - minX) / xRange - 0.5) * 600;
       const normalizedY = -((node.y - minY) / yRange) * 800; // Negative for upward growth
@@ -267,9 +267,9 @@ export default function PreviewTreeModal({ isOpen, onClose, seed, chapter }: Pre
 
     // If we have database connections, use them
     if (databaseTree && databaseTree.connections) {
-      databaseTree.connections.forEach(conn => {
-        const fromNode = nodes.find(n => n.id === conn.from);
-        const toNode = nodes.find(n => n.id === conn.to);
+      databaseTree.connections.forEach((conn: any) => {
+        const fromNode = nodes.find((n: any) => n.id === conn.from);
+        const toNode = nodes.find((n: any) => n.id === conn.to);
         if (fromNode && toNode) {
           ctx.beginPath();
           ctx.moveTo(fromNode.x, fromNode.y);
@@ -280,11 +280,11 @@ export default function PreviewTreeModal({ isOpen, onClose, seed, chapter }: Pre
     } else {
       // Otherwise use level-based connections
       for (let level = 1; level < 42; level++) {
-        const currentLevelNodes = nodes.filter(n => n.level === level);
-        const prevLevelNodes = nodes.filter(n => n.level === level - 1);
+        const currentLevelNodes = nodes.filter((n: any) => n.level === level);
+        const prevLevelNodes = nodes.filter((n: any) => n.level === level - 1);
 
-        currentLevelNodes.forEach(current => {
-          prevLevelNodes.forEach(prev => {
+        currentLevelNodes.forEach((current: any) => {
+          prevLevelNodes.forEach((prev: any) => {
             ctx.beginPath();
             ctx.moveTo(prev.x, prev.y);
             ctx.lineTo(current.x, current.y);
@@ -295,7 +295,7 @@ export default function PreviewTreeModal({ isOpen, onClose, seed, chapter }: Pre
     }
 
     // Draw nodes
-    nodes.forEach(node => {
+    nodes.forEach((node: any) => {
       const isHovered = hoveredNode?.id === node.id;
       const radius = node.type === 'final_boss' ? 20 :
                      node.type === 'boss' ? 15 :
@@ -370,7 +370,7 @@ export default function PreviewTreeModal({ isOpen, onClose, seed, chapter }: Pre
       const canvasX = (x - canvasRef.current.width / 2 - panOffset.x) / zoom;
       const canvasY = (y - canvasRef.current.height + 50 - panOffset.y) / zoom;
 
-      const hoveredNode = nodes.find(node => {
+      const hoveredNode = nodes.find((node: any) => {
         const dx = node.x - canvasX;
         const dy = node.y - canvasY;
         const radius = node.type === 'final_boss' ? 20 :
@@ -463,7 +463,7 @@ export default function PreviewTreeModal({ isOpen, onClose, seed, chapter }: Pre
               {hoveredNode.rewards && hoveredNode.rewards.length > 0 && (
                 <div className="space-y-1">
                   <div className="text-gray-400 text-xs font-bold uppercase">Rewards:</div>
-                  {hoveredNode.rewards.map((reward, idx) => (
+                  {hoveredNode.rewards.map((reward: any, idx: number) => (
                     <div key={idx} className="flex items-center justify-between text-sm">
                       <span className="text-gray-300">
                         {reward.icon} {reward.name}

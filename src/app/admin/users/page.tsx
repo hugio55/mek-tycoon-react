@@ -190,7 +190,7 @@ export default function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody>
-                {displayUsers?.map((user) => (
+                {displayUsers?.map((user: any) => (
                   <tr
                     key={user._id}
                     className="border-b border-gray-800 hover:bg-yellow-500/5 transition-colors cursor-pointer"
@@ -512,7 +512,7 @@ export default function AdminUsersPage() {
                     </h3>
                     <div className="max-h-[200px] overflow-y-auto space-y-1">
                       {userDetails.inventory.length > 0 ? (
-                        userDetails.inventory.map((item) => (
+                        userDetails.inventory.map((item: any) => (
                           <div key={item._id} className="text-xs text-gray-400 py-0.5 flex justify-between">
                             <span className="capitalize">{item.itemType}: {item.itemVariation}</span>
                             <span className="text-blue-400">x{item.quantity}</span>
@@ -530,7 +530,7 @@ export default function AdminUsersPage() {
                     </h3>
                     <div className="max-h-[150px] overflow-y-auto space-y-1">
                       {userDetails.activeBuffs.length > 0 ? (
-                        userDetails.activeBuffs.map((buff) => (
+                        userDetails.activeBuffs.map((buff: any) => (
                           <div key={buff._id} className="text-xs text-gray-400 py-0.5 flex justify-between">
                             <span>{buff.source}:</span>
                             <span className="text-green-400">+{buff.value} {buff.stacks > 1 && `x${buff.stacks}`}</span>
@@ -551,7 +551,7 @@ export default function AdminUsersPage() {
                     </h3>
                     <div className="max-h-[300px] overflow-y-auto space-y-1">
                       {userDetails.meks.length > 0 ? (
-                        userDetails.meks.map((mek) => (
+                        userDetails.meks.map((mek: any) => (
                           <Link
                             key={mek._id}
                             href={`/mek/${mek._id}`}
@@ -585,7 +585,7 @@ export default function AdminUsersPage() {
                       {userDetails.contracts.filter((c: any) => c.status === 'active').length > 0 ? (
                         userDetails.contracts
                           .filter((c: any) => c.status === 'active')
-                          .map((contract) => (
+                          .map((contract: any) => (
                             <div key={contract._id} className="text-xs text-gray-400 py-1">
                               <div className="flex justify-between">
                                 <span>{contract.location}</span>
@@ -610,7 +610,7 @@ export default function AdminUsersPage() {
                       Recent Transactions ({userDetails.recentTransactions.length})
                     </h3>
                     <div className="max-h-[150px] overflow-y-auto space-y-1">
-                      {userDetails.recentTransactions.slice(0, 10).map((tx) => (
+                      {userDetails.recentTransactions.slice(0, 10).map((tx: any) => (
                         <div key={tx._id} className="text-xs text-gray-400 py-0.5 flex justify-between">
                           <span className="capitalize">{tx.type}</span>
                           <span className={tx.amount && tx.amount > 0 ? 'text-green-400' : 'text-red-400'}>

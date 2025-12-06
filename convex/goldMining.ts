@@ -134,7 +134,7 @@ export const initializeGoldMining = mutation({
     const meksWithBoosts = args.ownedMeks.filter((mek: any) => mek.levelBoostAmount && mek.levelBoostAmount > 0);
     devLog.log('[INIT MUTATION] Meks with level boosts:', {
       count: meksWithBoosts.length,
-      totalBoost: meksWithBoosts.reduce((sum, mek) => sum + (mek.levelBoostAmount || 0), 0).toFixed(2)
+      totalBoost: meksWithBoosts.reduce((sum: any, mek: any) => sum + (mek.levelBoostAmount || 0), 0).toFixed(2)
     });
 
     // If we have duplicates, merge them NOW
@@ -142,12 +142,12 @@ export const initializeGoldMining = mutation({
       devLog.log(`[GoldMining] Found ${allExisting.length} duplicates for ${args.walletAddress.substring(0, 20)}... - merging`);
 
       // Keep the oldest record, sum accumulated gold, delete others
-      const sorted = allExisting.sort((a, b) => a.createdAt - b.createdAt);
+      const sorted = allExisting.sort((a: any, b: any) => a.createdAt - b.createdAt);
       const primary = sorted[0];
       const duplicates = sorted.slice(1);
 
       // Sum all accumulated gold from duplicates
-      const totalAccumulatedGold = allExisting.reduce((sum, record) => {
+      const totalAccumulatedGold = allExisting.reduce((sum: any, record: any) => {
         const currentGold = calculateCurrentGold({
           accumulatedGold: record.accumulatedGold || 0,
           goldPerHour: record.totalGoldPerHour,
@@ -239,7 +239,7 @@ export const initializeGoldMining = mutation({
       );
 
       // Merge new data with existing custom names
-      const mergedMeks = args.ownedMeks.map(newMek => {
+      const mergedMeks = args.ownedMeks.map((newMek: any) => {
         const existingName = existingNameMap.get(newMek.assetId);
         if (existingName) {
           console.log('[🔍MEKNAME] Preserving customName for:', {
@@ -685,7 +685,7 @@ export const getAllGoldMiningData = query({
       }
 
       // Get highest gold rate Mek
-      const highestRateMek = miner.ownedMeks.reduce((best, mek) =>
+      const highestRateMek = miner.ownedMeks.reduce((best: any, mek: any) =>
         mek.goldPerHour > (best?.goldPerHour || 0) ? mek : best,
         miner.ownedMeks[0]
       );
@@ -846,7 +846,7 @@ export const initializeWithBlockfrost = action({
         const onChainMekMap = new Map(meksForMutation.map((m: any) => [m.assetId, m]));
 
         // Start with existing Meks and update with on-chain data where available
-        finalMeksList = existingData.ownedMeks.map(existingMek => {
+        finalMeksList = existingData.ownedMeks.map((existingMek: any) => {
           const onChainMek = onChainMekMap.get(existingMek.assetId);
           if (onChainMek) {
             // Mek is on-chain - use the on-chain data (which includes level boosts)
@@ -909,7 +909,7 @@ export const initializeWithBlockfrost = action({
         success: true,
         meks: meksWithLevelBoosts, // Return the level-boosted data
         mekCount: meksWithLevelBoosts.length,
-        totalGoldPerHour: meksWithLevelBoosts.reduce((sum, m) => sum + m.goldPerHour, 0) // This now includes boosts
+        totalGoldPerHour: meksWithLevelBoosts.reduce((sum: any, m: any) => sum + m.goldPerHour, 0) // This now includes boosts
       };
 
     } catch (error: any) {
@@ -1362,11 +1362,11 @@ export const getGoldMiningStats = query({
     const last24h = now - (24 * 60 * 60 * 1000);
 
     // Calculate totals
-    const totalMeks = allMiners.reduce((sum, miner) => sum + miner.ownedMeks.length, 0);
-    const totalGoldPerHour = allMiners.reduce((sum, miner) => sum + miner.totalGoldPerHour, 0);
+    const totalMeks = allMiners.reduce((sum: any, miner: any) => sum + miner.ownedMeks.length, 0);
+    const totalGoldPerHour = allMiners.reduce((sum: any, miner: any) => sum + miner.totalGoldPerHour, 0);
 
     // Calculate accumulated gold using update time method (only for VERIFIED wallets)
-    const totalGoldAccumulated = allMiners.reduce((sum, miner) => {
+    const totalGoldAccumulated = allMiners.reduce((sum: any, miner: any) => {
       const currentGold = calculateCurrentGold({
         accumulatedGold: miner.accumulatedGold || 0,
         goldPerHour: miner.totalGoldPerHour,
@@ -1491,7 +1491,7 @@ export const setCompanyName = mutation({
     console.log('[setCompanyName] Checking if name is taken in goldMining...');
     const existingInGoldMining = await ctx.db
       .query("goldMining")
-      .filter((q) =>
+      .filter((q: any) =>
         q.and(
           q.neq(q.field("walletAddress"), args.walletAddress),
           q.eq(q.field("companyName"), trimmedName)
@@ -1651,7 +1651,7 @@ export const checkCompanyNameAvailability = query({
     // Check if name is taken in goldMining table
     const existingInGoldMining = await ctx.db
       .query("goldMining")
-      .filter((q) =>
+      .filter((q: any) =>
         args.currentWalletAddress
           ? q.and(
               q.neq(q.field("walletAddress"), args.currentWalletAddress),
