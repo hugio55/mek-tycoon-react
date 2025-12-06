@@ -185,6 +185,7 @@ import type * as nmkrSync from "../nmkrSync.js";
 import type * as nodeFeeVersions from "../nodeFeeVersions.js";
 import type * as nodeFees from "../nodeFees.js";
 import type * as normalMekRewards from "../normalMekRewards.js";
+import type * as notifications from "../notifications.js";
 import type * as offlineAccumulation from "../offlineAccumulation.js";
 import type * as optimizedQueries from "../optimizedQueries.js";
 import type * as overlays from "../overlays.js";
@@ -427,6 +428,7 @@ declare const fullApi: ApiFromModules<{
   nodeFeeVersions: typeof nodeFeeVersions;
   nodeFees: typeof nodeFees;
   normalMekRewards: typeof normalMekRewards;
+  notifications: typeof notifications;
   offlineAccumulation: typeof offlineAccumulation;
   optimizedQueries: typeof optimizedQueries;
   overlays: typeof overlays;
