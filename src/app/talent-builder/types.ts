@@ -132,6 +132,17 @@ export type ViewportPosition = {
 // TEMPLATE & SAVE TYPES
 // ============================================================================
 
+export interface TemplateConditions {
+  headVariations?: string[];
+  bodyVariations?: string[];
+  traitVariations?: string[];
+  rarityTiers?: string[];
+  powerScoreMin?: number;
+  powerScoreMax?: number;
+  rankMin?: number;
+  rankMax?: number;
+}
+
 export interface Template {
   _id: string;
   name: string;
@@ -141,6 +152,9 @@ export interface Template {
   category?: string;
   viewportDimensions?: ViewportDimensions;
   viewportPosition?: ViewportPosition;
+  conditions?: TemplateConditions;
+  createdAt?: number;
+  updatedAt?: number;
 }
 
 export interface SavedSpell {
