@@ -163,7 +163,7 @@ export const getAutosaveHistory = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("overlayAutosaves")
-      .withIndex("", (q: any) => q.eq("imageKey", args.imageKey))
+      .withIndex("by_imageKey", (q: any) => q.eq("imageKey", args.imageKey))
       .order("desc")
       .take(20);
   },
