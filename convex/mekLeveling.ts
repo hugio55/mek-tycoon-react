@@ -612,7 +612,7 @@ export const checkAndResetTransferredMeks = mutation({
     }
 
     const currentMekIds = new Set(
-      goldMiningData.ownedMeks.map((mek) => mek.assetId)
+      goldMiningData.ownedMeks.map((mek: any) => mek.assetId)
     );
 
     // Get all level records for this wallet
@@ -715,7 +715,7 @@ export const initializeMekLevels = mutation({
             .first();
 
           const mekBaseRate = goldMiningData?.ownedMeks.find(
-            (m) => m.assetId === mek.assetId
+            (m: any) => m.assetId === mek.assetId
           )?.goldPerHour || 0;
 
           // Create new level record with boost tracking
@@ -818,7 +818,7 @@ export const resetAllMekLevels = mutation({
 
     if (goldMiningData) {
       // Reset all Meks to level 1 with no boosts
-      const resetMeks = goldMiningData.ownedMeks.map((mek) => ({
+      const resetMeks = goldMiningData.ownedMeks.map((mek: any) => ({
         ...mek,
         currentLevel: 1,
         levelBoostPercent: 0,
@@ -828,7 +828,7 @@ export const resetAllMekLevels = mutation({
 
       // Recalculate total rates (no boosts now)
       const baseGoldPerHour = resetMeks.reduce(
-        (sum, mek) => sum + (mek.baseGoldPerHour || mek.goldPerHour || 0),
+        (sum: number, mek: any) => sum + (mek.baseGoldPerHour || mek.goldPerHour || 0),
         0
       );
 
