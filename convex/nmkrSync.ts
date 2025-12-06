@@ -126,7 +126,7 @@ export const syncSingleNFT = mutation({
 
     if (allMatchingByUid.length > 1) {
       console.error('[🔄SYNC-MUTATION] ⚠️ DUPLICATE/ORPHAN RECORDS DETECTED!');
-      console.error('[🔄SYNC-MUTATION] Records found:', allMatchingByUid.map(n => ({
+      console.error('[🔄SYNC-MUTATION] Records found:', allMatchingByUid.map((n: any) => ({
         _id: n._id,
         name: n.name,
         status: n.status,
@@ -135,7 +135,7 @@ export const syncSingleNFT = mutation({
 
       // If campaignId provided, find the record for THAT campaign specifically
       if (campaignId) {
-        const correctRecord = allMatchingByUid.find(n => n.campaignId === campaignId);
+        const correctRecord = allMatchingByUid.find((n: any) => n.campaignId === campaignId);
         if (!correctRecord) {
           throw new Error(
             `NFT ${nftUid} has ${allMatchingByUid.length} records but NONE belong to campaign ${campaignId}. ` +
@@ -154,7 +154,7 @@ export const syncSingleNFT = mutation({
     let nft;
     if (campaignId && allMatchingByUid.length > 1) {
       // Multiple records exist - use the one for the specified campaign
-      nft = allMatchingByUid.find(n => n.campaignId === campaignId);
+      nft = allMatchingByUid.find((n: any) => n.campaignId === campaignId);
     } else {
       // Single record or no campaignId - use first match
       nft = allMatchingByUid[0];
@@ -521,7 +521,7 @@ export const internalAutoSyncWithNMKR = internalAction({
         console.log(`[🔄NMKR-AUTO-SYNC] Retrieved ${nmkrNFTs.length} NFTs from NMKR`);
 
         // Map to format expected by syncCampaignInventory
-        const nmkrStatuses = nmkrNFTs.map(nft => ({
+        const nmkrStatuses = nmkrNFTs.map((nft: any) => ({
           nftUid: nft.uid,
           nmkrStatus: nft.state,
           name: nft.name,
@@ -575,8 +575,8 @@ export const getActiveCampaignsForSync = internalQuery({
 
     // Only return campaigns that have NMKR project UIDs
     return campaigns
-      .filter(c => c.nmkrProjectUid)
-      .map(c => ({
+      .filter((c: any) => c.nmkrProjectUid)
+      .map((c: any) => ({
         _id: c._id,
         name: c.name,
         nmkrProjectUid: c.nmkrProjectUid!,
@@ -617,7 +617,7 @@ export const getCampaignsNeedingSync = internalQuery({
         .withIndex("", (q: any) => q.eq("campaignId", campaign._id))
         .collect();
 
-      const reservedCount = inventory.filter(nft => nft.status === 'reserved').length;
+      const reservedCount = inventory.filter((nft: any) => nft.status === 'reserved').length;
 
       if (reservedCount > 0) {
         campaignsNeedingSync.push({
@@ -695,7 +695,7 @@ export const internalSyncCampaignInventory = internalMutation({
       const nmkrData = nmkrStatuses.find((s: NMKRStatusEntry) => s.nftUid === discrepancy.nftUid);
       if (!nmkrData) continue;
 
-      const nft = inventory.find(i => i.nftUid === discrepancy.nftUid);
+      const nft = inventory.find((i: any) => i.nftUid === discrepancy.nftUid);
       if (!nft) continue;
 
       const nmkrStatus = nmkrData.nmkrStatus as 'free' | 'reserved' | 'sold';
@@ -728,9 +728,9 @@ export const internalSyncCampaignInventory = internalMutation({
         .collect();
 
       await ctx.db.patch(campaignId, {
-        availableNFTs: updatedInventory.filter(i => i.status === "available").length,
-        reservedNFTs: updatedInventory.filter(i => i.status === "reserved").length,
-        soldNFTs: updatedInventory.filter(i => i.status === "sold").length,
+        availableNFTs: updatedInventory.filter((i: any) => i.status === "available").length,
+        reservedNFTs: updatedInventory.filter((i: any) => i.status === "reserved").length,
+        soldNFTs: updatedInventory.filter((i: any) => i.status === "sold").length,
       });
     }
 

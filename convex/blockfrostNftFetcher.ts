@@ -68,7 +68,7 @@ function hexToBech32(hexAddress: string): string {
 
     // Convert entire hex string (including network byte) to bytes
     const fullBytes = new Uint8Array(
-      cleanHex.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16))
+      cleanHex.match(/.{1,2}/g)!.map((byte: any) => parseInt(byte, 16))
     );
 
     // Convert bytes to 5-bit words for bech32 encoding
@@ -243,7 +243,7 @@ export const fetchNFTsByStakeAddress = action({
                   const parsed = parseMekAsset(asset);
                   if (parsed) {
                     // Check if we already have this Mek (avoid duplicates)
-                    const exists = meks.some(m => m.assetId === parsed.assetId);
+                    const exists = meks.some((m: any) => m.assetId === parsed.assetId);
                     if (!exists) {
                       meks.push(parsed);
                     }
@@ -444,7 +444,7 @@ export const fetchNFTsByAddress = action({
                 const parsed = parseMekAsset(asset);
                 if (parsed) {
                   // Check if we already have this Mek
-                  const exists = meks.some(m => m.assetId === parsed.assetId);
+                  const exists = meks.some((m: any) => m.assetId === parsed.assetId);
                   if (!exists) {
                     meks.push(parsed);
                   }

@@ -23,7 +23,7 @@ export const getCorporationData = query({
     // Try to find by wallet address first
     let goldMiningData = await ctx.db
       .query("goldMining")
-      .filter(q => q.eq(q.field("walletAddress"), identifier))
+      .filter((q: any) => q.eq(q.field("walletAddress"), identifier))
       .first();
 
     // If not found, try to find by company name (case insensitive)
@@ -64,7 +64,7 @@ export const getCorporationData = query({
       .withIndex("by_category_rank", q => q.eq("category", "gold"))
       .collect();
 
-    const rank = cachedLeaderboard.find(entry => entry.walletAddress === goldMiningData.walletAddress)?.rank ||
+    const rank = cachedLeaderboard.find((entry: any) => entry.walletAddress === goldMiningData.walletAddress)?.rank ||
                  cachedLeaderboard.length + 1; // If not in cache, they're below all cached entries
     const totalCorporations = cachedLeaderboard.length;
 
@@ -75,11 +75,11 @@ export const getCorporationData = query({
       .collect();
 
     const levelMap = new Map(
-      mekLevels.map(level => [level.assetId, level.currentLevel])
+      mekLevels.map((level: any) => [level.assetId, level.currentLevel])
     );
 
     // Format Meks with their levels
-    const meksWithLevels = (goldMiningData.ownedMeks || []).map(mek => {
+    const meksWithLevels = (goldMiningData.ownedMeks || []).map((mek: any) => {
       const mekNumberMatch = mek.assetName.match(/#(\d+)/);
       const mekNumber = mekNumberMatch ? parseInt(mekNumberMatch[1], 10) : null;
       const sourceKeyCode = mekNumber ? mekNumberToSourceKey.get(mekNumber.toString()) : null;

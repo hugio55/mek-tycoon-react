@@ -589,7 +589,7 @@ export const checkAuthentication = query({
       .withIndex("by_stake_and_active", q =>
         q.eq("stakeAddress", args.stakeAddress).eq("isActive", true)
       )
-      .filter(q =>
+      .filter((q: any) =>
         q.and(
           q.gt(q.field("expiresAt"), now),
           q.eq(q.field("revokedAt"), undefined)
@@ -623,7 +623,7 @@ export const checkAuthentication = query({
     const signatures = await ctx.db
       .query("walletSignatures")
       .withIndex("by_stake_address", q => q.eq("stakeAddress", args.stakeAddress))
-      .filter(q =>
+      .filter((q: any) =>
         q.and(
           q.eq(q.field("verified"), true),
           q.gt(q.field("expiresAt"), now),
@@ -781,7 +781,7 @@ export const resetWalletRateLimit = mutation({
   handler: async (ctx, args) => {
     const records = await ctx.db
       .query("walletRateLimits")
-      .filter(q => q.eq(q.field("stakeAddress"), args.stakeAddress))
+      .filter((q: any) => q.eq(q.field("stakeAddress"), args.stakeAddress))
       .collect();
 
     let resetCount = 0;
@@ -814,7 +814,7 @@ export const revokeAuthentication = mutation({
       .withIndex("by_stake_and_active", q =>
         q.eq("stakeAddress", args.stakeAddress).eq("isActive", true)
       )
-      .filter(q => q.eq(q.field("revokedAt"), undefined))
+      .filter((q: any) => q.eq(q.field("revokedAt"), undefined))
       .collect();
 
     let sessionRevokedCount = 0;
@@ -831,7 +831,7 @@ export const revokeAuthentication = mutation({
     const validSignatures = await ctx.db
       .query("walletSignatures")
       .withIndex("by_stake_address", q => q.eq("stakeAddress", args.stakeAddress))
-      .filter(q =>
+      .filter((q: any) =>
         q.and(
           q.eq(q.field("verified"), true),
           q.gt(q.field("expiresAt"), now),

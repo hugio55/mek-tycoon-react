@@ -42,7 +42,7 @@ export const fixWalletAndRecalculate = action({
     if (allMeks.length > 0) {
       // Get the actual gold rates from your calculation system
       const goldRates = await ctx.runQuery(api.goldMining.calculateGoldRates, {
-        meks: allMeks.map(mek => ({
+        meks: allMeks.map((mek: any) => ({
           assetId: mek.assetId,
           rarityRank: mek.rarityRank || 5000 // Default middle rank if not set
         }))
@@ -61,7 +61,7 @@ export const fixWalletAndRecalculate = action({
       stakeAddress: args.stakeAddress,
       meks: allMeks,
       totalGoldPerHour: totalGoldPerHour,
-      deleteIds: allWallets.map(w => w._id)
+      deleteIds: allWallets.map((w: any) => w._id)
     });
 
     if (!deleteResult.success) {
@@ -74,8 +74,8 @@ export const fixWalletAndRecalculate = action({
         walletAddress: args.stakeAddress,
         mekCount: totalMeks,
         totalGoldPerHour: totalGoldPerHour,
-        mekNumbers: allMeks.map(m => m.rarityRank || 5000),
-        mekDetails: allMeks.map(mek => ({
+        mekNumbers: allMeks.map((m: any) => m.rarityRank || 5000),
+        mekDetails: allMeks.map((mek: any) => ({
           assetId: mek.assetId,
           assetName: mek.assetName || mek.assetId,
           goldPerHour: mek.goldPerHour || (totalGoldPerHour / Math.max(1, allMeks.length)),
@@ -110,7 +110,7 @@ export const findRelatedWallets = query({
     // 1. Exact match on stake address
     // 2. Hex addresses with same suffix
     // 3. Any address containing the suffix
-    const related = allWallets.filter(w =>
+    const related = allWallets.filter((w: any) =>
       w.walletAddress === args.stakeAddress ||
       w.walletAddress.toLowerCase().includes(suffix.toLowerCase()) ||
       w.walletAddress.endsWith('fe6012f1') || // Your specific hex suffix

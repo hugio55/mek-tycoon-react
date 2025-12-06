@@ -28,7 +28,7 @@ export const getAllUsersForAdmin = query({
       }
     }
 
-    return allUsers.map(user => {
+    return allUsers.map((user: any) => {
       // Time since last login
       const lastActiveTime = user.lastLogin || user.createdAt || now;
       const minutesSinceActive = Math.floor((now - lastActiveTime) / (1000 * 60));
@@ -314,7 +314,7 @@ export const searchUsers = query({
     // Combine and deduplicate results
     const allResults = [...byWallet, ...byUsername, ...byDisplayName];
     const uniqueResults = Array.from(
-      new Map(allResults.map(item => [item._id, item])).values()
+      new Map(allResults.map((item: any) => [item._id, item])).values()
     );
 
     return uniqueResults;

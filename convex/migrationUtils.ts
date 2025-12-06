@@ -116,8 +116,8 @@ export const fixSpecialMekImages = mutation({
       }
     }
     
-    const updated = results.filter(r => r.status === "updated").length;
-    const notFound = results.filter(r => r.status === "not_found").length;
+    const updated = results.filter((r: any) => r.status === "updated").length;
+    const notFound = results.filter((r: any) => r.status === "not_found").length;
     
     return {
       success: true,
@@ -174,7 +174,7 @@ export const updateGenesisRanks = mutation({
     
     return {
       success: true,
-      message: `Genesis ranks updated: ${results.filter(r => r.status === "updated").length} meks`,
+      message: `Genesis ranks updated: ${results.filter((r: any) => r.status === "updated").length} meks`,
       results,
     };
   },
@@ -305,7 +305,7 @@ export const populateVariationData = mutation({
         total: args.mappings.length,
         updated,
         notFound,
-        noChanges: results.filter(r => r.status === "no_changes").length,
+        noChanges: results.filter((r: any) => r.status === "no_changes").length,
       }
     };
   },

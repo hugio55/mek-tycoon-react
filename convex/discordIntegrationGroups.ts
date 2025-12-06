@@ -153,7 +153,7 @@ export const getDiscordConnectionByWallet = query({
 
     return {
       ...connection,
-      wallets: wallets.map(w => w.walletAddress),
+      wallets: wallets.map((w: any) => w.walletAddress),
     };
   },
 });
@@ -190,7 +190,7 @@ export const getDiscordConnectionByDiscordUser = query({
 
     return {
       ...connection,
-      wallets: wallets.map(w => ({
+      wallets: wallets.map((w: any) => ({
         walletAddress: w.walletAddress,
         nickname: w.nickname,
         addedAt: w.addedAt,

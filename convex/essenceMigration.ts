@@ -31,7 +31,7 @@ export const activateEssenceForSlottedMeks = mutation({
       .collect();
 
     // Find slots with Meks
-    const slottedMeks = slots.filter(s => s.mekAssetId);
+    const slottedMeks = slots.filter((s: any) => s.mekAssetId);
 
     console.log('[Migration] Found slotted Meks:', slottedMeks.length);
 

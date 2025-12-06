@@ -9,7 +9,7 @@ export const checkCampaignProjectIds = query({
       .query("commemorativeCampaigns")
       .collect();
 
-    return campaigns.map(campaign => ({
+    return campaigns.map((campaign: any) => ({
       _id: campaign._id,
       name: campaign.name,
       nmkrProjectId: campaign.nmkrProjectId,

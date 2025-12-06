@@ -29,7 +29,7 @@ export const getActiveBuffTables = query({
   args: {},
   handler: async (ctx) => {
     const tables = await ctx.db.query("mekTreeBuffTables").collect();
-    return tables.filter(t => t.isActive);
+    return tables.filter((t: any) => t.isActive);
   },
 });
 
@@ -162,7 +162,7 @@ export const generateRandomBuffsForMek = query({
     
     for (let i = 0; i < args.numberOfBuffs; i++) {
       // Pick a random category that hasn't been used
-      const availableCategories = activeTables.filter(t => !usedCategories.has(t.category));
+      const availableCategories = activeTables.filter((t: any) => !usedCategories.has(t.category));
       if (availableCategories.length === 0) break;
       
       const categoryIndex = Math.floor(random() * availableCategories.length);

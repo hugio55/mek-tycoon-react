@@ -224,8 +224,8 @@ export const verifyNFTOwnership = action({
 
       // Compare wallet-reported with blockchain truth
       console.log('[Verification] Comparing wallet-reported vs blockchain MEKs');
-      const walletMekIds = new Set(args.walletReportedMeks.map(m => m.assetId));
-      const blockchainMekIds = new Set(blockchainMeks.map(m => m.assetId));
+      const walletMekIds = new Set(args.walletReportedMeks.map((m: any) => m.assetId));
+      const blockchainMekIds = new Set(blockchainMeks.map((m: any) => m.assetId));
 
       console.log('[Verification] Wallet MEK IDs:', Array.from(walletMekIds));
       console.log('[Verification] Blockchain MEK IDs:', Array.from(blockchainMekIds));
@@ -364,7 +364,7 @@ export const batchVerifyWallets = action({
       success: true,
       verifications: results,
       totalWallets: args.wallets.length,
-      verifiedCount: results.filter(r => r.verified).length
+      verifiedCount: results.filter((r: any) => r.verified).length
     };
   }
 });

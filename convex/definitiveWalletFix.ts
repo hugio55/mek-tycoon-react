@@ -12,7 +12,7 @@ export const consolidateAndVerify = mutation({
 
     // Filter for wallets that belong to this user
     // Match by stake address OR hex suffix
-    const userWallets = allWallets.filter(w =>
+    const userWallets = allWallets.filter((w: any) =>
       w.walletAddress === args.stakeAddress ||
       w.walletAddress.includes('ughgq076') || // Your stake suffix
       w.walletAddress.includes('fe6012f1') || // Your hex suffix

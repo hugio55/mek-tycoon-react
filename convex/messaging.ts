@@ -58,7 +58,7 @@ export const getConversations = query({
       .query("messageUnreadCounts")
       .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
-    const unreadMap = new Map(unreadRecords.map(r => [r.conversationId.toString(), r.count]));
+    const unreadMap = new Map(unreadRecords.map((r: any) => [r.conversationId.toString(), r.count]));
 
     // Batch fetch: Get all user info for other participants
     const userMap = new Map<string, { companyName: string; displayName: string }>();
@@ -78,14 +78,14 @@ export const getConversations = query({
       .query("messageBlocks")
       .withIndex("", (q: any) => q.eq("blockerWallet", args.walletAddress))
       .collect();
-    const iBlockedSet = new Set(myBlocks.map(b => b.blockedWallet));
+    const iBlockedSet = new Set(myBlocks.map((b: any) => b.blockedWallet));
 
     // Batch fetch: Get all blocks where I am the blocked
     const blocksAgainstMe = await ctx.db
       .query("messageBlocks")
       .withIndex("", (q: any) => q.eq("blockedWallet", args.walletAddress))
       .collect();
-    const theyBlockedMeSet = new Set(blocksAgainstMe.map(b => b.blockerWallet));
+    const theyBlockedMeSet = new Set(blocksAgainstMe.map((b: any) => b.blockerWallet));
 
     // Build final conversation list with all data
     const conversationsWithDetails = allConversations.map((conv) => {
@@ -985,8 +985,8 @@ export const getConversationMessageCount = query({
 
     return {
       total: messages.length,
-      visible: messages.filter(m => !m.isDeleted).length,
-      deleted: messages.filter(m => m.isDeleted).length,
+      visible: messages.filter((m: any) => !m.isDeleted).length,
+      deleted: messages.filter((m: any) => m.isDeleted).length,
     };
   },
 });

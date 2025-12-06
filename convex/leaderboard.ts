@@ -64,7 +64,7 @@ export const getTopPlayersByEssence = query({
     
     // Calculate total essence and sort to get top users
     const topUsers = users
-      .map(user => {
+      .map((user: any) => {
         const essenceTotal = Object.values(user.totalEssence).reduce((sum, val) => sum + val, 0);
         return { ...user, calculatedTotalEssence: essenceTotal };
       })
@@ -83,7 +83,7 @@ export const getTopPlayersByEssence = query({
       })
     );
     
-    const mekCountMap = new Map(userMekCounts.map(item => [item.walletAddress, item.count]));
+    const mekCountMap = new Map(userMekCounts.map((item: any) => [item.walletAddress, item.count]));
     
     return topUsers.map((user, index) => ({
       rank: index + 1,

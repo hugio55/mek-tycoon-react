@@ -128,7 +128,7 @@ export const saveAutosave = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const spriteCount = args.zones.filter(z => z.mode === "sprite").length;
+    const spriteCount = args.zones.filter((z: any) => z.mode === "sprite").length;
 
     // Save the autosave entry
     const autosaveId = await ctx.db.insert("overlayAutosaves", {

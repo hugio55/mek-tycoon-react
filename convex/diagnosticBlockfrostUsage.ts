@@ -24,7 +24,7 @@ export const getBlockfrostCallAnalysis = query({
       failed: 0,
     };
 
-    const syncsLast24h = recentSyncSagaRuns.filter(sync => {
+    const syncsLast24h = recentSyncSagaRuns.filter((sync: any) => {
       const age = Date.now() - sync.createdAt;
       const hours = age / (1000 * 60 * 60);
 
@@ -41,7 +41,7 @@ export const getBlockfrostCallAnalysis = query({
       .order("desc")
       .take(10);
 
-    const snapshotsLast24h = snapshotLogs.filter(log => {
+    const snapshotsLast24h = snapshotLogs.filter((log: any) => {
       const age = Date.now() - log.timestamp;
       const hours = age / (1000 * 60 * 60);
       return hours < 24;
@@ -66,7 +66,7 @@ export const getBlockfrostCallAnalysis = query({
       syncSagaActivity: {
         recentRuns: syncsLast24h.length,
         statusBreakdown: syncsByStatus,
-        recentSyncs: syncsLast24h.slice(0, 10).map(sync => ({
+        recentSyncs: syncsLast24h.slice(0, 10).map((sync: any) => ({
           walletAddress: sync.stakeAddress.substring(0, 20) + "...",
           status: sync.status,
           walletType: sync.walletType,
@@ -79,7 +79,7 @@ export const getBlockfrostCallAnalysis = query({
       snapshotActivity: {
         recentRuns: snapshotsLast24h.length,
         totalWalletsProcessed: snapshotsLast24h.reduce((sum, log) => sum + (log.updatedCount || 0), 0),
-        recentSnapshots: snapshotsLast24h.map(log => ({
+        recentSnapshots: snapshotsLast24h.map((log: any) => ({
           timestamp: new Date(log.timestamp).toISOString(),
           status: log.status,
           totalMiners: log.totalMiners,
@@ -127,7 +127,7 @@ export const checkForLoopingSyncs = query({
     const walletsWithExcessiveSyncs = [];
     for (const [wallet, syncs] of syncsByWallet.entries()) {
       if (syncs.length > 5) {
-        const last24h = syncs.filter(s => {
+        const last24h = syncs.filter((s: any) => {
           const age = Date.now() - s.createdAt;
           return age < 24 * 60 * 60 * 1000;
         });
@@ -137,9 +137,9 @@ export const checkForLoopingSyncs = query({
             wallet: wallet.substring(0, 20) + "...",
             totalSyncs: syncs.length,
             syncsLast24h: last24h.length,
-            statuses: last24h.map(s => s.status),
-            oldestSync: new Date(Math.min(...syncs.map(s => s.createdAt))).toISOString(),
-            newestSync: new Date(Math.max(...syncs.map(s => s.createdAt))).toISOString(),
+            statuses: last24h.map((s: any) => s.status),
+            oldestSync: new Date(Math.min(...syncs.map((s: any) => s.createdAt))).toISOString(),
+            newestSync: new Date(Math.max(...syncs.map((s: any) => s.createdAt))).toISOString(),
           });
         }
       }

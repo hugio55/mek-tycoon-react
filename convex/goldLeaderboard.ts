@@ -107,7 +107,7 @@ export const getWalletMeksForDisplay = query({
 
     // Create level map
     const levelMap = new Map(
-      mekLevels.map(level => [level.assetId, level.currentLevel])
+      mekLevels.map((level: any) => [level.assetId, level.currentLevel])
     );
 
     // Format Meks with their levels
@@ -274,7 +274,7 @@ export const getTopGoldMinersCached = query({
     return cachedLeaderboard
       .sort((a, b) => a.rank - b.rank)
       .slice(0, 3)
-      .map(entry => ({
+      .map((entry: any) => ({
         walletAddress: entry.walletAddress,
         displayWallet: entry.username || (entry.walletAddress ?
           `${entry.walletAddress.slice(0, 8)}...${entry.walletAddress.slice(-6)}` :
@@ -304,7 +304,7 @@ export const getAllCorporationsCached = query({
     const seenWallets = new Set<string>();
     const filteredEntries = cachedLeaderboard
       .sort((a, b) => a.rank - b.rank)
-      .filter(entry => {
+      .filter((entry: any) => {
         // Skip if 0 gold
         if (entry.value <= 0) return false;
 
@@ -316,7 +316,7 @@ export const getAllCorporationsCached = query({
       });
 
     // Return filtered entries with full display info
-    return filteredEntries.map(entry => ({
+    return filteredEntries.map((entry: any) => ({
       walletAddress: entry.walletAddress,
       displayWallet: entry.username || (entry.walletAddress ?
         `${entry.walletAddress.slice(0, 8)}...${entry.walletAddress.slice(-6)}` :
@@ -345,7 +345,7 @@ export const subscribeToTopMiners = query({
     return cachedLeaderboard
       .sort((a, b) => a.rank - b.rank)
       .slice(0, 3)
-      .map(entry => ({
+      .map((entry: any) => ({
         walletAddress: entry.walletAddress,
         currentGold: Math.floor(entry.value),
         hourlyRate: entry.metadata?.goldPerHour || 0,

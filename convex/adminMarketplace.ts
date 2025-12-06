@@ -70,7 +70,7 @@ export const getEssenceListingsDetailed = query({
 
     // Filter by variation if specified
     if (args.variationFilter) {
-      listings = listings.filter(l => l.itemVariation === args.variationFilter);
+      listings = listings.filter((l: any) => l.itemVariation === args.variationFilter);
     }
 
     // Get seller info for each listing
@@ -242,14 +242,14 @@ export const searchPlayers = query({
     const allUsers = await ctx.db.query("users").collect();
 
     // Filter by wallet or username
-    const matches = allUsers.filter(user =>
+    const matches = allUsers.filter((user: any) =>
       user.walletAddress.toLowerCase().includes(term) ||
       user.username?.toLowerCase().includes(term) ||
       user.displayName?.toLowerCase().includes(term)
     );
 
     // Return top 10 matches
-    return matches.slice(0, 10).map(user => ({
+    return matches.slice(0, 10).map((user: any) => ({
       _id: user._id,
       walletAddress: user.walletAddress,
       username: user.username,
@@ -270,7 +270,7 @@ export const getMarketStats = query({
 
     const totalListings = allListings.length;
     const totalEssenceQuantity = allListings.reduce((sum, l) => sum + l.quantity, 0);
-    const uniqueVariations = new Set(allListings.map(l => l.itemVariation)).size;
+    const uniqueVariations = new Set(allListings.map((l: any) => l.itemVariation)).size;
     const totalValue = allListings.reduce((sum, l) => sum + (l.quantity * l.pricePerUnit), 0);
 
     return {
@@ -376,7 +376,7 @@ export const getMarketplaceListingHistory = query({
       .order("desc") // Newest first
       .collect();
 
-    return history.map(item => ({
+    return history.map((item: any) => ({
       _id: item._id,
       timestamp: item.timestamp,
       variation: item.variationName,

@@ -8,7 +8,7 @@ const calculateBuffValue = (
   buffs: Array<Doc<"activeBuffs"> & { buffType: Doc<"buffTypes"> }>,
   buffType: string
 ): { flat: number; percentage: number } => {
-  const relevantBuffs = buffs.filter(b => b.buffType.buffType === buffType && b.isActive);
+  const relevantBuffs = buffs.filter((b: any) => b.buffType.buffType === buffType && b.isActive);
   
   let totalFlat = 0;
   let totalPercentage = 1;
@@ -108,7 +108,7 @@ export const addBuff = mutation({
     const existingBuff = await ctx.db
       .query("activeBuffs")
       .withIndex("by_user_active", q => q.eq("userId", args.userId).eq("isActive", true))
-      .filter(q => 
+      .filter((q: any) => 
         q.and(
           q.eq(q.field("buffTypeId"), args.buffTypeId),
           q.eq(q.field("source"), args.source),
@@ -161,7 +161,7 @@ export const cleanupExpiredBuffs = mutation({
     const expiredBuffs = await ctx.db
       .query("activeBuffs")
       .withIndex("by_expiration")
-      .filter(q => 
+      .filter((q: any) => 
         q.and(
           q.neq(q.field("expiresAt"), undefined),
           q.lt(q.field("expiresAt"), now),
@@ -188,7 +188,7 @@ export const seedBuffTypes = mutation({
     // Check if buff types already exist
     const existingBuffs = await ctx.db.query("buffTypes").collect();
     if (existingBuffs.length > 0) {
-      return { message: "Buff types already exist", existing: existingBuffs.map(b => b.name) };
+      return { message: "Buff types already exist", existing: existingBuffs.map((b: any) => b.name) };
     }
     
     // Create the 3 basic buff types
@@ -267,7 +267,7 @@ export const seedBuffTypes = mutation({
     return { 
       message: "Buff types created successfully",
       count: buffTypes.length,
-      created: afterInsert.map(b => b.name)
+      created: afterInsert.map((b: any) => b.name)
     };
   },
 });
@@ -289,7 +289,7 @@ export const giveTemporaryBuff = mutation({
     if (!buffType) {
       // Try to list all available buff types for debugging
       const allBuffTypes = await ctx.db.query("buffTypes").collect();
-      throw new Error(`Buff type "${args.buffName}" not found. Available: ${allBuffTypes.map(b => b.name).join(", ")}`);
+      throw new Error(`Buff type "${args.buffName}" not found. Available: ${allBuffTypes.map((b: any) => b.name).join(", ")}`);
     }
     
     // Add the buff with the specified duration

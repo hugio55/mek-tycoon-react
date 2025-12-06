@@ -37,7 +37,7 @@ export const findDuplicateWallets = query({
       .filter(([_, wallets]) => wallets.length > 1)
       .map(([key, wallets]) => ({
         groupKey: key,
-        wallets: wallets.map(w => ({
+        wallets: wallets.map((w: any) => ({
           id: w._id,
           address: w.walletAddress,
           type: w.walletType || 'unknown',
@@ -62,7 +62,7 @@ export const mergeDuplicatesAndFix = mutation({
     const allWallets = await ctx.db.query("goldMining").collect();
 
     // Find the primary wallet (stake address)
-    const primaryWallet = allWallets.find(w =>
+    const primaryWallet = allWallets.find((w: any) =>
       w.walletAddress === args.primaryWalletAddress ||
       w.walletAddress.startsWith('stake1') &&
       w.walletAddress.includes(args.primaryWalletAddress.slice(-8))
@@ -77,7 +77,7 @@ export const mergeDuplicatesAndFix = mutation({
 
     // Find related wallets (hex addresses with same suffix)
     const suffix = primaryWallet.walletAddress.slice(-8);
-    const relatedWallets = allWallets.filter(w =>
+    const relatedWallets = allWallets.filter((w: any) =>
       w._id !== primaryWallet._id &&
       (w.walletAddress.includes(suffix) ||
        w.walletAddress.endsWith(suffix))
@@ -88,13 +88,13 @@ export const mergeDuplicatesAndFix = mutation({
 
     // Add existing payment addresses from primary
     if (primaryWallet.paymentAddresses) {
-      primaryWallet.paymentAddresses.forEach(addr => allPaymentAddresses.add(addr));
+      primaryWallet.paymentAddresses.forEach((addr: any) => allPaymentAddresses.add(addr));
     }
 
     // Add payment addresses from related wallets
     for (const wallet of relatedWallets) {
       if (wallet.paymentAddresses) {
-        wallet.paymentAddresses.forEach(addr => allPaymentAddresses.add(addr));
+        wallet.paymentAddresses.forEach((addr: any) => allPaymentAddresses.add(addr));
       }
     }
 

@@ -35,7 +35,7 @@ export const createGoldBackup = mutation({
       const allGoldMining = await ctx.db.query("goldMining").collect();
 
       // Count unique wallets
-      const uniqueWallets = new Set(allGoldMining.map(gm => gm.walletAddress)).size;
+      const uniqueWallets = new Set(allGoldMining.map((gm: any) => gm.walletAddress)).size;
 
       // Create the main backup record
       const backupId = await ctx.db.insert("goldBackups", {
@@ -153,7 +153,7 @@ export const getAllGoldBackups = query({
       .order("desc")
       .take(limit);
 
-    return backups.map(backup => ({
+    return backups.map((backup: any) => ({
       ...backup,
       backupTimestamp: backup.backupTimestamp,
       formattedDate: new Date(backup.backupTimestamp).toLocaleString(),
@@ -188,7 +188,7 @@ export const getBackupDetails = query({
     const topUsers = userData
       .sort((a, b) => b.currentGold - a.currentGold)
       .slice(0, 5)
-      .map(user => ({
+      .map((user: any) => ({
         walletAddress: user.walletAddress.slice(0, 10) + "...",
         currentGold: user.currentGold,
         goldPerHour: user.goldPerHour,
@@ -225,12 +225,12 @@ export const getUserBackupHistory = query({
       .take(limit);
 
     // Get backup metadata for each user backup
-    const backupIds = [...new Set(userBackups.map(ub => ub.backupId))];
+    const backupIds = [...new Set(userBackups.map((ub: any) => ub.backupId))];
     const backupMetadata = await Promise.all(
-      backupIds.map(id => ctx.db.get(id))
+      backupIds.map((id: any) => ctx.db.get(id))
     );
 
-    const backupMap = new Map(backupMetadata.filter(b => b).map(b => [b!._id, b!]));
+    const backupMap = new Map(backupMetadata.filter((b: any) => b).map((b: any) => [b!._id, b!]));
 
     return userBackups.map(userBackup => {
       const backup = backupMap.get(userBackup.backupId);
@@ -268,7 +268,7 @@ export const cleanupOldBackups = mutation({
       return {
         dryRun: true,
         backupsToDelete: oldBackups.length,
-        oldestBackup: oldBackups.length > 0 ? new Date(Math.min(...oldBackups.map(b => b.backupTimestamp))).toLocaleString() : null,
+        oldestBackup: oldBackups.length > 0 ? new Date(Math.min(...oldBackups.map((b: any) => b.backupTimestamp))).toLocaleString() : null,
         cutoffDate: new Date(cutoffTime).toLocaleString(),
       };
     }
@@ -336,7 +336,7 @@ export const restoreFromBackup = mutation({
 
     // Filter by target wallets if specified
     if (args.targetWallets && args.targetWallets.length > 0) {
-      backupUserData = backupUserData.filter(data =>
+      backupUserData = backupUserData.filter((data: any) =>
         args.targetWallets!.includes(data.walletAddress)
       );
     }
@@ -347,7 +347,7 @@ export const restoreFromBackup = mutation({
         backupDate: new Date(backup.backupTimestamp).toLocaleString(),
         usersToRestore: backupUserData.length,
         totalGoldToRestore: backupUserData.reduce((sum, user) => sum + user.currentGold, 0),
-        sampleUsers: backupUserData.slice(0, 5).map(user => ({
+        sampleUsers: backupUserData.slice(0, 5).map((user: any) => ({
           walletAddress: user.walletAddress.slice(0, 10) + "...",
           currentGold: user.currentGold,
           goldPerHour: user.goldPerHour,
@@ -427,12 +427,12 @@ export const getBackupSystemStats = query({
 
     const [allBackups, recentBackups, currentGoldMining] = await Promise.all([
       ctx.db.query("goldBackups").collect(),
-      ctx.db.query("goldBackups").withIndex("by_timestamp").filter(q => q.gte(q.field("backupTimestamp"), last24h)).collect(),
+      ctx.db.query("goldBackups").withIndex("by_timestamp").filter((q: any) => q.gte(q.field("backupTimestamp"), last24h)).collect(),
       ctx.db.query("goldMining").collect(),
     ]);
 
-    const backupsLast7Days = allBackups.filter(b => b.backupTimestamp >= last7days).length;
-    const backupsLast30Days = allBackups.filter(b => b.backupTimestamp >= last30days).length;
+    const backupsLast7Days = allBackups.filter((b: any) => b.backupTimestamp >= last7days).length;
+    const backupsLast30Days = allBackups.filter((b: any) => b.backupTimestamp >= last30days).length;
 
     // Find most recent backup
     const mostRecentBackup = allBackups.sort((a, b) => b.backupTimestamp - a.backupTimestamp)[0];

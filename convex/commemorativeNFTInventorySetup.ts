@@ -193,15 +193,15 @@ export const getAllInventory = query({
 
     // Log status breakdown from raw database
     const statusCounts = {
-      available: inventory.filter(item => item.status === "available").length,
-      reserved: inventory.filter(item => item.status === "reserved").length,
-      sold: inventory.filter(item => item.status === "sold").length,
+      available: inventory.filter((item: any) => item.status === "available").length,
+      reserved: inventory.filter((item: any) => item.status === "reserved").length,
+      sold: inventory.filter((item: any) => item.status === "sold").length,
     };
     console.log('[📊GETALL] Status breakdown (raw DB):', statusCounts);
 
     // Log first few items to see actual status values
     const sample = inventory.slice(0, 3);
-    console.log('[📊GETALL] Sample items:', sample.map(nft => ({
+    console.log('[📊GETALL] Sample items:', sample.map((nft: any) => ({
       name: nft.name,
       nftUid: nft.nftUid,
       status: nft.status,
@@ -362,7 +362,7 @@ export const initializeFromCSV = action({
     const lines = args.csvContent.trim().split('\n');
 
     // Parse header row to find column indices
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const headers = lines[0].split(',').map((h: any) => h.trim().toLowerCase());
     console.log('[CSV INIT] CSV headers:', headers);
 
     const nfts = [];

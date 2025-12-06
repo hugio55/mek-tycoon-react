@@ -95,8 +95,8 @@ export const getWebhookStats = query({
 
     const stats = {
       total: allWebhooks.length,
-      last24Hours: allWebhooks.filter(w => w.processedAt > last24Hours).length,
-      last7Days: allWebhooks.filter(w => w.processedAt > last7Days).length,
+      last24Hours: allWebhooks.filter((w: any) => w.processedAt > last24Hours).length,
+      last7Days: allWebhooks.filter((w: any) => w.processedAt > last7Days).length,
     };
 
     return stats;

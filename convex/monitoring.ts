@@ -62,15 +62,15 @@ const _getRecentEvents = internalQuery({
     let filtered = events;
 
     if (args.eventType) {
-      filtered = filtered.filter(e => e.eventType === args.eventType);
+      filtered = filtered.filter((e: any) => e.eventType === args.eventType);
     }
 
     if (args.category) {
-      filtered = filtered.filter(e => e.category === args.category);
+      filtered = filtered.filter((e: any) => e.category === args.category);
     }
 
     if (args.severity) {
-      filtered = filtered.filter(e => e.severity === args.severity);
+      filtered = filtered.filter((e: any) => e.severity === args.severity);
     }
 
     return filtered;
@@ -119,7 +119,7 @@ const _getSummary = internalQuery({
 
     const events = await ctx.db
       .query("systemMonitoring")
-      .filter(q =>
+      .filter((q: any) =>
         q.and(
           q.gte(q.field("timestamp"), startTime),
           q.lte(q.field("timestamp"), endTime)
@@ -129,23 +129,23 @@ const _getSummary = internalQuery({
 
     // Calculate statistics
     const totalEvents = events.length;
-    const errorCount = events.filter(e => e.eventType === "error").length;
-    const criticalErrorCount = events.filter(e => e.eventType === "critical_error").length;
-    const warningCount = events.filter(e => e.eventType === "warning").length;
-    const snapshotCount = events.filter(e => e.eventType === "snapshot").length;
-    const cronCount = events.filter(e => e.eventType === "cron").length;
+    const errorCount = events.filter((e: any) => e.eventType === "error").length;
+    const criticalErrorCount = events.filter((e: any) => e.eventType === "critical_error").length;
+    const warningCount = events.filter((e: any) => e.eventType === "warning").length;
+    const snapshotCount = events.filter((e: any) => e.eventType === "snapshot").length;
+    const cronCount = events.filter((e: any) => e.eventType === "cron").length;
 
     // Get unique error messages
     const errorMessages = events
-      .filter(e => e.eventType === "error" || e.eventType === "critical_error")
-      .map(e => e.message);
+      .filter((e: any) => e.eventType === "error" || e.eventType === "critical_error")
+      .map((e: any) => e.message);
     const uniqueErrors = [...new Set(errorMessages)];
     const topErrors = uniqueErrors.slice(0, 10);
 
     // Get critical events
     const criticalEvents = events
-      .filter(e => e.severity === "critical")
-      .map(e => ({
+      .filter((e: any) => e.severity === "critical")
+      .map((e: any) => ({
         timestamp: e.timestamp,
         message: e.message,
         category: e.category,
@@ -274,7 +274,7 @@ export const cleanupOldEvents = internalMutation({
     // Find all events older than 30 days
     const oldEvents = await ctx.db
       .query("systemMonitoring")
-      .filter(q => q.lt(q.field("timestamp"), thirtyDaysAgo))
+      .filter((q: any) => q.lt(q.field("timestamp"), thirtyDaysAgo))
       .collect();
 
     let deletedCount = 0;
@@ -304,7 +304,7 @@ export const cleanupOldSummaries = internalMutation({
     // Find all summaries older than 30 days
     const oldSummaries = await ctx.db
       .query("monitoringSummaries")
-      .filter(q => q.lt(q.field("endTime"), thirtyDaysAgo))
+      .filter((q: any) => q.lt(q.field("endTime"), thirtyDaysAgo))
       .collect();
 
     let deletedCount = 0;

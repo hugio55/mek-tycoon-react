@@ -110,7 +110,7 @@ export const listBackups = query({
       .order("desc")
       .take(20);
 
-    return backups.map(backup => ({
+    return backups.map((backup: any) => ({
       id: backup._id,
       timestamp: backup.backupTimestamp,
       date: new Date(backup.backupTimestamp).toISOString(),
@@ -151,7 +151,7 @@ export const getBackupInfo = query({
         notes: backup.notes,
         triggeredBy: backup.triggeredBy
       },
-      sampleRecords: sampleRecords.map(record => ({
+      sampleRecords: sampleRecords.map((record: any) => ({
         wallet: record.walletAddress.slice(0, 20) + '...',
         accumulatedGold: record.accumulatedGold || 0,
         goldPerHour: record.goldPerHour,

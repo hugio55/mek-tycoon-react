@@ -91,7 +91,7 @@ export const saveSlotConfiguration = mutation({
 
     // Validation: All tenure values must be non-negative
     const allValues = [...args.basicSlot, ...args.advancedSlot, ...args.masterSlot];
-    if (allValues.some(val => val < 0)) {
+    if (allValues.some((val: any) => val < 0)) {
       throw new Error("All tenure values must be non-negative");
     }
 
@@ -254,7 +254,7 @@ export const updateSlotConfiguration = mutation({
       if (args.basicSlot.length !== 9) {
         throw new Error(`basicSlot must have exactly 9 values, got ${args.basicSlot.length}`);
       }
-      if (args.basicSlot.some(val => val < 0)) {
+      if (args.basicSlot.some((val: any) => val < 0)) {
         throw new Error("All basicSlot values must be non-negative");
       }
       updates.basicSlot = args.basicSlot;
@@ -265,7 +265,7 @@ export const updateSlotConfiguration = mutation({
       if (args.advancedSlot.length !== 9) {
         throw new Error(`advancedSlot must have exactly 9 values, got ${args.advancedSlot.length}`);
       }
-      if (args.advancedSlot.some(val => val < 0)) {
+      if (args.advancedSlot.some((val: any) => val < 0)) {
         throw new Error("All advancedSlot values must be non-negative");
       }
       updates.advancedSlot = args.advancedSlot;
@@ -276,7 +276,7 @@ export const updateSlotConfiguration = mutation({
       if (args.masterSlot.length !== 9) {
         throw new Error(`masterSlot must have exactly 9 values, got ${args.masterSlot.length}`);
       }
-      if (args.masterSlot.some(val => val < 0)) {
+      if (args.masterSlot.some((val: any) => val < 0)) {
         throw new Error("All masterSlot values must be non-negative");
       }
       updates.masterSlot = args.masterSlot;
@@ -316,7 +316,7 @@ export const countSlotConfigurations = query({
   args: {},
   handler: async (ctx) => {
     const configs = await ctx.db.query("slotConfigurations").collect();
-    const activeCount = configs.filter(c => c.isActive).length;
+    const activeCount = configs.filter((c: any) => c.isActive).length;
 
     return {
       total: configs.length,

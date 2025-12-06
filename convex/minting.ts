@@ -352,12 +352,12 @@ export const getBatchMintingStats = query({
 
     const stats = {
       totalMinted: allMints.length,
-      confirmedMints: allMints.filter(m => m.status === "confirmed").length,
-      pendingMints: allMints.filter(m => m.status === "pending" || m.status === "submitted").length,
-      failedMints: allMints.filter(m => m.status === "failed").length,
-      uniqueRecipients: new Set(allMints.map(m => m.recipientAddress)).size,
-      uniqueTokenTypes: new Set(allMints.map(m => m.tokenType)).size,
-      totalBatches: new Set(allMints.map(m => m.batchId)).size,
+      confirmedMints: allMints.filter((m: any) => m.status === "confirmed").length,
+      pendingMints: allMints.filter((m: any) => m.status === "pending" || m.status === "submitted").length,
+      failedMints: allMints.filter((m: any) => m.status === "failed").length,
+      uniqueRecipients: new Set(allMints.map((m: any) => m.recipientAddress)).size,
+      uniqueTokenTypes: new Set(allMints.map((m: any) => m.tokenType)).size,
+      totalBatches: new Set(allMints.map((m: any) => m.batchId)).size,
     };
 
     return stats;
@@ -380,7 +380,7 @@ export const getBatchMintsByRecipient = query({
     const results = await query.order("desc").collect();
 
     if (args.network) {
-      return results.filter(m => m.network === args.network);
+      return results.filter((m: any) => m.network === args.network);
     }
 
     return results;

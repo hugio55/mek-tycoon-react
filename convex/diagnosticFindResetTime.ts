@@ -12,7 +12,7 @@ export const findResetTimestamp = query({
     // 1. Get recent level upgrades from audit logs
     const recentUpgrades = await ctx.db
       .query("auditLogs")
-      .filter(q => q.eq(q.field("type"), "mekUpgrade"))
+      .filter((q: any) => q.eq(q.field("type"), "mekUpgrade"))
       .order("desc")
       .take(100);
 
@@ -31,16 +31,16 @@ export const findResetTimestamp = query({
     // 3. Check current mek levels
     const currentLevels = await ctx.db
       .query("mekLevels")
-      .filter(q => q.eq(q.field("ownershipStatus"), "verified"))
+      .filter((q: any) => q.eq(q.field("ownershipStatus"), "verified"))
       .take(50);
 
-    const level1Count = currentLevels.filter(m => m.currentLevel === 1).length;
-    const higherLevelCount = currentLevels.filter(m => m.currentLevel > 1).length;
+    const level1Count = currentLevels.filter((m: any) => m.currentLevel === 1).length;
+    const higherLevelCount = currentLevels.filter((m: any) => m.currentLevel > 1).length;
 
     // 4. Look for any monitoring logs around the reset time
     const monitoringLogs = await ctx.db
       .query("monitoringLogs")
-      .filter(q =>
+      .filter((q: any) =>
         q.or(
           q.eq(q.field("functionName"), "resetAllMekLevels"),
           q.eq(q.field("functionName"), "resetAllProgress"),
@@ -50,7 +50,7 @@ export const findResetTimestamp = query({
       .order("desc")
       .take(50);
 
-    const resetLogs = monitoringLogs.filter(log =>
+    const resetLogs = monitoringLogs.filter((log: any) =>
       log.message && (
         log.message.includes("reset") ||
         log.message.includes("Reset") ||
@@ -74,7 +74,7 @@ export const findResetTimestamp = query({
           ? ((Date.now() - lastUpgradeBeforeReset.timestamp) / (1000 * 60 * 60)).toFixed(1)
           : null
       },
-      resetEventsInMonitoringLogs: resetLogs.map(log => ({
+      resetEventsInMonitoringLogs: resetLogs.map((log: any) => ({
         timestamp: log.timestamp,
         date: new Date(log.timestamp || 0).toISOString(),
         hoursAgo: log.timestamp ? ((Date.now() - log.timestamp) / (1000 * 60 * 60)).toFixed(1) : null,
@@ -83,7 +83,7 @@ export const findResetTimestamp = query({
         message: log.message,
         severity: log.severity
       })),
-      recentUpgrades: recentUpgrades.slice(0, 10).map(log => ({
+      recentUpgrades: recentUpgrades.slice(0, 10).map((log: any) => ({
         timestamp: log.timestamp,
         date: new Date(log.timestamp).toISOString(),
         hoursAgo: ((Date.now() - log.timestamp) / (1000 * 60 * 60)).toFixed(1),

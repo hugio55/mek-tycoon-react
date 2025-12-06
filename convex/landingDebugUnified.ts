@@ -522,7 +522,7 @@ export const getBackupHistory = query({
       .order("desc")
       .take(200);
 
-    return backups.map(backup => ({
+    return backups.map((backup: any) => ({
       _id: backup._id,
       timestamp: backup.timestamp,
       description: backup.description,
@@ -641,7 +641,7 @@ export const getPermanentSnapshots = query({
       .order("desc")
       .collect();
 
-    return snapshots.map(snapshot => ({
+    return snapshots.map((snapshot: any) => ({
       _id: snapshot._id,
       timestamp: snapshot.timestamp,
       description: snapshot.description,

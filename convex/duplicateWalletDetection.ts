@@ -35,7 +35,7 @@ export const detectDuplicateWallets = query({
         exactDuplicates.push({
           walletAddress: address,
           count: records.length,
-          records: records.map(r => ({
+          records: records.map((r: any) => ({
             id: r._id as string,
             mekCount: r.ownedMeks.length,
             goldPerHour: r.totalGoldPerHour || 0,
@@ -73,7 +73,7 @@ export const detectDuplicateWallets = query({
     for (const [fingerprint, records] of fingerprintMap.entries()) {
       if (records.length > 1) {
         // Check if these are actually different wallet addresses
-        const uniqueAddresses = new Set(records.map(r => r.walletAddress));
+        const uniqueAddresses = new Set(records.map((r: any) => r.walletAddress));
         if (uniqueAddresses.size > 1) {
           const [mekCount, goldPerHour] = fingerprint.split('_').map(Number);
 
@@ -82,7 +82,7 @@ export const detectDuplicateWallets = query({
             mekCount,
             goldPerHour,
             walletCount: uniqueAddresses.size,
-            wallets: records.map(r => ({
+            wallets: records.map((r: any) => ({
               address: r.walletAddress,
               companyName: r.companyName || null,
               isVerified: r.isBlockchainVerified || false,
@@ -130,7 +130,7 @@ export const detectDuplicateWallets = query({
           assetId,
           assetName: wallets[0].assetName,
           walletCount: wallets.length,
-          wallets: wallets.map(w => ({
+          wallets: wallets.map((w: any) => ({
             address: w.walletAddress,
             goldPerHour: w.goldPerHour
           }))
@@ -139,15 +139,15 @@ export const detectDuplicateWallets = query({
     }
 
     // Type 4: Recently Active Duplicates (HIGHEST PRIORITY)
-    const recentlyActiveDuplicates = fingerprintDuplicates.filter(dup => {
+    const recentlyActiveDuplicates = fingerprintDuplicates.filter((dup: any) => {
       // Flag if ANY of the duplicate wallets were active in last 7 days
       const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
-      return dup.wallets.some(w => w.lastActive > sevenDaysAgo);
+      return dup.wallets.some((w: any) => w.lastActive > sevenDaysAgo);
     });
 
     // Summary Statistics
     const totalWallets = allMiners.length;
-    const uniqueAddresses = new Set(allMiners.map(m => m.walletAddress)).size;
+    const uniqueAddresses = new Set(allMiners.map((m: any) => m.walletAddress)).size;
     const databaseDuplicateCount = totalWallets - uniqueAddresses;
 
     return {
@@ -204,17 +204,17 @@ export const getWalletMekTransferHistory = query({
       const current = snapshots[i];
       const previous = snapshots[i - 1];
 
-      const currentAssetIds = new Set(current.meks.map(m => m.assetId));
-      const previousAssetIds = new Set(previous.meks.map(m => m.assetId));
+      const currentAssetIds = new Set(current.meks.map((m: any) => m.assetId));
+      const previousAssetIds = new Set(previous.meks.map((m: any) => m.assetId));
 
-      const added = current.meks.filter(m => !previousAssetIds.has(m.assetId));
-      const removed = previous.meks.filter(m => !currentAssetIds.has(m.assetId));
+      const added = current.meks.filter((m: any) => !previousAssetIds.has(m.assetId));
+      const removed = previous.meks.filter((m: any) => !currentAssetIds.has(m.assetId));
 
       if (added.length > 0 || removed.length > 0) {
         transfers.push({
           timestamp: current.snapshotTime,
-          meksAdded: added.map(m => ({ assetId: m.assetId, assetName: m.assetName })),
-          meksRemoved: removed.map(m => ({ assetId: m.assetId, assetName: m.assetName })),
+          meksAdded: added.map((m: any) => ({ assetId: m.assetId, assetName: m.assetName })),
+          meksRemoved: removed.map((m: any) => ({ assetId: m.assetId, assetName: m.assetName })),
           rateChange: current.totalGoldPerHour - previous.totalGoldPerHour
         });
       }
@@ -253,12 +253,12 @@ export const compareTwoWallets = query({
       return { error: "One or both wallets not found" };
     }
 
-    const assetIds1 = new Set(miner1.ownedMeks.map(m => m.assetId));
-    const assetIds2 = new Set(miner2.ownedMeks.map(m => m.assetId));
+    const assetIds1 = new Set(miner1.ownedMeks.map((m: any) => m.assetId));
+    const assetIds2 = new Set(miner2.ownedMeks.map((m: any) => m.assetId));
 
-    const sharedAssets = miner1.ownedMeks.filter(m => assetIds2.has(m.assetId));
-    const wallet1Only = miner1.ownedMeks.filter(m => !assetIds2.has(m.assetId));
-    const wallet2Only = miner2.ownedMeks.filter(m => !assetIds1.has(m.assetId));
+    const sharedAssets = miner1.ownedMeks.filter((m: any) => assetIds2.has(m.assetId));
+    const wallet1Only = miner1.ownedMeks.filter((m: any) => !assetIds2.has(m.assetId));
+    const wallet2Only = miner2.ownedMeks.filter((m: any) => !assetIds1.has(m.assetId));
 
     // Get snapshot history to see if MEKs were transferred
     const snapshots1 = await ctx.db
@@ -303,7 +303,7 @@ export const compareTwoWallets = query({
                        miner1.ownedMeks.length === miner2.ownedMeks.length &&
                        Math.abs(miner1.totalGoldPerHour - miner2.totalGoldPerHour) < 0.01
       },
-      sharedAssets: sharedAssets.map(m => ({
+      sharedAssets: sharedAssets.map((m: any) => ({
         assetId: m.assetId,
         assetName: m.assetName,
         goldPerHour: m.goldPerHour
@@ -455,7 +455,7 @@ export const autoFixAssetOverlaps = internalMutation({
         overlaps.push({
           assetId,
           assetName: wallets[0].assetName,
-          wallets: wallets.map(w => w.walletAddress)
+          wallets: wallets.map((w: any) => w.walletAddress)
         });
       }
     }
@@ -485,13 +485,13 @@ export const autoFixAssetOverlaps = internalMutation({
           return {
             walletAddress,
             lastSnapshotTime: snapshot?.snapshotTime || 0,
-            hasMekInSnapshot: snapshot?.meks.some(m => m.assetId === overlap.assetId) || false
+            hasMekInSnapshot: snapshot?.meks.some((m: any) => m.assetId === overlap.assetId) || false
           };
         })
       );
 
       // Find the wallet with the most recent snapshot that actually contains this MEK
-      const validWallets = walletsWithSnapshots.filter(w => w.hasMekInSnapshot);
+      const validWallets = walletsWithSnapshots.filter((w: any) => w.hasMekInSnapshot);
 
       if (validWallets.length === 0) {
         console.warn(`[Auto-Fix Asset Overlaps] No valid snapshots found for ${overlap.assetName} - skipping`);
@@ -512,7 +512,7 @@ export const autoFixAssetOverlaps = internalMutation({
             .first();
 
           if (miner) {
-            const filteredMeks = miner.ownedMeks.filter(m => m.assetId !== overlap.assetId);
+            const filteredMeks = miner.ownedMeks.filter((m: any) => m.assetId !== overlap.assetId);
             const newRate = filteredMeks.reduce((sum, m) => sum + (m.goldPerHour || 0), 0);
 
             await ctx.db.patch(miner._id, {
@@ -566,7 +566,7 @@ export const fixAssetOverlaps = action({
 
     for (const overlap of duplicates.assetOverlaps) {
       console.log(`[Fix Asset Overlaps] Processing ${overlap.assetName} (${overlap.assetId.substring(0, 20)}...)`);
-      console.log(`[Fix Asset Overlaps] Found in ${overlap.walletCount} wallets:`, overlap.wallets.map(w => w.address.substring(0, 15)));
+      console.log(`[Fix Asset Overlaps] Found in ${overlap.walletCount} wallets:`, overlap.wallets.map((w: any) => w.address.substring(0, 15)));
 
       // Check each wallet on the blockchain to find the real owner
       let correctWallet: string | null = null;
@@ -649,8 +649,8 @@ export const removeMekFromWallet = internalMutation({
     }
 
     // Filter out the MEK
-    const filteredMeks = miner.ownedMeks.filter(m => m.assetId !== args.assetId);
-    const removedMek = miner.ownedMeks.find(m => m.assetId === args.assetId);
+    const filteredMeks = miner.ownedMeks.filter((m: any) => m.assetId !== args.assetId);
+    const removedMek = miner.ownedMeks.find((m: any) => m.assetId === args.assetId);
 
     if (!removedMek) {
       console.log(`[Remove MEK] MEK ${args.assetName} not found in wallet ${args.walletAddress.substring(0, 15)}...`);

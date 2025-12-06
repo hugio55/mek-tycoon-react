@@ -28,7 +28,7 @@ export const getMeksByOwner = query({
       .collect();
     
     // Return only essential fields to reduce bandwidth by ~70%
-    return meks.map(mek => ({
+    return meks.map((mek: any) => ({
       _id: mek._id,
       assetId: mek.assetId,
       assetName: mek.assetName,
@@ -57,7 +57,7 @@ export const getMeksWithTenure = query({
       .collect();
 
     // Return essential fields + tenure tracking
-    return meks.map(mek => ({
+    return meks.map((mek: any) => ({
       _id: mek._id,
       assetId: mek.assetId,
       assetName: mek.assetName,
@@ -130,7 +130,7 @@ export const getMeksPaginated = query({
     
     // Return lean data with pagination metadata
     return {
-      meks: paginatedMeks.map(mek => ({
+      meks: paginatedMeks.map((mek: any) => ({
         _id: mek._id,
         assetId: mek.assetId,
         assetName: mek.assetName,
@@ -214,19 +214,19 @@ export const searchMeks = query({
     let filtered = results;
     
     if (args.headVariation && !query.toString().includes("by_head")) {
-      filtered = filtered.filter(m => m.headVariation === args.headVariation);
+      filtered = filtered.filter((m: any) => m.headVariation === args.headVariation);
     }
     if (args.bodyVariation && !query.toString().includes("by_body")) {
-      filtered = filtered.filter(m => m.bodyVariation === args.bodyVariation);
+      filtered = filtered.filter((m: any) => m.bodyVariation === args.bodyVariation);
     }
     if (args.rarityTier && !query.toString().includes("by_rarity")) {
-      filtered = filtered.filter(m => m.rarityTier === args.rarityTier);
+      filtered = filtered.filter((m: any) => m.rarityTier === args.rarityTier);
     }
     if (args.minLevel !== undefined) {
-      filtered = filtered.filter(m => (m.level || 1) >= args.minLevel!);
+      filtered = filtered.filter((m: any) => (m.level || 1) >= args.minLevel!);
     }
     if (args.maxLevel !== undefined) {
-      filtered = filtered.filter(m => (m.level || 1) <= args.maxLevel!);
+      filtered = filtered.filter((m: any) => (m.level || 1) <= args.maxLevel!);
     }
     
     // Apply limit
@@ -234,7 +234,7 @@ export const searchMeks = query({
     const limited = filtered.slice(0, limit);
     
     // Return lean results
-    return limited.map(mek => ({
+    return limited.map((mek: any) => ({
       _id: mek._id,
       assetId: mek.assetId,
       assetName: mek.assetName,
@@ -267,7 +267,7 @@ export const getTopMeksByPower = query({
       .take(limit);
     
     // Return lean data for leaderboard
-    return topMeks.map(mek => ({
+    return topMeks.map((mek: any) => ({
       _id: mek._id,
       assetId: mek.assetId,
       assetName: mek.assetName,
@@ -460,7 +460,7 @@ export const getAllMeks = query({
     const meks = await ctx.db.query("meks").take(limit);
 
     // Return minimal data even for admin queries
-    return meks.map(mek => ({
+    return meks.map((mek: any) => ({
       _id: mek._id,
       assetId: mek.assetId,
       assetName: mek.assetName,
@@ -478,7 +478,7 @@ export const listAll = query({
     const meks = await ctx.db.query("meks").collect();
 
     // Return full data for admin viewer
-    return meks.map(mek => ({
+    return meks.map((mek: any) => ({
       id: mek._id,
       assetId: mek.assetId,
       assetName: mek.assetName,
@@ -506,7 +506,7 @@ export const getAllMeksWithSourceKeys = query({
     const meks = await ctx.db.query("meks").take(limit);
     
     // Return data including source keys for image lookup
-    return meks.map(mek => ({
+    return meks.map((mek: any) => ({
       _id: mek._id,
       assetId: mek.assetId,
       assetName: mek.assetName,
@@ -535,7 +535,7 @@ export const getMeksByRarity = query({
       .withIndex("", (q: any) => q.eq("rarityTier", args.rarityTier))
       .take(limit);
     
-    return meks.map(mek => ({
+    return meks.map((mek: any) => ({
       _id: mek._id,
       assetId: mek.assetId,
       assetName: mek.assetName,
@@ -563,7 +563,7 @@ export const getMeksByHead = query({
       .withIndex("", (q: any) => q.eq("headVariation", args.headVariation))
       .take(limit);
     
-    return meks.map(mek => ({
+    return meks.map((mek: any) => ({
       _id: mek._id,
       assetId: mek.assetId,
       assetName: mek.assetName,
@@ -589,7 +589,7 @@ export const getMeksByBody = query({
       .withIndex("", (q: any) => q.eq("bodyVariation", args.bodyVariation))
       .take(limit);
     
-    return meks.map(mek => ({
+    return meks.map((mek: any) => ({
       _id: mek._id,
       assetId: mek.assetId,
       assetName: mek.assetName,
@@ -615,10 +615,10 @@ export const getUnassignedMeks = query({
       .collect();
     
     // Filter out meks that are already assigned as employees
-    const unassignedMeks = meks.filter(mek => !mek.isEmployee);
+    const unassignedMeks = meks.filter((mek: any) => !mek.isEmployee);
     
     // Return essential data for selection
-    return unassignedMeks.map(mek => ({
+    return unassignedMeks.map((mek: any) => ({
       _id: mek._id,
       name: mek.assetName,
       mekNumber: parseInt(mek.assetId?.replace("MEK", "") || "1000"),
@@ -695,10 +695,10 @@ export const getMeksWithLevelsAndTenure = query({
       .collect();
 
     // Create level lookup map
-    const levelMap = new Map(levelData.map(level => [level.assetId, level]));
+    const levelMap = new Map(levelData.map((level: any) => [level.assetId, level]));
 
     // Combine Mek data with level data and tenure fields
-    const result = meks.map(mek => {
+    const result = meks.map((mek: any) => {
       const level = levelMap.get(mek.assetId);
 
       return {
@@ -725,7 +725,7 @@ export const getMeksWithLevelsAndTenure = query({
 
     console.log('[🔒TENURE-DEBUG] === BACKEND QUERY RESULT ===');
     console.log('[🔒TENURE-DEBUG] Returning tenure data for', result.length, 'meks');
-    result.forEach(m => {
+    result.forEach((m: any) => {
       console.log(`[🔒TENURE-DEBUG] ${m.assetName}:`, {
         tenurePoints: m.tenurePoints,
         lastTenureUpdate: m.lastTenureUpdate,

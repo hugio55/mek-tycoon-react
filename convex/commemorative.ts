@@ -216,12 +216,12 @@ export const getPurchaseStats = query({
 
     const stats = {
       total: purchases.length,
-      pending: purchases.filter(p => p.status === "pending").length,
-      completed: purchases.filter(p => p.status === "completed").length,
-      failed: purchases.filter(p => p.status === "failed").length,
-      refunded: purchases.filter(p => p.status === "refunded").length,
+      pending: purchases.filter((p: any) => p.status === "pending").length,
+      completed: purchases.filter((p: any) => p.status === "completed").length,
+      failed: purchases.filter((p: any) => p.status === "failed").length,
+      refunded: purchases.filter((p: any) => p.status === "refunded").length,
       totalRevenue: purchases
-        .filter(p => p.status === "completed" && p.paymentAmount)
+        .filter((p: any) => p.status === "completed" && p.paymentAmount)
         .reduce((sum, p) => sum + (parseFloat(p.paymentAmount!) / 1000000), 0), // Convert lovelace to ADA
     };
 

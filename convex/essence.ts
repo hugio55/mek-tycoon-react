@@ -367,7 +367,7 @@ async function calculateEssenceMetadata(
 
   const allVariationIds = new Set<number>([
     ...Array.from(variationCounts.keys()),
-    ...safeBalances.map(b => b.variationId),
+    ...safeBalances.map((b: any) => b.variationId),
     ...Array.from(buffMap.keys()) // CRITICAL: Include buffed variations
   ]);
 
@@ -592,7 +592,7 @@ async function calculateRealTimeEssenceBalances(
 
   // Also check if there are any variations being produced that don't have balance records yet
   for (const [variationId, data] of Array.from(variationCounts.entries())) {
-    const existingBalance = balances.find(b => b.variationId === variationId);
+    const existingBalance = balances.find((b: any) => b.variationId === variationId);
     if (!existingBalance) {
       // This variation is being produced but has no balance record
       // Calculate its accumulated amount
@@ -1580,7 +1580,7 @@ export const adminAddEssence = mutation({
       .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
       .collect();
 
-    const balance = existingBalance.find(b => b.variationName === variationName);
+    const balance = existingBalance.find((b: any) => b.variationName === variationName);
 
     if (balance) {
       // Update existing balance
@@ -1657,8 +1657,8 @@ export const updateEssenceCheckpoints = internalMutation({
     // Get unique wallet addresses that have at least one slotted Mek
     const activeWallets = new Set(
       allSlots
-        .filter(slot => slot.mekAssetId) // Has a Mek slotted
-        .map(slot => slot.walletAddress)
+        .filter((slot: any) => slot.mekAssetId) // Has a Mek slotted
+        .map((slot: any) => slot.walletAddress)
     );
 
     let updatedCount = 0;
@@ -2133,7 +2133,7 @@ export const fixSlottedMeksTenure = mutation({
 
     // Get all Meks that are currently slotted
     const allMeks = await ctx.db.query("meks").collect();
-    const slottedMeks = allMeks.filter(m => m.isSlotted);
+    const slottedMeks = allMeks.filter((m: any) => m.isSlotted);
 
     console.log(`[🔒TENURE-FIX] Found ${slottedMeks.length} slotted Meks`);
 
@@ -2174,7 +2174,7 @@ export const checkMissingVariations = query({
   args: {},
   handler: async (ctx) => {
     const allVariations = await ctx.db.query("variationsReference").collect();
-    const existingIds = new Set(allVariations.map(v => v.variationId));
+    const existingIds = new Set(allVariations.map((v: any) => v.variationId));
 
     const missing: number[] = [];
     for (let id = 1; id <= 291; id++) {
@@ -2204,7 +2204,7 @@ export const fixZeroVariationIds = mutation({
   handler: async (ctx) => {
     // Get all essence balances with variationId = 0
     const allBalances = await ctx.db.query("essenceBalances").collect();
-    const zeroIdBalances = allBalances.filter(b => b.variationId === 0);
+    const zeroIdBalances = allBalances.filter((b: any) => b.variationId === 0);
 
     console.log(`🔧 [FIX VARIATION IDS] Found ${zeroIdBalances.length} balances with variationId = 0`);
 
@@ -2516,7 +2516,7 @@ export const diagnosticCheckSlottedMeksInMeksTable = query({
       .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
-    const slottedSlots = slots.filter(s => s.mekAssetId);
+    const slottedSlots = slots.filter((s: any) => s.mekAssetId);
     const results: any[] = [];
 
     for (const slot of slottedSlots) {
@@ -2562,9 +2562,9 @@ export const diagnosticCheckSlottedMeksInMeksTable = query({
       totalSlottedMeks: slottedSlots.length,
       results,
       summary: {
-        inMeksTable: results.filter(r => r.existsInMeksTable).length,
-        notInMeksTable: results.filter(r => !r.existsInMeksTable).length,
-        properlyConfigured: results.filter(r => r.diagnosis.startsWith("✅")).length,
+        inMeksTable: results.filter((r: any) => r.existsInMeksTable).length,
+        notInMeksTable: results.filter((r: any) => !r.existsInMeksTable).length,
+        properlyConfigured: results.filter((r: any) => r.diagnosis.startsWith("✅")).length,
       }
     };
   },

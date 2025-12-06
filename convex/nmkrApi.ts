@@ -294,7 +294,7 @@ export const uploadNFT = action({
     }
     if (metadataPlaceholder.length > 0) {
       console.log("[NMKR] Custom metadata fields:", metadataPlaceholder.length);
-      metadataPlaceholder.forEach(field => {
+      metadataPlaceholder.forEach((field: any) => {
         console.log(`  - ${field.name}: ${field.value}`);
       });
     }
@@ -314,7 +314,7 @@ export const uploadNFT = action({
     const requestPreview = {
       ...requestBody,
       previewImageNft: requestBody.previewImageNft ? { ...requestBody.previewImageNft, fileFromBase64: '[BASE64_DATA]' } : undefined,
-      subfiles: requestBody.subfiles?.map(sf => ({
+      subfiles: requestBody.subfiles?.map((sf: any) => ({
         ...sf,
         subfile: { ...sf.subfile, fileFromBase64: sf.subfile.fileFromBase64 ? '[BASE64_DATA]' : undefined }
       })),
@@ -352,7 +352,7 @@ export const uploadNFT = action({
         // Policy ID is the key under "721" in CIP-25 metadata
         const cip25 = metadata["721"];
         if (cip25) {
-          const policyIds = Object.keys(cip25).filter(key => key !== "version");
+          const policyIds = Object.keys(cip25).filter((key: any) => key !== "version");
           if (policyIds.length > 0) {
             policyId = policyIds[0];
             console.log("[NMKR] Extracted policyId from metadata:", policyId);

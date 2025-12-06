@@ -53,11 +53,11 @@ export const updateAllRanksInDatabase = mutation({
 
     // Second, insert new variations that exist in source but not in database
     for (const sourceVariation of COMPLETE_VARIATION_RARITY) {
-      const existsInDb = allVariations.some(v => v.name === sourceVariation.name);
+      const existsInDb = allVariations.some((v: any) => v.name === sourceVariation.name);
 
       if (!existsInDb) {
         // Find next available variationId
-        const maxId = Math.max(...allVariations.map(v => v.variationId), 0);
+        const maxId = Math.max(...allVariations.map((v: any) => v.variationId), 0);
         const newVariationId = maxId + 1 + inserted;
 
         await ctx.db.insert("variationsReference", {

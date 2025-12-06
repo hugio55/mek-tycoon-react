@@ -46,7 +46,7 @@ export const getVariationById = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("variationsReference")
-      .filter(q => q.eq(q.field("variationId"), args.variationId))
+      .filter((q: any) => q.eq(q.field("variationId"), args.variationId))
       .first();
   },
 });
@@ -57,7 +57,7 @@ export const getVariationsByType = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("variationsReference")
-      .filter(q => q.eq(q.field("type"), args.type))
+      .filter((q: any) => q.eq(q.field("type"), args.type))
       .collect();
   },
 });

@@ -6,7 +6,7 @@ export const listAllGoldMiningAccounts = query({
   handler: async (ctx) => {
     const allAccounts = await ctx.db.query("goldMining").collect();
 
-    return allAccounts.map(account => ({
+    return allAccounts.map((account: any) => ({
       _id: account._id,
       walletAddress: account.walletAddress,
       companyName: account.companyName,

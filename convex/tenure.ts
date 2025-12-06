@@ -764,7 +764,7 @@ export const getMekTenureData = query({
       .collect();
 
     // Return tenure data mapped by assetId for fast lookup
-    return meks.map(mek => ({
+    return meks.map((mek: any) => ({
       assetId: mek.assetId,
       tenurePoints: mek.tenurePoints || 0,
       tenureRate: mek.tenureRate || 0,

@@ -207,7 +207,7 @@ export const storeResolvedMetadata = mutation({
     // Check if we already have this metadata
     const existing = await ctx.db
       .query("nftMetadata")
-      .filter(q => q.eq(q.field("assetId"), args.assetId))
+      .filter((q: any) => q.eq(q.field("assetId"), args.assetId))
       .first();
 
     const metadataObj = JSON.parse(args.metadata);
@@ -246,7 +246,7 @@ export const getCachedMetadata = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("nftMetadata")
-      .filter(q => q.eq(q.field("assetId"), args.assetId))
+      .filter((q: any) => q.eq(q.field("assetId"), args.assetId))
       .first();
   },
 });
@@ -318,13 +318,13 @@ export const getMetadataStats = query({
 
     const stats = {
       totalCached: allMetadata.length,
-      withImages: allMetadata.filter(m => m.resolvedImage).length,
+      withImages: allMetadata.filter((m: any) => m.resolvedImage).length,
       byRarity: {} as Record<string, number>,
-      lastUpdated: Math.max(...allMetadata.map(m => m.lastUpdated || 0)),
+      lastUpdated: Math.max(...allMetadata.map((m: any) => m.lastUpdated || 0)),
     };
 
     // Count by rarity
-    allMetadata.forEach(m => {
+    allMetadata.forEach((m: any) => {
       const rarity = m.mekData?.rarity || 'unknown';
       stats.byRarity[rarity] = (stats.byRarity[rarity] || 0) + 1;
     });

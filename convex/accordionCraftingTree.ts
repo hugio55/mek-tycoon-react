@@ -141,7 +141,7 @@ export const addAccordionCraftingTree = mutation({
 
     return { 
       message: "Accordion crafting tree added successfully",
-      recipes: allRecipes.map(r => r.name)
+      recipes: allRecipes.map((r: any) => r.name)
     };
   },
 });

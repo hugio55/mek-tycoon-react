@@ -17,8 +17,8 @@ export const investigateLevelReset = query({
     // 1. Get all mekLevels records - check for suspicious patterns
     const allMekLevels = await ctx.db.query("mekLevels").collect();
 
-    const level1Count = allMekLevels.filter(m => m.currentLevel === 1).length;
-    const higherLevelCount = allMekLevels.filter(m => m.currentLevel > 1).length;
+    const level1Count = allMekLevels.filter((m: any) => m.currentLevel === 1).length;
+    const higherLevelCount = allMekLevels.filter((m: any) => m.currentLevel > 1).length;
     const totalMeks = allMekLevels.length;
 
     console.log(`[DIAGNOSTIC] Mek Level Distribution:
@@ -30,12 +30,12 @@ export const investigateLevelReset = query({
     // 2. Check for recent level changes in audit logs
     const recentAudits = await ctx.db
       .query("auditLogs")
-      .filter(q => q.eq(q.field("type"), "mekUpgrade"))
+      .filter((q: any) => q.eq(q.field("type"), "mekUpgrade"))
       .order("desc")
       .take(100);
 
     // Find the last upgrade before what might be a gap (indicating reset)
-    const upgradeTimestamps = recentAudits.map(a => a.timestamp).sort((a, b) => b - a);
+    const upgradeTimestamps = recentAudits.map((a: any) => a.timestamp).sort((a, b) => b - a);
 
     let suspiciousGap = null;
     for (let i = 0; i < upgradeTimestamps.length - 1; i++) {
@@ -84,10 +84,10 @@ export const investigateLevelReset = query({
         // This mek has a lower level now than in audit logs - was reset!
         const mek = await ctx.db
           .query("goldMining")
-          .filter(q => q.eq(q.field("walletAddress"), mekLevel.walletAddress))
+          .filter((q: any) => q.eq(q.field("walletAddress"), mekLevel.walletAddress))
           .first();
 
-        const mekData = mek?.ownedMeks.find(m => m.assetId === mekLevel.assetId);
+        const mekData = mek?.ownedMeks.find((m: any) => m.assetId === mekLevel.assetId);
 
         discrepancies.push({
           assetId: mekLevel.assetId,
@@ -102,8 +102,8 @@ export const investigateLevelReset = query({
 
     // 5. Group discrepancies by wallet to see scope
     const affectedWallets = new Set(
-      discrepancies.map(d => {
-        const mekLevel = allMekLevels.find(m => m.assetId === d.assetId);
+      discrepancies.map((d: any) => {
+        const mekLevel = allMekLevels.find((m: any) => m.assetId === d.assetId);
         return mekLevel?.walletAddress;
       }).filter(Boolean)
     );
@@ -111,7 +111,7 @@ export const investigateLevelReset = query({
     // 6. Check monitoring logs for any reset-related events
     const monitoringLogs = await ctx.db
       .query("monitoringLogs")
-      .filter(q =>
+      .filter((q: any) =>
         q.or(
           q.eq(q.field("category"), "gold"),
           q.eq(q.field("functionName"), "resetAllMekLevels"),
@@ -121,7 +121,7 @@ export const investigateLevelReset = query({
       .order("desc")
       .take(50);
 
-    const resetEvents = monitoringLogs.filter(log =>
+    const resetEvents = monitoringLogs.filter((log: any) =>
       log.message && (
         log.message.includes("reset") ||
         log.message.includes("Reset") ||
@@ -147,7 +147,7 @@ export const investigateLevelReset = query({
       },
       suspiciousGap,
       discrepancies: discrepancies.slice(0, 20), // Top 20 discrepancies
-      resetEvents: resetEvents.map(log => ({
+      resetEvents: resetEvents.map((log: any) => ({
         timestamp: log.timestamp,
         date: new Date(log.timestamp || 0).toISOString(),
         eventType: log.eventType,
@@ -157,7 +157,7 @@ export const investigateLevelReset = query({
         severity: log.severity,
         walletAddress: log.walletAddress,
       })),
-      lastUpgrades: recentAudits.slice(0, 10).map(audit => ({
+      lastUpgrades: recentAudits.slice(0, 10).map((audit: any) => ({
         timestamp: audit.timestamp,
         date: new Date(audit.timestamp).toISOString(),
         wallet: audit.stakeAddress,
@@ -178,7 +178,7 @@ export const getRecoveryData = query({
     // Get ALL upgrade history from audit logs
     const allUpgrades = await ctx.db
       .query("auditLogs")
-      .filter(q => q.eq(q.field("type"), "mekUpgrade"))
+      .filter((q: any) => q.eq(q.field("type"), "mekUpgrade"))
       .collect();
 
     // Build a map of each mek's highest recorded level
@@ -215,11 +215,11 @@ export const getRecoveryData = query({
       totalMeks: recoveryData.length,
       recoveryData: recoveryData,
       summary: {
-        level2Count: recoveryData.filter(m => m.maxLevel === 2).length,
-        level3Count: recoveryData.filter(m => m.maxLevel === 3).length,
-        level4Count: recoveryData.filter(m => m.maxLevel === 4).length,
-        level5Count: recoveryData.filter(m => m.maxLevel === 5).length,
-        level6PlusCount: recoveryData.filter(m => m.maxLevel >= 6).length,
+        level2Count: recoveryData.filter((m: any) => m.maxLevel === 2).length,
+        level3Count: recoveryData.filter((m: any) => m.maxLevel === 3).length,
+        level4Count: recoveryData.filter((m: any) => m.maxLevel === 4).length,
+        level5Count: recoveryData.filter((m: any) => m.maxLevel === 5).length,
+        level6PlusCount: recoveryData.filter((m: any) => m.maxLevel >= 6).length,
       }
     };
   },

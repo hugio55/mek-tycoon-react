@@ -21,7 +21,7 @@ function calculateChecksum(meks: any[]): string {
 
   // Sort by assetId for deterministic ordering
   const sortedAssetIds = meks
-    .map(m => m.assetId || m.assetName)
+    .map((m: any) => m.assetId || m.assetName)
     .filter(Boolean)
     .sort();
 
@@ -160,16 +160,16 @@ export const verifyWalletSync = action({
             devLog.warn(`[Checksum] Blockchain: ${blockchainMekCount} Meks (${blockchainChecksum})`);
 
             // Identify missing/extra Meks
-            const dbAssetIds = new Set(dbState.ownedMeks.map(m => m.assetId));
-            const blockchainAssetIds = new Set(blockchainResult.meks.map(m => m.assetId));
+            const dbAssetIds = new Set(dbState.ownedMeks.map((m: any) => m.assetId));
+            const blockchainAssetIds = new Set(blockchainResult.meks.map((m: any) => m.assetId));
 
             const missingInDb = blockchainResult.meks
-              .filter(m => !dbAssetIds.has(m.assetId))
-              .map(m => m.assetName);
+              .filter((m: any) => !dbAssetIds.has(m.assetId))
+              .map((m: any) => m.assetName);
 
             const extraInDb = dbState.ownedMeks
-              .filter(m => !blockchainAssetIds.has(m.assetId))
-              .map(m => m.assetName);
+              .filter((m: any) => !blockchainAssetIds.has(m.assetId))
+              .map((m: any) => m.assetName);
 
             const discrepancies = [
               `Database has ${dbMekCount} Meks, blockchain has ${blockchainMekCount} Meks`,

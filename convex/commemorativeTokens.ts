@@ -410,7 +410,7 @@ export const getMyCommemorativeTokens = query({
       .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
-    return tokens.filter(t => t.status === "confirmed");
+    return tokens.filter((t: any) => t.status === "confirmed");
   },
 });
 
@@ -443,7 +443,7 @@ export const getAllCommemorativeTokens = query({
 
     // Filter by token type if provided
     if (args.tokenType) {
-      tokens = tokens.filter(t => t.tokenType === args.tokenType);
+      tokens = tokens.filter((t: any) => t.tokenType === args.tokenType);
     }
 
     // Sort by edition number (descending - newest first)
@@ -478,15 +478,15 @@ export const getTokenTypeStats = query({
       .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
       .collect();
 
-    const confirmed = allTokens.filter(t => t.status === "confirmed").length;
-    const reserved = allTokens.filter(t => t.status === "reserved").length;
-    const minting = allTokens.filter(t => t.status === "minting").length;
-    const failed = allTokens.filter(t => t.status === "failed").length;
-    const cancelled = allTokens.filter(t => t.status === "cancelled").length;
+    const confirmed = allTokens.filter((t: any) => t.status === "confirmed").length;
+    const reserved = allTokens.filter((t: any) => t.status === "reserved").length;
+    const minting = allTokens.filter((t: any) => t.status === "minting").length;
+    const failed = allTokens.filter((t: any) => t.status === "failed").length;
+    const cancelled = allTokens.filter((t: any) => t.status === "cancelled").length;
 
     // Get latest confirmed mint
     const latestMint = allTokens
-      .filter(t => t.status === "confirmed")
+      .filter((t: any) => t.status === "confirmed")
       .sort((a, b) => (b.confirmedAt || 0) - (a.confirmedAt || 0))[0];
 
     return {
@@ -793,7 +793,7 @@ export const importSnapshotToNFT = mutation({
     }
 
     // Extract wallet addresses from snapshot's eligible users
-    const eligibleWallets = snapshot.eligibleUsers.map(user => user.walletAddress);
+    const eligibleWallets = snapshot.eligibleUsers.map((user: any) => user.walletAddress);
 
     // Update NFT with snapshot data
     await ctx.db.patch(design._id, {
@@ -843,7 +843,7 @@ export const importWhitelistToDesign = mutation({
     }
 
     // Extract wallet addresses from eligible users
-    const eligibleWallets = whitelist.eligibleUsers.map(user => user.walletAddress);
+    const eligibleWallets = whitelist.eligibleUsers.map((user: any) => user.walletAddress);
 
     // Update design with whitelist data
     await ctx.db.patch(design._id, {
@@ -1013,16 +1013,16 @@ export const getBatchMintingStats = query({
       .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
       .collect();
 
-    const confirmed = allMints.filter(m => m.status === "confirmed").length;
-    const failed = allMints.filter(m => m.status === "failed").length;
-    const pending = allMints.filter(m => m.status === "pending" || m.status === "submitted").length;
+    const confirmed = allMints.filter((m: any) => m.status === "confirmed").length;
+    const failed = allMints.filter((m: any) => m.status === "failed").length;
+    const pending = allMints.filter((m: any) => m.status === "pending" || m.status === "submitted").length;
 
     return {
       total: allMints.length,
       confirmed,
       failed,
       pending,
-      uniqueRecipients: new Set(allMints.map(m => m.recipientAddress)).size,
+      uniqueRecipients: new Set(allMints.map((m: any) => m.recipientAddress)).size,
     };
   },
 });

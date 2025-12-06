@@ -291,9 +291,9 @@ export const syncWalletNFTsWithSaga = action({
         walletAddress: args.stakeAddress,
       });
 
-      const levelMap = new Map(mekLevels.map(level => [level.assetId, level]));
+      const levelMap = new Map(mekLevels.map((level: any) => [level.assetId, level]));
 
-      const meksWithLevelBoosts = enrichedMeks.map(m => {
+      const meksWithLevelBoosts = enrichedMeks.map((m: any) => {
         const levelData = levelMap.get(m.assetId);
         const currentLevel = levelData?.currentLevel || 1;
         const boostPercent = levelData?.currentBoostPercent || 0;
@@ -352,7 +352,7 @@ export const syncWalletNFTsWithSaga = action({
         walletAddress: args.stakeAddress,
       });
 
-      const meksForMutation = meksWithLevelBoosts.map(m => ({
+      const meksForMutation = meksWithLevelBoosts.map((m: any) => ({
         assetId: m.assetId,
         policyId: m.policyId,
         assetName: m.assetName,
@@ -517,7 +517,7 @@ export const getRecentSagas = query({
 function calculateChecksum(meks: any[]): string {
   // Sort by assetId for deterministic ordering
   const sortedAssetIds = meks
-    .map(m => m.assetId || m.assetName)
+    .map((m: any) => m.assetId || m.assetName)
     .sort();
 
   // Create checksum string
@@ -585,7 +585,7 @@ export const manualRescanWalletGroup = action({
       }
     }
 
-    const totalSuccess = results.filter(r => r.success).length;
+    const totalSuccess = results.filter((r: any) => r.success).length;
     const totalMeks = results.reduce((sum, r) => sum + (r.mekCount || 0), 0);
 
     devLog.log(`[ManualRescan] Completed: ${totalSuccess}/${walletGroup.length} wallets synced, ${totalMeks} total Meks`);

@@ -52,7 +52,7 @@ export const seedAll = mutation({
 
     // First check if categories already exist to avoid duplicates
     const existingCategories = await ctx.db.query("buffCategories").collect();
-    const existingNames = new Set(existingCategories.map(c => c.name));
+    const existingNames = new Set(existingCategories.map((c: any) => c.name));
     
     // Insert all buff categories that don't already exist
     const results = [];

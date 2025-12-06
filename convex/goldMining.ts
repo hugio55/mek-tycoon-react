@@ -92,7 +92,7 @@ export const initializeGoldMining = mutation({
     // ALSO check for hex/payment address duplicates
     const stakeSuffix = args.walletAddress.slice(-8);
     const allWallets = await ctx.db.query("goldMining").collect();
-    const potentialDuplicates = allWallets.filter(w =>
+    const potentialDuplicates = allWallets.filter((w: any) =>
       w.walletAddress !== args.walletAddress &&
       (w.walletAddress.includes(stakeSuffix) ||
        w.walletAddress.includes('fe6012f1') || // Common hex suffix
@@ -131,7 +131,7 @@ export const initializeGoldMining = mutation({
     });
 
     // Check if level boost data is being passed
-    const meksWithBoosts = args.ownedMeks.filter(mek => mek.levelBoostAmount && mek.levelBoostAmount > 0);
+    const meksWithBoosts = args.ownedMeks.filter((mek: any) => mek.levelBoostAmount && mek.levelBoostAmount > 0);
     devLog.log('[INIT MUTATION] Meks with level boosts:', {
       count: meksWithBoosts.length,
       totalBoost: meksWithBoosts.reduce((sum, mek) => sum + (mek.levelBoostAmount || 0), 0).toFixed(2)
@@ -221,21 +221,21 @@ export const initializeGoldMining = mutation({
       });
 
       // [🔍MEKNAME] Log what's being saved vs what existed
-      const existingNames = existing.ownedMeks.filter(m => m.customName);
-      const newNames = args.ownedMeks.filter(m => m.customName);
+      const existingNames = existing.ownedMeks.filter((m: any) => m.customName);
+      const newNames = args.ownedMeks.filter((m: any) => m.customName);
       console.log('[🔍MEKNAME] initializeGoldMining - Before merge:', {
         existingMeksWithNames: existingNames.length,
         newMeksWithNames: newNames.length,
-        existingNames: existingNames.map(m => ({ assetId: m.assetId, name: m.customName })),
-        newNames: newNames.map(m => ({ assetId: m.assetId, name: m.customName }))
+        existingNames: existingNames.map((m: any) => ({ assetId: m.assetId, name: m.customName })),
+        newNames: newNames.map((m: any) => ({ assetId: m.assetId, name: m.customName }))
       });
 
       // CRITICAL FIX: Preserve customName from existing data
       // Create a map of existing custom names by assetId
       const existingNameMap = new Map(
         existing.ownedMeks
-          .filter(m => m.customName)
-          .map(m => [m.assetId, m.customName])
+          .filter((m: any) => m.customName)
+          .map((m: any) => [m.assetId, m.customName])
       );
 
       // Merge new data with existing custom names
@@ -254,10 +254,10 @@ export const initializeGoldMining = mutation({
         return newMek;
       });
 
-      const finalNames = mergedMeks.filter(m => m.customName);
+      const finalNames = mergedMeks.filter((m: any) => m.customName);
       console.log('[🔍MEKNAME] After merge, preserved names:', {
         count: finalNames.length,
-        names: finalNames.map(m => ({ assetId: m.assetId, name: m.customName }))
+        names: finalNames.map((m: any) => ({ assetId: m.assetId, name: m.customName }))
       });
 
       await ctx.db.patch(existing._id, {
@@ -567,7 +567,7 @@ export const calculateGoldRates = query({
 
     if (!goldRateConfig) {
       // Use default linear rates if no config exists
-      return args.meks.map(mek => {
+      return args.meks.map((mek: any) => {
         const rank = mek.rarityRank || 2000; // Default to mid-rank if unknown
         // Linear scale from 100 gold/hr (rank 1) to 10 gold/hr (rank 4000)
         const goldPerHour = Math.max(10, 100 - (rank - 1) * 0.0225);
@@ -581,7 +581,7 @@ export const calculateGoldRates = query({
     // Calculate rates based on the configured curve
     const { curveType, minGold, maxGold, steepness, midPoint, totalMeks } = goldRateConfig;
 
-    return args.meks.map(mek => {
+    return args.meks.map((mek: any) => {
       const rank = mek.rarityRank || totalMeks / 2; // Default to mid-rank if unknown
       const normalizedRank = (rank - 1) / (totalMeks - 1); // Normalize to 0-1
 
@@ -643,7 +643,7 @@ export const getTopMiners = query({
       .order("desc")
       .take(limit);
 
-    return miners.map(miner => ({
+    return miners.map((miner: any) => ({
       walletAddress: miner.walletAddress,
       totalGoldPerHour: miner.totalGoldPerHour,
       currentGold: miner.currentGold,
@@ -659,7 +659,7 @@ export const getAllGoldMiningData = query({
     const now = Date.now();
     const allMiners = await ctx.db.query("goldMining").collect();
 
-    return allMiners.map(miner => {
+    return allMiners.map((miner: any) => {
       // Calculate: accumulated gold + (time since last update × current rate)
       // VERIFICATION CHECK: Only accumulate if verified
       const currentGold = calculateCurrentGold({
@@ -779,10 +779,10 @@ export const initializeWithBlockfrost = action({
       });
 
       // Create a map for quick level lookup
-      const levelMap = new Map(mekLevels.map(level => [level.assetId, level]));
+      const levelMap = new Map(mekLevels.map((level: any) => [level.assetId, level]));
 
       // Apply level boosts to Mek rates
-      const meksWithLevelBoosts = meksWithRates.map(m => {
+      const meksWithLevelBoosts = meksWithRates.map((m: any) => {
         const levelData = levelMap.get(m.assetId);
         const currentLevel = levelData?.currentLevel || 1;
         const boostPercent = levelData?.currentBoostPercent || 0;
@@ -804,7 +804,7 @@ export const initializeWithBlockfrost = action({
 
       // Initialize or update gold mining record
       // Include level boost fields to preserve upgrade data
-      const meksForMutation = meksWithLevelBoosts.map(m => ({
+      const meksForMutation = meksWithLevelBoosts.map((m: any) => ({
         assetId: m.assetId,
         policyId: m.policyId,
         assetName: m.assetName,
@@ -836,14 +836,14 @@ export const initializeWithBlockfrost = action({
         devLog.log(`[GoldMining] Merging existing ${existingData.ownedMeks.length} Meks with ${meksForMutation.length} on-chain Meks`);
 
         // [🔍MEKNAME] Log existing custom names before merge
-        const existingNames = existingData.ownedMeks.filter(m => m.customName);
+        const existingNames = existingData.ownedMeks.filter((m: any) => m.customName);
         console.log('[🔍MEKNAME] initializeWithBlockfrost - Existing custom names:', {
           count: existingNames.length,
-          names: existingNames.map(m => ({ assetId: m.assetId, name: m.customName }))
+          names: existingNames.map((m: any) => ({ assetId: m.assetId, name: m.customName }))
         });
 
         // Create a map of on-chain Meks by assetId
-        const onChainMekMap = new Map(meksForMutation.map(m => [m.assetId, m]));
+        const onChainMekMap = new Map(meksForMutation.map((m: any) => [m.assetId, m]));
 
         // Start with existing Meks and update with on-chain data where available
         finalMeksList = existingData.ownedMeks.map(existingMek => {
@@ -887,10 +887,10 @@ export const initializeWithBlockfrost = action({
         });
 
         // [🔍MEKNAME] Verify custom names survived the merge
-        const finalNames = finalMeksList.filter(m => m.customName);
+        const finalNames = finalMeksList.filter((m: any) => m.customName);
         console.log('[🔍MEKNAME] After merge, custom names preserved:', {
           count: finalNames.length,
-          names: finalNames.map(m => ({ assetId: m.assetId, name: m.customName }))
+          names: finalNames.map((m: any) => ({ assetId: m.assetId, name: m.customName }))
         });
 
         devLog.log(`[GoldMining] Final merged list: ${finalMeksList.length} Meks`);
@@ -956,7 +956,7 @@ export const getGroupMeks = query({
         .withIndex("", (q: any) => q.eq("groupId", membership.groupId))
         .collect();
 
-      walletsToQuery = allMemberships.map(m => m.walletAddress);
+      walletsToQuery = allMemberships.map((m: any) => m.walletAddress);
     }
 
     // Get gold mining data for all wallets
@@ -969,7 +969,7 @@ export const getGroupMeks = query({
 
       if (goldMining && goldMining.ownedMeks) {
         // Add wallet source to each Mek
-        const meksWithSource = goldMining.ownedMeks.map(mek => ({
+        const meksWithSource = goldMining.ownedMeks.map((mek: any) => ({
           ...mek,
           sourceWallet: wallet
         }));
@@ -1007,7 +1007,7 @@ export const getCorporationStats = query({
         .withIndex("", (q: any) => q.eq("groupId", membership.groupId))
         .collect();
 
-      walletsToQuery = allMemberships.map(m => m.walletAddress);
+      walletsToQuery = allMemberships.map((m: any) => m.walletAddress);
     }
 
     // Aggregate stats from all wallets
@@ -1380,7 +1380,7 @@ export const getGoldMiningStats = query({
 
     // Count wallet types
     const walletTypes: Record<string, number> = {};
-    allMiners.forEach(miner => {
+    allMiners.forEach((miner: any) => {
       const type = miner.walletType || "unknown";
       walletTypes[type] = (walletTypes[type] || 0) + 1;
     });
@@ -1452,7 +1452,7 @@ function validateCompanyName(name: string): { valid: boolean; error?: string } {
   // Basic profanity filter (add more terms as needed)
   const profanityWords = ['fuck', 'shit', 'damn', 'hell', 'ass', 'bitch', 'crap', 'piss'];
   const lowerName = trimmed.toLowerCase();
-  const hasProfanity = profanityWords.some(word => lowerName.includes(word));
+  const hasProfanity = profanityWords.some((word: any) => lowerName.includes(word));
 
   if (hasProfanity) {
     return { valid: false, error: "Company name contains inappropriate language" };
@@ -1750,14 +1750,14 @@ export const syncWalletFromBlockchain = action({
       });
 
       const mekLevelsMap = new Map(
-        allMekLevels.map(level => [level.assetId, level])
+        allMekLevels.map((level: any) => [level.assetId, level])
       );
 
       // Get existing MEKs for metadata
       const miner = await ctx.runQuery(internal.goldMiningSnapshot.getAllMinersForSnapshot);
-      const minerData = miner.find(m => m.walletAddress === args.walletAddress);
+      const minerData = miner.find((m: any) => m.walletAddress === args.walletAddress);
       const existingMeksMap = new Map(
-        minerData?.ownedMeks?.map(mek => [mek.assetId, mek]) || []
+        minerData?.ownedMeks?.map((mek: any) => [mek.assetId, mek]) || []
       );
 
       // Build complete MEK details
@@ -1934,7 +1934,7 @@ export const setMekName = mutation({
     }
 
     // Find the Mek in the ownedMeks array and update its name
-    const updatedMeks = existing.ownedMeks.map(mek => {
+    const updatedMeks = existing.ownedMeks.map((mek: any) => {
       if (mek.assetId === args.mekAssetId) {
         console.log('[🔍MEKNAME] FOUND target Mek, updating name:', {
           assetId: mek.assetId,
@@ -1950,7 +1950,7 @@ export const setMekName = mutation({
     });
 
     // Check if we actually found and updated the Mek
-    const mekFound = updatedMeks.some(mek => mek.assetId === args.mekAssetId);
+    const mekFound = updatedMeks.some((mek: any) => mek.assetId === args.mekAssetId);
     if (!mekFound) {
       console.log('[🔍MEKNAME] ERROR: Mek not found in collection');
       return {
@@ -1971,7 +1971,7 @@ export const setMekName = mutation({
 
     // Re-fetch to verify the update persisted
     const verification = await ctx.db.get(existing._id);
-    const verifiedMek = verification?.ownedMeks.find(m => m.assetId === args.mekAssetId);
+    const verifiedMek = verification?.ownedMeks.find((m: any) => m.assetId === args.mekAssetId);
     console.log('[🔍MEKNAME] Verification check:', {
       mekFound: !!verifiedMek,
       customName: verifiedMek?.customName,
@@ -2047,7 +2047,7 @@ export const getMekName = query({
     }
 
     // Find the Mek in the ownedMeks array
-    const mek = data.ownedMeks.find(m => m.assetId === args.mekAssetId);
+    const mek = data.ownedMeks.find((m: any) => m.assetId === args.mekAssetId);
 
     return {
       customName: mek?.customName || null,

@@ -248,7 +248,7 @@ export const createManualWhitelist = mutation({
 
     // Report payment addresses found (helpful error)
     if (paymentAddressesFound.length > 0) {
-      const preview = paymentAddressesFound.slice(0, 2).map(a => a.substring(0, 20) + '...').join(', ');
+      const preview = paymentAddressesFound.slice(0, 2).map((a: any) => a.substring(0, 20) + '...').join(', ');
       const more = paymentAddressesFound.length > 2 ? ` (+${paymentAddressesFound.length - 2} more)` : '';
       throw new Error(
         `Payment addresses not allowed (${paymentAddressesFound.length} found): ${preview}${more}. Please use STAKE addresses (stake1... or stake_test1...) only. NMKR collects payment addresses during checkout.`
@@ -438,12 +438,12 @@ export const searchCompanyNames = query({
 
     const searchLower = args.searchTerm.toLowerCase();
     const matches = allMiners
-      .filter(miner =>
+      .filter((miner: any) =>
         miner.companyName &&
         miner.companyName.toLowerCase().includes(searchLower) &&
         miner.walletAddress
       )
-      .map(miner => ({
+      .map((miner: any) => ({
         companyName: miner.companyName!,
         walletAddress: miner.walletAddress!,
       }))
@@ -718,7 +718,7 @@ export const createSnapshot = mutation({
       description: args.description,
       eligibleUsers: whitelist.eligibleUsers,
       userCount: whitelist.userCount,
-      rulesSnapshot: whitelist.rules.map(r => ({
+      rulesSnapshot: whitelist.rules.map((r: any) => ({
         criteriaField: r.criteriaField,
         operator: r.operator,
         value: r.value,

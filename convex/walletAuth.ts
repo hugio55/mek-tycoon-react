@@ -278,7 +278,7 @@ export const getOnlineUsers = query({
       .order("desc")
       .take(limit);
     
-    return onlineUsers.map(user => ({
+    return onlineUsers.map((user: any) => ({
       _id: user._id,
       walletAddress: user.walletAddress.slice(0, 10) + "..." + user.walletAddress.slice(-6),
       username: user.username,

@@ -11,7 +11,7 @@ class MerkleTree {
   private levels: string[][];
 
   constructor(data: string[]) {
-    this.leaves = data.map(item => this.hash(item));
+    this.leaves = data.map((item: any) => this.hash(item));
     this.levels = this.buildTree();
   }
 
@@ -79,7 +79,7 @@ export const createGoldCheckpoint = action({
       const leafData = [
         args.walletAddress,
         args.goldAmount.toString(),
-        ...args.mekData.map(m => `${m.assetId}:${m.goldRate}:${m.lastUpdate}`)
+        ...args.mekData.map((m: any) => `${m.assetId}:${m.goldRate}:${m.lastUpdate}`)
       ];
 
       // Build merkle tree

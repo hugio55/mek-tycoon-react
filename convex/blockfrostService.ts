@@ -48,7 +48,7 @@ function hexToBech32(hexAddress: string): string {
 
     // Convert entire hex string (including network byte) to bytes
     const fullBytes = new Uint8Array(
-      cleanHex.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16))
+      cleanHex.match(/.{1,2}/g)!.map((byte: any) => parseInt(byte, 16))
     );
 
     // Convert bytes to 5-bit words for bech32 encoding

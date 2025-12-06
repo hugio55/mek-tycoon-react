@@ -9,7 +9,7 @@ export const manualMergeWalletsBySuffix = mutation({
   handler: async (ctx, args) => {
     const allRecords = await ctx.db.query("goldMining").collect();
 
-    const matchingRecords = allRecords.filter(record =>
+    const matchingRecords = allRecords.filter((record: any) =>
       record.walletAddress.endsWith(args.suffix)
     );
 
@@ -17,7 +17,7 @@ export const manualMergeWalletsBySuffix = mutation({
       return {
         success: false,
         message: `Only found ${matchingRecords.length} wallet(s) ending with ${args.suffix}`,
-        wallets: matchingRecords.map(r => r.walletAddress)
+        wallets: matchingRecords.map((r: any) => r.walletAddress)
       };
     }
 
@@ -37,7 +37,7 @@ export const manualMergeWalletsBySuffix = mutation({
       });
     }
 
-    const highestGoldRate = Math.max(...matchingRecords.map(r => r.totalGoldPerHour));
+    const highestGoldRate = Math.max(...matchingRecords.map((r: any) => r.totalGoldPerHour));
     const mostMeks = matchingRecords.reduce((max, r) =>
       (r.ownedMeks?.length || 0) > (max.ownedMeks?.length || 0) ? r : max
     , primary);
@@ -46,7 +46,7 @@ export const manualMergeWalletsBySuffix = mutation({
       ownedMeks: mostMeks.ownedMeks || primary.ownedMeks,
       totalGoldPerHour: highestGoldRate,
       accumulatedGold: totalAccumulatedGold, // CRITICAL FIX: Removed 50k cap during wallet merge
-      isBlockchainVerified: matchingRecords.some(r => r.isBlockchainVerified),
+      isBlockchainVerified: matchingRecords.some((r: any) => r.isBlockchainVerified),
       lastSnapshotTime: now,
       updatedAt: now,
     });
@@ -59,7 +59,7 @@ export const manualMergeWalletsBySuffix = mutation({
       success: true,
       message: `Merged ${duplicates.length} duplicate(s) into wallet ${primary.walletAddress}`,
       primaryWallet: primary.walletAddress,
-      deletedWallets: duplicates.map(d => d.walletAddress),
+      deletedWallets: duplicates.map((d: any) => d.walletAddress),
       totalGold: totalAccumulatedGold, // FIXED: Removed cap for accurate display
       goldPerHour: highestGoldRate
     };

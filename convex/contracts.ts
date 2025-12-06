@@ -165,5 +165,5 @@ function calculateProbabilities(biasScore: number): number[] {
   });
   
   const total = probs.reduce((a, b) => a + b, 0);
-  return probs.map(p => p / total);
+  return probs.map((p: any) => p / total);
 }

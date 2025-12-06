@@ -97,7 +97,7 @@ export const getAllUsersWithDisplayNames = query({
       .filter((q) => q.eq(q.field("displayNameSet"), true))
       .collect();
 
-    return users.map(user => ({
+    return users.map((user: any) => ({
       walletAddress: user.walletAddress,
       displayName: user.displayName,
       gold: user.gold,

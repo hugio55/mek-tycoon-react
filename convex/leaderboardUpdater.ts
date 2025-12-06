@@ -17,7 +17,7 @@ export const updateGoldLeaderboard = internalMutation({
       const allMiners = await ctx.db.query("goldMining").collect();
 
       // Skip wallets inactive for 15+ days to reduce bandwidth
-      const miners = allMiners.filter(miner =>
+      const miners = allMiners.filter((miner: any) =>
         (miner.lastActiveTime || miner.lastLogin || 0) > inactiveThreshold
       );
 
@@ -29,7 +29,7 @@ export const updateGoldLeaderboard = internalMutation({
       }
 
       // Calculate current gold for each miner (same logic as goldLeaderboard.ts)
-      const minersWithCurrentGold = miners.map(miner => {
+      const minersWithCurrentGold = miners.map((miner: any) => {
         const lastCheckpoint = miner.lastSnapshotTime || miner.lastActiveTime || miner.createdAt || now;
         const timeDiff = Math.max(0, now - lastCheckpoint);
         const hoursElapsed = timeDiff / (1000 * 60 * 60);
@@ -127,7 +127,7 @@ export const updateGoldLeaderboard = internalMutation({
         .withIndex("by_category_rank", q => q.eq("category", "gold"))
         .collect();
 
-      const entriesToDelete = allGoldEntries.filter(entry => entry.rank > LEADERBOARD_SIZE);
+      const entriesToDelete = allGoldEntries.filter((entry: any) => entry.rank > LEADERBOARD_SIZE);
       for (const entry of entriesToDelete) {
         await ctx.db.delete(entry._id);
       }

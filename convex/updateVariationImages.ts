@@ -360,7 +360,7 @@ export const getVariationsWithImages = mutation({
   args: {},
   handler: async (ctx) => {
     const variations = await ctx.db.query("variationsReference").collect();
-    return variations.map(v => ({
+    return variations.map((v: any) => ({
       name: v.name,
       type: v.type,
       imageUrl: v.imageUrl || null

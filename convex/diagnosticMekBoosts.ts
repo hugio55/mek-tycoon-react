@@ -13,7 +13,7 @@ export const compareMekDataSources = query({
     // Get gold mining data (with ownedMeks array)
     const goldMiningData = await ctx.db
       .query("goldMining")
-      .filter(q => q.eq(q.field("walletAddress"), args.walletAddress))
+      .filter((q: any) => q.eq(q.field("walletAddress"), args.walletAddress))
       .first();
 
     if (!goldMiningData) {
@@ -28,7 +28,7 @@ export const compareMekDataSources = query({
 
     // Build comparison
     const comparison = goldMiningData.ownedMeks.map(ownedMek => {
-      const mekLevel = mekLevelsData.find(level => level.assetId === ownedMek.assetId);
+      const mekLevel = mekLevelsData.find((level: any) => level.assetId === ownedMek.assetId);
 
       return {
         assetName: ownedMek.assetName,
@@ -68,9 +68,9 @@ export const compareMekDataSources = query({
       walletAddress: args.walletAddress,
       totalMeks: goldMiningData.ownedMeks.length,
       mekLevelsRecords: mekLevelsData.length,
-      upgradedMeks: comparison.filter(m => m.hasBoost).length,
-      boostsShowingInUI: comparison.filter(m => m.boostShowsInUI).length,
-      outOfSync: comparison.filter(m => !m.inSync).length,
+      upgradedMeks: comparison.filter((m: any) => m.hasBoost).length,
+      boostsShowingInUI: comparison.filter((m: any) => m.boostShowsInUI).length,
+      outOfSync: comparison.filter((m: any) => !m.inSync).length,
       comparison: comparison,
     };
   },
@@ -90,7 +90,7 @@ export const checkWalletSync = query({
       return result;
     }
 
-    const outOfSyncMeks = result.comparison.filter(m => !m.inSync);
+    const outOfSyncMeks = result.comparison.filter((m: any) => !m.inSync);
 
     return {
       walletAddress: args.walletAddress,
@@ -101,7 +101,7 @@ export const checkWalletSync = query({
         boostsShowingInUI: result.boostsShowingInUI,
         outOfSync: result.outOfSync,
       },
-      outOfSyncMeks: outOfSyncMeks.map(m => ({
+      outOfSyncMeks: outOfSyncMeks.map((m: any) => ({
         assetName: m.assetName,
         ownedLevel: m.ownedMeks_currentLevel,
         actualLevel: m.mekLevels_currentLevel,

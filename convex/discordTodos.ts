@@ -86,7 +86,7 @@ export const addTask = mutation({
     }
 
     const newTask = {
-      id: todoDoc.tasks.length > 0 ? Math.max(...todoDoc.tasks.map(t => t.id)) + 1 : 1,
+      id: todoDoc.tasks.length > 0 ? Math.max(...todoDoc.tasks.map((t: any) => t.id)) + 1 : 1,
       text: args.text,
       completed: false,
       createdAt: Date.now(),
@@ -216,7 +216,7 @@ export const clearCompleted = mutation({
 
     if (!todoDoc) throw new Error("Todo doc not found");
 
-    const incompleteTasks = todoDoc.tasks.filter(task => !task.completed);
+    const incompleteTasks = todoDoc.tasks.filter((task: any) => !task.completed);
     const clearedCount = todoDoc.tasks.length - incompleteTasks.length;
 
     await ctx.db.patch(todoDoc._id, {

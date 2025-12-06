@@ -162,7 +162,7 @@ export const getSpellsForLevel = query({
       .collect();
     
     // Filter spells that the player can use at this level
-    return allSpells.filter(spell => spell.requiredLevel <= args.level);
+    return allSpells.filter((spell: any) => spell.requiredLevel <= args.level);
   },
 });
 

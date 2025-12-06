@@ -128,7 +128,7 @@ export const unlockNode = mutation({
     }
 
     // Find the node
-    const node = tree.nodes.find(n => n.id === args.nodeId);
+    const node = tree.nodes.find((n: any) => n.id === args.nodeId);
     if (!node) {
       throw new Error("Node not found");
     }
@@ -144,7 +144,7 @@ export const unlockNode = mutation({
     }
 
     // Check prerequisites (must have at least one connected unlocked node)
-    const hasPrereq = tree.connections.some(conn => 
+    const hasPrereq = tree.connections.some((conn: any) => 
       conn.to === args.nodeId && tree.unlockedNodes.includes(conn.from)
     );
 

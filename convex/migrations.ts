@@ -266,7 +266,7 @@ export const syncIsSlottedFromEssenceSlots = mutation({
 
     // Get ALL essence slots that have a Mek slotted
     const allSlots = await ctx.db.query("essenceSlots").collect();
-    const slottedSlots = allSlots.filter(slot => slot.mekAssetId);
+    const slottedSlots = allSlots.filter((slot: any) => slot.mekAssetId);
 
     console.log(`[MIGRATION] Found ${slottedSlots.length} slotted Meks in essenceSlots table`);
 

@@ -395,10 +395,10 @@ export const getAbuseStats = query({
   handler: async (ctx) => {
     const allFlags = await ctx.db.query("tradeAbuseFlags").collect();
 
-    const pendingCount = allFlags.filter(f => f.status === "pending").length;
-    const investigatingCount = allFlags.filter(f => f.status === "investigating").length;
-    const confirmedCount = allFlags.filter(f => f.status === "confirmed_abuse").length;
-    const clearedCount = allFlags.filter(f => f.status === "cleared" || f.status === "auto_cleared").length;
+    const pendingCount = allFlags.filter((f: any) => f.status === "pending").length;
+    const investigatingCount = allFlags.filter((f: any) => f.status === "investigating").length;
+    const confirmedCount = allFlags.filter((f: any) => f.status === "confirmed_abuse").length;
+    const clearedCount = allFlags.filter((f: any) => f.status === "cleared" || f.status === "auto_cleared").length;
 
     // Count by flag reason
     const reasonCounts: Record<string, number> = {};
@@ -437,11 +437,11 @@ export const getAbuseStats = query({
 
     // Recent flags (last 24 hours)
     const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-    const recentFlags = allFlags.filter(f => f.createdAt > oneDayAgo).length;
+    const recentFlags = allFlags.filter((f: any) => f.createdAt > oneDayAgo).length;
 
     // Highest risk scores
     const highRiskFlags = allFlags
-      .filter(f => f.status === "pending")
+      .filter((f: any) => f.status === "pending")
       .sort((a, b) => b.riskScore - a.riskScore)
       .slice(0, 5);
 
@@ -549,7 +549,7 @@ export const getCorporationRiskProfile = query({
       .collect();
 
     const allTradePairs = [...tradePairs1, ...tradePairs2];
-    const flaggedPairs = allTradePairs.filter(p => p.flagged);
+    const flaggedPairs = allTradePairs.filter((p: any) => p.flagged);
 
     // Calculate total risk score
     const allFlags = [...flagsAsBuyer, ...flagsAsSeller];
@@ -571,7 +571,7 @@ export const getCorporationRiskProfile = query({
       flagsAsBuyer: flagsAsBuyer.length,
       flagsAsSeller: flagsAsSeller.length,
       totalRiskScore,
-      confirmedAbuse: allFlags.filter(f => f.status === "confirmed_abuse").length,
+      confirmedAbuse: allFlags.filter((f: any) => f.status === "confirmed_abuse").length,
       tradingPartners: allTradePairs.length,
       flaggedPartners: flaggedPairs.length,
       recentFlags: allFlags
@@ -989,7 +989,7 @@ export const searchCorporations = query({
     const allGoldMining = await ctx.db.query("goldMining").collect();
 
     const matchingWallets = allGoldMining
-      .filter(gm =>
+      .filter((gm: any) =>
         (gm.companyName?.toLowerCase().includes(searchLower)) ||
         (gm.walletAddress?.toLowerCase().includes(searchLower))
       )
@@ -1014,18 +1014,18 @@ export const searchCorporations = query({
     // Also search users by displayName/username for those without goldMining records
     const allUsers = await ctx.db.query("users").collect();
     const userMatches = allUsers
-      .filter(u =>
-        !matchingWallets.some(gm => gm.walletAddress === u.walletAddress) &&
+      .filter((u: any) =>
+        !matchingWallets.some((gm: any) => gm.walletAddress === u.walletAddress) &&
         ((u.displayName?.toLowerCase().includes(searchLower)) ||
          (u.username?.toLowerCase().includes(searchLower)))
       )
       .slice(0, limit)
-      .map(u => ({
+      .map((u: any) => ({
         id: u._id,
         name: u.displayName || u.username || "Unknown",
         walletAddress: u.walletAddress,
       }));
 
-    return [...results.filter(r => r !== null), ...userMatches].slice(0, limit);
+    return [...results.filter((r: any) => r !== null), ...userMatches].slice(0, limit);
   },
 });

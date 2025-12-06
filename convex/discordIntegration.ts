@@ -531,7 +531,7 @@ export const setPrimaryWallet = mutation({
       .filter((q) => q.eq(q.field("active"), true))
       .collect();
 
-    const targetWallet = allWallets.find(w => w.walletAddress === args.walletAddress);
+    const targetWallet = allWallets.find((w: any) => w.walletAddress === args.walletAddress);
 
     if (!targetWallet) {
       throw new Error('Wallet not found or not linked to this user');

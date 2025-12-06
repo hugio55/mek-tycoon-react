@@ -77,7 +77,7 @@ export const adminForceResync = action({
 
       const levelMap = new Map(mekLevels.map((level: Doc<"mekLevels">) => [level.assetId, level]));
 
-      const meksWithLevelBoosts: any[] = enrichedMeks.map(m => {
+      const meksWithLevelBoosts: any[] = enrichedMeks.map((m: any) => {
         const levelData = levelMap.get(m.assetId);
         const currentLevel = levelData?.currentLevel || 1;
         const boostPercent = levelData?.currentBoostPercent || 0;
@@ -103,7 +103,7 @@ export const adminForceResync = action({
       const preservedWalletType = existingWallet?.walletType || "unknown";
 
       // STEP 5: Update database (bypass authentication, preserve walletType)
-      const meksForMutation = meksWithLevelBoosts.map(m => ({
+      const meksForMutation = meksWithLevelBoosts.map((m: any) => ({
         assetId: m.assetId,
         policyId: m.policyId,
         assetName: m.assetName,

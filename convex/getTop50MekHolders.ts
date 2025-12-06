@@ -11,7 +11,7 @@ export const getTop50MekHolders = query({
 
     // Sort by Mek count and get top 50
     const top50 = allMiners
-      .filter(miner => miner.ownedMeks.length > 0) // Only include wallets with Meks
+      .filter((miner: any) => miner.ownedMeks.length > 0) // Only include wallets with Meks
       .sort((a, b) => b.ownedMeks.length - a.ownedMeks.length)
       .slice(0, 50)
       .map((miner, index) => ({
@@ -43,7 +43,7 @@ export const getTop50MekHolders = query({
 
     return {
       holders: top50,
-      totalConnectedHolders: allMiners.filter(m => m.ownedMeks.length > 0).length,
+      totalConnectedHolders: allMiners.filter((m: any) => m.ownedMeks.length > 0).length,
       lastUpdated: Date.now(),
       note: "Shows only wallets that have connected to the app"
     };

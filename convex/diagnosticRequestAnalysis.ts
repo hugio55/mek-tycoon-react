@@ -20,13 +20,13 @@ export const getRequestAnalysis = query({
     const now = Date.now();
     const dayAgo = now - (24 * 60 * 60 * 1000);
 
-    const activeUsers = goldMiningRecords.filter(record =>
+    const activeUsers = goldMiningRecords.filter((record: any) =>
       (record.updatedAt || record.createdAt) > dayAgo
     );
 
     // Get session activity
     const sessions = await ctx.db.query("walletSessions").collect();
-    const activeSessions = sessions.filter(session =>
+    const activeSessions = sessions.filter((session: any) =>
       (session.lastActivityTime || session.lastActiveTime || session.createdAt) > dayAgo
     );
 

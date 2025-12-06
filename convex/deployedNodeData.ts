@@ -208,7 +208,7 @@ export const getDeploymentHistory = query({
       .order("desc")
       .take(limit);
 
-    return deployments.map(d => ({
+    return deployments.map((d: any) => ({
       _id: d._id,
       deploymentId: d.deploymentId,
       deployedAt: d.deployedAt,
@@ -396,7 +396,7 @@ export const deployMekanismsChapter = mutation({
         { chapter: 10, normalMekRange: [501, 850], challengerRange: [101, 140], miniBossRange: [11, 19], finalBossRank: 1 },
       ];
 
-      const chapterConfig = chapterConfigs.find(c => c.chapter === args.chapter);
+      const chapterConfig = chapterConfigs.find((c: any) => c.chapter === args.chapter);
       if (!chapterConfig) {
         throw new Error(`Invalid chapter number: ${args.chapter}`);
       }
@@ -497,7 +497,7 @@ export const deployMekanismsChapter = mutation({
       const chapterFinalBossNodes: any[] = [];
 
       // Normal Meks (350 per chapter) - use distribution algorithm
-      const normalMekPool = meks.filter(m =>
+      const normalMekPool = meks.filter((m: any) =>
         m.rank >= chapterConfig.normalMekRange[0] &&
         m.rank <= chapterConfig.normalMekRange[1]
       ).sort((a, b) => b.rank - a.rank); // Sort by rank descending (rarest first)
@@ -521,7 +521,7 @@ export const deployMekanismsChapter = mutation({
       });
 
       // Challengers (40 per chapter) - shuffle for variety
-      const challengerMekPool = meks.filter(m =>
+      const challengerMekPool = meks.filter((m: any) =>
         m.rank >= chapterConfig.challengerRange[0] &&
         m.rank <= chapterConfig.challengerRange[1]
       );
@@ -550,7 +550,7 @@ export const deployMekanismsChapter = mutation({
       });
 
       // Mini-Bosses (9 per chapter) - select strategically
-      const miniBossMekPool = meks.filter(m =>
+      const miniBossMekPool = meks.filter((m: any) =>
         m.rank >= chapterConfig.miniBossRange[0] &&
         m.rank <= chapterConfig.miniBossRange[1]
       );
@@ -579,7 +579,7 @@ export const deployMekanismsChapter = mutation({
       });
 
       // Final Boss (1 per chapter)
-      const finalBoss = meks.find(m => m.rank === chapterConfig.finalBossRank);
+      const finalBoss = meks.find((m: any) => m.rank === chapterConfig.finalBossRank);
       if (finalBoss) {
         chapterFinalBossNodes.push({
           chapter: args.chapter,

@@ -189,7 +189,7 @@ export const autoMergeDuplicates = mutation({
     const walletGroups = new Map<string, typeof allRecords>();
     const userFingerprints = new Map<string, typeof allRecords>();
 
-    allRecords.forEach(record => {
+    allRecords.forEach((record: any) => {
       // Group by exact address
       const existing = walletGroups.get(record.walletAddress) || [];
       existing.push(record);
@@ -243,7 +243,7 @@ export const autoMergeDuplicates = mutation({
       if (records.length <= 1) continue; // No duplicates
 
       // Filter out records that were already merged in the exact address pass
-      const remainingRecords = records.filter(r => {
+      const remainingRecords = records.filter((r: any) => {
         try {
           // Check if record still exists
           return !alreadyMerged.has(r._id as string);
@@ -453,7 +453,7 @@ export const getAllWallets = query({
 
     // Return ALL wallets without deduplication
     // Each wallet is a unique user/corporation (1 wallet = 1 corp)
-    return allMiners.map(miner => {
+    return allMiners.map((miner: any) => {
       // Calculate current gold (respecting verification status)
       let currentGold = miner.accumulatedGold || 0;
 
@@ -777,7 +777,7 @@ export const reconstructCumulativeGoldExact = mutation({
       }
 
       // Find all upgrades that happened in this interval
-      const upgradesInInterval = allUpgrades.filter(mek => {
+      const upgradesInInterval = allUpgrades.filter((mek: any) => {
         const acquiredAt = mek.levelAcquiredAt || 0;
         return acquiredAt > intervalStart && acquiredAt <= intervalEnd && mek.currentLevel > 1;
       });

@@ -73,7 +73,7 @@ export const getSnapshotHealth = query({
     }
 
     // Get unique wallets from recent snapshots
-    const uniqueSnapshotWallets = new Set(recentSnapshots.map(s => s.walletAddress));
+    const uniqueSnapshotWallets = new Set(recentSnapshots.map((s: any) => s.walletAddress));
 
     // Calculate stats
     const lastSnapshotRun = recentLogs[0];
@@ -141,7 +141,7 @@ export const getSnapshotHealth = query({
       },
 
       // Recent logs summary
-      recentLogs: recentLogs.map(log => ({
+      recentLogs: recentLogs.map((log: any) => ({
         timestamp: log.timestamp,
         totalMiners: log.totalMiners,
         updatedCount: log.updatedCount,
@@ -215,11 +215,11 @@ export const getWalletSnapshotHealth = query({
       const current = snapshots[i - 1];
       const previous = snapshots[i];
 
-      const currentMekIds = new Set(current.meks.map(m => m.assetId));
-      const previousMekIds = new Set(previous.meks.map(m => m.assetId));
+      const currentMekIds = new Set(current.meks.map((m: any) => m.assetId));
+      const previousMekIds = new Set(previous.meks.map((m: any) => m.assetId));
 
-      const meksAdded = current.meks.filter(m => !previousMekIds.has(m.assetId)).length;
-      const meksRemoved = previous.meks.filter(m => !currentMekIds.has(m.assetId)).length;
+      const meksAdded = current.meks.filter((m: any) => !previousMekIds.has(m.assetId)).length;
+      const meksRemoved = previous.meks.filter((m: any) => !currentMekIds.has(m.assetId)).length;
 
       if (meksAdded > 0 || meksRemoved > 0) {
         mekTransfers.push({
@@ -266,7 +266,7 @@ export const getWalletSnapshotHealth = query({
       },
 
       // Recent snapshots
-      recentSnapshots: snapshots.slice(0, 5).map(s => ({
+      recentSnapshots: snapshots.slice(0, 5).map((s: any) => ({
         timestamp: s.snapshotTime,
         mekCount: s.totalMekCount,
         goldPerHour: s.totalGoldPerHour,

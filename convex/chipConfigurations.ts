@@ -121,7 +121,7 @@ export const initializeMasterRanges = mutation({
     const existingRanges = await ctx.db.query("chipMasterRanges").collect();
     
     // Create a set of existing buff category IDs
-    const existingCategoryIds = new Set(existingRanges.map(r => r.buffCategoryId));
+    const existingCategoryIds = new Set(existingRanges.map((r: any) => r.buffCategoryId));
     
     const created = [];
     

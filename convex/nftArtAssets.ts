@@ -30,8 +30,8 @@ export const getArtLibrary = query({
 
     // Filter by tags if provided
     if (args.tags && args.tags.length > 0) {
-      assets = assets.filter(asset =>
-        args.tags!.some(tag => asset.tags?.includes(tag))
+      assets = assets.filter((asset: any) =>
+        args.tags!.some((tag: any) => asset.tags?.includes(tag))
       );
     }
 
@@ -78,9 +78,9 @@ export const searchArtAssets = query({
     const assets = await query.collect();
 
     // Filter by search term
-    const filtered = assets.filter(asset =>
+    const filtered = assets.filter((asset: any) =>
       asset.assetName.toLowerCase().includes(args.searchTerm.toLowerCase()) ||
-      asset.tags?.some(tag => tag.toLowerCase().includes(args.searchTerm.toLowerCase()))
+      asset.tags?.some((tag: any) => tag.toLowerCase().includes(args.searchTerm.toLowerCase()))
     );
 
     return filtered.sort((a, b) => b.uploadedAt - a.uploadedAt);
@@ -110,8 +110,8 @@ export const getArtUsageStats = query({
       usedInMainArt: variationsWithMainArt.length,
       usedInThumbnails: variationsWithThumbnail.length,
       totalUsage: new Set([
-        ...variationsWithMainArt.map(v => v._id),
-        ...variationsWithThumbnail.map(v => v._id),
+        ...variationsWithMainArt.map((v: any) => v._id),
+        ...variationsWithThumbnail.map((v: any) => v._id),
       ]).size,
       variations: [...variationsWithMainArt, ...variationsWithThumbnail],
     };

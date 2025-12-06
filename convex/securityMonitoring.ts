@@ -137,7 +137,7 @@ export const detectAnomalies = action({
             timestamp: Date.now(),
             severity: 'medium' as const
           });
-          wallets.forEach(w => suspiciousWallets.add(w));
+          wallets.forEach((w: any) => suspiciousWallets.add(w));
         }
       }
 
@@ -199,7 +199,7 @@ export const getRecentAnomalies = query({
       .order("desc");
 
     if (args.severity) {
-      query = query.filter(q => q.eq(q.field("severity"), args.severity));
+      query = query.filter((q: any) => q.eq(q.field("severity"), args.severity));
     }
 
     return await query.take(limit);
@@ -246,7 +246,7 @@ export const getSuspiciousWallets = query({
     let query = ctx.db.query("suspiciousWallets");
 
     if (args.active !== undefined) {
-      query = query.filter(q => q.eq(q.field("active"), args.active));
+      query = query.filter((q: any) => q.eq(q.field("active"), args.active));
     }
 
     return await query.collect();
@@ -297,26 +297,26 @@ export const getSecurityMetrics = query({
     const recentAnomalies = await ctx.db
       .query("securityAnomalies")
       .withIndex("by_created")
-      .filter(q => q.gt(q.field("createdAt"), last24Hours))
+      .filter((q: any) => q.gt(q.field("createdAt"), last24Hours))
       .collect();
 
     // Get suspicious wallets
     const suspiciousWallets = await ctx.db
       .query("suspiciousWallets")
-      .filter(q => q.eq(q.field("active"), true))
+      .filter((q: any) => q.eq(q.field("active"), true))
       .collect();
 
     // Get rate limit violations
     const rateLimitViolations = await ctx.db
       .query("rateLimitViolations")
-      .filter(q => q.gt(q.field("timestamp"), last24Hours))
+      .filter((q: any) => q.gt(q.field("timestamp"), last24Hours))
       .collect();
 
     // Get failed signatures from audit logs
     const failedSignatures = await ctx.db
       .query("auditLogs")
       .withIndex("by_timestamp")
-      .filter(q =>
+      .filter((q: any) =>
         q.and(
           q.gt(q.field("timestamp"), last24Hours),
           q.eq(q.field("signatureVerified"), false)
@@ -327,10 +327,10 @@ export const getSecurityMetrics = query({
     return {
       anomalyCount: recentAnomalies.length,
       anomaliesBySeverity: {
-        low: recentAnomalies.filter(a => a.severity === 'low').length,
-        medium: recentAnomalies.filter(a => a.severity === 'medium').length,
-        high: recentAnomalies.filter(a => a.severity === 'high').length,
-        critical: recentAnomalies.filter(a => a.severity === 'critical').length,
+        low: recentAnomalies.filter((a: any) => a.severity === 'low').length,
+        medium: recentAnomalies.filter((a: any) => a.severity === 'medium').length,
+        high: recentAnomalies.filter((a: any) => a.severity === 'high').length,
+        critical: recentAnomalies.filter((a: any) => a.severity === 'critical').length,
       },
       suspiciousWalletCount: suspiciousWallets.length,
       rateLimitViolations: rateLimitViolations.length,

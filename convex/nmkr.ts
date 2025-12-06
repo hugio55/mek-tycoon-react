@@ -93,13 +93,13 @@ export const getNextAvailableNFT = action({
 
       // Log state breakdown
       const stateBreakdown: Record<string, number> = {};
-      data.nfts.forEach(nft => {
+      data.nfts.forEach((nft: any) => {
         stateBreakdown[nft.state] = (stateBreakdown[nft.state] || 0) + 1;
       });
       console.log('[🔨NMKR] State breakdown:', stateBreakdown);
 
       // Filter for unminted NFTs (state === "free")
-      const availableNfts = data.nfts.filter(nft => nft.state === "free");
+      const availableNfts = data.nfts.filter((nft: any) => nft.state === "free");
 
       console.log('[🔨NMKR] Available (free) NFTs:', availableNfts.length);
 
@@ -115,7 +115,7 @@ export const getNextAvailableNFT = action({
 
       // Log first few available NFTs before sorting
       console.log('[🔨NMKR] First 3 available NFTs (unsorted):',
-        availableNfts.slice(0, 3).map(n => ({
+        availableNfts.slice(0, 3).map((n: any) => ({
           name: n.tokenname || n.displayname,
           state: n.state,
           uid: n.uid
@@ -131,7 +131,7 @@ export const getNextAvailableNFT = action({
 
       // Log first few NFTs after sorting
       console.log('[🔨NMKR] First 3 NFTs (sorted):',
-        sortedNfts.slice(0, 3).map(n => ({
+        sortedNfts.slice(0, 3).map((n: any) => ({
           name: n.tokenname || n.displayname,
           number: extractNftNumber(n.tokenname || n.displayname),
           state: n.state,
@@ -293,9 +293,9 @@ export const getProjectStats = action({
 
       const stats = {
         totalNfts: data.nfts.length,
-        available: data.nfts.filter(n => n.state === "free").length,
-        minted: data.nfts.filter(n => n.state === "minted" || n.state === "sold").length,
-        reserved: data.nfts.filter(n => n.state === "reserved").length,
+        available: data.nfts.filter((n: any) => n.state === "free").length,
+        minted: data.nfts.filter((n: any) => n.state === "minted" || n.state === "sold").length,
+        reserved: data.nfts.filter((n: any) => n.state === "reserved").length,
       };
 
       console.log('[🔨NMKR] Project stats:', stats);
@@ -448,7 +448,7 @@ export const parseNMKRCSV = action({
     console.log("[🔨NMKR] Parsing NMKR CSV export");
 
     const lines = args.csvContent.trim().split("\n");
-    const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
+    const headers = lines[0].split(",").map((h: any) => h.trim().toLowerCase());
 
     console.log("[🔨NMKR] CSV headers:", headers);
 

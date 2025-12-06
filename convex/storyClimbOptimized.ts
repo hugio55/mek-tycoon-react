@@ -265,7 +265,7 @@ export const getChapterSummaries = query({
       .withIndex("by_deployment_id", q => q.eq("deploymentId", deploymentId))
       .collect();
 
-    return chapters.map(c => ({
+    return chapters.map((c: any) => ({
       chapter: c.chapter,
       nodeCount: c.nodeCount,
       createdAt: c.createdAt,
@@ -309,12 +309,12 @@ export const getMigrationStatus = query({
     return {
       legacy: {
         totalDeployments: oldDeployments.length,
-        activeDeployments: oldDeployments.filter(d => d.status === "active").length,
+        activeDeployments: oldDeployments.filter((d: any) => d.status === "active").length,
       },
       optimized: {
         totalDeployments: newDeployments.length,
         totalChapters: chapters.length,
-        activeDeployments: newDeployments.filter(d => d.status === "active").length,
+        activeDeployments: newDeployments.filter((d: any) => d.status === "active").length,
       },
       migrationNeeded: oldDeployments.length > newDeployments.length,
       deploymentsToMigrate: oldDeployments.length - newDeployments.length,

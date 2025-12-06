@@ -122,7 +122,7 @@ export const getLogsByType = query({
   handler: async (ctx, args) => {
     const query = ctx.db
       .query("auditLogs")
-      .filter(q => q.eq(q.field("type"), args.type))
+      .filter((q: any) => q.eq(q.field("type"), args.type))
       .order("desc");
 
     if (args.limit) {
@@ -142,7 +142,7 @@ export const getWalletLogs = query({
   handler: async (ctx, args) => {
     const query = ctx.db
       .query("auditLogs")
-      .filter(q => q.eq(q.field("stakeAddress"), args.stakeAddress))
+      .filter((q: any) => q.eq(q.field("stakeAddress"), args.stakeAddress))
       .order("desc");
 
     if (args.limit) {
@@ -161,7 +161,7 @@ export const getRecentRateChanges = query({
   handler: async (ctx, args) => {
     const query = ctx.db
       .query("auditLogs")
-      .filter(q => q.eq(q.field("type"), "rateChange"))
+      .filter((q: any) => q.eq(q.field("type"), "rateChange"))
       .order("desc");
 
     if (args.limit) {
@@ -181,7 +181,7 @@ export const getLastVerification = query({
     return await ctx.db
       .query("auditLogs")
       .withIndex("", (q: any) => q.eq("stakeAddress", args.stakeAddress))
-      .filter(q => q.eq(q.field("type"), "verification"))
+      .filter((q: any) => q.eq(q.field("type"), "verification"))
       .order("desc")
       .first();
   }

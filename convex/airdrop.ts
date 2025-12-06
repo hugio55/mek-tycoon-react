@@ -75,7 +75,7 @@ export const getAllSubmissions = query({
 
     // Filter by status if provided
     if (args.status) {
-      submissions = submissions.filter(s => s.status === args.status);
+      submissions = submissions.filter((s: any) => s.status === args.status);
     }
 
     // Get user details for each submission
@@ -108,10 +108,10 @@ export const getSubmissionStats = query({
 
     const stats = {
       total: submissions.length,
-      pending: submissions.filter(s => s.status === "pending").length,
-      processing: submissions.filter(s => s.status === "processing").length,
-      sent: submissions.filter(s => s.status === "sent").length,
-      failed: submissions.filter(s => s.status === "failed").length,
+      pending: submissions.filter((s: any) => s.status === "pending").length,
+      processing: submissions.filter((s: any) => s.status === "processing").length,
+      sent: submissions.filter((s: any) => s.status === "sent").length,
+      failed: submissions.filter((s: any) => s.status === "failed").length,
     };
 
     return stats;
@@ -127,7 +127,7 @@ export const getEligibleUsersCount = query({
       .collect();
 
     const now = Date.now();
-    const eligible = miners.filter(miner => {
+    const eligible = miners.filter((miner: any) => {
       // Calculate current gold (including ongoing accumulation if verified)
       let currentGold = miner.accumulatedGold || 0;
 
@@ -158,7 +158,7 @@ export const getEligibleUsersList = query({
       .collect();
 
     const now = Date.now();
-    const eligible = miners.filter(miner => {
+    const eligible = miners.filter((miner: any) => {
       // Calculate current gold (including ongoing accumulation if verified)
       let currentGold = miner.accumulatedGold || 0;
 
@@ -177,7 +177,7 @@ export const getEligibleUsersList = query({
     });
 
     // Return with calculated current gold
-    return eligible.map(miner => {
+    return eligible.map((miner: any) => {
       let currentGold = miner.accumulatedGold || 0;
 
       if (miner.isBlockchainVerified === true) {

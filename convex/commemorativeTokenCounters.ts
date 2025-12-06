@@ -9,7 +9,7 @@ export const getAllDesigns = query({
 
     // Extract unique designs
     const designs = new Set<string>();
-    tokens.forEach(token => {
+    tokens.forEach((token: any) => {
       if (token.design) {
         designs.add(token.design);
       }

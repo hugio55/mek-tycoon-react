@@ -525,7 +525,7 @@ export const getCampaignInventory = query({
 
     // Log first few items to see their status
     const sample = inventory.slice(0, 3);
-    console.log('[📊QUERY] Sample items:', sample.map(nft => ({
+    console.log('[📊QUERY] Sample items:', sample.map((nft: any) => ({
       name: nft.name,
       nftUid: nft.nftUid,
       status: nft.status,
@@ -636,7 +636,7 @@ export const backfillInventoryImages = mutation({
       .collect();
 
     // Create a map for quick lookup
-    const imageMap = new Map(args.images.map(img => [img.nftUid, img.imageUrl]));
+    const imageMap = new Map(args.images.map((img: any) => [img.nftUid, img.imageUrl]));
 
     let updated = 0;
     let skipped = 0;
@@ -772,7 +772,7 @@ export const debugReservations = query({
       .collect();
 
     return {
-      reservations: reservations.map(r => ({
+      reservations: reservations.map((r: any) => ({
         nftInventoryId: r.nftInventoryId,
         nftNumber: r.nftNumber,
         status: r.status,
@@ -1107,7 +1107,7 @@ export const analyzeDuplicateNFTs = query({
       .map(([uid, records]) => ({
         nftUid: uid,
         count: records.length,
-        records: records.map(r => ({
+        records: records.map((r: any) => ({
           _id: r._id,
           name: r.name,
           nftNumber: r.nftNumber,
@@ -1123,7 +1123,7 @@ export const analyzeDuplicateNFTs = query({
       .map(([name, records]) => ({
         name: name,
         count: records.length,
-        records: records.map(r => ({
+        records: records.map((r: any) => ({
           _id: r._id,
           nftUid: r.nftUid,
           nftNumber: r.nftNumber,
@@ -1135,7 +1135,7 @@ export const analyzeDuplicateNFTs = query({
       }));
 
     // Detailed breakdown of all records
-    const allRecordsDetails = allRecords.map(r => ({
+    const allRecordsDetails = allRecords.map((r: any) => ({
       _id: r._id,
       name: r.name,
       nftUid: r.nftUid,
@@ -1242,7 +1242,7 @@ export const cleanupDuplicateNFTs = mutation({
       const deleteRecords = sorted.slice(1);
 
       // CRITICAL FIX: Check if any duplicate has "sold" status but the kept record doesn't
-      const hasSoldDuplicate = deleteRecords.some(r => r.status === "sold");
+      const hasSoldDuplicate = deleteRecords.some((r: any) => r.status === "sold");
       const needsStatusTransfer = hasSoldDuplicate && keepRecord.status !== "sold";
 
       if (needsStatusTransfer) {

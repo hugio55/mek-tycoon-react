@@ -20,7 +20,7 @@ export const getWalletDebugInfo = query({
       )
       .collect();
 
-    return records.map(record => ({
+    return records.map((record: any) => ({
       id: record._id,
       walletAddress: record.walletAddress,
       walletType: record.walletType,

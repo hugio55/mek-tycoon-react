@@ -113,10 +113,10 @@ export const getEventStats = query({
     const totalRemaining = variations.reduce((sum, v) => sum + v.supplyRemaining, 0);
 
     const totalRevenue = purchases
-      .filter(p => p.status === "completed")
+      .filter((p: any) => p.status === "completed")
       .reduce((sum, p) => sum + p.priceAda, 0);
 
-    const uniqueBuyers = new Set(purchases.map(p => p.walletAddress)).size;
+    const uniqueBuyers = new Set(purchases.map((p: any) => p.walletAddress)).size;
 
     return {
       totalSupply,

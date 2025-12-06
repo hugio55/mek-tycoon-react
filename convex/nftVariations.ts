@@ -52,9 +52,9 @@ export const getSupplyStats = query({
       .collect();
 
     const stats = {
-      easy: variations.find(v => v.difficulty === "easy"),
-      medium: variations.find(v => v.difficulty === "medium"),
-      hard: variations.find(v => v.difficulty === "hard"),
+      easy: variations.find((v: any) => v.difficulty === "easy"),
+      medium: variations.find((v: any) => v.difficulty === "medium"),
+      hard: variations.find((v: any) => v.difficulty === "hard"),
       total: {
         supplyTotal: variations.reduce((sum, v) => sum + v.supplyTotal, 0),
         supplyMinted: variations.reduce((sum, v) => sum + v.supplyMinted, 0),
@@ -79,7 +79,7 @@ export const getAvailableVariations = query({
     const allVariations = await query.collect();
 
     // Filter to only variations with remaining supply
-    const availableVariations = allVariations.filter(v => v.supplyRemaining > 0);
+    const availableVariations = allVariations.filter((v: any) => v.supplyRemaining > 0);
 
     return availableVariations.sort((a, b) => a.displayOrder - b.displayOrder);
   },

@@ -74,12 +74,12 @@ export const runNightlySnapshot = internalAction({
           console.log(`[Snapshot Debug] Wallet ${stakeAddress}:`, {
             totalMeksInBlockchain: walletData.meks.length,
             mekLevelsFound: allMekLevels.length,
-            mekLevelsAssetIds: allMekLevels.map(l => l.assetId.substring(0, 20)),
+            mekLevelsAssetIds: allMekLevels.map((l: any) => l.assetId.substring(0, 20)),
           });
 
           // Also get existing ownedMeks for metadata (policyId, imageUrl, variations, etc.)
           const existingMeksMap = new Map(
-            miner.ownedMeks.map(mek => [mek.assetId, mek])
+            miner.ownedMeks.map((mek: any) => [mek.assetId, mek])
           );
 
           // For each blockchain Mek, use level data from mekLevels (source of truth)
@@ -416,8 +416,8 @@ export const updateMinerAfterSnapshot = internalMutation({
 
     // CRITICAL FIX: Rebuild ownedMeks array with updated level boost data from snapshot
     // This ensures the UI shows correct level boosts after snapshots run
-    const existingMeksMap = new Map(miner.ownedMeks.map(mek => [mek.assetId, mek]));
-    const updatedOwnedMeks = args.mekDetails.map(detail => {
+    const existingMeksMap = new Map(miner.ownedMeks.map((mek: any) => [mek.assetId, mek]));
+    const updatedOwnedMeks = args.mekDetails.map((detail: any) => {
       const existingMek = existingMeksMap.get(detail.assetId);
 
       if (existingMek) {
@@ -703,12 +703,12 @@ export const runManualSnapshot = internalAction({
           console.log(`[Snapshot Debug] Wallet ${stakeAddress}:`, {
             totalMeksInBlockchain: walletData.meks.length,
             mekLevelsFound: allMekLevels.length,
-            mekLevelsAssetIds: allMekLevels.map(l => l.assetId.substring(0, 20)),
+            mekLevelsAssetIds: allMekLevels.map((l: any) => l.assetId.substring(0, 20)),
           });
 
           // Also get existing ownedMeks for metadata (policyId, imageUrl, variations, etc.)
           const existingMeksMap = new Map(
-            miner.ownedMeks.map(mek => [mek.assetId, mek])
+            miner.ownedMeks.map((mek: any) => [mek.assetId, mek])
           );
 
           // For each blockchain Mek, use level data from mekLevels (source of truth)
@@ -1030,7 +1030,7 @@ export const processSingleBatch = internalAction({
           });
 
           const mekLevelsMap = new Map(allMekLevels.map((level: any) => [level.assetId, level]));
-          const existingMeksMap = new Map(miner.ownedMeks.map(mek => [mek.assetId, mek]));
+          const existingMeksMap = new Map(miner.ownedMeks.map((mek: any) => [mek.assetId, mek]));
 
           // Build mek details
           const mekDetails = [];
@@ -1227,7 +1227,7 @@ export const getSnapshotLogs = query({
       .order("desc")
       .take(limit);
 
-    return logs.map(log => ({
+    return logs.map((log: any) => ({
       timestamp: log.timestamp,
       date: new Date(log.timestamp).toISOString(),
       totalMiners: log.totalMiners,
@@ -1289,8 +1289,8 @@ export const calculateGoldFromHistory = query({
       } else {
         // For subsequent snapshots, only credit Meks that were present in BOTH snapshots
         const previousSnapshot = sortedSnapshots[i - 1];
-        const previousMekIds = new Set(previousSnapshot.meks.map(m => m.assetId));
-        const continuousMeks = snapshot.meks.filter(m => previousMekIds.has(m.assetId));
+        const previousMekIds = new Set(previousSnapshot.meks.map((m: any) => m.assetId));
+        const continuousMeks = snapshot.meks.filter((m: any) => previousMekIds.has(m.assetId));
 
         // Calculate rate only for continuous Meks
         const continuousRate = continuousMeks.reduce((sum, mek) => sum + mek.goldPerHour, 0);
@@ -1341,7 +1341,7 @@ export const runBatchAntiCheat = internalMutation({
 
         if (existingWallet && existingWallet !== wallet.walletAddress) {
           // Conflict detected!
-          const existingConflict = conflicts.find(c => c.assetId === mek.assetId);
+          const existingConflict = conflicts.find((c: any) => c.assetId === mek.assetId);
           if (existingConflict) {
             if (!existingConflict.wallets.includes(wallet.walletAddress)) {
               existingConflict.wallets.push(wallet.walletAddress);
@@ -1375,7 +1375,7 @@ export const runBatchAntiCheat = internalMutation({
 
       // Get wallet records to check last active time
       const walletRecords = await Promise.all(
-        conflict.wallets.map(addr =>
+        conflict.wallets.map((addr: any) =>
           ctx.db
             .query("goldMining")
             .withIndex("by_wallet", q => q.eq("walletAddress", addr))
@@ -1385,7 +1385,7 @@ export const runBatchAntiCheat = internalMutation({
 
       // Sort by last active time (most recent first)
       const sortedWallets = walletRecords
-        .filter(w => w !== null)
+        .filter((w: any) => w !== null)
         .sort((a, b) => (b!.lastActiveTime || 0) - (a!.lastActiveTime || 0));
 
       if (sortedWallets.length === 0) continue;
@@ -1397,7 +1397,7 @@ export const runBatchAntiCheat = internalMutation({
 
       // Remove from other wallets
       for (const wallet of removeWallets) {
-        const filteredMeks = wallet.ownedMeks.filter(m => m.assetId !== conflict.assetId);
+        const filteredMeks = wallet.ownedMeks.filter((m: any) => m.assetId !== conflict.assetId);
         const newRate = filteredMeks.reduce((sum, m) => sum + (m.goldPerHour || 0), 0);
 
         await ctx.db.patch(wallet._id, {

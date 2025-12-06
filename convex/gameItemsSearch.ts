@@ -30,7 +30,7 @@ export const searchGameItems = query({
     const bodyVariations = new Set<string>();
     const itemVariations = new Set<string>();
 
-    meks.forEach(mek => {
+    meks.forEach((mek: any) => {
       if (mek.headVariation && mek.headVariation.toLowerCase().includes(searchLower)) {
         headVariations.add(mek.headVariation);
       }
@@ -42,7 +42,7 @@ export const searchGameItems = query({
       }
     });
 
-    headVariations.forEach(head => {
+    headVariations.forEach((head: any) => {
       results.push({
         id: `head-${head}`,
         name: `${head} Head`,
@@ -51,7 +51,7 @@ export const searchGameItems = query({
       });
     });
 
-    bodyVariations.forEach(body => {
+    bodyVariations.forEach((body: any) => {
       results.push({
         id: `body-${body}`,
         name: `${body} Body`,
@@ -60,7 +60,7 @@ export const searchGameItems = query({
       });
     });
 
-    itemVariations.forEach(item => {
+    itemVariations.forEach((item: any) => {
       results.push({
         id: `trait-${item}`,
         name: `${item} Trait`,
@@ -74,7 +74,7 @@ export const searchGameItems = query({
       .query("variationsReference")
       .collect();
 
-    variations.forEach(variation => {
+    variations.forEach((variation: any) => {
       if (variation.name?.toLowerCase().includes(searchLower)) {
         const typeLabel = variation.type === 'head' ? 'Head' : 
                          variation.type === 'body' ? 'Body' : 'Trait';
@@ -82,7 +82,7 @@ export const searchGameItems = query({
         const itemId = `${variation.type}-${variation.variationId}-${variation.name}`;
         
         // Check if we already have this item
-        if (!results.some(r => r.id === itemId)) {
+        if (!results.some((r: any) => r.id === itemId)) {
           results.push({
             id: itemId,
             name: `${variation.name} ${typeLabel}`,
@@ -99,7 +99,7 @@ export const searchGameItems = query({
       .query("craftingRecipes")
       .collect();
 
-    recipes.forEach(recipe => {
+    recipes.forEach((recipe: any) => {
       if (recipe.name?.toLowerCase().includes(searchLower)) {
         results.push({
           id: `recipe-${recipe._id}`,
@@ -115,7 +115,7 @@ export const searchGameItems = query({
       .query("inventory")
       .take(100);
 
-    inventoryItems.forEach(item => {
+    inventoryItems.forEach((item: any) => {
       if (item.itemVariation?.toLowerCase().includes(searchLower)) {
         results.push({
           id: `inventory-${item._id}`,
@@ -134,7 +134,7 @@ export const searchGameItems = query({
       "Time Essence", "Space Essence", "Life Essence", "Death Essence"
     ];
 
-    essenceTypes.forEach(essence => {
+    essenceTypes.forEach((essence: any) => {
       if (essence.toLowerCase().includes(searchLower)) {
         results.push({
           id: `essence-${essence.toLowerCase().replace(' ', '-')}`,
@@ -158,7 +158,7 @@ export const searchGameItems = query({
       { name: "Legendary Frame", type: "Cosmetic" },
     ];
 
-    commonItems.forEach(item => {
+    commonItems.forEach((item: any) => {
       if (item.name.toLowerCase().includes(searchLower)) {
         results.push({
           id: `common-${item.name.toLowerCase().replace(/\s+/g, '-')}`,

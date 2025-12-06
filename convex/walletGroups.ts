@@ -501,7 +501,7 @@ export const removeWalletFromGroup = mutation({
     let primaryTransferred = false;
     if (group && group.primaryWallet === args.walletAddress) {
       // Find the next wallet (sorted by addedAt)
-      const remaining = allWallets.filter(w => w.walletAddress !== args.walletAddress);
+      const remaining = allWallets.filter((w: any) => w.walletAddress !== args.walletAddress);
       remaining.sort((a, b) => a.addedAt - b.addedAt);
 
       if (remaining.length > 0) {
@@ -586,7 +586,7 @@ export const getGroupWallets = query({
       return a.addedAt - b.addedAt;
     });
 
-    return wallets.map(w => ({
+    return wallets.map((w: any) => ({
       walletAddress: w.walletAddress,
       nickname: w.nickname,
       addedAt: w.addedAt,
@@ -635,7 +635,7 @@ export const getMyGroupWallets = query({
       return a.addedAt - b.addedAt;
     });
 
-    return wallets.map(w => ({
+    return wallets.map((w: any) => ({
       walletAddress: w.walletAddress,
       nickname: w.nickname,
       addedAt: w.addedAt,

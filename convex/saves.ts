@@ -30,7 +30,7 @@ export const listSaves = query({
       .order("desc")
       .collect();
     
-    return saves.map(save => ({
+    return saves.map((save: any) => ({
       ...save,
       formattedDate: new Date(save.createdAt).toLocaleString(),
       formattedSize: formatBytes(save.sizeInBytes),

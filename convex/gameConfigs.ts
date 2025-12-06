@@ -43,7 +43,7 @@ export const getAllGameConfigs = query({
         miniboss: activeDurationConfig.miniboss,
         finalboss: activeDurationConfig.finalboss,
       } : null,
-      durationConfigs: allDurationConfigs.map(config => ({
+      durationConfigs: allDurationConfigs.map((config: any) => ({
         name: config.name,
         isActive: config.isActive,
         createdAt: config.createdAt,

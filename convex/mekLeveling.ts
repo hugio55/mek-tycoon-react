@@ -116,7 +116,7 @@ export const getGroupMekLevels = query({
         .withIndex("", (q: any) => q.eq("groupId", membership.groupId))
         .collect();
 
-      walletsToQuery = allMemberships.map(m => m.walletAddress);
+      walletsToQuery = allMemberships.map((m: any) => m.walletAddress);
     }
 
     // Get Mek levels from all wallets

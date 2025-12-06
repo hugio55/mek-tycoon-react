@@ -16,8 +16,8 @@ export const verifyVariationMigration = query({
       { name: "Nothing", expectedId: 288, expectedType: "item" },
     ];
 
-    const results = checks.map(check => {
-      const variation = variations.find(v => v.name === check.name);
+    const results = checks.map((check: any) => {
+      const variation = variations.find((v: any) => v.name === check.name);
       return {
         name: check.name,
         expectedId: check.expectedId,
@@ -30,7 +30,7 @@ export const verifyVariationMigration = query({
       };
     });
 
-    const allPass = results.every(r => r.pass);
+    const allPass = results.every((r: any) => r.pass);
 
     return {
       totalVariations: variations.length,

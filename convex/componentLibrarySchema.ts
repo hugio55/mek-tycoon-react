@@ -348,7 +348,7 @@ export const componentLibraryTables = {
  * 1. Get all components in a category:
  *    ctx.db.query("components")
  *      .withIndex("by_category", q => q.eq("category", "button"))
- *      .filter(q => q.eq(q.field("isArchived"), false))
+ *      .filter((q: any) => q.eq(q.field("isArchived"), false))
  *      .collect()
  *
  * 2. Get most used components:
@@ -372,7 +372,7 @@ export const componentLibraryTables = {
  * 5. Get user's color preferences:
  *    ctx.db.query("userPreferences")
  *      .withIndex("by_type", q => q.eq("preferenceType", "color"))
- *      .filter(q => q.gt(q.field("confidenceScore"), 0.8))
+ *      .filter((q: any) => q.gt(q.field("confidenceScore"), 0.8))
  *      .collect()
  *
  * 6. Find where a component is used:
@@ -384,7 +384,7 @@ export const componentLibraryTables = {
  * 7. Search components by name:
  *    ctx.db.query("components")
  *      .withSearchIndex("search_name", q => q.search("name", searchTerm))
- *      .filter(q => q.eq(q.field("isPublic"), true))
+ *      .filter((q: any) => q.eq(q.field("isPublic"), true))
  *      .collect()
  *
  * 8. Get transformation session history:

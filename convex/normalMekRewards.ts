@@ -102,7 +102,7 @@ export const getMekVariationData = query({
   },
   handler: async (ctx, args) => {
     // Find the mek at the specified rank
-    const selectedMek = (mekRarityMaster as MekData[]).find(m => m.rank === args.rank);
+    const selectedMek = (mekRarityMaster as MekData[]).find((m: any) => m.rank === args.rank);
 
     if (!selectedMek) {
       return null;
@@ -113,7 +113,7 @@ export const getMekVariationData = query({
     const bodyCounts: Record<string, number> = {};
     const traitCounts: Record<string, number> = {};
 
-    (mekRarityMaster as MekData[]).forEach(mek => {
+    (mekRarityMaster as MekData[]).forEach((mek: any) => {
       if (mek.rank >= 1 && mek.rank <= 4000) {
         headCounts[mek.head] = (headCounts[mek.head] || 0) + 1;
         bodyCounts[mek.body] = (bodyCounts[mek.body] || 0) + 1;
@@ -144,7 +144,7 @@ export const getMekVariationData = query({
 
     return {
       mek: selectedMek,
-      probabilities: parts.map(p => ({
+      probabilities: parts.map((p: any) => ({
         name: p.name,
         type: p.type,
         count: p.count,
@@ -164,10 +164,10 @@ export const getMekByRankOrId = query({
     let selectedMek: MekData | undefined;
 
     if (args.searchType === "rank") {
-      selectedMek = (mekRarityMaster as MekData[]).find(m => m.rank === parseInt(args.value));
+      selectedMek = (mekRarityMaster as MekData[]).find((m: any) => m.rank === parseInt(args.value));
     } else {
       // Search by asset ID
-      selectedMek = (mekRarityMaster as MekData[]).find(m => m.assetId === args.value);
+      selectedMek = (mekRarityMaster as MekData[]).find((m: any) => m.assetId === args.value);
     }
 
     if (!selectedMek) {
@@ -179,7 +179,7 @@ export const getMekByRankOrId = query({
     const bodyCounts: Record<string, number> = {};
     const traitCounts: Record<string, number> = {};
 
-    (mekRarityMaster as MekData[]).forEach(mek => {
+    (mekRarityMaster as MekData[]).forEach((mek: any) => {
       if (mek.rank >= 1 && mek.rank <= 4000) {
         headCounts[mek.head] = (headCounts[mek.head] || 0) + 1;
         bodyCounts[mek.body] = (bodyCounts[mek.body] || 0) + 1;
@@ -210,7 +210,7 @@ export const getMekByRankOrId = query({
 
     return {
       mek: selectedMek,
-      probabilities: parts.map(p => ({
+      probabilities: parts.map((p: any) => ({
         name: p.name,
         type: p.type,
         count: p.count,
@@ -229,7 +229,7 @@ export const getAllVariationCounts = query({
     const traitCounts: Record<string, number> = {};
 
     // Count all variations from ranks 1-4000
-    (mekRarityMaster as MekData[]).forEach(mek => {
+    (mekRarityMaster as MekData[]).forEach((mek: any) => {
       if (mek.rank >= 1 && mek.rank <= 4000) {
         headCounts[mek.head] = (headCounts[mek.head] || 0) + 1;
         bodyCounts[mek.body] = (bodyCounts[mek.body] || 0) + 1;
@@ -238,7 +238,7 @@ export const getAllVariationCounts = query({
     });
 
     return {
-      totalMeks: (mekRarityMaster as MekData[]).filter(m => m.rank >= 1 && m.rank <= 4000).length,
+      totalMeks: (mekRarityMaster as MekData[]).filter((m: any) => m.rank >= 1 && m.rank <= 4000).length,
       uniqueHeads: Object.keys(headCounts).length,
       uniqueBodies: Object.keys(bodyCounts).length,
       uniqueTraits: Object.keys(traitCounts).length,

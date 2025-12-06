@@ -115,7 +115,7 @@ export const listDurationConfigs = query({
       .order("desc")
       .collect();
 
-    return configs.map(config => ({
+    return configs.map((config: any) => ({
       name: config.name,
       isActive: config.isActive,
       createdAt: config.createdAt,

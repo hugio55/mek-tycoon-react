@@ -155,7 +155,7 @@ export const validateSessionByAddress = query({
       .withIndex("by_stake_and_active", q =>
         q.eq("stakeAddress", args.stakeAddress).eq("isActive", true)
       )
-      .filter(q =>
+      .filter((q: any) =>
         q.and(
           q.gt(q.field("expiresAt"), now),
           q.eq(q.field("revokedAt"), undefined)
@@ -398,10 +398,10 @@ export const getActiveSessions = query({
       .withIndex("by_stake_and_active", q =>
         q.eq("stakeAddress", args.stakeAddress).eq("isActive", true)
       )
-      .filter(q => q.gt(q.field("expiresAt"), now))
+      .filter((q: any) => q.gt(q.field("expiresAt"), now))
       .collect();
 
-    return sessions.map(session => ({
+    return sessions.map((session: any) => ({
       sessionId: session.sessionId,
       platform: session.platform,
       deviceId: session.deviceId,

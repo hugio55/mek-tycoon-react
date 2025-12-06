@@ -45,10 +45,10 @@ export const getPurchases = query({
 
     // Apply non-indexed filters
     if (args.dateStart) {
-      purchases = purchases.filter(p => p.purchasedAt >= args.dateStart!);
+      purchases = purchases.filter((p: any) => p.purchasedAt >= args.dateStart!);
     }
     if (args.dateEnd) {
-      purchases = purchases.filter(p => p.purchasedAt <= args.dateEnd!);
+      purchases = purchases.filter((p: any) => p.purchasedAt <= args.dateEnd!);
     }
 
     // Sort by purchase date descending (newest first)
@@ -171,15 +171,15 @@ export const getPurchaseStats = query({
 
     const stats = {
       total: purchases.length,
-      pending: purchases.filter(p => p.status === "pending").length,
-      confirmed: purchases.filter(p => p.status === "confirmed").length,
-      completed: purchases.filter(p => p.status === "completed").length,
-      failed: purchases.filter(p => p.status === "failed").length,
-      refunded: purchases.filter(p => p.status === "refunded").length,
+      pending: purchases.filter((p: any) => p.status === "pending").length,
+      confirmed: purchases.filter((p: any) => p.status === "confirmed").length,
+      completed: purchases.filter((p: any) => p.status === "completed").length,
+      failed: purchases.filter((p: any) => p.status === "failed").length,
+      refunded: purchases.filter((p: any) => p.status === "refunded").length,
       totalRevenueAda: purchases
-        .filter(p => p.status === "completed")
+        .filter((p: any) => p.status === "completed")
         .reduce((sum, p) => sum + p.priceAda, 0),
-      uniqueBuyers: new Set(purchases.map(p => p.walletAddress)).size,
+      uniqueBuyers: new Set(purchases.map((p: any) => p.walletAddress)).size,
       byDifficulty: {
         easy: 0,
         medium: 0,
@@ -217,14 +217,14 @@ export const getRevenueAnalytics = query({
 
     // Filter by date range
     if (args.dateStart) {
-      purchases = purchases.filter(p => p.purchasedAt >= args.dateStart!);
+      purchases = purchases.filter((p: any) => p.purchasedAt >= args.dateStart!);
     }
     if (args.dateEnd) {
-      purchases = purchases.filter(p => p.purchasedAt <= args.dateEnd!);
+      purchases = purchases.filter((p: any) => p.purchasedAt <= args.dateEnd!);
     }
 
     // Only completed purchases
-    purchases = purchases.filter(p => p.status === "completed");
+    purchases = purchases.filter((p: any) => p.status === "completed");
 
     const totalRevenue = purchases.reduce((sum, p) => sum + p.priceAda, 0);
     const averagePrice = purchases.length > 0 ? totalRevenue / purchases.length : 0;
@@ -241,8 +241,8 @@ export const getRevenueAnalytics = query({
       averagePrice,
       totalSales: purchases.length,
       revenueByDate,
-      highestSale: Math.max(...purchases.map(p => p.priceAda), 0),
-      lowestSale: purchases.length > 0 ? Math.min(...purchases.map(p => p.priceAda)) : 0,
+      highestSale: Math.max(...purchases.map((p: any) => p.priceAda), 0),
+      lowestSale: purchases.length > 0 ? Math.min(...purchases.map((p: any) => p.priceAda)) : 0,
     };
   },
 });

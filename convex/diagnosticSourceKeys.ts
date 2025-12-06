@@ -60,11 +60,11 @@ export const checkSourceKeyData = query({
       // Summary stats
       stats: {
         totalMeks: record.ownedMeks.length,
-        meksWithSourceKey: record.ownedMeks.filter(m => !!m.sourceKey).length,
-        meksWithSourceKeyBase: record.ownedMeks.filter(m => !!m.sourceKeyBase).length,
-        meksWithHeadVariation: record.ownedMeks.filter(m => !!m.headVariation).length,
-        meksWithBodyVariation: record.ownedMeks.filter(m => !!m.bodyVariation).length,
-        meksWithItemVariation: record.ownedMeks.filter(m => !!m.itemVariation).length
+        meksWithSourceKey: record.ownedMeks.filter((m: any) => !!m.sourceKey).length,
+        meksWithSourceKeyBase: record.ownedMeks.filter((m: any) => !!m.sourceKeyBase).length,
+        meksWithHeadVariation: record.ownedMeks.filter((m: any) => !!m.headVariation).length,
+        meksWithBodyVariation: record.ownedMeks.filter((m: any) => !!m.bodyVariation).length,
+        meksWithItemVariation: record.ownedMeks.filter((m: any) => !!m.itemVariation).length
       }
     };
   }

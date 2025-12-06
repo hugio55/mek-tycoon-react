@@ -107,8 +107,8 @@ export const applyBuffsToVariations = mutation({
       const bSpecial = b.name.includes('???') || b.name.includes('Ultimate') ? 1000 : 0;
 
       // Gold, 24K, Royal etc are rare
-      const aRare = ['Gold', '24K', 'Royal', 'Crimson', 'Hacker', 'Terminator'].some(r => a.name.includes(r)) ? 100 : 0;
-      const bRare = ['Gold', '24K', 'Royal', 'Crimson', 'Hacker', 'Terminator'].some(r => b.name.includes(r)) ? 100 : 0;
+      const aRare = ['Gold', '24K', 'Royal', 'Crimson', 'Hacker', 'Terminator'].some((r: any) => a.name.includes(r)) ? 100 : 0;
+      const bRare = ['Gold', '24K', 'Royal', 'Crimson', 'Hacker', 'Terminator'].some((r: any) => b.name.includes(r)) ? 100 : 0;
 
       // Sort by special status, then rarity, then alphabetically
       return (aSpecial + aRare) - (bSpecial + bRare) || a.name.localeCompare(b.name);
@@ -129,8 +129,8 @@ export const applyBuffsToVariations = mutation({
       // Store buff percentage in database
       const existingVariation = await ctx.db
         .query("variationBuffs")
-        .filter(q => q.eq(q.field("variationId"), variation.id))
-        .filter(q => q.eq(q.field("category"), variation.category))
+        .filter((q: any) => q.eq(q.field("variationId"), variation.id))
+        .filter((q: any) => q.eq(q.field("category"), variation.category))
         .first();
 
       if (existingVariation) {
@@ -160,7 +160,7 @@ export const getVariationBuffs = query({
     if (args.category) {
       const variations = await query.collect();
       return variations
-        .filter(v => v.category === args.category)
+        .filter((v: any) => v.category === args.category)
         .sort((a, b) => a.buffPercent - b.buffPercent); // Sort by buff percent (common to rare)
     }
 

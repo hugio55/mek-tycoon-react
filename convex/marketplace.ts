@@ -25,13 +25,13 @@ export const getActiveListings = query({
     // Filter by item type if specified
     let filtered = listings;
     if (args.itemType && args.itemType !== "all") {
-      filtered = filtered.filter(l => l.itemType === args.itemType);
+      filtered = filtered.filter((l: any) => l.itemType === args.itemType);
     }
 
     // Filter by search term if specified
     if (args.searchTerm) {
       const searchLower = args.searchTerm.toLowerCase();
-      filtered = filtered.filter(l => 
+      filtered = filtered.filter((l: any) => 
         l.itemVariation?.toLowerCase().includes(searchLower) ||
         l.itemType.toLowerCase().includes(searchLower) ||
         l.essenceType?.toLowerCase().includes(searchLower)
@@ -408,7 +408,7 @@ export const createListing = mutation({
         .withIndex("", (q: any) => q.eq("walletAddress", seller.walletAddress))
         .collect();
 
-      const balance = existingBalances.find(b => b.variationName === variationName);
+      const balance = existingBalances.find((b: any) => b.variationName === variationName);
       const currentAmount = balance?.accumulatedAmount || 0;
 
       if (currentAmount < args.quantity) {

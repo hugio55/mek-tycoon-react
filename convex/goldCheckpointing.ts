@@ -77,7 +77,7 @@ export const calculateAccumulation = query({
     const checkpoints = await ctx.db
       .query("goldCheckpoints")
       .withIndex("by_wallet", q => q.eq("walletAddress", args.walletAddress))
-      .filter(q => {
+      .filter((q: any) => {
         let conditions = q.eq(q.field("walletAddress"), args.walletAddress);
 
         if (args.startTime) {
@@ -149,8 +149,8 @@ export const getVerificationStats = query({
 
     const checkpoints = await query.collect();
 
-    const verified = checkpoints.filter(cp => cp.verified).length;
-    const pending = checkpoints.filter(cp => !cp.verified).length;
+    const verified = checkpoints.filter((cp: any) => cp.verified).length;
+    const pending = checkpoints.filter((cp: any) => !cp.verified).length;
     const totalGold = checkpoints.reduce((sum, cp) => sum + cp.goldAmount, 0);
 
     return {

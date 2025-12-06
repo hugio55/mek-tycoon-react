@@ -23,7 +23,7 @@ export const saveTableData = mutation({
   },
   handler: async (ctx, args) => {
     // Delete all existing data for the categories being saved
-    const categoriesToUpdate = [...new Set(args.data.map(item => item.category))];
+    const categoriesToUpdate = [...new Set(args.data.map((item: any) => item.category))];
     for (const category of categoriesToUpdate) {
       const existing = await ctx.db
         .query("mekTreeTables")

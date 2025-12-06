@@ -10,7 +10,7 @@ export const getAllVersions = query({
       .order("desc")
       .collect();
 
-    return versions.map(v => ({
+    return versions.map((v: any) => ({
       _id: v._id,
       name: v.name,
       createdAt: v.createdAt,

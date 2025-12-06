@@ -40,7 +40,7 @@ export const consolidateToStakeAddress = action({
     if (bestMeks.length > 0) {
       // Calculate using the ACTUAL gold mining rates
       const goldRates = await ctx.runQuery(api.goldMining.calculateGoldRates, {
-        meks: bestMeks.map(mek => ({
+        meks: bestMeks.map((mek: any) => ({
           assetId: mek.assetId,
           rarityRank: mek.rarityRank || 5000
         }))
@@ -68,7 +68,7 @@ export const consolidateToStakeAddress = action({
     // FIXED: Actions CAN call mutations directly via ctx.runMutation
     const result = await ctx.runMutation(api.finalWalletFix.replaceAllWithOne, {
       stakeAddress: args.stakeAddress,
-      walletIds: allWallets.map(w => w._id),
+      walletIds: allWallets.map((w: any) => w._id),
       meks: bestMeks,
       goldPerHour: finalGoldRate
     });

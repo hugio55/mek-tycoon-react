@@ -139,7 +139,7 @@ export const fetchOnChainRates = action({
     // For now, calculate rates based on our architecture
 
     // Filter out meks without mekNumber
-    const validMeks = args.mekAssets.filter(m => m.mekNumber !== undefined);
+    const validMeks = args.mekAssets.filter((m: any) => m.mekNumber !== undefined);
 
     if (validMeks.length < args.mekAssets.length) {
       console.warn(`[fetchOnChainRates] Filtered out ${args.mekAssets.length - validMeks.length} meks without mekNumber`);

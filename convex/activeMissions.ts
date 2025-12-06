@@ -13,7 +13,7 @@ export const getActiveMissions = query({
 
     // Filter out expired missions
     const now = Date.now();
-    const activeMissions = missions.filter(mission => {
+    const activeMissions = missions.filter((mission: any) => {
       const endTime = mission.startTime + mission.duration;
       return endTime > now;
     });

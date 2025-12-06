@@ -77,7 +77,7 @@ class RateLimiter {
     }
 
     // Clean up old requests from queue (older than 1 second)
-    this.requestQueue = this.requestQueue.filter(time => now - time < 1000);
+    this.requestQueue = this.requestQueue.filter((time: any) => now - time < 1000);
 
     // Check per-second limit
     if (this.requestQueue.length >= BLOCKFROST_CONFIG.rateLimit.maxRequestsPerSecond) {

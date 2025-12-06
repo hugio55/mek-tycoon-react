@@ -55,7 +55,7 @@ export const getSnapshotHistory = query({
     // Filter by company name if provided
     if (args.companyName) {
       const searchTerm = args.companyName.toLowerCase();
-      return snapshotsWithCompany.filter(snapshot =>
+      return snapshotsWithCompany.filter((snapshot: any) =>
         snapshot.companyName?.toLowerCase().includes(searchTerm)
       );
     }
@@ -95,13 +95,13 @@ export const getWalletSnapshotTimeline = query({
       .order("desc")
       .collect();
 
-    return snapshots.map(snapshot => ({
+    return snapshots.map((snapshot: any) => ({
       timestamp: snapshot.snapshotTime,
       mekCount: snapshot.totalMekCount,
       goldPerHour: snapshot.totalGoldPerHour,
       spendableGold: snapshot.spendableGold,
       cumulativeGoldEarned: snapshot.cumulativeGoldEarned,
-      meks: snapshot.meks.map(mek => ({
+      meks: snapshot.meks.map((mek: any) => ({
         assetId: mek.assetId,
         assetName: mek.assetName,
         goldPerHour: mek.goldPerHour,
@@ -166,13 +166,13 @@ export const restoreFromSnapshot = mutation({
 
     // Create a map of existing meks to preserve required fields
     const existingMeksMap = new Map(
-      miner.ownedMeks.map(mek => [mek.assetId, mek])
+      miner.ownedMeks.map((mek: any) => [mek.assetId, mek])
     );
 
     // Restore the miner's COMPLETE game state from snapshot
     await ctx.db.patch(miner._id, {
       totalGoldPerHour: snapshot.totalGoldPerHour,
-      ownedMeks: snapshot.meks.map(mek => {
+      ownedMeks: snapshot.meks.map((mek: any) => {
         const existingMek = existingMeksMap.get(mek.assetId);
         return {
           assetId: mek.assetId,
@@ -210,7 +210,7 @@ export const restoreFromSnapshot = mutation({
       .collect();
 
     // Step 2: Create a Set of assetIds in the snapshot
-    const snapshotAssetIds = new Set(snapshot.meks.map(m => m.assetId));
+    const snapshotAssetIds = new Set(snapshot.meks.map((m: any) => m.assetId));
 
     // Step 3: Delete mekLevels records for Meks NOT in the snapshot (sold/transferred)
     for (const level of existingLevels) {
@@ -222,7 +222,7 @@ export const restoreFromSnapshot = mutation({
     // Step 4: Update or create mekLevels for ALL Meks in snapshot
     const now = Date.now();
     for (const mek of snapshot.meks) {
-      const existingLevel = existingLevels.find(l => l.assetId === mek.assetId);
+      const existingLevel = existingLevels.find((l: any) => l.assetId === mek.assetId);
       const mekLevel = mek.currentLevel || 1;
       const mekNumber = parseInt(mek.assetName.replace(/\D/g, '')) || 0;
 

@@ -56,7 +56,7 @@ export const mergeUserDuplicates = mutation({
 
     // Find ALL other wallets that might be duplicates
     const allWallets = await ctx.db.query("goldMining").collect();
-    const duplicates = allWallets.filter(w => {
+    const duplicates = allWallets.filter((w: any) => {
       if (w.walletAddress === args.stakeAddress) return false; // Skip the stake wallet itself
 
       // Check if it's a duplicate by various patterns
@@ -120,7 +120,7 @@ export const mergeUserDuplicates = mutation({
       success: true,
       message: `Deleted ${duplicates.length} duplicate wallets`,
       deletedCount: duplicates.length,
-      deletedWallets: duplicates.map(d => d.walletAddress.substring(0, 30) + "...")
+      deletedWallets: duplicates.map((d: any) => d.walletAddress.substring(0, 30) + "...")
     };
   }
 });

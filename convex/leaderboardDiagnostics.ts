@@ -22,7 +22,7 @@ export const diagnoseLeaderboard = query({
       .slice(0, 10);
 
     return {
-      cache: cachedEntries.map(entry => ({
+      cache: cachedEntries.map((entry: any) => ({
         rank: entry.rank,
         walletAddress: entry.walletAddress,
         username: entry.username,
@@ -31,7 +31,7 @@ export const diagnoseLeaderboard = query({
         mekCount: entry.metadata?.mekDetails?.total,
         lastUpdated: new Date(entry.lastUpdated).toISOString(),
       })),
-      goldMining: topMiners.map(miner => ({
+      goldMining: topMiners.map((miner: any) => ({
         walletAddress: miner.walletAddress,
         companyName: miner.companyName,
         companyNameType: typeof miner.companyName,
@@ -70,12 +70,12 @@ export const findCorruptedCompanyNames = query({
     const allMiners = await ctx.db.query("goldMining").collect();
 
     const corrupted = allMiners
-      .filter(miner => {
+      .filter((miner: any) => {
         if (!miner.companyName) return false;
         // Check if companyName is just a number
         return /^\d+$/.test(miner.companyName);
       })
-      .map(miner => ({
+      .map((miner: any) => ({
         walletAddress: miner.walletAddress,
         companyName: miner.companyName,
         mekCount: miner.ownedMeks?.length || 0,

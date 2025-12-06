@@ -45,7 +45,7 @@ export const runDailyBackup = internalMutation({
       // Get all gold mining data for backup
       const allGoldMining = await ctx.db.query("goldMining").collect();
 
-      const uniqueWallets = new Set(allGoldMining.map(gm => gm.walletAddress)).size;
+      const uniqueWallets = new Set(allGoldMining.map((gm: any) => gm.walletAddress)).size;
 
       // Create the backup
       const backupId = await ctx.db.insert("goldBackups", {

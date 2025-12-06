@@ -9,7 +9,7 @@ export const getAllPlayers = query({
   handler: async (ctx) => {
     const allMiners = await ctx.db.query("goldMining").collect();
 
-    return allMiners.map(miner => ({
+    return allMiners.map((miner: any) => ({
       walletAddress: miner.walletAddress,
       corporationName: miner.companyName || "Unnamed Corporation",
       stakeAddress: null, // goldMining doesn't have stake address stored

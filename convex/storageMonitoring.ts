@@ -33,13 +33,13 @@ export const getStorageStats = query({
 
     // Calculate counts from samples
     const ownershipHistoryCount = ownershipHistorySample.length;
-    const ownershipHistoryRecent24h = ownershipHistorySample.filter(s => s.snapshotTime >= oneDayAgo).length;
-    const ownershipHistoryRecent7d = ownershipHistorySample.filter(s => s.snapshotTime >= sevenDaysAgo).length;
-    const ownershipHistoryRecent30d = ownershipHistorySample.filter(s => s.snapshotTime >= thirtyDaysAgo).length;
+    const ownershipHistoryRecent24h = ownershipHistorySample.filter((s: any) => s.snapshotTime >= oneDayAgo).length;
+    const ownershipHistoryRecent7d = ownershipHistorySample.filter((s: any) => s.snapshotTime >= sevenDaysAgo).length;
+    const ownershipHistoryRecent30d = ownershipHistorySample.filter((s: any) => s.snapshotTime >= thirtyDaysAgo).length;
 
     const goldSnapshotsCount = goldSnapshotsSample.length;
-    const goldSnapshotsRecent24h = goldSnapshotsSample.filter(s => s.timestamp >= oneDayAgo).length;
-    const goldSnapshotsRecent7d = goldSnapshotsSample.filter(s => s.timestamp >= sevenDaysAgo).length;
+    const goldSnapshotsRecent24h = goldSnapshotsSample.filter((s: any) => s.timestamp >= oneDayAgo).length;
+    const goldSnapshotsRecent7d = goldSnapshotsSample.filter((s: any) => s.timestamp >= sevenDaysAgo).length;
 
     const goldCheckpointsCount = goldCheckpointsSample;
     const snapshotLogsCount = snapshotLogsSample;
@@ -147,7 +147,7 @@ export const getOwnershipHistoryByWallet = query({
       .order("desc")
       .take(limit);
 
-    return snapshots.map(snapshot => ({
+    return snapshots.map((snapshot: any) => ({
       snapshotTime: snapshot.snapshotTime,
       date: new Date(snapshot.snapshotTime).toISOString(),
       mekCount: snapshot.totalMekCount,

@@ -7,8 +7,8 @@ export const getAllSourceKeys = query({
     
     // Extract just the sourceKeyBase values
     const sourceKeys = meks
-      .map(mek => mek.sourceKeyBase)
-      .filter(key => key !== undefined && key !== null)
+      .map((mek: any) => mek.sourceKeyBase)
+      .filter((key: any) => key !== undefined && key !== null)
       .sort();
     
     return {
@@ -25,8 +25,8 @@ export const getMissingSourceKeys = query({
     
     // Find meks without sourceKeyBase
     const missing = meks
-      .filter(mek => !mek.sourceKeyBase)
-      .map(mek => ({
+      .filter((mek: any) => !mek.sourceKeyBase)
+      .map((mek: any) => ({
         assetId: mek.assetId,
         assetName: mek.assetName,
         sourceKey: mek.sourceKey

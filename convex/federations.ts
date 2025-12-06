@@ -345,7 +345,7 @@ async function updateFederationVariations(ctx: any, federationId: string) {
     .collect();
 
   // Get all wallet addresses directly from memberships (1 wallet = 1 corp)
-  const allWallets: string[] = memberships.map(m => m.walletAddress);
+  const allWallets: string[] = memberships.map((m: any) => m.walletAddress);
 
   // Get all Meks owned by these wallets
   const allMeks = await ctx.db

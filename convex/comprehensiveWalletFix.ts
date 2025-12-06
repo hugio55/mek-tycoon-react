@@ -58,7 +58,7 @@ export const fixAllWalletIssues = action({
     let correctGoldRate = 0;
     if (bestMeks.length > 0) {
       const goldRates = await ctx.runQuery(api.goldMining.calculateGoldRates, {
-        meks: bestMeks.map(mek => ({
+        meks: bestMeks.map((mek: any) => ({
           assetId: mek.assetId,
           rarityRank: mek.rarityRank || 5000
         }))
@@ -75,7 +75,7 @@ export const fixAllWalletIssues = action({
     // FIXED: Actions CAN call mutations directly via ctx.runMutation
     await ctx.runMutation(api.comprehensiveWalletFix.recreateWallet, {
       stakeAddress: args.stakeAddress,
-      walletIds: allWallets.map(w => w._id),
+      walletIds: allWallets.map((w: any) => w._id),
       meks: bestMeks,
       goldPerHour: correctGoldRate,
       accumulatedGold: totalAccumulatedGold
@@ -111,7 +111,7 @@ export const findAllRelatedWallets = query({
     // 3. Any address containing the stake suffix
     const stakeSuffix = args.stakeAddress.slice(-8); // Last 8 chars
 
-    return allWallets.filter(w =>
+    return allWallets.filter((w: any) =>
       w.walletAddress === args.stakeAddress || // Exact stake match
       w.walletAddress.includes(stakeSuffix) || // Contains suffix
       w.walletAddress.includes('ughgq076') || // Your specific suffix
@@ -175,7 +175,7 @@ export const cleanSnapshotHistory = mutation({
 
     // Find entries that belong to this user but use wrong address format
     const stakeSuffix = args.stakeAddress.slice(-8);
-    const wrongEntries = allHistory.filter(h =>
+    const wrongEntries = allHistory.filter((h: any) =>
       h.walletAddress !== args.stakeAddress &&
       (h.walletAddress.includes(stakeSuffix) ||
        h.walletAddress.includes('ughgq076') ||

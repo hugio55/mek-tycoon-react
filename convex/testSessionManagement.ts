@@ -8,7 +8,7 @@ export const testSchemaBackwardCompatibility = query({
     // Test reading users with new optional fields
     const users = await ctx.db.query("users").take(5);
 
-    const results = users.map(user => ({
+    const results = users.map((user: any) => ({
       walletAddress: user.walletAddress,
       hasOldFields: {
         walletType: !!user.walletType,
@@ -26,7 +26,7 @@ export const testSchemaBackwardCompatibility = query({
     // Test reading walletSignatures with new optional fields
     const signatures = await ctx.db.query("walletSignatures").take(5);
 
-    const signatureResults = signatures.map(sig => ({
+    const signatureResults = signatures.map((sig: any) => ({
       stakeAddress: sig.stakeAddress,
       hasOldFields: {
         nonce: !!sig.nonce,

@@ -17,7 +17,7 @@ export const calculateAndStoreRarity = mutation({
     const bodyCounts: Record<string, number> = {};
     const traitCounts: Record<string, number> = {};
 
-    allMeks.forEach(mek => {
+    allMeks.forEach((mek: any) => {
       // Count heads
       if (mek.head) {
         headCounts[mek.head] = (headCounts[mek.head] || 0) + 1;

@@ -106,7 +106,7 @@ export const loadSaveIntoTable = mutation({
     }
 
     // Get categories to update from the save data
-    const categoriesToUpdate = [...new Set(save.data.map(item => item.category))];
+    const categoriesToUpdate = [...new Set(save.data.map((item: any) => item.category))];
 
     // Delete existing data for those categories
     for (const category of categoriesToUpdate) {

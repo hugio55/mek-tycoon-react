@@ -216,12 +216,12 @@ export const getClaimStats = query({
       .query("commemorativeNFTClaims")
       .collect();
 
-    const uniqueWallets = new Set(allClaims.map(c => c.walletAddress)).size;
+    const uniqueWallets = new Set(allClaims.map((c: any) => c.walletAddress)).size;
     const totalClaims = allClaims.length;
 
     // Group by NFT name
     const claimsByNFT: Record<string, number> = {};
-    allClaims.forEach(claim => {
+    allClaims.forEach((claim: any) => {
       claimsByNFT[claim.nftName] = (claimsByNFT[claim.nftName] || 0) + 1;
     });
 
@@ -291,7 +291,7 @@ export const deleteTestClaims = mutation({
       .collect();
 
     // Filter for test/mock claims
-    const claimsToDelete = testClaims.filter(claim =>
+    const claimsToDelete = testClaims.filter((claim: any) =>
       claim.transactionHash.startsWith('mock_') ||
       claim.transactionHash.startsWith('debug_') ||
       claim.transactionHash.startsWith('test_') ||

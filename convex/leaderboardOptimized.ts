@@ -128,14 +128,14 @@ export const updateLeaderboardCache = internalMutation({
     const users = await ctx.db.query("users").collect();
     
     // Skip processing for users with no meaningful data based on category
-    const relevantUsers = users.filter(user => {
+    const relevantUsers = users.filter((user: any) => {
       switch (args.category) {
         case "gold":
           return user.gold > 0;
         case "meks":
           return user.walletAddress !== "";
         case "essence":
-          return Object.values(user.totalEssence || {}).some(v => v > 0);
+          return Object.values(user.totalEssence || {}).some((v: any) => v > 0);
         case "achievements":
           return true; // Everyone can have achievements
         case "topMeks":
@@ -262,7 +262,7 @@ export const updateLeaderboardCache = internalMutation({
       .take(1000); // Limit to prevent timeout
     
     // Delete in batches
-    const deletePromises = existingCache.map(entry => ctx.db.delete(entry._id));
+    const deletePromises = existingCache.map((entry: any) => ctx.db.delete(entry._id));
     await Promise.all(deletePromises);
     
     // OPTIMIZATION: Cache top 50 for display, but keep all data for accurate rankings

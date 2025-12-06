@@ -25,7 +25,7 @@ export const investigateAllData = query({
 
     // PHASE 2: Get active reservations from inventory table (new system)
     // Reservations are now stored directly in inventory rows with status="reserved"
-    const allReservations = allInventory.filter(inv =>
+    const allReservations = allInventory.filter((inv: any) =>
       inv.status === "reserved" && inv.reservedBy && inv.reservedAt && inv.expiresAt
     );
 
@@ -41,7 +41,7 @@ export const investigateAllData = query({
         totalReservations: allReservations.length,
         totalCampaigns: allCampaigns.length,
       },
-      claims: allClaims.map(claim => ({
+      claims: allClaims.map((claim: any) => ({
         _id: claim._id,
         campaignId: claim.campaignId,
         walletAddress: claim.walletAddress,
@@ -52,7 +52,7 @@ export const investigateAllData = query({
         claimedAtDate: new Date(claim.claimedAt).toISOString(),
         metadata: claim.metadata,
       })),
-      inventory: allInventory.map(inv => ({
+      inventory: allInventory.map((inv: any) => ({
         _id: inv._id,
         campaignId: inv.campaignId,
         nftUid: inv.nftUid,
@@ -65,7 +65,7 @@ export const investigateAllData = query({
         createdAt: inv.createdAt,
         createdAtDate: new Date(inv.createdAt).toISOString(),
       })),
-      reservations: allReservations.map(inv => {
+      reservations: allReservations.map((inv: any) => {
         // Helper function to format date in EST with 12-hour time
         const formatDateEST = (timestamp: number) => {
           return new Date(timestamp).toLocaleString('en-US', {
@@ -108,7 +108,7 @@ export const investigateAllData = query({
           paymentWindowClosedAt: inv.paymentWindowClosedAt,
         };
       }),
-      campaigns: allCampaigns.map(camp => ({
+      campaigns: allCampaigns.map((camp: any) => ({
         _id: camp._id,
         name: camp.name,
         description: camp.description,
@@ -315,7 +315,7 @@ export const fixBrokenReservations = mutation({
       .withIndex("", (q: any) => q.eq("status", "reserved"))
       .collect();
 
-    const brokenReservations = allReserved.filter(inv => !inv.expiresAt);
+    const brokenReservations = allReserved.filter((inv: any) => !inv.expiresAt);
 
     console.log('[FIX BROKEN] Found', brokenReservations.length, 'broken reservations with undefined expiresAt');
 
