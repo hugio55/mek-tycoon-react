@@ -13,7 +13,7 @@ The directory `mek-tycoon-react-staging` is the PRIMARY and MAIN working directo
 
 **Naming note**: Despite the word "staging" in the directory name, this is our primary development environment where ALL current work happens.
 
-**⚠️ UNIFIED DATABASE**: As of December 2024, we use a SINGLE database (Sturgeon/Production) for both localhost development and live site. There is no separate dev database. All changes to the backend affect real users immediately.
+**⚠️ UNIFIED DATABASE**: As of December 2025, we use a SINGLE database (Sturgeon/Production) for both localhost development and live site. There is no separate dev database. All changes to the backend affect real users immediately.
 
 ## Dev Server Management
 **CRITICAL: User starts their own dev servers. DO NOT automatically run background dev server tasks.**
@@ -76,7 +76,7 @@ npm run dev:all
 ## 🚨 CRITICAL: UNIFIED DATABASE - ALL CHANGES ARE PRODUCTION 🚨
 **EVERY BACKEND CHANGE AFFECTS REAL USERS IMMEDIATELY**
 
-### Database Architecture (UNIFIED - December 2024)
+### Database Architecture (UNIFIED - December 2025)
 
 **This project uses a SINGLE unified Convex database:**
 
@@ -88,7 +88,7 @@ npm run dev:all
 
 **Trout (wry-trout-962.convex.cloud)** = **DEPRECATED/UNUSED**
 - Previously used as a separate dev database
-- No longer in use as of December 2024
+- No longer in use as of December 2025
 - Do NOT point `.env.local` to Trout
 
 ---

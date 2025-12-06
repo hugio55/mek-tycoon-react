@@ -287,7 +287,7 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
       setShowSaveDialog(true);
     } else if (state.selectedTemplateId) {
       // We're editing an existing template - just overwrite
-      handleSaveMekTemplate('overwrite', state.selectedTemplateId);
+      handleSaveMekTemplate('overwrite', state.selectedTemplateId as Id<"mekTreeTemplates">);
     } else {
       // New template with unique name - save directly
       handleSaveMekTemplate('new', null);
