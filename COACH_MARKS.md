@@ -16,7 +16,9 @@ A "hole" cut out of the dark overlay, revealing and highlighting one UI element.
 A single tutorial moment: one spotlight + one arrow + one tooltip. Steps can be standalone or part of a sequence.
 
 ### Sequence
-A chain of steps that guide users through a flow. Example: "Click Forge" → navigates to Forge page → "Select a Mek" → "Confirm Craft"
+A linear chain of steps that guide users through a flow. Example: "Click Forge" → navigates to Forge page → "Select a Mek" → "Confirm Craft"
+
+**Note**: Sequences are LINEAR only (no branching). User clicks element → proceeds to next step.
 
 ### Mandatory vs Optional
 - **Mandatory**: User MUST click the highlighted element to proceed. Dark area clicks do nothing.
@@ -46,6 +48,42 @@ Finds element by selector, then applies manual offsets.
 
 ---
 
+## Visual Style: Space Age / Liquid Glass
+
+**Reference Component**: `EssenceDistributionLightboxSpaceAge.tsx`
+
+### Key Styling Elements
+```css
+/* Liquid Glass Container */
+background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+backdrop-filter: blur(30px);
+border: 1px solid rgba(255,255,255,0.12);
+border-radius: 20px;
+box-shadow: 0 25px 80px rgba(0,0,0,0.6), 0 0 60px rgba(34,211,238,0.05);
+
+/* Cyan Accent Color */
+color: #22d3ee; /* cyan-400 */
+text-shadow: 0 0 30px rgba(34, 211, 238, 0.5);
+
+/* Dark Backdrop */
+background: rgba(0,0,0,0.70);
+backdrop-filter: blur(20px);
+```
+
+### Fonts
+- **Headers**: `font-family: 'Orbitron', sans-serif`
+- **Body/Labels**: `font-family: 'Play', sans-serif`
+- **Buttons/Controls**: `font-family: 'Saira', sans-serif`
+
+### Button Style
+```css
+background: linear-gradient(135deg, rgba(34,211,238,0.2), rgba(34,211,238,0.1));
+border: 1px solid rgba(255,255,255,0.1);
+color: #22d3ee;
+```
+
+---
+
 ## Database Schema
 
 ### coachMarkSteps
@@ -55,6 +93,7 @@ Stores all tutorial step definitions.
 |-------|------|-------------|
 | stepKey | string | Unique identifier (e.g., "onboard-forge-button") |
 | name | string | Human-readable name for admin |
+| description | string | Admin notes about this step |
 | pageRoute | string | Which page (e.g., "/home", "/forge") |
 | sequenceId | string? | Which sequence this belongs to |
 | sequenceOrder | number | Order within sequence |
@@ -63,15 +102,20 @@ Stores all tutorial step definitions.
 | manualPosition | object? | { x, y, width, height } in percentages/pixels |
 | positionOffset | object? | { top, left, right, bottom } fine-tuning |
 | spotlightShape | enum | "rectangle" \| "circle" \| "pill" |
-| spotlightPadding | number | Extra space around spotlight |
+| spotlightPadding | number | Extra space around spotlight (default: 8) |
 | arrowPosition | enum | "top" \| "bottom" \| "left" \| "right" \| "none" |
+| arrowOffset | number? | Fine-tune arrow position |
 | tooltipText | string | Main instruction |
+| tooltipTitle | string? | Optional title above instruction |
 | tooltipPosition | enum | "above" \| "below" \| "left" \| "right" \| "auto" |
 | isMandatory | boolean | Must click element to proceed |
 | allowBackdropClick | boolean | Can click dark area to skip |
 | showSkipButton | boolean | Show skip option |
+| showNextButton | boolean | Show next button for non-mandatory |
 | triggerCondition | enum | "first-login" \| "first-visit-page" \| "manual" |
 | isActive | boolean | Enable/disable step |
+| createdAt | number | Timestamp |
+| updatedAt | number | Timestamp |
 
 ### coachMarkProgress
 Tracks each user's tutorial progress.
@@ -82,7 +126,9 @@ Tracks each user's tutorial progress.
 | completedSteps | string[] | Array of completed stepKeys |
 | skippedSteps | string[] | Array of skipped stepKeys |
 | currentSequence | string? | Active sequence ID |
+| currentStepIndex | number? | Current position in sequence |
 | tutorialCompleted | boolean | Finished all mandatory onboarding |
+| lastUpdated | number | Timestamp |
 
 ### coachMarkSequences
 Defines step groupings.
@@ -91,9 +137,11 @@ Defines step groupings.
 |-------|------|-------------|
 | sequenceId | string | Unique identifier |
 | name | string | Display name |
+| description | string | Admin notes |
 | stepOrder | string[] | Ordered array of stepKeys |
 | isOnboarding | boolean | Auto-trigger on first login |
 | isActive | boolean | Enable/disable sequence |
+| createdAt | number | Timestamp |
 
 ---
 
@@ -105,12 +153,13 @@ The main visual component. Uses React portal to render at document.body.
 - Calculates spotlight position from target element or manual coords
 - Handles resize/scroll to keep spotlight aligned
 - Manages click events (backdrop vs spotlight area)
+- Space Age liquid glass styling
 
 ### CoachMarkArrow
 Animated arrow pointing to spotlight.
 - Bouncing/pulsing animation
-- Configurable direction
-- Yellow/gold industrial styling
+- Configurable direction (top/bottom/left/right)
+- Cyan glow effect matching Space Age theme
 
 ### CoachMarkTooltip
 Instruction popup near spotlight.
@@ -119,6 +168,7 @@ Instruction popup near spotlight.
 - Skip button (if allowed)
 - Next button (for non-mandatory)
 - Step counter ("2 of 5")
+- Space Age liquid glass styling
 
 ### CoachMarkProvider (Context)
 Global state management.
@@ -134,6 +184,8 @@ Global state management.
 ### Step Management
 - Create/edit/delete steps
 - Visual element picker tool
+- Manual position sliders (X%, Y%, width, height)
+- Offset adjustments for fine-tuning
 - Live preview mode
 - Reorder steps in sequences
 
@@ -141,10 +193,81 @@ Global state management.
 - Create/edit sequences
 - Assign steps to sequences
 - Set as onboarding sequence
+- Drag-and-drop reordering
 
 ### Progress Viewer
 - See which users completed which steps
 - Reset progress for testing
+
+---
+
+## Implementation Phases
+
+### Phase 1: Database Schema & Backend ← CURRENT
+- Add tables to `convex/schema.ts`
+- Create `convex/coachMarks.ts` (user queries/mutations)
+- Create `convex/coachMarksAdmin.ts` (admin CRUD)
+
+### Phase 2: Core Components
+- `CoachMarkOverlay.tsx` - main visual overlay
+- `CoachMarkArrow.tsx` - animated pointer
+- `CoachMarkTooltip.tsx` - instruction bubble
+
+### Phase 3: Context Provider
+- `CoachMarkContext.tsx` - global state management
+- Integration with Convex backend
+- Route change detection
+
+### Phase 4: Admin Panel
+- `CoachMarksAdmin.tsx` - admin interface
+- Step editor with all options
+- Visual element picker
+- Preview mode
+
+### Phase 5: Integration
+- Add provider to app layout
+- First login detection
+- Add `data-tutorial` attributes to key elements
+
+### Phase 6: Testing & Polish
+- Test new user flow
+- Handle edge cases
+- Mobile responsiveness
+
+---
+
+## Files to Create
+
+```
+convex/
+  coachMarks.ts           # User queries/mutations
+  coachMarksAdmin.ts      # Admin CRUD functions
+
+src/components/
+  CoachMarkOverlay.tsx
+  CoachMarkArrow.tsx
+  CoachMarkTooltip.tsx
+  CoachMarksAdmin.tsx
+
+src/contexts/
+  CoachMarkContext.tsx
+
+src/app/admin/
+  (add CoachMarksAdmin to admin tabs)
+```
+
+---
+
+## Trigger Conditions
+
+### first-login
+Runs when corporation has no progress record. Starts onboarding sequence automatically.
+
+### first-visit-page
+Triggers first time user visits specific page. Good for page-specific tutorials.
+
+### manual
+Only triggers via code. For admin testing or special circumstances.
 
 ---
 
@@ -175,56 +298,6 @@ For elements that are hard to target (like canvas areas or dynamic content):
 
 ---
 
-## Trigger Conditions
-
-### first-login
-Runs when corporation has no progress record. Starts onboarding sequence automatically.
-
-### first-visit-page
-Triggers first time user visits specific page. Good for page-specific tutorials.
-
-### manual
-Only triggers via code. For admin testing or special circumstances.
-
-### after-step
-Triggers after another step completes. Enables chained tutorials.
-
----
-
-## Implementation Status
-
-- [ ] Phase 1: Database schema
-- [ ] Phase 2: Core overlay component
-- [ ] Phase 3: Context provider
-- [ ] Phase 4: Admin panel
-- [ ] Phase 5: First login integration
-- [ ] Phase 6: Testing & polish
-
----
-
-## Files
-
-```
-convex/
-  schema.ts               # Add coachMarkSteps, coachMarkProgress, coachMarkSequences
-  coachMarks.ts           # User queries/mutations
-  coachMarksAdmin.ts      # Admin CRUD
-
-src/components/
-  CoachMarkOverlay.tsx
-  CoachMarkArrow.tsx
-  CoachMarkTooltip.tsx
-  CoachMarksAdmin.tsx
-
-src/contexts/
-  CoachMarkContext.tsx
-
-src/app/admin/
-  (add CoachMarksAdmin to admin tabs)
-```
-
----
-
 ## Design Decisions
 
 ### Why SVG Mask?
@@ -241,8 +314,10 @@ Ensures overlay is always on top, not affected by parent z-index stacking contex
 ### Why data-tutorial Attributes?
 More reliable than CSS selectors. Won't break if class names change. Self-documenting.
 
+### Why Linear Sequences Only?
+Keeps system simple. Most onboarding flows are linear anyway. Can add branching later if needed.
+
 ---
 
-## Related Documentation
-- Plan file: `PLAN_coach_marks.md`
-- Admin panel: `/admin` (Coach Marks tab - to be added)
+## Admin Panel Location
+`/admin` → Coach Marks tab (to be added)

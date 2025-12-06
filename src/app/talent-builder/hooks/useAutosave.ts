@@ -66,17 +66,26 @@ export function useAutosave(options: UseAutosaveOptions = {}): UseAutosaveReturn
   // State for hasUnsavedChanges (not a ref, so it triggers re-renders)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  // Convex mutation for syncing templates
+  const updateTemplate = useMutation(api.mekTreeTemplates.updateTemplate);
+
   // Refs to access current state in callbacks
   const nodesRef = useRef(state.nodes);
   const connectionsRef = useRef(state.connections);
   const currentSaveNameRef = useRef(state.currentSaveName);
   const builderModeRef = useRef(state.builderMode);
+  const selectedTemplateIdRef = useRef(state.selectedTemplateId);
+  const templateNameRef = useRef(state.templateName);
+  const viewportDimensionsRef = useRef(state.viewportDimensions);
 
   // Tracking refs
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const fileBackupTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const convexSyncTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedNodesRef = useRef<string>('');
   const lastSavedConnectionsRef = useRef<string>('');
+  const lastConvexSyncNodesRef = useRef<string>('');
+  const lastConvexSyncConnectionsRef = useRef<string>('');
 
   // Update refs when state changes
   useEffect(() => {
@@ -84,7 +93,10 @@ export function useAutosave(options: UseAutosaveOptions = {}): UseAutosaveReturn
     connectionsRef.current = state.connections;
     currentSaveNameRef.current = state.currentSaveName;
     builderModeRef.current = state.builderMode;
-  }, [state.nodes, state.connections, state.currentSaveName, state.builderMode]);
+    selectedTemplateIdRef.current = state.selectedTemplateId;
+    templateNameRef.current = state.templateName;
+    viewportDimensionsRef.current = state.viewportDimensions;
+  }, [state.nodes, state.connections, state.currentSaveName, state.builderMode, state.selectedTemplateId, state.templateName, state.viewportDimensions]);
 
   // Perform localStorage save
   const performLocalStorageSave = useCallback(() => {
@@ -170,6 +182,52 @@ export function useAutosave(options: UseAutosaveOptions = {}): UseAutosaveReturn
     }
   }, [dispatch, maxAutoBackups]);
 
+  // Perform Convex sync (only when a template is saved/open)
+  const performConvexSync = useCallback(async () => {
+    const templateId = selectedTemplateIdRef.current;
+    const currentNodes = nodesRef.current;
+    const currentConnections = connectionsRef.current;
+
+    // Only sync if we have a saved template open
+    if (!templateId || currentNodes.length === 0) {
+      return;
+    }
+
+    // Check if anything actually changed since last sync
+    const nodesJson = JSON.stringify(currentNodes);
+    const connectionsJson = JSON.stringify(currentConnections);
+
+    if (nodesJson === lastConvexSyncNodesRef.current && connectionsJson === lastConvexSyncConnectionsRef.current) {
+      console.log('[ConvexSync] No changes since last sync, skipping');
+      return;
+    }
+
+    try {
+      console.log('[ConvexSync] Syncing template to Convex...', templateId);
+
+      // Sanitize nodes to match Convex schema
+      const sanitizedNodes = sanitizeNodesForConvex(currentNodes);
+
+      await updateTemplate({
+        templateId: templateId as Id<"mekTreeTemplates">,
+        name: templateNameRef.current || undefined,
+        nodes: sanitizedNodes,
+        connections: currentConnections,
+        viewportDimensions: viewportDimensionsRef.current
+      });
+
+      // Update tracking refs
+      lastConvexSyncNodesRef.current = nodesJson;
+      lastConvexSyncConnectionsRef.current = connectionsJson;
+
+      dispatch({ type: 'SET_LAST_CONVEX_SYNC', payload: new Date() });
+      console.log(`[ConvexSync] Synced ${currentNodes.length} nodes to Convex`);
+    } catch (e) {
+      console.error('[ConvexSync] Error:', e);
+      // Don't set error state for background sync - just log it
+    }
+  }, [dispatch, updateTemplate]);
+
   // Debounced localStorage save - triggers on every change
   useEffect(() => {
     if (!enabled) return;
@@ -218,13 +276,34 @@ export function useAutosave(options: UseAutosaveOptions = {}): UseAutosaveReturn
     };
   }, [enabled, fileBackupInterval, performFileBackup]);
 
+  // Convex sync timer - every 5 minutes (only when template is open)
+  useEffect(() => {
+    if (!enabled) return;
+
+    convexSyncTimerRef.current = setInterval(() => {
+      // Only sync if a template is open (selectedTemplateId exists)
+      if (selectedTemplateIdRef.current && nodesRef.current.length > 0) {
+        console.log('[ConvexSync] Triggered by 5-minute timer');
+        performConvexSync();
+      }
+    }, convexSyncInterval);
+
+    return () => {
+      if (convexSyncTimerRef.current) {
+        clearInterval(convexSyncTimerRef.current);
+      }
+    };
+  }, [enabled, convexSyncInterval, performConvexSync]);
+
   return {
     lastAutoSave: state.lastAutoSave,
     lastBackup: state.lastConvexBackup,
+    lastConvexSync: state.lastConvexSync,
     autosaveError: state.autosaveError,
     changesSinceLastSave: state.changeCounter,
     hasUnsavedChanges,
     triggerLocalStorageSave: performLocalStorageSave,
-    triggerFileBackup: performFileBackup
+    triggerFileBackup: performFileBackup,
+    triggerConvexSync: performConvexSync
   };
 }

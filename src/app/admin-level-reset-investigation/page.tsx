@@ -1,20 +1,22 @@
 'use client';
 
-import { useQuery } from 'convex/react';
+import { useConvex } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { sturgeonClient } from '@/lib/sturgeonClient';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 /**
  * Admin tool to investigate the global level reset incident
  *
- * This page queries Sturgeon (production) to analyze:
+ * SIMPLIFIED FOR SINGLE DATABASE - now uses main Convex client (Sturgeon)
+ *
+ * This page queries production to analyze:
  * - When the reset happened
  * - How many players were affected
  * - What levels were lost
  * - Audit log evidence
  */
 export default function LevelResetInvestigationPage() {
+  const convex = useConvex();
   const [investigationData, setInvestigationData] = useState<any>(null);
   const [recoveryData, setRecoveryData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -25,12 +27,12 @@ export default function LevelResetInvestigationPage() {
     setError(null);
 
     try {
-      console.log('[INVESTIGATION] Querying Sturgeon for level reset data...');
+      console.log('[INVESTIGATION] Querying for level reset data...');
 
-      const results = await sturgeonClient.query(api.diagnosticLevelReset.investigateLevelReset, {});
+      const results = await convex.query(api.diagnosticLevelReset.investigateLevelReset, {});
       setInvestigationData(results);
 
-      const recovery = await sturgeonClient.query(api.diagnosticLevelReset.getRecoveryData, {});
+      const recovery = await convex.query(api.diagnosticLevelReset.getRecoveryData, {});
       setRecoveryData(recovery);
 
       console.log('[INVESTIGATION] Results:', results);
