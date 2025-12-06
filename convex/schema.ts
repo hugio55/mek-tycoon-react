@@ -89,6 +89,8 @@ export default defineSchema({
       rarityTiers: v.optional(v.array(v.string())), // Apply to specific rarity tiers
       powerScoreMin: v.optional(v.number()),
       powerScoreMax: v.optional(v.number()),
+      rankMin: v.optional(v.number()), // Minimum rarity rank (1-4000)
+      rankMax: v.optional(v.number()), // Maximum rarity rank (1-4000)
     })),
     
     // Tree structure (same as individual trees)
