@@ -1,10 +1,9 @@
 "use client";
 
 /**
- * EnvironmentIndicator - SIMPLIFIED FOR SINGLE DATABASE
+ * EnvironmentIndicator - SINGLE DATABASE MODE
  *
- * Previously showed Trout vs Sturgeon based on port.
- * Now always shows "PRODUCTION" since we use a single database (Sturgeon).
+ * Shows "PRODUCTION" status for the single database (Sturgeon).
  */
 
 import { useEffect, useState } from "react";

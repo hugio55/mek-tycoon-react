@@ -1,10 +1,9 @@
 'use client';
 
 /**
- * WalletManagementAdmin - SIMPLIFIED FOR SINGLE DATABASE
+ * WalletManagementAdmin - SINGLE DATABASE MODE
  *
- * Previously supported dual-database selection (Trout/Sturgeon).
- * Now uses single database (Sturgeon) via main Convex client.
+ * Uses single database (Sturgeon) via main Convex client.
  */
 
 import { useState, lazy, Suspense, useMemo, useCallback, useRef, useEffect } from 'react';
