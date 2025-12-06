@@ -78,7 +78,7 @@ The notification bell and messaging icon will sit together in the header:
 - Appears below bell icon, anchored to right edge
 - Width: ~320px
 - Max height: ~400px with internal scroll
-- Shows most recent 5-10 notifications
+- Shows most recent **5 notifications**
 - Background: `bg-black/95` with backdrop blur
 - Border: `border-yellow-500/30`
 
@@ -112,8 +112,8 @@ The notification bell and messaging icon will sit together in the header:
 - Full-screen modal (portal to body)
 - Dark backdrop with blur
 - Centered panel, ~600-800px wide, ~80vh tall
-- Scrollable list of ALL notifications ever
-- Paginated (load more as user scrolls, or explicit pagination)
+- Scrollable list of ALL notifications (up to 100 max)
+- Paginated: **10 notifications per page**, "Load More" button to get next page
 
 **Lightbox Layout:**
 ```
@@ -225,11 +225,11 @@ getUserIdByWallet(walletAddress) → userId | null
 // Get unread count for badge
 getUnreadCount(userId) → number
 
-// Get recent notifications for dropdown (last 10)
-getRecentNotifications(userId, limit: 10) → Notification[]
+// Get recent notifications for dropdown (default: 5)
+getRecentNotifications(userId, limit?: 5) → Notification[]
 
-// Get all notifications for lightbox (paginated)
-getAllNotifications(userId, cursor?, limit: 50) → {
+// Get all notifications for lightbox (paginated, default: 10 per page)
+getAllNotifications(userId, cursor?, limit?: 10) → {
   notifications: Notification[],
   nextCursor?: number,
   hasMore: boolean
@@ -249,6 +249,7 @@ markAllAsRead(userId)
 clearAllNotifications(userId)
 
 // Create notification (internal - called by other systems)
+// Enforces 100-notification cap per user, auto-deletes oldest
 createNotification({
   userId,
   type,
@@ -261,6 +262,7 @@ createNotification({
 })
 
 // Create notification (public - for testing)
+// Also enforces 100-notification cap per user
 createNotificationPublic({ ...same args... })
 ```
 
@@ -383,7 +385,7 @@ src/components/notifications/
 
 **Responsibilities:**
 - Render dropdown panel when bell is clicked
-- Show recent notifications (limit 10)
+- Show recent **5 notifications**
 - "View All" button opens lightbox
 - "Clear All" button clears everything
 - Close when clicking outside
@@ -392,8 +394,8 @@ src/components/notifications/
 
 **Responsibilities:**
 - Full-screen modal (portal to document.body)
-- Paginated list of ALL notifications
-- Infinite scroll or "Load More" button
+- Paginated list of ALL notifications (**10 per page**, max 100 total)
+- "Load More" button for pagination
 - "Clear All" at bottom
 - Close button
 
@@ -586,8 +588,8 @@ src/components/UnifiedHeader.tsx  # Add NotificationBell + Messages icon
 | Component | Description |
 |-----------|-------------|
 | NotificationBell | Bell icon with unread count badge |
-| NotificationDropdown | Quick-view of recent 10 notifications |
-| NotificationLightbox | Full paginated history (View All) |
+| NotificationDropdown | Quick-view of recent **5 notifications** |
+| NotificationLightbox | Full paginated history (**10 per page**, max 100 total) |
 | NotificationItem | Single notification with dot, text, timestamp |
 | Clear All | Removes all notifications permanently |
 | Messages Icon | Future - same pattern for messaging quick-view |
@@ -610,7 +612,7 @@ src/components/UnifiedHeader.tsx  # Add NotificationBell + Messages icon
 - [x] Planning document created
 - [x] Add `notifications` table to schema (convex/schema.ts:3786-3813)
 - [x] Create player backend queries and mutations (convex/notifications.ts)
-- [x] Create admin backend queries and mutations (convex/notifications.ts:237-483)
+- [x] Create admin backend queries and mutations (convex/notifications.ts:276-521)
   - `adminGetAllNotifications` - View all notifications system-wide
   - `adminGetPlayerNotifications` - View notifications for specific player
   - `adminGetNotificationStats` - Dashboard statistics
@@ -623,6 +625,10 @@ src/components/UnifiedHeader.tsx  # Add NotificationBell + Messages icon
 - [x] Build NotificationLightbox component (src/components/notifications/NotificationLightbox.tsx)
 - [x] Build NotificationBell component (src/components/notifications/NotificationBell.tsx)
 - [x] Integrate into UnifiedHeader (src/components/UnifiedHeader.tsx:458)
+- [x] Implement 100-notification cap with auto-delete oldest (convex/notifications.ts)
+  - Constants: `MAX_NOTIFICATIONS_PER_USER = 100`, `DROPDOWN_LIMIT = 5`, `LIGHTBOX_PAGE_SIZE = 10`
+  - Cap enforced in both `createNotification` (internal) and `createNotificationPublic`
+  - Oldest notifications automatically deleted when cap reached
 
 ### Not Yet Built (Future)
 - [ ] Admin UI page to view/manage notifications (backend ready, needs frontend)
