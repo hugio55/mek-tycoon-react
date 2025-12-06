@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
+import { getMediaUrl } from '@/lib/media-url';
 
 // Debug control configuration storage key (for backward compatibility and migration)
 const STORAGE_KEY = 'mek-landing-debug-config';
@@ -4806,7 +4807,7 @@ export default function LandingDebugPage() {
           }}
         >
           <img
-            src="/oe-items/oe-icon.png"
+            src={getMediaUrl('/oe-items/oe-icon.png')}
             alt="OE Icon"
             style={{
               width: `${100 * config.oeLogoScale}px`,

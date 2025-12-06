@@ -4415,7 +4415,7 @@ export default function EssenceMarketPage() {
                       {/* Essence thumbnail + name */}
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <img
-                          src="/essence-images/named-100px/1011-fm.png"
+                          src={getMediaUrl("/essence-images/named-100px/1011-fm.png")}
                           alt="Cameras & Film"
                           className="w-6 h-6 rounded"
                         />
@@ -4457,7 +4457,7 @@ export default function EssenceMarketPage() {
                       {/* Essence thumbnail + name */}
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <img
-                          src="/essence-images/named-100px/arcade.png"
+                          src={getMediaUrl("/essence-images/named-100px/arcade.png")}
                           alt="Musical"
                           className="w-6 h-6 rounded"
                         />
@@ -4499,7 +4499,7 @@ export default function EssenceMarketPage() {
                       {/* Essence thumbnail + name */}
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <img
-                          src="/essence-images/named-100px/concrete.png"
+                          src={getMediaUrl("/essence-images/named-100px/concrete.png")}
                           alt="Materials"
                           className="w-6 h-6 rounded"
                         />
@@ -4588,7 +4588,7 @@ export default function EssenceMarketPage() {
                       {/* Essence thumbnail + name */}
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <img
-                          src="/essence-images/named-100px/1011-fm.png"
+                          src={getMediaUrl("/essence-images/named-100px/1011-fm.png")}
                           alt="Cameras & Film"
                           className="w-6 h-6 rounded"
                         />

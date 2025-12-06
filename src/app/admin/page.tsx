@@ -789,7 +789,7 @@ function UniversalBackgroundAdmin() {
                 <div
                   className="absolute inset-0 pointer-events-none"
                   style={{
-                    backgroundImage: 'url(/colored-bg-1.webp)',
+                    backgroundImage: `url(${getMediaUrl('/colored-bg-1.webp')})`,
                     backgroundSize: effectiveIsMobile ? '180%' : 'cover',
                     backgroundPosition: effectiveIsMobile ? 'center calc(50% + 80px)' : 'center',
                     opacity: 0.77,
