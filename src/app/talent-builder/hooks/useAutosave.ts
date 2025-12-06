@@ -1,10 +1,14 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
+import { useMutation } from 'convex/react';
+import { api } from '../../../../convex/_generated/api';
 import { useTalentBuilder } from '../TalentBuilderContext';
 import { createSaveData } from '../saveMigrations';
+import { Id } from '../../../../convex/_generated/dataModel';
 
 interface UseAutosaveOptions {
   localStorageDebounce?: number; // Default: 2 seconds
   fileBackupInterval?: number; // Default: 5 minutes
+  convexSyncInterval?: number; // Default: 5 minutes - sync to Convex if template is open
   maxAutoBackups?: number; // Default: 20 - cleanup older auto-backups
   enabled?: boolean;
 }
@@ -12,15 +16,18 @@ interface UseAutosaveOptions {
 interface UseAutosaveReturn {
   lastAutoSave: Date | null;
   lastBackup: Date | null;
+  lastConvexSync: Date | null;
   autosaveError: string | null;
   changesSinceLastSave: number;
   hasUnsavedChanges: boolean;
   triggerLocalStorageSave: () => void;
   triggerFileBackup: () => Promise<void>;
+  triggerConvexSync: () => Promise<void>;
 }
 
 const DEFAULT_LOCALSTORAGE_DEBOUNCE = 2 * 1000; // 2 seconds
 const DEFAULT_FILE_BACKUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const DEFAULT_CONVEX_SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const DEFAULT_MAX_AUTO_BACKUPS = 20;
 
 export function useAutosave(options: UseAutosaveOptions = {}): UseAutosaveReturn {

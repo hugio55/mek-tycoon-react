@@ -5,6 +5,13 @@ import { checkDeploymentAuth } from '@/lib/deployment/auth';
 
 const execAsync = promisify(exec);
 
+/**
+ * deploy-prod route - SIMPLIFIED FOR SINGLE DATABASE
+ *
+ * Previously deployed to a separate Sturgeon database.
+ * Now deploys to the main Convex database (which IS Sturgeon).
+ */
+
 export async function POST(request: NextRequest) {
   const authError = checkDeploymentAuth(request);
   if (authError) return authError;
@@ -20,27 +27,26 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Deploy to Sturgeon (production database)
-    // Uses the STURGEON_URL environment variable
-    const sturgeonUrl = process.env.NEXT_PUBLIC_STURGEON_URL;
+    // Single database mode: use main Convex URL (now points to Sturgeon)
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 
-    if (!sturgeonUrl) {
+    if (!convexUrl) {
       return NextResponse.json({
         success: false,
-        error: 'NEXT_PUBLIC_STURGEON_URL not configured',
+        error: 'NEXT_PUBLIC_CONVEX_URL not configured',
       }, { status: 500 });
     }
 
-    // Deploy to production using the Sturgeon URL
+    // Deploy to production using the main Convex URL
     // --yes flag skips confirmation prompt (required for non-interactive terminals)
     // --typecheck=disable skips TypeScript checking (matches dev server behavior)
     const { stdout, stderr } = await execAsync(
-      `npx convex deploy --url "${sturgeonUrl}" --yes --typecheck=disable`,
+      `npx convex deploy --url "${convexUrl}" --yes --typecheck=disable`,
       {
         timeout: 180000, // 3 minute timeout for production
         env: {
           ...process.env,
-          CONVEX_URL: sturgeonUrl
+          CONVEX_URL: convexUrl
         }
       }
     );
