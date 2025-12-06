@@ -171,7 +171,7 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
   // Check if template name already exists
   const checkExistingTemplate = useCallback((name: string) => {
     if (!templates) return null;
-    return templates.find(t => t.name.toLowerCase() === name.toLowerCase());
+    return templates.find((t: { name: string }) => t.name.toLowerCase() === name.toLowerCase());
   }, [templates]);
 
   // Handle creating a new category
