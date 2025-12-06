@@ -4114,7 +4114,7 @@ export default function AdminMasterDataPage() {
                 </p>
 
                 {/* NFT Sub-Tabs */}
-                <NFTAdminTabs troutClient={troutClient} sturgeonClient={sturgeonClient} />
+                <NFTAdminTabs client={httpClient} />
               </div>
           </div>
           )}
@@ -6658,8 +6658,8 @@ function CampaignManagerWithDatabase({
   );
 }
 
-// NFT Admin Sub-Tabs Component - All tabs now use Production (Sturgeon) database
-function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturgeonClient: any }) {
+// NFT Admin Sub-Tabs Component - SIMPLIFIED FOR SINGLE DATABASE
+function NFTAdminTabs({ client }: { client: any }) {
   const [nftSubTab, setNftSubTab] = useState<'commemorative' | 'whitelist-manager' | 'json-generator' | 'campaigns'>('json-generator');
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [campaignUpdateTrigger, setCampaignUpdateTrigger] = useState(0);
@@ -6690,9 +6690,6 @@ function NFTAdminTabs({ troutClient, sturgeonClient }: { troutClient: any; sturg
     onConfirm: () => {},
     isLoading: false,
   });
-
-  // Always use production (Sturgeon) client
-  const client = sturgeonClient;
 
   // Fetch campaigns from production database (only when campaigns tab is active)
   useEffect(() => {

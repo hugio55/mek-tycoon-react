@@ -11,6 +11,22 @@ const DROPDOWN_LIMIT = 5; // Show 5 most recent in dropdown
 const LIGHTBOX_PAGE_SIZE = 10; // Show 10 per page in "View All"
 
 // ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * SECURITY: Validates that linkTo is an internal path only (prevents open redirects)
+ * Valid: /home, /profile, /contracts/single-missions
+ * Invalid: https://evil.com, //evil.com, javascript:alert(1)
+ */
+function isValidInternalPath(linkTo: string | undefined): boolean {
+  if (!linkTo) return true; // No link is valid
+  // Must start with single / and not with // (protocol-relative)
+  // Must not contain : (blocks javascript:, https:, etc.)
+  return linkTo.startsWith('/') && !linkTo.startsWith('//') && !linkTo.includes(':');
+}
+
+// ============================================================================
 // QUERIES
 // ============================================================================
 
@@ -143,9 +159,16 @@ export const markAsRead = mutation({
 });
 
 // Mark all notifications as read for a user
+// SECURITY: Verifies user exists before modifying their notifications
 export const markAllAsRead = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    // SECURITY: Verify the user exists
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      return { success: false, reason: "user_not_found", count: 0 };
+    }
+
     const unreadNotifications = await ctx.db
       .query("notifications")
       .withIndex("by_user_unread", (q) =>
@@ -162,9 +185,16 @@ export const markAllAsRead = mutation({
 });
 
 // Clear all notifications for a user
+// SECURITY: Verifies user exists before clearing their notifications
 export const clearAllNotifications = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
+    // SECURITY: Verify the user exists
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      return { success: false, reason: "user_not_found", count: 0 };
+    }
+
     const notifications = await ctx.db
       .query("notifications")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -196,6 +226,11 @@ export const createNotification = internalMutation({
     const user = await ctx.db.get(args.userId);
     if (!user) {
       return { success: false, reason: "user_not_found" };
+    }
+
+    // SECURITY: Validate linkTo is internal path only (prevents open redirects)
+    if (!isValidInternalPath(args.linkTo)) {
+      return { success: false, reason: "invalid_link" };
     }
 
     // Check for duplicate notification if sourceType and sourceId provided
@@ -263,6 +298,11 @@ export const createNotificationPublic = mutation({
     const user = await ctx.db.get(args.userId);
     if (!user) {
       return { success: false, reason: "user_not_found" };
+    }
+
+    // SECURITY: Validate linkTo is internal path only (prevents open redirects)
+    if (!isValidInternalPath(args.linkTo)) {
+      return { success: false, reason: "invalid_link" };
     }
 
     // Check for duplicate notification if sourceType and sourceId provided
@@ -460,6 +500,11 @@ export const adminSendNotification = mutation({
     linkParams: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
+    // SECURITY: Validate linkTo is internal path only (prevents open redirects)
+    if (!isValidInternalPath(args.linkTo)) {
+      return { success: false, error: "Invalid link - must be internal path" };
+    }
+
     // Find the user
     const user = await ctx.db
       .query("users")
