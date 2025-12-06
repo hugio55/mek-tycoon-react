@@ -988,12 +988,11 @@ export default function AdminMasterDataPage() {
   // Single database client (SIMPLIFIED - uses main URL from env)
   const [httpClient] = useState(() => new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!));
 
-  // Detect which database we're connected to
+  // Detect which database we're connected to (single database mode)
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || '';
   const deploymentName = convexUrl.split("//")[1]?.split(".")[0] || "unknown";
   const isProduction = deploymentName === 'fabulous-sturgeon-691';
-  const isStaging = deploymentName === 'wry-trout-962';
-  const databaseLabel = isProduction ? 'Sturgeon' : isStaging ? 'Trout' : deploymentName;
+  const databaseLabel = isProduction ? 'Sturgeon' : deploymentName;
 
   // Site settings (single database mode)
   const [dbSettings, setDbSettings] = useState<any>(null);

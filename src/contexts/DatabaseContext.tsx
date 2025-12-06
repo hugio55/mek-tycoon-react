@@ -1,19 +1,17 @@
 'use client';
 
 /**
- * DatabaseContext - SIMPLIFIED FOR SINGLE DATABASE
+ * DatabaseContext - SINGLE DATABASE MODE
  *
- * This context previously supported switching between Trout (dev) and Sturgeon (prod).
- * Now that we use a single database (Sturgeon), this context is simplified to always
- * use the main Convex client. The interface is preserved for backwards compatibility
- * with existing components.
+ * This context uses the single production database (Sturgeon) for all operations.
+ * The interface is preserved for backwards compatibility with existing components.
  */
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ConvexReactClient } from 'convex/react';
 
-// Keep type for backwards compatibility, but it's always 'sturgeon' now
-type DatabaseType = 'trout' | 'sturgeon';
+// Single database type
+type DatabaseType = 'sturgeon';
 
 interface DatabaseContextValue {
   selectedDatabase: DatabaseType;

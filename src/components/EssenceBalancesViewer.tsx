@@ -9,7 +9,7 @@ import { useDemoWallet } from '@/contexts/DemoWalletContext';
 
 interface EssenceBalancesViewerProps {
   client: ConvexReactClient | null;
-  selectedDatabase: 'trout' | 'sturgeon';
+  selectedDatabase: 'sturgeon';
   onClose: () => void;
 }
 

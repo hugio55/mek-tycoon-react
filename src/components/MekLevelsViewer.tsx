@@ -9,7 +9,7 @@ import { Id } from '@/convex/_generated/dataModel';
 interface MekLevelsViewerProps {
   walletAddress: string;
   client: ConvexReactClient | null;
-  selectedDatabase: 'trout' | 'sturgeon';
+  selectedDatabase: 'sturgeon';
   onClose: () => void;
 }
 

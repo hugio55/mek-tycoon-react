@@ -1,10 +1,9 @@
 "use client";
 
 /**
- * EnvironmentDebugPanel - SIMPLIFIED FOR SINGLE DATABASE
+ * EnvironmentDebugPanel - SINGLE DATABASE MODE
  *
- * Previously showed dual-database (Trout/Sturgeon) configuration.
- * Now shows single production database (Sturgeon) status.
+ * Shows single production database (Sturgeon) status.
  */
 
 import { useEffect, useState } from "react";
@@ -56,8 +55,7 @@ export default function EnvironmentDebugPanel() {
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || '';
   const deploymentName = convexUrl.split("//")[1]?.split(".")[0] || "unknown";
   const isProduction = deploymentName === 'fabulous-sturgeon-691';
-  const isStaging = deploymentName === 'wry-trout-962';
-  const databaseLabel = isProduction ? 'Sturgeon (Production)' : isStaging ? 'Trout (Staging)' : deploymentName;
+  const databaseLabel = isProduction ? 'Sturgeon (Production)' : deploymentName;
 
   return (
     <div

@@ -10,7 +10,7 @@ import { Id } from "@/convex/_generated/dataModel";
 interface BuffManagementProps {
   walletAddress: string;
   client: ConvexReactClient | null;
-  selectedDatabase: 'trout' | 'sturgeon';
+  selectedDatabase: 'sturgeon';
   onClose: () => void;
 }
 

@@ -8,7 +8,7 @@ import { api } from '@/convex/_generated/api';
 interface ActivityLogViewerProps {
   walletAddress: string;
   client: ConvexReactClient | null;
-  selectedDatabase: 'trout' | 'sturgeon';
+  selectedDatabase: 'sturgeon';
   onClose: () => void;
 }
 
