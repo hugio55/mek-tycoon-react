@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { useTalentBuilder } from '../TalentBuilderContext';
@@ -17,6 +17,11 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
   const { state, dispatch, actions } = useTalentBuilder();
   const { saveToLocalStorage, startNewTree, currentSaveName } = useSaveLoad();
   const { findDisconnectedAndDeadEndNodes, clearHighlights, highlightDisconnected } = useConnectionAnalysis();
+
+  // Rank range state for Mek templates
+  const [rankMin, setRankMin] = useState<number>(1);
+  const [rankMax, setRankMax] = useState<number>(1000);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   // Convex mutations for Mek templates
   const templates = useQuery(api.mekTreeTemplates.getAllTemplates);
@@ -130,15 +135,13 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
   }, [highlightDisconnected, findDisconnectedAndDeadEndNodes, clearHighlights]);
 
   const handleSaveMekTemplate = useCallback(async () => {
-    let name: string | null = state.templateName;
+    const name = state.templateName;
     if (!name) {
-      name = prompt('Enter template name:');
-      if (!name) return;
-      dispatch({ type: 'SET_TEMPLATE_NAME', payload: name });
+      alert('Please enter a template name');
+      return;
     }
 
-    const description = state.templateDescription || prompt('Enter template description (optional):') || 'Custom Mek template';
-    if (description) dispatch({ type: 'SET_TEMPLATE_DESCRIPTION', payload: description });
+    const description = state.templateDescription || 'Custom Mek template';
 
     try {
       const cleanedNodes = state.nodes.map(node => {
@@ -160,15 +163,21 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
         return cleaned;
       });
 
+      // Build conditions with rank range
+      const conditions = {
+        rankMin: rankMin,
+        rankMax: rankMax
+      };
+
       if (state.selectedTemplateId) {
         await updateTemplate({
           templateId: state.selectedTemplateId,
           nodes: cleanedNodes,
           connections: state.connections,
           viewportDimensions: state.viewportDimensions,
-          viewportPosition: state.viewportPosition
+          conditions: conditions
         });
-        actions.setSaveStatus('Template updated!', 3000);
+        actions.setSaveStatus(`Template updated! (Ranks ${rankMin}-${rankMax})`, 3000);
       } else {
         const id = await createTemplate({
           name: name,
@@ -177,11 +186,12 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
           nodes: cleanedNodes,
           connections: state.connections,
           viewportDimensions: state.viewportDimensions,
-          viewportPosition: state.viewportPosition
+          conditions: conditions
         });
         dispatch({ type: 'SET_SELECTED_TEMPLATE_ID', payload: id });
-        actions.setSaveStatus('Template created: ' + name, 3000);
+        actions.setSaveStatus(`Template "${name}" created for ranks ${rankMin}-${rankMax}`, 3000);
       }
+      setShowSaveModal(false);
     } catch (e: unknown) {
       const errorMsg = e instanceof Error ? e.message : String(e);
       if (errorMsg.includes('already exists')) {
@@ -190,7 +200,7 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
         alert('Error saving template: ' + errorMsg);
       }
     }
-  }, [state.templateName, state.templateDescription, state.nodes, state.connections, state.selectedTemplateId, state.viewportDimensions, dispatch, actions, createTemplate, updateTemplate]);
+  }, [state.templateName, state.templateDescription, state.nodes, state.connections, state.selectedTemplateId, state.viewportDimensions, rankMin, rankMax, dispatch, actions, createTemplate, updateTemplate]);
 
   return (
     <div className="bg-gray-900 border-b border-gray-800 shrink-0">
@@ -364,9 +374,70 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
         {/* File Operations - Mek Template Mode */}
         {state.builderMode === 'mek' && (
           <>
+            {/* Template Name & Description */}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Template name..."
+                value={state.templateName}
+                onChange={(e) => dispatch({ type: 'SET_TEMPLATE_NAME', payload: e.target.value })}
+                className="w-32 px-2 py-1 text-sm rounded bg-gray-800 text-white border border-gray-600 placeholder-gray-500"
+              />
+            </div>
+
+            {/* Rank Range */}
+            <div className="flex items-center gap-1 border-l border-gray-700 pl-2 ml-2">
+              <span className="text-xs text-gray-400">Ranks:</span>
+              <input
+                type="number"
+                value={rankMin}
+                onChange={(e) => setRankMin(parseInt(e.target.value) || 1)}
+                className="w-16 px-1 py-1 text-sm rounded bg-gray-800 text-purple-400 border border-purple-500/30 font-mono text-center"
+                min="1"
+                max="4000"
+              />
+              <span className="text-gray-500">-</span>
+              <input
+                type="number"
+                value={rankMax}
+                onChange={(e) => setRankMax(parseInt(e.target.value) || 1000)}
+                className="w-16 px-1 py-1 text-sm rounded bg-gray-800 text-purple-400 border border-purple-500/30 font-mono text-center"
+                min="1"
+                max="4000"
+              />
+            </div>
+
+            {/* Quick Rank Presets */}
+            <select
+              value="presets"
+              onChange={(e) => {
+                if (e.target.value !== 'presets') {
+                  const [min, max] = e.target.value.split('-').map(Number);
+                  setRankMin(min);
+                  setRankMax(max);
+                }
+              }}
+              className="px-2 py-1 text-sm rounded bg-gray-700 text-gray-400 border border-gray-600"
+            >
+              <option value="presets">Presets</option>
+              <option value="1-1000">Ranks 1-1000</option>
+              <option value="1001-2000">Ranks 1001-2000</option>
+              <option value="2001-3000">Ranks 2001-3000</option>
+              <option value="3001-4000">Ranks 3001-4000</option>
+              <option value="1-500">Legendary (1-500)</option>
+              <option value="501-1500">Epic (501-1500)</option>
+              <option value="1501-3000">Rare (1501-3000)</option>
+              <option value="3001-4000">Common (3001-4000)</option>
+            </select>
+
             <button
               onClick={handleSaveMekTemplate}
-              className="px-3 py-1 text-sm rounded bg-green-600 hover:bg-green-700 text-white"
+              disabled={!state.templateName}
+              className={`px-3 py-1 text-sm rounded ${
+                state.templateName
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+              }`}
             >
               Save Template
             </button>
@@ -376,6 +447,13 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
             >
               Load Template
             </button>
+
+            {/* Template count indicator */}
+            {templates && templates.length > 0 && (
+              <span className="text-xs text-gray-500 ml-2">
+                {templates.length} template{templates.length !== 1 ? 's' : ''} saved
+              </span>
+            )}
           </>
         )}
 
