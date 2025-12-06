@@ -98,6 +98,8 @@ export const recordPurchase = mutation({
       paymentAddress: args.paymentAddress,
       campaignName: args.campaignName,
       nmkrProjectId: args.nmkrProjectId,
+      nmkrProjectUid: args.nmkrProjectId, // Use projectId as UID for compatibility
+      purchaseDate: Date.now(),
       status: "pending",
       goldSnapshot: args.goldSnapshot,
       mekCountSnapshot: args.mekCount,
