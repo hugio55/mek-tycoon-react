@@ -8,6 +8,7 @@ import {
   LassoSelection,
   RotationHandle,
   ViewportDimensions,
+  ViewportPosition,
   HistoryEntry,
   SavedSpell,
   SavedCiruTree,
@@ -92,6 +93,8 @@ export interface TalentState {
   // Viewport preview
   showViewportBox: boolean;
   viewportDimensions: ViewportDimensions;
+  viewportPosition: ViewportPosition;
+  isDraggingViewport: boolean;
 
   // History (undo/redo)
   history: HistoryEntry[];
@@ -193,6 +196,9 @@ export type TalentAction =
   // Viewport
   | { type: 'SET_SHOW_VIEWPORT_BOX'; payload: boolean }
   | { type: 'SET_VIEWPORT_DIMENSIONS'; payload: ViewportDimensions }
+  | { type: 'SET_VIEWPORT_POSITION'; payload: ViewportPosition }
+  | { type: 'SET_IS_DRAGGING_VIEWPORT'; payload: boolean }
+  | { type: 'CENTER_VIEWPORT' }
 
   // History
   | { type: 'SET_HISTORY'; payload: HistoryEntry[] }
@@ -304,6 +310,8 @@ export const initialState: TalentState = {
   // Viewport preview
   showViewportBox: true,
   viewportDimensions: { width: 800, height: 600 },
+  viewportPosition: { x: 1500, y: 1500 }, // Center of 3000x3000 canvas
+  isDraggingViewport: false,
 
   // History
   history: [],
@@ -634,6 +642,20 @@ export function talentReducer(state: TalentState, action: TalentAction): TalentS
 
     case 'SET_VIEWPORT_DIMENSIONS':
       return { ...state, viewportDimensions: action.payload };
+
+    case 'SET_VIEWPORT_POSITION':
+      return { ...state, viewportPosition: action.payload };
+
+    case 'SET_IS_DRAGGING_VIEWPORT':
+      return { ...state, isDraggingViewport: action.payload };
+
+    case 'CENTER_VIEWPORT': {
+      // Center viewport based on current builder mode
+      const gridSize = state.builderMode === 'story' ? 6000 : 3000;
+      const centerX = gridSize / 2;
+      const centerY = gridSize / 2;
+      return { ...state, viewportPosition: { x: centerX, y: centerY } };
+    }
 
     // =========================================================================
     // HISTORY (UNDO/REDO)

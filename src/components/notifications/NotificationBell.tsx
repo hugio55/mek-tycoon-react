@@ -18,7 +18,6 @@ export default function NotificationBell({ userId }: NotificationBellProps) {
 
   const unreadCount = useQuery(api.notifications.getUnreadCount, { userId });
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (bellRef.current && !bellRef.current.contains(event.target as Node)) {
@@ -53,30 +52,55 @@ export default function NotificationBell({ userId }: NotificationBellProps) {
   };
 
   const displayCount = unreadCount !== undefined ? (unreadCount > 9 ? '9+' : unreadCount) : null;
+  const hasUnread = unreadCount !== undefined && unreadCount > 0;
 
   return (
     <div ref={bellRef} className="relative">
-      {/* Bell button */}
+      {/* Bell button - Space Age Glass Style */}
       <button
         onClick={handleBellClick}
-        className={`
-          relative flex items-center justify-center w-9 h-9 rounded-lg
-          transition-all duration-200
-          ${isDropdownOpen
-            ? 'bg-yellow-500/20 border-yellow-500/50'
-            : 'bg-black/40 hover:bg-yellow-500/10 border-yellow-500/30 hover:border-yellow-500/50'
+        className="relative flex items-center justify-center w-10 h-10 rounded-xl
+          transition-all duration-300 hover:scale-105 active:scale-95"
+        style={{
+          background: isDropdownOpen
+            ? 'linear-gradient(135deg, rgba(34,211,238,0.2), rgba(34,211,238,0.08))'
+            : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
+          border: isDropdownOpen
+            ? '1px solid rgba(34,211,238,0.4)'
+            : '1px solid rgba(255,255,255,0.15)',
+          boxShadow: isDropdownOpen
+            ? '0 0 20px rgba(34,211,238,0.25), 0 4px 15px rgba(0,0,0,0.3)'
+            : hasUnread
+              ? '0 0 15px rgba(34,211,238,0.15), 0 4px 15px rgba(0,0,0,0.2)'
+              : '0 4px 15px rgba(0,0,0,0.2)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+        }}
+        onMouseEnter={(e) => {
+          if (!isDropdownOpen) {
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(34,211,238,0.15), rgba(34,211,238,0.05))';
+            e.currentTarget.style.borderColor = 'rgba(34,211,238,0.3)';
+            e.currentTarget.style.boxShadow = '0 0 20px rgba(34,211,238,0.2), 0 4px 15px rgba(0,0,0,0.3)';
           }
-          border backdrop-blur-sm
-        `}
+        }}
+        onMouseLeave={(e) => {
+          if (!isDropdownOpen) {
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+            e.currentTarget.style.boxShadow = hasUnread
+              ? '0 0 15px rgba(34,211,238,0.15), 0 4px 15px rgba(0,0,0,0.2)'
+              : '0 4px 15px rgba(0,0,0,0.2)';
+          }
+        }}
         aria-label="Notifications"
       >
         {/* Bell icon */}
         <svg
-          className={`w-5 h-5 transition-colors ${
-            isDropdownOpen || (unreadCount && unreadCount > 0)
-              ? 'text-yellow-400'
-              : 'text-gray-400 group-hover:text-yellow-400'
-          }`}
+          className="w-5 h-5 transition-all duration-300"
+          style={{
+            color: isDropdownOpen || hasUnread ? '#22d3ee' : 'rgba(255,255,255,0.6)',
+            filter: isDropdownOpen || hasUnread ? 'drop-shadow(0 0 6px rgba(34,211,238,0.5))' : 'none',
+          }}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -89,12 +113,17 @@ export default function NotificationBell({ userId }: NotificationBellProps) {
           />
         </svg>
 
-        {/* Badge */}
-        {displayCount !== null && unreadCount !== undefined && unreadCount > 0 && (
+        {/* Badge with cyan glow */}
+        {displayCount !== null && hasUnread && (
           <span
-            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center
-              px-1 text-[10px] font-bold text-black bg-yellow-400 rounded-full
-              shadow-[0_0_8px_rgba(250,182,23,0.6)] animate-pulse"
+            className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] flex items-center justify-center
+              px-1.5 text-[10px] font-bold rounded-full"
+            style={{
+              background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
+              color: '#000',
+              boxShadow: '0 0 10px rgba(34,211,238,0.8), 0 0 20px rgba(34,211,238,0.4)',
+              animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            }}
           >
             {displayCount}
           </span>

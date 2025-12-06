@@ -8,7 +8,6 @@ interface NotificationItemProps {
   compact?: boolean;
 }
 
-// Format relative time (e.g., "2 min ago", "1 hour ago", "Dec 5")
 function formatRelativeTime(timestamp: number): string {
   const now = Date.now();
   const diff = now - timestamp;
@@ -43,42 +42,95 @@ export default function NotificationItem({
     <div
       onClick={() => onClick(notification)}
       className={`
-        flex items-start gap-3 p-3 cursor-pointer transition-all duration-200
-        hover:bg-yellow-500/10 border-b border-yellow-500/20 last:border-b-0
-        ${isUnread ? 'bg-yellow-500/5' : ''}
-        ${compact ? 'py-2' : 'py-3'}
+        group relative flex items-start gap-3 cursor-pointer transition-all duration-300
+        ${compact ? 'px-4 py-3' : 'px-5 py-4'}
       `}
+      style={{
+        background: isUnread
+          ? 'linear-gradient(135deg, rgba(34,211,238,0.08) 0%, rgba(34,211,238,0.02) 100%)'
+          : 'transparent',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = isUnread
+          ? 'linear-gradient(135deg, rgba(34,211,238,0.15) 0%, rgba(34,211,238,0.05) 100%)'
+          : 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = isUnread
+          ? 'linear-gradient(135deg, rgba(34,211,238,0.08) 0%, rgba(34,211,238,0.02) 100%)'
+          : 'transparent';
+      }}
     >
-      {/* Unread indicator */}
+      {/* Unread indicator with glow */}
       <div className="flex-shrink-0 mt-1.5">
         {isUnread ? (
-          <div className="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_6px_rgba(250,182,23,0.6)]" />
+          <div
+            className="w-2.5 h-2.5 rounded-full"
+            style={{
+              background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
+              boxShadow: '0 0 8px rgba(34,211,238,0.8), 0 0 16px rgba(34,211,238,0.4)',
+            }}
+          />
         ) : (
-          <div className="w-2 h-2" />
+          <div className="w-2.5 h-2.5" />
         )}
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start justify-between gap-3">
           <h4
-            className={`
-              text-sm font-medium truncate
-              ${isUnread ? 'text-yellow-400' : 'text-gray-300'}
-            `}
+            className={`text-sm font-medium truncate transition-all duration-300 ${
+              compact ? 'max-w-[180px]' : ''
+            }`}
+            style={{
+              color: isUnread ? '#22d3ee' : 'rgba(255,255,255,0.7)',
+              textShadow: isUnread ? '0 0 10px rgba(34,211,238,0.4)' : 'none',
+            }}
           >
             {notification.title}
           </h4>
-          <span className="text-xs text-gray-500 flex-shrink-0">
+          <span
+            className="text-xs flex-shrink-0 transition-colors duration-300"
+            style={{ color: 'rgba(255,255,255,0.35)' }}
+          >
             {formatRelativeTime(notification.createdAt)}
           </span>
         </div>
         {notification.subtitle && (
-          <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">
+          <p
+            className={`text-xs mt-1 transition-colors duration-300 ${
+              compact ? 'line-clamp-1' : 'line-clamp-2'
+            }`}
+            style={{ color: 'rgba(255,255,255,0.45)' }}
+          >
             {notification.subtitle}
           </p>
         )}
+
+        {/* Link indicator on hover */}
+        {notification.linkTo && (
+          <div
+            className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-1"
+            style={{ color: 'rgba(250,204,21,0.7)' }}
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
+            </svg>
+            <span className="text-xs">Click to view</span>
+          </div>
+        )}
       </div>
+
+      {/* Hover glow effect overlay */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+        style={{
+          background: 'linear-gradient(90deg, transparent 0%, rgba(34,211,238,0.03) 50%, transparent 100%)',
+        }}
+      />
     </div>
   );
 }

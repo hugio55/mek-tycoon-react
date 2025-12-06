@@ -123,6 +123,11 @@ export type ViewportDimensions = {
   height: number;
 };
 
+export type ViewportPosition = {
+  x: number;
+  y: number;
+};
+
 // ============================================================================
 // TEMPLATE & SAVE TYPES
 // ============================================================================
@@ -135,6 +140,7 @@ export interface Template {
   connections: Connection[];
   category?: string;
   viewportDimensions?: ViewportDimensions;
+  viewportPosition?: ViewportPosition;
 }
 
 export interface SavedSpell {
