@@ -521,7 +521,7 @@ export default function EssenceDistributionLightboxSpaceAge({ isOpen, onClose }:
                           <button
                             key={value}
                             onClick={() => setViewCount(value as typeof viewCount)}
-                            className="relative px-4 py-2 text-xs font-medium uppercase tracking-wider transition-all duration-200"
+                            className="relative px-4 py-2 text-xs font-medium uppercase tracking-wider transition-all duration-200 overflow-hidden"
                             style={{
                               fontFamily: 'Saira, sans-serif',
                               background: viewCount === value
