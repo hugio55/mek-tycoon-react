@@ -74,6 +74,7 @@ export default function DeploymentsAdmin() {
   const [willDoFullDeploy, setWillDoFullDeploy] = useState(false); // Intent to do full deploy (before confirmation)
   const [logCounter, setLogCounter] = useState(0); // Counter for unique log IDs
   const [deployError, setDeployError] = useState<string | null>(null); // Error message if deploy fails
+  const [isSyncingR2, setIsSyncingR2] = useState(false); // R2 sync state
 
   useEffect(() => {
     setMounted(true);
