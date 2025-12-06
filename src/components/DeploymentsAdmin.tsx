@@ -986,6 +986,52 @@ export default function DeploymentsAdmin() {
         </div>
       </div>
 
+      {/* R2 Media Sync Section */}
+      <div className="border-t border-gray-700 pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="text-gray-400 text-sm uppercase tracking-wider">Media File Sync (Cloudflare R2)</div>
+            <div className="text-gray-500 text-xs mt-1">
+              Syncs /public folder to R2 bucket (mek-tycoon-2)
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText('sync-to-r2.bat');
+              addLog('Copy', 'success', 'Batch file name copied: sync-to-r2.bat');
+            }}
+            className="text-xs text-gray-500 hover:text-gray-300 bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded transition-colors"
+            title="Click to copy batch file name"
+          >
+            📋 sync-to-r2.bat
+          </button>
+        </div>
+        <div className="bg-gray-800/50 border border-cyan-500/30 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="text-cyan-400 text-sm">
+              <span className="font-bold">Auto-sync:</span> Runs automatically on git push (pre-push hook)
+            </div>
+            <button
+              onClick={handleSyncR2}
+              disabled={anyActionRunning || isSyncingR2}
+              className={`
+                px-4 py-2 rounded-lg font-bold transition-colors
+                ${isSyncingR2
+                  ? 'bg-cyan-600 text-white animate-pulse'
+                  : 'bg-cyan-700 hover:bg-cyan-600 disabled:bg-gray-800 disabled:text-gray-600'}
+              `}
+            >
+              {isSyncingR2 ? 'Syncing...' : 'Sync to R2 Now'}
+            </button>
+          </div>
+          <div className="mt-3 text-xs text-gray-500">
+            <div>• Images, sounds, and videos from /public are served from R2</div>
+            <div>• Pre-push hook syncs automatically when you push to GitHub</div>
+            <div>• Use manual sync after adding new media files</div>
+          </div>
+        </div>
+      </div>
+
       {/* Rollback Section */}
       {backups.length > 0 && (
         <div className="border-t border-gray-700 pt-6">
