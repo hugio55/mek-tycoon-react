@@ -312,8 +312,6 @@ function TalentBuilderInner() {
           lassoSelection={state.lassoSelection}
           showViewportBox={state.showViewportBox}
           viewportDimensions={state.viewportDimensions}
-          viewportPosition={state.viewportPosition}
-          isDraggingViewport={state.isDraggingViewport}
           unconnectedNodes={state.unconnectedNodes}
           deadEndNodes={state.deadEndNodes}
           highlightDisconnected={state.highlightDisconnected}

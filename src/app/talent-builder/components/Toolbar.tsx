@@ -52,8 +52,6 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
       };
       dispatch({ type: 'SET_NODES', payload: [startNode] });
       dispatch({ type: 'SET_CONNECTIONS', payload: [] });
-      // Center viewport for Mek mode (center of 3000x3000 canvas)
-      dispatch({ type: 'SET_VIEWPORT_POSITION', payload: { x: 1500, y: 1500 } });
     } else if (newMode === 'story') {
       // Initialize Story mode with start node at bottom center
       const startNode: TalentNode = {

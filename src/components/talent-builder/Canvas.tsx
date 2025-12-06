@@ -50,8 +50,6 @@ const Canvas: React.FC<CanvasProps> = memo(({
   lassoSelection,
   showViewportBox,
   viewportDimensions,
-  viewportPosition,
-  isDraggingViewport,
   unconnectedNodes,
   deadEndNodes,
   highlightDisconnected,
