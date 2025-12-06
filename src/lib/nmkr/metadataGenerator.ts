@@ -41,8 +41,10 @@ export interface NMKRMetadataFile {
  */
 export function generateNMKRMetadataFiles(params: NMKRMetadataParams): NMKRMetadataFile[] {
   const files: NMKRMetadataFile[] = [];
+  const startNum = params.startingNumber || 1;
+  const endNum = startNum + params.numberOfNFTs - 1;
 
-  for (let i = 1; i <= params.numberOfNFTs; i++) {
+  for (let i = startNum; i <= endNum; i++) {
     const metadata = buildSingleNFTMetadata(params, i);
     // Filename uses display name with spaces and number - this becomes the display name in NMKR
     const filename = `${params.displayNameBase} #${i}.metadata`;

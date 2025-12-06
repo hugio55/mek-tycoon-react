@@ -31,6 +31,7 @@ export default function NMKRJSONGenerator() {
   const [displayNameBase, setDisplayNameBase] = useState('Bronze Token');
   const [tokenBaseName, setTokenBaseName] = useState('MekBetaBronzeToken');
   const [numberOfNFTs, setNumberOfNFTs] = useState(5);
+  const [startingNumber, setStartingNumber] = useState(1);
   const [phase] = useState(1); // Keep for backwards compatibility with library, but not shown in UI
   const [description, setDescription] = useState('Exclusive commemorative NFT.');
   const [imageIpfsHash, setImageIpfsHash] = useState('');
@@ -58,6 +59,9 @@ export default function NMKRJSONGenerator() {
 
     const savedNumberOfNFTs = localStorage.getItem('nmkr_numberOfNFTs');
     if (savedNumberOfNFTs) setNumberOfNFTs(parseInt(savedNumberOfNFTs));
+
+    const savedStartingNumber = localStorage.getItem('nmkr_startingNumber');
+    if (savedStartingNumber) setStartingNumber(parseInt(savedStartingNumber));
 
     const savedDescription = localStorage.getItem('nmkr_description');
     if (savedDescription) setDescription(savedDescription);
@@ -165,6 +169,10 @@ export default function NMKRJSONGenerator() {
   useEffect(() => {
     localStorage.setItem('nmkr_numberOfNFTs', numberOfNFTs.toString());
   }, [numberOfNFTs]);
+
+  useEffect(() => {
+    localStorage.setItem('nmkr_startingNumber', startingNumber.toString());
+  }, [startingNumber]);
 
   useEffect(() => {
     localStorage.setItem('nmkr_description', description);
