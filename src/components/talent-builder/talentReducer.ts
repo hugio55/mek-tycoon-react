@@ -58,6 +58,7 @@ export interface TalentState {
   changeCounter: number;
   lastAutoSave: Date | null;
   lastConvexBackup: Date | null;
+  lastConvexSync: Date | null;
   autosaveError: string | null;
   skipNextHistoryPush: boolean;
 
@@ -160,6 +161,7 @@ export type TalentAction =
   | { type: 'INCREMENT_CHANGE_COUNTER' }
   | { type: 'SET_LAST_AUTO_SAVE'; payload: Date | null }
   | { type: 'SET_LAST_CONVEX_BACKUP'; payload: Date | null }
+  | { type: 'SET_LAST_CONVEX_SYNC'; payload: Date | null }
   | { type: 'SET_AUTOSAVE_ERROR'; payload: string | null }
   | { type: 'SET_SKIP_NEXT_HISTORY_PUSH'; payload: boolean }
 
@@ -275,6 +277,7 @@ export const initialState: TalentState = {
   changeCounter: 0,
   lastAutoSave: null,
   lastConvexBackup: null,
+  lastConvexSync: null,
   autosaveError: null,
   skipNextHistoryPush: false,
 
@@ -547,6 +550,9 @@ export function talentReducer(state: TalentState, action: TalentAction): TalentS
 
     case 'SET_LAST_CONVEX_BACKUP':
       return { ...state, lastConvexBackup: action.payload };
+
+    case 'SET_LAST_CONVEX_SYNC':
+      return { ...state, lastConvexSync: action.payload };
 
     case 'SET_AUTOSAVE_ERROR':
       return { ...state, autosaveError: action.payload };

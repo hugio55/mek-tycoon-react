@@ -1,13 +1,19 @@
 'use client';
 
+/**
+ * CommemorativeToken1Admin - SIMPLIFIED FOR SINGLE DATABASE
+ *
+ * Previously used ProductionDatabaseContext for Sturgeon access.
+ * Now uses the main DatabaseContext which always points to Sturgeon.
+ */
+
 import { useState, useEffect } from 'react';
 import { api } from '@/convex/_generated/api';
-import { ProductionDatabaseProvider, useProductionDatabase } from '@/contexts/ProductionDatabaseContext';
-import ProductionBanner from '@/components/admin/ProductionBanner';
+import { useDatabaseContext } from '@/contexts/DatabaseContext';
 import MutationConfirmDialog from '@/components/admin/MutationConfirmDialog';
 
 function CommemorativeToken1AdminContent() {
-  const { client, canMutate, mutationsEnabled } = useProductionDatabase();
+  const { client, canMutate, productionMutationsEnabled: mutationsEnabled } = useDatabaseContext();
 
   const [selectedSnapshotId, setSelectedSnapshotId] = useState<string>('');
   const [showDebug, setShowDebug] = useState(false);
@@ -136,9 +142,6 @@ function CommemorativeToken1AdminContent() {
 
   return (
     <div className="p-6">
-      {/* Production Banner */}
-      <ProductionBanner title="NFT Eligibility - Production" />
-
       {/* Header */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-yellow-400 mb-2" style={{ fontFamily: "'Orbitron', sans-serif" }}>
@@ -312,11 +315,7 @@ function CommemorativeToken1AdminContent() {
   );
 }
 
-// Wrapper component that provides ProductionDatabaseContext
+// Export component directly (single database mode - no provider wrapper needed)
 export default function CommemorativeToken1Admin() {
-  return (
-    <ProductionDatabaseProvider>
-      <CommemorativeToken1AdminContent />
-    </ProductionDatabaseProvider>
-  );
+  return <CommemorativeToken1AdminContent />;
 }

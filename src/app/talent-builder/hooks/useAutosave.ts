@@ -27,13 +27,36 @@ interface UseAutosaveReturn {
 
 const DEFAULT_LOCALSTORAGE_DEBOUNCE = 2 * 1000; // 2 seconds
 const DEFAULT_FILE_BACKUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
-const DEFAULT_CONVEX_SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const DEFAULT_CONVEX_SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutes (only when a template is open)
 const DEFAULT_MAX_AUTO_BACKUPS = 20;
+
+// Helper to sanitize nodes for Convex (remove fields not in schema)
+function sanitizeNodesForConvex(nodes: typeof import('../types').TalentNode[]): Parameters<typeof import('../../../../convex/_generated/api').api.mekTreeTemplates.updateTemplate>[0]['nodes'] {
+  return nodes.map(node => ({
+    id: node.id,
+    name: node.name,
+    x: node.x,
+    y: node.y,
+    tier: node.tier,
+    desc: node.desc,
+    xp: node.xp,
+    unlocked: node.unlocked,
+    nodeType: node.nodeType,
+    statBonus: node.statBonus,
+    abilityId: node.abilityId,
+    passiveEffect: node.passiveEffect,
+    buffGrant: node.buffGrant ? {
+      buffType: node.buffGrant.buffType || '',
+      baseValue: node.buffGrant.baseValue
+    } : undefined
+  }));
+}
 
 export function useAutosave(options: UseAutosaveOptions = {}): UseAutosaveReturn {
   const {
     localStorageDebounce = DEFAULT_LOCALSTORAGE_DEBOUNCE,
     fileBackupInterval = DEFAULT_FILE_BACKUP_INTERVAL,
+    convexSyncInterval = DEFAULT_CONVEX_SYNC_INTERVAL,
     maxAutoBackups = DEFAULT_MAX_AUTO_BACKUPS,
     enabled = true
   } = options;

@@ -678,13 +678,9 @@ function WhitelistManagerAdminContent() {
   );
 }
 
-// Outer wrapper component with ProductionDatabaseProvider
+// Export component directly (single database mode - no provider wrapper needed)
 export default function WhitelistManagerAdmin() {
-  return (
-    <ProductionDatabaseProvider>
-      <WhitelistManagerAdminContent />
-    </ProductionDatabaseProvider>
-  );
+  return <WhitelistManagerAdminContent />;
 }
 
 // Create/Edit Whitelist Modal Component
