@@ -190,7 +190,7 @@ export const upgradeMekLevel = mutation({
 
     // 2. Verify the wallet owns this Mek and get its base rate
     const ownedMek = goldMiningData.ownedMeks.find(
-      (m) => m.assetId === args.assetId
+      (m: any) => m.assetId === args.assetId
     );
 
     if (!ownedMek) {
@@ -345,7 +345,7 @@ export const upgradeMekLevel = mutation({
       });
 
       // Update the goldMining record with new effective rates
-      const updatedMeks = goldMiningData.ownedMeks.map((mek) => {
+      const updatedMeks = goldMiningData.ownedMeks.map((mek: any) => {
         if (mek.assetId === args.assetId) {
           const effectiveRate = baseRate + newBoostAmount;
           return {
@@ -363,11 +363,11 @@ export const upgradeMekLevel = mutation({
 
       // Recalculate total rates
       const baseGoldPerHour = updatedMeks.reduce(
-        (sum, mek) => sum + (mek.baseGoldPerHour || mek.goldPerHour || 0),
+        (sum: number, mek: any) => sum + (mek.baseGoldPerHour || mek.goldPerHour || 0),
         0
       );
       const boostGoldPerHour = updatedMeks.reduce(
-        (sum, mek) => sum + (mek.levelBoostAmount || 0),
+        (sum: number, mek: any) => sum + (mek.levelBoostAmount || 0),
         0
       );
       const totalGoldPerHour = baseGoldPerHour + boostGoldPerHour;
