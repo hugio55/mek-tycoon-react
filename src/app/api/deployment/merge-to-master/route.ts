@@ -51,6 +51,9 @@ export async function POST(request: NextRequest) {
     const output = pushOutput + pushStderr;
     const alreadyUpToDate = output.includes('Everything up-to-date');
 
+    // Sync local master to match origin/master (prevents stale local branch confusion)
+    await execAsync('git fetch origin master:master', { timeout: 30000 });
+
     return NextResponse.json({
       success: true,
       message: alreadyUpToDate
@@ -58,6 +61,7 @@ export async function POST(request: NextRequest) {
         : `Pushed ${currentBranch} to origin/master - Vercel production deployment triggered`,
       previousBranch: currentBranch,
       alreadyUpToDate,
+      localMasterSynced: true,
       method: 'direct-push', // Indicates we used the new method
     });
   } catch (error: any) {
