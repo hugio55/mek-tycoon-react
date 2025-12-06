@@ -436,11 +436,20 @@ export default function DeploymentsAdmin() {
     }
 
     // Step 2: Sync media files to R2 (ensures media is on CDN before code goes live)
+    // Use AbortController to prevent infinite hanging - 2 minute timeout
     setDeployStep(2);
     console.log('[🚀DEPLOY] Step 2: Syncing media to R2...');
     addLog('Full Deploy', 'pending', 'Step 2/5: Syncing media files to Cloudflare R2...');
     try {
-      const res = await fetch('/api/deployment/sync-r2', { method: 'POST' });
+      const r2Controller = new AbortController();
+      const r2Timeout = setTimeout(() => r2Controller.abort(), 120000); // 2 minute timeout
+
+      const res = await fetch('/api/deployment/sync-r2', {
+        method: 'POST',
+        signal: r2Controller.signal
+      });
+      clearTimeout(r2Timeout);
+
       const data = await res.json();
       console.log('[🚀DEPLOY] Step 2 result:', data);
       if (data.success) {
@@ -451,7 +460,11 @@ export default function DeploymentsAdmin() {
       }
     } catch (error) {
       console.error('[🚀DEPLOY] Step 2 error:', error);
-      addLog('Full Deploy', 'error', 'R2 sync warning - continuing without sync...');
+      if (error instanceof Error && error.name === 'AbortError') {
+        addLog('Full Deploy', 'error', 'R2 sync timed out after 2 minutes - continuing...');
+      } else {
+        addLog('Full Deploy', 'error', 'R2 sync warning - continuing without sync...');
+      }
       // Continue anyway
     }
 
