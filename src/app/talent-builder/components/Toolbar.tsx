@@ -59,7 +59,7 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
   // Get current selected category
   const selectedCategory = useMemo(() => {
     if (!selectedCategoryId || !categories) return null;
-    return categories.find(c => c._id === selectedCategoryId) || null;
+    return categories.find((c: { _id: string }) => c._id === selectedCategoryId) || null;
   }, [selectedCategoryId, categories]);
 
   const handleBuilderModeChange = useCallback((newMode: BuilderMode) => {
@@ -481,7 +481,7 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
                 className="px-2 py-1 text-sm bg-gray-800 border border-gray-700 rounded text-white min-w-[140px]"
               >
                 <option value="">Uncategorized</option>
-                {categories?.map((cat) => (
+                {categories?.map((cat: { _id: string; name: string; templateCount: number; hasActiveTemplate: boolean }) => (
                   <option key={cat._id} value={cat._id}>
                     {cat.name} ({cat.templateCount})
                     {cat.hasActiveTemplate ? ' ✓' : ''}
