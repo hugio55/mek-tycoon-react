@@ -739,7 +739,7 @@ export default function MessagingSystemAdmin() {
     <div
       className="min-h-[800px] rounded-lg overflow-hidden relative"
       style={{
-        backgroundImage: 'url(/colored-bg-1.webp)',
+        backgroundImage: `url(${getMediaUrl('/colored-bg-1.webp')})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}

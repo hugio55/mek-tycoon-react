@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import FillTextButton from '@/components/controls/FillTextButton';
+import { getMediaUrl } from '@/lib/media-url';
 
 const STYLE_CATEGORIES = [
   { id: 'lightboxes', name: 'Lightboxes', icon: '🪟' },
@@ -205,7 +206,7 @@ function LiquidGlassStyles() {
       <div
         className="relative p-8 rounded-xl overflow-hidden"
         style={{
-          backgroundImage: 'url(/random-images/planet1.png)',
+          backgroundImage: `url(${getMediaUrl('/random-images/planet1.png')})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
