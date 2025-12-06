@@ -704,9 +704,9 @@ export const backfillSoldNFTData = mutation({
       // Try to find the completed reservation for this NFT
       // Check both legacy and campaign reservation tables
 
-      // First try to find completed reservations
+      // Try to find completed reservations
       let reservation = await ctx.db
-        .query("commemorativeNFTReservationsCampaign")
+        .query("commemorativeNFTReservations")
         .filter((q) =>
           q.and(
             q.eq(q.field("nftInventoryId"), nft._id),
@@ -715,31 +715,10 @@ export const backfillSoldNFTData = mutation({
         )
         .first();
 
-      // If not found, try legacy reservations with completed status
-      if (!reservation) {
-        reservation = await ctx.db
-          .query("commemorativeNFTReservations")
-          .filter((q) =>
-            q.and(
-              q.eq(q.field("nftInventoryId"), nft._id),
-              q.eq(q.field("status"), "completed")
-            )
-          )
-          .first();
-      }
-
       // If still not found, try ANY reservation for this NFT (maybe sale was completed externally)
       if (!reservation) {
         reservation = await ctx.db
           .query("commemorativeNFTReservations")
-          .filter((q) => q.eq(q.field("nftInventoryId"), nft._id))
-          .order("desc")
-          .first();
-      }
-
-      if (!reservation) {
-        reservation = await ctx.db
-          .query("commemorativeNFTReservationsCampaign")
           .filter((q) => q.eq(q.field("nftInventoryId"), nft._id))
           .order("desc")
           .first();
@@ -788,22 +767,12 @@ export const backfillSoldNFTData = mutation({
 export const debugReservations = query({
   args: {},
   handler: async (ctx) => {
-    const campaignRes = await ctx.db
-      .query("commemorativeNFTReservationsCampaign")
-      .collect();
-
-    const legacyRes = await ctx.db
+    const reservations = await ctx.db
       .query("commemorativeNFTReservations")
       .collect();
 
     return {
-      campaign: campaignRes.map(r => ({
-        nftInventoryId: r.nftInventoryId,
-        nftNumber: r.nftNumber,
-        status: r.status,
-        reservedBy: r.reservedBy,
-      })),
-      legacy: legacyRes.map(r => ({
+      reservations: reservations.map(r => ({
         nftInventoryId: r.nftInventoryId,
         nftNumber: r.nftNumber,
         status: r.status,

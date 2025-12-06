@@ -174,6 +174,47 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
     return templates.find(t => t.name.toLowerCase() === name.toLowerCase());
   }, [templates]);
 
+  // Handle creating a new category
+  const handleCreateCategory = useCallback(async () => {
+    if (!newCategoryName.trim()) {
+      alert('Please enter a category name');
+      return;
+    }
+
+    try {
+      const id = await createCategory({
+        name: newCategoryName.trim(),
+        description: 'Custom category'
+      });
+      setSelectedCategoryId(id);
+      setNewCategoryName('');
+      setShowCategoryDialog(false);
+      actions.setSaveStatus(`Category "${newCategoryName}" created!`, 3000);
+    } catch (e: unknown) {
+      const errorMsg = e instanceof Error ? e.message : String(e);
+      alert('Error creating category: ' + errorMsg);
+    }
+  }, [newCategoryName, createCategory, actions]);
+
+  // Handle setting a template as active for its category
+  const handleSetActiveTemplate = useCallback(async (templateId: Id<"mekTreeTemplates">) => {
+    if (!selectedCategoryId) {
+      alert('No category selected');
+      return;
+    }
+
+    try {
+      await setActiveTemplate({
+        categoryId: selectedCategoryId,
+        templateId: templateId
+      });
+      actions.setSaveStatus('Template set as active!', 3000);
+    } catch (e: unknown) {
+      const errorMsg = e instanceof Error ? e.message : String(e);
+      alert('Error setting active template: ' + errorMsg);
+    }
+  }, [selectedCategoryId, setActiveTemplate, actions]);
+
   const handleSaveMekTemplate = useCallback(async (mode: 'new' | 'overwrite', templateId: Id<"mekTreeTemplates"> | null) => {
     const name = state.templateName;
     if (!name) return;
@@ -205,6 +246,7 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
           templateId: templateId,
           name: name,
           description: description,
+          categoryId: selectedCategoryId || undefined,
           nodes: cleanedNodes,
           connections: state.connections,
           viewportDimensions: state.viewportDimensions
@@ -215,7 +257,7 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
         const id = await createTemplate({
           name: name,
           description: description,
-          category: 'custom',
+          categoryId: selectedCategoryId || undefined,
           nodes: cleanedNodes,
           connections: state.connections,
           viewportDimensions: state.viewportDimensions
@@ -228,7 +270,7 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
       const errorMsg = e instanceof Error ? e.message : String(e);
       alert('Error saving template: ' + errorMsg);
     }
-  }, [state.templateName, state.templateDescription, state.nodes, state.connections, state.viewportDimensions, dispatch, actions, createTemplate, updateTemplate]);
+  }, [state.templateName, state.templateDescription, state.nodes, state.connections, state.viewportDimensions, selectedCategoryId, dispatch, actions, createTemplate, updateTemplate]);
 
   // Handle save button click - shows dialog if name exists
   const handleSaveClick = useCallback(() => {
@@ -424,14 +466,39 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
         {/* File Operations - Mek Template Mode */}
         {state.builderMode === 'mek' && (
           <>
+            {/* Category Selector */}
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-400">Category:</label>
+              <select
+                value={selectedCategoryId || ''}
+                onChange={(e) => {
+                  if (e.target.value === '__new__') {
+                    setShowCategoryDialog(true);
+                  } else {
+                    setSelectedCategoryId(e.target.value ? e.target.value as Id<"mekTreeCategories"> : null);
+                  }
+                }}
+                className="px-2 py-1 text-sm bg-gray-800 border border-gray-700 rounded text-white min-w-[140px]"
+              >
+                <option value="">Uncategorized</option>
+                {categories?.map((cat) => (
+                  <option key={cat._id} value={cat._id}>
+                    {cat.name} ({cat.templateCount})
+                    {cat.hasActiveTemplate ? ' ✓' : ''}
+                  </option>
+                ))}
+                <option value="__new__">+ New Category...</option>
+              </select>
+            </div>
+
             {/* Template Name */}
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                placeholder="Template name..."
+                placeholder="Save name..."
                 value={state.templateName}
                 onChange={(e) => dispatch({ type: 'SET_TEMPLATE_NAME', payload: e.target.value })}
-                className="w-40 px-2 py-1 text-sm rounded bg-gray-800 text-white border border-gray-600 placeholder-gray-500"
+                className="w-32 px-2 py-1 text-sm rounded bg-gray-800 text-white border border-gray-600 placeholder-gray-500"
               />
             </div>
 
@@ -444,19 +511,29 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
                   : 'bg-gray-700 text-gray-500 cursor-not-allowed'
               }`}
             >
-              Save Template
+              Save
             </button>
             <button
               onClick={() => dispatch({ type: 'SET_SHOW_TEMPLATE_MANAGER', payload: true })}
               className="px-3 py-1 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white"
             >
-              Load Template
+              Load
             </button>
 
+            {/* Category info */}
+            {selectedCategory && (
+              <span className="text-xs text-purple-400 ml-2">
+                {selectedCategory.name}
+                {selectedCategory.activeTemplateId && (
+                  <span className="text-green-400 ml-1">● Active set</span>
+                )}
+              </span>
+            )}
+
             {/* Template count indicator */}
-            {templates && templates.length > 0 && (
+            {displayedTemplates && displayedTemplates.length > 0 && (
               <span className="text-xs text-gray-500 ml-2">
-                {templates.length} saved
+                {displayedTemplates.length} saves
               </span>
             )}
 
@@ -501,6 +578,51 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
                 </button>
                 <button
                   onClick={() => setShowSaveDialog(false)}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* New Category Dialog */}
+        {showCategoryDialog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+            <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-600">
+              <h3 className="text-lg font-bold text-purple-400 mb-4">
+                Create New Category
+              </h3>
+              <p className="text-gray-300 mb-4">
+                Categories group related template saves together. One save within each category can be set as the &quot;active&quot; template.
+              </p>
+              <input
+                type="text"
+                placeholder="Category name (e.g., Fire Tree, Tank Build)"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleCreateCategory()}
+                className="w-full px-3 py-2 mb-4 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-500"
+                autoFocus
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCreateCategory}
+                  disabled={!newCategoryName.trim()}
+                  className={`flex-1 px-4 py-2 rounded font-medium ${
+                    newCategoryName.trim()
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                      : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  Create Category
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCategoryDialog(false);
+                    setNewCategoryName('');
+                  }}
                   className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded"
                 >
                   Cancel

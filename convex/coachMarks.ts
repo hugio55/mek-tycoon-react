@@ -299,46 +299,33 @@ export const markStepComplete = mutation({
       return { success: true, newStep: true };
     }
 
-    // Update existing progress
+    // Update existing progress - add step to completed list
     const completedSteps = progress.completedSteps.includes(args.stepKey)
       ? progress.completedSteps
       : [...progress.completedSteps, args.stepKey];
 
-    // Check sequence advancement
+    await ctx.db.patch(progress._id, {
+      completedSteps,
+      lastUpdated: now,
+    });
+
+    // Advance sequence if in one
     const step = await ctx.db
       .query("coachMarkSteps")
       .withIndex("by_step_key", (q) => q.eq("stepKey", args.stepKey))
       .first();
 
-    let updates: any = {
-      completedSteps,
-      lastUpdated: now,
-    };
-
-    if (step?.sequenceId && progress.currentSequence === step.sequenceId) {
-      const sequence = await ctx.db
-        .query("coachMarkSequences")
-        .withIndex("by_sequence_id", (q) => q.eq("sequenceId", step.sequenceId!))
+    if (step) {
+      // Re-fetch progress since we just patched it
+      const updatedProgress = await ctx.db
+        .query("coachMarkProgress")
+        .withIndex("by_corporation", (q) => q.eq("corporationId", args.corporationId))
         .first();
 
-      if (sequence) {
-        const currentIndex = progress.currentStepIndex ?? 0;
-        const nextIndex = currentIndex + 1;
-
-        if (nextIndex >= sequence.stepOrder.length) {
-          // Sequence complete
-          updates.currentSequence = undefined;
-          updates.currentStepIndex = undefined;
-          if (sequence.isOnboarding) {
-            updates.tutorialCompleted = true;
-          }
-        } else {
-          updates.currentStepIndex = nextIndex;
-        }
+      if (updatedProgress) {
+        await advanceSequence(ctx, updatedProgress, step, now);
       }
     }
-
-    await ctx.db.patch(progress._id, updates);
 
     return { success: true };
   },
@@ -397,36 +384,14 @@ export const skipStep = mutation({
       });
     }
 
-    // Advance sequence if in one (same logic as complete)
-    progress = await ctx.db
+    // Advance sequence if in one
+    const updatedProgress = await ctx.db
       .query("coachMarkProgress")
       .withIndex("by_corporation", (q) => q.eq("corporationId", args.corporationId))
       .first();
 
-    if (step.sequenceId && progress?.currentSequence === step.sequenceId) {
-      const sequence = await ctx.db
-        .query("coachMarkSequences")
-        .withIndex("by_sequence_id", (q) => q.eq("sequenceId", step.sequenceId!))
-        .first();
-
-      if (sequence && progress) {
-        const currentIndex = progress.currentStepIndex ?? 0;
-        const nextIndex = currentIndex + 1;
-
-        if (nextIndex >= sequence.stepOrder.length) {
-          await ctx.db.patch(progress._id, {
-            currentSequence: undefined,
-            currentStepIndex: undefined,
-            tutorialCompleted: sequence.isOnboarding ? true : progress.tutorialCompleted,
-            lastUpdated: now,
-          });
-        } else {
-          await ctx.db.patch(progress._id, {
-            currentStepIndex: nextIndex,
-            lastUpdated: now,
-          });
-        }
-      }
+    if (updatedProgress) {
+      await advanceSequence(ctx, updatedProgress, step, now);
     }
 
     return { success: true };

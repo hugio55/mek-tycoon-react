@@ -7,7 +7,6 @@
 
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
 
 // =============================================================================
 // STEP QUERIES
@@ -66,19 +65,19 @@ export const getStepsByPage = query({
 });
 
 /**
- * Get steps by sequence.
+ * Get steps by sequence (uses index, returns sorted by sequenceOrder).
  */
 export const getStepsBySequence = query({
   args: {
     sequenceId: v.string(),
   },
   handler: async (ctx, args) => {
-    const steps = await ctx.db
+    // Note: The by_sequence index is on [sequenceId, sequenceOrder]
+    // so results come back sorted by sequenceOrder automatically
+    return await ctx.db
       .query("coachMarkSteps")
-      .filter((q) => q.eq(q.field("sequenceId"), args.sequenceId))
+      .withIndex("by_sequence", (q) => q.eq("sequenceId", args.sequenceId))
       .collect();
-
-    return steps.sort((a, b) => a.sequenceOrder - b.sequenceOrder);
   },
 });
 
@@ -150,6 +149,17 @@ export const createStep = mutation({
     isActive: v.boolean(),
   },
   handler: async (ctx, args) => {
+    // Validate targeting configuration
+    if (args.targetType === "element" && !args.elementSelector) {
+      throw new Error("elementSelector is required when targetType is 'element'");
+    }
+    if (args.targetType === "manual" && !args.manualPosition) {
+      throw new Error("manualPosition is required when targetType is 'manual'");
+    }
+    if (args.targetType === "hybrid" && !args.elementSelector) {
+      throw new Error("elementSelector is required when targetType is 'hybrid'");
+    }
+
     // Check for duplicate stepKey
     const existing = await ctx.db
       .query("coachMarkSteps")
@@ -177,8 +187,9 @@ export const createStep = mutation({
 
       if (sequence) {
         const newStepOrder = [...sequence.stepOrder];
-        // Insert at correct position based on sequenceOrder
-        newStepOrder.splice(args.sequenceOrder, 0, args.stepKey);
+        // Insert at correct position, clamped to valid range
+        const insertIndex = Math.min(args.sequenceOrder, newStepOrder.length);
+        newStepOrder.splice(insertIndex, 0, args.stepKey);
         await ctx.db.patch(sequence._id, { stepOrder: newStepOrder });
       }
     }
