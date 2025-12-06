@@ -6,8 +6,55 @@
  */
 
 import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
+import { query, mutation, MutationCtx } from "./_generated/server";
+import { Doc, Id } from "./_generated/dataModel";
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+/**
+ * Advances to the next step in a sequence, or marks sequence complete.
+ * Shared logic between markStepComplete and skipStep.
+ */
+async function advanceSequence(
+  ctx: MutationCtx,
+  progress: Doc<"coachMarkProgress">,
+  step: Doc<"coachMarkSteps">,
+  now: number
+): Promise<void> {
+  if (!step.sequenceId || progress.currentSequence !== step.sequenceId) {
+    return;
+  }
+
+  const sequence = await ctx.db
+    .query("coachMarkSequences")
+    .withIndex("by_sequence_id", (q) => q.eq("sequenceId", step.sequenceId!))
+    .first();
+
+  if (!sequence) {
+    return;
+  }
+
+  const currentIndex = progress.currentStepIndex ?? 0;
+  const nextIndex = currentIndex + 1;
+
+  if (nextIndex >= sequence.stepOrder.length) {
+    // Sequence complete
+    await ctx.db.patch(progress._id, {
+      currentSequence: undefined,
+      currentStepIndex: undefined,
+      tutorialCompleted: sequence.isOnboarding ? true : progress.tutorialCompleted,
+      lastUpdated: now,
+    });
+  } else {
+    // Move to next step
+    await ctx.db.patch(progress._id, {
+      currentStepIndex: nextIndex,
+      lastUpdated: now,
+    });
+  }
+}
 
 // =============================================================================
 // QUERIES - Read tutorial state

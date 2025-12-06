@@ -3373,6 +3373,7 @@ export default defineSchema({
     soldTo: v.optional(v.string()), // Stake address of buyer (preserved after sale)
     soldAt: v.optional(v.number()), // Timestamp when sale was completed
     companyNameAtSale: v.optional(v.string()), // Corporation name at time of purchase (historical snapshot)
+    transactionHash: v.optional(v.string()), // Blockchain transaction hash
   })
     .index("by_uid", ["nftUid"])
     .index("by_number", ["nftNumber"])
@@ -3405,6 +3406,8 @@ export default defineSchema({
     ),
     paymentWindowOpenedAt: v.optional(v.number()), // When NMKR window opened (for timer pause)
     paymentWindowClosedAt: v.optional(v.number()), // When NMKR window closed
+    transactionHash: v.optional(v.string()), // Blockchain transaction hash when completed
+    completedAt: v.optional(v.number()), // Timestamp when sale was completed
   })
     .index("by_nft_uid", ["nftUid"])
     .index("by_reserved_by", ["reservedBy"])

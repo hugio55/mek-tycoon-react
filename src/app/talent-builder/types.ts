@@ -143,16 +143,35 @@ export interface TemplateConditions {
   rankMax?: number;
 }
 
+// Tree Category - Parent category that gets assigned to Meks
+// Each category can have multiple template saves, with one "active" template
+export interface TreeCategory {
+  _id: string;
+  name: string;
+  description?: string;
+  conditions?: TemplateConditions;
+  activeTemplateId?: string;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+// TreeCategory with additional computed fields
+export interface TreeCategoryWithCounts extends TreeCategory {
+  templateCount: number;
+  hasActiveTemplate: boolean;
+}
+
 export interface Template {
   _id: string;
   name: string;
   description?: string;
+  categoryId?: string; // Parent category this template belongs to
   nodes: TalentNode[];
   connections: Connection[];
-  category?: string;
+  category?: string; // Legacy field
   viewportDimensions?: ViewportDimensions;
   viewportPosition?: ViewportPosition;
-  conditions?: TemplateConditions;
+  conditions?: TemplateConditions; // Legacy field - conditions now live on categories
   createdAt?: number;
   updatedAt?: number;
 }

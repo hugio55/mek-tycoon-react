@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { useTalentBuilder } from '../TalentBuilderContext';
 import { useSaveLoad, useConnectionAnalysis } from '../hooks';
-import { BuilderMode, CanvasMode, TalentNode } from '../types';
+import { BuilderMode, CanvasMode, TalentNode, TreeCategory } from '../types';
 import { Id } from '../../../../convex/_generated/dataModel';
 
 interface ToolbarProps {
@@ -24,10 +24,43 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
   const [saveMode, setSaveMode] = useState<'new' | 'overwrite'>('new');
   const [existingTemplateId, setExistingTemplateId] = useState<Id<"mekTreeTemplates"> | null>(null);
 
-  // Convex mutations for Mek templates
+  // Category management state
+  const [selectedCategoryId, setSelectedCategoryId] = useState<Id<"mekTreeCategories"> | null>(null);
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+
+  // Convex queries for categories
+  const categories = useQuery(api.mekTreeCategories.getAllCategoriesWithCounts);
+  const uncategorizedTemplates = useQuery(api.mekTreeTemplates.getUncategorizedTemplates);
+
+  // Get templates for selected category (or uncategorized)
+  const categoryTemplates = useQuery(
+    api.mekTreeTemplates.getTemplatesByCategory,
+    selectedCategoryId ? { categoryId: selectedCategoryId } : 'skip'
+  );
+
+  // Templates to display: either category templates or uncategorized
+  const displayedTemplates = useMemo(() => {
+    if (selectedCategoryId) {
+      return categoryTemplates || [];
+    }
+    return uncategorizedTemplates || [];
+  }, [selectedCategoryId, categoryTemplates, uncategorizedTemplates]);
+
+  // All templates (for name checking)
   const templates = useQuery(api.mekTreeTemplates.getAllTemplates);
+
+  // Convex mutations for Mek templates and categories
   const createTemplate = useMutation(api.mekTreeTemplates.createTemplate);
   const updateTemplate = useMutation(api.mekTreeTemplates.updateTemplate);
+  const createCategory = useMutation(api.mekTreeCategories.createCategory);
+  const setActiveTemplate = useMutation(api.mekTreeCategories.setActiveTemplate);
+
+  // Get current selected category
+  const selectedCategory = useMemo(() => {
+    if (!selectedCategoryId || !categories) return null;
+    return categories.find(c => c._id === selectedCategoryId) || null;
+  }, [selectedCategoryId, categories]);
 
   const handleBuilderModeChange = useCallback((newMode: BuilderMode) => {
     dispatch({ type: 'SET_BUILDER_MODE', payload: newMode });
