@@ -182,7 +182,7 @@ export const createStep = mutation({
     if (args.sequenceId) {
       const sequence = await ctx.db
         .query("coachMarkSequences")
-        .withIndex("", (q: any) => q.eq("sequenceId", args.sequenceId!))
+        .withIndex("by_sequence_id", (q) => q.eq("sequenceId", args.sequenceId!))
         .first();
 
       if (sequence) {
@@ -303,7 +303,7 @@ export const deleteStep = mutation({
     if (step.sequenceId) {
       const sequence = await ctx.db
         .query("coachMarkSequences")
-        .withIndex("", (q: any) => q.eq("sequenceId", step.sequenceId!))
+        .withIndex("by_sequence_id", (q) => q.eq("sequenceId", step.sequenceId!))
         .first();
 
       if (sequence) {
@@ -369,7 +369,7 @@ export const getSequenceWithSteps = query({
     for (const stepKey of sequence.stepOrder) {
       const step = await ctx.db
         .query("coachMarkSteps")
-        .withIndex("", (q: any) => q.eq("stepKey", stepKey))
+        .withIndex("by_step_key", (q) => q.eq("stepKey", stepKey))
         .first();
 
       if (step) {
@@ -412,7 +412,7 @@ export const createSequence = mutation({
     if (args.isOnboarding) {
       const existingOnboarding = await ctx.db
         .query("coachMarkSequences")
-        .withIndex("", (q: any) => q.eq("isOnboarding", true))
+        .withIndex("by_onboarding", (q) => q.eq("isOnboarding", true))
         .first();
 
       if (existingOnboarding) {
@@ -459,7 +459,7 @@ export const updateSequence = mutation({
     if (args.updates.isOnboarding === true && !sequence.isOnboarding) {
       const existingOnboarding = await ctx.db
         .query("coachMarkSequences")
-        .withIndex("", (q: any) => q.eq("isOnboarding", true))
+        .withIndex("by_onboarding", (q) => q.eq("isOnboarding", true))
         .first();
 
       if (existingOnboarding && existingOnboarding._id !== sequence._id) {
@@ -494,7 +494,7 @@ export const deleteSequence = mutation({
     for (const stepKey of sequence.stepOrder) {
       const step = await ctx.db
         .query("coachMarkSteps")
-        .withIndex("", (q: any) => q.eq("stepKey", stepKey))
+        .withIndex("by_step_key", (q) => q.eq("stepKey", stepKey))
         .first();
 
       if (step) {
@@ -537,7 +537,7 @@ export const reorderSequence = mutation({
     for (let i = 0; i < args.newStepOrder.length; i++) {
       const step = await ctx.db
         .query("coachMarkSteps")
-        .withIndex("", (q: any) => q.eq("stepKey", args.newStepOrder[i]))
+        .withIndex("by_step_key", (q) => q.eq("stepKey", args.newStepOrder[i]))
         .first();
 
       if (step) {
@@ -607,7 +607,7 @@ export const resetProgress = mutation({
     // Find onboarding sequence to restart it
     const onboardingSequence = await ctx.db
       .query("coachMarkSequences")
-      .withIndex("", (q: any) => q.eq("isOnboarding", true))
+      .withIndex("by_onboarding", (q) => q.eq("isOnboarding", true))
       .filter((q) => q.eq(q.field("isActive"), true))
       .first();
 
