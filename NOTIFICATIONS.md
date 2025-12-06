@@ -20,9 +20,13 @@ A notification system that alerts players to important in-game events. The syste
 **Key Design Decisions:**
 - **No sound effects** - Silent notifications only
 - **No grouping** - Each notification is individual, never combined
-- **Permanent lifespan** - Notifications persist until user manually clears them
+- **100 notification cap** - Max 100 notifications per player, oldest auto-deleted when cap reached
 - **Persist after viewing** - Read notifications stay in the list (just lose the "new" indicator)
 - **Single color scheme** - No priority-based colors, keep it simple
+
+**Display Limits:**
+- **Dropdown**: 5 most recent notifications
+- **Lightbox**: 10 notifications per page (10 pages max at 100 total)
 
 ---
 

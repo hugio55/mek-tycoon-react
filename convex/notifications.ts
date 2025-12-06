@@ -215,6 +215,7 @@ export const createNotification = internalMutation({
 });
 
 // Public mutation to create notification (for admin/testing)
+// Also enforces 100-notification cap per user
 export const createNotificationPublic = mutation({
   args: {
     userId: v.id("users"),
@@ -238,6 +239,20 @@ export const createNotificationPublic = mutation({
 
       if (existing) {
         return { success: false, reason: "duplicate", existingId: existing._id };
+      }
+    }
+
+    // Enforce notification cap - delete oldest if at limit
+    const userNotifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_user_created", (q) => q.eq("userId", args.userId))
+      .order("asc") // Oldest first
+      .collect();
+
+    if (userNotifications.length >= MAX_NOTIFICATIONS_PER_USER) {
+      const toDelete = userNotifications.slice(0, userNotifications.length - MAX_NOTIFICATIONS_PER_USER + 1);
+      for (const notification of toDelete) {
+        await ctx.db.delete(notification._id);
       }
     }
 
