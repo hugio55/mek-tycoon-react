@@ -1,5 +1,5 @@
 import React, { memo, useRef, useEffect, useCallback } from 'react';
-import { TalentNode, Connection, DragState, CanvasMode, BoxSelection, LassoSelection, BuilderMode, ViewportDimensions, ViewportPosition } from '@/app/talent-builder/types';
+import { TalentNode, Connection, DragState, CanvasMode, BoxSelection, LassoSelection, BuilderMode, ViewportDimensions } from '@/app/talent-builder/types';
 import { TalentAction } from './talentReducer';
 
 interface CanvasProps {
@@ -21,8 +21,6 @@ interface CanvasProps {
   lassoSelection: LassoSelection;
   showViewportBox: boolean;
   viewportDimensions: ViewportDimensions;
-  viewportPosition: ViewportPosition;
-  isDraggingViewport: boolean;
   unconnectedNodes: Set<string>;
   deadEndNodes: Set<string>;
   highlightDisconnected: boolean;
@@ -237,21 +235,6 @@ const Canvas: React.FC<CanvasProps> = memo(({
   }, [mode, panOffset, zoom, snapPosition, onAddNode, dispatch]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    // Handle viewport box dragging
-    if (isDraggingViewport) {
-      const rect = canvasRef.current?.getBoundingClientRect();
-      if (!rect) return;
-
-      const x = (e.clientX - rect.left - panOffset.x) / zoom;
-      const y = (e.clientY - rect.top - panOffset.y) / zoom;
-
-      dispatch({
-        type: 'SET_VIEWPORT_POSITION',
-        payload: { x, y }
-      });
-      return;
-    }
-
     if (isPanning) {
       const deltaX = e.clientX - panStart.x;
       const deltaY = e.clientY - panStart.y;
@@ -338,15 +321,9 @@ const Canvas: React.FC<CanvasProps> = memo(({
         }
       });
     }
-  }, [isPanning, panStart, panOffset, boxSelection, lassoSelection, dragState, zoom, snapPosition, nodes, selectedNodes, dispatch, isDraggingViewport]);
+  }, [isPanning, panStart, panOffset, boxSelection, lassoSelection, dragState, zoom, snapPosition, nodes, selectedNodes, dispatch]);
 
   const handleMouseUp = useCallback(() => {
-    // Stop viewport dragging
-    if (isDraggingViewport) {
-      dispatch({ type: 'SET_IS_DRAGGING_VIEWPORT', payload: false });
-      return;
-    }
-
     // Finish box selection
     if (boxSelection.isSelecting) {
       const minX = Math.min(boxSelection.startX, boxSelection.endX);
@@ -395,7 +372,7 @@ const Canvas: React.FC<CanvasProps> = memo(({
     dispatch({ type: 'SET_IS_PANNING', payload: false });
     dispatch({ type: 'SET_BOX_SELECTION', payload: { isSelecting: false, startX: 0, startY: 0, endX: 0, endY: 0, addToSelection: false } });
     dispatch({ type: 'SET_LASSO_SELECTION', payload: { isSelecting: false, points: [] } });
-  }, [boxSelection, lassoSelection, nodes, selectedNodes, dispatch, isDraggingViewport]);
+  }, [boxSelection, lassoSelection, nodes, selectedNodes, dispatch]);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
@@ -563,32 +540,26 @@ const Canvas: React.FC<CanvasProps> = memo(({
             </div>
           )}
 
-          {/* Viewport Box - Draggable */}
+          {/* Viewport Box - Locked to center of grid */}
           {showViewportBox && (
             <div
-              className={`absolute border-2 border-dashed border-yellow-500 ${isDraggingViewport ? 'cursor-grabbing' : 'cursor-grab'}`}
+              className="absolute border-2 border-dashed border-yellow-500 pointer-events-none"
               style={{
-                left: `${viewportPosition.x - viewportDimensions.width / 2}px`,
-                top: `${viewportPosition.y - viewportDimensions.height / 2}px`,
+                left: `${gridSize / 2 - viewportDimensions.width / 2}px`,
+                top: `${gridSize / 2 - viewportDimensions.height / 2}px`,
                 width: `${viewportDimensions.width}px`,
                 height: `${viewportDimensions.height}px`,
-                zIndex: 50,
-                backgroundColor: isDraggingViewport ? 'rgba(251, 191, 36, 0.1)' : 'transparent',
-                transition: isDraggingViewport ? 'none' : 'background-color 0.2s'
-              }}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                dispatch({ type: 'SET_IS_DRAGGING_VIEWPORT', payload: true });
+                zIndex: 50
               }}
             >
               {/* Viewport label */}
               <div
-                className="absolute -top-6 left-0 bg-yellow-500 text-black text-xs px-2 py-0.5 rounded font-bold pointer-events-none"
+                className="absolute -top-6 left-0 bg-yellow-500 text-black text-xs px-2 py-0.5 rounded font-bold"
               >
                 VIEWPORT ({viewportDimensions.width}x{viewportDimensions.height})
               </div>
               {/* Center crosshair */}
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-4 h-0.5 bg-yellow-500/50" />
                 <div className="absolute w-0.5 h-4 bg-yellow-500/50" />
               </div>

@@ -15,13 +15,23 @@ const LIGHTBOX_PAGE_SIZE = 10; // Show 10 per page in "View All"
 // ============================================================================
 
 // Get user ID by wallet address (helper for frontend to get userId)
+// Checks both walletAddress and walletStakeAddress fields
 export const getUserIdByWallet = query({
   args: { walletAddress: v.string() },
   handler: async (ctx, args) => {
-    const user = await ctx.db
+    // First try by walletAddress
+    let user = await ctx.db
       .query("users")
       .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
       .first();
+
+    // If not found, try by walletStakeAddress
+    if (!user) {
+      user = await ctx.db
+        .query("users")
+        .withIndex("by_stake_address", (q) => q.eq("walletStakeAddress", args.walletAddress))
+        .first();
+    }
 
     return user?._id ?? null;
   },

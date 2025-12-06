@@ -324,14 +324,6 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
               <option value="1280x720">1280x720 (HD)</option>
               <option value="375x667">375x667 (Phone)</option>
             </select>
-
-            <button
-              onClick={() => dispatch({ type: 'CENTER_VIEWPORT' })}
-              className="px-2 py-1 text-sm rounded bg-yellow-600/50 hover:bg-yellow-600 text-yellow-200 border border-yellow-500/50"
-              title="Center viewport box on canvas"
-            >
-              Center
-            </button>
           </div>
         </div>
       </div>
