@@ -11,7 +11,7 @@ export const getActiveConfig = query({
   handler: async (ctx) => {
     const config = await ctx.db
       .query("airdropConfig")
-      .withIndex("", (q: any) => q.eq("isActive", true))
+      .withIndex("by_active", (q: any) => q.eq("isActive", true))
       .first();
 
     return config;
@@ -24,7 +24,7 @@ export const getConfigByCampaign = query({
   handler: async (ctx, args) => {
     const config = await ctx.db
       .query("airdropConfig")
-      .withIndex("", (q: any) => q.eq("campaignName", args.campaignName))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignName", args.campaignName))
       .first();
 
     return config;
@@ -40,7 +40,7 @@ export const getUserSubmission = query({
   handler: async (ctx, args) => {
     const submission = await ctx.db
       .query("airdropSubmissions")
-      .withIndex("", (q: any) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q: any) => q.eq("userId", args.userId))
       .filter((q) => q.eq(q.field("campaignName"), args.campaignName))
       .first();
 
@@ -65,7 +65,7 @@ export const getAllSubmissions = query({
     if (args.campaignName) {
       submissions = await ctx.db
         .query("airdropSubmissions")
-        .withIndex("", (q: any) => q.eq("campaignName", args.campaignName!))
+        .withIndex("by_campaign", (q: any) => q.eq("campaignName", args.campaignName!))
         .collect();
     } else {
       submissions = await ctx.db
@@ -103,7 +103,7 @@ export const getSubmissionStats = query({
   handler: async (ctx, args) => {
     const submissions = await ctx.db
       .query("airdropSubmissions")
-      .withIndex("", (q: any) => q.eq("campaignName", args.campaignName))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignName", args.campaignName))
       .collect();
 
     const stats = {
@@ -208,7 +208,7 @@ export const getWalletCompanyNames = query({
     for (const walletAddress of args.walletAddresses) {
       const miner = await ctx.db
         .query("goldMining")
-        .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
         .first();
 
       companyMap[walletAddress] = miner?.companyName || null;
@@ -242,7 +242,7 @@ export const upsertConfig = mutation({
     // Check if config exists
     const existing = await ctx.db
       .query("airdropConfig")
-      .withIndex("", (q: any) => q.eq("campaignName", args.campaignName))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignName", args.campaignName))
       .first();
 
     const now = Date.now();
@@ -277,7 +277,7 @@ export const submitAddress = mutation({
     // Verify campaign is active
     const config = await ctx.db
       .query("airdropConfig")
-      .withIndex("", (q: any) => q.eq("campaignName", args.campaignName))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignName", args.campaignName))
       .first();
 
     if (!config || !config.isActive) {
@@ -410,7 +410,7 @@ export const toggleActive = mutation({
   handler: async (ctx, args) => {
     const config = await ctx.db
       .query("airdropConfig")
-      .withIndex("", (q: any) => q.eq("campaignName", args.campaignName))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignName", args.campaignName))
       .first();
 
     if (!config) {
@@ -461,5 +461,3 @@ export const addAdminNotes = mutation({
     });
 
     return { success: true };
-  },
-});
