@@ -1142,6 +1142,115 @@ export const cascadeDeleteUser = mutation({
     deletedCounts.messages = messagesDeleted;
     deletedCounts.conversations = allConversations.length;
 
+    // === ADDITIONAL WALLET-REFERENCED TABLES ===
+
+    // federationInvites (as inviter or invitee)
+    const federationInvitesAsInvitee = await ctx.db.query("federationInvites")
+      .withIndex("by_invited_wallet", (q: any) => q.eq("invitedWalletAddress", walletAddress)).collect();
+    const federationInvitesAsInviter = await ctx.db.query("federationInvites")
+      .filter((q) => q.eq(q.field("invitedByWalletAddress"), walletAddress)).collect();
+    const allFederationInvites = [...federationInvitesAsInvitee, ...federationInvitesAsInviter];
+    for (const record of allFederationInvites) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.federationInvites = allFederationInvites.length;
+
+    // mekTransferEvents (as fromWallet or toWallet)
+    const mekTransferEventsFrom = await ctx.db.query("mekTransferEvents")
+      .withIndex("by_from_wallet", (q: any) => q.eq("fromWallet", walletAddress)).collect();
+    const mekTransferEventsTo = await ctx.db.query("mekTransferEvents")
+      .withIndex("by_to_wallet", (q: any) => q.eq("toWallet", walletAddress)).collect();
+    const allMekTransferEvents = [...mekTransferEventsFrom, ...mekTransferEventsTo];
+    for (const record of allMekTransferEvents) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.mekTransferEvents = allMekTransferEvents.length;
+
+    // batchMintedTokens (as recipient)
+    const batchMintedTokens = await ctx.db.query("batchMintedTokens")
+      .filter((q) => q.eq(q.field("recipientAddress"), walletAddress)).collect();
+    for (const record of batchMintedTokens) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.batchMintedTokens = batchMintedTokens.length;
+
+    // messageBlocks (as blocker or blocked)
+    const messageBlocksAsBlocker = await ctx.db.query("messageBlocks")
+      .withIndex("by_blocker", (q: any) => q.eq("blockerWallet", walletAddress)).collect();
+    const messageBlocksAsBlocked = await ctx.db.query("messageBlocks")
+      .withIndex("by_blocked", (q: any) => q.eq("blockedWallet", walletAddress)).collect();
+    const allMessageBlocks = [...messageBlocksAsBlocker, ...messageBlocksAsBlocked];
+    for (const record of allMessageBlocks) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.messageBlocks = allMessageBlocks.length;
+
+    // federationVariationCollection - remove wallet from contributingWallets array
+    // Note: We update the array rather than delete the record since other wallets may still contribute
+    const federationVariations = await ctx.db.query("federationVariationCollection")
+      .filter((q) => q.neq(q.field("contributingWallets"), undefined)).collect();
+    let federationVariationsUpdated = 0;
+    for (const record of federationVariations) {
+      const wallets = record.contributingWallets || [];
+      if (wallets.includes(walletAddress)) {
+        const updatedWallets = wallets.filter((w: string) => w !== walletAddress);
+        if (updatedWallets.length === 0) {
+          // No wallets left, delete the record
+          await ctx.db.delete(record._id);
+        } else {
+          // Update the record with remaining wallets
+          await ctx.db.patch(record._id, {
+            contributingWallets: updatedWallets,
+            count: Math.max(0, record.count - 1),
+            lastUpdated: Date.now()
+          });
+        }
+        federationVariationsUpdated++;
+      }
+    }
+    deletedCounts.federationVariationCollectionUpdates = federationVariationsUpdated;
+
+    // === CORPORATIONS SYSTEM (parallel user system) ===
+
+    // nftPurchases (by walletAddress or userId)
+    const nftPurchasesByWallet = await ctx.db.query("nftPurchases")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    const nftPurchasesByUser = await ctx.db.query("nftPurchases")
+      .filter((q) => q.eq(q.field("userId"), userId)).collect();
+    // Dedupe
+    const nftPurchaseIds = new Set([...nftPurchasesByWallet, ...nftPurchasesByUser].map(r => r._id.toString()));
+    for (const record of [...nftPurchasesByWallet, ...nftPurchasesByUser]) {
+      if (nftPurchaseIds.has(record._id.toString())) {
+        await ctx.db.delete(record._id);
+        nftPurchaseIds.delete(record._id.toString());
+      }
+    }
+    deletedCounts.nftPurchases = nftPurchasesByWallet.length + nftPurchasesByUser.length;
+
+    // corporations (by stakeAddress - use walletAddress which could be stake address)
+    const corporations = await ctx.db.query("corporations")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress)).collect();
+    // Also try with user's stake address if different
+    const corporationsByStake = user.walletStakeAddress && user.walletStakeAddress !== walletAddress
+      ? await ctx.db.query("corporations")
+          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", user.walletStakeAddress)).collect()
+      : [];
+    const allCorporations = [...corporations, ...corporationsByStake];
+
+    // For each corporation, delete related coachMarkProgress
+    let coachMarkProgressDeleted = 0;
+    for (const corp of allCorporations) {
+      const coachMarkProgress = await ctx.db.query("coachMarkProgress")
+        .withIndex("by_corporation", (q: any) => q.eq("corporationId", corp._id)).collect();
+      for (const record of coachMarkProgress) {
+        await ctx.db.delete(record._id);
+        coachMarkProgressDeleted++;
+      }
+      await ctx.db.delete(corp._id);
+    }
+    deletedCounts.corporations = allCorporations.length;
+    deletedCounts.coachMarkProgress = coachMarkProgressDeleted;
+
     // === FINALLY DELETE THE USER ===
     await ctx.db.delete(userId);
     deletedCounts.users = 1;
