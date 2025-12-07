@@ -988,42 +988,79 @@ const DATA_SYSTEMS = [
 export default function AdminMasterDataPage() {
   const convex = useConvex();
 
-  // Single database client (SIMPLIFIED - uses main URL from env)
-  const [httpClient] = useState(() => new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!));
+  // DUAL DATABASE CLIENTS - Trout (Dev) and Sturgeon (Production)
+  const troutUrl = process.env.NEXT_PUBLIC_CONVEX_URL!;
+  const sturgeonUrl = process.env.NEXT_PUBLIC_STURGEON_URL;
 
-  // Detect which database we're connected to (single database mode)
-  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || '';
-  const deploymentName = convexUrl.split("//")[1]?.split(".")[0] || "unknown";
-  const isProduction = deploymentName === 'fabulous-sturgeon-691';
-  const databaseLabel = isProduction ? 'Sturgeon' : deploymentName;
+  const [troutClient] = useState(() => new ConvexHttpClient(troutUrl));
+  const [sturgeonClient] = useState(() => sturgeonUrl ? new ConvexHttpClient(sturgeonUrl) : null);
 
-  // Site settings (single database mode)
-  const [dbSettings, setDbSettings] = useState<any>(null);
-  const [dbLoading, setDbLoading] = useState(true);
+  // Legacy alias for backwards compatibility
+  const httpClient = troutClient;
+
+  // Detect connected database names
+  const troutDeployment = troutUrl.split("//")[1]?.split(".")[0] || "unknown";
+  const sturgeonDeployment = sturgeonUrl?.split("//")[1]?.split(".")[0] || "not-configured";
+
+  // Legacy variables for backwards compatibility
+  const convexUrl = troutUrl;
+  const deploymentName = troutDeployment;
+  const isProduction = false; // Always dev mode for main client now
+  const databaseLabel = troutDeployment;
+
+  // DUAL DATABASE SETTINGS
+  const [troutSettings, setTroutSettings] = useState<any>(null);
+  const [sturgeonSettings, setSturgeonSettings] = useState<any>(null);
+  const [troutLoading, setTroutLoading] = useState(true);
+  const [sturgeonLoading, setSturgeonLoading] = useState(true);
+
+  // Legacy alias
+  const dbSettings = troutSettings;
+  const setDbSettings = setTroutSettings;
+  const dbLoading = troutLoading;
 
   // Portal mounting state
   const [mounted, setMounted] = useState(false);
 
-  // Fetch settings from database (single database mode)
+  // Fetch settings from BOTH databases
   useEffect(() => {
-    async function fetchSettings() {
+    async function fetchTroutSettings() {
       try {
-        const settings = await httpClient.query(api.siteSettings.getSiteSettings);
-        setDbSettings(settings);
+        const settings = await troutClient.query(api.siteSettings.getSiteSettings);
+        setTroutSettings(settings);
       } catch (error) {
-        console.error('[Admin] Error fetching settings:', error);
+        console.error('[Admin] Error fetching Trout settings:', error);
       } finally {
-        setDbLoading(false);
+        setTroutLoading(false);
       }
     }
 
-    fetchSettings();
+    async function fetchSturgeonSettings() {
+      if (!sturgeonClient) {
+        setSturgeonLoading(false);
+        return;
+      }
+      try {
+        const settings = await sturgeonClient.query(api.siteSettings.getSiteSettings);
+        setSturgeonSettings(settings);
+      } catch (error) {
+        console.error('[Admin] Error fetching Sturgeon settings:', error);
+      } finally {
+        setSturgeonLoading(false);
+      }
+    }
+
+    fetchTroutSettings();
+    fetchSturgeonSettings();
 
     // Poll for updates every 5 seconds
-    const interval = setInterval(fetchSettings, 5000);
+    const interval = setInterval(() => {
+      fetchTroutSettings();
+      fetchSturgeonSettings();
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, [httpClient]);
+  }, [troutClient, sturgeonClient]);
 
   // Set mounted state for portals
   useEffect(() => {
