@@ -684,13 +684,13 @@ export const getMeksWithLevelsAndTenure = query({
     // Get all Meks owned by wallet
     const meks = await ctx.db
       .query("meks")
-      .withIndex("", (q: any) => q.eq("owner", args.walletAddress))
+      .withIndex("by_owner", (q: any) => q.eq("owner", args.walletAddress))
       .collect();
 
     // Get level data for all Meks
     const levelData = await ctx.db
       .query("mekLevels")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .filter((q) => q.neq(q.field("ownershipStatus"), "transferred"))
       .collect();
 
