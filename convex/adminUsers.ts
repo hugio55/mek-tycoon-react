@@ -53,7 +53,7 @@ export const getAllUsersForAdmin = query({
         _id: user._id,
         walletAddress: user.walletAddress,
         walletType: user.walletType || user.lastWalletType || "Unknown",
-        companyName: user.displayName || null,
+        companyName: user.corporationName || null,
         mekCount: mekCountByWallet.get(user.walletAddress) || 0,
         totalGoldPerHour: user.goldPerHour || 0,
         currentGold: Math.floor((user.gold || 0) * 100) / 100,
@@ -615,7 +615,7 @@ export const previewTestWallets = query({
 
       return {
         walletAddress,
-        displayName: user.displayName || "No name",
+        displayName: user.corporationName || "No name",
         createdAt: user.createdAt,
         lastLogin: user.lastLogin,
         relatedRecords: {
