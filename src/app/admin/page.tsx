@@ -982,7 +982,8 @@ const DATA_SYSTEMS = [
   { id: 'messaging-system', name: 'Messaging System', icon: '💬', implemented: true },
   { id: 'rarity-bias', name: 'Rarity Bias', icon: '📊', implemented: true },
   { id: 'universal-background', name: 'Universal Background', icon: '🌌', implemented: true },
-  { id: 'coach-marks', name: 'Coach Marks', icon: '🎯', implemented: true }
+  { id: 'coach-marks', name: 'Coach Marks', icon: '🎯', implemented: true },
+  { id: 'user-flow', name: 'User Flow', icon: '🔗', implemented: true }
 ];
 
 export default function AdminMasterDataPage() {
@@ -6493,6 +6494,142 @@ export default function AdminMasterDataPage() {
 
           {activeTab === 'coach-marks' && (
             <CoachMarksAdmin />
+          )}
+
+          {/* User Flow - Database Table Relationships */}
+          {activeTab === 'user-flow' && (
+            <div className="bg-black/50 backdrop-blur border-2 border-blue-500/30 rounded-lg p-6">
+              <p className="text-gray-400 mb-6">
+                Visual diagram of database tables and how they relate to each other. The users table is the core identity table - all other tables reference it via stakeAddress.
+              </p>
+
+              <div className="relative" style={{ minHeight: '700px' }}>
+                {/* SVG Lines connecting tables */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
+                  {/* users → meks */}
+                  <line x1="200" y1="150" x2="450" y2="100" stroke="#3b82f6" strokeWidth="2" strokeDasharray="5,5" />
+                  <text x="320" y="110" fill="#60a5fa" fontSize="10" className="font-mono">ownerStakeAddress → stakeAddress</text>
+
+                  {/* users → userEssence */}
+                  <line x1="200" y1="180" x2="450" y2="220" stroke="#22c55e" strokeWidth="2" strokeDasharray="5,5" />
+                  <text x="290" y="210" fill="#4ade80" fontSize="10" className="font-mono">stakeAddress (FK)</text>
+
+                  {/* users → userJobSlots */}
+                  <line x1="200" y1="200" x2="450" y2="340" stroke="#eab308" strokeWidth="2" strokeDasharray="5,5" />
+                  <text x="290" y="290" fill="#facc15" fontSize="10" className="font-mono">stakeAddress (FK)</text>
+
+                  {/* users → goldMiningState */}
+                  <line x1="200" y1="220" x2="450" y2="460" stroke="#a855f7" strokeWidth="2" strokeDasharray="5,5" />
+                  <text x="290" y="370" fill="#c084fc" fontSize="10" className="font-mono">stakeAddress (FK)</text>
+
+                  {/* goldMining (legacy) - separate, no direct connection */}
+                  <line x1="200" y1="240" x2="450" y2="580" stroke="#ef4444" strokeWidth="2" strokeDasharray="3,3" opacity="0.5" />
+                  <text x="280" y="450" fill="#f87171" fontSize="10" className="font-mono">LEGACY (walletAddress)</text>
+
+                  {/* userJobSlots → meks */}
+                  <line x1="650" y1="340" x2="650" y2="120" stroke="#06b6d4" strokeWidth="2" strokeDasharray="5,5" />
+                  <text x="660" y="230" fill="#22d3ee" fontSize="10" className="font-mono">assignedMekId → assetId</text>
+                </svg>
+
+                {/* USERS table - Center Left */}
+                <div className="absolute left-4 top-24 w-52 bg-blue-900/40 border-2 border-blue-500 rounded p-3" style={{ zIndex: 1 }}>
+                  <div className="text-blue-400 font-bold text-sm mb-2 border-b border-blue-500/50 pb-1">users</div>
+                  <div className="text-xs text-gray-300 space-y-1">
+                    <div className="text-yellow-400">stakeAddress (PK)</div>
+                    <div>corporationName</div>
+                    <div>displayName</div>
+                    <div>gold</div>
+                    <div className="text-orange-400">totalEssence (LEGACY)</div>
+                    <div>level, xp</div>
+                    <div>session/auth</div>
+                  </div>
+                  <div className="text-[10px] text-blue-300 mt-2 border-t border-blue-500/30 pt-1">CORE IDENTITY TABLE</div>
+                </div>
+
+                {/* MEKS table - Right Top */}
+                <div className="absolute right-4 top-4 w-52 bg-cyan-900/40 border-2 border-cyan-500 rounded p-3" style={{ zIndex: 1 }}>
+                  <div className="text-cyan-400 font-bold text-sm mb-2 border-b border-cyan-500/50 pb-1">meks</div>
+                  <div className="text-xs text-gray-300 space-y-1">
+                    <div className="text-yellow-400">assetId (PK)</div>
+                    <div className="text-blue-400">ownerStakeAddress (FK)</div>
+                    <div>headVariation, bodyVariation</div>
+                    <div>sourceKey, sourceKeyBase</div>
+                    <div>talentTree {"{...}"}</div>
+                    <div>rarityTier, gameRank</div>
+                  </div>
+                  <div className="text-[10px] text-cyan-300 mt-2 border-t border-cyan-500/30 pt-1">NFT COLLECTION</div>
+                </div>
+
+                {/* userEssence table */}
+                <div className="absolute right-4 top-44 w-52 bg-green-900/40 border-2 border-green-500 rounded p-3" style={{ zIndex: 1 }}>
+                  <div className="text-green-400 font-bold text-sm mb-2 border-b border-green-500/50 pb-1">userEssence</div>
+                  <div className="text-xs text-gray-300 space-y-1">
+                    <div className="text-blue-400">stakeAddress (FK)</div>
+                    <div>essenceType (291 types)</div>
+                    <div>balance</div>
+                  </div>
+                  <div className="text-[10px] text-green-300 mt-2 border-t border-green-500/30 pt-1">SPARSE DATA - Row per type owned</div>
+                </div>
+
+                {/* userJobSlots table */}
+                <div className="absolute right-4 top-80 w-52 bg-yellow-900/40 border-2 border-yellow-500 rounded p-3" style={{ zIndex: 1 }}>
+                  <div className="text-yellow-400 font-bold text-sm mb-2 border-b border-yellow-500/50 pb-1">userJobSlots</div>
+                  <div className="text-xs text-gray-300 space-y-1">
+                    <div className="text-blue-400">stakeAddress (FK)</div>
+                    <div>slotType, slotIndex</div>
+                    <div className="text-cyan-400">assignedMekId (FK→meks)</div>
+                    <div>slotXP, slotLevel</div>
+                  </div>
+                  <div className="text-[10px] text-yellow-300 mt-2 border-t border-yellow-500/30 pt-1">JOB ASSIGNMENTS</div>
+                </div>
+
+                {/* goldMiningState table */}
+                <div className="absolute right-4 top-[440px] w-52 bg-purple-900/40 border-2 border-purple-500 rounded p-3" style={{ zIndex: 1 }}>
+                  <div className="text-purple-400 font-bold text-sm mb-2 border-b border-purple-500/50 pb-1">goldMiningState</div>
+                  <div className="text-xs text-gray-300 space-y-1">
+                    <div className="text-blue-400">stakeAddress (FK)</div>
+                    <div>totalGoldPerHour</div>
+                    <div>accumulatedGold</div>
+                    <div>lastCalculationTime</div>
+                  </div>
+                  <div className="text-[10px] text-purple-300 mt-2 border-t border-purple-500/30 pt-1">PHASE II - Gold tracking</div>
+                </div>
+
+                {/* goldMining (LEGACY) table */}
+                <div className="absolute right-4 bottom-4 w-52 bg-red-900/40 border-2 border-red-500/50 rounded p-3 opacity-60" style={{ zIndex: 1 }}>
+                  <div className="text-red-400 font-bold text-sm mb-2 border-b border-red-500/50 pb-1">goldMining (LEGACY)</div>
+                  <div className="text-xs text-gray-400 space-y-1">
+                    <div className="text-orange-400">walletAddress (old PK)</div>
+                    <div className="line-through">companyName (duplicate)</div>
+                    <div className="line-through">ownedMeks[] (denormalized)</div>
+                    <div>selectedMeks[], goldRate</div>
+                  </div>
+                  <div className="text-[10px] text-red-300 mt-2 border-t border-red-500/30 pt-1">PHASE I - Should be deprecated</div>
+                </div>
+
+                {/* Legend */}
+                <div className="absolute left-4 bottom-4 bg-gray-900/80 border border-gray-600 rounded p-3" style={{ zIndex: 1 }}>
+                  <div className="text-gray-400 font-bold text-xs mb-2">LEGEND</div>
+                  <div className="text-xs space-y-1">
+                    <div><span className="text-yellow-400">Yellow</span> = Primary Key (PK)</div>
+                    <div><span className="text-blue-400">Blue</span> = Foreign Key (FK) → users</div>
+                    <div><span className="text-cyan-400">Cyan</span> = FK → other table</div>
+                    <div><span className="text-orange-400">Orange</span> = Legacy/deprecated field</div>
+                    <div><span className="line-through text-gray-500">Strikethrough</span> = Should be removed</div>
+                  </div>
+                </div>
+
+                {/* Notes panel */}
+                <div className="absolute left-4 top-[340px] w-52 bg-gray-800/60 border border-gray-600 rounded p-3" style={{ zIndex: 1 }}>
+                  <div className="text-gray-300 font-bold text-xs mb-2">KEY RELATIONSHIPS</div>
+                  <div className="text-[10px] text-gray-400 space-y-2">
+                    <div><strong className="text-blue-400">users.stakeAddress</strong> is the universal FK for all user data</div>
+                    <div><strong className="text-red-400">goldMining</strong> uses old walletAddress - should migrate to stakeAddress</div>
+                    <div><strong className="text-orange-400">users.totalEssence</strong> is legacy - userEssence table is the new sparse storage</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
         </div>
