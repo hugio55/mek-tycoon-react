@@ -73,8 +73,9 @@ function WalletManagementAdminContent() {
   const [confirmationText, setConfirmationText] = useState('');
   const [showConfirmationPrompt, setShowConfirmationPrompt] = useState(false);
 
-  // BANDWIDTH OPTIMIZATION: Only load wallets when user clicks "Load Wallets" button
-  const [walletsLoaded, setWalletsLoaded] = useState(false);
+  // Auto-load wallets toggle (default ON when no real players yet)
+  const [autoLoadWallets, setAutoLoadWallets] = useState(true);
+  const [walletsLoaded, setWalletsLoaded] = useState(true); // Default to loaded now
   const [showOnlyWrenCo, setShowOnlyWrenCo] = useState(false);
 
   // Load wallets from database (single database mode - always uses main client)
@@ -1166,48 +1167,21 @@ Check console for full timeline.
             </div>
           )}
 
-          {/* Confirmation Prompt Modal */}
+          {/* Confirmation Prompt Modal - Simple toggle confirmation */}
           {showConfirmationPrompt && mounted && createPortal(
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[99999]">
               <div className="bg-gray-900 border-4 border-red-500 rounded-lg p-6 max-w-md w-full mx-4">
                 <h3 className="text-2xl font-bold text-red-400 mb-4" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                  ⚠️ ENABLE PRODUCTION MUTATIONS?
+                  Enable Production Mutations?
                 </h3>
-                <div className="space-y-4 text-sm text-gray-300 mb-6">
-                  <p className="font-bold text-red-300">
-                    You are about to enable mutations on the PRODUCTION database (Sturgeon).
-                  </p>
-                  <p>This will allow you to:</p>
-                  <ul className="list-disc list-inside space-y-1 text-red-200">
-                    <li>Delete real player accounts</li>
-                    <li>Modify gold balances for live users</li>
-                    <li>Reset player progress</li>
-                    <li>Make irreversible changes to production data</li>
-                  </ul>
-                  <p className="font-bold text-yellow-300">
-                    All changes affect REAL PLAYERS immediately!
-                  </p>
-                </div>
-
-                <div className="mb-6">
-                  <label className="block text-sm font-bold text-red-400 mb-2">
-                    Type "ENABLE MUTATIONS" to confirm:
-                  </label>
-                  <input
-                    type="text"
-                    value={confirmationText}
-                    onChange={(e) => setConfirmationText(e.target.value)}
-                    className="w-full px-4 py-2 bg-gray-800 border-2 border-red-500 rounded-lg text-white focus:outline-none focus:border-red-400"
-                    placeholder="ENABLE MUTATIONS"
-                    autoFocus
-                  />
-                </div>
+                <p className="text-sm text-gray-300 mb-6">
+                  This allows changes to the production database. All changes affect real players immediately.
+                </p>
 
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
                       setShowConfirmationPrompt(false);
-                      setConfirmationText('');
                     }}
                     className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg text-white font-bold transition-colors"
                   >
@@ -1215,16 +1189,12 @@ Check console for full timeline.
                   </button>
                   <button
                     onClick={() => {
-                      if (confirmationText === 'ENABLE MUTATIONS') {
-                        setProductionMutationsEnabled(true);
-                        setShowConfirmationPrompt(false);
-                        setConfirmationText('');
-                      }
+                      setProductionMutationsEnabled(true);
+                      setShowConfirmationPrompt(false);
                     }}
-                    disabled={confirmationText !== 'ENABLE MUTATIONS'}
-                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-500 border border-red-500 rounded-lg text-white font-bold transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-500 border border-red-500 rounded-lg text-white font-bold transition-colors"
                   >
-                    Enable Mutations
+                    Enable
                   </button>
                 </div>
               </div>

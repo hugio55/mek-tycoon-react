@@ -532,18 +532,16 @@ export const resetUserProgress = mutation({
 
 /**
  * Check if a wallet address is a test wallet
- * Test wallets have patterns like: demo_, demo_wallet_, addr_test1, etc.
+ * Real Cardano wallets start with addr1 (payment) or stake1 (stake address)
+ * Any other pattern is a test/fake wallet
  */
 function isTestWallet(walletAddress: string): boolean {
   if (!walletAddress) return false;
   const lower = walletAddress.toLowerCase();
-  return (
-    lower.startsWith("demo_") ||
-    lower.startsWith("demo_wallet") ||
-    lower.startsWith("addr_test1") ||
-    lower.includes("test_wallet") ||
-    lower.includes("mock_wallet")
-  );
+  // Real Cardano addresses start with addr1 or stake1
+  const isRealCardanoAddress = lower.startsWith("addr1") || lower.startsWith("stake1");
+  // If it's not a real Cardano address, it's a test wallet
+  return !isRealCardanoAddress;
 }
 
 /**
