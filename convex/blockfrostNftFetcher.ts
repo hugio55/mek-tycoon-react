@@ -153,116 +153,58 @@ export const fetchNFTsByStakeAddress = action({
         }
       }
 
-      // Wait for rate limit slot
-      await rateLimiter.waitForSlot();
+      // OPTIMIZATION: Use /accounts/{stake}/addresses/assets endpoint
+      // This returns ALL assets for the stake address in ONE call (paginated)
+      // Much faster than: fetch addresses → for each address fetch UTXOs → parse UTXOs
+      const allAssets: BlockfrostAsset[] = [];
+      const meks: ParsedMek[] = [];
+      let page = 1;
+      let hasMore = true;
 
-      // Fetch account info to verify address exists
-      const accountUrl = `${BLOCKFROST_CONFIG.baseUrl}/accounts/${stakeAddress}`;
-      const accountResponse = await fetch(accountUrl, {
-        headers: getBlockfrostHeaders(),
-        signal: AbortSignal.timeout(BLOCKFROST_CONFIG.timeout),
-      });
-
-      if (!accountResponse.ok) {
-        if (accountResponse.status === 404) {
-          console.log(`[Blockfrost] Stake address not found: ${stakeAddress}`);
-          return { success: true, meks: [], totalAssets: 0 };
-        }
-        await handleBlockfrostError(accountResponse);
-      }
-
-      // Fetch all addresses associated with this stake account (WITH PAGINATION!)
-      const addresses = [];
-      let addressPage = 1;
-      let hasMoreAddresses = true;
-
-      while (hasMoreAddresses) {
+      while (hasMore) {
         await rateLimiter.waitForSlot();
-        const addressesUrl = `${BLOCKFROST_CONFIG.baseUrl}/accounts/${stakeAddress}/addresses?page=${addressPage}&count=100`;
-        const addressesResponse = await fetch(addressesUrl, {
+
+        const assetsUrl = `${BLOCKFROST_CONFIG.baseUrl}/accounts/${stakeAddress}/addresses/assets?page=${page}&count=100`;
+        console.log(`[Blockfrost] Fetching assets page ${page}...`);
+
+        const assetsResponse = await fetch(assetsUrl, {
           headers: getBlockfrostHeaders(),
           signal: AbortSignal.timeout(BLOCKFROST_CONFIG.timeout),
         });
 
-        if (!addressesResponse.ok) {
-          await handleBlockfrostError(addressesResponse);
+        if (!assetsResponse.ok) {
+          if (assetsResponse.status === 404) {
+            // Stake address not found or has no assets
+            console.log(`[Blockfrost] Stake address not found or no assets: ${stakeAddress}`);
+            break;
+          }
+          await handleBlockfrostError(assetsResponse);
         }
 
-        const addressBatch = await addressesResponse.json();
-        addresses.push(...addressBatch);
+        const assetBatch = await assetsResponse.json();
+        console.log(`[Blockfrost] Page ${page}: ${assetBatch.length} assets`);
 
-        // Check if there are more pages
-        hasMoreAddresses = addressBatch.length === 100;
-        addressPage++;
-      }
+        // Process assets in this batch
+        for (const asset of assetBatch) {
+          // Asset format: { unit: "policyId+assetNameHex", quantity: "1" }
+          allAssets.push(asset);
 
-      console.log(`[Blockfrost] Found ${addresses.length} addresses for stake key ${stakeAddress}`);
-
-      // Collect all assets from all addresses
-      const allAssets: BlockfrostAsset[] = [];
-      const meks: ParsedMek[] = [];
-
-      for (const addressObj of addresses) {
-        const address = addressObj.address;
-
-        // Pagination support for addresses with many assets
-        let page = 1;
-        let hasMore = true;
-
-        while (hasMore) {
-          await rateLimiter.waitForSlot();
-
-          const utxosUrl = `${BLOCKFROST_CONFIG.baseUrl}/addresses/${address}/utxos?page=${page}&count=100`;
-          const utxosResponse = await fetch(utxosUrl, {
-            headers: getBlockfrostHeaders(),
-            signal: AbortSignal.timeout(BLOCKFROST_CONFIG.timeout),
-          });
-
-          if (!utxosResponse.ok) {
-            if (utxosResponse.status === 404) {
-              // No UTXOs for this address
-              hasMore = false;
-              continue;
-            }
-            await handleBlockfrostError(utxosResponse);
-          }
-
-          const utxos = await utxosResponse.json();
-
-          // Extract assets from UTXOs
-          for (const utxo of utxos) {
-            if (utxo.amount && Array.isArray(utxo.amount)) {
-              for (const asset of utxo.amount) {
-                // Skip ADA
-                if (asset.unit === "lovelace") continue;
-
-                allAssets.push(asset);
-
-                // Check if this is a Mek NFT
-                if (asset.unit && asset.unit.startsWith(MEK_POLICY_ID)) {
-                  const parsed = parseMekAsset(asset);
-                  if (parsed) {
-                    // Check if we already have this Mek (avoid duplicates)
-                    const exists = meks.some((m: any) => m.assetId === parsed.assetId);
-                    if (!exists) {
-                      meks.push(parsed);
-                    }
-                  }
-                }
+          // Check if this is a Mek NFT
+          if (asset.unit && asset.unit.startsWith(MEK_POLICY_ID)) {
+            const parsed = parseMekAsset(asset);
+            if (parsed) {
+              const exists = meks.some((m: any) => m.assetId === parsed.assetId);
+              if (!exists) {
+                meks.push(parsed);
               }
             }
           }
-
-          // Check if there are more pages
-          hasMore = utxos.length === 100;
-          page++;
         }
-      }
 
-      // OPTIMIZATION: Skip individual metadata fetching - it's not used!
-      // goldMining.ts uses getMekDataByNumber() from local data files instead.
-      // This saves 1 API call per Mek (~42 calls for typical wallet).
-      // The fingerprint and metadata fields are optional and can be fetched later if needed.
+        // Check if there are more pages
+        hasMore = assetBatch.length === 100;
+        page++;
+      }
 
       // Cache the results
       const result = { meks, totalAssets: allAssets.length };
@@ -491,7 +433,8 @@ export const getBlockfrostCacheStats = action({
   },
 });
 
-// Quick Mek count - fast lookup without metadata fetching
+// Quick Mek count - ULTRA-FAST lookup using /accounts/{stake}/addresses/assets endpoint
+// This is dramatically faster than scanning UTXOs - single API call per 100 assets!
 // Used for immediate UI feedback before full data load
 export const quickMekCount = action({
   args: {
@@ -503,7 +446,7 @@ export const quickMekCount = action({
     error?: string;
   }> => {
     try {
-      console.log(`[Blockfrost-QuickCount] Starting fast Mek count for ${args.stakeAddress.substring(0, 20)}...`);
+      console.log(`[Blockfrost-QuickCount] Starting FAST Mek count for ${args.stakeAddress.substring(0, 20)}...`);
       const startTime = Date.now();
 
       // Convert hex stake address to bech32 format if needed
@@ -520,104 +463,57 @@ export const quickMekCount = action({
         };
       }
 
-      // Wait for rate limit slot
-      await rateLimiter.waitForSlot();
+      // OPTIMIZATION: Use /accounts/{stake}/addresses/assets endpoint
+      // This returns ALL assets for the stake address in ONE call (paginated)
+      // Much faster than: fetch addresses → for each address fetch UTXOs → parse UTXOs
+      const allAssets: any[] = [];
+      const meks: ParsedMek[] = [];
+      let page = 1;
+      let hasMore = true;
 
-      // Fetch account info to verify address exists
-      const accountUrl = `${BLOCKFROST_CONFIG.baseUrl}/accounts/${stakeAddress}`;
-      const accountResponse = await fetch(accountUrl, {
-        headers: getBlockfrostHeaders(),
-        signal: AbortSignal.timeout(BLOCKFROST_CONFIG.timeout),
-      });
-
-      if (!accountResponse.ok) {
-        if (accountResponse.status === 404) {
-          console.log(`[Blockfrost-QuickCount] Stake address not found`);
-          return { success: true, count: 0 };
-        }
-        await handleBlockfrostError(accountResponse);
-      }
-
-      // Fetch all addresses associated with this stake account
-      const addresses = [];
-      let addressPage = 1;
-      let hasMoreAddresses = true;
-
-      while (hasMoreAddresses) {
+      while (hasMore) {
         await rateLimiter.waitForSlot();
-        const addressesUrl = `${BLOCKFROST_CONFIG.baseUrl}/accounts/${stakeAddress}/addresses?page=${addressPage}&count=100`;
-        const addressesResponse = await fetch(addressesUrl, {
+
+        const assetsUrl = `${BLOCKFROST_CONFIG.baseUrl}/accounts/${stakeAddress}/addresses/assets?page=${page}&count=100`;
+        console.log(`[Blockfrost-QuickCount] Fetching assets page ${page}...`);
+
+        const assetsResponse = await fetch(assetsUrl, {
           headers: getBlockfrostHeaders(),
           signal: AbortSignal.timeout(BLOCKFROST_CONFIG.timeout),
         });
 
-        if (!addressesResponse.ok) {
-          await handleBlockfrostError(addressesResponse);
+        if (!assetsResponse.ok) {
+          if (assetsResponse.status === 404) {
+            // Stake address not found or has no assets
+            console.log(`[Blockfrost-QuickCount] No assets found (404)`);
+            break;
+          }
+          await handleBlockfrostError(assetsResponse);
         }
 
-        const addressBatch = await addressesResponse.json();
-        addresses.push(...addressBatch);
+        const assetBatch = await assetsResponse.json();
+        console.log(`[Blockfrost-QuickCount] Page ${page}: ${assetBatch.length} assets`);
 
-        hasMoreAddresses = addressBatch.length === 100;
-        addressPage++;
-      }
+        // Process assets in this batch
+        for (const asset of assetBatch) {
+          // Asset format: { unit: "policyId+assetNameHex", quantity: "1" }
+          allAssets.push(asset);
 
-      console.log(`[Blockfrost-QuickCount] Found ${addresses.length} addresses`);
-
-      // OPTIMIZATION: Collect full Mek data (not just count) and cache it
-      // This way fetchNFTsByStakeAddress can use the cache and skip re-scanning
-      const allAssets: any[] = [];
-      const meks: ParsedMek[] = [];
-
-      for (const addressObj of addresses) {
-        const address = addressObj.address;
-        let page = 1;
-        let hasMore = true;
-
-        while (hasMore) {
-          await rateLimiter.waitForSlot();
-
-          const utxosUrl = `${BLOCKFROST_CONFIG.baseUrl}/addresses/${address}/utxos?page=${page}&count=100`;
-          const utxosResponse = await fetch(utxosUrl, {
-            headers: getBlockfrostHeaders(),
-            signal: AbortSignal.timeout(BLOCKFROST_CONFIG.timeout),
-          });
-
-          if (!utxosResponse.ok) {
-            if (utxosResponse.status === 404) {
-              hasMore = false;
-              continue;
-            }
-            await handleBlockfrostError(utxosResponse);
-          }
-
-          const utxos = await utxosResponse.json();
-
-          // Extract and parse Meks (same as fetchNFTsByStakeAddress)
-          for (const utxo of utxos) {
-            if (utxo.amount && Array.isArray(utxo.amount)) {
-              for (const asset of utxo.amount) {
-                if (asset.unit === "lovelace") continue;
-
-                allAssets.push(asset);
-
-                // Check if this is a Mek NFT
-                if (asset.unit && asset.unit.startsWith(MEK_POLICY_ID)) {
-                  const parsed = parseMekAsset(asset);
-                  if (parsed) {
-                    const exists = meks.some((m: any) => m.assetId === parsed.assetId);
-                    if (!exists) {
-                      meks.push(parsed);
-                    }
-                  }
-                }
+          // Check if this is a Mek NFT
+          if (asset.unit && asset.unit.startsWith(MEK_POLICY_ID)) {
+            const parsed = parseMekAsset(asset);
+            if (parsed) {
+              const exists = meks.some((m: any) => m.assetId === parsed.assetId);
+              if (!exists) {
+                meks.push(parsed);
               }
             }
           }
-
-          hasMore = utxos.length === 100;
-          page++;
         }
+
+        // Check if there are more pages
+        hasMore = assetBatch.length === 100;
+        page++;
       }
 
       // CRITICAL: Cache the results so fetchNFTsByStakeAddress gets a cache hit!
@@ -625,7 +521,7 @@ export const quickMekCount = action({
       blockfrostCache.set(cacheKey, result);
 
       const elapsed = Date.now() - startTime;
-      console.log(`[Blockfrost-QuickCount] Found ${meks.length} Meks in ${elapsed}ms (cached for Phase 2)`);
+      console.log(`[Blockfrost-QuickCount] Found ${meks.length} Meks in ${elapsed}ms using FAST endpoint (cached for Phase 2)`);
 
       return {
         success: true,

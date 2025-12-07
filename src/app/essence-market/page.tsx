@@ -106,7 +106,6 @@ export default function EssenceMarketPage() {
   const pricingInfoLayout = 34; // LOCKED to Option 34: Vertical v4 - Bold Labels
   const bottleImageSize = 130; // Locked to 130px
   const priceLayoutStyle = 8; // Locked to Style 8: Tapping Mode
-  const listingCardStyle = 1; // Locked to Style 1: Ultra Bright Glass
   const [buyOrderSection, setBuyOrderSection] = useState<"open" | "mine">("open");
   const buttonVariation = 3; // Locked to Style 3: Minimal Modern
   const [debugListingCount, setDebugListingCount] = useState<number>(0);
@@ -2914,122 +2913,16 @@ export default function EssenceMarketPage() {
     }
   };
 
-  // Listing card styling variations
-  const getListingCardStyles = (styleNum: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10) => {
-    switch (styleNum) {
-      case 1: // Ultra Bright Glass
-        return {
-          className: "relative p-4 rounded-lg overflow-hidden group hover:border-yellow-400/20 transition-all duration-500",
-          style: {
-            background: `linear-gradient(105deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(105deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0.06) 100%)`,
-            backdropFilter: 'blur(4px) brightness(1.25)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-          }
-        };
-      case 2: // Prominent Yellow Border
-        return {
-          className: "relative p-4 rounded-lg overflow-hidden group hover:border-yellow-400/60 transition-all duration-500",
-          style: {
-            background: `linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.05) 100%)`,
-            backdropFilter: 'blur(3px) brightness(1.1)',
-            border: '2px solid rgba(250, 182, 23, 0.3)',
-            boxShadow: '0 0 10px rgba(250, 182, 23, 0.15)',
-          }
-        };
-      case 3: // Prominent White Border
-        return {
-          className: "relative p-4 rounded-lg overflow-hidden group hover:border-white/30 transition-all duration-500",
-          style: {
-            background: `linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)`,
-            backdropFilter: 'blur(4px) brightness(1.12)',
-            border: '2px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-          }
-        };
-      case 4: // Prominent Gray Border - Bright Glass
-        return {
-          className: "relative p-4 rounded-lg overflow-hidden group hover:border-gray-400 transition-all duration-500",
-          style: {
-            background: `linear-gradient(105deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(105deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.05) 100%)`,
-            backdropFilter: 'blur(5px) brightness(1.18)',
-            border: '2px solid rgba(150, 150, 150, 0.4)',
-          }
-        };
-      case 5: // Double Border - Yellow & White
-        return {
-          className: "relative p-4 rounded-lg overflow-hidden group hover:border-yellow-400/50 transition-all duration-500",
-          style: {
-            background: `linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.06) 100%)`,
-            backdropFilter: 'blur(4px) brightness(1.15)',
-            border: '2px solid rgba(250, 182, 23, 0.25)',
-            boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.15), 0 0 12px rgba(250, 182, 23, 0.12)',
-          }
-        };
-      case 6: // Neon Holographic
-        return {
-          className: "relative p-4 rounded-lg overflow-hidden group hover:border-cyan-400/40 transition-all duration-500",
-          style: {
-            background: `linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(135deg, rgba(0, 255, 255, 0.03) 0%, rgba(255, 0, 255, 0.03) 50%, rgba(0, 255, 255, 0.03) 100%)`,
-            backdropFilter: 'blur(6px) brightness(1.2) saturate(1.3)',
-            border: '2px solid rgba(100, 255, 255, 0.25)',
-            boxShadow: '0 0 20px rgba(0, 255, 255, 0.2), inset 0 0 20px rgba(255, 0, 255, 0.1)',
-          }
-        };
-      case 7: // Carbon Fiber
-        return {
-          className: "relative p-4 rounded-lg overflow-hidden group hover:border-gray-500 transition-all duration-500",
-          style: {
-            background: `linear-gradient(125deg, rgba(30, 30, 30, 0.9) 0%, rgba(10, 10, 10, 0.95) 100%)`,
-            backdropFilter: 'blur(2px) brightness(0.9)',
-            border: '2px solid rgba(60, 60, 60, 0.6)',
-            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 2px 8px rgba(0, 0, 0, 0.5)',
-          }
-        };
-      case 8: // Deep Frosted
-        return {
-          className: "relative p-4 rounded-lg overflow-hidden group hover:border-blue-300/20 transition-all duration-500",
-          style: {
-            background: `linear-gradient(150deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(150deg, rgba(200, 220, 255, 0.08) 0%, rgba(150, 180, 255, 0.12) 100%)`,
-            backdropFilter: 'blur(12px) brightness(1.3) saturate(0.8)',
-            border: '1px solid rgba(200, 220, 255, 0.25)',
-            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.15)',
-          }
-        };
-      case 9: // Rainbow Gradient Border
-        return {
-          className: "relative p-4 rounded-lg overflow-hidden group hover:border-transparent transition-all duration-500",
-          style: {
-            background: `linear-gradient(105deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.06) 100%)`,
-            backdropFilter: 'blur(4px) brightness(1.12)',
-            border: '3px solid transparent',
-            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
-                              linear-gradient(90deg, #ff0080, #ff8c00, #40e0d0, #8a2be2, #ff0080)`,
-            backgroundOrigin: 'border-box',
-            backgroundClip: 'padding-box, border-box',
-          }
-        };
-      case 10: // Military Stencil
-        return {
-          className: "relative p-4 overflow-hidden group hover:border-yellow-500/40 transition-all duration-500",
-          style: {
-            background: `linear-gradient(180deg, rgba(40, 40, 20, 0.7) 0%, rgba(20, 20, 10, 0.85) 100%)`,
-            backdropFilter: 'blur(3px) brightness(1.05)',
-            border: '3px solid rgba(250, 182, 23, 0.4)',
-            borderRadius: '2px',
-            boxShadow: 'inset 2px 2px 0 rgba(0, 0, 0, 0.3), inset -2px -2px 0 rgba(255, 255, 255, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.5)',
-            clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))',
-          }
-        };
-      default:
-        return {
-          className: "relative p-4 rounded-lg overflow-hidden group hover:border-yellow-400/20 transition-all duration-500",
-          style: {
-            background: `linear-gradient(105deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(105deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0.06) 100%)`,
-            backdropFilter: 'blur(4px) brightness(1.25)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-          }
-        };
-    }
+  // Listing card styling - Ultra Bright Glass with dark backdrop for readability
+  const getListingCardStyles = () => {
+    return {
+      className: "relative p-4 rounded-lg overflow-hidden group hover:border-yellow-400/20 transition-all duration-500",
+      style: {
+        background: `linear-gradient(105deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(105deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0.06) 100%)`,
+        backdropFilter: 'blur(4px) brightness(1.25)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+      }
+    };
   };
 
   return (
@@ -4908,7 +4801,7 @@ export default function EssenceMarketPage() {
               const minPurchase = 0.1;
               const canAfford = displayGold >= listing.pricePerUnit * minPurchase;
 
-              const cardStyles = getListingCardStyles(listingCardStyle);
+              const cardStyles = getListingCardStyles();
               return (
                 <div
                   key={listing._id}
