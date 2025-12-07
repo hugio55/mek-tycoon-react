@@ -69,7 +69,7 @@ export const submitBetaSignup = mutation({
     // Check for existing signup with this stake address (using index for performance)
     const existingAddress = await ctx.db
       .query("betaSignups")
-      .withIndex("", (q: any) => q.eq("stakeAddress", normalizedAddress))
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", normalizedAddress))
       .first();
 
     if (existingAddress) {
@@ -81,7 +81,7 @@ export const submitBetaSignup = mutation({
     if (args.ipAddress && args.ipAddress !== 'unknown') {
       const existingIP = await ctx.db
         .query("betaSignups")
-        .withIndex("", (q: any) => q.eq("ipAddress", args.ipAddress ?? null))
+        .withIndex("by_ip_address", (q: any) => q.eq("ipAddress", args.ipAddress ?? null))
         .first();
 
       if (existingIP) {
@@ -134,7 +134,7 @@ export const checkStakeAddressRegistered = query({
     // Use index for efficient lookup
     const existing = await ctx.db
       .query("betaSignups")
-      .withIndex("", (q: any) => q.eq("stakeAddress", normalized))
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", normalized))
       .first();
 
     return {

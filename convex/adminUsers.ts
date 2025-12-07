@@ -525,3 +525,519 @@ export const resetUserProgress = mutation({
     return await ctx.db.get(args.userId);
   },
 });
+
+// ============================================================================
+// TEST WALLET CLEANUP SYSTEM
+// ============================================================================
+
+/**
+ * Check if a wallet address is a test wallet
+ * Test wallets have patterns like: demo_, demo_wallet_, addr_test1, etc.
+ */
+function isTestWallet(walletAddress: string): boolean {
+  if (!walletAddress) return false;
+  const lower = walletAddress.toLowerCase();
+  return (
+    lower.startsWith("demo_") ||
+    lower.startsWith("demo_wallet") ||
+    lower.startsWith("addr_test1") ||
+    lower.includes("test_wallet") ||
+    lower.includes("mock_wallet")
+  );
+}
+
+/**
+ * Preview all test wallets and count related data across all tables
+ * Returns a detailed breakdown of what would be deleted
+ */
+export const previewTestWallets = query({
+  args: {},
+  handler: async (ctx) => {
+    // Get all users
+    const allUsers = await ctx.db.query("users").collect();
+
+    // Filter to test wallets only
+    const testWallets = allUsers.filter(u => isTestWallet(u.walletAddress));
+
+    if (testWallets.length === 0) {
+      return {
+        testWalletCount: 0,
+        wallets: [],
+        totalRelatedRecords: 0,
+        message: "No test wallets found"
+      };
+    }
+
+    // Build detailed preview for each test wallet
+    const walletPreviews = await Promise.all(testWallets.map(async (user) => {
+      const walletAddress = user.walletAddress;
+      const userId = user._id;
+
+      // Count records in tables with userId
+      const craftingSessions = await ctx.db.query("craftingSessions")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      const inventory = await ctx.db.query("inventory")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      const transactions = await ctx.db.query("transactions")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      const achievements = await ctx.db.query("achievements")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      const activeBuffs = await ctx.db.query("activeBuffs")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      const userStatsCache = await ctx.db.query("userStatsCache")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      const contracts = await ctx.db.query("contracts")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      const chipInstances = await ctx.db.query("chipInstances")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      const marketListings = await ctx.db.query("marketListings")
+        .withIndex("by_seller", (q: any) => q.eq("sellerId", userId)).collect();
+      const mekTalentTrees = await ctx.db.query("mekTalentTrees")
+        .withIndex("by_owner", (q: any) => q.eq("ownerId", userId)).collect();
+
+      // Count records in tables with walletAddress
+      const meks = await ctx.db.query("meks")
+        .withIndex("by_owner", (q: any) => q.eq("owner", walletAddress)).collect();
+      const goldMining = await ctx.db.query("goldMining")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+      const mekLevels = await ctx.db.query("mekLevels")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+      const leaderboardCache = await ctx.db.query("leaderboardCache")
+        .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+
+      const totalRecords =
+        craftingSessions.length + inventory.length + transactions.length +
+        achievements.length + activeBuffs.length + userStatsCache.length +
+        contracts.length + chipInstances.length + marketListings.length +
+        mekTalentTrees.length + meks.length + goldMining.length +
+        mekLevels.length + leaderboardCache.length + 1; // +1 for user record
+
+      return {
+        walletAddress,
+        displayName: user.displayName || "No name",
+        createdAt: user.createdAt,
+        lastLogin: user.lastLogin,
+        relatedRecords: {
+          craftingSessions: craftingSessions.length,
+          inventory: inventory.length,
+          transactions: transactions.length,
+          achievements: achievements.length,
+          activeBuffs: activeBuffs.length,
+          userStatsCache: userStatsCache.length,
+          contracts: contracts.length,
+          chipInstances: chipInstances.length,
+          marketListings: marketListings.length,
+          mekTalentTrees: mekTalentTrees.length,
+          meks: meks.length,
+          goldMining: goldMining.length,
+          mekLevels: mekLevels.length,
+          leaderboardCache: leaderboardCache.length,
+        },
+        totalRecords,
+      };
+    }));
+
+    const totalRelatedRecords = walletPreviews.reduce((sum, w) => sum + w.totalRecords, 0);
+
+    return {
+      testWalletCount: testWallets.length,
+      wallets: walletPreviews,
+      totalRelatedRecords,
+      message: `Found ${testWallets.length} test wallet(s) with ${totalRelatedRecords} total records to delete`
+    };
+  },
+});
+
+/**
+ * Cascade delete a single user and ALL related data from ALL tables
+ * This is the comprehensive delete that cleans up everything
+ */
+export const cascadeDeleteUser = mutation({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const walletAddress = args.walletAddress;
+
+    // Find the user first
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
+      .first();
+
+    if (!user) {
+      return {
+        success: false,
+        message: "User not found",
+        deletedCounts: {}
+      };
+    }
+
+    const userId = user._id;
+    const deletedCounts: Record<string, number> = {};
+
+    // === DELETE FROM TABLES WITH userId ===
+
+    // craftingSessions
+    const craftingSessions = await ctx.db.query("craftingSessions")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+    for (const record of craftingSessions) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.craftingSessions = craftingSessions.length;
+
+    // inventory
+    const inventory = await ctx.db.query("inventory")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+    for (const record of inventory) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.inventory = inventory.length;
+
+    // transactions
+    const transactions = await ctx.db.query("transactions")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+    for (const record of transactions) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.transactions = transactions.length;
+
+    // achievements
+    const achievements = await ctx.db.query("achievements")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+    for (const record of achievements) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.achievements = achievements.length;
+
+    // activeBuffs
+    const activeBuffs = await ctx.db.query("activeBuffs")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+    for (const record of activeBuffs) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.activeBuffs = activeBuffs.length;
+
+    // userStatsCache
+    const userStatsCache = await ctx.db.query("userStatsCache")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+    for (const record of userStatsCache) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.userStatsCache = userStatsCache.length;
+
+    // contracts
+    const contracts = await ctx.db.query("contracts")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+    for (const record of contracts) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.contracts = contracts.length;
+
+    // chipInstances
+    const chipInstances = await ctx.db.query("chipInstances")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+    for (const record of chipInstances) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.chipInstances = chipInstances.length;
+
+    // marketListings (as seller)
+    const marketListings = await ctx.db.query("marketListings")
+      .withIndex("by_seller", (q: any) => q.eq("sellerId", userId)).collect();
+    for (const record of marketListings) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.marketListings = marketListings.length;
+
+    // mekTalentTrees
+    const mekTalentTrees = await ctx.db.query("mekTalentTrees")
+      .withIndex("by_owner", (q: any) => q.eq("ownerId", userId)).collect();
+    for (const record of mekTalentTrees) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.mekTalentTrees = mekTalentTrees.length;
+
+    // === DELETE FROM TABLES WITH walletAddress ===
+
+    // meks (IMPORTANT: This removes Mek ownership - they'll become unowned)
+    const meks = await ctx.db.query("meks")
+      .withIndex("by_owner", (q: any) => q.eq("owner", walletAddress)).collect();
+    for (const record of meks) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.meks = meks.length;
+
+    // goldMining
+    const goldMining = await ctx.db.query("goldMining")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of goldMining) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.goldMining = goldMining.length;
+
+    // mekLevels
+    const mekLevels = await ctx.db.query("mekLevels")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of mekLevels) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.mekLevels = mekLevels.length;
+
+    // leaderboardCache
+    const leaderboardCache = await ctx.db.query("leaderboardCache")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    for (const record of leaderboardCache) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.leaderboardCache = leaderboardCache.length;
+
+    // discordConnections
+    const discordConnections = await ctx.db.query("discordConnections")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    for (const record of discordConnections) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.discordConnections = discordConnections.length;
+
+    // mekOwnershipHistory
+    const mekOwnershipHistory = await ctx.db.query("mekOwnershipHistory")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    for (const record of mekOwnershipHistory) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.mekOwnershipHistory = mekOwnershipHistory.length;
+
+    // goldCheckpoints
+    const goldCheckpoints = await ctx.db.query("goldCheckpoints")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of goldCheckpoints) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.goldCheckpoints = goldCheckpoints.length;
+
+    // goldSnapshots
+    const goldSnapshots = await ctx.db.query("goldSnapshots")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of goldSnapshots) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.goldSnapshots = goldSnapshots.length;
+
+    // syncChecksums
+    const syncChecksums = await ctx.db.query("syncChecksums")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of syncChecksums) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.syncChecksums = syncChecksums.length;
+
+    // sagaExecutions
+    const sagaExecutions = await ctx.db.query("sagaExecutions")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of sagaExecutions) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.sagaExecutions = sagaExecutions.length;
+
+    // securityAnomalies
+    const securityAnomalies = await ctx.db.query("securityAnomalies")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of securityAnomalies) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.securityAnomalies = securityAnomalies.length;
+
+    // suspiciousWallets
+    const suspiciousWallets = await ctx.db.query("suspiciousWallets")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of suspiciousWallets) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.suspiciousWallets = suspiciousWallets.length;
+
+    // rateLimitViolations
+    const rateLimitViolations = await ctx.db.query("rateLimitViolations")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of rateLimitViolations) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.rateLimitViolations = rateLimitViolations.length;
+
+    // walletGroupMemberships
+    const walletGroupMemberships = await ctx.db.query("walletGroupMemberships")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of walletGroupMemberships) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.walletGroupMemberships = walletGroupMemberships.length;
+
+    // === FINALLY DELETE THE USER ===
+    await ctx.db.delete(userId);
+    deletedCounts.users = 1;
+
+    const totalDeleted = Object.values(deletedCounts).reduce((sum, count) => sum + count, 0);
+
+    console.log(`[Admin] Cascade deleted user ${walletAddress.substring(0, 20)}... (${totalDeleted} total records)`);
+
+    return {
+      success: true,
+      message: `Deleted user and ${totalDeleted} related records`,
+      deletedCounts,
+    };
+  },
+});
+
+/**
+ * Bulk delete all test wallets with cascade delete
+ * WARNING: This is destructive and cannot be undone!
+ */
+export const bulkDeleteTestWallets = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // Get all users
+    const allUsers = await ctx.db.query("users").collect();
+
+    // Filter to test wallets only
+    const testWallets = allUsers.filter(u => isTestWallet(u.walletAddress));
+
+    if (testWallets.length === 0) {
+      return {
+        success: true,
+        message: "No test wallets found to delete",
+        deletedCount: 0,
+        details: []
+      };
+    }
+
+    const details: Array<{ wallet: string; totalDeleted: number }> = [];
+    let totalDeletedRecords = 0;
+
+    for (const user of testWallets) {
+      const walletAddress = user.walletAddress;
+      const userId = user._id;
+      let recordsDeleted = 0;
+
+      // Delete from all tables (same as cascadeDeleteUser but inline for efficiency)
+
+      // Tables with userId
+      const craftingSessions = await ctx.db.query("craftingSessions")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      for (const r of craftingSessions) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const inventory = await ctx.db.query("inventory")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      for (const r of inventory) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const transactions = await ctx.db.query("transactions")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      for (const r of transactions) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const achievements = await ctx.db.query("achievements")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      for (const r of achievements) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const activeBuffs = await ctx.db.query("activeBuffs")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      for (const r of activeBuffs) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const userStatsCache = await ctx.db.query("userStatsCache")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      for (const r of userStatsCache) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const contracts = await ctx.db.query("contracts")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      for (const r of contracts) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const chipInstances = await ctx.db.query("chipInstances")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      for (const r of chipInstances) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const marketListings = await ctx.db.query("marketListings")
+        .withIndex("by_seller", (q: any) => q.eq("sellerId", userId)).collect();
+      for (const r of marketListings) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const mekTalentTrees = await ctx.db.query("mekTalentTrees")
+        .withIndex("by_owner", (q: any) => q.eq("ownerId", userId)).collect();
+      for (const r of mekTalentTrees) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      // Tables with walletAddress
+      const meks = await ctx.db.query("meks")
+        .withIndex("by_owner", (q: any) => q.eq("owner", walletAddress)).collect();
+      for (const r of meks) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const goldMining = await ctx.db.query("goldMining")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+      for (const r of goldMining) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const mekLevels = await ctx.db.query("mekLevels")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+      for (const r of mekLevels) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const leaderboardCache = await ctx.db.query("leaderboardCache")
+        .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+      for (const r of leaderboardCache) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const discordConnections = await ctx.db.query("discordConnections")
+        .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+      for (const r of discordConnections) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const mekOwnershipHistory = await ctx.db.query("mekOwnershipHistory")
+        .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+      for (const r of mekOwnershipHistory) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const goldCheckpoints = await ctx.db.query("goldCheckpoints")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+      for (const r of goldCheckpoints) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const goldSnapshots = await ctx.db.query("goldSnapshots")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+      for (const r of goldSnapshots) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const syncChecksums = await ctx.db.query("syncChecksums")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+      for (const r of syncChecksums) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const sagaExecutions = await ctx.db.query("sagaExecutions")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+      for (const r of sagaExecutions) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const securityAnomalies = await ctx.db.query("securityAnomalies")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+      for (const r of securityAnomalies) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const suspiciousWallets = await ctx.db.query("suspiciousWallets")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+      for (const r of suspiciousWallets) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const rateLimitViolations = await ctx.db.query("rateLimitViolations")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+      for (const r of rateLimitViolations) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      const walletGroupMemberships = await ctx.db.query("walletGroupMemberships")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+      for (const r of walletGroupMemberships) { await ctx.db.delete(r._id); recordsDeleted++; }
+
+      // Delete user record
+      await ctx.db.delete(userId);
+      recordsDeleted++;
+
+      details.push({
+        wallet: walletAddress.substring(0, 25) + "...",
+        totalDeleted: recordsDeleted,
+      });
+
+      totalDeletedRecords += recordsDeleted;
+    }
+
+    console.log(`[Admin] Bulk deleted ${testWallets.length} test wallets (${totalDeletedRecords} total records)`);
+
+    return {
+      success: true,
+      message: `Deleted ${testWallets.length} test wallet(s) and ${totalDeletedRecords} related records`,
+      deletedCount: testWallets.length,
+      totalRecordsDeleted: totalDeletedRecords,
+      details,
+    };
+  },
+});

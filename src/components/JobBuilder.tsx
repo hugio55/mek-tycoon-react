@@ -35,7 +35,7 @@ const DEFAULT_FORM: JobFormData = {
 
 export default function JobBuilder() {
   // Sub-tab state
-  const [activeSubTab, setActiveSubTab] = useState<'builder' | 'list' | 'umbrellas'>('builder');
+  const [activeSubTab, setActiveSubTab] = useState<'builder' | 'list' | 'umbrellas' | 'pitstops'>('builder');
 
   // Form state
   const [formData, setFormData] = useState<JobFormData>(DEFAULT_FORM);
@@ -203,6 +203,7 @@ export default function JobBuilder() {
           { id: 'builder', label: 'Job Builder', icon: '+' },
           { id: 'list', label: 'All Jobs', icon: '#' },
           { id: 'umbrellas', label: 'Collections', icon: '@' },
+          { id: 'pitstops', label: 'Pit Stops', icon: '!' },
         ].map((tab) => (
           <button
             key={tab.id}
