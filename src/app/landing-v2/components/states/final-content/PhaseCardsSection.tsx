@@ -20,7 +20,7 @@ export default function PhaseCardsSection({ phaseCards, showPhases }: PhaseCards
 
   // Preload the click sound on mount for instant playback
   useEffect(() => {
-    const audio = new Audio('/audio/sci fi click.mp3');
+    const audio = new Audio('/audio/sci fi beep more calm mp3 1.mp3');
     audio.preload = 'auto';
     audio.load();
 
