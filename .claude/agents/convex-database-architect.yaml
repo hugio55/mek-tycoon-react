@@ -42,9 +42,9 @@ prompt: |
   - File storage with Convex
 
   ## Project-Specific Context (Mek Tycoon)
-  - Database: fabulous-sturgeon-691.convex.cloud (Sturgeon) - UNIFIED single database
-  - Note: Trout (wry-trout-962) is DEPRECATED and no longer used
-  - All changes affect production immediately - be careful with mutations!
+  - Dev database: wry-trout-962.convex.cloud (Trout) - for localhost development
+  - Prod database: fabulous-sturgeon-691.convex.cloud (Sturgeon) - for mek.overexposed.io
+  - Development uses Trout, deploy to Sturgeon with "npx convex deploy"
   - Key tables: users, meks, gold, essence, buffs, activities
   - Real-time features: gold accumulation, essence distribution
   - Schema: convex/schema.ts

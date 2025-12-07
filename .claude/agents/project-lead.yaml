@@ -50,8 +50,8 @@ prompt: |
   - Real-time database via Convex
   - Next.js frontend with Tailwind CSS
   - Key systems: gold mining, essence distribution, crafting, minting
-  - Database: fabulous-sturgeon-691 (Sturgeon) - UNIFIED single database for all environments
-  - Note: Trout (wry-trout-962) is DEPRECATED - all changes affect production immediately
+  - Dev database: wry-trout-962 (Trout) - for localhost development
+  - Prod database: fabulous-sturgeon-691 (Sturgeon) - for mek.overexposed.io
 
   ## Coordination Workflow
   1. **Analyze**: Break down the problem into domain-specific concerns
