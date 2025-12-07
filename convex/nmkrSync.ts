@@ -191,8 +191,19 @@ export const syncSingleNFT = mutation({
 
     // Handle status-specific updates
     if (newStatus === 'sold') {
-      updates.soldTo = soldTo || nft.soldTo; // Preserve existing if not provided
+      const finalSoldTo = soldTo || nft.soldTo;
+      updates.soldTo = finalSoldTo;
       updates.soldAt = Date.now();
+
+      // Look up company name for historical tracking
+      if (finalSoldTo) {
+        const goldMiningRecord = await ctx.db
+          .query("goldMining")
+          .withIndex("by_wallet", (q: any) => q.eq("walletAddress", finalSoldTo))
+          .first();
+        updates.companyNameAtSale = goldMiningRecord?.companyName || undefined;
+      }
+
       // Clear reservation fields
       updates.reservedBy = undefined;
       updates.reservedAt = undefined;
@@ -307,8 +318,19 @@ export const syncCampaignInventory = mutation({
         };
 
         if (newStatus === 'sold') {
-          updates.soldTo = nmkrData.soldTo || nft.soldTo;
+          const finalSoldTo = nmkrData.soldTo || nft.soldTo;
+          updates.soldTo = finalSoldTo;
           updates.soldAt = Date.now();
+
+          // Look up company name for historical tracking
+          if (finalSoldTo) {
+            const goldMiningRecord = await ctx.db
+              .query("goldMining")
+              .withIndex("by_wallet", (q: any) => q.eq("walletAddress", finalSoldTo))
+              .first();
+            updates.companyNameAtSale = (goldMiningRecord as any)?.companyName || undefined;
+          }
+
           updates.reservedBy = undefined;
           updates.reservedAt = undefined;
           updates.expiresAt = undefined;
@@ -704,8 +726,19 @@ export const internalSyncCampaignInventory = internalMutation({
       const updates: Record<string, unknown> = { status: newStatus };
 
       if (newStatus === 'sold') {
-        updates.soldTo = nmkrData.soldTo || nft.soldTo;
+        const finalSoldTo = nmkrData.soldTo || nft.soldTo;
+        updates.soldTo = finalSoldTo;
         updates.soldAt = Date.now();
+
+        // Look up company name for historical tracking
+        if (finalSoldTo) {
+          const goldMiningRecord = await ctx.db
+            .query("goldMining")
+            .withIndex("by_wallet", (q: any) => q.eq("walletAddress", finalSoldTo))
+            .first();
+          updates.companyNameAtSale = (goldMiningRecord as any)?.companyName || undefined;
+        }
+
         updates.reservedBy = undefined;
         updates.reservedAt = undefined;
         updates.expiresAt = undefined;

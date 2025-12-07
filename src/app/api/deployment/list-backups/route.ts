@@ -5,7 +5,7 @@ import { checkDeploymentAuth } from '@/lib/deployment/auth';
 
 interface BackupMetadata {
   id: string;
-  type: 'quick' | 'full' | 'full-dev';
+  type: 'quick' | 'full' | 'full-dev' | 'complete';
   database?: string;
   timestamp: string;
   commitHash: string;
@@ -14,6 +14,12 @@ interface BackupMetadata {
   notes?: string;
   convexExportPath?: string;
   exportSizeBytes?: number;
+  // For complete backups
+  sturgeonExportPath?: string;
+  sturgeonSizeBytes?: number;
+  troutExportPath?: string | null;
+  troutSizeBytes?: number;
+  totalSizeBytes?: number;
 }
 
 export async function GET(request: NextRequest) {
@@ -79,6 +85,27 @@ export async function GET(request: NextRequest) {
       // Full-dev directory doesn't exist or is empty
     }
 
+    // Read complete backups (both databases)
+    try {
+      const completeDir = path.join(backupsDir, 'complete');
+      const completeFiles = await readdir(completeDir);
+
+      for (const file of completeFiles) {
+        if (file.endsWith('.json')) {
+          const filePath = path.join(completeDir, file);
+          const content = await readFile(filePath, 'utf-8');
+          const backup = JSON.parse(content) as BackupMetadata;
+          // Use totalSizeBytes for complete backups
+          if (backup.totalSizeBytes && !backup.exportSizeBytes) {
+            backup.exportSizeBytes = backup.totalSizeBytes;
+          }
+          backups.push(backup);
+        }
+      }
+    } catch (e) {
+      // Complete directory doesn't exist or is empty
+    }
+
     // Sort by timestamp, newest first
     backups.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
@@ -96,6 +123,7 @@ export async function GET(request: NextRequest) {
       quickCount: backups.filter((b) => b.type === 'quick').length,
       fullCount: backups.filter((b) => b.type === 'full').length,
       fullDevCount: backups.filter((b) => b.type === 'full-dev').length,
+      completeCount: backups.filter((b) => b.type === 'complete').length,
       totalSizeBytes: totalSize,
       totalSizeDisplay: totalSizeDisplay,
     });

@@ -24,7 +24,7 @@ interface ActionLog {
 
 interface Backup {
   id: string;
-  type: 'quick' | 'full' | 'full-dev';
+  type: 'quick' | 'full' | 'full-dev' | 'complete';
   database?: string;
   timestamp: string;
   commitHash: string;
@@ -33,6 +33,12 @@ interface Backup {
   notes?: string;
   convexExportPath?: string;
   exportSizeBytes?: number;
+  // For complete backups
+  sturgeonExportPath?: string;
+  sturgeonSizeBytes?: number;
+  troutExportPath?: string | null;
+  troutSizeBytes?: number;
+  totalSizeBytes?: number;
 }
 
 // Format date to 12-hour time
@@ -163,10 +169,10 @@ export default function DeploymentsAdmin() {
   const handleFullBackup = async () => {
     setIsBackingUp(true);
     setBackupType('full');
-    addLog('Full Backup', 'pending', 'Creating code + Sturgeon (PROD) database backup (this may take a minute)...');
+    addLog('Full Backup', 'pending', 'Backing up BOTH databases (Sturgeon + Trout)... This may take 1-2 minutes.');
 
     try {
-      const res = await fetch('/api/deployment/backup-full', {
+      const res = await fetch('/api/deployment/backup-complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes: '' })
@@ -175,16 +181,18 @@ export default function DeploymentsAdmin() {
 
       if (data.success) {
         addLog('Full Backup', 'success', data.message);
+        // Log individual database sizes
+        if (data.steps) {
+          data.steps.forEach((step: string) => addLog('Full Backup', 'success', step));
+        }
         setSessionBackup({
           id: data.backupId,
-          type: 'full',
-          database: 'Sturgeon (fabulous-sturgeon-691)',
+          type: 'complete',
           timestamp: data.timestamp,
           commitHash: data.commitHash,
           commitMessage: data.commitMessage,
           branch: 'master',
-          convexExportPath: data.exportPath,
-          exportSizeBytes: data.sizeBytes
+          totalSizeBytes: data.totalSize
         });
         await fetchBackups();
       } else {
@@ -192,33 +200,6 @@ export default function DeploymentsAdmin() {
       }
     } catch (error) {
       addLog('Full Backup', 'error', 'Failed to create backup');
-    } finally {
-      setIsBackingUp(false);
-      setBackupType(null);
-    }
-  };
-
-  const handleFullDevBackup = async () => {
-    setIsBackingUp(true);
-    setBackupType('full');
-    addLog('Dev Backup', 'pending', 'Creating Trout (DEV) database backup (this may take a minute)...');
-
-    try {
-      const res = await fetch('/api/deployment/backup-full-dev', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes: '' })
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        addLog('Dev Backup', 'success', data.message);
-        await fetchBackups();
-      } else {
-        addLog('Dev Backup', 'error', data.error);
-      }
-    } catch (error) {
-      addLog('Dev Backup', 'error', 'Failed to create dev backup');
     } finally {
       setIsBackingUp(false);
       setBackupType(null);
@@ -935,7 +916,7 @@ export default function DeploymentsAdmin() {
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <button
             onClick={handleQuickBackup}
             disabled={anyActionRunning}
@@ -947,7 +928,7 @@ export default function DeploymentsAdmin() {
             `}
           >
             <div className="font-bold text-blue-400">Quick Backup</div>
-            <div className="text-xs text-gray-400 mt-1">Code only (~5 sec)</div>
+            <div className="text-xs text-gray-400 mt-1">Git commit reference (~5 sec)</div>
             <div className="text-xs text-gray-500">For routine code changes</div>
             {isBackingUp && backupType === 'quick' && (
               <div className="text-xs text-blue-300 mt-2 animate-pulse">Creating backup...</div>
@@ -964,29 +945,11 @@ export default function DeploymentsAdmin() {
                 : 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600'}
             `}
           >
-            <div className="font-bold text-purple-400">Full Backup (PROD)</div>
-            <div className="text-xs text-gray-400 mt-1">Sturgeon + Code (~30-60 sec)</div>
-            <div className="text-xs text-gray-500">Production database backup</div>
+            <div className="font-bold text-purple-400">Full Backup</div>
+            <div className="text-xs text-gray-400 mt-1">Sturgeon + Trout + Code (~1-2 min)</div>
+            <div className="text-xs text-gray-500">Complete backup of everything</div>
             {isBackingUp && backupType === 'full' && (
-              <div className="text-xs text-purple-300 mt-2 animate-pulse">Exporting Sturgeon...</div>
-            )}
-          </button>
-
-          <button
-            onClick={handleFullDevBackup}
-            disabled={anyActionRunning}
-            className={`
-              px-4 py-3 rounded-lg transition-colors text-left
-              ${isBackingUp && backupType === 'full'
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600'}
-            `}
-          >
-            <div className="font-bold text-green-400">Full Backup (DEV)</div>
-            <div className="text-xs text-gray-400 mt-1">Trout + Code (~30-60 sec)</div>
-            <div className="text-xs text-gray-500">Development database backup</div>
-            {isBackingUp && backupType === 'full' && (
-              <div className="text-xs text-green-300 mt-2 animate-pulse">Exporting Trout...</div>
+              <div className="text-xs text-purple-300 mt-2 animate-pulse">Exporting both databases...</div>
             )}
           </button>
         </div>
@@ -995,7 +958,7 @@ export default function DeploymentsAdmin() {
           <div className="mt-4 pt-4 border-t border-gray-700">
             <div className="text-gray-500 text-xs">
               {backups.length} backup{backups.length !== 1 ? 's' : ''} available
-              ({backups.filter(b => b.type === 'quick').length} quick, {backups.filter(b => b.type === 'full').length} prod, {backups.filter(b => b.type === 'full-dev').length} dev)
+              ({backups.filter(b => b.type === 'quick').length} quick, {backups.filter(b => b.type === 'complete').length} full, {backups.filter(b => b.type === 'full' || b.type === 'full-dev').length} legacy)
             </div>
           </div>
         )}
@@ -1163,11 +1126,12 @@ export default function DeploymentsAdmin() {
                 >
                   <div className="flex items-center gap-3">
                     <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                      backup.type === 'full' ? 'bg-purple-500/20 text-purple-400' :
+                      backup.type === 'complete' ? 'bg-purple-500/20 text-purple-400' :
+                      backup.type === 'full' ? 'bg-orange-500/20 text-orange-400' :
                       backup.type === 'full-dev' ? 'bg-green-500/20 text-green-400' :
                       'bg-blue-500/20 text-blue-400'
                     }`}>
-                      {backup.type === 'full' ? 'PROD' : backup.type === 'full-dev' ? 'DEV' : 'QUICK'}
+                      {backup.type === 'complete' ? 'FULL' : backup.type === 'full' ? 'PROD' : backup.type === 'full-dev' ? 'DEV' : 'QUICK'}
                     </span>
                     <div>
                       <div className="flex items-center gap-2">
