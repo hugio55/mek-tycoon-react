@@ -62,12 +62,13 @@ export const createWalletGroup = mutation({
     const now = Date.now();
 
     // PRESERVE ORIGINAL NAME: Get the wallet's current company name before creating group
-    const goldMining = await ctx.db
-      .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+    // Phase II: Query users table instead of goldMining
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
-    const originalCompanyName = goldMining?.companyName || null;
+    const originalCompanyName = user?.corporationName || null;
 
     // Create the wallet group
     await ctx.db.insert("walletGroups", {
@@ -200,12 +201,13 @@ export const addWalletToGroupVerified = mutation({
       const now = Date.now();
 
       // PRESERVE ORIGINAL NAME: Get the existing wallet's current company name before creating group
-      const existingWalletGoldMining = await ctx.db
-        .query("goldMining")
-        .withIndex("", (q: any) => q.eq("walletAddress", args.existingWalletInGroup))
+      // Phase II: Query users table instead of goldMining
+      const existingUser = await ctx.db
+        .query("users")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.existingWalletInGroup))
         .first();
 
-      const existingOriginalCompanyName = existingWalletGoldMining?.companyName || null;
+      const existingOriginalCompanyName = existingUser?.corporationName || null;
 
       // Create the wallet group
       await ctx.db.insert("walletGroups", {
@@ -333,12 +335,13 @@ export const addWalletToGroupVerified = mutation({
     }
 
     // PRESERVE ORIGINAL NAME: Get the wallet's current company name before merging
-    const newWalletGoldMining = await ctx.db
-      .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.newWalletAddress))
+    // Phase II: Query users table instead of goldMining
+    const newWalletUser = await ctx.db
+      .query("users")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.newWalletAddress))
       .first();
 
-    const originalCompanyName = newWalletGoldMining?.companyName || null;
+    const originalCompanyName = newWalletUser?.corporationName || null;
 
     // Add the new wallet to the same group
     await ctx.db.insert("walletGroupMemberships", {
@@ -442,15 +445,16 @@ export const removeWalletFromGroup = mutation({
       }
 
       // Restore the wallet's original company name (if it had one)
+      // Phase II: Update users table instead of goldMining
       if (originalCompanyName) {
-        const goldMining = await ctx.db
-          .query("goldMining")
-          .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
           .first();
 
-        if (goldMining) {
-          await ctx.db.patch(goldMining._id, {
-            companyName: originalCompanyName,
+        if (user) {
+          await ctx.db.patch(user._id, {
+            corporationName: originalCompanyName,
           });
           console.log(`[RemoveWallet] Restored original company name "${originalCompanyName}" for ${args.walletAddress}`);
         }
@@ -478,15 +482,16 @@ export const removeWalletFromGroup = mutation({
     await ctx.db.delete(membership._id);
 
     // Restore the wallet's original company name (if it had one)
+    // Phase II: Update users table instead of goldMining
     if (originalCompanyName) {
-      const goldMining = await ctx.db
-        .query("goldMining")
-        .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
         .first();
 
-      if (goldMining) {
-        await ctx.db.patch(goldMining._id, {
-          companyName: originalCompanyName,
+      if (user) {
+        await ctx.db.patch(user._id, {
+          corporationName: originalCompanyName,
         });
         console.log(`[RemoveWallet] Restored original company name "${originalCompanyName}" for ${args.walletAddress}`);
       }

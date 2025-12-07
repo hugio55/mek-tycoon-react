@@ -129,9 +129,9 @@ export const checkClaimEligibility = query({
         };
       }
 
-      // Get corporation name
-      const goldMiningRecord = await ctx.db
-        .query("goldMining")
+      // Phase II: Get corporation name from users table
+      const user = await ctx.db
+        .query("users")
         .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
         .first();
 
@@ -139,7 +139,7 @@ export const checkClaimEligibility = query({
         eligible: true,
         reason: "Testing whitelist - multiple mints allowed",
         snapshotName: snapshot.snapshotName,
-        corporationName: goldMiningRecord?.companyName || null,
+        corporationName: user?.corporationName || null,
         testingMode: true,
       };
     }
@@ -229,13 +229,13 @@ export const checkClaimEligibility = query({
     }
 
     // All checks passed - user is eligible and has no active reservation
-    // Now look up their corporation name from goldMining table
-    const goldMiningRecord = await ctx.db
-      .query("goldMining")
+    // Phase II: Look up corporation name from users table
+    const user = await ctx.db
+      .query("users")
       .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
-    const corporationName = goldMiningRecord?.companyName || null;
+    const corporationName = user?.corporationName || null;
 
     return {
       eligible: true,
@@ -303,9 +303,9 @@ export const checkCampaignEligibility = query({
         };
       }
 
-      // Get corporation name
-      const goldMiningRecord = await ctx.db
-        .query("goldMining")
+      // Phase II: Get corporation name from users table
+      const user = await ctx.db
+        .query("users")
         .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
         .first();
 
@@ -314,7 +314,7 @@ export const checkCampaignEligibility = query({
         reason: "Testing whitelist - multiple mints allowed for this campaign",
         campaignName: campaign.name,
         snapshotName: snapshot.snapshotName,
-        corporationName: goldMiningRecord?.companyName || null,
+        corporationName: user?.corporationName || null,
         testingMode: true,
       };
     }
@@ -385,8 +385,9 @@ export const checkCampaignEligibility = query({
     }
 
     // 7. All checks passed - user is eligible
-    const goldMiningRecord = await ctx.db
-      .query("goldMining")
+    // Phase II: Get corporation name from users table
+    const user = await ctx.db
+      .query("users")
       .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
@@ -395,7 +396,7 @@ export const checkCampaignEligibility = query({
       reason: "Eligible for this campaign",
       campaignName: campaign.name,
       snapshotName: snapshot.snapshotName,
-      corporationName: goldMiningRecord?.companyName || null,
+      corporationName: user?.corporationName || null,
     };
   },
 });
