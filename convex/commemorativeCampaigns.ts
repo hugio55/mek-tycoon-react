@@ -45,7 +45,7 @@ export const createCampaign = mutation({
     // Check if campaign with this name already exists
     const existing = await ctx.db
       .query("commemorativeCampaigns")
-      .withIndex("", (q: any) => q.eq("name", args.name))
+      .withIndex("by_name", (q: any) => q.eq("name", args.name))
       .first();
 
     if (existing) {
@@ -388,7 +388,7 @@ export const listActiveCampaigns = query({
   handler: async (ctx) => {
     const campaigns = await ctx.db
       .query("commemorativeCampaigns")
-      .withIndex("", (q: any) => q.eq("status", "active"))
+      .withIndex("by_status", (q: any) => q.eq("status", "active"))
       .collect();
 
     return campaigns;
