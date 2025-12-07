@@ -29,8 +29,8 @@ export { LevelProgressStyle };
 interface MekProfileLightboxProps {
   isOpen: boolean;
   onClose: () => void;
-  styleVariation?: 'default' | 'variation1' | 'variation2';
-  onStyleVariationChange?: (variation: 'default' | 'variation1' | 'variation2') => void;
+  styleVariation?: 'default' | 'variation1' | 'variation2' | 'space-age';
+  onStyleVariationChange?: (variation: 'default' | 'variation1' | 'variation2' | 'space-age') => void;
   cardInteriorStyle?: CardInteriorStyle;
   onCardInteriorStyleChange?: (style: CardInteriorStyle) => void;
   buffDetailsLayout?: BuffDetailsLayout;
@@ -150,6 +150,8 @@ export default function MekProfileLightbox({
         return 'relative w-[960px] max-w-[95vw] max-h-[90vh] border-2 border-blue-500/60 rounded-2xl overflow-hidden shadow-2xl flex flex-col';
       case 'variation2': // Neon Fusion
         return 'relative w-[960px] max-w-[95vw] max-h-[90vh] border-2 border-purple-500/50 rounded-xl overflow-hidden shadow-2xl shadow-purple-500/20 flex flex-col';
+      case 'space-age': // Space Age Liquid Glass
+        return 'relative w-[960px] max-w-[95vw] max-h-[90vh] overflow-hidden flex flex-col';
       default: // Industrial
         return 'relative w-[960px] max-w-[95vw] max-h-[90vh] border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl flex flex-col';
     }
@@ -161,6 +163,8 @@ export default function MekProfileLightbox({
         return 'text-5xl font-bold tracking-wider text-center mb-1';
       case 'variation2':
         return 'text-5xl font-bold tracking-wider text-center mb-1 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent';
+      case 'space-age':
+        return 'text-4xl font-bold tracking-wider text-center mb-2';
       default:
         return 'text-5xl font-bold font-orbitron tracking-wider text-center mb-1';
     }
@@ -172,6 +176,8 @@ export default function MekProfileLightbox({
         return 'text-blue-400';
       case 'variation2':
         return 'text-purple-400';
+      case 'space-age':
+        return 'text-cyan-400';
       default:
         return 'text-yellow-400';
     }
@@ -183,10 +189,18 @@ export default function MekProfileLightbox({
         return 'bg-black/40 backdrop-blur-sm border-2 border-blue-500/40 rounded-xl p-4';
       case 'variation2':
         return 'bg-gradient-to-br from-purple-900/30 to-pink-900/30 backdrop-blur-sm border border-purple-500/50 rounded-lg p-4 shadow-lg shadow-purple-500/10';
+      case 'space-age':
+        return 'backdrop-blur-md border border-white/10 rounded-xl p-4';
       default:
         return 'mek-card-industrial mek-border-sharp-gold p-4';
     }
   };
+
+  // Space Age specific inline styles for cards
+  const getSpaceAgeCardStyle = () => ({
+    background: 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.3), 0 0 30px rgba(34,211,238,0.03)'
+  });
 
   // Card Interior Style Functions
   const getCardInteriorClasses = () => {
