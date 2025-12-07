@@ -132,7 +132,7 @@ export const checkClaimEligibility = query({
       // Get corporation name
       const goldMiningRecord = await ctx.db
         .query("goldMining")
-        .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
         .first();
 
       return {
@@ -148,7 +148,7 @@ export const checkClaimEligibility = query({
     // This handles the case where user closes lightbox and tries to claim again
     const activeReservation = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("", (q: any) => q.eq("reservedBy", args.walletAddress))
+      .withIndex("by_reserved_by", (q: any) => q.eq("reservedBy", args.walletAddress))
       .filter((q) => q.eq(q.field("status"), "active"))
       .first();
 
@@ -164,7 +164,7 @@ export const checkClaimEligibility = query({
     // Check BOTH legacy reservations table AND inventory soldTo field
     const completedReservation = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("", (q: any) => q.eq("reservedBy", args.walletAddress))
+      .withIndex("by_reserved_by", (q: any) => q.eq("reservedBy", args.walletAddress))
       .filter((q) => q.eq(q.field("status"), "completed"))
       .first();
 
@@ -232,7 +232,7 @@ export const checkClaimEligibility = query({
     // Now look up their corporation name from goldMining table
     const goldMiningRecord = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     const corporationName = goldMiningRecord?.companyName || null;
@@ -306,7 +306,7 @@ export const checkCampaignEligibility = query({
       // Get corporation name
       const goldMiningRecord = await ctx.db
         .query("goldMining")
-        .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
         .first();
 
       return {
@@ -387,7 +387,7 @@ export const checkCampaignEligibility = query({
     // 7. All checks passed - user is eligible
     const goldMiningRecord = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     return {
@@ -522,7 +522,7 @@ export const batchCheckClaimStatus = query({
     for (const stakeAddress of args.stakeAddresses) {
       const completedReservation = await ctx.db
         .query("commemorativeNFTReservations")
-        .withIndex("", (q: any) => q.eq("reservedBy", stakeAddress))
+        .withIndex("by_reserved_by", (q: any) => q.eq("reservedBy", stakeAddress))
         .filter((q) => q.eq(q.field("status"), "completed"))
         .first();
 

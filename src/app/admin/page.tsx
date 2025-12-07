@@ -1914,185 +1914,189 @@ export default function AdminMasterDataPage() {
           </div>
         </div>
 
-        {/* 🐟 DUAL DATABASE CONTROLS 🐟 */}
-        <div className="mb-4 grid grid-cols-2 gap-4">
-          {/* STAGING (Trout) Panel */}
-          <div className="p-3 bg-yellow-900/20 border-yellow-600/50 border rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-bold text-yellow-400">🐟 STAGING</span>
-              <span className="text-[10px] text-yellow-300">({troutDeployment})</span>
-            </div>
-            {troutLoading ? (
-              <p className="text-gray-400 text-xs">Loading...</p>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-yellow-300">Landing Page</span>
-                  <div className="flex items-center gap-2">
-                    <Switch.Root
-                      checked={troutSettings?.landingPageEnabled ?? false}
-                      onCheckedChange={async (enabled) => {
-                        await troutClient.mutation(api.siteSettings.toggleLandingPage, { enabled });
-                        const updated = await troutClient.query(api.siteSettings.getSiteSettings);
-                        setTroutSettings(updated);
-                      }}
-                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-green-500 transition-colors cursor-pointer"
-                    >
-                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
-                    </Switch.Root>
-                    <span className={`text-[10px] font-bold w-6 ${troutSettings?.landingPageEnabled ? 'text-green-400' : 'text-gray-500'}`}>
-                      {troutSettings?.landingPageEnabled ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-yellow-300">Localhost Bypass</span>
-                  <div className="flex items-center gap-2">
-                    <Switch.Root
-                      checked={troutSettings?.localhostBypass ?? true}
-                      onCheckedChange={async (enabled) => {
-                        await troutClient.mutation(api.siteSettings.toggleLocalhostBypass, { enabled });
-                        const updated = await troutClient.query(api.siteSettings.getSiteSettings);
-                        setTroutSettings(updated);
-                      }}
-                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-green-500 transition-colors cursor-pointer"
-                    >
-                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
-                    </Switch.Root>
-                    <span className={`text-[10px] font-bold w-6 ${troutSettings?.localhostBypass ? 'text-green-400' : 'text-gray-500'}`}>
-                      {troutSettings?.localhostBypass ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-orange-300 flex items-center gap-1">
-                    <span className="text-[10px]">🚨</span> Maintenance
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <Switch.Root
-                      checked={troutSettings?.maintenanceMode ?? false}
-                      onCheckedChange={async (enabled) => {
-                        const confirmed = window.confirm(
-                          '🚨 STAGING MAINTENANCE MODE 🚨\n\n' +
-                          `You are about to ${enabled ? 'ENABLE' : 'DISABLE'} maintenance mode on STAGING (Trout).\n\n` +
-                          'Are you sure?'
-                        );
-                        if (!confirmed) return;
-                        await troutClient.mutation(api.siteSettings.toggleMaintenanceMode, { enabled });
-                        const updated = await troutClient.query(api.siteSettings.getSiteSettings);
-                        setTroutSettings(updated);
-                      }}
-                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-orange-500 transition-colors cursor-pointer"
-                    >
-                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
-                    </Switch.Root>
-                    <span className={`text-[10px] font-bold w-6 ${troutSettings?.maintenanceMode ? 'text-orange-400' : 'text-gray-500'}`}>
-                      {troutSettings?.maintenanceMode ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
-                </div>
+        {/* 🐟 DATABASE CONTROLS - Adapts to available databases 🐟 */}
+        <div className={`mb-4 grid gap-4 ${hasDualDatabase ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {/* STAGING (Trout) Panel - Only show if Trout is available */}
+          {troutClient && (
+            <div className={`p-3 bg-yellow-900/20 border-yellow-600/50 border rounded-lg ${hasOnlyTrout ? 'max-w-xl' : ''}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm font-bold text-yellow-400">🐟 STAGING</span>
+                <span className="text-[10px] text-yellow-300">({troutDeployment})</span>
+                {hasOnlyTrout && <span className="text-[10px] text-gray-500 ml-auto">(Development Mode)</span>}
               </div>
-            )}
-          </div>
+              {troutLoading ? (
+                <p className="text-gray-400 text-xs">Loading...</p>
+              ) : (
+                <div className={hasOnlyTrout ? "grid grid-cols-3 gap-4" : "space-y-2"}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-yellow-300">Landing Page</span>
+                    <div className="flex items-center gap-2">
+                      <Switch.Root
+                        checked={troutSettings?.landingPageEnabled ?? false}
+                        onCheckedChange={async (enabled) => {
+                          await troutClient.mutation(api.siteSettings.toggleLandingPage, { enabled });
+                          const updated = await troutClient.query(api.siteSettings.getSiteSettings);
+                          setTroutSettings(updated);
+                        }}
+                        className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-green-500 transition-colors cursor-pointer"
+                      >
+                        <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                      </Switch.Root>
+                      <span className={`text-[10px] font-bold w-6 ${troutSettings?.landingPageEnabled ? 'text-green-400' : 'text-gray-500'}`}>
+                        {troutSettings?.landingPageEnabled ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-yellow-300">Localhost Bypass</span>
+                    <div className="flex items-center gap-2">
+                      <Switch.Root
+                        checked={troutSettings?.localhostBypass ?? true}
+                        onCheckedChange={async (enabled) => {
+                          await troutClient.mutation(api.siteSettings.toggleLocalhostBypass, { enabled });
+                          const updated = await troutClient.query(api.siteSettings.getSiteSettings);
+                          setTroutSettings(updated);
+                        }}
+                        className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-green-500 transition-colors cursor-pointer"
+                      >
+                        <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                      </Switch.Root>
+                      <span className={`text-[10px] font-bold w-6 ${troutSettings?.localhostBypass ? 'text-green-400' : 'text-gray-500'}`}>
+                        {troutSettings?.localhostBypass ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-orange-300 flex items-center gap-1">
+                      <span className="text-[10px]">🚨</span> Maintenance
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Switch.Root
+                        checked={troutSettings?.maintenanceMode ?? false}
+                        onCheckedChange={async (enabled) => {
+                          const confirmed = window.confirm(
+                            '🚨 STAGING MAINTENANCE MODE 🚨\n\n' +
+                            `You are about to ${enabled ? 'ENABLE' : 'DISABLE'} maintenance mode on STAGING (Trout).\n\n` +
+                            'Are you sure?'
+                          );
+                          if (!confirmed) return;
+                          await troutClient.mutation(api.siteSettings.toggleMaintenanceMode, { enabled });
+                          const updated = await troutClient.query(api.siteSettings.getSiteSettings);
+                          setTroutSettings(updated);
+                        }}
+                        className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-orange-500 transition-colors cursor-pointer"
+                      >
+                        <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                      </Switch.Root>
+                      <span className={`text-[10px] font-bold w-6 ${troutSettings?.maintenanceMode ? 'text-orange-400' : 'text-gray-500'}`}>
+                        {troutSettings?.maintenanceMode ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
-          {/* PRODUCTION (Sturgeon) Panel */}
-          <div className="p-3 bg-green-900/20 border-green-600/50 border rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-bold text-green-400">🐟 PRODUCTION</span>
-              <span className="text-[10px] text-green-300">({sturgeonDeployment})</span>
-            </div>
-            {!sturgeonClient ? (
-              <p className="text-gray-400 text-xs">Not configured - Add NEXT_PUBLIC_STURGEON_URL to .env.local</p>
-            ) : sturgeonLoading ? (
-              <p className="text-gray-400 text-xs">Loading...</p>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-green-300">Landing Page</span>
-                  <div className="flex items-center gap-2">
-                    <Switch.Root
-                      checked={sturgeonSettings?.landingPageEnabled ?? false}
-                      onCheckedChange={async (enabled) => {
-                        const confirmed = window.confirm(
-                          '⚠️ PRODUCTION CHANGE ⚠️\n\n' +
-                          `You are about to ${enabled ? 'ENABLE' : 'DISABLE'} the landing page on PRODUCTION.\n\n` +
-                          'This affects REAL USERS. Are you sure?'
-                        );
-                        if (!confirmed) return;
-                        await sturgeonClient!.mutation(api.siteSettings.toggleLandingPage, { enabled });
-                        const updated = await sturgeonClient!.query(api.siteSettings.getSiteSettings);
-                        setSturgeonSettings(updated);
-                      }}
-                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-green-500 transition-colors cursor-pointer"
-                    >
-                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
-                    </Switch.Root>
-                    <span className={`text-[10px] font-bold w-6 ${sturgeonSettings?.landingPageEnabled ? 'text-green-400' : 'text-gray-500'}`}>
-                      {sturgeonSettings?.landingPageEnabled ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-green-300">Localhost Bypass</span>
-                  <div className="flex items-center gap-2">
-                    <Switch.Root
-                      checked={sturgeonSettings?.localhostBypass ?? true}
-                      onCheckedChange={async (enabled) => {
-                        const confirmed = window.confirm(
-                          '⚠️ PRODUCTION CHANGE ⚠️\n\n' +
-                          `You are about to ${enabled ? 'ENABLE' : 'DISABLE'} localhost bypass on PRODUCTION.\n\n` +
-                          'Are you sure?'
-                        );
-                        if (!confirmed) return;
-                        await sturgeonClient!.mutation(api.siteSettings.toggleLocalhostBypass, { enabled });
-                        const updated = await sturgeonClient!.query(api.siteSettings.getSiteSettings);
-                        setSturgeonSettings(updated);
-                      }}
-                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-green-500 transition-colors cursor-pointer"
-                    >
-                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
-                    </Switch.Root>
-                    <span className={`text-[10px] font-bold w-6 ${sturgeonSettings?.localhostBypass ? 'text-green-400' : 'text-gray-500'}`}>
-                      {sturgeonSettings?.localhostBypass ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-orange-300 flex items-center gap-1">
-                    <span className="text-[10px]">🚨</span> Maintenance
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <Switch.Root
-                      checked={sturgeonSettings?.maintenanceMode ?? false}
-                      onCheckedChange={async (enabled) => {
-                        const confirmed = window.confirm(
-                          '🚨🚨🚨 PRODUCTION MAINTENANCE MODE 🚨🚨🚨\n\n' +
-                          `You are about to ${enabled ? 'ENABLE' : 'DISABLE'} maintenance mode on PRODUCTION (Sturgeon).\n\n` +
-                          'This will redirect ALL REAL USERS to the maintenance page!\n\n' +
-                          'ARE YOU ABSOLUTELY SURE?'
-                        );
-                        if (!confirmed) return;
-                        await sturgeonClient!.mutation(api.siteSettings.toggleMaintenanceMode, { enabled });
-                        const updated = await sturgeonClient!.query(api.siteSettings.getSiteSettings);
-                        setSturgeonSettings(updated);
-                        if (enabled) {
-                          alert('🚨 PRODUCTION MAINTENANCE MODE ACTIVATED!\nAll users are being redirected to the maintenance page.');
-                        } else {
-                          alert('✓ Production maintenance mode deactivated.');
-                        }
-                      }}
-                      className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-orange-500 transition-colors cursor-pointer"
-                    >
-                      <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
-                    </Switch.Root>
-                    <span className={`text-[10px] font-bold w-6 ${sturgeonSettings?.maintenanceMode ? 'text-orange-400' : 'text-gray-500'}`}>
-                      {sturgeonSettings?.maintenanceMode ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
-                </div>
+          {/* PRODUCTION (Sturgeon) Panel - Only show if Sturgeon is available */}
+          {sturgeonClient && (
+            <div className={`p-3 bg-green-900/20 border-green-600/50 border rounded-lg ${hasOnlySturgeon ? 'max-w-xl' : ''}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm font-bold text-green-400">🐟 PRODUCTION</span>
+                <span className="text-[10px] text-green-300">({sturgeonDeployment})</span>
+                {hasOnlySturgeon && <span className="text-[10px] text-gray-500 ml-auto">(Live Site)</span>}
               </div>
-            )}
-          </div>
+              {sturgeonLoading ? (
+                <p className="text-gray-400 text-xs">Loading...</p>
+              ) : (
+                <div className={hasOnlySturgeon ? "grid grid-cols-3 gap-4" : "space-y-2"}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-green-300">Landing Page</span>
+                    <div className="flex items-center gap-2">
+                      <Switch.Root
+                        checked={sturgeonSettings?.landingPageEnabled ?? false}
+                        onCheckedChange={async (enabled) => {
+                          const confirmed = window.confirm(
+                            '⚠️ PRODUCTION CHANGE ⚠️\n\n' +
+                            `You are about to ${enabled ? 'ENABLE' : 'DISABLE'} the landing page on PRODUCTION.\n\n` +
+                            'This affects REAL USERS. Are you sure?'
+                          );
+                          if (!confirmed) return;
+                          await sturgeonClient!.mutation(api.siteSettings.toggleLandingPage, { enabled });
+                          const updated = await sturgeonClient!.query(api.siteSettings.getSiteSettings);
+                          setSturgeonSettings(updated);
+                        }}
+                        className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-green-500 transition-colors cursor-pointer"
+                      >
+                        <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                      </Switch.Root>
+                      <span className={`text-[10px] font-bold w-6 ${sturgeonSettings?.landingPageEnabled ? 'text-green-400' : 'text-gray-500'}`}>
+                        {sturgeonSettings?.landingPageEnabled ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-green-300">Localhost Bypass</span>
+                    <div className="flex items-center gap-2">
+                      <Switch.Root
+                        checked={sturgeonSettings?.localhostBypass ?? true}
+                        onCheckedChange={async (enabled) => {
+                          const confirmed = window.confirm(
+                            '⚠️ PRODUCTION CHANGE ⚠️\n\n' +
+                            `You are about to ${enabled ? 'ENABLE' : 'DISABLE'} localhost bypass on PRODUCTION.\n\n` +
+                            'Are you sure?'
+                          );
+                          if (!confirmed) return;
+                          await sturgeonClient!.mutation(api.siteSettings.toggleLocalhostBypass, { enabled });
+                          const updated = await sturgeonClient!.query(api.siteSettings.getSiteSettings);
+                          setSturgeonSettings(updated);
+                        }}
+                        className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-green-500 transition-colors cursor-pointer"
+                      >
+                        <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                      </Switch.Root>
+                      <span className={`text-[10px] font-bold w-6 ${sturgeonSettings?.localhostBypass ? 'text-green-400' : 'text-gray-500'}`}>
+                        {sturgeonSettings?.localhostBypass ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-orange-300 flex items-center gap-1">
+                      <span className="text-[10px]">🚨</span> Maintenance
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Switch.Root
+                        checked={sturgeonSettings?.maintenanceMode ?? false}
+                        onCheckedChange={async (enabled) => {
+                          const confirmed = window.confirm(
+                            '🚨🚨🚨 PRODUCTION MAINTENANCE MODE 🚨🚨🚨\n\n' +
+                            `You are about to ${enabled ? 'ENABLE' : 'DISABLE'} maintenance mode on PRODUCTION (Sturgeon).\n\n` +
+                            'This will redirect ALL REAL USERS to the maintenance page!\n\n' +
+                            'ARE YOU ABSOLUTELY SURE?'
+                          );
+                          if (!confirmed) return;
+                          await sturgeonClient!.mutation(api.siteSettings.toggleMaintenanceMode, { enabled });
+                          const updated = await sturgeonClient!.query(api.siteSettings.getSiteSettings);
+                          setSturgeonSettings(updated);
+                          if (enabled) {
+                            alert('🚨 PRODUCTION MAINTENANCE MODE ACTIVATED!\nAll users are being redirected to the maintenance page.');
+                          } else {
+                            alert('✓ Production maintenance mode deactivated.');
+                          }
+                        }}
+                        className="w-9 h-5 bg-gray-700 rounded-full relative data-[state=checked]:bg-orange-500 transition-colors cursor-pointer"
+                      >
+                        <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
+                      </Switch.Root>
+                      <span className={`text-[10px] font-bold w-6 ${sturgeonSettings?.maintenanceMode ? 'text-orange-400' : 'text-gray-500'}`}>
+                        {sturgeonSettings?.maintenanceMode ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
 
