@@ -5,12 +5,14 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import RarityChart from "@/components/RarityChart";
+import { restoreWalletSession } from "@/lib/walletSessionManager";
 
 export default function RarityBiasPage() {
   const [userId, setUserId] = useState<Id<"users"> | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [rarityBias, setRarityBias] = useState(150);
   const [displayBias, setDisplayBias] = useState(150); // For smooth slider display
-  
+
   // Generate stars for background
   const stars = useMemo(() => [...Array(30)].map((_, i) => ({
     id: i,
@@ -19,32 +21,38 @@ export default function RarityBiasPage() {
     size: Math.random() * 2 + 0.5,
     opacity: Math.random() * 0.8 + 0.2,
   })), []);
-  
+
   const fineStars = useMemo(() => [...Array(50)].map((_, i) => ({
     id: i,
     left: `${Math.random() * 100}%`,
     top: `${Math.random() * 100}%`,
   })), []);
-  
+
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
-  
+
+  // Restore wallet session on mount (no demo fallback)
   useEffect(() => {
-    const initUser = async () => {
-      const user = await getOrCreateUser({ 
-        walletAddress: "demo_wallet_123" 
-      });
-      if (user) {
-        setUserId(user._id as Id<"users">);
-        setRarityBias(user.rarityBias || 150);
-        setDisplayBias(user.rarityBias || 150);
+    const initWallet = async () => {
+      const session = await restoreWalletSession();
+      if (session) {
+        const address = session.stakeAddress || session.walletAddress;
+        if (address) {
+          setWalletAddress(address);
+          const user = await getOrCreateUser({ walletAddress: address });
+          if (user) {
+            setUserId(user._id as Id<"users">);
+            setRarityBias(user.rarityBias || 150);
+            setDisplayBias(user.rarityBias || 150);
+          }
+        }
       }
     };
-    initUser();
+    initWallet();
   }, [getOrCreateUser]);
-  
+
   const userProfile = useQuery(
     api.users.getUserProfile,
-    userId ? { walletAddress: "demo_wallet_123" } : "skip"
+    walletAddress ? { walletAddress } : "skip"
   );
   
   useEffect(() => {

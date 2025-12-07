@@ -7,6 +7,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import Link from "next/link";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import UsernameModal from "@/components/UsernameModal";
+import { restoreWalletSession } from "@/lib/walletSessionManager";
 
 export default function Hub2Page() {
   
@@ -44,16 +45,24 @@ export default function Hub2Page() {
   useEffect(() => {
     const initUser = async () => {
       try {
-        const storedWallet = localStorage.getItem('walletAddress') || localStorage.getItem('stakeAddress') || "demo_wallet_123";
+        // Restore wallet session (no demo fallback)
+        const session = await restoreWalletSession();
+        const storedWallet = session?.stakeAddress || session?.walletAddress || null;
+
+        if (!storedWallet) {
+          // No wallet connected - page will show in limited mode
+          return;
+        }
+
         setWalletAddress(storedWallet);
-        
-        const user = await getOrCreateUser({ 
-          walletAddress: storedWallet 
+
+        const user = await getOrCreateUser({
+          walletAddress: storedWallet
         });
         if (user) {
           setUserId(user._id as Id<"users">);
           setTotalGold(user.gold);
-          
+
           try {
             const goldData = await getInitialGold({ userId: user._id as Id<"users"> });
             setCachedGoldData(goldData);
@@ -89,7 +98,7 @@ export default function Hub2Page() {
   
   // Check if user has set display name
   useEffect(() => {
-    if (getUserDisplayName && walletAddress && walletAddress !== "demo_wallet_123") {
+    if (getUserDisplayName && walletAddress) {
       // Handle if getUserDisplayName is an object with displayNameSet property
       if (typeof getUserDisplayName === 'object' && getUserDisplayName.displayName) {
         setDisplayName(getUserDisplayName.displayName || null);

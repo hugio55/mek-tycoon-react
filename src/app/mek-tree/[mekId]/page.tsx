@@ -8,6 +8,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import Link from "next/link";
 import MekImage from "@/components/MekImage";
 import BackgroundEffects from "@/components/BackgroundEffects";
+import { restoreWalletSession } from "@/lib/walletSessionManager";
 
 // Helper function to safely get error message
 function getErrorMessage(error: unknown): string {
@@ -77,14 +78,19 @@ export default function MekTreePage() {
   // Initialize user and tree
   useEffect(() => {
     const initUser = async () => {
-      const stakeAddress = localStorage.getItem('stakeAddress');
-      const paymentAddress = localStorage.getItem('walletAddress');
-      const addressToUse = stakeAddress || paymentAddress || "demo_wallet_123";
-      
+      // Restore wallet session (no demo fallback)
+      const session = await restoreWalletSession();
+      const addressToUse = session?.stakeAddress || session?.walletAddress || null;
+
+      if (!addressToUse) {
+        // No wallet connected - can't manage talent tree
+        return;
+      }
+
       const user = await getOrCreateUser({ walletAddress: addressToUse });
       if (user) {
         setUserId(user._id as Id<"users">);
-        
+
         // Create tree if it doesn't exist
         if (!mekTree && mek) {
           await getOrCreateMekTree({

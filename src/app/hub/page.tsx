@@ -8,6 +8,7 @@ import Link from "next/link";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import UsernameModal from "@/components/UsernameModal";
 import { getMediaUrl } from "@/lib/media-url";
+import { restoreWalletSession } from "@/lib/walletSessionManager";
 
 export default function HubPage() {
   
@@ -62,17 +63,24 @@ export default function HubPage() {
   useEffect(() => {
     const initUser = async () => {
       try {
-        // Get wallet from localStorage or use demo
-        const storedWallet = localStorage.getItem('walletAddress') || localStorage.getItem('stakeAddress') || "demo_wallet_123";
+        // Restore wallet session (no demo fallback)
+        const session = await restoreWalletSession();
+        const storedWallet = session?.stakeAddress || session?.walletAddress || null;
+
+        if (!storedWallet) {
+          // No wallet connected - page will show in limited mode
+          return;
+        }
+
         setWalletAddress(storedWallet);
-        
-        const user = await getOrCreateUser({ 
-          walletAddress: storedWallet 
+
+        const user = await getOrCreateUser({
+          walletAddress: storedWallet
         });
         if (user) {
           setUserId(user._id as Id<"users">);
           setTotalGold(user.gold);
-          
+
           // Fetch initial gold data once
           try {
             const goldData = await getInitialGold({ userId: user._id as Id<"users"> });
@@ -110,7 +118,7 @@ export default function HubPage() {
   
   // Check if user has set display name
   useEffect(() => {
-    if (getUserDisplayName && walletAddress && walletAddress !== "demo_wallet_123") {
+    if (getUserDisplayName && walletAddress) {
       if (!getUserDisplayName.displayNameSet) {
         setShowUsernameModal(true);
       } else {
@@ -514,7 +522,7 @@ export default function HubPage() {
                 >
                   Edit Name
                 </button>
-                {walletAddress && walletAddress !== "demo_wallet_123" ? (
+                {walletAddress ? (
                   <button
                     onClick={() => {
                       // Disconnect wallet
@@ -594,10 +602,11 @@ export default function HubPage() {
                 className="p-3 bg-gray-900/50 rounded border-l-4 border-yellow-500 hover:bg-gray-800/70 transition-all cursor-pointer"
                 onClick={async () => {
                   // Update to 8,743 g/hr for testing (~2.43 gold per second)
+                  if (!walletAddress) return;
                   try {
-                    const result = await setGoldRate({ 
-                      walletAddress: "demo_wallet_123", 
-                      goldPerHour: GAME_CONSTANTS.TEST_GOLD_RATE 
+                    const result = await setGoldRate({
+                      walletAddress,
+                      goldPerHour: GAME_CONSTANTS.TEST_GOLD_RATE
                     });
                     // Update local state immediately
                     setGoldPerSecond(result.goldPerSecond);
