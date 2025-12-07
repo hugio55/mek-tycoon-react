@@ -988,25 +988,47 @@ const DATA_SYSTEMS = [
 export default function AdminMasterDataPage() {
   const convex = useConvex();
 
-  // DUAL DATABASE CLIENTS - Trout (Dev) and Sturgeon (Production)
-  const troutUrl = process.env.NEXT_PUBLIC_CONVEX_URL!;
-  const sturgeonUrl = process.env.NEXT_PUBLIC_STURGEON_URL;
+  // DUAL DATABASE CLIENTS - Smart Environment Detection
+  // On localhost: CONVEX_URL = Trout, STURGEON_URL = Sturgeon (dual mode)
+  // On production: CONVEX_URL = Sturgeon, STURGEON_URL = undefined (single mode)
+  const mainUrl = process.env.NEXT_PUBLIC_CONVEX_URL!;
+  const secondaryUrl = process.env.NEXT_PUBLIC_STURGEON_URL;
 
-  const [troutClient] = useState(() => new ConvexHttpClient(troutUrl));
-  const [sturgeonClient] = useState(() => sturgeonUrl ? new ConvexHttpClient(sturgeonUrl) : null);
+  // Detect which database the main URL points to
+  const mainIsSturgeon = mainUrl.includes('sturgeon');
+  const mainIsTrout = mainUrl.includes('trout');
+
+  // Smart client setup based on environment
+  // If main is Trout (localhost): troutClient = main, sturgeonClient = secondary
+  // If main is Sturgeon (production): sturgeonClient = main, troutClient = secondary (if available)
+  const [mainClient] = useState(() => new ConvexHttpClient(mainUrl));
+  const [secondaryClient] = useState(() => secondaryUrl ? new ConvexHttpClient(secondaryUrl) : null);
+
+  // Assign clients based on detected environment
+  const troutClient = mainIsTrout ? mainClient : (secondaryUrl?.includes('trout') ? secondaryClient : null);
+  const sturgeonClient = mainIsSturgeon ? mainClient : (secondaryUrl?.includes('sturgeon') ? secondaryClient : null);
 
   // Legacy alias for backwards compatibility
-  const httpClient = troutClient;
+  const httpClient = mainClient;
 
   // Detect connected database names
-  const troutDeployment = troutUrl.split("//")[1]?.split(".")[0] || "unknown";
-  const sturgeonDeployment = sturgeonUrl?.split("//")[1]?.split(".")[0] || "not-configured";
+  const mainDeployment = mainUrl.split("//")[1]?.split(".")[0] || "unknown";
+  const secondaryDeployment = secondaryUrl?.split("//")[1]?.split(".")[0] || "not-configured";
+
+  // Determine actual deployment names for each database
+  const troutDeployment = mainIsTrout ? mainDeployment : (secondaryUrl?.includes('trout') ? secondaryDeployment : "not-configured");
+  const sturgeonDeployment = mainIsSturgeon ? mainDeployment : (secondaryUrl?.includes('sturgeon') ? secondaryDeployment : "not-configured");
 
   // Legacy variables for backwards compatibility
-  const convexUrl = troutUrl;
-  const deploymentName = troutDeployment;
-  const isProduction = false; // Always dev mode for main client now
-  const databaseLabel = troutDeployment;
+  const convexUrl = mainUrl;
+  const deploymentName = mainDeployment;
+  const isProduction = mainIsSturgeon;
+  const databaseLabel = mainDeployment;
+
+  // Check if we have dual database access
+  const hasDualDatabase = (troutClient !== null) && (sturgeonClient !== null);
+  const hasOnlyTrout = troutClient !== null && sturgeonClient === null;
+  const hasOnlySturgeon = sturgeonClient !== null && troutClient === null;
 
   // DUAL DATABASE SETTINGS
   const [troutSettings, setTroutSettings] = useState<any>(null);
@@ -1014,17 +1036,21 @@ export default function AdminMasterDataPage() {
   const [troutLoading, setTroutLoading] = useState(true);
   const [sturgeonLoading, setSturgeonLoading] = useState(true);
 
-  // Legacy alias
-  const dbSettings = troutSettings;
-  const setDbSettings = setTroutSettings;
-  const dbLoading = troutLoading;
+  // Legacy alias (points to main database)
+  const dbSettings = mainIsSturgeon ? sturgeonSettings : troutSettings;
+  const setDbSettings = mainIsSturgeon ? setSturgeonSettings : setTroutSettings;
+  const dbLoading = mainIsSturgeon ? sturgeonLoading : troutLoading;
 
   // Portal mounting state
   const [mounted, setMounted] = useState(false);
 
-  // Fetch settings from BOTH databases
+  // Fetch settings from available databases
   useEffect(() => {
     async function fetchTroutSettings() {
+      if (!troutClient) {
+        setTroutLoading(false);
+        return;
+      }
       try {
         const settings = await troutClient.query(api.siteSettings.getSiteSettings);
         setTroutSettings(settings);
