@@ -617,13 +617,13 @@ export default function UnifiedHeader() {
             style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
           />
 
-          {/* Dark Container - Matches Admin Messaging Style */}
+          {/* Translucent Container - Liquid Glass Style */}
           <div
-            className="relative w-full max-w-5xl h-[85vh] bg-black/90 rounded-xl border border-gray-700 shadow-2xl overflow-hidden"
+            className="relative w-full max-w-5xl h-[85vh] bg-black/60 backdrop-blur-xl rounded-xl border border-gray-700 shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 bg-black/60">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 bg-black/40">
               <div className="flex items-center gap-3">
                 <svg
                   className="w-6 h-6 text-yellow-500"

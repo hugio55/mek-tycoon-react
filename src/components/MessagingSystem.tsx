@@ -406,39 +406,46 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     (isNewConversation && existingConversation?.disabledByAdmin);
 
   return (
-    <div className="flex h-full min-h-[500px] bg-black/40 backdrop-blur-sm overflow-hidden">
+    <div className="flex h-full min-h-[500px] bg-black/30 backdrop-blur-md overflow-hidden">
       {/* Left Sidebar - Inbox */}
-      <div className="w-80 border-r border-white/10 flex flex-col">
+      <div className="w-80 border-r border-gray-700 flex flex-col bg-black/40">
         {/* Inbox Header */}
-        <div className="p-4 border-b border-white/10">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-white">Inbox</h2>
-            <button
-              onClick={() => setShowBlockedUsers(!showBlockedUsers)}
-              className={`text-xs px-2 py-1 rounded transition-colors ${
-                showBlockedUsers
-                  ? 'bg-red-500/20 text-red-400 border border-red-500/50'
-                  : 'text-gray-400 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              Blocked
-            </button>
-          </div>
-
-          {/* New Conversation Button */}
+        <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-white">Inbox</h2>
           <button
-            onClick={() => setShowNewConversation(true)}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/20 transition-colors"
+            onClick={() => setShowBlockedUsers(!showBlockedUsers)}
+            className={`text-xs px-2 py-1 rounded-full border transition-colors ${
+              showBlockedUsers
+                ? 'bg-red-500/20 text-red-400 border-red-500/50'
+                : 'bg-gray-700/50 text-gray-400 border-gray-600 hover:border-gray-500'
+            }`}
           >
-            <span className="text-lg">+</span>
-            <span>New Conversation</span>
+            Blocked
           </button>
         </div>
 
+        {/* New Conversation Button - Matches Admin Style */}
+        <button
+          onClick={() => setShowNewConversation(true)}
+          className="w-full p-4 text-left border-b border-gray-700/50 hover:bg-white/5 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+              <span className="text-cyan-400 text-lg">+</span>
+            </div>
+            <div>
+              <div className="text-cyan-400 font-medium">New Conversation</div>
+              <div className="text-gray-500 text-sm">Search for a corporation</div>
+            </div>
+          </div>
+        </button>
+
         {/* Blocked Users Panel */}
         {showBlockedUsers && (
-          <div className="p-3 border-b border-white/10 bg-red-500/5">
-            <div className="text-sm text-gray-400 mb-2">Blocked Users</div>
+          <div className="border-b border-gray-700 bg-red-500/5">
+            <div className="p-3 border-b border-red-500/20">
+              <div className="text-sm font-medium text-red-400">Blocked Users</div>
+            </div>
             {blockedUsers && blockedUsers.length > 0 ? (
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {blockedUsers.map((block: any) => (
@@ -464,16 +471,16 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
         {/* Conversation List */}
         <div className="flex-1 overflow-y-auto">
           {conversations?.map((conv: any) => (
-            <button
+            <div
               key={conv._id}
               onClick={() => {
                 setSelectedConversationId(conv._id);
                 setIsNewConversation(false);
                 setSelectedRecipient(null);
               }}
-              className={`w-full p-3 text-left transition-colors border-b border-white/5 group ${
+              className={`group w-full p-4 text-left border-b border-gray-700/50 transition-colors cursor-pointer ${
                 selectedConversationId === conv._id
-                  ? 'bg-white/10'
+                  ? 'bg-yellow-500/10'
                   : 'hover:bg-white/5'
               }`}
             >
@@ -525,7 +532,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                   </div>
                 </div>
               </div>
-            </button>
+            </div>
           ))}
 
           {(!conversations || conversations.length === 0) && (
@@ -539,11 +546,11 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
       </div>
 
       {/* Right Panel - Conversation */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-black/40">
         {selectedConversationId || isNewConversation ? (
           <>
             {/* Conversation Header */}
-            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+            <div className="p-4 border-b border-gray-700 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
                   <img

@@ -581,10 +581,10 @@ export const internalAutoSyncWithNMKR = internalAction({
 
     for (const campaign of campaignsNeedingSync) {
       try {
-        console.log(`[🔄NMKR-AUTO-SYNC] Syncing campaign: ${campaign.name} (${campaign.nmkrProjectUid})`);
+        console.log(`[🔄NMKR-AUTO-SYNC] Syncing campaign: ${campaign.name} (${campaign.nmkrProjectId})`);
 
         // Fetch current NFT statuses from NMKR
-        const nmkrNFTs = await fetchAllNMKRNFTs(campaign.nmkrProjectUid, apiKey);
+        const nmkrNFTs = await fetchAllNMKRNFTs(campaign.nmkrProjectId, apiKey);
 
         console.log(`[🔄NMKR-AUTO-SYNC] Retrieved ${nmkrNFTs.length} NFTs from NMKR`);
 
@@ -638,16 +638,16 @@ export const getActiveCampaignsForSync = internalQuery({
   handler: async (ctx) => {
     const campaigns = await ctx.db
       .query("commemorativeCampaigns")
-      .filter((q) => q.eq(q.field("isActive"), true))
+      .filter((q) => q.eq(q.field("status"), "active"))
       .collect();
 
-    // Only return campaigns that have NMKR project UIDs
+    // Only return campaigns that have NMKR project IDs
     return campaigns
-      .filter((c: any) => c.nmkrProjectUid)
+      .filter((c: any) => c.nmkrProjectId)
       .map((c: any) => ({
         _id: c._id,
         name: c.name,
-        nmkrProjectUid: c.nmkrProjectUid!,
+        nmkrProjectId: c.nmkrProjectId!,
       }));
   },
 });
@@ -668,16 +668,16 @@ export const getActiveCampaignsForSync = internalQuery({
 export const getCampaignsNeedingSync = internalQuery({
   args: {},
   handler: async (ctx) => {
-    // Get all active campaigns with NMKR project UIDs
+    // Get all active campaigns with NMKR project IDs
     const campaigns = await ctx.db
       .query("commemorativeCampaigns")
-      .filter((q) => q.eq(q.field("isActive"), true))
+      .filter((q) => q.eq(q.field("status"), "active"))
       .collect();
 
     const campaignsNeedingSync = [];
 
     for (const campaign of campaigns) {
-      if (!campaign.nmkrProjectUid) continue;
+      if (!campaign.nmkrProjectId) continue;
 
       // Check if this campaign has any reserved NFTs (at-risk of missed webhook)
       const inventory = await ctx.db
@@ -691,7 +691,7 @@ export const getCampaignsNeedingSync = internalQuery({
         campaignsNeedingSync.push({
           _id: campaign._id,
           name: campaign.name,
-          nmkrProjectUid: campaign.nmkrProjectUid,
+          nmkrProjectId: campaign.nmkrProjectId,
           reservedCount,
         });
       }
