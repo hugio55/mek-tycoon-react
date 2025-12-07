@@ -5822,10 +5822,20 @@ export default function MekProfileLightbox({
                     </div>
                   </div>
 
-                  {/* RIGHT SIDEBAR */}
-                  <div className="lg:col-span-3 space-y-4">
-                    {/* Employment Status - PowerSwitch */}
-                    {renderStatusCard()}
+                  {/* RIGHT SIDEBAR - Abilities Tree (Small Vertical) */}
+                  <div className="lg:col-span-3">
+                    <div className="h-full bg-black/40 border border-yellow-500/30 rounded overflow-hidden relative">
+                      <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
+                      <MekAbilitiesTree
+                        categoryId={abilitiesTreeCategoryId}
+                        templateId={abilitiesTreeTemplateId}
+                        rotated={false}
+                        showNodeNames={false}
+                        nodeColor="#fbbf24"
+                        connectionColor="#555"
+                        className="relative z-10 h-full"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -5858,23 +5868,6 @@ export default function MekProfileLightbox({
                     useYellowGlow={useYellowGlow}
                     statsLayoutStyle={statsLayoutStyle}
                   />
-                </div>
-
-                {/* Abilities Tree */}
-                <div className="mek-card-industrial mek-border-sharp-gold p-4">
-                  <div className="mek-label-uppercase mb-3">ABILITIES TREE</div>
-                  <div className="w-full h-64 md:h-80 lg:h-96 bg-black/40 border border-yellow-500/20 relative overflow-hidden">
-                    <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-                    <MekAbilitiesTree
-                      categoryId={abilitiesTreeCategoryId}
-                      templateId={abilitiesTreeTemplateId}
-                      rotated={true}
-                      showNodeNames={false}
-                      nodeColor="#fbbf24"
-                      connectionColor="#666"
-                      className="relative z-10"
-                    />
-                  </div>
                 </div>
               </div>
             </div>

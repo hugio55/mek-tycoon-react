@@ -322,38 +322,135 @@ export const getGoldMiningData = query({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    const data = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
+    // ==========================================================================
+    // PHASE II: Query from new normalized tables (users + goldMiningState + meks)
+    // ==========================================================================
+
+    // Try to find user by stake address first (Phase II primary key)
+    let user = await ctx.db
+      .query("users")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.walletAddress))
       .first();
 
-    if (!data) {
-      return null;
+    // Fallback: try legacy walletAddress field
+    if (!user) {
+      user = await ctx.db
+        .query("users")
+        .filter((q: any) => q.eq(q.field("walletAddress"), args.walletAddress))
+        .first();
     }
 
-    // Use stored rates (updated by mutations) - no need to recalculate on every query
-    // Mutations keep these synchronized, so reading them is fast and accurate
-    const baseRate = data.baseGoldPerHour || 0;
-    const boostRate = data.boostGoldPerHour || 0;
-    const totalRate = data.totalGoldPerHour || 0;
+    // LEGACY FALLBACK: If user not found in new tables, try old goldMining table
+    if (!user) {
+      const legacyData = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
+        .first();
 
-    // VERIFICATION CHECK: Only accumulate gold if wallet is verified
+      if (!legacyData) {
+        return null;
+      }
+
+      // Return legacy data format
+      const baseRate = legacyData.baseGoldPerHour || 0;
+      const boostRate = legacyData.boostGoldPerHour || 0;
+      const totalRate = legacyData.totalGoldPerHour || 0;
+      const currentGold = calculateCurrentGold({
+        accumulatedGold: legacyData.accumulatedGold || 0,
+        goldPerHour: totalRate,
+        lastSnapshotTime: legacyData.lastSnapshotTime || legacyData.updatedAt || legacyData.createdAt,
+        isVerified: legacyData.isBlockchainVerified === true,
+        consecutiveSnapshotFailures: legacyData.consecutiveSnapshotFailures || 0
+      });
+
+      return {
+        ...legacyData,
+        currentGold,
+        baseGoldPerHour: baseRate,
+        boostGoldPerHour: boostRate,
+        totalGoldPerHour: totalRate,
+        isVerified: legacyData.isBlockchainVerified === true,
+      };
+    }
+
+    // Get gold mining state from new table
+    const miningState = await ctx.db
+      .query("goldMiningState")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", user.stakeAddress || args.walletAddress))
+      .first();
+
+    // Get owned meks from new meks table
+    const ownedMeks = await ctx.db
+      .query("meks")
+      .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", user.stakeAddress || args.walletAddress))
+      .collect();
+
+    // Calculate rates from meks
+    const baseRate = miningState?.baseGoldPerHour || 0;
+    const boostRate = miningState?.boostGoldPerHour || 0;
+    const totalRate = miningState?.totalGoldPerHour || 0;
+
+    // Calculate current gold
     const currentGold = calculateCurrentGold({
-      accumulatedGold: data.accumulatedGold || 0,
+      accumulatedGold: miningState?.accumulatedGold || 0,
       goldPerHour: totalRate,
-      lastSnapshotTime: data.lastSnapshotTime || data.updatedAt || data.createdAt,
-      isVerified: data.isBlockchainVerified === true,
-      consecutiveSnapshotFailures: data.consecutiveSnapshotFailures || 0
+      lastSnapshotTime: miningState?.lastSnapshotTime || miningState?.updatedAt || now,
+      isVerified: miningState?.isBlockchainVerified === true,
+      consecutiveSnapshotFailures: miningState?.consecutiveSnapshotFailures || 0
     });
 
+    // Return in backwards-compatible format (same structure as old goldMining table)
     return {
-      ...data,
+      _id: user._id,
+      walletAddress: user.stakeAddress || args.walletAddress,
+      walletType: user.walletType,
+      paymentAddresses: user.paymentAddresses,
+      corporationName: user.corporationName,
+
+      // Meks from new meks table (formatted like old ownedMeks array)
+      ownedMeks: ownedMeks.map((mek: any) => ({
+        assetId: mek.assetId,
+        policyId: mek.policyId,
+        assetName: mek.assetName,
+        imageUrl: mek.imageUrl,
+        goldPerHour: mek.effectiveGoldPerHour || mek.baseGoldPerHour || 0,
+        rarityRank: mek.rarityRank,
+        headVariation: mek.headVariation,
+        bodyVariation: mek.bodyVariation,
+        itemVariation: mek.itemVariation,
+        sourceKey: mek.sourceKey,
+        sourceKeyBase: mek.sourceKeyBase,
+        baseGoldPerHour: mek.baseGoldPerHour,
+        currentLevel: mek.currentLevel,
+        levelBoostPercent: mek.levelBoostPercent,
+        levelBoostAmount: mek.levelBoostAmount,
+        effectiveGoldPerHour: mek.effectiveGoldPerHour,
+        customName: mek.customName,
+      })),
+
+      // Gold mining state
       currentGold,
-      // Use stored rates (already accurate from mutations)
+      accumulatedGold: miningState?.accumulatedGold || 0,
       baseGoldPerHour: baseRate,
       boostGoldPerHour: boostRate,
       totalGoldPerHour: totalRate,
-      isVerified: data.isBlockchainVerified === true, // Add verification status to response
+      lastSnapshotTime: miningState?.lastSnapshotTime,
+      lastActiveTime: miningState?.lastActiveTime,
+      totalCumulativeGold: miningState?.totalCumulativeGold || 0,
+
+      // Verification
+      isBlockchainVerified: miningState?.isBlockchainVerified || false,
+      isVerified: miningState?.isBlockchainVerified === true,
+      consecutiveSnapshotFailures: miningState?.consecutiveSnapshotFailures || 0,
+
+      // Timestamps
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt || miningState?.updatedAt,
+
+      // User data
+      gold: user.gold || 0,
+      level: user.level || 1,
+      experience: user.experience || 0,
     };
   },
 });
