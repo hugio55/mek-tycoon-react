@@ -31,14 +31,19 @@ type SubMenu = 'wallet-list' | 'snapshot-history' | 'snapshot-health' | 'gold-re
 type SnapshotHealthTab = 'health' | 'logging';
 
 function WalletManagementAdminContent() {
-  // Get database context
+  // Get database context with environment detection
   const {
     selectedDatabase,
     setSelectedDatabase,
     client,
     canMutate,
     productionMutationsEnabled,
-    setProductionMutationsEnabled
+    setProductionMutationsEnabled,
+    hasTrout,
+    hasSturgeon,
+    hasDualDatabase,
+    troutLabel,
+    sturgeonLabel,
   } = useDatabaseContext();
 
   const getClient = () => client;
@@ -797,6 +802,54 @@ Check console for full timeline.
         >
           🎮 Beta Signups
         </button>
+
+        {/* Database Selector - Only shows when dual database available */}
+        <div className="ml-auto">
+          {hasDualDatabase ? (
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${
+              selectedDatabase === 'sturgeon'
+                ? 'bg-green-900/20 border-green-500/50'
+                : 'bg-yellow-900/20 border-yellow-500/50'
+            }`}>
+              <span className="text-xs text-gray-400">Database:</span>
+              <button
+                onClick={() => setSelectedDatabase('trout')}
+                className={`px-2 py-0.5 text-xs font-bold rounded transition-all ${
+                  selectedDatabase === 'trout'
+                    ? 'bg-yellow-500/30 text-yellow-300 border border-yellow-500/50'
+                    : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                Staging
+              </button>
+              <button
+                onClick={() => setSelectedDatabase('sturgeon')}
+                className={`px-2 py-0.5 text-xs font-bold rounded transition-all ${
+                  selectedDatabase === 'sturgeon'
+                    ? 'bg-green-500/30 text-green-300 border border-green-500/50'
+                    : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                Production
+              </button>
+            </div>
+          ) : (
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${
+              hasSturgeon
+                ? 'bg-green-900/20 border-green-500/50'
+                : 'bg-yellow-900/20 border-yellow-500/50'
+            }`}>
+              <div className={`w-2 h-2 rounded-full animate-pulse ${
+                hasSturgeon ? 'bg-green-400' : 'bg-yellow-400'
+              }`} />
+              <span className={`text-xs font-bold ${
+                hasSturgeon ? 'text-green-400' : 'text-yellow-400'
+              }`}>
+                {hasSturgeon ? 'PRODUCTION' : 'STAGING'}
+              </span>
+            </div>
+          )}
+        </div>
 
       </div>
 
