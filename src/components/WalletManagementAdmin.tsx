@@ -808,15 +808,15 @@ Check console for full timeline.
           {hasDualDatabase ? (
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${
               selectedDatabase === 'sturgeon'
-                ? 'bg-green-900/20 border-green-500/50'
-                : 'bg-yellow-900/20 border-yellow-500/50'
+                ? 'bg-red-900/20 border-red-500/50'
+                : 'bg-green-900/20 border-green-500/50'
             }`}>
               <span className="text-xs text-gray-400">Database:</span>
               <button
                 onClick={() => setSelectedDatabase('trout')}
                 className={`px-2 py-0.5 text-xs font-bold rounded transition-all ${
                   selectedDatabase === 'trout'
-                    ? 'bg-yellow-500/30 text-yellow-300 border border-yellow-500/50'
+                    ? 'bg-green-500/30 text-green-300 border border-green-500/50'
                     : 'text-gray-500 hover:text-gray-300'
                 }`}
               >
@@ -826,7 +826,7 @@ Check console for full timeline.
                 onClick={() => setSelectedDatabase('sturgeon')}
                 className={`px-2 py-0.5 text-xs font-bold rounded transition-all ${
                   selectedDatabase === 'sturgeon'
-                    ? 'bg-green-500/30 text-green-300 border border-green-500/50'
+                    ? 'bg-red-500/30 text-red-300 border border-red-500/50'
                     : 'text-gray-500 hover:text-gray-300'
                 }`}
               >
@@ -836,14 +836,14 @@ Check console for full timeline.
           ) : (
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${
               hasSturgeon
-                ? 'bg-green-900/20 border-green-500/50'
-                : 'bg-yellow-900/20 border-yellow-500/50'
+                ? 'bg-red-900/20 border-red-500/50'
+                : 'bg-green-900/20 border-green-500/50'
             }`}>
               <div className={`w-2 h-2 rounded-full animate-pulse ${
-                hasSturgeon ? 'bg-green-400' : 'bg-yellow-400'
+                hasSturgeon ? 'bg-red-400' : 'bg-green-400'
               }`} />
               <span className={`text-xs font-bold ${
-                hasSturgeon ? 'text-green-400' : 'text-yellow-400'
+                hasSturgeon ? 'text-red-400' : 'text-green-400'
               }`}>
                 {hasSturgeon ? 'PRODUCTION' : 'STAGING'}
               </span>
@@ -1155,12 +1155,12 @@ Check console for full timeline.
               {/* Database Indicator - Reflects selected database */}
               <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
                 selectedDatabase === 'trout'
-                  ? 'bg-yellow-900/30 border border-yellow-600/50'
-                  : 'bg-green-900/30 border border-green-600/50'
+                  ? 'bg-green-900/30 border border-green-600/50'
+                  : 'bg-red-900/30 border border-red-600/50'
               }`}>
                 <span className="text-sm text-gray-400">Database:</span>
                 <span className={`text-sm font-bold ${
-                  selectedDatabase === 'trout' ? 'text-yellow-400' : 'text-green-400'
+                  selectedDatabase === 'trout' ? 'text-green-400' : 'text-red-400'
                 }`} style={{ fontFamily: "'Orbitron', sans-serif" }}>
                   {selectedDatabase === 'trout' ? `🐟 ${troutLabel}` : `🐟 ${sturgeonLabel}`}
                 </span>

@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
-import { useDatabaseContext } from '@/contexts/DatabaseContext';
+import { useDatabaseContext, DatabaseProvider } from '@/contexts/DatabaseContext';
 
 function WhitelistManagerAdminContent() {
   // Get database context (always Sturgeon now - single database mode)
@@ -678,9 +678,13 @@ function WhitelistManagerAdminContent() {
   );
 }
 
-// Export component directly (single database mode - no provider wrapper needed)
+// Export component wrapped with DatabaseProvider
 export default function WhitelistManagerAdmin() {
-  return <WhitelistManagerAdminContent />;
+  return (
+    <DatabaseProvider>
+      <WhitelistManagerAdminContent />
+    </DatabaseProvider>
+  );
 }
 
 // Create/Edit Whitelist Modal Component
