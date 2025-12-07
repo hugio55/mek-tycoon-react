@@ -5904,49 +5904,55 @@ export default function EssenceMarketPage() {
           </div>
         )}
 
-        {/* My Listings Modal */}
+        {/* My Listings Modal - Space Age Style */}
         {showMyListingsModal && (
           <div
-            className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-4"
-            style={{ backdropFilter: 'blur(2px)' }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center overflow-auto p-4"
             onClick={() => setShowMyListingsModal(false)}
           >
+            {/* Space Age Backdrop */}
             <div
-              className="relative w-[960px] max-w-[95vw] h-auto max-h-[90vh] bg-black/20 backdrop-blur-xl border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl"
+              className="fixed inset-0 bg-black/70"
+              style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
+            />
+
+            {/* Lightbox Container - Liquid Glass Style */}
+            <div
+              className="relative w-[960px] max-w-[95vw] h-auto max-h-[90vh] overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
+                backdropFilter: 'blur(30px)',
+                WebkitBackdropFilter: 'blur(30px)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: '20px',
+                boxShadow: '0 25px 80px rgba(0,0,0,0.6), 0 0 60px rgba(34,211,238,0.05)'
+              }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Close button */}
+              {/* Close Button - Space Age Style */}
               <button
                 onClick={() => setShowMyListingsModal(false)}
-                className="absolute top-4 right-4 z-50 flex items-center justify-center hover:scale-110 transition-transform"
+                className="absolute top-5 right-5 z-50 w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
+                style={{
+                  background: 'rgba(255,255,255,0.1)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                }}
               >
-                <span className="text-yellow-400 text-3xl font-bold" style={{ textShadow: '0 0 10px rgba(250, 182, 23, 0.5)' }}>×</span>
+                <span className="text-white/70 text-2xl font-light hover:text-white transition-colors">×</span>
               </button>
 
               {/* Scrollable Content */}
               <div className="w-full h-full overflow-y-auto overflow-x-hidden scrollbar-hide">
                 <div className="relative text-white">
-                  {/* Industrial Header */}
-                  <div className="w-full bg-gradient-to-b from-black via-black to-transparent">
-                    <div className="relative overflow-hidden">
-                      <div className="absolute inset-0 opacity-10">
-                        <div className="absolute inset-0" style={{
-                          backgroundImage: 'repeating-linear-gradient(45deg, #fab617 0, #fab617 10px, transparent 10px, transparent 20px)',
-                        }} />
-                      </div>
-
-                      <div className="max-w-7xl mx-auto px-4 py-[15px]">
-                        <h1 className="text-5xl font-bold font-orbitron tracking-wider text-center mb-1">
-                          <span className="text-yellow-400">MY</span>{" "}
-                          <span className="text-gray-400">LISTINGS</span>
-                        </h1>
-                        <p className="text-center text-gray-400 text-xs max-w-2xl mx-auto" style={{
-                          lineHeight: '1.6'
-                        }}>
-                          View and manage your active marketplace listings. Track sales, monitor remaining stock, and recall listings at any time.
-                        </p>
-                      </div>
-                    </div>
+                  {/* Space Age Header */}
+                  <div className="w-full py-6 px-8">
+                    <h1 className="text-4xl font-bold tracking-wider text-center mb-2" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                      <span className="text-cyan-400" style={{ textShadow: '0 0 30px rgba(34, 211, 238, 0.5)' }}>MY</span>{" "}
+                      <span className="text-white/80">LISTINGS</span>
+                    </h1>
+                    <p className="text-center text-white/50 text-sm max-w-2xl mx-auto" style={{ fontFamily: 'Play, sans-serif' }}>
+                      View and manage your active marketplace listings. Track sales, monitor remaining stock, and recall listings at any time.
+                    </p>
                   </div>
 
                   {/* Content Area */}
