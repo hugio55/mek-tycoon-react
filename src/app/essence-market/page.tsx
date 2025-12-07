@@ -10,6 +10,7 @@ import EssenceListingLightboxV6FullMarketMatch from "@/components/EssenceListing
 import { renderHeaderButtons } from "@/lib/headerButtonVariations";
 import { Tooltip } from "@/components/ui/tooltip-card";
 import { getMediaUrl } from "@/lib/media-url";
+import CloseButton from "@/components/controls/CloseButton";
 // Removed: restoreWalletSession - using localStorage directly like hub page
 
 // Dynamic filter options per market category
@@ -5929,17 +5930,14 @@ export default function EssenceMarketPage() {
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Close Button - Space Age Style */}
-              <button
-                onClick={() => setShowMyListingsModal(false)}
-                className="absolute top-5 right-5 z-50 w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
-                style={{
-                  background: 'rgba(255,255,255,0.1)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                }}
-              >
-                <span className="text-white/70 text-2xl font-light hover:text-white transition-colors">×</span>
-              </button>
+              {/* Close Button - Animated X */}
+              <div className="absolute top-5 right-5 z-50" style={{ marginTop: 0 }}>
+                <CloseButton
+                  onClick={() => setShowMyListingsModal(false)}
+                  hideLabel
+                  className="!mt-0"
+                />
+              </div>
 
               {/* Scrollable Content */}
               <div className="w-full h-full overflow-y-auto overflow-x-hidden scrollbar-hide">

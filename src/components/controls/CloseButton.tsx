@@ -6,9 +6,10 @@ import './CloseButton.css';
 interface CloseButtonProps {
   onClick?: () => void;
   className?: string;
+  hideLabel?: boolean;
 }
 
-export default function CloseButton({ onClick, className = '' }: CloseButtonProps) {
+export default function CloseButton({ onClick, className = '', hideLabel = false }: CloseButtonProps) {
   return (
     <div
       className={`close-container ${className}`}
@@ -25,7 +26,7 @@ export default function CloseButton({ onClick, className = '' }: CloseButtonProp
     >
       <div className="leftright"></div>
       <div className="rightleft"></div>
-      <label className="close">close</label>
+      {!hideLabel && <label className="close">close</label>}
     </div>
   );
 }

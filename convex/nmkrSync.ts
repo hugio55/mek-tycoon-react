@@ -115,7 +115,7 @@ export const syncSingleNFT = mutation({
     // Check for ALL records with this nftUid (detect duplicates/orphans)
     const allMatchingByUid = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("", (q: any) => q.eq("nftUid", nftUid))
+      .withIndex("by_uid", (q: any) => q.eq("nftUid", nftUid))
       .collect();
 
     console.log(`[🔄SYNC-MUTATION] Found ${allMatchingByUid.length} records with nftUid ${nftUid}`);
