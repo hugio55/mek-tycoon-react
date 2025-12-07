@@ -13,6 +13,7 @@ export type SecurityEvent =
   | 'session_decrypt_error'
   | 'session_migrate_start'
   | 'session_migrate_complete'
+  | 'session_migrate_skip'
   | 'session_migrate_error'
   | 'nonce_generate'
   | 'nonce_consume'
