@@ -53,7 +53,7 @@ export const getInventoryDiscrepancies = query({
     // Get all inventory items for this campaign
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("", (q: any) => q.eq("campaignId", campaignId))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignId", campaignId))
       .collect();
 
     const discrepancies: SyncDiscrepancy[] = [];
@@ -241,7 +241,7 @@ export const syncCampaignInventory = mutation({
     // Get discrepancies first (call the query handler directly)
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("", (q: any) => q.eq("campaignId", campaignId))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignId", campaignId))
       .collect();
 
     type NMKRStatusEntry = { nftUid: string; nmkrStatus: string; soldTo?: string };
@@ -331,7 +331,7 @@ export const syncCampaignInventory = mutation({
     if (campaign) {
       const inventory = await ctx.db
         .query("commemorativeNFTInventory")
-        .withIndex("", (q: any) => q.eq("campaignId", campaignId))
+        .withIndex("by_campaign", (q: any) => q.eq("campaignId", campaignId))
         .collect();
 
       const availableNFTs = inventory.filter((i) => i.status === "available").length;
@@ -654,7 +654,7 @@ export const internalSyncCampaignInventory = internalMutation({
     // Get all inventory items for this campaign
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("", (q: any) => q.eq("campaignId", campaignId))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignId", campaignId))
       .collect();
 
     type NMKRStatusEntry = { nftUid: string; nmkrStatus: string; soldTo?: string };
@@ -724,7 +724,7 @@ export const internalSyncCampaignInventory = internalMutation({
     if (campaign) {
       const updatedInventory = await ctx.db
         .query("commemorativeNFTInventory")
-        .withIndex("", (q: any) => q.eq("campaignId", campaignId))
+        .withIndex("by_campaign", (q: any) => q.eq("campaignId", campaignId))
         .collect();
 
       await ctx.db.patch(campaignId, {
