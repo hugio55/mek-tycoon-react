@@ -101,8 +101,13 @@ const Canvas: React.FC<CanvasProps> = memo(({
 
   const snapPosition = useCallback((value: number): number => {
     if (!snapToGrid) return value;
-    // Snap to multiples of GRID_SIZE to align with grid dots
-    return Math.round(value / GRID_SIZE) * GRID_SIZE;
+    // For 30px nodes (radius 15), snap so CENTER lands on grid dots
+    // Center = corner + 15, and dots are at multiples of GRID_SIZE (20)
+    // So corner should be at (multiple of GRID_SIZE) - 15
+    const nodeRadius = 15; // Half of 30px node
+    const centerPosition = value + nodeRadius;
+    const nearestDot = Math.round(centerPosition / GRID_SIZE) * GRID_SIZE;
+    return nearestDot - nodeRadius;
   }, [snapToGrid]);
 
   const handleNodeClick = useCallback((nodeId: string, e: React.MouseEvent) => {

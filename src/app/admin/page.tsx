@@ -965,7 +965,7 @@ const DATA_SYSTEMS = [
   { id: 'market-system', name: 'Market', icon: '🏪', implemented: true },
   { id: 'offers-system', name: 'Offers System', icon: '💬', implemented: true },
   { id: 'variations', name: 'Variations', icon: '🎨', implemented: false },
-  { id: 'slots-system', name: 'Slots', icon: '📦', implemented: true },
+  { id: 'jobs-system', name: 'Jobs', icon: '💼', implemented: true },
   { id: 'gold-backup-system', name: 'Gold Backup System', icon: '💾', implemented: true },
   { id: 'wallet-management', name: 'Player Management', icon: '👥', implemented: true },
   { id: 'port-monitor', name: 'Port Monitor', icon: '🔌', implemented: true },
@@ -1224,7 +1224,7 @@ export default function AdminMasterDataPage() {
   const [variationSearch, setVariationSearch] = useState('');
   const [selectedVariation, setSelectedVariation] = useState<{ name: string; rank: number; category: string } | null>(null);
 
-  // Slots System State
+  // Jobs System State
   const [slotsSubTab, setSlotsSubTab] = useState<'job-builder' | 'tenure-config'>('job-builder');
   const [selectedSlotType, setSelectedSlotType] = useState<'basic' | 'advanced' | 'master'>('basic');
   const [slotsConfig, setSlotsConfig] = useState({
@@ -3976,21 +3976,21 @@ export default function AdminMasterDataPage() {
           </div>
           )}
 
-          {/* Slots System */}
-          {activeTab === 'slots-system' && (
-          <div id="section-slots-system" className="bg-black/50 backdrop-blur border-2 border-yellow-500/30 rounded-lg shadow-lg shadow-black/50">
+          {/* Jobs System */}
+          {activeTab === 'jobs-system' && (
+          <div id="section-jobs-system" className="bg-black/50 backdrop-blur border-2 border-yellow-500/30 rounded-lg shadow-lg shadow-black/50">
             <button
-              onClick={() => toggleSection('slots-system')}
+              onClick={() => toggleSection('jobs-system')}
               className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <span className="text-2xl">📦</span>
-                <h3 className="text-xl font-bold text-yellow-400">Slots System</h3>
+                <span className="text-2xl">💼</span>
+                <h3 className="text-xl font-bold text-yellow-400">Jobs System</h3>
                 <span className="px-2 py-1 bg-green-600/30 text-green-400 text-xs font-bold rounded">IMPLEMENTED</span>
               </div>
-              <span className="text-gray-400">{expandedSections.has('slots-system') ? '▼' : '▶'}</span>
+              <span className="text-gray-400">{expandedSections.has('jobs-system') ? '▼' : '▶'}</span>
             </button>
-            {expandedSections.has('slots-system') && (
+            {expandedSections.has('jobs-system') && (
               <div className="p-4 border-t border-gray-700/50">
                 {/* Sub-Tab Navigation */}
                 <div className="flex gap-2 border-b border-gray-700/50 pb-3 mb-6">
@@ -6546,11 +6546,13 @@ function CampaignManagerWithDatabase({
   onVerifyWithNMKR,
   onBackfillSoldNFTData,
   onBackfillImages,
+  onFetchFromNMKR,
   cleaningCampaignId,
   syncingCampaignId,
   verifyingCampaignId,
   backfillRunning,
   backfillImagesRunning,
+  fetchingFromNMKRCampaignId,
   client,
   mutationsEnabled
 }: {
@@ -6561,11 +6563,13 @@ function CampaignManagerWithDatabase({
   onVerifyWithNMKR: (campaignId: string, campaignName: string, nmkrProjectId?: string) => Promise<void>;
   onBackfillSoldNFTData: () => Promise<void>;
   onBackfillImages: (campaignId: string, nmkrProjectId: string) => Promise<void>;
+  onFetchFromNMKR: (campaignId: string, nmkrProjectId: string) => Promise<void>;
   cleaningCampaignId: string | null;
   syncingCampaignId: string | null;
   verifyingCampaignId: string | null;
   backfillRunning: boolean;
   backfillImagesRunning: string | null;
+  fetchingFromNMKRCampaignId: string | null;
   client: any;
   mutationsEnabled: boolean;
 }) {
@@ -6897,6 +6901,7 @@ function NFTAdminTabs({ client }: { client: any }) {
   const [nmkrVerifying, setNmkrVerifying] = useState<string | null>(null);
   const [backfillRunning, setBackfillRunning] = useState(false);
   const [backfillImagesRunning, setBackfillImagesRunning] = useState<string | null>(null);
+  const [fetchingFromNMKRCampaignId, setFetchingFromNMKRCampaignId] = useState<string | null>(null);
 
   // Mutation confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -7275,6 +7280,89 @@ function NFTAdminTabs({ client }: { client: any }) {
       alert(`Error backfilling images: ${error.message}`);
     } finally {
       setBackfillImagesRunning(null);
+    }
+  };
+
+  // Fetch all NFTs from NMKR and add to campaign inventory
+  const handleFetchFromNMKR = async (campaignId: string, nmkrProjectId: string) => {
+    if (!mutationsEnabled) {
+      alert('Mutations are disabled. Enable editing first using the banner above.');
+      return;
+    }
+
+    if (!nmkrProjectId) {
+      alert('⚠️ This campaign has no NMKR Project ID configured.');
+      return;
+    }
+
+    setFetchingFromNMKRCampaignId(campaignId);
+    try {
+      console.log('[🚀FETCH-NMKR] Fetching NFTs from NMKR project:', nmkrProjectId);
+
+      // Fetch NFTs from NMKR API
+      const response = await fetch('/api/nmkr/fetch-nfts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectUid: nmkrProjectId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to fetch NFTs from NMKR');
+      }
+
+      const data = await response.json();
+      console.log('[🚀FETCH-NMKR] NMKR response:', data);
+
+      if (!data.nfts || data.nfts.length === 0) {
+        alert('⚠️ No NFTs found in NMKR project.');
+        return;
+      }
+
+      // Filter to only include "free" (available) NFTs
+      const freeNfts = data.nfts.filter((nft: { state?: string }) => nft.state === 'free');
+
+      if (freeNfts.length === 0) {
+        alert(`⚠️ No available NFTs found.\n\n${data.nfts.length} total NFTs in NMKR, but all are reserved or sold.`);
+        return;
+      }
+
+      console.log('[🚀FETCH-NMKR] Found', freeNfts.length, 'available NFTs. Adding to inventory...');
+
+      // Use the new addNewNFTsToInventory mutation which handles duplicates
+      const nfts = freeNfts.map((nft: { nftUid: string; nftNumber: number; name: string }) => ({
+        nftUid: nft.nftUid,
+        nftNumber: nft.nftNumber,
+        name: nft.name,
+        paymentUrl: undefined, // Will be generated by backend
+      }));
+
+      const result = await client.mutation(api.commemorativeNFTInventorySetup.addNewNFTsToInventory, {
+        nfts,
+      });
+
+      console.log('[🚀FETCH-NMKR] Result:', result);
+
+      if (result.success) {
+        const msg = result.added > 0
+          ? `✅ Successfully imported ${result.added} new NFTs from NMKR!${result.skipped > 0 ? `\n⏭️ ${result.skipped} already in inventory (skipped).` : ''}\n\nTotal inventory: ${result.total} NFTs`
+          : `✅ All ${result.skipped} NFTs are already in inventory. No new NFTs to add.`;
+        alert(msg);
+
+        // Sync counters to update the stats
+        await client.mutation(api.commemorativeCampaigns.syncCampaignCounters, {
+          campaignId: campaignId as any,
+        });
+
+        setCampaignUpdateTrigger(prev => prev + 1);
+      } else {
+        alert(`❌ Import failed: ${result.error || 'Unknown error'}`);
+      }
+    } catch (error: any) {
+      console.error('[🚀FETCH-NMKR] Error:', error);
+      alert(`Error fetching from NMKR: ${error.message}`);
+    } finally {
+      setFetchingFromNMKRCampaignId(null);
     }
   };
 

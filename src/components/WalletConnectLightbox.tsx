@@ -394,8 +394,22 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
 
       // PHASE 1: Quick count - get Mek count immediately
       console.log('[WalletConnect] Phase 1: Getting quick Mek count...');
-      setConnectionStatus('Scanning blockchain for Meks...');
       setLoadingPhase('counting');
+
+      // OPTIMISTIC UI: Show last known Mek count immediately while scanning
+      const lastKnownCount = localStorage.getItem(`mek_count_${stakeAddress}`);
+      if (lastKnownCount) {
+        const count = parseInt(lastKnownCount, 10);
+        if (count > 0) {
+          setQuickMekCount(count);
+          setConnectionStatus(`Verifying ${count} Mek${count !== 1 ? 's' : ''}...`);
+          console.log(`[WalletConnect] Optimistic UI: Showing last known count of ${count} Meks`);
+        } else {
+          setConnectionStatus('Scanning blockchain for Meks...');
+        }
+      } else {
+        setConnectionStatus('Scanning blockchain for Meks...');
+      }
 
       let detectedMekCount = 0;
 
@@ -406,9 +420,13 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
           setQuickMekCount(detectedMekCount);
           setConnectionStatus(`Found ${detectedMekCount} Mek${detectedMekCount !== 1 ? 's' : ''} on blockchain!`);
           console.log(`[WalletConnect] Quick count: ${detectedMekCount} Meks`);
+          // Update cached count
+          localStorage.setItem(`mek_count_${stakeAddress}`, detectedMekCount.toString());
         } else if (quickCountResult.count === 0) {
+          setQuickMekCount(null);
           setConnectionStatus('No Meks found in wallet');
           console.log('[WalletConnect] Quick count: 0 Meks');
+          localStorage.removeItem(`mek_count_${stakeAddress}`);
         }
       } catch (quickCountError: any) {
         console.warn('[WalletConnect] Quick count failed, continuing...', quickCountError);
@@ -499,10 +517,14 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       localStorage.removeItem('mek_disconnect_nonce');
       console.log('[WalletConnect] Cleared disconnect nonce - signature verification complete');
 
-      // Store wallet type for reconnection
+      // Store wallet type and Mek count for reconnection
       if (typeof window !== 'undefined') {
         localStorage.setItem('goldMiningWallet', stakeAddress);
         localStorage.setItem('goldMiningWalletType', wallet.name.toLowerCase());
+        // Store Mek count for optimistic UI on next connection
+        if (meks.length > 0) {
+          localStorage.setItem(`mek_count_${stakeAddress}`, meks.length.toString());
+        }
       }
 
       setConnectionStatus('Connection successful!');
