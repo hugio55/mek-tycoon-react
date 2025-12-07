@@ -1519,3 +1519,34 @@ export const searchWalletTraces = query({
     };
   },
 });
+
+// ============================================================================
+// LEADERBOARD CACHE MANAGEMENT
+// ============================================================================
+
+/**
+ * Clear all leaderboard cache entries
+ * Safe operation - cache will repopulate on next cron run (every 15 minutes)
+ */
+export const clearLeaderboardCache = mutation({
+  args: {},
+  handler: async (ctx) => {
+    console.log('[ADMIN] Clearing leaderboard cache...');
+
+    const allEntries = await ctx.db.query("leaderboardCache").collect();
+
+    let deletedCount = 0;
+    for (const entry of allEntries) {
+      await ctx.db.delete(entry._id);
+      deletedCount++;
+    }
+
+    console.log(`[ADMIN] Deleted ${deletedCount} leaderboard cache entries`);
+
+    return {
+      success: true,
+      deletedCount,
+      message: `Cleared ${deletedCount} leaderboard cache entries. Cache will repopulate on next cron run.`
+    };
+  },
+});
