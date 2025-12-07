@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { restoreWalletSession, clearWalletSession, extendSessionOnActivity, rememberDevice, isDeviceRemembered } from "@/lib/walletSessionManager";
@@ -96,6 +97,9 @@ function SessionTimer({
  * - / (welcome page - uses this same header inline)
  */
 export default function UnifiedHeader() {
+  const pathname = usePathname();
+  const isAdminPage = pathname?.startsWith('/admin');
+
   const [walletDropdownOpen, setWalletDropdownOpen] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [sessionExpiresAt, setSessionExpiresAt] = useState<number | null>(null);
