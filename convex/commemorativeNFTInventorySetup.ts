@@ -202,6 +202,47 @@ export const addNewNFTsToInventory = mutation({
   },
 });
 
+// Fix orphaned NFTs by assigning them to a campaign
+// Use this for NFTs that were imported without a campaignId
+export const assignOrphanedNFTsToCampaign = mutation({
+  args: {
+    campaignId: v.id("commemorativeCampaigns"),
+  },
+  handler: async (ctx, args) => {
+    console.log('[INVENTORY FIX] Looking for orphaned NFTs (no campaignId)...');
+
+    // Find all inventory items without a campaignId
+    const allInventory = await ctx.db
+      .query("commemorativeNFTInventory")
+      .collect();
+
+    const orphaned = allInventory.filter(item => !item.campaignId);
+    console.log('[INVENTORY FIX] Found', orphaned.length, 'orphaned NFTs');
+
+    if (orphaned.length === 0) {
+      return {
+        success: true,
+        fixed: 0,
+        message: 'No orphaned NFTs found',
+      };
+    }
+
+    // Update each orphaned NFT with the campaign ID
+    for (const nft of orphaned) {
+      await ctx.db.patch(nft._id, {
+        campaignId: args.campaignId,
+      });
+      console.log('[INVENTORY FIX] Assigned', nft.name, 'to campaign');
+    }
+
+    return {
+      success: true,
+      fixed: orphaned.length,
+      message: `Assigned ${orphaned.length} orphaned NFTs to campaign`,
+    };
+  },
+});
+
 // Clear all inventory (use with caution!)
 export const clearInventory = mutation({
   handler: async (ctx) => {
