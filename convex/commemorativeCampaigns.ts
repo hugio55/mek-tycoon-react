@@ -513,32 +513,15 @@ export const getCampaignInventory = query({
     campaignId: v.id("commemorativeCampaigns"),
   },
   handler: async (ctx, args) => {
-    console.log('[📊QUERY] getCampaignInventory called for campaign:', args.campaignId);
-
+    // Note: No logging here - this query polls every 3 seconds
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
       .withIndex("by_campaign", (q: any) => q.eq("campaignId", args.campaignId))
-      .order("asc") // Sort by nftNumber ascending
+      .order("asc")
       .collect();
 
-    console.log('[📊QUERY] Found', inventory.length, 'inventory items');
-
-    // Log first few items to see their status
-    const sample = inventory.slice(0, 3);
-    console.log('[📊QUERY] Sample items:', sample.map((nft: any) => ({
-      name: nft.name,
-      nftUid: nft.nftUid,
-      status: nft.status,
-      soldTo: nft.soldTo,
-      companyNameAtSale: nft.companyNameAtSale,
-      reservedBy: nft.reservedBy,
-    })));
-
     // Sort by nftNumber to ensure correct ordering
-    const sorted = inventory.sort((a, b) => a.nftNumber - b.nftNumber);
-
-    console.log('[📊QUERY] Returning sorted inventory');
-    return sorted;
+    return inventory.sort((a, b) => a.nftNumber - b.nftNumber);
   },
 });
 
