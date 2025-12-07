@@ -151,14 +151,12 @@ export default function OverlayEditor() {
   useEffect(() => {
     const handleGlobalMouseUp = () => {
       isMouseDownRef.current = false;
-      if (isDraggingExisting) {
-        setIsDraggingExisting(false);
-      }
+      setIsDraggingExisting(false); // Always reset - safe to call even if already false
     };
 
     window.addEventListener('mouseup', handleGlobalMouseUp);
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
-  }, [isDraggingExisting]);
+  }, []); // Empty deps - register once, no stale closure issues
 
   // Load overlay data when it arrives from Convex (ONLY on initial load)
   // This prevents Convex reactivity from overwriting unsaved local changes
