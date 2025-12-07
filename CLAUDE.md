@@ -8,12 +8,12 @@ The directory `mek-tycoon-react-staging` is the PRIMARY and MAIN working directo
 
 - **Primary Directory**: `C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react-staging`
 - **Do NOT use**: The `mek-tycoon-react` directory exists but is NOT used for current work
-- **Database**: `fabulous-sturgeon-691.convex.cloud` (UNIFIED PRODUCTION DATABASE)
+- **Databases**: DUAL DATABASE SYSTEM (Trout for dev, Sturgeon for production)
 - **Port**: localhost:3200
 
 **Naming note**: Despite the word "staging" in the directory name, this is our primary development environment where ALL current work happens.
 
-**⚠️ UNIFIED DATABASE**: As of December 2025, we use a SINGLE database (Sturgeon/Production) for both localhost development and live site. There is no separate dev database. All changes to the backend affect real users immediately.
+**⚠️ DUAL DATABASE SYSTEM**: We use TWO separate databases - Trout (dev) for localhost development and Sturgeon (production) for the live site. This allows safe testing before deploying to production.
 
 ## Dev Server Management
 **CRITICAL: User starts their own dev servers. DO NOT automatically run background dev server tasks.**
@@ -209,73 +209,89 @@ users: {
 
 ---
 
-## 🚨 CRITICAL: UNIFIED DATABASE - ALL CHANGES ARE PRODUCTION 🚨
-**EVERY BACKEND CHANGE AFFECTS REAL USERS IMMEDIATELY**
+## 🚨 CRITICAL: DUAL DATABASE SYSTEM 🚨
+**Trout = Development | Sturgeon = Production**
 
-### Database Architecture (UNIFIED - December 2025)
+### Database Architecture (DUAL - December 2025)
 
-**This project uses a SINGLE unified Convex database:**
+**This project uses TWO separate Convex databases:**
 
-**Sturgeon (fabulous-sturgeon-691.convex.cloud)** = **THE ONLY DATABASE**
-- Used by BOTH localhost:3200 development AND the live website (mek.overexposed.io)
+**Trout (wry-trout-962.convex.cloud)** = **DEVELOPMENT DATABASE**
+- Used by localhost:3200 development (`npm run dev:all`)
+- Safe for testing schema changes, new features, and experiments
+- `.env.local` points `NEXT_PUBLIC_CONVEX_URL` to Trout
+- Changes here do NOT affect live users
+- Can be reset/wiped without impacting production
+
+**Sturgeon (fabulous-sturgeon-691.convex.cloud)** = **PRODUCTION DATABASE**
+- Used by the live website (mek.overexposed.io)
 - Contains REAL user data and 36+ active players
-- All backend changes (schema, queries, mutations, cron jobs) affect live users immediately
-- **There is NO separate dev/staging database**
-
-**Trout (wry-trout-962.convex.cloud)** = **DEPRECATED/UNUSED**
-- Previously used as a separate dev database
-- No longer in use as of December 2025
-- Do NOT point `.env.local` to Trout
+- Accessed via `NEXT_PUBLIC_STURGEON_URL` in `.env.local`
+- Deploy to production using "Deploy Prod" in Deployment Control Center
+- **Changes here affect real users immediately**
 
 ---
 
-### 🛑 IMPORTANT: UNIFIED DATABASE IMPLICATIONS
+### 🛡️ BENEFITS OF DUAL DATABASE
 
-**What this means for development:**
-- ✅ Frontend changes (React components, styling, UI) are safe - only affect localhost until deployed
-- ⚠️ Backend changes (Convex functions, schema) affect production immediately when you run `npx convex dev`
-- ⚠️ Schema changes, new indexes, mutations all go live instantly
-- ⚠️ Cron job changes affect the live scheduled tasks
+**Safe Development:**
+- ✅ Test schema changes on Trout first without breaking production
+- ✅ Experiment with new features safely
+- ✅ Break things on dev without affecting users
+- ✅ Full separation between test and live data
 
-**When running `npm run dev:all` or `npx convex dev`:**
-- The Convex dev server syncs your local `/convex` folder to the production database
-- Any changes to `.ts` files in `/convex` are deployed immediately
-- This is by design for the unified workflow
+**When running `npm run dev:all`:**
+- Convex syncs to **Trout** (dev database)
+- Frontend runs on localhost:3200
+- Changes to `/convex` files deploy to Trout only
+- Production (Sturgeon) remains unaffected
+
+---
+
+### Deployment Workflow
+
+**Standard Development Flow:**
+1. Make changes locally (code + Convex functions)
+2. Test on localhost with Trout database
+3. When ready, use Deployment Control Center to:
+   - Create backup (Quick or Full)
+   - Deploy to Sturgeon (production)
+
+**Deployment Control Center (Admin → Deployments):**
+- **Quick Backup**: Records git commit hash (code reference point)
+- **Full Backup**: Exports Sturgeon database + file storage to `/backups/full/`
+- **Deploy Dev (Trout)**: Updates Convex functions on dev database
+- **Deploy Prod (Sturgeon)**: Updates Convex functions on production
+- **Full Deploy Button**: Commits → R2 sync → Push to GitHub → Push to master → Deploy Convex
 
 ---
 
 ### Backend Change Protocol
 
-**Before modifying ANY file in the `/convex` folder:**
+**For Trout (Dev) - Safe to experiment:**
+- Schema changes are safe to test
+- Can add/remove fields freely
+- Great for testing new queries/mutations
+- Reset if needed without consequences
 
-1. **Consider the impact**: Will this break existing functionality for live users?
-2. **Schema changes**: Be extra careful - adding fields is safe, removing/renaming can break things
-3. **Test mentally first**: Think through edge cases before the code syncs
-4. **Announce risky changes**: Tell the user "This backend change will affect production immediately"
-
-**Safe operations:**
-- Adding new optional fields to schema
-- Adding new queries/mutations (existing code won't call them yet)
-- Bug fixes that don't change data structure
-
-**Risky operations (announce first):**
-- Changing existing query/mutation signatures
-- Modifying schema field types
-- Removing or renaming fields
-- Changing cron job schedules or logic
+**For Sturgeon (Production) - Be careful:**
+1. **Test on Trout first**: Always verify changes work on dev
+2. **Create backup before deploy**: Use Full Backup for schema changes
+3. **Schema changes**: Adding optional fields is safe, removing/renaming requires migration
+4. **Announce risky changes**: Tell user "This production deploy could affect live users"
 
 ---
 
-### Key Principles (Unified Database)
+### Key Principles (Dual Database)
 
-1. **All Backend = Production**: Every Convex change affects real users
-2. **Frontend is Safe**: UI changes only affect localhost until deployed to Vercel
-3. **Think Before Saving**: Convex auto-syncs on file save
-4. **No Safety Net**: There's no dev database to test on first
-5. **Announce Risky Changes**: Let user know before backend changes that could break things
-6. **Schema Caution**: Be especially careful with schema modifications
+1. **Trout = Safe Playground**: Experiment freely on dev
+2. **Sturgeon = Handle With Care**: Production affects real users
+3. **Test Before Deploy**: Always test on Trout before deploying to Sturgeon
+4. **Backup Before Deploy**: Create backup before production deployments
+5. **Frontend vs Backend**: Frontend changes only affect localhost until Vercel deploy; backend changes deploy to current database immediately
+6. **Use Deployment Control**: Admin → Deployments for safe production deploys
 
-**REMEMBER**: With a unified database, the traditional "test in dev, deploy to prod" workflow doesn't apply to backend changes. Be thoughtful and deliberate with Convex modifications.
+**REMEMBER**: The dual database system gives you a safety net. Use Trout to test, then deploy to Sturgeon when confident.
 
 ---
 
