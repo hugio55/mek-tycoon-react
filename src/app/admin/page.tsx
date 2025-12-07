@@ -1164,6 +1164,7 @@ export default function AdminMasterDataPage() {
     { name: 'Leaderboard', path: '/leaderboard', category: 'Systems' },
     { name: 'Search', path: '/search', category: 'Systems' },
     { name: 'Mek Layouts', path: '/mek-layouts', category: 'Systems' },
+    { name: 'Comms (Messaging)', path: '/comms', category: 'Systems' },
     { name: 'Admin', path: '/admin', category: 'Admin' },
     { name: 'Admin Users', path: '/admin/users', category: 'Admin' },
   ];
