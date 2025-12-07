@@ -1,17 +1,10 @@
 'use client';
 
-/**
- * DatabaseContext - SINGLE DATABASE MODE
- *
- * This context uses the single production database (Sturgeon) for all operations.
- * The interface is preserved for backwards compatibility with existing components.
- */
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ConvexReactClient } from 'convex/react';
+import { sturgeonClient } from '@/lib/sturgeonClient';
 
-// Single database type
-type DatabaseType = 'sturgeon';
+type DatabaseType = 'trout' | 'sturgeon';
 
 interface DatabaseContextValue {
   selectedDatabase: DatabaseType;
@@ -29,32 +22,22 @@ interface DatabaseProviderProps {
 }
 
 export function DatabaseProvider({ children }: DatabaseProviderProps) {
-  // Always 'sturgeon' now (single database)
-  const [selectedDatabase] = useState<DatabaseType>('sturgeon');
-  // Always enabled now (single database = full access)
-  const [productionMutationsEnabled] = useState(true);
+  const [selectedDatabase, setSelectedDatabase] = useState<DatabaseType>('trout');
+  const [productionMutationsEnabled, setProductionMutationsEnabled] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Always use the main Convex client (now points to Sturgeon via .env.local)
   const getClient = () => {
     if (!mounted) return null;
-    return window.convex;
+    return selectedDatabase === 'sturgeon' ? sturgeonClient : window.convex;
   };
 
-  // Always allow mutations (single database = no read-only mode needed)
-  const canMutate = () => true;
-
-  // No-op setters for backwards compatibility
-  const setSelectedDatabase = () => {
-    console.log('[DatabaseContext] Database selection is disabled - using single database (Sturgeon)');
-  };
-
-  const setProductionMutationsEnabled = () => {
-    console.log('[DatabaseContext] Mutation toggle is disabled - always enabled in single database mode');
+  const canMutate = () => {
+    if (selectedDatabase === 'trout') return true;
+    return productionMutationsEnabled;
   };
 
   const value: DatabaseContextValue = {
@@ -114,7 +97,7 @@ export function useDatabaseQuery<T>(
 
     runQuery();
 
-    // Re-run query every 2 seconds for reactivity
+    // Re-run query every 2 seconds for reactivity (Convex would normally handle this)
     const interval = setInterval(runQuery, 2000);
 
     return () => {
@@ -132,11 +115,15 @@ export function useDatabaseQuery<T>(
  * Usage: const mutate = useDatabaseMutation(api.table.functionName);
  */
 export function useDatabaseMutation(mutation: any) {
-  const { client } = useDatabaseContext();
+  const { client, canMutate } = useDatabaseContext();
 
   return async (args: any) => {
     if (!client) {
       throw new Error('Client not initialized');
+    }
+
+    if (!canMutate()) {
+      throw new Error('Mutations disabled in READ ONLY mode');
     }
 
     return await client.mutation(mutation, args);
@@ -148,11 +135,15 @@ export function useDatabaseMutation(mutation: any) {
  * Usage: const runAction = useDatabaseAction(api.table.functionName);
  */
 export function useDatabaseAction(action: any) {
-  const { client } = useDatabaseContext();
+  const { client, canMutate } = useDatabaseContext();
 
   return async (args: any) => {
     if (!client) {
       throw new Error('Client not initialized');
+    }
+
+    if (!canMutate()) {
+      throw new Error('Actions disabled in READ ONLY mode');
     }
 
     return await client.action(action, args);
