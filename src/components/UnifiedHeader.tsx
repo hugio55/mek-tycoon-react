@@ -10,6 +10,7 @@ import { CompanyNameModal } from "@/components/CompanyNameModal";
 import WalletConnectLightbox from "@/components/WalletConnectLightbox";
 import { getMediaUrl } from "@/lib/media-url";
 import { NotificationBell } from "@/components/notifications";
+import MessagingSystem from "@/components/MessagingSystem";
 
 // Session Timer Component - Shows countdown to session expiration with "Remember this device" option
 function SessionTimer({
@@ -645,13 +646,14 @@ export default function UnifiedHeader() {
               </button>
             </div>
 
-            {/* Content Area - placeholder for now */}
-            <div className="h-[calc(100%-64px)] overflow-auto p-6">
-              <div className="text-center text-gray-500 py-12">
-                <div className="text-6xl mb-4">💬</div>
-                <div className="text-xl font-medium text-gray-700">Messaging System</div>
-                <div className="text-sm mt-2">Coming soon...</div>
-              </div>
+            {/* Content Area - Messaging System */}
+            <div className="h-[calc(100%-64px)] overflow-hidden">
+              {walletAddress && (
+                <MessagingSystem
+                  walletAddress={walletAddress}
+                  companyName={companyNameData?.companyName}
+                />
+              )}
             </div>
           </div>
         </div>,

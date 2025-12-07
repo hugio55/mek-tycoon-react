@@ -217,14 +217,24 @@ export const syncSingleNFT = mutation({
       updates.soldTo = finalSoldTo;
       updates.soldAt = Date.now();
 
-      // Look up company name for historical tracking
+      // Look up company name for historical tracking - Phase II: Use users table first
       // Only attempt lookup if we have a stake address (starts with "stake1")
       if (finalSoldTo && finalSoldTo.startsWith("stake1")) {
-        const goldMiningRecord = await ctx.db
-          .query("goldMining")
-          .withIndex("by_wallet", (q: any) => q.eq("walletAddress", finalSoldTo))
+        // Try new users table first (primary source - Phase II)
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", finalSoldTo))
           .first();
-        updates.companyNameAtSale = goldMiningRecord?.companyName || undefined;
+        updates.companyNameAtSale = (user as any)?.corporationName || undefined;
+
+        // Fallback to legacy goldMining table if not found in users
+        if (!updates.companyNameAtSale) {
+          const goldMiningRecord = await ctx.db
+            .query("goldMining")
+            .withIndex("by_wallet", (q: any) => q.eq("walletAddress", finalSoldTo))
+            .first();
+          updates.companyNameAtSale = (goldMiningRecord as any)?.companyName || undefined;
+        }
       }
 
       // Clear reservation fields
@@ -367,14 +377,24 @@ export const syncCampaignInventory = mutation({
           updates.soldTo = finalSoldTo;
           updates.soldAt = Date.now();
 
-          // Look up company name for historical tracking
+          // Look up company name for historical tracking - Phase II: Use users table first
           // Only attempt lookup if we have a stake address (starts with "stake1")
           if (finalSoldTo && finalSoldTo.startsWith("stake1")) {
-            const goldMiningRecord = await ctx.db
-              .query("goldMining")
-              .withIndex("by_wallet", (q: any) => q.eq("walletAddress", finalSoldTo))
+            // Try new users table first (primary source - Phase II)
+            const user = await ctx.db
+              .query("users")
+              .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", finalSoldTo))
               .first();
-            updates.companyNameAtSale = (goldMiningRecord as any)?.companyName || undefined;
+            updates.companyNameAtSale = (user as any)?.corporationName || undefined;
+
+            // Fallback to legacy goldMining table if not found in users
+            if (!updates.companyNameAtSale) {
+              const goldMiningRecord = await ctx.db
+                .query("goldMining")
+                .withIndex("by_wallet", (q: any) => q.eq("walletAddress", finalSoldTo))
+                .first();
+              updates.companyNameAtSale = (goldMiningRecord as any)?.companyName || undefined;
+            }
           }
 
           updates.reservedBy = undefined;
@@ -798,14 +818,24 @@ export const internalSyncCampaignInventory = internalMutation({
         updates.soldTo = finalSoldTo;
         updates.soldAt = Date.now();
 
-        // Look up company name for historical tracking
+        // Look up company name for historical tracking - Phase II: Use users table first
         // Only attempt lookup if we have a stake address (starts with "stake1")
         if (finalSoldTo && finalSoldTo.startsWith("stake1")) {
-          const goldMiningRecord = await ctx.db
-            .query("goldMining")
-            .withIndex("by_wallet", (q: any) => q.eq("walletAddress", finalSoldTo))
+          // Try new users table first (primary source - Phase II)
+          const user = await ctx.db
+            .query("users")
+            .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", finalSoldTo))
             .first();
-          updates.companyNameAtSale = (goldMiningRecord as any)?.companyName || undefined;
+          updates.companyNameAtSale = (user as any)?.corporationName || undefined;
+
+          // Fallback to legacy goldMining table if not found in users
+          if (!updates.companyNameAtSale) {
+            const goldMiningRecord = await ctx.db
+              .query("goldMining")
+              .withIndex("by_wallet", (q: any) => q.eq("walletAddress", finalSoldTo))
+              .first();
+            updates.companyNameAtSale = (goldMiningRecord as any)?.companyName || undefined;
+          }
         }
 
         updates.reservedBy = undefined;
