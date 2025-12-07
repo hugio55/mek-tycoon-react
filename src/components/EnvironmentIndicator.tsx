@@ -1,9 +1,9 @@
 "use client";
 
 /**
- * EnvironmentIndicator - SINGLE DATABASE MODE
+ * EnvironmentIndicator - DUAL DATABASE MODE
  *
- * Shows "PRODUCTION" status for the single database (Sturgeon).
+ * Shows environment status based on connected database (Trout=Staging, Sturgeon=Production).
  */
 
 import { useEffect, useState } from "react";
@@ -50,14 +50,24 @@ export default function EnvironmentIndicator() {
   // Extract deployment name from Convex URL
   const deploymentName = convexUrl.split("//")[1]?.split(".")[0] || "unknown";
 
-  // Fixed environment config for single database
-  const environment = {
+  // Detect if production (Sturgeon) or staging (Trout) based on URL
+  const isProduction = convexUrl.includes('sturgeon');
+
+  // Dynamic environment config based on connected database
+  const environment = isProduction ? {
     name: "PRODUCTION",
     database: "Sturgeon",
     color: "text-green-400",
     bgColor: "from-green-900/20 to-green-950/40",
     borderColor: "border-green-500/50",
     glowColor: "rgba(74, 222, 128, 0.3)",
+  } : {
+    name: "STAGING",
+    database: "Trout",
+    color: "text-yellow-400",
+    bgColor: "from-yellow-900/20 to-yellow-950/40",
+    borderColor: "border-yellow-500/50",
+    glowColor: "rgba(250, 204, 21, 0.3)",
   };
 
   // Auto-collapse on outside click for mobile
@@ -96,7 +106,7 @@ export default function EnvironmentIndicator() {
               connectionStatus === 'loading' ? 'bg-yellow-400' :
               'bg-red-400'
             } animate-pulse`} />
-            <div className={`text-xs font-bold ${environment.color} font-mono`}>PROD</div>
+            <div className={`text-xs font-bold ${environment.color} font-mono`}>{isProduction ? 'PROD' : 'STG'}</div>
             <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isExpanded ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} />
             </svg>

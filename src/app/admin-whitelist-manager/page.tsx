@@ -88,10 +88,12 @@ export default function AdminWhitelistManager() {
             <p className="text-gray-400">Create and manage NFT whitelist eligibility rules</p>
           </div>
           <div className="flex gap-4 items-center">
-            {/* Database indicator - single database now */}
-            <div className="bg-gray-900 border border-green-500/30 rounded-lg p-3">
+            {/* Database indicator - uses main client (Trout for dev) */}
+            <div className="bg-gray-900 border border-yellow-500/30 rounded-lg p-3">
               <div className="text-xs text-gray-400 mb-1">Database</div>
-              <div className="text-green-400 font-bold">Production (Sturgeon)</div>
+              <div className="text-yellow-400 font-bold">
+                {process.env.NEXT_PUBLIC_CONVEX_URL?.includes('sturgeon') ? 'Production (Sturgeon)' : 'Staging (Trout)'}
+              </div>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
