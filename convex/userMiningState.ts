@@ -481,6 +481,8 @@ export const initializeWithBlockfrost = action({
   args: {
     stakeAddress: v.string(),
     walletType: v.string(),
+    walletAddress: v.optional(v.string()),
+    paymentAddresses: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     try {
