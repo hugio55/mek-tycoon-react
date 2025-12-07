@@ -76,7 +76,7 @@ export const getConfig = query({
   handler: async (ctx, args) => {
     const config = await ctx.db
       .query("goldConfig")
-      .withIndex("", (q: any) => q.eq("key", args.key))
+      .withIndex("by_key", (q: any) => q.eq("key", args.key))
       .first();
 
     return config;
@@ -102,7 +102,7 @@ export const getBaseGoldRate = query({
   handler: async (ctx) => {
     const config = await ctx.db
       .query("goldConfig")
-      .withIndex("", (q: any) => q.eq("key", "baseGoldPerHour"))
+      .withIndex("by_key", (q: any) => q.eq("key", "baseGoldPerHour"))
       .first();
 
     if (!config) {
@@ -141,7 +141,7 @@ export const setConfig = mutation({
     // Check if config exists
     const existing = await ctx.db
       .query("goldConfig")
-      .withIndex("", (q: any) => q.eq("key", args.key))
+      .withIndex("by_key", (q: any) => q.eq("key", args.key))
       .first();
 
     if (existing) {
@@ -206,7 +206,7 @@ export const deleteConfig = mutation({
   handler: async (ctx, args) => {
     const config = await ctx.db
       .query("goldConfig")
-      .withIndex("", (q: any) => q.eq("key", args.key))
+      .withIndex("by_key", (q: any) => q.eq("key", args.key))
       .first();
 
     if (!config) {
@@ -238,7 +238,7 @@ export const initializeDefaultGoldConfig = mutation({
     // Initialize baseGoldPerHour config if it doesn't exist
     const existing = await ctx.db
       .query("goldConfig")
-      .withIndex("", (q: any) => q.eq("key", "baseGoldPerHour"))
+      .withIndex("by_key", (q: any) => q.eq("key", "baseGoldPerHour"))
       .first();
 
     if (existing) {

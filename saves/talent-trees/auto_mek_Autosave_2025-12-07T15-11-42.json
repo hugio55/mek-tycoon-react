@@ -1,0 +1,329 @@
+{
+  "name": "Autosave",
+  "builderMode": "mek",
+  "nodes": [
+    {
+      "desc": "Mek template start",
+      "id": "start",
+      "name": "START",
+      "tier": 0,
+      "x": 1485,
+      "xp": 0,
+      "y": 1485
+    },
+    {
+      "desc": "",
+      "id": "node-1765081832519",
+      "name": "",
+      "tier": 1,
+      "x": 1445,
+      "xp": 0,
+      "y": 1565
+    },
+    {
+      "desc": "",
+      "id": "node-1765081837406",
+      "name": "",
+      "tier": 1,
+      "x": 1525,
+      "xp": 0,
+      "y": 1565
+    },
+    {
+      "desc": "",
+      "id": "node-1765081843206",
+      "name": "",
+      "tier": 1,
+      "x": 1445,
+      "xp": 0,
+      "y": 1625
+    },
+    {
+      "desc": "",
+      "id": "node-1765081848388",
+      "name": "",
+      "tier": 1,
+      "x": 1525,
+      "xp": 0,
+      "y": 1625
+    },
+    {
+      "desc": "",
+      "id": "node-1765081852716",
+      "name": "",
+      "tier": 1,
+      "x": 1445,
+      "xp": 0,
+      "y": 1685
+    },
+    {
+      "desc": "",
+      "id": "node-1765081886366",
+      "name": "",
+      "tier": 1,
+      "x": 1445,
+      "xp": 0,
+      "y": 1745
+    },
+    {
+      "desc": "",
+      "id": "node-1765081890037",
+      "name": "",
+      "tier": 1,
+      "x": 1525,
+      "xp": 0,
+      "y": 1685
+    },
+    {
+      "desc": "",
+      "id": "node-1765081891794",
+      "name": "",
+      "tier": 1,
+      "x": 1525,
+      "xp": 0,
+      "y": 1745
+    },
+    {
+      "desc": "",
+      "id": "node-1765081915868",
+      "name": "",
+      "tier": 1,
+      "x": 1445,
+      "xp": 0,
+      "y": 1805
+    },
+    {
+      "desc": "",
+      "id": "node-1765081916868",
+      "name": "",
+      "tier": 1,
+      "x": 1445,
+      "xp": 0,
+      "y": 1865
+    },
+    {
+      "id": "node-1765119956029",
+      "name": "",
+      "x": 1445,
+      "y": 1925,
+      "tier": 1,
+      "desc": "",
+      "xp": 0,
+      "goldCost": 0,
+      "essences": [],
+      "ingredients": [],
+      "isSpell": false
+    },
+    {
+      "id": "node-1765119957810",
+      "name": "",
+      "x": 1445,
+      "y": 1985,
+      "tier": 1,
+      "desc": "",
+      "xp": 0,
+      "goldCost": 0,
+      "essences": [],
+      "ingredients": [],
+      "isSpell": false
+    },
+    {
+      "id": "node-1765119958541",
+      "name": "",
+      "x": 1445,
+      "y": 2045,
+      "tier": 1,
+      "desc": "",
+      "xp": 0,
+      "goldCost": 0,
+      "essences": [],
+      "ingredients": [],
+      "isSpell": false
+    },
+    {
+      "id": "node-1765119959219",
+      "name": "",
+      "x": 1445,
+      "y": 2105,
+      "tier": 1,
+      "desc": "",
+      "xp": 0,
+      "goldCost": 0,
+      "essences": [],
+      "ingredients": [],
+      "isSpell": false
+    },
+    {
+      "id": "node-1765119981893",
+      "name": "",
+      "x": 1525,
+      "y": 1805,
+      "tier": 1,
+      "desc": "",
+      "xp": 0,
+      "goldCost": 0,
+      "essences": [],
+      "ingredients": [],
+      "isSpell": false
+    },
+    {
+      "id": "node-1765119983343",
+      "name": "",
+      "x": 1525,
+      "y": 1865,
+      "tier": 1,
+      "desc": "",
+      "xp": 0,
+      "goldCost": 0,
+      "essences": [],
+      "ingredients": [],
+      "isSpell": false
+    },
+    {
+      "id": "node-1765119984659",
+      "name": "",
+      "x": 1525,
+      "y": 1925,
+      "tier": 1,
+      "desc": "",
+      "xp": 0,
+      "goldCost": 0,
+      "essences": [],
+      "ingredients": [],
+      "isSpell": false
+    },
+    {
+      "id": "node-1765119985491",
+      "name": "",
+      "x": 1525,
+      "y": 1985,
+      "tier": 1,
+      "desc": "",
+      "xp": 0,
+      "goldCost": 0,
+      "essences": [],
+      "ingredients": [],
+      "isSpell": false
+    },
+    {
+      "id": "node-1765119986099",
+      "name": "",
+      "x": 1525,
+      "y": 2045,
+      "tier": 1,
+      "desc": "",
+      "xp": 0,
+      "goldCost": 0,
+      "essences": [],
+      "ingredients": [],
+      "isSpell": false
+    },
+    {
+      "id": "node-1765119986485",
+      "name": "",
+      "x": 1525,
+      "y": 2105,
+      "tier": 1,
+      "desc": "",
+      "xp": 0,
+      "goldCost": 0,
+      "essences": [],
+      "ingredients": [],
+      "isSpell": false
+    }
+  ],
+  "connections": [
+    {
+      "from": "start",
+      "to": "node-1765081832519"
+    },
+    {
+      "from": "start",
+      "to": "node-1765081837406"
+    },
+    {
+      "from": "node-1765081837406",
+      "to": "node-1765081848388"
+    },
+    {
+      "from": "node-1765081848388",
+      "to": "node-1765081890037"
+    },
+    {
+      "from": "node-1765081890037",
+      "to": "node-1765081891794"
+    },
+    {
+      "from": "node-1765081832519",
+      "to": "node-1765081843206"
+    },
+    {
+      "from": "node-1765081852716",
+      "to": "node-1765081843206"
+    },
+    {
+      "from": "node-1765081852716",
+      "to": "node-1765081886366"
+    },
+    {
+      "from": "node-1765081915868",
+      "to": "node-1765081886366"
+    },
+    {
+      "from": "node-1765081915868",
+      "to": "node-1765081916868"
+    },
+    {
+      "from": "node-1765081916868",
+      "to": "node-1765119956029"
+    },
+    {
+      "from": "node-1765119956029",
+      "to": "node-1765119957810"
+    },
+    {
+      "from": "node-1765119957810",
+      "to": "node-1765119958541"
+    },
+    {
+      "from": "node-1765119958541",
+      "to": "node-1765119959219"
+    },
+    {
+      "from": "node-1765081891794",
+      "to": "node-1765119981893"
+    },
+    {
+      "from": "node-1765119981893",
+      "to": "node-1765119983343"
+    },
+    {
+      "from": "node-1765119983343",
+      "to": "node-1765119984659"
+    },
+    {
+      "from": "node-1765119984659",
+      "to": "node-1765119985491"
+    },
+    {
+      "from": "node-1765119985491",
+      "to": "node-1765119986099"
+    },
+    {
+      "from": "node-1765119986099",
+      "to": "node-1765119986485"
+    },
+    {
+      "from": "node-1765081915868",
+      "to": "node-1765119983343"
+    },
+    {
+      "from": "node-1765119985491",
+      "to": "node-1765119958541"
+    }
+  ],
+  "savedAt": "2025-12-07T15:11:42.826Z",
+  "isAutoBackup": true,
+  "nodeCount": 21,
+  "connectionCount": 22
+}

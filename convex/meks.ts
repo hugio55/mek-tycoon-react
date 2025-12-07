@@ -24,7 +24,7 @@ export const getMeksByOwner = query({
   handler: async (ctx, args) => {
     const meks = await ctx.db
       .query("meks")
-      .withIndex("", (q: any) => q.eq("owner", args.owner))
+      .withIndex("by_owner", (q: any) => q.eq("owner", args.owner))
       .collect();
     
     // Return only essential fields to reduce bandwidth by ~70%
@@ -53,7 +53,7 @@ export const getMeksWithTenure = query({
   handler: async (ctx, args) => {
     const meks = await ctx.db
       .query("meks")
-      .withIndex("", (q: any) => q.eq("owner", args.owner))
+      .withIndex("by_owner", (q: any) => q.eq("owner", args.owner))
       .collect();
 
     // Return essential fields + tenure tracking
@@ -103,7 +103,7 @@ export const getMeksPaginated = query({
     // Get all meks for the owner
     const allMeks = await ctx.db
       .query("meks")
-      .withIndex("", (q: any) => q.eq("owner", args.owner))
+      .withIndex("by_owner", (q: any) => q.eq("owner", args.owner))
       .collect();
     
     // Sort meks
@@ -166,7 +166,7 @@ export const getMekByAssetId = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("meks")
-      .withIndex("", (q: any) => q.eq("assetId", args.assetId))
+      .withIndex("by_asset_id", (q: any) => q.eq("assetId", args.assetId))
       .first();
   },
 });
@@ -192,19 +192,19 @@ export const searchMeks = query({
     // Use appropriate index based on search criteria
     if (args.owner) {
       results = await ctx.db.query("meks")
-        .withIndex("", (q: any) => q.eq("owner", args.owner!))
+        .withIndex("by_owner", (q: any) => q.eq("owner", args.owner!))
         .collect();
     } else if (args.rarityTier) {
       results = await ctx.db.query("meks")
-        .withIndex("", (q: any) => q.eq("rarityTier", args.rarityTier!))
+        .withIndex("by_rarity", (q: any) => q.eq("rarityTier", args.rarityTier!))
         .collect();
     } else if (args.headVariation) {
       results = await ctx.db.query("meks")
-        .withIndex("", (q: any) => q.eq("headVariation", args.headVariation!))
+        .withIndex("by_head", (q: any) => q.eq("headVariation", args.headVariation!))
         .collect();
     } else if (args.bodyVariation) {
       results = await ctx.db.query("meks")
-        .withIndex("", (q: any) => q.eq("bodyVariation", args.bodyVariation!))
+        .withIndex("by_body", (q: any) => q.eq("bodyVariation", args.bodyVariation!))
         .collect();
     } else {
       results = await ctx.db.query("meks").collect();
@@ -290,7 +290,7 @@ export const getOwnerMekStats = query({
   handler: async (ctx, args) => {
     const meks = await ctx.db
       .query("meks")
-      .withIndex("", (q: any) => q.eq("owner", args.owner))
+      .withIndex("by_owner", (q: any) => q.eq("owner", args.owner))
       .collect();
     
     // Calculate stats efficiently
@@ -408,7 +408,7 @@ export const updateMekStats = mutation({
   handler: async (ctx, args) => {
     const mek = await ctx.db
       .query("meks")
-      .withIndex("", (q: any) => q.eq("assetId", args.assetId))
+      .withIndex("by_asset_id", (q: any) => q.eq("assetId", args.assetId))
       .first();
     
     if (!mek) {
@@ -429,7 +429,7 @@ export const transferMek = mutation({
   handler: async (ctx, args) => {
     const mek = await ctx.db
       .query("meks")
-      .withIndex("", (q: any) => q.eq("assetId", args.assetId))
+      .withIndex("by_asset_id", (q: any) => q.eq("assetId", args.assetId))
       .first();
     
     if (!mek) {
@@ -532,7 +532,7 @@ export const getMeksByRarity = query({
     
     const meks = await ctx.db
       .query("meks")
-      .withIndex("", (q: any) => q.eq("rarityTier", args.rarityTier))
+      .withIndex("by_rarity", (q: any) => q.eq("rarityTier", args.rarityTier))
       .take(limit);
     
     return meks.map((mek: any) => ({
@@ -560,7 +560,7 @@ export const getMeksByHead = query({
     
     const meks = await ctx.db
       .query("meks")
-      .withIndex("", (q: any) => q.eq("headVariation", args.headVariation))
+      .withIndex("by_head", (q: any) => q.eq("headVariation", args.headVariation))
       .take(limit);
     
     return meks.map((mek: any) => ({
@@ -586,7 +586,7 @@ export const getMeksByBody = query({
     
     const meks = await ctx.db
       .query("meks")
-      .withIndex("", (q: any) => q.eq("bodyVariation", args.bodyVariation))
+      .withIndex("by_body", (q: any) => q.eq("bodyVariation", args.bodyVariation))
       .take(limit);
     
     return meks.map((mek: any) => ({
@@ -611,7 +611,7 @@ export const getUnassignedMeks = query({
     // Get meks owned by user that are not assigned to employee slots
     const meks = await ctx.db
       .query("meks")
-      .withIndex("", (q: any) => q.eq("owner", user.walletAddress))
+      .withIndex("by_owner", (q: any) => q.eq("owner", user.walletAddress))
       .collect();
     
     // Filter out meks that are already assigned as employees

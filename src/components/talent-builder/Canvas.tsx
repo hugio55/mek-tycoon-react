@@ -190,7 +190,13 @@ const Canvas: React.FC<CanvasProps> = memo(({
       const x = (e.clientX - rect.left - panOffset.x) / zoom;
       const y = (e.clientY - rect.top - panOffset.y) / zoom;
 
-      onAddNode(snapPosition(x), snapPosition(y));
+      // For add mode, snap click position directly to nearest grid dot
+      // The click position is where the node CENTER should go
+      // onAddNode will subtract nodeRadius to get the corner position
+      const snappedX = snapToGrid ? Math.round(x / GRID_SIZE) * GRID_SIZE : x;
+      const snappedY = snapToGrid ? Math.round(y / GRID_SIZE) * GRID_SIZE : y;
+
+      onAddNode(snappedX, snappedY);
       return;
     }
 

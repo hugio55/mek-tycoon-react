@@ -341,7 +341,10 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
           setConnectionStatus('Signature verified!');
 
           // Signature succeeded - user proved they own the wallet
-          // The disconnect nonce will be cleared after successful session save
+          // CRITICAL: Clear nonce IMMEDIATELY after successful signature
+          // This prevents requiring re-signing if later steps (Blockfrost, session save) fail
+          localStorage.removeItem('mek_disconnect_nonce');
+          console.log('[🔐SIGNATURE] Cleared disconnect nonce after successful signature');
         } catch (signError: any) {
           // Clear the help timeout on error
           if (signatureHelpTimeoutRef.current) {
@@ -558,10 +561,8 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
         sessionId: generateSessionId(),
       });
 
-      // Clear disconnect nonce after successful connection
-      // User has proven wallet ownership via signature, safe to reconnect
-      localStorage.removeItem('mek_disconnect_nonce');
-      console.log('[WalletConnect] Cleared disconnect nonce - signature verification complete');
+      // Note: Disconnect nonce is now cleared immediately after successful signature (above)
+      // This prevents requiring re-signing if later connection steps fail
 
       // Store wallet type and Mek count for reconnection
       if (typeof window !== 'undefined') {
