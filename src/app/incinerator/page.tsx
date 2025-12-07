@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import { restoreWalletSession } from "@/lib/walletSessionManager";
 
 // 5 essence types for the distribution graph
 const essenceTypes = [
@@ -26,14 +24,14 @@ interface ChipItem {
 }
 
 export default function IncineratorPage() {
-  const [userId, setUserId] = useState<Id<"users"> | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [selectedChip, setSelectedChip] = useState<ChipItem | null>(null);
   const [isIncinerating, setIsIncinerating] = useState(false);
   const [biasScore, setBiasScore] = useState(150);
   const [resultEssence, setResultEssence] = useState<string | null>(null);
   const [showInventoryModal, setShowInventoryModal] = useState(false);
   const [inventoryTab, setInventoryTab] = useState<'uni' | 'mek'>('uni');
-  
+
   // Generate stars for background
   const stars = useMemo(() => [...Array(30)].map((_, i) => ({
     id: i,
@@ -42,31 +40,23 @@ export default function IncineratorPage() {
     size: Math.random() * 2 + 0.5,
     opacity: Math.random() * 0.8 + 0.2,
   })), []);
-  
+
   const fineStars = useMemo(() => [...Array(50)].map((_, i) => ({
     id: i,
     left: `${Math.random() * 100}%`,
     top: `${Math.random() * 100}%`,
   })), []);
-  
-  const getOrCreateUser = useMutation(api.users.getOrCreateUser);
-  
+
+  // Restore wallet session on mount (no demo fallback)
   useEffect(() => {
-    const initUser = async () => {
-      const user = await getOrCreateUser({ 
-        walletAddress: "demo_wallet_123" 
-      });
-      if (user) {
-        setUserId(user._id as Id<"users">);
+    const initWallet = async () => {
+      const session = await restoreWalletSession();
+      if (session) {
+        setWalletAddress(session.stakeAddress || session.walletAddress || null);
       }
     };
-    initUser();
-  }, [getOrCreateUser]);
-  
-  const userProfile = useQuery(
-    api.users.getUserProfile,
-    userId ? { walletAddress: "demo_wallet_123" } : "skip"
-  );
+    initWallet();
+  }, []);
   
   // Mock chip inventory - in real app, this would come from the database
   const mockChipInventory: ChipItem[] = useMemo(() => [

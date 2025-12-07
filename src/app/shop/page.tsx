@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import CreateListingModal from "@/components/CreateListingModal";
 import GlobalBackground from "@/components/GlobalBackground";
+import { restoreWalletSession } from "@/lib/walletSessionManager";
 
 const CATEGORIES = [
   { id: "mek-chips", name: "Mek Chips", hasDropdown: true, subcategories: [
@@ -28,6 +29,7 @@ const SORT_OPTIONS = [
 
 export default function ShopPage() {
   const [userId, setUserId] = useState<Id<"users"> | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("head");
   const [sortBy, setSortBy] = useState("recent");
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,27 +37,34 @@ export default function ShopPage() {
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [showMekChipsDropdown, setShowMekChipsDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
+
   // New listing form state
   const [listingType, setListingType] = useState<"essence" | "head" | "body" | "trait" | "overexposed" | "universal-chips" | "frames" | "oem">("essence");
   const [listingVariation, setListingVariation] = useState("");
   const [listingQuantity, setListingQuantity] = useState("1");
   const [listingPrice, setListingPrice] = useState("");
   const [essenceAmount, setEssenceAmount] = useState("1"); // For essence listings (decimal amounts)
-  
-  // Get or create user
+
+  // Get or create user - only for real wallet sessions
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
-  
+
+  // Restore wallet session on mount (no demo fallback)
   useEffect(() => {
-    const initUser = async () => {
-      const user = await getOrCreateUser({ 
-        walletAddress: "demo_wallet_123" 
-      });
-      if (user) {
-        setUserId(user._id as Id<"users">);
+    const initWallet = async () => {
+      const session = await restoreWalletSession();
+      if (session) {
+        const address = session.stakeAddress || session.walletAddress;
+        if (address) {
+          setWalletAddress(address);
+          // Only create user record for real wallets
+          const user = await getOrCreateUser({ walletAddress: address });
+          if (user) {
+            setUserId(user._id as Id<"users">);
+          }
+        }
       }
     };
-    initUser();
+    initWallet();
   }, [getOrCreateUser]);
   
   // Handle click outside dropdown
@@ -78,7 +87,7 @@ export default function ShopPage() {
   // Get user profile
   const userProfile = useQuery(
     api.users.getUserProfile,
-    userId ? { walletAddress: "demo_wallet_123" } : "skip"
+    walletAddress ? { walletAddress } : "skip"
   );
   
   // Get marketplace listings

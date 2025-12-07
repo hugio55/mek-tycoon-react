@@ -45,7 +45,7 @@ interface LeaderboardEntry {
 }
 
 export default function LeaderboardPage() {
-  const [currentWallet, setCurrentWallet] = useState<string>("demo_wallet_123");
+  const [currentWallet, setCurrentWallet] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<LeaderboardCategory>('achievements');
   const [topMeksSortBy, setTopMeksSortBy] = useState<TopMeksSortBy>('goldPerHour');
   const [goldView, setGoldView] = useState<GoldViewType>('total');
@@ -56,7 +56,7 @@ export default function LeaderboardPage() {
   useEffect(() => {
     const stakeAddress = localStorage.getItem('stakeAddress');
     const paymentAddress = localStorage.getItem('walletAddress');
-    const addressToUse = stakeAddress || paymentAddress || "demo_wallet_123";
+    const addressToUse = stakeAddress || paymentAddress || null;
     setCurrentWallet(addressToUse);
   }, []);
 

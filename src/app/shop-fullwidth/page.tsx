@@ -8,6 +8,7 @@ import CreateListingModal from "@/components/CreateListingModal";
 import MakeOfferModal from "@/components/MakeOfferModal";
 import GlobalBackground from "@/components/GlobalBackground";
 import ShopSystem from "@/lib/shopSystem";
+import { restoreWalletSession } from "@/lib/walletSessionManager";
 
 const CATEGORIES = [
   { id: "mek-chips", name: "MEK CHIPS", hasDropdown: true, subcategories: [
@@ -108,6 +109,7 @@ interface Listing {
 
 export default function ShopHybridPage() {
   const [userId, setUserId] = useState<Id<"users"> | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("essence");
   const [sortBy, setSortBy] = useState("recent");
   const [searchTerm, setSearchTerm] = useState("");
@@ -128,25 +130,31 @@ export default function ShopHybridPage() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const uniChipDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Get or create user
+  // Get or create user - only for real wallet sessions
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
 
+  // Restore wallet session on mount (no demo fallback)
   useEffect(() => {
-    const initUser = async () => {
-      const user = await getOrCreateUser({
-        walletAddress: "demo_wallet_123"
-      });
-      if (user) {
-        setUserId(user._id as Id<"users">);
+    const initWallet = async () => {
+      const session = await restoreWalletSession();
+      if (session) {
+        const address = session.stakeAddress || session.walletAddress;
+        if (address) {
+          setWalletAddress(address);
+          const user = await getOrCreateUser({ walletAddress: address });
+          if (user) {
+            setUserId(user._id as Id<"users">);
+          }
+        }
       }
     };
-    initUser();
+    initWallet();
   }, [getOrCreateUser]);
 
   // Get user profile
   const userProfileQuery = useQuery(
     api.users.getUserProfile,
-    userId ? { walletAddress: "demo_wallet_123" } : "skip"
+    walletAddress ? { walletAddress } : "skip"
   );
 
   // Override gold for testing UI with insufficient funds

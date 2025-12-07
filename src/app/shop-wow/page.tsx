@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { restoreWalletSession } from "@/lib/walletSessionManager";
 
 const CATEGORIES = [
   { id: "all", name: "All" },
@@ -40,38 +41,45 @@ interface Listing {
 
 export default function ShopWoWPage() {
   const [userId, setUserId] = useState<Id<"users"> | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
-  
+
   // New listing form state
   const [listingType, setListingType] = useState<"essence" | "head" | "body" | "trait" | "overexposed">("essence");
   const [listingVariation, setListingVariation] = useState("");
   const [listingQuantity, setListingQuantity] = useState("1");
   const [listingPrice, setListingPrice] = useState("");
   const [essenceAmount, setEssenceAmount] = useState("1");
-  
-  // Get or create user
+
+  // Get or create user - only for real wallet sessions
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
-  
+
+  // Restore wallet session on mount (no demo fallback)
   useEffect(() => {
-    const initUser = async () => {
-      const user = await getOrCreateUser({ 
-        walletAddress: "demo_wallet_123" 
-      });
-      if (user) {
-        setUserId(user._id as Id<"users">);
+    const initWallet = async () => {
+      const session = await restoreWalletSession();
+      if (session) {
+        const address = session.stakeAddress || session.walletAddress;
+        if (address) {
+          setWalletAddress(address);
+          const user = await getOrCreateUser({ walletAddress: address });
+          if (user) {
+            setUserId(user._id as Id<"users">);
+          }
+        }
       }
     };
-    initUser();
+    initWallet();
   }, [getOrCreateUser]);
-  
+
   // Get user profile
   const userProfile = useQuery(
     api.users.getUserProfile,
-    userId ? { walletAddress: "demo_wallet_123" } : "skip"
+    walletAddress ? { walletAddress } : "skip"
   );
   
   // Get marketplace listings - PAUSED TO SAVE BANDWIDTH
