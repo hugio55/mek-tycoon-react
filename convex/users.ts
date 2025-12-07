@@ -12,9 +12,9 @@ export const createOrUpdate = mutation({
     // Check if user exists
     const existingUser = await ctx.db
       .query("users")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
-    
+
     if (existingUser) {
       // Update connection info
       await ctx.db.patch(existingUser._id, {
@@ -78,9 +78,9 @@ export const getOrCreateUser = mutation({
     // Check if user exists
     const existingUser = await ctx.db
       .query("users")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
-    
+
     if (existingUser) {
       // Update last login
       await ctx.db.patch(existingUser._id, {
@@ -139,12 +139,12 @@ export const getCurrentUser = query({
   args: { walletAddress: v.optional(v.string()) },
   handler: async (ctx, args) => {
     if (!args.walletAddress) return null;
-    
+
     const user = await ctx.db
       .query("users")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress!))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress!))
       .first();
-    
+
     return user;
   },
 });
@@ -155,36 +155,36 @@ export const getUserProfile = query({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
-    
+
     if (!user) {
       return null;
     }
-    
+
     // Get user's Meks
     const meks = await ctx.db
       .query("meks")
-      .withIndex("", (q: any) => q.eq("owner", args.walletAddress))
+      .withIndex("by_owner", (q: any) => q.eq("owner", args.walletAddress))
       .collect();
-    
+
     // Get user's inventory
     const inventory = await ctx.db
       .query("inventory")
-      .withIndex("", (q: any) => q.eq("userId", user._id))
+      .withIndex("by_user", (q: any) => q.eq("userId", user._id))
       .collect();
-    
+
     // Get active crafting sessions
     const activeSessions = await ctx.db
       .query("craftingSessions")
-      .withIndex("", (q: any) => q.eq("userId", user._id))
+      .withIndex("by_user", (q: any) => q.eq("userId", user._id))
       .filter((q) => q.eq(q.field("status"), "crafting"))
       .collect();
-    
+
     // Get achievements
     const achievements = await ctx.db
       .query("achievements")
-      .withIndex("", (q: any) => q.eq("userId", user._id))
+      .withIndex("by_user", (q: any) => q.eq("userId", user._id))
       .collect();
     
     return {
@@ -241,13 +241,13 @@ export const updateUserGold = mutation({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
-    
+
     if (!user) {
       throw new Error("User not found");
     }
-    
+
     await ctx.db.patch(user._id, {
       gold: args.amount,
     });
@@ -347,7 +347,7 @@ export const getTransactionHistory = query({
 
     const transactions = await ctx.db
       .query("transactions")
-      .withIndex("", (q: any) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q: any) => q.eq("userId", args.userId))
       .order("desc")
       .take(limit);
 

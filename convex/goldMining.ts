@@ -562,7 +562,7 @@ export const calculateGoldRates = query({
     // Get the current gold rate configuration
     const goldRateConfig = await ctx.db
       .query("mekGoldRateSaves")
-      .withIndex("", (q: any) => q.eq("isCurrentConfig", true))
+      .withIndex("by_current", (q: any) => q.eq("isCurrentConfig", true))
       .first();
 
     if (!goldRateConfig) {
@@ -953,7 +953,7 @@ export const getGroupMeks = query({
       // Get all wallets in the group
       const allMemberships = await ctx.db
         .query("walletGroupMemberships")
-        .withIndex("", (q: any) => q.eq("groupId", membership.groupId))
+        .withIndex("by_group", (q: any) => q.eq("groupId", membership.groupId))
         .collect();
 
       walletsToQuery = allMemberships.map((m: any) => m.walletAddress);
@@ -964,7 +964,7 @@ export const getGroupMeks = query({
     for (const wallet of walletsToQuery) {
       const goldMining = await ctx.db
         .query("goldMining")
-        .withIndex("", (q: any) => q.eq("walletAddress", wallet))
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", wallet))
         .first();
 
       if (goldMining && goldMining.ownedMeks) {
@@ -995,7 +995,7 @@ export const getCorporationStats = query({
     // Find the wallet group for this wallet
     const membership = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     let walletsToQuery = [args.walletAddress]; // Default to just this wallet
@@ -1004,7 +1004,7 @@ export const getCorporationStats = query({
       // Get all wallets in the group
       const allMemberships = await ctx.db
         .query("walletGroupMemberships")
-        .withIndex("", (q: any) => q.eq("groupId", membership.groupId))
+        .withIndex("by_group", (q: any) => q.eq("groupId", membership.groupId))
         .collect();
 
       walletsToQuery = allMemberships.map((m: any) => m.walletAddress);
@@ -1020,7 +1020,7 @@ export const getCorporationStats = query({
     for (const wallet of walletsToQuery) {
       const goldMining = await ctx.db
         .query("goldMining")
-        .withIndex("", (q: any) => q.eq("walletAddress", wallet))
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", wallet))
         .first();
 
       if (goldMining) {
