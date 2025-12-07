@@ -237,26 +237,17 @@ export const completeCampaignReservation = mutation({
     const inventoryRow = await ctx.db.get(args.reservationId as Id<"commemorativeNFTInventory">);
 
     if (inventoryRow && inventoryRow.status === "reserved") {
-      // Look up company name for historical tracking - Phase II: Use users table first
+      // Look up corporation name for historical tracking
+      // users table IS the corporation (1 user = 1 corporation)
       const walletAddress = inventoryRow.reservedBy;
       let companyNameAtSale: string | undefined;
 
       if (walletAddress) {
-        // Try new users table first (primary source - Phase II)
         const user = await ctx.db
           .query("users")
           .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
           .first();
         companyNameAtSale = user?.corporationName || undefined;
-
-        // Fallback to legacy goldMining table if not found in users
-        if (!companyNameAtSale) {
-          const goldMiningRecord = await ctx.db
-            .query("goldMining")
-            .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
-            .first();
-          companyNameAtSale = (goldMiningRecord as any)?.companyName || undefined;
-        }
       }
 
       // New system: Inventory row IS the reservation
@@ -304,26 +295,17 @@ export const completeCampaignReservation = mutation({
       return { success: false, error: "Reservation not found" };
     }
 
-    // Look up company name for historical tracking - Phase II: Use users table first
+    // Look up corporation name for historical tracking
+    // users table IS the corporation (1 user = 1 corporation)
     const walletAddress = reservation.reservedBy;
     let companyNameAtSale: string | undefined;
 
     if (walletAddress) {
-      // Try new users table first (primary source - Phase II)
       const user = await ctx.db
         .query("users")
         .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
         .first();
       companyNameAtSale = user?.corporationName || undefined;
-
-      // Fallback to legacy goldMining table if not found in users
-      if (!companyNameAtSale) {
-        const goldMiningRecord = await ctx.db
-          .query("goldMining")
-          .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
-          .first();
-        companyNameAtSale = (goldMiningRecord as any)?.companyName || undefined;
-      }
     }
 
     // Update reservation status
@@ -387,24 +369,14 @@ export const completeCampaignReservationByWallet = mutation({
 
     console.log('[CAMPAIGN RESERVATION] Found reservation:', inventoryRow._id, 'NFT:', inventoryRow.nftNumber);
 
-    // Look up company name for historical tracking - Phase II: Use users table first
+    // Look up corporation name for historical tracking
+    // users table IS the corporation (1 user = 1 corporation)
     let companyNameAtSale: string | undefined;
-
-    // Try new users table first (primary source - Phase II)
     const user = await ctx.db
       .query("users")
       .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.walletAddress))
       .first();
     companyNameAtSale = user?.corporationName || undefined;
-
-    // Fallback to legacy goldMining table if not found in users
-    if (!companyNameAtSale) {
-      const goldMiningRecord = await ctx.db
-        .query("goldMining")
-        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
-        .first();
-      companyNameAtSale = (goldMiningRecord as any)?.companyName || undefined;
-    }
 
     // Update inventory to sold (keeping reservation fields for record)
     await ctx.db.patch(inventoryRow._id, {
