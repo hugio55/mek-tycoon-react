@@ -325,7 +325,7 @@ export const repairPaymentUrls = mutation({
     let inventoryQuery = ctx.db.query("commemorativeNFTInventory");
 
     if (args.campaignId) {
-      inventoryQuery = inventoryQuery.withIndex("", (q: any) =>
+      inventoryQuery = inventoryQuery.withIndex("by_campaign", (q: any) =>
         q.eq("campaignId", args.campaignId)
       );
     }
@@ -505,14 +505,14 @@ export const initializeFromCSV = action({
 
     console.log('[CSV INIT] Successfully parsed', nfts.length, 'available NFTs from CSV');
 
-    // Use the existing populateInventoryManually mutation
-    const result = await ctx.runMutation(api.commemorativeNFTInventorySetup.populateInventoryManually, {
+    // Use addNewNFTsToInventory which handles existing inventory gracefully
+    const result = await ctx.runMutation(api.commemorativeNFTInventorySetup.addNewNFTsToInventory, {
       nfts,
     });
 
     return {
-      created: result.success ? result.count : 0,
-      skipped: result.success ? 0 : nfts.length,
+      created: result.success ? result.added : 0,
+      skipped: result.success ? result.skipped : nfts.length,
     };
   },
 });
@@ -554,7 +554,7 @@ export const markInventoryAsSoldByUid = mutation({
     // Query inventory by nftUid using the index
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("", (q: any) => q.eq("nftUid", args.nftUid))
+      .withIndex("by_uid", (q: any) => q.eq("nftUid", args.nftUid))
       .first();
 
     // NFT not found in inventory
@@ -588,7 +588,7 @@ export const markInventoryAsSoldByUid = mutation({
     if (inventory.status === "reserved") {
       const activeReservation = await ctx.db
         .query("commemorativeNFTReservations")
-        .withIndex("", (q: any) => q.eq("nftInventoryId", inventory._id))
+        .withIndex("by_inventory_id", (q: any) => q.eq("nftInventoryId", inventory._id))
         .filter((q) => q.eq(q.field("status"), "active"))
         .first();
 
