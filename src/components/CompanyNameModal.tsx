@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { getMediaUrl } from '@/lib/media-url';
+import HolographicButton from './ui/IndustrialButtons/HolographicButton';
 
 interface CompanyNameModalProps {
   isOpen: boolean;
@@ -252,56 +252,57 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
           <div className="h-px bg-cyan-500/20 mb-6" />
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Input field */}
+            {/* Input field - Glowing Border Style (Cyan) */}
             <div>
-              <label htmlFor="companyName" className="block text-sm font-light text-cyan-400/80 mb-2 tracking-wide">
+              <label htmlFor="companyName" className="block text-sm font-semibold text-cyan-400 mb-2 tracking-wide">
                 Corporation Name
               </label>
               <div className="relative group">
-                <input
-                  id="companyName"
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="Enter corporation name..."
-                  maxLength={30}
-                  className="w-full px-4 py-3 rounded-xl text-white placeholder-white/30 focus:outline-none transition-all duration-300"
+                {/* Glowing border container */}
+                <div
+                  className="relative rounded-xl overflow-hidden transition-all duration-500"
                   style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    border: '1px solid rgba(0, 220, 220, 0.25)',
-                    boxShadow: '0 0 0 0 rgba(0, 220, 220, 0)',
+                    padding: '2px',
+                    background: 'linear-gradient(135deg, #00d4ff 0%, #0891b2 50%, #00d4ff 100%)',
+                    boxShadow: '0 0 20px rgba(0, 212, 255, 0.3), 0 0 40px rgba(0, 212, 255, 0.15)',
                   }}
-                  onFocus={(e) => {
-                    e.target.style.border = '1px solid rgba(0, 220, 220, 0.5)';
-                    e.target.style.boxShadow = '0 0 20px rgba(0, 220, 220, 0.15)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.border = '1px solid rgba(0, 220, 220, 0.25)';
-                    e.target.style.boxShadow = '0 0 0 0 rgba(0, 220, 220, 0)';
-                  }}
-                  disabled={isSubmitting}
-                  autoFocus
-                />
-                <div className="absolute right-3 top-3 text-xs text-cyan-400/50">
+                >
+                  <input
+                    id="companyName"
+                    type="text"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="Enter corporation name..."
+                    maxLength={30}
+                    className="w-full px-4 py-3.5 rounded-[10px] text-white placeholder-white/40 focus:outline-none transition-all duration-300"
+                    style={{
+                      background: '#010201',
+                      fontSize: '16px',
+                    }}
+                    disabled={isSubmitting}
+                    autoFocus
+                  />
+                </div>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-cyan-400/70 font-medium">
                   {companyName.length}/30
                 </div>
               </div>
 
               {/* Availability status */}
               {showAvailabilityStatus && (
-                <div className="mt-2 text-sm font-light">
+                <div className="mt-3 text-sm font-semibold">
                   {isChecking ? (
                     <div className="text-white/60 flex items-center gap-2">
                       <div className="w-3 h-3 border border-white/60 border-t-transparent rounded-full animate-spin"></div>
                       Checking availability...
                     </div>
                   ) : isAvailable ? (
-                    <div className="text-green-400">
-                      Available
+                    <div className="text-green-400" style={{ textShadow: '0 0 10px rgba(74, 222, 128, 0.5)' }}>
+                      ✓ Available
                     </div>
                   ) : (
-                    <div className="text-red-400">
-                      Not available
+                    <div className="text-red-400" style={{ textShadow: '0 0 10px rgba(248, 113, 113, 0.5)' }}>
+                      ✗ Not available
                     </div>
                   )}
                 </div>
@@ -323,43 +324,27 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
 
             {/* Buttons */}
             <div className="flex flex-col gap-3 pt-2">
-              <button
-                type="submit"
-                disabled={buttonDisabled}
-                className="group relative w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden"
-                style={{
-                  background: buttonDisabled
-                    ? 'rgba(255,255,255,0.08)'
-                    : 'rgba(0, 220, 220, 0.2)',
-                  border: buttonDisabled
-                    ? '1px solid rgba(255, 255, 255, 0.1)'
-                    : '1px solid rgba(0, 220, 220, 0.5)',
-                  color: buttonDisabled ? 'rgba(255, 255, 255, 0.4)' : '#00dcdc',
-                  boxShadow: buttonDisabled ? 'none' : '0 0 20px rgba(0, 220, 220, 0.1)',
-                }}
-              >
-                {/* Honeycomb hover effect */}
-                {!buttonDisabled && (
-                  <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl"
-                    style={{
-                      backgroundImage: `url('${getMediaUrl('/random-images/honey-png1.webp')}')`,
-                      backgroundSize: '125%',
-                      backgroundPosition: 'center',
-                    }}
-                  />
-                )}
-                <span className="relative z-10 transition-all duration-300 group-hover:[text-shadow:0_0_8px_rgba(0,220,220,0.8)]">
-                  {isSubmitting ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                      {mode === 'initial' ? 'Creating...' : 'Updating...'}
-                    </span>
-                  ) : (
-                    mode === 'initial' ? 'Create Corporation' : 'Update Name'
-                  )}
-                </span>
-              </button>
+              {/* HolographicButton with particle effects */}
+              <div className="w-full">
+                <HolographicButton
+                  text={isSubmitting
+                    ? (mode === 'initial' ? 'CREATING...' : 'UPDATING...')
+                    : (mode === 'initial' ? 'CREATE CORPORATION' : 'UPDATE NAME')
+                  }
+                  onClick={() => {
+                    // Create a synthetic event to pass to handleSubmit
+                    const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
+                    handleSubmit(syntheticEvent);
+                  }}
+                  isActive={!buttonDisabled}
+                  variant="blue"
+                  alwaysOn={!buttonDisabled}
+                  disabled={buttonDisabled}
+                  hideIcon={true}
+                  className="w-full"
+                  particleSpeed={0.15}
+                />
+              </div>
 
               {mode === 'edit' && (
                 <button
