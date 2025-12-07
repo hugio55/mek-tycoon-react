@@ -406,7 +406,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     (isNewConversation && existingConversation?.disabledByAdmin);
 
   return (
-    <div className="flex h-[calc(100vh-120px)] min-h-[500px] bg-black/20 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+    <div className="flex h-full min-h-[500px] bg-black/40 backdrop-blur-sm overflow-hidden">
       {/* Left Sidebar - Inbox */}
       <div className="w-80 border-r border-white/10 flex flex-col">
         {/* Inbox Header */}

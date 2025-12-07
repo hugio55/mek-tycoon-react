@@ -617,13 +617,13 @@ export default function UnifiedHeader() {
             style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
           />
 
-          {/* White Box Container */}
+          {/* Dark Container - Matches Admin Messaging Style */}
           <div
-            className="relative w-full max-w-4xl h-[80vh] bg-white rounded-2xl shadow-2xl overflow-hidden"
+            className="relative w-full max-w-5xl h-[85vh] bg-black/90 rounded-xl border border-gray-700 shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 bg-black/60">
               <div className="flex items-center gap-3">
                 <svg
                   className="w-6 h-6 text-yellow-500"
@@ -632,13 +632,13 @@ export default function UnifiedHeader() {
                 >
                   <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
                 </svg>
-                <h2 className="text-xl font-bold text-gray-800" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Orbitron, sans-serif' }}>
                   COMMUNICATIONS
                 </h2>
               </div>
               <button
                 onClick={() => setShowMessaging(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors text-gray-500 hover:text-gray-700"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M18 6L6 18M6 6l12 12" />
@@ -647,7 +647,7 @@ export default function UnifiedHeader() {
             </div>
 
             {/* Content Area - Messaging System */}
-            <div className="h-[calc(100%-64px)] overflow-hidden">
+            <div className="h-[calc(100%-64px)] overflow-hidden bg-transparent">
               {walletAddress && (
                 <MessagingSystem
                   walletAddress={walletAddress}
