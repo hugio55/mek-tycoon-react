@@ -540,6 +540,50 @@ const Canvas: React.FC<CanvasProps> = memo(({
             </svg>
           )}
 
+          {/* Grid Center Marker - Fixed at absolute center of grid */}
+          {showGrid && (
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                left: `${gridSize / 2}px`,
+                top: `${gridSize / 2}px`,
+                transform: 'translate(-50%, -50%)',
+                zIndex: 5
+              }}
+            >
+              {/* Horizontal line */}
+              <div
+                className="absolute bg-red-500/60"
+                style={{
+                  width: '24px',
+                  height: '2px',
+                  left: '-12px',
+                  top: '-1px'
+                }}
+              />
+              {/* Vertical line */}
+              <div
+                className="absolute bg-red-500/60"
+                style={{
+                  width: '2px',
+                  height: '24px',
+                  left: '-1px',
+                  top: '-12px'
+                }}
+              />
+              {/* Center dot */}
+              <div
+                className="absolute bg-red-500 rounded-full"
+                style={{
+                  width: '6px',
+                  height: '6px',
+                  left: '-3px',
+                  top: '-3px'
+                }}
+              />
+            </div>
+          )}
+
           {/* Story Mode Runway Guidelines */}
           {builderMode === 'story' && (
             <div className="absolute inset-0 pointer-events-none">

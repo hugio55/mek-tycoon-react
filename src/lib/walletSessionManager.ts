@@ -5,7 +5,10 @@
  * Includes async session encryption and origin validation
  */
 
-import { saveSession, getSession, clearSession, WalletSession } from './walletSession';
+import { saveSession, getSession, clearSession, WalletSession, clearDeviceRemembered, extendSessionOnActivity, rememberDevice, isDeviceRemembered } from './walletSession';
+
+// Re-export for convenience
+export { extendSessionOnActivity, rememberDevice, isDeviceRemembered };
 import { detectPlatform, generateDeviceId } from './platformDetection';
 
 export interface SessionData {
@@ -106,6 +109,10 @@ export function clearWalletSession(): void {
   console.log('[🔓DISCONNECT] === Starting Wallet Disconnect Process ===');
   console.log('[🔓DISCONNECT] Step 1: Clearing encrypted session...');
   clearSession();
+
+  // Clear device remembered status - user must re-trust this device after manual disconnect
+  console.log('[🔓DISCONNECT] Step 1b: Clearing device remembered status...');
+  clearDeviceRemembered();
 
   // Generate and store disconnect nonce for signature verification
   // This prevents someone from reconnecting without proving wallet ownership

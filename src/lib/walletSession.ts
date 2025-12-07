@@ -9,6 +9,8 @@ import { SecurityStateLogger, SessionMigrationTracker } from './securityStateLog
 
 const SESSION_KEY = 'mek_wallet_session';
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const EXTENDED_SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+const REMEMBERED_DEVICE_KEY = 'mek_device_remembered';
 
 export interface WalletSession {
   walletAddress: string; // Primary identifier (stake address)
@@ -259,13 +261,14 @@ export async function getSessionTimeRemaining(): Promise<number | null> {
 }
 
 /**
- * Extend session expiration by 24 hours
+ * Extend session expiration by 24 hours (or 7 days if device is remembered)
  */
 export async function extendSession(): Promise<boolean> {
   const session = await getSession();
   if (!session) return false;
 
-  session.expiresAt = Date.now() + SESSION_DURATION;
+  const duration = isDeviceRemembered() ? EXTENDED_SESSION_DURATION : SESSION_DURATION;
+  session.expiresAt = Date.now() + duration;
 
   try {
     // Re-encrypt and save updated session
@@ -273,10 +276,97 @@ export async function extendSession(): Promise<boolean> {
     localStorage.setItem(SESSION_KEY, encryptedSession);
     console.log('[Session] Extended session expiration:', {
       newExpiry: new Date(session.expiresAt).toISOString(),
+      duration: isDeviceRemembered() ? '7 days' : '24 hours',
     });
     return true;
   } catch (error) {
     console.error('[Session] Failed to extend session:', error);
+    return false;
+  }
+}
+
+/**
+ * Check if this device has been marked as "remembered"
+ */
+export function isDeviceRemembered(): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(REMEMBERED_DEVICE_KEY) === 'true';
+}
+
+/**
+ * Mark device as remembered and extend session to 7 days + 24 hours
+ * Returns the new expiration timestamp
+ */
+export async function rememberDevice(): Promise<number | null> {
+  if (typeof window === 'undefined') return null;
+
+  const session = await getSession();
+  if (!session) return null;
+
+  // Mark device as remembered
+  localStorage.setItem(REMEMBERED_DEVICE_KEY, 'true');
+
+  // Extend session by 7 days + 24 hours from now
+  const newExpiry = Date.now() + EXTENDED_SESSION_DURATION + SESSION_DURATION;
+  session.expiresAt = newExpiry;
+
+  try {
+    const encryptedSession = await encryptSession(session);
+    localStorage.setItem(SESSION_KEY, encryptedSession);
+    console.log('[Session] Device remembered! Extended session to:', {
+      newExpiry: new Date(newExpiry).toISOString(),
+      duration: '8 days (7 + 1)',
+    });
+    return newExpiry;
+  } catch (error) {
+    console.error('[Session] Failed to remember device:', error);
+    return null;
+  }
+}
+
+/**
+ * Clear device remembered status (called on manual disconnect)
+ */
+export function clearDeviceRemembered(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(REMEMBERED_DEVICE_KEY);
+  console.log('[Session] Cleared device remembered status');
+}
+
+/**
+ * Extend session on activity (page load/refresh)
+ * Only extends if more than 1 hour has passed since last extension
+ * to avoid excessive re-encryption
+ */
+export async function extendSessionOnActivity(): Promise<boolean> {
+  const session = await getSession();
+  if (!session) return false;
+
+  const now = Date.now();
+  const lastValidated = session.lastValidated || session.createdAt;
+  const timeSinceLastExtension = now - lastValidated;
+
+  // Only extend if more than 1 hour since last activity
+  // This prevents excessive re-encryption on every page load
+  const ONE_HOUR = 60 * 60 * 1000;
+  if (timeSinceLastExtension < ONE_HOUR) {
+    return false; // Too soon to extend
+  }
+
+  const duration = isDeviceRemembered() ? EXTENDED_SESSION_DURATION : SESSION_DURATION;
+  session.expiresAt = now + duration;
+  session.lastValidated = now;
+
+  try {
+    const encryptedSession = await encryptSession(session);
+    localStorage.setItem(SESSION_KEY, encryptedSession);
+    console.log('[Session] Extended session on activity:', {
+      newExpiry: new Date(session.expiresAt).toISOString(),
+      duration: isDeviceRemembered() ? '7 days' : '24 hours',
+    });
+    return true;
+  } catch (error) {
+    console.error('[Session] Failed to extend session on activity:', error);
     return false;
   }
 }

@@ -4,14 +4,22 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { restoreWalletSession, clearWalletSession } from "@/lib/walletSessionManager";
+import { restoreWalletSession, clearWalletSession, extendSessionOnActivity, rememberDevice, isDeviceRemembered } from "@/lib/walletSessionManager";
 import { CompanyNameModal } from "@/components/CompanyNameModal";
 import WalletConnectLightbox from "@/components/WalletConnectLightbox";
 import { getMediaUrl } from "@/lib/media-url";
 import { NotificationBell } from "@/components/notifications";
 
-// Session Timer Component - Shows countdown to session expiration
-function SessionTimer({ expiresAt }: { expiresAt: number }) {
+// Session Timer Component - Shows countdown to session expiration with "Remember this device" option
+function SessionTimer({
+  expiresAt,
+  onRememberDevice,
+  deviceRemembered
+}: {
+  expiresAt: number;
+  onRememberDevice?: () => void;
+  deviceRemembered?: boolean;
+}) {
   const [timeRemaining, setTimeRemaining] = useState<string>('');
   const [isExpiringSoon, setIsExpiringSoon] = useState(false);
 
@@ -29,11 +37,14 @@ function SessionTimer({ expiresAt }: { expiresAt: number }) {
       // Check if expiring soon (less than 5 minutes)
       setIsExpiringSoon(remaining < 5 * 60 * 1000);
 
-      const hours = Math.floor(remaining / (1000 * 60 * 60));
+      const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
 
-      if (hours > 0) {
+      if (days > 0) {
+        setTimeRemaining(`${days}d ${hours}h ${minutes}m`);
+      } else if (hours > 0) {
         setTimeRemaining(`${hours}h ${minutes}m`);
       } else if (minutes > 0) {
         setTimeRemaining(`${minutes}m ${seconds}s`);
@@ -49,8 +60,24 @@ function SessionTimer({ expiresAt }: { expiresAt: number }) {
   }, [expiresAt]);
 
   return (
-    <div className={`font-mono text-lg ${isExpiringSoon ? 'text-red-400 animate-pulse' : 'text-green-400'}`}>
-      {timeRemaining}
+    <div className="space-y-2">
+      <div className={`font-mono text-lg ${isExpiringSoon ? 'text-red-400 animate-pulse' : 'text-green-400'}`}>
+        {timeRemaining}
+      </div>
+      {/* Remember this device button */}
+      {onRememberDevice && !deviceRemembered && (
+        <button
+          onClick={onRememberDevice}
+          className="w-full px-3 py-1.5 text-xs bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30 hover:border-yellow-500/50 text-yellow-400 rounded transition-all duration-200"
+        >
+          Remember this device
+        </button>
+      )}
+      {deviceRemembered && (
+        <div className="text-xs text-green-400/70 flex items-center gap-1">
+          <span>✓</span> Device remembered
+        </div>
+      )}
     </div>
   );
 }
@@ -72,19 +99,30 @@ export default function UnifiedHeader() {
   const [walletDropdownOpen, setWalletDropdownOpen] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [sessionExpiresAt, setSessionExpiresAt] = useState<number | null>(null);
+  const [deviceRemembered, setDeviceRemembered] = useState(false);
   const [showCompanyNameModal, setShowCompanyNameModal] = useState(false);
   const [companyNameModalMode, setCompanyNameModalMode] = useState<'initial' | 'edit'>('initial');
   const [showWalletConnect, setShowWalletConnect] = useState(false);
 
-  // Track showWalletConnect state changes (logging disabled - enable DEBUG_WALLET in console)
+  // Handle "Remember this device" button click
+  const handleRememberDevice = async () => {
+    const newExpiry = await rememberDevice();
+    if (newExpiry) {
+      setSessionExpiresAt(newExpiry);
+      setDeviceRemembered(true);
+    }
+  };
 
-
-  // Get wallet address from encrypted session storage
+  // Get wallet address from encrypted session storage and extend session on activity
   useEffect(() => {
+    // Check device remembered status on mount
+    setDeviceRemembered(isDeviceRemembered());
+
     // Silent init - logging disabled to reduce console noise
     // Enable DEBUG_WALLET in console for debugging: window.DEBUG_WALLET = true
     let lastAddress: string | null = null;
     let lastExpires: number | null = null;
+    let hasExtendedSession = false;
 
     const checkWalletAddress = async () => {
       try {
@@ -93,6 +131,22 @@ export default function UnifiedHeader() {
         if (session) {
           const address = session.stakeAddress || session.walletAddress;
           const expiresAt = session.expiresAt || null;
+
+          // Extend session on first check (page load) - only once per page load
+          if (!hasExtendedSession) {
+            hasExtendedSession = true;
+            const extended = await extendSessionOnActivity();
+            if (extended) {
+              // Session was extended - re-read to get new expiry
+              const updatedSession = await restoreWalletSession();
+              if (updatedSession) {
+                const updatedAddress = updatedSession.stakeAddress || updatedSession.walletAddress;
+                setWalletAddress(updatedAddress);
+                setSessionExpiresAt(updatedSession.expiresAt);
+                return; // Exit early, we've updated everything
+              }
+            }
+          }
 
           // Only update state if values actually changed
           // This prevents unnecessary re-renders and query re-executions
@@ -297,13 +351,17 @@ export default function UnifiedHeader() {
                 </div>
               </div>
 
-              {/* 3. Session expiration timer */}
+              {/* 3. Session expiration timer with "Remember this device" option */}
               {sessionExpiresAt && (
                 <div className="px-4 py-4 border-b border-yellow-500/20">
                   <div className="text-gray-500 text-base sm:text-lg uppercase tracking-wider mb-1">
                     Session Expires
                   </div>
-                  <SessionTimer expiresAt={sessionExpiresAt} />
+                  <SessionTimer
+                    expiresAt={sessionExpiresAt}
+                    onRememberDevice={handleRememberDevice}
+                    deviceRemembered={deviceRemembered}
+                  />
                 </div>
               )}
 

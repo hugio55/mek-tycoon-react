@@ -128,8 +128,8 @@ function WalletManagementAdminContent() {
     if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
     const client = getClient();
     if (!client) throw new Error('Client not initialized');
-    // PHASE II: Delete from users table
-    return await client.mutation(api.adminUsers.deleteUserCompletely, args);
+    // CASCADE DELETE: Removes user from ALL tables (users, meks, goldMining, etc.)
+    return await client.mutation(api.adminUsers.cascadeDeleteUser, args);
   };
 
   const mergeDuplicates = async (args: any) => {
