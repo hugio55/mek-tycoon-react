@@ -286,23 +286,7 @@ export const connectCorporation = mutation({
       }
     }
 
-    // Create goldMiningState record for new user
-    try {
-      await ctx.db.insert("goldMiningState", {
-        stakeAddress: args.stakeAddress,
-        totalGoldPerHour: 0,
-        baseGoldPerHour: 0,
-        boostGoldPerHour: 0,
-        accumulatedGold: 0,
-        lastActiveTime: now,
-        lastSnapshotTime: now,
-        totalCumulativeGold: 0,
-        createdAt: now,
-        updatedAt: now,
-      });
-    } catch (error) {
-      console.error("[corporationAuth] Failed to create goldMiningState:", error);
-    }
+    // NOTE: goldMiningState creation removed - Phase II uses job slots for income, not passive mining
 
     const newUser = await ctx.db.get(newUserId);
 

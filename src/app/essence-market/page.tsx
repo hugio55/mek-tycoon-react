@@ -3143,7 +3143,7 @@ export default function EssenceMarketPage() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 py-6 px-[30px]">
+      <div className="relative z-10 py-6 px-[100px]">
         {/* Title Section - Conditional Header Style */}
         {useSpaceAgeHeader ? (
           /* Space Age Style Header - Liquid Glass Aesthetic */

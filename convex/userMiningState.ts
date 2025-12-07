@@ -3,54 +3,16 @@ import { mutation, query, action } from "./_generated/server";
 import { api } from "./_generated/api";
 
 // =============================================================================
-// PHASE II: User Mining State (Clean Architecture)
+// PHASE II: Mek Syncing from Blockchain
 // =============================================================================
-// This file provides gold mining queries using the new normalized architecture:
-// - User data from `users` table
-// - Gold mining state from `goldMiningState` table
-// - Meks from `meks` table (queried by ownerStakeAddress)
+// This file handles syncing meks from blockchain to database.
+// NOTE: goldMiningState is OBSOLETE - jobs are now the income source, not meks.
+// Gold accumulation functionality has been removed.
 // =============================================================================
-
-// =============================================================================
-// CONSTANTS
-// =============================================================================
-
-const MINING_CONSTANTS = {
-  GOLD_CAP: 50000, // Maximum gold that can accumulate
-  MAX_OFFLINE_HOURS: 24, // Maximum hours of offline earnings
-  MIN_UPDATE_INTERVAL_MS: 30 * 1000, // 30 seconds debounce
-} as const;
 
 // =============================================================================
 // HELPER FUNCTIONS
 // =============================================================================
-
-/**
- * Calculate current gold including time-based accumulation
- */
-function calculateCurrentGold(params: {
-  accumulatedGold: number;
-  goldPerHour: number;
-  lastSnapshotTime: number;
-  isVerified: boolean;
-}): number {
-  const { accumulatedGold, goldPerHour, lastSnapshotTime, isVerified } = params;
-
-  // If not verified, no gold accumulation
-  if (!isVerified) {
-    return accumulatedGold;
-  }
-
-  const now = Date.now();
-  const hoursSinceSnapshot = (now - lastSnapshotTime) / (1000 * 60 * 60);
-
-  // Cap offline earnings to max hours
-  const cappedHours = Math.min(hoursSinceSnapshot, MINING_CONSTANTS.MAX_OFFLINE_HOURS);
-  const earnedGold = cappedHours * goldPerHour;
-
-  // Apply gold cap
-  return Math.min(accumulatedGold + earnedGold, MINING_CONSTANTS.GOLD_CAP);
-}
 
 /**
  * Validates stake address format
@@ -65,112 +27,6 @@ function isValidStakeAddress(address: string): boolean {
 // =============================================================================
 // QUERIES
 // =============================================================================
-
-/**
- * Get user's gold mining data (Phase II - clean architecture)
- *
- * Returns data in format compatible with existing frontend:
- * - currentGold, totalGoldPerHour, baseGoldPerHour, boostGoldPerHour
- * - ownedMeks array (now fetched from meks table)
- * - companyName (now from users.corporationName)
- */
-export const getUserMiningData = query({
-  args: {
-    stakeAddress: v.string(),
-  },
-  handler: async (ctx, args) => {
-    if (!isValidStakeAddress(args.stakeAddress)) {
-      return null;
-    }
-
-    // Get user data
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
-      .first();
-
-    if (!user) {
-      return null;
-    }
-
-    // Get gold mining state
-    const miningState = await ctx.db
-      .query("goldMiningState")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
-      .first();
-
-    // Get owned meks
-    const ownedMeks = await ctx.db
-      .query("meks")
-      .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", args.stakeAddress))
-      .collect();
-
-    // Calculate current gold
-    const baseRate = miningState?.baseGoldPerHour || 0;
-    const boostRate = miningState?.boostGoldPerHour || 0;
-    const totalRate = miningState?.totalGoldPerHour || 0;
-
-    const currentGold = miningState ? calculateCurrentGold({
-      accumulatedGold: miningState.accumulatedGold || 0,
-      goldPerHour: totalRate,
-      lastSnapshotTime: miningState.lastSnapshotTime || miningState.updatedAt || miningState.createdAt,
-      isVerified: miningState.isBlockchainVerified === true,
-    }) : 0;
-
-    // Format meks for frontend compatibility
-    const formattedMeks = ownedMeks.map((mek: any) => ({
-      assetId: mek.assetId,
-      policyId: mek.policyId || '',
-      assetName: mek.assetName,
-      imageUrl: mek.iconUrl,
-      goldPerHour: mek.goldRate || 0,
-      rarityRank: mek.rarityRank,
-      headVariation: mek.headVariation,
-      bodyVariation: mek.bodyVariation,
-      itemVariation: mek.itemVariation,
-      sourceKey: mek.sourceKey,
-      sourceKeyBase: mek.sourceKeyBase,
-      // Level boost data (stored on mek in Phase II)
-      baseGoldPerHour: mek.goldRate || 0,
-      currentLevel: mek.level || 1,
-      levelBoostPercent: mek.levelBoostPercent || 0,
-      levelBoostAmount: mek.levelBoostAmount || 0,
-      effectiveGoldPerHour: mek.goldRate || 0,
-      customName: mek.customName,
-    }));
-
-    // Return in format compatible with existing frontend
-    return {
-      // Identity
-      walletAddress: args.stakeAddress, // For backwards compat
-      stakeAddress: args.stakeAddress,
-      companyName: user.corporationName,
-
-      // Gold data
-      currentGold,
-      accumulatedGold: miningState?.accumulatedGold || 0,
-      totalCumulativeGold: miningState?.totalCumulativeGold || 0,
-
-      // Gold rates
-      baseGoldPerHour: baseRate,
-      boostGoldPerHour: boostRate,
-      totalGoldPerHour: totalRate,
-
-      // Meks
-      ownedMeks: formattedMeks,
-
-      // Verification
-      isBlockchainVerified: miningState?.isBlockchainVerified || false,
-      isVerified: miningState?.isBlockchainVerified || false,
-      lastVerificationTime: miningState?.lastVerificationTime,
-
-      // Timestamps
-      createdAt: miningState?.createdAt || user.createdAt,
-      updatedAt: miningState?.updatedAt || user.updatedAt,
-      lastActiveTime: miningState?.lastActiveTime,
-    };
-  },
-});
 
 /**
  * Get user's owned meks
@@ -193,105 +49,13 @@ export const getUserMeks = query({
   },
 });
 
-/**
- * Get gold mining state only
- */
-export const getGoldMiningState = query({
-  args: {
-    stakeAddress: v.string(),
-  },
-  handler: async (ctx, args) => {
-    if (!isValidStakeAddress(args.stakeAddress)) {
-      return null;
-    }
-
-    const state = await ctx.db
-      .query("goldMiningState")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
-      .first();
-
-    if (!state) {
-      return null;
-    }
-
-    const currentGold = calculateCurrentGold({
-      accumulatedGold: state.accumulatedGold || 0,
-      goldPerHour: state.totalGoldPerHour,
-      lastSnapshotTime: state.lastSnapshotTime || state.updatedAt || state.createdAt,
-      isVerified: state.isBlockchainVerified === true,
-    });
-
-    return {
-      ...state,
-      currentGold,
-    };
-  },
-});
-
 // =============================================================================
 // MUTATIONS
 // =============================================================================
 
 /**
- * Update last active time (debounced checkpoint)
- */
-export const updateLastActive = mutation({
-  args: {
-    stakeAddress: v.string(),
-  },
-  handler: async (ctx, args) => {
-    if (!isValidStakeAddress(args.stakeAddress)) {
-      return { success: false, error: "Invalid stake address" };
-    }
-
-    const now = Date.now();
-
-    const state = await ctx.db
-      .query("goldMiningState")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
-      .first();
-
-    if (!state) {
-      return { success: false, error: "Mining state not found" };
-    }
-
-    // Debounce - skip if recent update
-    const timeSinceLastUpdate = now - (state.updatedAt || 0);
-    if (timeSinceLastUpdate < MINING_CONSTANTS.MIN_UPDATE_INTERVAL_MS) {
-      return { success: true, skipped: true };
-    }
-
-    // Calculate accumulated gold up to now
-    let newAccumulatedGold = state.accumulatedGold || 0;
-    let newTotalCumulative = state.totalCumulativeGold || 0;
-
-    if (state.isBlockchainVerified) {
-      const currentGold = calculateCurrentGold({
-        accumulatedGold: state.accumulatedGold || 0,
-        goldPerHour: state.totalGoldPerHour,
-        lastSnapshotTime: state.lastSnapshotTime || state.updatedAt || state.createdAt,
-        isVerified: true,
-      });
-
-      const goldEarned = currentGold - (state.accumulatedGold || 0);
-      newAccumulatedGold = currentGold;
-      newTotalCumulative = (state.totalCumulativeGold || 0) + goldEarned;
-    }
-
-    await ctx.db.patch(state._id, {
-      lastActiveTime: now,
-      lastSnapshotTime: now,
-      accumulatedGold: newAccumulatedGold,
-      totalCumulativeGold: newTotalCumulative,
-      updatedAt: now,
-    });
-
-    return { success: true, accumulatedGold: newAccumulatedGold };
-  },
-});
-
-/**
  * Store meks for a user (called after Blockfrost verification)
+ * Syncs mek ownership from blockchain to database
  */
 export const storeMeksForUser = mutation({
   args: {
@@ -359,112 +123,12 @@ export const storeMeksForUser = mutation({
       }
     }
 
-    // Update gold mining state
-    const miningState = await ctx.db
-      .query("goldMiningState")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
-      .first();
-
-    if (miningState) {
-      await ctx.db.patch(miningState._id, {
-        totalGoldPerHour,
-        baseGoldPerHour: totalGoldPerHour, // Will be adjusted for boosts later
-        isBlockchainVerified: true,
-        lastVerificationTime: now,
-        updatedAt: now,
-      });
-    } else {
-      // Create mining state if it doesn't exist
-      await ctx.db.insert("goldMiningState", {
-        stakeAddress: args.stakeAddress,
-        totalGoldPerHour,
-        baseGoldPerHour: totalGoldPerHour,
-        boostGoldPerHour: 0,
-        accumulatedGold: 0,
-        lastActiveTime: now,
-        lastSnapshotTime: now,
-        totalCumulativeGold: 0,
-        isBlockchainVerified: true,
-        lastVerificationTime: now,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }
+    // NOTE: goldMiningState update removed - Phase II uses job slots for income, not passive mining
 
     return {
       success: true,
       mekCount: args.meks.length,
-      totalGoldPerHour,
-    };
-  },
-});
-
-/**
- * Collect gold (move accumulated gold to user's balance)
- */
-export const collectGold = mutation({
-  args: {
-    stakeAddress: v.string(),
-    amount: v.number(),
-  },
-  handler: async (ctx, args) => {
-    if (!isValidStakeAddress(args.stakeAddress)) {
-      throw new Error("Invalid stake address");
-    }
-
-    const now = Date.now();
-
-    // Get user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // Get mining state
-    const miningState = await ctx.db
-      .query("goldMiningState")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
-      .first();
-
-    if (!miningState) {
-      throw new Error("Mining state not found");
-    }
-
-    // Calculate available gold
-    const availableGold = calculateCurrentGold({
-      accumulatedGold: miningState.accumulatedGold || 0,
-      goldPerHour: miningState.totalGoldPerHour,
-      lastSnapshotTime: miningState.lastSnapshotTime || miningState.updatedAt || miningState.createdAt,
-      isVerified: miningState.isBlockchainVerified === true,
-    });
-
-    const collectAmount = Math.min(args.amount, availableGold);
-
-    if (collectAmount <= 0) {
-      return { success: false, error: "No gold to collect" };
-    }
-
-    // Update user's gold balance
-    await ctx.db.patch(user._id, {
-      gold: (user.gold || 0) + collectAmount,
-      updatedAt: now,
-    });
-
-    // Reset accumulated gold
-    await ctx.db.patch(miningState._id, {
-      accumulatedGold: 0,
-      lastSnapshotTime: now,
-      updatedAt: now,
-    });
-
-    return {
-      success: true,
-      collected: collectAmount,
-      newBalance: (user.gold || 0) + collectAmount,
+      totalGoldPerHour, // Still returned for frontend display compatibility
     };
   },
 });
@@ -475,7 +139,7 @@ export const collectGold = mutation({
 
 /**
  * Initialize user mining with Blockfrost verification
- * Phase II: Stores meks in meks table, state in goldMiningState
+ * Syncs meks from blockchain to meks table
  */
 export const initializeWithBlockfrost = action({
   args: {
@@ -530,7 +194,7 @@ export const initializeWithBlockfrost = action({
         });
       }
 
-      // Store meks using the new mutation
+      // Store meks using the mutation
       const storeResult = await ctx.runMutation(api.userMiningState.storeMeksForUser, {
         stakeAddress: args.stakeAddress,
         meks: meksWithRates,
@@ -553,55 +217,5 @@ export const initializeWithBlockfrost = action({
         meks: [],
       };
     }
-  },
-});
-
-// =============================================================================
-// LEADERBOARD QUERIES
-// =============================================================================
-
-/**
- * Get top miners by gold per hour
- */
-export const getTopMiners = query({
-  args: {
-    limit: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const limit = Math.min(args.limit || 100, 500);
-
-    const topMiners = await ctx.db
-      .query("goldMiningState")
-      .withIndex("by_total_rate")
-      .order("desc")
-      .take(limit);
-
-    // Get user info for each miner
-    const results = [];
-    for (const miner of topMiners) {
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", miner.stakeAddress))
-        .first();
-
-      if (user) {
-        const mekCount = await ctx.db
-          .query("meks")
-          .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", miner.stakeAddress))
-          .collect()
-          .then(meks => meks.length);
-
-        results.push({
-          stakeAddress: miner.stakeAddress,
-          corporationName: user.corporationName,
-          totalGoldPerHour: miner.totalGoldPerHour,
-          totalCumulativeGold: miner.totalCumulativeGold || 0,
-          mekCount,
-          isVerified: miner.isBlockchainVerified || false,
-        });
-      }
-    }
-
-    return results;
   },
 });
