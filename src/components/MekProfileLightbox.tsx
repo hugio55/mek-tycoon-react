@@ -74,6 +74,9 @@ interface MekProfileLightboxProps {
   onTenureLevelStyleChange?: (style: TenureLevelStyle) => void;
   statusCardStyle?: StatusCardStyle;
   onStatusCardStyleChange?: (style: StatusCardStyle) => void;
+  // Abilities Tree props
+  abilitiesTreeCategoryId?: string;
+  abilitiesTreeTemplateId?: string;
 }
 
 export default function MekProfileLightbox({
@@ -123,7 +126,9 @@ export default function MekProfileLightbox({
   tenureLevelStyle = 'classic-side-labels',
   onTenureLevelStyleChange,
   statusCardStyle = 'compact-minimal',
-  onStatusCardStyleChange
+  onStatusCardStyleChange,
+  abilitiesTreeCategoryId,
+  abilitiesTreeTemplateId
 }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
@@ -5861,7 +5866,8 @@ export default function MekProfileLightbox({
                   <div className="w-full h-64 md:h-80 lg:h-96 bg-black/40 border border-yellow-500/20 relative overflow-hidden">
                     <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
                     <MekAbilitiesTree
-                      categoryId="jh7dg8xhxvdkxgbj5b4yw2ys4h7anx4h"
+                      categoryId={abilitiesTreeCategoryId}
+                      templateId={abilitiesTreeTemplateId}
                       rotated={true}
                       showNodeNames={false}
                       nodeColor="#fbbf24"

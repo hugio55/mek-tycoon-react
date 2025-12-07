@@ -231,7 +231,7 @@ export default function MekAbilitiesTree({
         })}
 
         {/* Nodes */}
-        {transformedNodes.map(node => {
+        {transformedNodes.map((node: TransformedNode) => {
           if (node.isLabel) return null;
 
           const coords = getCoords(node.normalX, node.normalY);

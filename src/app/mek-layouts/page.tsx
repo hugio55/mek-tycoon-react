@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 import MekProfileLightbox, { CardInteriorStyle, DesignationCardStyle, GoldGenerationStyle, CombinedGoldCardStyle, LevelProgressStyle, StatsLayoutStyle, TenureLevelStyle, StatusCardStyle } from '@/components/MekProfileLightbox';
 import GoldGenerationDetailsLightbox from '@/components/GoldGenerationDetailsLightbox';
 
@@ -36,6 +38,10 @@ export default function MekLayoutsPage() {
   const [statsLayoutStyle, setStatsLayoutStyle] = useState<StatsLayoutStyle>('vertical-divider');
   const [tenureLevelStyle, setTenureLevelStyle] = useState<TenureLevelStyle>('classic-side-labels');
   const [statusCardStyle, setStatusCardStyle] = useState<StatusCardStyle>('compact-minimal');
+  const [abilitiesTreeCategoryId, setAbilitiesTreeCategoryId] = useState<string | undefined>(undefined);
+
+  // Query for tree categories (for abilities tree selector)
+  const treeCategories = useQuery(api.mekTreeCategories.getAllCategoriesWithCounts);
 
   return (
     <div className="min-h-screen text-white flex flex-col items-center p-4">
@@ -577,6 +583,30 @@ export default function MekLayoutsPage() {
               )}
             </div>
 
+            {/* Abilities Tree Category Selector */}
+            <div className="mb-3 pt-2 border-t border-yellow-500/30">
+              <label className="block text-[10px] text-yellow-400 uppercase tracking-wider mb-1.5">
+                Abilities Tree Category
+              </label>
+              <select
+                value={abilitiesTreeCategoryId || ''}
+                onChange={(e) => setAbilitiesTreeCategoryId(e.target.value || undefined)}
+                className="w-full bg-black/60 border border-yellow-500/50 rounded px-2 py-1.5 text-yellow-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-yellow-500 focus:outline-none focus:border-yellow-400 transition-all"
+              >
+                <option value="">No Tree Selected</option>
+                {treeCategories?.map((cat: { _id: string; name: string; templateCount: number; hasActiveTemplate: boolean }) => (
+                  <option key={cat._id} value={cat._id}>
+                    {cat.name} ({cat.templateCount}) {cat.hasActiveTemplate ? '✓' : ''}
+                  </option>
+                ))}
+              </select>
+              {abilitiesTreeCategoryId && (
+                <div className="text-[10px] text-yellow-400/60 mt-1">
+                  Tree will display in Abilities section
+                </div>
+              )}
+            </div>
+
             {/* Current Selection Display */}
             <div className="pt-2 border-t border-cyan-500/30">
               <div className="text-[10px] text-gray-500 mb-1">Active:</div>
@@ -660,6 +690,7 @@ export default function MekLayoutsPage() {
         onTenureLevelStyleChange={setTenureLevelStyle}
         statusCardStyle={statusCardStyle}
         onStatusCardStyleChange={setStatusCardStyle}
+        abilitiesTreeCategoryId={abilitiesTreeCategoryId}
       />
 
       {/* Gold Generation Details Lightbox */}

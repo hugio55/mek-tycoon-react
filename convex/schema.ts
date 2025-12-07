@@ -242,15 +242,38 @@ export default defineSchema({
     .index("by_mek_owner", ["mekId", "ownerId"]),
 
   // User profiles
+  // =============================================================================
+  // IDENTITY HUB - Phase II Architecture
+  // =============================================================================
+  // stakeAddress is THE primary identifier for all user operations.
+  // Legacy fields (walletAddress, walletStakeAddress) kept for backwards compatibility.
+  // =============================================================================
   users: defineTable({
-    // Cardano Wallet Authentication
-    walletAddress: v.string(), // Primary identifier
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PRIMARY IDENTIFIER (Phase II: Stake Address)
+    // ═══════════════════════════════════════════════════════════════════════════
+    stakeAddress: v.optional(v.string()), // PRIMARY KEY - "stake1u..." format (Phase II)
+    paymentAddresses: v.optional(v.array(v.string())), // Associated payment addresses
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CORPORATION IDENTITY (merged from corporations table)
+    // ═══════════════════════════════════════════════════════════════════════════
+    corporationName: v.optional(v.string()), // User-chosen corporation name
+    corporationNameLower: v.optional(v.string()), // Lowercase for case-insensitive search
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // LEGACY WALLET FIELDS (Phase I - kept for backwards compatibility)
+    // ═══════════════════════════════════════════════════════════════════════════
+    walletAddress: v.string(), // LEGACY: Original primary identifier (payment address)
     walletName: v.optional(v.string()), // Wallet provider name (Nami, Eternl, etc.)
-    walletStakeAddress: v.optional(v.string()), // Stake address for additional verification
+    walletStakeAddress: v.optional(v.string()), // LEGACY: Use stakeAddress instead
     walletVerified: v.optional(v.boolean()), // True if wallet ownership is verified via signature
     walletType: v.optional(v.string()), // e.g., "nami", "eternl", "flint", etc.
 
-    // Session Management & Mobile Tracking
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SESSION MANAGEMENT
+    // ═══════════════════════════════════════════════════════════════════════════
+    sessionToken: v.optional(v.string()), // Random UUID for session auth (from corporations)
     lastWalletType: v.optional(v.string()), // Last connected wallet (eternl, nami, etc.)
     lastConnectionPlatform: v.optional(v.string()), // mobile_ios, mobile_android, mobile_web, desktop
     lastConnectionTime: v.optional(v.number()), // Timestamp of last connection
@@ -273,7 +296,13 @@ export default defineSchema({
     bio: v.optional(v.string()),
     profileFrame: v.optional(v.string()), // Which frame they're using on profile page
     
-    // Game resources
+    // ═══════════════════════════════════════════════════════════════════════════
+    // GAME RESOURCES (Aggregate Stats)
+    // ═══════════════════════════════════════════════════════════════════════════
+    gold: v.number(), // Current gold balance (always needed, stays here)
+
+    // LEGACY: Essence will be moved to userEssence table (291 types as rows)
+    // Keep this for backwards compatibility during migration
     totalEssence: v.object({
       stone: v.number(),
       disco: v.number(),
@@ -291,7 +320,6 @@ export default defineSchema({
       drill: v.number(),
       security: v.number(),
     }),
-    gold: v.number(),
     craftingSlots: v.number(),
 
     // Base slot values (before buffs)
@@ -328,17 +356,56 @@ export default defineSchema({
     createdAt: v.optional(v.number()),
     updatedAt: v.optional(v.number()),
     
-    // Status
+    // ═══════════════════════════════════════════════════════════════════════════
+    // STATUS & ROLES
+    // ═══════════════════════════════════════════════════════════════════════════
     isOnline: v.optional(v.boolean()),
     isBanned: v.optional(v.boolean()),
     role: v.optional(v.union(v.literal("user"), v.literal("moderator"), v.literal("admin"))),
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MIGRATION TRACKING (for Phase I → Phase II consolidation)
+    // ═══════════════════════════════════════════════════════════════════════════
+    legacyWalletAddress: v.optional(v.string()), // Original walletAddress before migration
+    migratedAt: v.optional(v.number()), // Timestamp when record was migrated to new schema
+    migrationSource: v.optional(v.string()), // "goldMining", "corporations", or "users"
   })
-    .index("by_wallet", ["walletAddress"])
-    .index("by_stake_address", ["walletStakeAddress"])
+    .index("by_wallet", ["walletAddress"]) // LEGACY: Keep for backwards compat
+    .index("by_stake_address", ["stakeAddress"]) // PRIMARY lookup for Phase II
+    .index("by_legacy_stake_address", ["walletStakeAddress"]) // LEGACY: For migration
+    .index("by_corporation_name_lower", ["corporationNameLower"]) // For name searches
     .index("by_username", ["username"])
     .index("by_display_name_lower", ["displayNameLower"])
     .index("by_session_id", ["activeSessionId"])
-    .index("by_session_expiry", ["sessionExpiresAt"]),
+    .index("by_session_expiry", ["sessionExpiresAt"])
+    .index("by_level", ["level"]) // For leaderboards
+    .index("by_gold", ["gold"]), // For gold leaderboards
+
+  // =============================================================================
+  // USER ESSENCE (Normalized Sparse Data)
+  // =============================================================================
+  // 291 essence types stored as rows, not columns.
+  // Only rows with balance > 0 are stored (sparse).
+  // Easy to add new essence types without schema changes.
+  // =============================================================================
+  userEssence: defineTable({
+    // Ownership
+    stakeAddress: v.string(), // FK to users.stakeAddress
+
+    // Essence Identity
+    essenceType: v.string(), // "stone", "disco", "bumblebee", etc. (291 types)
+
+    // Balance
+    balance: v.number(), // Amount owned (only store if > 0)
+
+    // Metadata
+    lastUpdated: v.optional(v.number()), // When balance was last changed
+    lastSource: v.optional(v.string()), // "mining", "crafting", "trade", "admin"
+  })
+    .index("by_user", ["stakeAddress"])
+    .index("by_user_type", ["stakeAddress", "essenceType"])
+    .index("by_type", ["essenceType"])
+    .index("by_balance", ["essenceType", "balance"]), // For finding users with specific essence
 
   // Variations reference table - maps all variations to unique IDs
   variationsReference: defineTable({
