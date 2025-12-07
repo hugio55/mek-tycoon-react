@@ -517,7 +517,7 @@ export const getCampaignInventory = query({
 
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignId", args.campaignId))
       .order("asc") // Sort by nftNumber ascending
       .collect();
 

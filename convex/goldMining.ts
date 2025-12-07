@@ -86,7 +86,7 @@ export const initializeGoldMining = mutation({
     // Check for ALL records with this wallet (to handle duplicates)
     const allExisting = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     // ALSO check for hex/payment address duplicates
@@ -324,7 +324,7 @@ export const getGoldMiningData = query({
 
     const data = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!data) {
@@ -369,7 +369,7 @@ export const updateGoldCheckpoint = mutation({
 
     const existing = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!existing) {
@@ -531,7 +531,7 @@ export const updateLastActive = mutation({
 
     const existing = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!existing) {
@@ -944,7 +944,7 @@ export const getGroupMeks = query({
     // Find the wallet group for this wallet
     const membership = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     let walletsToQuery = [args.walletAddress]; // Default to just this wallet
@@ -1071,7 +1071,7 @@ export const isWalletVerified = query({
   handler: async (ctx, args) => {
     const data = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!data) {
@@ -1547,7 +1547,7 @@ export const setCompanyName = mutation({
     console.log('[setCompanyName] No corporation found, checking goldMining...');
     const existing = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!existing) {
@@ -1569,7 +1569,7 @@ export const setCompanyName = mutation({
     console.log('[setCompanyName] Syncing company name to users table...');
     const userRecord = await ctx.db
       .query("users")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (userRecord) {
@@ -1599,7 +1599,7 @@ export const getCompanyName = query({
     // First check Phase I goldMining table
     const data = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (data?.companyName) {
@@ -1697,7 +1697,7 @@ export const updateWalletType = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!existing) {
@@ -1903,7 +1903,7 @@ export const setMekName = mutation({
     // Find the user's gold mining record
     const existing = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!existing) {
@@ -2036,7 +2036,7 @@ export const getMekName = query({
   handler: async (ctx, args) => {
     const data = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!data) {
