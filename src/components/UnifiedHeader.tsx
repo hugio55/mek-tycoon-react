@@ -241,14 +241,18 @@ export default function UnifiedHeader() {
   // PHASE II: Mandatory corporation name enforcement
   // If logged in but no corporation name, go directly to the CompanyNameModal
   // Skip the intermediate "Corporation Name Required" modal
+  // Exception: Admin page is exempt from this requirement
   useEffect(() => {
+    // Skip enforcement on admin page - allows admin access without corporation
+    if (isAdminPage) return;
+
     // Only check when we have a wallet address AND the query has completed
     if (walletAddress && companyNameData !== undefined && !companyNameData?.hasCompanyName) {
       console.log('[UnifiedHeader] ENFORCEMENT: Wallet connected but no corporation name - opening CompanyNameModal directly');
       setCompanyNameModalMode('initial');
       setShowCompanyNameModal(true);
     }
-  }, [walletAddress, companyNameData]);
+  }, [walletAddress, companyNameData, isAdminPage]);
 
   // Click outside handler for wallet dropdown
   useEffect(() => {
@@ -494,8 +498,8 @@ export default function UnifiedHeader() {
         />
       )}
 
-      {/* Name Required Warning Modal */}
-      {showNameRequiredWarning && createPortal(
+      {/* Name Required Warning Modal - Not shown on admin page */}
+      {showNameRequiredWarning && !isAdminPage && createPortal(
         <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4">
           {/* Backdrop */}
           <div
