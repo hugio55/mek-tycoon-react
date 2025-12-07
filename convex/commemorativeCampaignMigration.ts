@@ -116,7 +116,7 @@ export const createLabRatCampaign = mutation({
     // Check if already exists
     const existing = await ctx.db
       .query("commemorativeCampaigns")
-      .withIndex("", (q: any) => q.eq("name", "Lab Rat"))
+      .withIndex("by_name", (q: any) => q.eq("name", "Lab Rat"))
       .first();
 
     if (existing) {

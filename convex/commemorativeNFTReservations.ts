@@ -306,7 +306,7 @@ export const completeReservationByWallet = mutation({
     let companyNameAtSale: string | undefined;
     const goldMiningRecord = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
     companyNameAtSale = goldMiningRecord?.companyName || undefined;
 

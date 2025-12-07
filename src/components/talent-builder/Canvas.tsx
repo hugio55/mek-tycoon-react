@@ -330,8 +330,8 @@ const Canvas: React.FC<CanvasProps> = memo(({
       const maxY = Math.max(boxSelection.startY, boxSelection.endY);
 
       const nodesInBox = nodes.filter(node => {
-        const isStart = node.id === 'start' || node.id.startsWith('start-');
-        const nodeRadius = isStart ? 25 : 15;
+        const nodeSize = getNodeSize(node);
+        const nodeRadius = nodeSize / 2;
         const nodeCenterX = node.x + nodeRadius;
         const nodeCenterY = node.y + nodeRadius;
         return nodeCenterX >= minX && nodeCenterX <= maxX && nodeCenterY >= minY && nodeCenterY <= maxY;
@@ -348,8 +348,8 @@ const Canvas: React.FC<CanvasProps> = memo(({
     // Finish lasso selection
     if (lassoSelection.isSelecting && lassoSelection.points.length > 2) {
       const nodesInLasso = nodes.filter(node => {
-        const isStart = node.id === 'start' || node.id.startsWith('start-');
-        const nodeRadius = isStart ? 25 : 15;
+        const nodeSize = getNodeSize(node);
+        const nodeRadius = nodeSize / 2;
         const nodeCenterX = node.x + nodeRadius;
         const nodeCenterY = node.y + nodeRadius;
         return isPointInPolygon(nodeCenterX, nodeCenterY, lassoSelection.points);
