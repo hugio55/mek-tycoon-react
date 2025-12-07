@@ -28,7 +28,8 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const setCompanyNameMutation = useMutation(api.goldMining.setCompanyName);
+  // Phase II: Use corporationAuth instead of goldMining for company name management
+  const setCompanyNameMutation = useMutation(api.corporationAuth.setCompanyName);
 
   // Mount check for portal
   useEffect(() => {
@@ -59,9 +60,10 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
   }, [companyName]);
 
   // Skip availability check in demo mode
+  // Phase II: Use corporationAuth instead of goldMining
   const isDemoMode = walletAddress.includes('demo');
   const checkAvailability = useQuery(
-    api.goldMining.checkCompanyNameAvailability,
+    api.corporationAuth.checkCompanyNameAvailability,
     !isDemoMode && debouncedCompanyName.trim().length >= 2 ? {
       companyName: debouncedCompanyName.trim(),
       currentWalletAddress: walletAddress
@@ -69,7 +71,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
   );
 
   const currentCompanyName = useQuery(
-    api.goldMining.getCompanyName,
+    api.corporationAuth.getCompanyName,
     !isDemoMode && walletAddress ? { walletAddress } : 'skip'
   );
 

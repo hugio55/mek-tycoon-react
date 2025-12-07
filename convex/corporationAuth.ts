@@ -671,3 +671,146 @@ export const getUserEssenceBalance = query({
     return essenceRow?.balance || 0;
   },
 });
+
+// =============================================================================
+// COMPANY NAME MANAGEMENT
+// =============================================================================
+
+/**
+ * Check if a company name is available
+ * Used for real-time validation in CompanyNameModal
+ */
+export const checkCompanyNameAvailability = query({
+  args: {
+    companyName: v.string(),
+    currentWalletAddress: v.string(), // Actually stake address now
+  },
+  handler: async (ctx, args) => {
+    const trimmedName = args.companyName.trim();
+
+    // Basic validation
+    if (trimmedName.length < 2) {
+      return { available: false, error: "Name must be at least 2 characters" };
+    }
+
+    if (trimmedName.length > 30) {
+      return { available: false, error: "Name must be 30 characters or less" };
+    }
+
+    const nameLower = trimmedName.toLowerCase();
+
+    // Check if name exists (case-insensitive)
+    const existingUser = await ctx.db
+      .query("users")
+      .withIndex("by_corporation_name_lower", (q: any) => q.eq("corporationNameLower", nameLower))
+      .first();
+
+    // If name exists, check if it belongs to the current user
+    if (existingUser) {
+      // Allow if it's the current user's name
+      if (existingUser.stakeAddress === args.currentWalletAddress) {
+        return { available: true, isCurrentName: true };
+      }
+      return { available: false, error: "This name is already taken" };
+    }
+
+    return { available: true };
+  },
+});
+
+/**
+ * Get current company name for a user
+ * Used by CompanyNameModal to pre-fill the form in edit mode
+ */
+export const getCompanyName = query({
+  args: {
+    walletAddress: v.string(), // Actually stake address now
+  },
+  handler: async (ctx, args) => {
+    // Try to find user by stake address
+    let user = await ctx.db
+      .query("users")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.walletAddress))
+      .first();
+
+    // Fallback: try legacy wallet address if stake address not found
+    if (!user) {
+      user = await ctx.db
+        .query("users")
+        .filter((q: any) => q.eq(q.field("walletAddress"), args.walletAddress))
+        .first();
+    }
+
+    if (!user) {
+      return { hasCompanyName: false, companyName: null };
+    }
+
+    return {
+      hasCompanyName: !!user.corporationName,
+      companyName: user.corporationName || null,
+    };
+  },
+});
+
+/**
+ * Set company name for a user
+ * Simpler version that doesn't require session token (for CompanyNameModal)
+ * Uses walletAddress as the identifier (actually stake address in Phase II)
+ */
+export const setCompanyName = mutation({
+  args: {
+    walletAddress: v.string(), // Actually stake address now
+    companyName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const trimmedName = args.companyName.trim();
+
+    // Validation
+    if (!trimmedName || trimmedName.length < 2) {
+      return { success: false, error: "Corporation name must be at least 2 characters" };
+    }
+
+    if (trimmedName.length > 30) {
+      return { success: false, error: "Corporation name must be 30 characters or less" };
+    }
+
+    // Find user by stake address
+    let user = await ctx.db
+      .query("users")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.walletAddress))
+      .first();
+
+    // Fallback: try legacy wallet address if stake address not found
+    if (!user) {
+      user = await ctx.db
+        .query("users")
+        .filter((q: any) => q.eq(q.field("walletAddress"), args.walletAddress))
+        .first();
+    }
+
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    const nameLower = trimmedName.toLowerCase();
+
+    // Check if name is already taken (case-insensitive)
+    const existingWithName = await ctx.db
+      .query("users")
+      .withIndex("by_corporation_name_lower", (q: any) => q.eq("corporationNameLower", nameLower))
+      .first();
+
+    if (existingWithName && existingWithName._id !== user._id) {
+      return { success: false, error: "This corporation name is already taken" };
+    }
+
+    // Update the user's corporation name
+    await ctx.db.patch(user._id, {
+      corporationName: trimmedName,
+      corporationNameLower: nameLower,
+      updatedAt: Date.now(),
+    });
+
+    return { success: true, companyName: trimmedName };
+  },
+});
