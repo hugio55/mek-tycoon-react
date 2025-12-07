@@ -1119,6 +1119,31 @@ export default function AdminMasterDataPage() {
   // Pages dropdown state
   const [showPagesDropdown, setShowPagesDropdown] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [favoritePages, setFavoritePages] = useState<string[]>([]);
+
+  // Load favorite pages from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('adminFavoritePages');
+    if (saved) {
+      try {
+        setFavoritePages(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to load favorite pages:', e);
+      }
+    }
+  }, []);
+
+  // Toggle favorite and persist to localStorage
+  const toggleFavorite = (path: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Don't trigger the copy URL action
+    setFavoritePages(prev => {
+      const newFavorites = prev.includes(path)
+        ? prev.filter(p => p !== path)
+        : [...prev, path];
+      localStorage.setItem('adminFavoritePages', JSON.stringify(newFavorites));
+      return newFavorites;
+    });
+  };
 
   // List of important pages for quick access
   const QUICK_ACCESS_PAGES = [
@@ -1138,6 +1163,7 @@ export default function AdminMasterDataPage() {
     { name: 'Achievements', path: '/achievements', category: 'Systems' },
     { name: 'Leaderboard', path: '/leaderboard', category: 'Systems' },
     { name: 'Search', path: '/search', category: 'Systems' },
+    { name: 'Mek Layouts', path: '/mek-layouts', category: 'Systems' },
     { name: 'Admin', path: '/admin', category: 'Admin' },
     { name: 'Admin Users', path: '/admin/users', category: 'Admin' },
   ];
@@ -1877,14 +1903,59 @@ export default function AdminMasterDataPage() {
                   <span className="text-xs text-gray-500 ml-2">(click to copy URL)</span>
                 </div>
                 <div className="max-h-[80vh] overflow-y-auto">
+                  {/* Favorites section - only show if there are favorites */}
+                  {favoritePages.length > 0 && (
+                    <>
+                      <div className="px-3 py-1.5 bg-yellow-900/30 text-xs text-yellow-400 uppercase tracking-wider font-bold flex items-center gap-1.5">
+                        <span>★</span> Favorites
+                      </div>
+                      {QUICK_ACCESS_PAGES
+                        .filter((p: any) => favoritePages.includes(p.path))
+                        .map((page: any) => (
+                        <button
+                          key={`fav-${page.path}`}
+                          onClick={() => copyPageUrl(page.path)}
+                          className="w-full px-3 py-2 text-left hover:bg-cyan-600/20 transition-colors flex items-center justify-between group bg-yellow-900/10"
+                        >
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => toggleFavorite(page.path, e)}
+                              className="text-yellow-400 hover:text-yellow-300 transition-colors"
+                              title="Remove from favorites"
+                            >
+                              ★
+                            </button>
+                            <span className="text-sm text-gray-300 group-hover:text-cyan-300">{page.name}</span>
+                          </div>
+                          {copiedUrl === page.path ? (
+                            <span className="text-xs text-green-400 font-bold">Copied!</span>
+                          ) : (
+                            <span className="text-xs text-gray-600 group-hover:text-cyan-500 font-mono">{page.path}</span>
+                          )}
+                        </button>
+                      ))}
+                      <div className="border-b border-gray-700 my-1" />
+                    </>
+                  )}
                   {/* All non-Admin pages without category headers */}
-                  {QUICK_ACCESS_PAGES.filter((p: any) => p.category !== 'Admin').map((page: any) => (
+                  {QUICK_ACCESS_PAGES
+                    .filter((p: any) => p.category !== 'Admin' && !favoritePages.includes(p.path))
+                    .map((page: any) => (
                     <button
                       key={page.path}
                       onClick={() => copyPageUrl(page.path)}
                       className="w-full px-3 py-2 text-left hover:bg-cyan-600/20 transition-colors flex items-center justify-between group"
                     >
-                      <span className="text-sm text-gray-300 group-hover:text-cyan-300">{page.name}</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => toggleFavorite(page.path, e)}
+                          className="text-gray-600 hover:text-yellow-400 transition-colors"
+                          title="Add to favorites"
+                        >
+                          ☆
+                        </button>
+                        <span className="text-sm text-gray-300 group-hover:text-cyan-300">{page.name}</span>
+                      </div>
                       {copiedUrl === page.path ? (
                         <span className="text-xs text-green-400 font-bold">Copied!</span>
                       ) : (
@@ -1896,13 +1967,24 @@ export default function AdminMasterDataPage() {
                   <div className="px-3 py-1.5 bg-gray-800/50 text-xs text-gray-500 uppercase tracking-wider font-bold">
                     Admin
                   </div>
-                  {QUICK_ACCESS_PAGES.filter((p: any) => p.category === 'Admin').map((page: any) => (
+                  {QUICK_ACCESS_PAGES
+                    .filter((p: any) => p.category === 'Admin' && !favoritePages.includes(p.path))
+                    .map((page: any) => (
                     <button
                       key={page.path}
                       onClick={() => copyPageUrl(page.path)}
                       className="w-full px-3 py-2 text-left hover:bg-cyan-600/20 transition-colors flex items-center justify-between group"
                     >
-                      <span className="text-sm text-gray-300 group-hover:text-cyan-300">{page.name}</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => toggleFavorite(page.path, e)}
+                          className="text-gray-600 hover:text-yellow-400 transition-colors"
+                          title="Add to favorites"
+                        >
+                          ☆
+                        </button>
+                        <span className="text-sm text-gray-300 group-hover:text-cyan-300">{page.name}</span>
+                      </div>
                       {copiedUrl === page.path ? (
                         <span className="text-xs text-green-400 font-bold">Copied!</span>
                       ) : (
