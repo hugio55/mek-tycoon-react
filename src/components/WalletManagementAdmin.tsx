@@ -77,6 +77,12 @@ function WalletManagementAdminContent() {
   const [autoLoadWallets, setAutoLoadWallets] = useState(true);
   const [walletsLoaded, setWalletsLoaded] = useState(true); // Default to loaded now
   const [showOnlyWrenCo, setShowOnlyWrenCo] = useState(false);
+  const [refreshCounter, setRefreshCounter] = useState(0); // Force refresh trigger
+
+  // Function to refresh wallet list
+  const refreshWallets = () => {
+    setRefreshCounter(c => c + 1);
+  };
 
   // Load wallets from database (single database mode - always uses main client)
   useEffect(() => {
@@ -104,7 +110,7 @@ function WalletManagementAdminContent() {
         console.error('[Player Management] Error loading wallets:', error);
         setIsLoadingWallets(false);
       });
-  }, [walletsLoaded, client]);
+  }, [walletsLoaded, client, refreshCounter]);
 
   const wallets = walletsData;
 
@@ -434,6 +440,7 @@ function WalletManagementAdminContent() {
     try {
       const result = await deleteWallet({ walletAddress });
       setStatusMessage({ type: 'success', message: result.message });
+      refreshWallets(); // Refresh the list after deletion
       setTimeout(() => setStatusMessage(null), 5000);
     } catch (error) {
       setStatusMessage({ type: 'error', message: 'Failed to delete wallet' });
@@ -1238,6 +1245,7 @@ Check console for full timeline.
             onClick={() => {
               setWalletsLoaded(true);
               setShowOnlyWrenCo(false);
+              refreshWallets(); // Force refresh even if already loaded
             }}
             className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 border border-yellow-500 rounded-lg text-white font-semibold transition-colors flex items-center gap-2"
           >
@@ -1248,6 +1256,7 @@ Check console for full timeline.
             onClick={() => {
               setWalletsLoaded(true);
               setShowOnlyWrenCo(true);
+              refreshWallets();
             }}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-500 border border-blue-500 rounded-lg text-white font-semibold transition-colors flex items-center gap-2"
           >
