@@ -564,9 +564,10 @@ export const quickMekCount = action({
 
       console.log(`[Blockfrost-QuickCount] Found ${addresses.length} addresses`);
 
-      // Quick count - just count Meks without fetching metadata
-      let mekCount = 0;
-      const seenAssets = new Set<string>(); // Avoid counting duplicates
+      // OPTIMIZATION: Collect full Mek data (not just count) and cache it
+      // This way fetchNFTsByStakeAddress can use the cache and skip re-scanning
+      const allAssets: any[] = [];
+      const meks: ParsedMek[] = [];
 
       for (const addressObj of addresses) {
         const address = addressObj.address;
@@ -592,17 +593,22 @@ export const quickMekCount = action({
 
           const utxos = await utxosResponse.json();
 
-          // Count Meks in UTXOs (NO metadata fetching - that's the slow part!)
+          // Extract and parse Meks (same as fetchNFTsByStakeAddress)
           for (const utxo of utxos) {
             if (utxo.amount && Array.isArray(utxo.amount)) {
               for (const asset of utxo.amount) {
                 if (asset.unit === "lovelace") continue;
 
+                allAssets.push(asset);
+
                 // Check if this is a Mek NFT
                 if (asset.unit && asset.unit.startsWith(MEK_POLICY_ID)) {
-                  if (!seenAssets.has(asset.unit)) {
-                    seenAssets.add(asset.unit);
-                    mekCount++;
+                  const parsed = parseMekAsset(asset);
+                  if (parsed) {
+                    const exists = meks.some((m: any) => m.assetId === parsed.assetId);
+                    if (!exists) {
+                      meks.push(parsed);
+                    }
                   }
                 }
               }
@@ -614,12 +620,16 @@ export const quickMekCount = action({
         }
       }
 
+      // CRITICAL: Cache the results so fetchNFTsByStakeAddress gets a cache hit!
+      const result = { meks, totalAssets: allAssets.length };
+      blockfrostCache.set(cacheKey, result);
+
       const elapsed = Date.now() - startTime;
-      console.log(`[Blockfrost-QuickCount] Found ${mekCount} Meks in ${elapsed}ms`);
+      console.log(`[Blockfrost-QuickCount] Found ${meks.length} Meks in ${elapsed}ms (cached for Phase 2)`);
 
       return {
         success: true,
-        count: mekCount,
+        count: meks.length,
       };
 
     } catch (error: any) {
