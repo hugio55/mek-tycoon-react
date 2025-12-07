@@ -225,6 +225,7 @@ import type * as tradeAbuse from "../tradeAbuse.js";
 import type * as updateTop30Ranks from "../updateTop30Ranks.js";
 import type * as updateVariationImages from "../updateVariationImages.js";
 import type * as updateVariationSourceKeys from "../updateVariationSourceKeys.js";
+import type * as userMiningState from "../userMiningState.js";
 import type * as userStats from "../userStats.js";
 import type * as usernames from "../usernames.js";
 import type * as users from "../users.js";
@@ -472,6 +473,7 @@ declare const fullApi: ApiFromModules<{
   updateTop30Ranks: typeof updateTop30Ranks;
   updateVariationImages: typeof updateVariationImages;
   updateVariationSourceKeys: typeof updateVariationSourceKeys;
+  userMiningState: typeof userMiningState;
   userStats: typeof userStats;
   usernames: typeof usernames;
   users: typeof users;

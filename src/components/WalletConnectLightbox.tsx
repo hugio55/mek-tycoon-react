@@ -53,8 +53,8 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
   // PHASE II: Convex mutation to create/link corporation (stake-address-only)
   const connectCorporationMutation = useMutation(api.corporationAuth.connectCorporation);
 
-  // Blockfrost NFT verification action (server-side)
-  const initializeWithBlockfrostAction = useAction(api.goldMining.initializeWithBlockfrost);
+  // Blockfrost NFT verification action (server-side) - Phase II: uses userMiningState
+  const initializeWithBlockfrostAction = useAction(api.userMiningState.initializeWithBlockfrost);
 
   // Quick Mek count action (fast lookup without metadata)
   const quickMekCountAction = useAction(api.blockfrostNftFetcher.quickMekCount);
