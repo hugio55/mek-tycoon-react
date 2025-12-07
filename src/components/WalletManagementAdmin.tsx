@@ -79,6 +79,9 @@ function WalletManagementAdminContent() {
   const [showOnlyWrenCo, setShowOnlyWrenCo] = useState(false);
   const [refreshCounter, setRefreshCounter] = useState(0); // Force refresh trigger
 
+  // Campaign selection for claim status column
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+
   // Function to refresh wallet list
   const refreshWallets = () => {
     setRefreshCounter(c => c + 1);
@@ -114,11 +117,23 @@ function WalletManagementAdminContent() {
 
   const wallets = walletsData;
 
-  // Batch check claim status for all wallets
+  // Fetch all campaigns for the dropdown
+  const campaigns = useQuery(api.commemorativeCampaigns.listAllCampaigns) || [];
+
+  // Auto-select first campaign if none selected
+  useEffect(() => {
+    if (campaigns.length > 0 && !selectedCampaignId) {
+      setSelectedCampaignId(campaigns[0]._id);
+    }
+  }, [campaigns, selectedCampaignId]);
+
+  // Batch check claim status for all wallets (campaign-specific)
   const stakeAddresses = wallets?.map((w: any) => w.walletAddress) || [];
   const claimStatusData = useQuery(
-    api.nftEligibility.batchCheckClaimStatus,
-    walletsLoaded && stakeAddresses.length > 0 ? { stakeAddresses } : "skip"
+    api.nftEligibility.batchCheckClaimStatusForCampaign,
+    walletsLoaded && stakeAddresses.length > 0 && selectedCampaignId
+      ? { stakeAddresses, campaignId: selectedCampaignId as any }
+      : "skip"
   );
 
   // CRITICAL FIX: Replace useMutation hooks with direct client calls
@@ -779,10 +794,6 @@ Check console for full timeline.
           case 'cumulativeGold':
             aVal = aData.totalCumulativeGold || 0;
             bVal = bData.totalCumulativeGold || 0;
-            break;
-          case 'goldSpent':
-            aVal = aData.totalGoldSpentOnUpgrades || 0;
-            bVal = bData.totalGoldSpentOnUpgrades || 0;
             break;
           case 'firstConnected':
             aVal = aData.createdAt || 0;
@@ -1517,14 +1528,26 @@ Check console for full timeline.
               >
                 Cumulative Gold {sortColumn === 'cumulativeGold' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th
-                onClick={() => handleSort('goldSpent')}
-                className="px-2 py-2 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
-              >
-                Gold Spent {sortColumn === 'goldSpent' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </th>
               <th className="px-2 py-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Claimed Token
+                <div className="flex flex-col items-center gap-1">
+                  <span>Claimed Token</span>
+                  <select
+                    value={selectedCampaignId || ''}
+                    onChange={(e) => setSelectedCampaignId(e.target.value || null)}
+                    className="px-2 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-gray-300 cursor-pointer hover:border-yellow-500/50 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {campaigns.length === 0 ? (
+                      <option value="">No campaigns</option>
+                    ) : (
+                      campaigns.map((campaign: any) => (
+                        <option key={campaign._id} value={campaign._id}>
+                          {campaign.name}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
               </th>
               <th className="px-2 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 Claim Date
@@ -1838,11 +1861,6 @@ Check console for full timeline.
                       <td className="px-2 py-2 text-right">
                         <span className="text-sm font-semibold text-yellow-400">
                           {(wallet.totalCumulativeGold || 0).toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2 text-right">
-                        <span className="text-sm font-semibold text-red-400">
-                          {(wallet.totalGoldSpentOnUpgrades || 0).toLocaleString()}
                         </span>
                       </td>
                       <td className="px-2 py-2 text-center">

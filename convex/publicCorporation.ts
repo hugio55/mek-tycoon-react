@@ -13,6 +13,7 @@ mekRarityMaster.forEach((mek: any) => {
 });
 
 // Public query to get corporation data by wallet address or company name
+// Phase II: Try users table first, fallback to goldMining for legacy data
 export const getCorporationData = query({
   args: {
     identifier: v.string(), // Can be wallet address or company name
@@ -20,28 +21,54 @@ export const getCorporationData = query({
   handler: async (ctx, { identifier }) => {
     const now = Date.now();
 
-    // Try to find by wallet address first
-    let goldMiningData = await ctx.db
-      .query("goldMining")
-      .filter((q: any) => q.eq(q.field("walletAddress"), identifier))
+    // Phase II: Try to find in users table first by wallet address
+    let userData = await ctx.db
+      .query("users")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", identifier))
       .first();
 
-    // If not found, try to find by company name (case insensitive)
-    if (!goldMiningData) {
-      const allMiners = await ctx.db.query("goldMining").collect();
-      goldMiningData = allMiners.find(
-        miner => miner.companyName?.toLowerCase() === identifier.toLowerCase()
+    // If not found by wallet, try by corporation name (case insensitive)
+    if (!userData) {
+      const allUsers = await ctx.db.query("users").collect();
+      userData = allUsers.find(
+        user => user.corporationName?.toLowerCase() === identifier.toLowerCase()
       ) || null;
     }
 
-    if (!goldMiningData) {
+    // LEGACY FALLBACK: Try goldMining table if not found in users
+    let goldMiningData = null;
+    if (!userData) {
+      goldMiningData = await ctx.db
+        .query("goldMining")
+        .filter((q: any) => q.eq(q.field("walletAddress"), identifier))
+        .first();
+
+      if (!goldMiningData) {
+        const allMiners = await ctx.db.query("goldMining").collect();
+        goldMiningData = allMiners.find(
+          miner => miner.companyName?.toLowerCase() === identifier.toLowerCase()
+        ) || null;
+      }
+    }
+
+    // Use userData if available, otherwise goldMiningData
+    const sourceData = userData || goldMiningData;
+    if (!sourceData) {
       return null;
     }
 
-    // Calculate current cumulative gold
-    let currentGold = goldMiningData.accumulatedGold || 0;
+    // For users table, we need to get gold data from goldMining
+    if (userData && !goldMiningData) {
+      goldMiningData = await ctx.db
+        .query("goldMining")
+        .filter((q: any) => q.eq(q.field("walletAddress"), userData.walletAddress))
+        .first();
+    }
 
-    if (goldMiningData.isBlockchainVerified === true) {
+    // Calculate current cumulative gold
+    let currentGold = goldMiningData?.accumulatedGold || 0;
+
+    if (goldMiningData?.isBlockchainVerified === true) {
       const lastUpdateTime = goldMiningData.lastSnapshotTime || goldMiningData._creationTime;
       const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
       const goldSinceLastUpdate = (goldMiningData.totalGoldPerHour || 0) * hoursSinceLastUpdate;
@@ -49,11 +76,11 @@ export const getCorporationData = query({
       currentGold = (goldMiningData.accumulatedGold || 0) + goldSinceLastUpdate;
     }
 
-    const goldEarnedSinceLastUpdate = currentGold - (goldMiningData.accumulatedGold || 0);
-    let baseCumulativeGold = goldMiningData.totalCumulativeGold || 0;
+    const goldEarnedSinceLastUpdate = currentGold - (goldMiningData?.accumulatedGold || 0);
+    let baseCumulativeGold = goldMiningData?.totalCumulativeGold || 0;
 
-    if (!goldMiningData.totalCumulativeGold || baseCumulativeGold === 0) {
-      baseCumulativeGold = (goldMiningData.accumulatedGold || 0) + (goldMiningData.totalGoldSpentOnUpgrades || 0);
+    if (!goldMiningData?.totalCumulativeGold || baseCumulativeGold === 0) {
+      baseCumulativeGold = (goldMiningData?.accumulatedGold || 0) + (goldMiningData?.totalGoldSpentOnUpgrades || 0);
     }
 
     const totalCumulativeGold = baseCumulativeGold + goldEarnedSinceLastUpdate;
@@ -64,14 +91,15 @@ export const getCorporationData = query({
       .withIndex("by_category_rank", q => q.eq("category", "gold"))
       .collect();
 
-    const rank = cachedLeaderboard.find((entry: any) => entry.walletAddress === goldMiningData.walletAddress)?.rank ||
+    const targetWallet = userData?.walletAddress || goldMiningData?.walletAddress || '';
+    const rank = cachedLeaderboard.find((entry: any) => entry.walletAddress === targetWallet)?.rank ||
                  cachedLeaderboard.length + 1; // If not in cache, they're below all cached entries
     const totalCorporations = cachedLeaderboard.length;
 
     // Get level data for the Meks (using index for better performance)
     const mekLevels = await ctx.db
       .query("mekLevels")
-      .withIndex("by_wallet", q => q.eq("walletAddress", goldMiningData!.walletAddress))
+      .withIndex("by_wallet", q => q.eq("walletAddress", targetWallet))
       .collect();
 
     const levelMap = new Map(
@@ -79,7 +107,7 @@ export const getCorporationData = query({
     );
 
     // Format Meks with their levels
-    const meksWithLevels = (goldMiningData.ownedMeks || []).map((mek: any) => {
+    const meksWithLevels = (goldMiningData?.ownedMeks || []).map((mek: any) => {
       const mekNumberMatch = mek.assetName.match(/#(\d+)/);
       const mekNumber = mekNumberMatch ? parseInt(mekNumberMatch[1], 10) : null;
       const sourceKeyCode = mekNumber ? mekNumberToSourceKey.get(mekNumber.toString()) : null;
@@ -114,22 +142,26 @@ export const getCorporationData = query({
       : 0;
 
     // Calculate corporation age
-    const createdAt = goldMiningData._creationTime;
+    const createdAt = goldMiningData?._creationTime || userData?._creationTime || now;
     const ageInDays = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
 
+    // Phase II: Prefer corporationName from users table, fallback to goldMining.companyName
+    const walletAddress = userData?.walletAddress || goldMiningData?.walletAddress || '';
+    const companyName = userData?.corporationName || goldMiningData?.companyName || `Corporation ${walletAddress.slice(0, 6)}`;
+
     return {
-      walletAddress: goldMiningData.walletAddress,
-      companyName: goldMiningData.companyName || `Corporation ${goldMiningData.walletAddress.slice(0, 6)}`,
-      displayWallet: `${goldMiningData.walletAddress.slice(0, 8)}...${goldMiningData.walletAddress.slice(-6)}`,
+      walletAddress,
+      companyName,
+      displayWallet: `${walletAddress.slice(0, 8)}...${walletAddress.slice(-6)}`,
       totalCumulativeGold: Math.floor(totalCumulativeGold),
-      goldPerHour: goldMiningData.totalGoldPerHour || 0,
+      goldPerHour: goldMiningData?.totalGoldPerHour || 0,
       mekCount: meksWithLevels.length,
       rank,
       totalCorporations,
       meks: meksWithLevels,
       averageLevel: avgLevel,
       corporationAge: ageInDays,
-      isBlockchainVerified: goldMiningData.isBlockchainVerified === true,
+      isBlockchainVerified: goldMiningData?.isBlockchainVerified === true,
     };
   },
 });

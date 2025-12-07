@@ -546,6 +546,44 @@ export const batchCheckClaimStatus = query({
 });
 
 /**
+ * Batch check claim status for multiple stake addresses for a specific campaign
+ * Used by admin Player Management to show who has claimed from each campaign
+ */
+export const batchCheckClaimStatusForCampaign = query({
+  args: {
+    stakeAddresses: v.array(v.string()),
+    campaignId: v.id("commemorativeCampaigns"),
+  },
+  handler: async (ctx, args) => {
+    const claimStatusMap: Record<string, { claimed: boolean; claimedAt?: number }> = {};
+
+    // Check each stake address for completed reservations in this specific campaign
+    for (const stakeAddress of args.stakeAddresses) {
+      const completedReservation = await ctx.db
+        .query("commemorativeNFTReservations")
+        .withIndex("by_campaign_and_wallet", (q: any) =>
+          q.eq("campaignId", args.campaignId).eq("reservedBy", stakeAddress)
+        )
+        .filter((q) => q.eq(q.field("status"), "completed"))
+        .first();
+
+      if (completedReservation) {
+        claimStatusMap[stakeAddress] = {
+          claimed: true,
+          claimedAt: completedReservation.completedAt || completedReservation.reservedAt,
+        };
+      } else {
+        claimStatusMap[stakeAddress] = {
+          claimed: false,
+        };
+      }
+    }
+
+    return claimStatusMap;
+  },
+});
+
+/**
  * Debug function to check why a specific stake address isn't matching
  */
 export const debugStakeAddressMatch = query({
