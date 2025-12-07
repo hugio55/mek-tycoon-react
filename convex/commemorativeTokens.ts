@@ -27,7 +27,7 @@ export const checkBetaTesterEligibility = query({
     // 1. Get NFT design config
     const design = await ctx.db
       .query("commemorativeTokenCounters")
-      .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
+      .withIndex("by_type", (q: any) => q.eq("tokenType", args.tokenType))
       .first();
 
     if (!design) {
@@ -41,7 +41,7 @@ export const checkBetaTesterEligibility = query({
     // First check the permanent claims table
     const existingClaim = await ctx.db
       .query("commemorativeNFTClaims")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (existingClaim) {
@@ -56,7 +56,7 @@ export const checkBetaTesterEligibility = query({
     // 3. Also check commemorativeTokens table (reservation/mint tracking)
     const existingMint = await ctx.db
       .query("commemorativeTokens")
-      .withIndex("", (q: any) =>
+      .withIndex("by_wallet_type", (q: any) =>
         q.eq("walletAddress", args.walletAddress).eq("tokenType", args.tokenType)
       )
       .first();
@@ -78,7 +78,7 @@ export const checkBetaTesterEligibility = query({
         // Find user for userId (still useful for tracking)
         const user = await ctx.db
           .query("users")
-          .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+          .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
           .first();
 
         return {
@@ -98,7 +98,7 @@ export const checkBetaTesterEligibility = query({
     // 5. Otherwise fall back to gold mining check (backwards compatibility)
     const user = await ctx.db
       .query("users")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!user) {
@@ -110,7 +110,7 @@ export const checkBetaTesterEligibility = query({
 
     const goldMining = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (goldMining) {
@@ -142,7 +142,7 @@ export const getTokenTypeInfo = query({
   handler: async (ctx, args) => {
     const counter = await ctx.db
       .query("commemorativeTokenCounters")
-      .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
+      .withIndex("by_type", (q: any) => q.eq("tokenType", args.tokenType))
       .first();
 
     if (!counter) {
@@ -178,7 +178,7 @@ export const reserveEdition = mutation({
     // 1. Double-check user hasn't already minted (safety check)
     const existing = await ctx.db
       .query("commemorativeTokens")
-      .withIndex("", (q: any) =>
+      .withIndex("by_wallet_type", (q: any) =>
         q.eq("walletAddress", args.walletAddress).eq("tokenType", args.tokenType)
       )
       .first();
@@ -190,7 +190,7 @@ export const reserveEdition = mutation({
     // 2. Get or create counter for this token type
     const counter = await ctx.db
       .query("commemorativeTokenCounters")
-      .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
+      .withIndex("by_type", (q: any) => q.eq("tokenType", args.tokenType))
       .first();
 
     let nextEdition = 1;
@@ -301,7 +301,7 @@ export const confirmMint = mutation({
     // Increment totalMinted counter
     const counter = await ctx.db
       .query("commemorativeTokenCounters")
-      .withIndex("", (q: any) => q.eq("tokenType", reservation.tokenType))
+      .withIndex("by_type", (q: any) => q.eq("tokenType", reservation.tokenType))
       .first();
 
     if (counter) {
@@ -314,7 +314,7 @@ export const confirmMint = mutation({
     // This prevents double-claiming even if user transfers NFT out
     const existingClaim = await ctx.db
       .query("commemorativeNFTClaims")
-      .withIndex("", (q: any) => q.eq("transactionHash", args.txHash))
+      .withIndex("by_transaction", (q: any) => q.eq("transactionHash", args.txHash))
       .first();
 
     if (!existingClaim) {
@@ -384,7 +384,7 @@ export const cancelReservation = mutation({
     // Decrement counter so edition can be re-used
     const counter = await ctx.db
       .query("commemorativeTokenCounters")
-      .withIndex("", (q: any) => q.eq("tokenType", reservation.tokenType))
+      .withIndex("by_type", (q: any) => q.eq("tokenType", reservation.tokenType))
       .first();
 
     if (counter && counter.currentEdition === reservation.editionNumber) {
@@ -466,7 +466,7 @@ export const getTokenTypeStats = query({
   handler: async (ctx, args) => {
     const counter = await ctx.db
       .query("commemorativeTokenCounters")
-      .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
+      .withIndex("by_type", (q: any) => q.eq("tokenType", args.tokenType))
       .first();
 
     if (!counter) {
@@ -554,7 +554,7 @@ export const initializeTokenType = mutation({
     // Check if already exists
     const existing = await ctx.db
       .query("commemorativeTokenCounters")
-      .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
+      .withIndex("by_type", (q: any) => q.eq("tokenType", args.tokenType))
       .first();
 
     if (existing) {
@@ -629,7 +629,7 @@ export const updateTokenType = mutation({
   handler: async (ctx, args) => {
     const counter = await ctx.db
       .query("commemorativeTokenCounters")
-      .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
+      .withIndex("by_type", (q: any) => q.eq("tokenType", args.tokenType))
       .first();
 
     if (!counter) {
@@ -666,7 +666,7 @@ export const deleteTokenType = mutation({
   handler: async (ctx, args) => {
     const counter = await ctx.db
       .query("commemorativeTokenCounters")
-      .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
+      .withIndex("by_type", (q: any) => q.eq("tokenType", args.tokenType))
       .first();
 
     if (!counter) {
@@ -708,7 +708,7 @@ export const takeEligibilitySnapshot = mutation({
   handler: async (ctx, args) => {
     const design = await ctx.db
       .query("commemorativeTokenCounters")
-      .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
+      .withIndex("by_type", (q: any) => q.eq("tokenType", args.tokenType))
       .first();
 
     if (!design) {
@@ -776,7 +776,7 @@ export const importSnapshotToNFT = mutation({
   handler: async (ctx, args) => {
     const design = await ctx.db
       .query("commemorativeTokenCounters")
-      .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
+      .withIndex("by_type", (q: any) => q.eq("tokenType", args.tokenType))
       .first();
 
     if (!design) {
@@ -826,7 +826,7 @@ export const importWhitelistToDesign = mutation({
   handler: async (ctx, args) => {
     const design = await ctx.db
       .query("commemorativeTokenCounters")
-      .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
+      .withIndex("by_type", (q: any) => q.eq("tokenType", args.tokenType))
       .first();
 
     if (!design) {
@@ -939,7 +939,7 @@ export const recordBatchMintedToken = mutation({
     // Update totalMinted counter for this design
     const counter = await ctx.db
       .query("commemorativeTokenCounters")
-      .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
+      .withIndex("by_type", (q: any) => q.eq("tokenType", args.tokenType))
       .first();
 
     if (counter) {
@@ -1039,7 +1039,7 @@ export const initializePhase1BetaNFT = mutation({
     // Check if already exists
     const existing = await ctx.db
       .query("commemorativeTokenCounters")
-      .withIndex("", (q: any) => q.eq("tokenType", TOKEN_TYPE))
+      .withIndex("by_type", (q: any) => q.eq("tokenType", TOKEN_TYPE))
       .first();
 
     if (existing) {
