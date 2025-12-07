@@ -5488,7 +5488,11 @@ export default function MekProfileLightbox({
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
-          backgroundColor: `rgba(0, 0, 0, ${backdropDarkness / 100})`
+          backgroundColor: styleVariation === 'space-age'
+            ? 'rgba(0, 0, 0, 0.7)'
+            : `rgba(0, 0, 0, ${backdropDarkness / 100})`,
+          backdropFilter: styleVariation === 'space-age' ? 'blur(20px)' : undefined,
+          WebkitBackdropFilter: styleVariation === 'space-age' ? 'blur(20px)' : undefined
         }}
         onClick={onClose}
       />
@@ -5496,7 +5500,14 @@ export default function MekProfileLightbox({
       {/* Lightbox Container - Dynamic styling based on variation with dynamic blur/darkness */}
       <div
         className={`${getContainerClasses()} pointer-events-auto`}
-        style={{
+        style={styleVariation === 'space-age' ? {
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
+          backdropFilter: 'blur(30px)',
+          WebkitBackdropFilter: 'blur(30px)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: '20px',
+          boxShadow: '0 25px 80px rgba(0,0,0,0.6), 0 0 60px rgba(34,211,238,0.05)'
+        } : {
           backgroundColor: styleVariation === 'variation2'
             ? `rgba(88, 28, 135, ${cardDarkness / 100})`
             : `rgba(0, 0, 0, ${cardDarkness / 100})`,
@@ -5507,49 +5518,74 @@ export default function MekProfileLightbox({
         {/* Scrollable Content */}
         <div className="w-full flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
           <div className="relative text-white">
-            {/* Industrial Header - Made Sticky with Dynamic Blur & Darkness */}
-            <div
-              className="sticky top-0 z-40 w-full"
-              style={{
-                backgroundColor: `rgba(0, 0, 0, ${headerDarkness / 100})`,
-                backdropFilter: `blur(${headerBlur}px) saturate(80%)`,
-                WebkitBackdropFilter: `blur(${headerBlur}px) saturate(80%)`
-              }}
-            >
-              {/* Additional blur overlay layer for stronger effect */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  backdropFilter: `blur(${Math.floor(headerBlur / 2)}px)`,
-                  WebkitBackdropFilter: `blur(${Math.floor(headerBlur / 2)}px)`,
-                  zIndex: -1
-                }}
-              />
-              <div className="relative overflow-hidden">
-                <div className="absolute inset-0 opacity-5">
-                  <div className="absolute inset-0" style={{
-                    backgroundImage: 'repeating-linear-gradient(45deg, #fab617 0, #fab617 10px, transparent 10px, transparent 20px)',
-                  }} />
-                </div>
+            {/* Space Age Header */}
+            {styleVariation === 'space-age' ? (
+              <div className="w-full py-6 px-8">
+                {/* Close Button - Space Age Style */}
+                <button
+                  onClick={onClose}
+                  className="absolute top-5 right-5 z-50 w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
+                  style={{
+                    background: 'rgba(255,255,255,0.1)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                  }}
+                >
+                  <span className="text-white/70 text-2xl font-light hover:text-white transition-colors">×</span>
+                </button>
 
-                <div className="max-w-7xl mx-auto px-4" style={{ paddingTop: `${headerBottomPadding}px`, paddingBottom: `${headerBottomPadding}px` }}>
-                  {/* Close Button - Inside scrollable content at top right */}
-                  <div className="absolute top-4 right-4 z-50">
-                    <CloseButton onClick={onClose} className="!mt-0 scale-75" />
+                <h1 className={getHeaderTitleClasses()} style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                  <span className="text-cyan-400" style={{ textShadow: '0 0 30px rgba(34, 211, 238, 0.5)' }}>MEK</span>{" "}
+                  <span className="text-white/80">PROFILE</span>
+                </h1>
+                <p className="text-center text-white/50 text-sm max-w-2xl mx-auto" style={{ fontFamily: 'Play, sans-serif' }}>
+                  Detailed information about your Mekanism unit including stats, variations, and abilities.
+                </p>
+              </div>
+            ) : (
+              /* Industrial Header - Made Sticky with Dynamic Blur & Darkness */
+              <div
+                className="sticky top-0 z-40 w-full"
+                style={{
+                  backgroundColor: `rgba(0, 0, 0, ${headerDarkness / 100})`,
+                  backdropFilter: `blur(${headerBlur}px) saturate(80%)`,
+                  WebkitBackdropFilter: `blur(${headerBlur}px) saturate(80%)`
+                }}
+              >
+                {/* Additional blur overlay layer for stronger effect */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    backdropFilter: `blur(${Math.floor(headerBlur / 2)}px)`,
+                    WebkitBackdropFilter: `blur(${Math.floor(headerBlur / 2)}px)`,
+                    zIndex: -1
+                  }}
+                />
+                <div className="relative overflow-hidden">
+                  <div className="absolute inset-0 opacity-5">
+                    <div className="absolute inset-0" style={{
+                      backgroundImage: 'repeating-linear-gradient(45deg, #fab617 0, #fab617 10px, transparent 10px, transparent 20px)',
+                    }} />
                   </div>
 
-                  <h1 className={getHeaderTitleClasses()}>
-                    <span className={getPrimaryColor()}>MEK</span>{" "}
-                    <span className="text-gray-400">PROFILE</span>
-                  </h1>
-                  <p className="text-center text-gray-400 text-xs max-w-2xl mx-auto" style={{
-                    lineHeight: '1.6'
-                  }}>
-                    Detailed information about your Mekanism unit including stats, variations, and abilities.
-                  </p>
+                  <div className="max-w-7xl mx-auto px-4" style={{ paddingTop: `${headerBottomPadding}px`, paddingBottom: `${headerBottomPadding}px` }}>
+                    {/* Close Button - Inside scrollable content at top right */}
+                    <div className="absolute top-4 right-4 z-50">
+                      <CloseButton onClick={onClose} className="!mt-0 scale-75" />
+                    </div>
+
+                    <h1 className={getHeaderTitleClasses()}>
+                      <span className={getPrimaryColor()}>MEK</span>{" "}
+                      <span className="text-gray-400">PROFILE</span>
+                    </h1>
+                    <p className="text-center text-gray-400 text-xs max-w-2xl mx-auto" style={{
+                      lineHeight: '1.6'
+                    }}>
+                      Detailed information about your Mekanism unit including stats, variations, and abilities.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Main Content - Layout 1 (Three-Column) */}
             <div

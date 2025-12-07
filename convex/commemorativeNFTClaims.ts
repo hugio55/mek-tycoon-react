@@ -37,7 +37,7 @@ export const recordClaim = mutation({
     // Check if claim already exists
     const existingClaim = await ctx.db
       .query("commemorativeNFTClaims")
-      .withIndex("by_tx_hash", (q: any) => q.eq("transactionHash", args.transactionHash))
+      .withIndex("by_transaction", (q: any) => q.eq("transactionHash", args.transactionHash))
       .first();
 
     if (existingClaim) {
@@ -145,7 +145,7 @@ export const getClaimByTransaction = query({
   handler: async (ctx, args) => {
     const claim = await ctx.db
       .query("commemorativeNFTClaims")
-      .withIndex("by_tx_hash", (q: any) => q.eq("transactionHash", args.transactionHash))
+      .withIndex("by_transaction", (q: any) => q.eq("transactionHash", args.transactionHash))
       .first();
 
     return claim;

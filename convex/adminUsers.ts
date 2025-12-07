@@ -46,7 +46,7 @@ export const getAllUsersForAdmin = query({
 
       // Calculate total essence value
       const totalEssenceValue = user.totalEssence
-        ? Object.values(user.totalEssence).reduce((sum, val) => sum + val, 0)
+        ? Object.values(user.totalEssence).reduce((sum: number, val: number) => sum + val, 0)
         : 0;
 
       return {

@@ -10,7 +10,7 @@ export default function MekLayoutsPage() {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isGoldDetailsOpen, setIsGoldDetailsOpen] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(true);
-  const [styleVariation, setStyleVariation] = useState<'default' | 'variation1' | 'variation2'>('default');
+  const [styleVariation, setStyleVariation] = useState<'default' | 'variation1' | 'variation2' | 'space-age'>('default');
   const [cardInteriorStyle, setCardInteriorStyle] = useState<CardInteriorStyle>('compact');
   const [buffDetailsLayout, setBuffDetailsLayout] = useState<'classic' | 'compact-grid' | 'detailed-cards' | 'minimal'>('classic');
   const [designationCardStyle, setDesignationCardStyle] = useState<DesignationCardStyle>('neon-edge');
@@ -284,12 +284,13 @@ export default function MekLayoutsPage() {
               </label>
               <select
                 value={styleVariation}
-                onChange={(e) => setStyleVariation(e.target.value as 'default' | 'variation1' | 'variation2')}
+                onChange={(e) => setStyleVariation(e.target.value as 'default' | 'variation1' | 'variation2' | 'space-age')}
                 className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
               >
                 <option value="default">Industrial Yellow</option>
                 <option value="variation1">Cyberpunk Cyan</option>
                 <option value="variation2">Military Green</option>
+                <option value="space-age">Space Age (Liquid Glass)</option>
               </select>
             </div>
 
