@@ -12,6 +12,7 @@ interface HolographicButtonProps {
   disabled?: boolean;
   hideIcon?: boolean;
   particleSpeed?: number;
+  textSize?: 'sm' | 'base' | 'lg' | 'xl' | '2xl';
 }
 
 export default function HolographicButton({
@@ -23,12 +24,21 @@ export default function HolographicButton({
   className = "",
   disabled = false,
   hideIcon = false,
-  particleSpeed = 0.1125
+  particleSpeed = 0.1125,
+  textSize = '2xl'
 }: HolographicButtonProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
+
+  const textSizeClass = {
+    'sm': 'text-sm',
+    'base': 'text-base',
+    'lg': 'text-lg',
+    'xl': 'text-xl',
+    '2xl': 'text-2xl'
+  }[textSize];
   const particlesRef = useRef<Particle[]>([]);
 
   // Particle class for holographic effects
@@ -295,7 +305,7 @@ export default function HolographicButton({
 
               {/* Text moved up 5px (from 15px to 10px) */}
               <span
-                className={`text-2xl font-bold uppercase whitespace-nowrap ${
+                className={`${textSizeClass} font-bold uppercase whitespace-nowrap ${
                   isActive
                     ? variant === 'yellow' ? 'text-yellow-400' : variant === 'gray' ? 'text-gray-500' : variant === 'red' ? 'text-red-400' : 'text-cyan-400'
                     : 'text-gray-500'

@@ -12,6 +12,7 @@ interface CompanyNameModalProps {
   walletAddress: string;
   onSuccess?: (companyName: string) => void;
   mode?: 'initial' | 'edit';
+  onCancel?: () => void;
 }
 
 export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
@@ -19,7 +20,8 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
   onClose,
   walletAddress,
   onSuccess,
-  mode = 'initial'
+  mode = 'initial',
+  onCancel
 }) => {
   const [mounted, setMounted] = useState(false);
   const [companyName, setCompanyName] = useState('');
@@ -196,7 +198,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
       <div
         className="fixed inset-0 bg-black/70"
         style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
-        onClick={mode === 'edit' ? handleClose : undefined}
+        onClick={mode === 'edit' ? handleClose : onCancel}
       />
 
       {/* Modal content - Space Age glass style with color accents */}
@@ -343,6 +345,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
                   hideIcon={true}
                   className="w-full"
                   particleSpeed={0.15}
+                  textSize="lg"
                 />
               </div>
 
@@ -357,6 +360,16 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
                     border: '1px solid rgba(255, 255, 255, 0.2)',
                     color: 'rgba(255, 255, 255, 0.7)',
                   }}
+                >
+                  Cancel
+                </button>
+              )}
+              {mode === 'initial' && onCancel && (
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  disabled={isSubmitting}
+                  className="w-full text-center text-white/50 hover:text-white/80 text-sm font-light tracking-wide transition-colors disabled:opacity-50 py-2"
                 >
                   Cancel
                 </button>

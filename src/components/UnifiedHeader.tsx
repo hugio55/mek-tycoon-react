@@ -103,6 +103,7 @@ export default function UnifiedHeader() {
   const [showCompanyNameModal, setShowCompanyNameModal] = useState(false);
   const [companyNameModalMode, setCompanyNameModalMode] = useState<'initial' | 'edit'>('initial');
   const [showWalletConnect, setShowWalletConnect] = useState(false);
+  const [showNameRequiredWarning, setShowNameRequiredWarning] = useState(false);
 
   // Handle "Remember this device" button click
   const handleRememberDevice = async () => {
@@ -465,7 +466,91 @@ export default function UnifiedHeader() {
           onClose={() => setShowCompanyNameModal(false)}
           walletAddress={walletAddress}
           mode={companyNameModalMode}
+          onCancel={() => {
+            setShowCompanyNameModal(false);
+            setShowNameRequiredWarning(true);
+          }}
         />
+      )}
+
+      {/* Name Required Warning Modal */}
+      {showNameRequiredWarning && createPortal(
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/80"
+            style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
+          />
+
+          {/* Modal content */}
+          <div
+            className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-yellow-500/30"
+            style={{
+              background: 'rgba(20, 15, 10, 0.95)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(250, 182, 23, 0.1)',
+              backdropFilter: 'blur(30px)',
+              WebkitBackdropFilter: 'blur(30px)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top accent bar */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-yellow-500/60" />
+
+            <div className="px-6 pt-8 pb-6">
+              {/* Warning icon */}
+              <div className="text-center mb-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/30 mb-4">
+                  <svg className="w-8 h-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-light text-white tracking-wide mb-2">
+                  Corporation Name Required
+                </h3>
+                <p className="text-white/60 text-sm font-light leading-relaxed">
+                  You must set a name for your corporation or disconnect your wallet to continue.
+                </p>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex flex-col gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowNameRequiredWarning(false);
+                    setCompanyNameModalMode('initial');
+                    setShowCompanyNameModal(true);
+                  }}
+                  className="w-full py-3 rounded-xl text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                  style={{
+                    background: 'linear-gradient(135deg, #fab617 0%, #d4a00f 100%)',
+                    color: '#000',
+                    boxShadow: '0 0 20px rgba(250, 182, 23, 0.3)',
+                  }}
+                >
+                  Set Corporation Name
+                </button>
+                <button
+                  onClick={async () => {
+                    setShowNameRequiredWarning(false);
+                    await clearWalletSession();
+                    setWalletAddress(null);
+                    setSessionExpiresAt(null);
+                    window.location.reload();
+                  }}
+                  className="w-full py-3 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-red-500/20 active:scale-[0.98]"
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: 'rgba(239, 68, 68, 0.9)',
+                  }}
+                >
+                  Disconnect Wallet
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
       {/* Wallet Connect Lightbox */}
