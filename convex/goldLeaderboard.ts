@@ -62,7 +62,7 @@ export const getTopGoldMiners = query({
 
       allMiners.push({
         walletAddress,
-        companyName: user?.companyName,
+        companyName: user?.corporationName,
         accumulatedGold: miningState.accumulatedGold || 0,
         isBlockchainVerified: miningState.isBlockchainVerified,
         lastSnapshotTime: miningState.lastSnapshotTime,
@@ -353,7 +353,7 @@ export const getAllCorporations = query({
 
       allMiners.push({
         walletAddress,
-        companyName: user?.companyName,
+        companyName: user?.corporationName,
         accumulatedGold: miningState.accumulatedGold || 0,
         isBlockchainVerified: miningState.isBlockchainVerified,
         lastSnapshotTime: miningState.lastSnapshotTime,

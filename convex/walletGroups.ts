@@ -690,6 +690,7 @@ export const getWalletCompanyName = query({
 });
 
 // Update company name for all wallets in a group
+// Phase II: Update users table instead of goldMining
 export const updateGroupCompanyName = mutation({
   args: {
     groupId: v.string(),
@@ -702,16 +703,16 @@ export const updateGroupCompanyName = mutation({
       .withIndex("", (q: any) => q.eq("groupId", args.groupId))
       .collect();
 
-    // Update company name for each wallet's goldMining record
+    // Update company name for each wallet's user record
     for (const wallet of wallets) {
-      const goldMining = await ctx.db
-        .query("goldMining")
-        .withIndex("", (q: any) => q.eq("walletAddress", wallet.walletAddress))
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", wallet.walletAddress))
         .first();
 
-      if (goldMining) {
-        await ctx.db.patch(goldMining._id, {
-          companyName: args.companyName,
+      if (user) {
+        await ctx.db.patch(user._id, {
+          corporationName: args.companyName,
         });
       }
     }

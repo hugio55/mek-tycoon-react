@@ -169,7 +169,7 @@ export default function DeploymentsAdmin() {
   const handleFullBackup = async () => {
     setIsBackingUp(true);
     setBackupType('full');
-    addLog('Full Backup', 'pending', 'Backing up BOTH databases (Sturgeon + Trout)... This may take 1-2 minutes.');
+    addLog('Nuclear Backup', 'pending', 'Starting complete backup (commit → push → export databases)...');
 
     try {
       const res = await fetch('/api/deployment/backup-complete', {
@@ -180,26 +180,33 @@ export default function DeploymentsAdmin() {
       const data = await res.json();
 
       if (data.success) {
-        addLog('Full Backup', 'success', data.message);
-        // Log individual database sizes
+        // Log each step from the backup process
         if (data.steps) {
-          data.steps.forEach((step: string) => addLog('Full Backup', 'success', step));
+          data.steps.forEach((step: string) => {
+            const isWarning = step.toLowerCase().includes('warning') || step.toLowerCase().includes('failed');
+            addLog('Nuclear Backup', isWarning ? 'error' : 'success', step);
+          });
         }
+        addLog('Nuclear Backup', 'success', `Complete! Total size: ${data.totalSize}`);
         setSessionBackup({
           id: data.backupId,
           type: 'complete',
           timestamp: data.timestamp,
           commitHash: data.commitHash,
           commitMessage: data.commitMessage,
-          branch: 'master',
+          branch: data.branch,
           totalSizeBytes: data.totalSize
         });
         await fetchBackups();
       } else {
-        addLog('Full Backup', 'error', data.error);
+        addLog('Nuclear Backup', 'error', data.error);
+        // Still show partial steps if available
+        if (data.steps) {
+          data.steps.forEach((step: string) => addLog('Nuclear Backup', 'pending', step));
+        }
       }
     } catch (error) {
-      addLog('Full Backup', 'error', 'Failed to create backup');
+      addLog('Nuclear Backup', 'error', 'Failed to create backup - server error');
     } finally {
       setIsBackingUp(false);
       setBackupType(null);
@@ -945,11 +952,11 @@ export default function DeploymentsAdmin() {
                 : 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600'}
             `}
           >
-            <div className="font-bold text-purple-400">Full Backup</div>
-            <div className="text-xs text-gray-400 mt-1">Sturgeon + Trout + Code (~1-2 min)</div>
-            <div className="text-xs text-gray-500">Complete backup of everything</div>
+            <div className="font-bold text-purple-400">Nuclear Backup</div>
+            <div className="text-xs text-gray-400 mt-1">Commit → Push → Export Both DBs (~1-2 min)</div>
+            <div className="text-xs text-gray-500">Complete disaster recovery backup</div>
             {isBackingUp && backupType === 'full' && (
-              <div className="text-xs text-purple-300 mt-2 animate-pulse">Exporting both databases...</div>
+              <div className="text-xs text-purple-300 mt-2 animate-pulse">Running backup sequence...</div>
             )}
           </button>
         </div>

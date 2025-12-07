@@ -27,12 +27,13 @@ export const linkDiscordToCorporation = mutation({
       const now = Date.now();
 
       // PRESERVE ORIGINAL NAME: Get the wallet's current company name before creating group
-      const goldMining = await ctx.db
-        .query("goldMining")
-        .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      // Phase II: Query users table instead of goldMining
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
         .first();
 
-      const originalCompanyName = goldMining?.companyName || null;
+      const originalCompanyName = user?.corporationName || null;
 
       await ctx.db.insert("walletGroups", {
         groupId,

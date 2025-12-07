@@ -58,17 +58,18 @@ export const fixGroupData = mutation({
     if (!membership) {
       console.log('[FIX] Creating walletGroupMemberships record');
 
-      // Get company name from goldMining
-      const goldMining = await ctx.db
-        .query("goldMining")
-        .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
+      // Get company name from users table
+      // Phase II: Query users table instead of goldMining
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
         .first();
 
       await ctx.db.insert("walletGroupMemberships", {
         groupId,
         walletAddress,
         addedAt: Date.now(),
-        originalCompanyName: goldMining?.companyName || null,
+        originalCompanyName: user?.corporationName || null,
       });
     } else if (membership.groupId !== groupId) {
       console.log('[FIX] Updating existing membership to correct group');

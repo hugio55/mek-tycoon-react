@@ -29,7 +29,7 @@ export const deleteMockAccounts = mutation({
 
     let deletedCount = 0;
 
-    // Delete from goldMining table
+    // Delete from goldMining table (legacy)
     const goldMiningEntries = await ctx.db.query("goldMining").collect();
     for (const entry of goldMiningEntries) {
       // Check if wallet contains "demo_wal" OR company name matches mock names
@@ -40,6 +40,19 @@ export const deleteMockAccounts = mutation({
         await ctx.db.delete(entry._id);
         deletedCount++;
         console.log(`Deleted goldMining entry: ${entry.companyName || entry.walletAddress}`);
+      }
+    }
+
+    // Phase II: Also delete from users table
+    const usersEntries = await ctx.db.query("users").collect();
+    for (const entry of usersEntries) {
+      const isDemoWallet = entry.walletAddress && entry.walletAddress.toLowerCase().includes("demo_wal");
+      const isMockCompany = entry.corporationName && mockCompanyNames.includes(entry.corporationName);
+
+      if (isDemoWallet || isMockCompany) {
+        await ctx.db.delete(entry._id);
+        deletedCount++;
+        console.log(`Deleted users entry: ${entry.corporationName || entry.walletAddress}`);
       }
     }
 

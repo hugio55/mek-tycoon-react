@@ -32,16 +32,12 @@ type FlagReason =
   | "session_overlap"
   | "manual_flag";
 
-// Helper to get corporation name from goldMining table
+// Helper to get corporation name from users table
+// Phase II: Use users.corporationName instead of goldMining.companyName
 async function getCorpName(ctx: MutationCtx | QueryCtx, user: Doc<"users">): Promise<string> {
-  // Try to get company name from goldMining table
-  const goldMining = await ctx.db
-    .query("goldMining")
-    .withIndex("", (q: any) => q.eq("walletAddress", user.walletAddress))
-    .first();
-
-  if (goldMining?.companyName) {
-    return goldMining.companyName;
+  // Phase II: corporationName is now stored directly on the users table
+  if (user.corporationName) {
+    return user.corporationName;
   }
 
   // Fall back to user fields
@@ -972,6 +968,7 @@ export const simulateAllScenarios = query({
 });
 
 // Search for corporations by name
+// Phase II: Search users table instead of goldMining
 export const searchCorporations = query({
   args: {
     searchTerm: v.string(),
@@ -985,47 +982,23 @@ export const searchCorporations = query({
     const searchLower = args.searchTerm.toLowerCase();
     const limit = args.limit || 20;
 
-    // Search goldMining for company names (that's where companyName lives)
-    const allGoldMining = await ctx.db.query("goldMining").collect();
-
-    const matchingWallets = allGoldMining
-      .filter((gm: any) =>
-        (gm.companyName?.toLowerCase().includes(searchLower)) ||
-        (gm.walletAddress?.toLowerCase().includes(searchLower))
-      )
-      .slice(0, limit);
-
-    // Get corresponding users
-    const results = await Promise.all(
-      matchingWallets.map(async (gm) => {
-        const user = await ctx.db
-          .query("users")
-          .withIndex("", (q: any) => q.eq("walletAddress", gm.walletAddress))
-          .first();
-
-        return user ? {
-          id: user._id,
-          name: gm.companyName || user.displayName || user.username || "Unknown",
-          walletAddress: gm.walletAddress,
-        } : null;
-      })
-    );
-
-    // Also search users by displayName/username for those without goldMining records
+    // Phase II: Search users table for corporation names
     const allUsers = await ctx.db.query("users").collect();
-    const userMatches = allUsers
+
+    const matchingUsers = allUsers
       .filter((u: any) =>
-        !matchingWallets.some((gm: any) => gm.walletAddress === u.walletAddress) &&
-        ((u.displayName?.toLowerCase().includes(searchLower)) ||
-         (u.username?.toLowerCase().includes(searchLower)))
+        (u.corporationName?.toLowerCase().includes(searchLower)) ||
+        (u.walletAddress?.toLowerCase().includes(searchLower)) ||
+        (u.displayName?.toLowerCase().includes(searchLower)) ||
+        (u.username?.toLowerCase().includes(searchLower))
       )
       .slice(0, limit)
       .map((u: any) => ({
         id: u._id,
-        name: u.displayName || u.username || "Unknown",
+        name: u.corporationName || u.displayName || u.username || "Unknown",
         walletAddress: u.walletAddress,
       }));
 
-    return [...results.filter((r: any) => r !== null), ...userMatches].slice(0, limit);
+    return matchingUsers;
   },
 });
