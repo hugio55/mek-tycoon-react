@@ -290,7 +290,7 @@ export const syncCampaignInventory = mutation({
         // Find the NFT in inventory
         const nft = await ctx.db
           .query("commemorativeNFTInventory")
-          .withIndex("", (q: any) => q.eq("nftUid", discrepancy.nftUid))
+          .withIndex("by_uid", (q: any) => q.eq("nftUid", discrepancy.nftUid))
           .first();
 
         if (!nft) {
@@ -382,7 +382,7 @@ export const getCampaignInventorySummary = query({
   handler: async (ctx, args) => {
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     const available = inventory.filter((i) => i.status === "available");
@@ -614,7 +614,7 @@ export const getCampaignsNeedingSync = internalQuery({
       // Check if this campaign has any reserved NFTs (at-risk of missed webhook)
       const inventory = await ctx.db
         .query("commemorativeNFTInventory")
-        .withIndex("", (q: any) => q.eq("campaignId", campaign._id))
+        .withIndex("by_campaign", (q: any) => q.eq("campaignId", campaign._id))
         .collect();
 
       const reservedCount = inventory.filter((nft: any) => nft.status === 'reserved').length;
