@@ -123,6 +123,82 @@ export const populateInventoryManually = mutation({
   },
 });
 
+// Add new NFTs to existing inventory (skips duplicates by nftUid)
+// Use this to add NFTs when inventory already has items
+export const addNewNFTsToInventory = mutation({
+  args: {
+    nfts: v.array(
+      v.object({
+        nftUid: v.string(),
+        nftNumber: v.number(),
+        name: v.string(),
+        paymentUrl: v.optional(v.string()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const projectId = PROJECT_ID;
+
+    console.log('[INVENTORY ADD] Adding', args.nfts.length, 'NFTs to existing inventory');
+
+    // Get existing UIDs to skip duplicates
+    const existingInventory = await ctx.db
+      .query("commemorativeNFTInventory")
+      .collect();
+
+    const existingUids = new Set(existingInventory.map(item => item.nftUid));
+    console.log('[INVENTORY ADD] Found', existingUids.size, 'existing NFTs in inventory');
+
+    const basePaymentUrl = NMKR_NETWORK === "mainnet"
+      ? "https://pay.nmkr.io"
+      : "https://pay.preprod.nmkr.io";
+
+    let addedCount = 0;
+    let skippedCount = 0;
+
+    for (const nft of args.nfts) {
+      // Skip if already exists
+      if (existingUids.has(nft.nftUid)) {
+        console.log('[INVENTORY ADD] Skipping duplicate:', nft.name);
+        skippedCount++;
+        continue;
+      }
+
+      // Build payment URL
+      let paymentUrl: string;
+      if (nft.paymentUrl) {
+        paymentUrl = nft.paymentUrl;
+      } else {
+        const dashlessUid = nft.nftUid.replace(/-/g, '');
+        paymentUrl = `${basePaymentUrl}/?p=${projectId}&n=${dashlessUid}`;
+      }
+
+      await ctx.db.insert("commemorativeNFTInventory", {
+        nftUid: nft.nftUid,
+        nftNumber: nft.nftNumber,
+        name: nft.name,
+        status: "available",
+        projectId,
+        paymentUrl,
+        createdAt: now,
+      });
+
+      console.log('[INVENTORY ADD] Added:', nft.name, 'UID:', nft.nftUid);
+      addedCount++;
+    }
+
+    console.log('[INVENTORY ADD] Complete - Added:', addedCount, 'Skipped:', skippedCount);
+
+    return {
+      success: true,
+      added: addedCount,
+      skipped: skippedCount,
+      total: existingInventory.length + addedCount,
+    };
+  },
+});
+
 // Clear all inventory (use with caution!)
 export const clearInventory = mutation({
   handler: async (ctx) => {
