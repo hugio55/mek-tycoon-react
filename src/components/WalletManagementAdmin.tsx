@@ -240,6 +240,66 @@ function WalletManagementAdminContent() {
     return await client.mutation(api.adminResetAllProgress.resetAllProgress, args);
   };
 
+  // Test wallet cleanup functions
+  const previewTestWallets = async () => {
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.query(api.adminUsers.previewTestWallets);
+  };
+
+  const bulkDeleteTestWallets = async () => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.adminUsers.bulkDeleteTestWallets);
+  };
+
+  const handlePreviewTestWallets = async () => {
+    setIsPreviewingTestWallets(true);
+    try {
+      const result = await previewTestWallets();
+      setTestWalletPreview(result);
+      setShowTestWalletModal(true);
+    } catch (error) {
+      console.error('[Test Wallet Cleanup] Preview error:', error);
+      setStatusMessage({ type: 'error', message: `Preview failed: ${error}` });
+    } finally {
+      setIsPreviewingTestWallets(false);
+    }
+  };
+
+  const handleDeleteTestWallets = async () => {
+    if (!testWalletPreview || testWalletPreview.testWalletCount === 0) return;
+
+    const confirmed = window.confirm(
+      `ARE YOU ABSOLUTELY SURE?\n\nThis will permanently delete:\n• ${testWalletPreview.testWalletCount} test wallet(s)\n• ${testWalletPreview.totalRelatedRecords} related records\n\nThis action CANNOT be undone!`
+    );
+
+    if (!confirmed) return;
+
+    const doubleConfirmed = window.confirm(
+      `FINAL CONFIRMATION\n\nType OK to delete ${testWalletPreview.testWalletCount} test wallets permanently.`
+    );
+
+    if (!doubleConfirmed) return;
+
+    setIsDeletingTestWallets(true);
+    try {
+      const result = await bulkDeleteTestWallets();
+      setStatusMessage({ type: 'success', message: result.message });
+      setShowTestWalletModal(false);
+      setTestWalletPreview(null);
+      // Refresh wallet list
+      setWalletsLoaded(false);
+      setTimeout(() => setWalletsLoaded(true), 100);
+    } catch (error) {
+      console.error('[Test Wallet Cleanup] Delete error:', error);
+      setStatusMessage({ type: 'error', message: `Delete failed: ${error}` });
+    } finally {
+      setIsDeletingTestWallets(false);
+    }
+  };
+
   const [activeSubmenu, setActiveSubmenu] = useState<SubMenu>('wallet-list');
   const [snapshotHealthTab, setSnapshotHealthTab] = useState<SnapshotHealthTab>('health');
   const [searchTerm, setSearchTerm] = useState('');
@@ -256,6 +316,11 @@ function WalletManagementAdminContent() {
   const [goldDiagnosticResults, setGoldDiagnosticResults] = useState<any>(null);
   const [goldFixResults, setGoldFixResults] = useState<any>(null);
   const [isRunningGoldRepair, setIsRunningGoldRepair] = useState(false);
+  // Test wallet cleanup state
+  const [testWalletPreview, setTestWalletPreview] = useState<any>(null);
+  const [isPreviewingTestWallets, setIsPreviewingTestWallets] = useState(false);
+  const [isDeletingTestWallets, setIsDeletingTestWallets] = useState(false);
+  const [showTestWalletModal, setShowTestWalletModal] = useState(false);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [hoveredDropdown, setHoveredDropdown] = useState<string | null>(null);

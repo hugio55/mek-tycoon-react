@@ -121,7 +121,7 @@ export const deleteCampaign = mutation({
     // CASCADE DELETE: First delete all inventory records for this campaign
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     console.log(`[CAMPAIGNS] Deleting campaign "${campaign.name}" (${args.campaignId})`);
@@ -146,7 +146,7 @@ export const deleteCampaign = mutation({
     // Also delete any reservations for this campaign
     const reservations = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     for (const reservation of reservations) {
@@ -217,7 +217,7 @@ export const updateCampaignStats = mutation({
     // Count inventory items for this campaign using indexed query
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     const stats = {
@@ -379,7 +379,7 @@ export const patchInventorySaleData = mutation({
     // Find the inventory item by UID
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("", (q: any) => q.eq("nftUid", args.nftUid))
+      .withIndex("by_uid", (q: any) => q.eq("nftUid", args.nftUid))
       .first();
 
     if (!inventory) {

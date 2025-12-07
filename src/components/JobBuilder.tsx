@@ -619,6 +619,116 @@ export default function JobBuilder() {
           </div>
         </div>
       )}
+
+      {/* PIT STOPS TAB */}
+      {activeSubTab === 'pitstops' && (
+        <div className="space-y-6">
+          {/* Overview */}
+          <div className="bg-gray-800/50 rounded-lg border border-gray-700 p-6">
+            <h3 className="text-lg font-bold text-white mb-4">Pit Stop Buff System</h3>
+            <p className="text-gray-400 text-sm mb-4">
+              When a Mek reaches a pit stop milestone, they are presented with 3 random buff options to choose from.
+              Each buff has a tier (Bronze, Silver, Gold, Diamond) that determines its value.
+            </p>
+
+            {/* Buff Type Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Flat Gold Buff */}
+              <div className="bg-gray-900/50 rounded-lg border border-yellow-500/30 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xl">coins</span>
+                  <h4 className="text-yellow-400 font-bold uppercase tracking-wider">Flat Gold</h4>
+                </div>
+                <p className="text-gray-500 text-xs mb-3">One-time gold bonus applied immediately</p>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-amber-600">Bronze</span>
+                    <span className="text-gray-400">100 gold</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Silver</span>
+                    <span className="text-gray-400">200 gold</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-yellow-400">Gold</span>
+                    <span className="text-gray-400">500 gold</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-cyan-300">Diamond</span>
+                    <span className="text-gray-400">1,000 gold</span>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-gray-700">
+                  <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Coming Soon</span>
+                </div>
+              </div>
+
+              {/* Gold/Hour Buff */}
+              <div className="bg-gray-900/50 rounded-lg border border-gray-600/30 p-4 opacity-50">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xl">chart</span>
+                  <h4 className="text-gray-400 font-bold uppercase tracking-wider">Gold/Hour</h4>
+                </div>
+                <p className="text-gray-500 text-xs mb-3">Permanent increase to gold mining rate</p>
+                <div className="mt-3 pt-3 border-t border-gray-700">
+                  <span className="px-2 py-1 bg-gray-600/30 text-gray-500 text-xs rounded">Not Implemented</span>
+                </div>
+              </div>
+
+              {/* Flat Essence Buff */}
+              <div className="bg-gray-900/50 rounded-lg border border-gray-600/30 p-4 opacity-50">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xl">gem</span>
+                  <h4 className="text-gray-400 font-bold uppercase tracking-wider">Flat Essence</h4>
+                </div>
+                <p className="text-gray-500 text-xs mb-3">One-time essence bonus applied immediately</p>
+                <div className="mt-3 pt-3 border-t border-gray-700">
+                  <span className="px-2 py-1 bg-gray-600/30 text-gray-500 text-xs rounded">Not Implemented</span>
+                </div>
+              </div>
+
+              {/* Essence/Day Buff */}
+              <div className="bg-gray-900/50 rounded-lg border border-gray-600/30 p-4 opacity-50">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xl">sparkle</span>
+                  <h4 className="text-gray-400 font-bold uppercase tracking-wider">Essence/Day</h4>
+                </div>
+                <p className="text-gray-500 text-xs mb-3">Permanent increase to essence generation</p>
+                <div className="mt-3 pt-3 border-t border-gray-700">
+                  <span className="px-2 py-1 bg-gray-600/30 text-gray-500 text-xs rounded">Not Implemented</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tier Explanation */}
+          <div className="bg-gray-800/50 rounded-lg border border-gray-700 p-6">
+            <h3 className="text-lg font-bold text-white mb-4">Buff Tiers</h3>
+            <p className="text-gray-400 text-sm mb-4">
+              Each pit stop randomly selects 3 buffs. Each buff rolls its tier independently based on RNG.
+            </p>
+
+            <div className="grid grid-cols-4 gap-4">
+              <div className="bg-amber-900/20 rounded-lg border border-amber-600/30 p-4 text-center">
+                <div className="text-2xl font-bold text-amber-600 mb-1">Bronze</div>
+                <div className="text-xs text-gray-500">Common</div>
+              </div>
+              <div className="bg-gray-600/20 rounded-lg border border-gray-400/30 p-4 text-center">
+                <div className="text-2xl font-bold text-gray-300 mb-1">Silver</div>
+                <div className="text-xs text-gray-500">Uncommon</div>
+              </div>
+              <div className="bg-yellow-900/20 rounded-lg border border-yellow-500/30 p-4 text-center">
+                <div className="text-2xl font-bold text-yellow-400 mb-1">Gold</div>
+                <div className="text-xs text-gray-500">Rare</div>
+              </div>
+              <div className="bg-cyan-900/20 rounded-lg border border-cyan-400/30 p-4 text-center">
+                <div className="text-2xl font-bold text-cyan-300 mb-1">Diamond</div>
+                <div className="text-xs text-gray-500">Legendary</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
