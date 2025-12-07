@@ -407,7 +407,7 @@ export const getMyCommemorativeTokens = query({
   handler: async (ctx, args) => {
     const tokens = await ctx.db
       .query("commemorativeTokens")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .filter((q) => q.eq(q.field("walletAddress"), args.walletAddress))
       .collect();
 
     return tokens.filter((t: any) => t.status === "confirmed");
@@ -435,7 +435,7 @@ export const getAllCommemorativeTokens = query({
     if (args.status) {
       tokens = await ctx.db
         .query("commemorativeTokens")
-        .withIndex("", (q: any) => q.eq("status", args.status!))
+        .withIndex("by_status", (q: any) => q.eq("status", args.status!))
         .collect();
     } else {
       tokens = await ctx.db.query("commemorativeTokens").collect();
@@ -475,7 +475,7 @@ export const getTokenTypeStats = query({
 
     const allTokens = await ctx.db
       .query("commemorativeTokens")
-      .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
+      .filter((q) => q.eq(q.field("tokenType"), args.tokenType))
       .collect();
 
     const confirmed = allTokens.filter((t: any) => t.status === "confirmed").length;
@@ -681,7 +681,7 @@ export const deleteTokenType = mutation({
     // Delete any reservations
     const reservations = await ctx.db
       .query("commemorativeTokens")
-      .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
+      .filter((q) => q.eq(q.field("tokenType"), args.tokenType))
       .collect();
 
     for (const reservation of reservations) {
@@ -871,7 +871,7 @@ export const getDesignsByPolicy = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("commemorativeTokenCounters")
-      .withIndex("", (q: any) => q.eq("policyId", args.policyId))
+      .withIndex("by_policy_id", (q: any) => q.eq("policyId", args.policyId))
       .collect();
   },
 });
@@ -965,7 +965,7 @@ export const getBatchMintedTokens = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("batchMintedTokens")
-      .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
+      .withIndex("by_token_type", (q: any) => q.eq("tokenType", args.tokenType))
       .collect();
   },
 });
@@ -980,7 +980,7 @@ export const getBatchMintedBySnapshot = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("batchMintedTokens")
-      .withIndex("", (q: any) => q.eq("snapshotId", args.snapshotId))
+      .withIndex("by_snapshot", (q: any) => q.eq("snapshotId", args.snapshotId))
       .collect();
   },
 });
@@ -995,7 +995,7 @@ export const getBatchMintedByAddress = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("batchMintedTokens")
-      .withIndex("", (q: any) => q.eq("recipientAddress", args.address))
+      .withIndex("by_recipient", (q: any) => q.eq("recipientAddress", args.address))
       .collect();
   },
 });
@@ -1010,7 +1010,7 @@ export const getBatchMintingStats = query({
   handler: async (ctx, args) => {
     const allMints = await ctx.db
       .query("batchMintedTokens")
-      .withIndex("", (q: any) => q.eq("tokenType", args.tokenType))
+      .withIndex("by_token_type", (q: any) => q.eq("tokenType", args.tokenType))
       .collect();
 
     const confirmed = allMints.filter((m: any) => m.status === "confirmed").length;

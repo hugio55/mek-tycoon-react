@@ -513,11 +513,17 @@ const Canvas: React.FC<CanvasProps> = memo(({
             transition: dragState.isDragging || isPanning || boxSelection.isSelecting || lassoSelection.isSelecting ? 'none' : 'transform 0.1s'
           }}
         >
-          {/* Grid */}
+          {/* Grid - offset pattern so center of grid lands on a dot */}
           {showGrid && (
             <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.25 }}>
               <defs>
-                <pattern id="grid" width={GRID_SIZE} height={GRID_SIZE} patternUnits="userSpaceOnUse">
+                <pattern
+                  id="grid"
+                  width={GRID_SIZE}
+                  height={GRID_SIZE}
+                  patternUnits="userSpaceOnUse"
+                  patternTransform={`translate(${-GRID_SIZE/2}, ${-GRID_SIZE/2})`}
+                >
                   <circle cx={GRID_SIZE/2} cy={GRID_SIZE/2} r="1" fill="white"/>
                 </pattern>
               </defs>
