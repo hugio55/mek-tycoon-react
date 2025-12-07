@@ -194,6 +194,26 @@ export const syncSingleNFT = mutation({
       // Determine the buyer's address - prefer our reservedBy (known stake address format)
       // over NMKR's soldTo (may be transaction hash or different address format)
       const finalSoldTo = nft.reservedBy || soldTo || nft.soldTo;
+
+      // CRITICAL SAFETY CHECK: Log warning if we can't determine the buyer
+      if (!finalSoldTo) {
+        console.error('[🚨NMKR-SYNC] CRITICAL: Cannot determine buyer for sold NFT!', {
+          nftUid: nft.nftUid,
+          nftNumber: nft.nftNumber,
+          name: nft.name,
+          reservedBy: nft.reservedBy,
+          soldToArg: soldTo,
+          existingSoldTo: nft.soldTo,
+        });
+      } else if (!finalSoldTo.startsWith("stake1")) {
+        console.warn('[⚠️NMKR-SYNC] soldTo is not a stake address format:', {
+          nftUid: nft.nftUid,
+          name: nft.name,
+          finalSoldTo,
+          source: nft.reservedBy ? 'reservedBy' : (soldTo ? 'nmkrSoldTo' : 'existingSoldTo'),
+        });
+      }
+
       updates.soldTo = finalSoldTo;
       updates.soldAt = Date.now();
 
@@ -324,6 +344,26 @@ export const syncCampaignInventory = mutation({
           // Determine the buyer's address - prefer our reservedBy (known stake address format)
           // over NMKR's soldTo (may be transaction hash or different address format)
           const finalSoldTo = nft.reservedBy || nmkrData.soldTo || nft.soldTo;
+
+          // CRITICAL SAFETY CHECK: Log warning if we can't determine the buyer
+          if (!finalSoldTo) {
+            console.error('[🚨NMKR-SYNC] CRITICAL: Cannot determine buyer for sold NFT!', {
+              nftUid: nft.nftUid,
+              nftNumber: nft.nftNumber,
+              name: nft.name,
+              reservedBy: nft.reservedBy,
+              nmkrSoldTo: nmkrData.soldTo,
+              existingSoldTo: nft.soldTo,
+            });
+          } else if (!finalSoldTo.startsWith("stake1")) {
+            console.warn('[⚠️NMKR-SYNC] soldTo is not a stake address format:', {
+              nftUid: nft.nftUid,
+              name: nft.name,
+              finalSoldTo,
+              source: nft.reservedBy ? 'reservedBy' : (nmkrData.soldTo ? 'nmkrSoldTo' : 'existingSoldTo'),
+            });
+          }
+
           updates.soldTo = finalSoldTo;
           updates.soldAt = Date.now();
 
@@ -735,6 +775,26 @@ export const internalSyncCampaignInventory = internalMutation({
         // Determine the buyer's address - prefer our reservedBy (known stake address format)
         // over NMKR's soldTo (may be transaction hash or different address format)
         const finalSoldTo = nft.reservedBy || nmkrData.soldTo || nft.soldTo;
+
+        // CRITICAL SAFETY CHECK: Log warning if we can't determine the buyer
+        if (!finalSoldTo) {
+          console.error('[🚨NMKR-SYNC-INTERNAL] CRITICAL: Cannot determine buyer for sold NFT!', {
+            nftUid: nft.nftUid,
+            nftNumber: nft.nftNumber,
+            name: nft.name,
+            reservedBy: nft.reservedBy,
+            nmkrSoldTo: nmkrData.soldTo,
+            existingSoldTo: nft.soldTo,
+          });
+        } else if (!finalSoldTo.startsWith("stake1")) {
+          console.warn('[⚠️NMKR-SYNC-INTERNAL] soldTo is not a stake address format:', {
+            nftUid: nft.nftUid,
+            name: nft.name,
+            finalSoldTo,
+            source: nft.reservedBy ? 'reservedBy' : (nmkrData.soldTo ? 'nmkrSoldTo' : 'existingSoldTo'),
+          });
+        }
+
         updates.soldTo = finalSoldTo;
         updates.soldAt = Date.now();
 
