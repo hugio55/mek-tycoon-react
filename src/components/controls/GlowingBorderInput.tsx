@@ -218,13 +218,15 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
         maxLength={maxLength}
         disabled={disabled}
         autoFocus={autoFocus}
-        className="relative text-white outline-none z-10 disabled:opacity-50"
+        className="relative text-white outline-none z-10 disabled:opacity-50 placeholder-white/40"
         style={{
           width: inputWidth,
           height: 56,
           borderRadius: 10,
           border: 'none',
-          backgroundColor: '#010201',
+          backgroundColor: 'rgba(0, 10, 15, 0.7)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
           paddingLeft: showSearchIcon ? 45 : 16,
           paddingRight: showFilterButton ? 55 : (showCharacterCount ? 60 : 16),
           fontSize: 16,

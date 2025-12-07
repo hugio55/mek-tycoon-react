@@ -313,28 +313,50 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
 
             {/* Buttons */}
             <div className="flex flex-col gap-3 pt-2">
-              {/* HolographicButton with particle effects */}
-              <div className="w-full">
-                <HolographicButton
-                  text={isSubmitting
-                    ? (mode === 'initial' ? 'CREATING...' : 'UPDATING...')
-                    : (mode === 'initial' ? 'CREATE CORPORATION' : 'UPDATE NAME')
-                  }
+              {/* Fancy HolographicButton for initial creation only */}
+              {mode === 'initial' && (
+                <div className="w-full">
+                  <HolographicButton
+                    text={isSubmitting ? 'CREATING...' : 'CREATE CORPORATION'}
+                    onClick={() => {
+                      const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
+                      handleSubmit(syntheticEvent);
+                    }}
+                    isActive={!buttonDisabled}
+                    variant="blue"
+                    alwaysOn={!buttonDisabled}
+                    disabled={buttonDisabled}
+                    hideIcon={true}
+                    className="w-full"
+                    particleSpeed={0.15}
+                    textSize="lg"
+                    rounded={true}
+                  />
+                </div>
+              )}
+
+              {/* Simple button for edit mode */}
+              {mode === 'edit' && (
+                <button
+                  type="button"
                   onClick={() => {
-                    // Create a synthetic event to pass to handleSubmit
                     const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
                     handleSubmit(syntheticEvent);
                   }}
-                  isActive={!buttonDisabled}
-                  variant="blue"
-                  alwaysOn={!buttonDisabled}
                   disabled={buttonDisabled}
-                  hideIcon={true}
-                  className="w-full"
-                  particleSpeed={0.15}
-                  textSize="lg"
-                />
-              </div>
+                  className="w-full py-3 px-6 rounded-xl text-sm font-semibold uppercase tracking-wider transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{
+                    background: buttonDisabled
+                      ? 'rgba(255,255,255,0.05)'
+                      : 'linear-gradient(135deg, rgba(6,182,212,0.3) 0%, rgba(34,211,238,0.2) 100%)',
+                    border: `1px solid ${buttonDisabled ? 'rgba(255,255,255,0.1)' : 'rgba(34,211,238,0.5)'}`,
+                    color: buttonDisabled ? 'rgba(255,255,255,0.4)' : '#22d3ee',
+                    boxShadow: buttonDisabled ? 'none' : '0 0 20px rgba(34,211,238,0.2)',
+                  }}
+                >
+                  {isSubmitting ? 'Updating...' : 'Update Name'}
+                </button>
+              )}
 
               {mode === 'edit' && (
                 <button

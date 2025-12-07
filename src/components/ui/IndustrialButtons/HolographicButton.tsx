@@ -13,6 +13,7 @@ interface HolographicButtonProps {
   hideIcon?: boolean;
   particleSpeed?: number;
   textSize?: 'sm' | 'base' | 'lg' | 'xl' | '2xl';
+  rounded?: boolean;
 }
 
 export default function HolographicButton({
@@ -25,7 +26,8 @@ export default function HolographicButton({
   disabled = false,
   hideIcon = false,
   particleSpeed = 0.1125,
-  textSize = '2xl'
+  textSize = '2xl',
+  rounded = false
 }: HolographicButtonProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
@@ -192,10 +194,11 @@ export default function HolographicButton({
         transition-all duration-300
         ${!isActive ? 'grayscale opacity-60' : ''}
         ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
+        ${rounded ? 'rounded-2xl' : ''}
         ${className}
       `}
     >
-      <div className="relative">
+      <div className={`relative ${rounded ? 'rounded-2xl' : ''}`}>
         <div
           className={`
             relative bg-gradient-to-br
@@ -212,6 +215,7 @@ export default function HolographicButton({
             backdrop-blur-md
             border-2 transition-all duration-300
             px-8 py-3
+            ${rounded ? 'rounded-2xl' : ''}
           `}
           style={{
             borderColor: isActive
