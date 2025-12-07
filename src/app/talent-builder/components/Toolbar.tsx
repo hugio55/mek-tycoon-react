@@ -46,19 +46,20 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
     }
   }, []);
 
-  // Auto-save Mek Talent Tree preset when dimensions change and preset is active
+  // Auto-save Mek Talent Tree preset when dimensions or position change and preset is active
   useEffect(() => {
     if (activePreset === 'mekTalentTree') {
       const presetData = {
         width: state.viewportDimensions.width,
         height: state.viewportDimensions.height,
-        // Save position relative to grid center for Mek trees
+        posX: state.viewportPosition?.x || 0,
+        posY: state.viewportPosition?.y || 0,
         updatedAt: Date.now()
       };
       localStorage.setItem('mekTalentTreeViewport', JSON.stringify(presetData));
       console.log('[VIEWPORT] Auto-saved Mek Talent Tree preset:', presetData);
     }
-  }, [activePreset, state.viewportDimensions.width, state.viewportDimensions.height]);
+  }, [activePreset, state.viewportDimensions.width, state.viewportDimensions.height, state.viewportPosition?.x, state.viewportPosition?.y]);
 
   // Helper to apply Mek Talent Tree preset
   const applyMekTalentTreePreset = useCallback(() => {
@@ -460,6 +461,43 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
                 min="100"
                 max="5000"
               />
+            </div>
+
+            {/* Viewport Position Controls */}
+            <div className="flex items-center gap-1 ml-2 border-l border-gray-700 pl-2">
+              <span className="text-xs text-gray-500">pos:</span>
+              <input
+                type="number"
+                value={state.viewportPosition?.x || 0}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'SET_VIEWPORT_POSITION',
+                    payload: { x: parseInt(e.target.value) || 0, y: state.viewportPosition?.y || 0 }
+                  })
+                }
+                className="w-14 px-1 py-1 text-sm rounded bg-gray-700 text-cyan-400 border border-cyan-500/30 font-mono text-center"
+                title="X offset from center"
+              />
+              <span className="text-gray-500">,</span>
+              <input
+                type="number"
+                value={state.viewportPosition?.y || 0}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'SET_VIEWPORT_POSITION',
+                    payload: { x: state.viewportPosition?.x || 0, y: parseInt(e.target.value) || 0 }
+                  })
+                }
+                className="w-14 px-1 py-1 text-sm rounded bg-gray-700 text-cyan-400 border border-cyan-500/30 font-mono text-center"
+                title="Y offset from center"
+              />
+              <button
+                onClick={() => dispatch({ type: 'SET_VIEWPORT_POSITION', payload: { x: 0, y: 0 } })}
+                className="px-1 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600 text-gray-400"
+                title="Reset position to center"
+              >
+                ⌂
+              </button>
             </div>
 
             <select

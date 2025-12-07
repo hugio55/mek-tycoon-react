@@ -40,24 +40,17 @@ export default function GlobalLightboxHandler() {
       const session = await restoreWalletSession();
       const stored = session?.stakeAddress || '';
       setWalletAddress(stored);
-      console.log('[GlobalLightboxHandler] Wallet address from session:', stored ? stored.slice(0, 15) + '...' : 'none');
     };
     loadWallet();
   }, []);
 
   useEffect(() => {
-    console.log('[GlobalLightboxHandler] Attaching openLightbox event listener');
-
     const handleOpenLightbox = (event: CustomEvent) => {
-      console.log('[GlobalLightboxHandler] Received openLightbox event!', event);
       const lightboxId = event.detail?.lightboxId;
       const eventWalletAddress = event.detail?.walletAddress;
-      console.log('[GlobalLightboxHandler] Lightbox ID:', lightboxId);
-      console.log('[GlobalLightboxHandler] Wallet from event:', eventWalletAddress);
 
       switch (lightboxId) {
         case 'essence-distribution':
-          console.log('[GlobalLightboxHandler] Opening Essence Distribution lightbox');
           // Use wallet from event detail if provided, otherwise restore from encrypted session
           (async () => {
             let currentWallet = eventWalletAddress;
@@ -65,30 +58,24 @@ export default function GlobalLightboxHandler() {
               const session = await restoreWalletSession();
               currentWallet = session?.stakeAddress || 'demo_wallet_123';
             }
-            console.log('[GlobalLightboxHandler] Using wallet address:', currentWallet ? currentWallet.slice(0, 15) + '...' : 'demo');
             setWalletAddress(currentWallet);
             setShowEssenceLightbox(true);
           })();
           break;
         case 'mek-levels':
-          console.log('[GlobalLightboxHandler] Opening Mek Levels lightbox');
           setShowMekLevels(true);
           break;
         case 'activity-log':
-          console.log('[GlobalLightboxHandler] Opening Activity Log lightbox');
           setShowActivityLog(true);
           break;
         case 'essence-balances':
-          console.log('[GlobalLightboxHandler] Opening Essence Balances lightbox');
           setShowEssenceBalances(true);
           break;
         case 'essence-buffs':
-          console.log('[GlobalLightboxHandler] Opening Essence Buffs lightbox');
           setShowEssenceBuffs(true);
           break;
         case 'variation-triangle':
         case 'meks-triangle':
-          console.log('[GlobalLightboxHandler] Opening Meks Triangle lightbox');
           // Ensure we have wallet address for querying owned Meks
           (async () => {
             let currentWallet = eventWalletAddress;
@@ -96,13 +83,11 @@ export default function GlobalLightboxHandler() {
               const session = await restoreWalletSession();
               currentWallet = session?.stakeAddress || 'demo_wallet_123';
             }
-            console.log('[GlobalLightboxHandler] Triangle using wallet:', currentWallet ? currentWallet.slice(0, 15) + '...' : 'demo');
             setWalletAddress(currentWallet);
             setShowMeksTriangle(true);
           })();
           break;
         case 'beta-signup':
-          console.log('[GlobalLightboxHandler] Opening Beta Signup lightbox');
           setShowBetaSignup(true);
           break;
         default:
@@ -112,7 +97,6 @@ export default function GlobalLightboxHandler() {
 
     window.addEventListener('openLightbox', handleOpenLightbox as EventListener);
     return () => {
-      console.log('[GlobalLightboxHandler] Removing openLightbox event listener');
       window.removeEventListener('openLightbox', handleOpenLightbox as EventListener);
     };
   }, []);

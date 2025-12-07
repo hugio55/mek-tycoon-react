@@ -377,17 +377,13 @@ export default function NavigationBar() {
                 const action = zone.metadata?.buttonAction;
                 const actionData = zone.metadata?.buttonActionData;
 
-                console.log(`Navigation button clicked: ${zone.label || zone.type}`, { action, actionData });
-
                 // Execute configured action
                 if (action === "url" && actionData) {
                   router.push(actionData);
                 } else if (action === "lightbox" && actionData) {
                   // Get wallet address from encrypted session storage
                   const session = await restoreWalletSession();
-                  console.log('[NavigationBar] Session resolved:', session ? 'found' : 'null');
                   const walletAddress = session?.stakeAddress || session?.walletAddress || 'demo_wallet_123';
-                  console.log('[NavigationBar] Using wallet:', walletAddress ? walletAddress.slice(0, 15) + '...' : 'demo');
                   window.dispatchEvent(new CustomEvent('openLightbox', {
                     detail: {
                       lightboxId: actionData,

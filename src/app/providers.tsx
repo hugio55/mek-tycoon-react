@@ -19,7 +19,6 @@ function ConvexWindowBridge() {
   useEffect(() => {
     // Expose Convex client to window for admin components that need direct access
     (window as any).convex = convex;
-    console.log('[Convex] Client exposed to window.convex');
   }, []);
 
   return null;
