@@ -1,9 +1,10 @@
 'use client';
 
 /**
- * WalletManagementAdmin - SINGLE DATABASE MODE
+ * WalletManagementAdmin - DUAL DATABASE MODE
  *
- * Uses single database (Sturgeon) via main Convex client.
+ * Supports both Trout (staging) and Sturgeon (production) via DatabaseContext.
+ * Database switching is controlled by the parent component through context.
  */
 
 import { useState, lazy, Suspense, useMemo, useCallback, useRef, useEffect } from 'react';
