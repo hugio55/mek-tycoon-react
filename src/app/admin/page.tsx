@@ -1133,6 +1133,7 @@ export default function AdminMasterDataPage() {
     { name: 'Single Missions', path: '/contracts/single-missions', category: 'Contracts' },
     { name: 'Story Climb', path: '/scrap-yard/story-climb', category: 'Contracts' },
     { name: 'Cirutree (Talent)', path: '/cirutree', category: 'Systems' },
+    { name: 'Talent Builder', path: '/talent-builder', category: 'Systems' },
     { name: 'Shop', path: '/shop', category: 'Systems' },
     { name: 'Achievements', path: '/achievements', category: 'Systems' },
     { name: 'Leaderboard', path: '/leaderboard', category: 'Systems' },

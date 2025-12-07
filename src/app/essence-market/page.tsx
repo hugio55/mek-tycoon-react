@@ -5972,28 +5972,22 @@ export default function EssenceMarketPage() {
                       // ⚠️ END TEMPORARY TEST DATA ⚠️
 
                       return (
-                      <div key={listing._id} className="relative p-4 rounded-lg overflow-hidden hover:border-yellow-400/10 transition-all duration-500"
+                      <div key={listing._id} className="relative p-4 overflow-hidden transition-all duration-300 hover:scale-[1.02]"
                         style={{
-                          background: `linear-gradient(105deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0.01) 100%)`,
-                          backdropFilter: 'blur(3px) brightness(1.05)',
-                          border: '1px solid rgba(255, 255, 255, 0.05)',
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
+                          backdropFilter: 'blur(20px)',
+                          WebkitBackdropFilter: 'blur(20px)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '16px',
+                          boxShadow: '0 8px 32px rgba(0,0,0,0.3), 0 0 20px rgba(34,211,238,0.03)'
                         }}
                       >
-                        {/* Crosshatch pattern */}
-                        <div
-                          className="absolute inset-0 pointer-events-none opacity-40"
-                          style={{
-                            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px),
-                                              repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px)`
-                          }}
-                        />
-                        {/* Radial gradient accents */}
+                        {/* Subtle radial glow */}
                         <div
                           className="absolute inset-0 pointer-events-none"
                           style={{
-                            background: `radial-gradient(circle at 25% 25%, rgba(250, 182, 23, 0.04) 0%, transparent 25%),
-                                         radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.03) 0%, transparent 25%),
-                                         radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.01) 0%, transparent 50%)`
+                            background: 'radial-gradient(circle at 50% 0%, rgba(34,211,238,0.08) 0%, transparent 50%)',
+                            borderRadius: '16px'
                           }}
                         />
 
@@ -6006,7 +6000,7 @@ export default function EssenceMarketPage() {
                                 <img
                                   src={`/essence-images/named-bottles-1k/${(listing.itemVariation || 'default').toLowerCase().replace(/\s+/g, '-')}.png`}
                                   alt={listing.itemVariation}
-                                  className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(250,182,23,0.3)]"
+                                  className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]"
                                   onError={(e) => { e.currentTarget.src = '/essence-images/named-bottles-1k/default.png'; }}
                                 />
                               </div>
@@ -6014,64 +6008,70 @@ export default function EssenceMarketPage() {
 
                             {/* Essence Name */}
                             <div className="text-center mb-3">
-                              <div className="text-yellow-400 font-bold text-lg uppercase tracking-wide">
+                              <div className="text-cyan-400 font-bold text-lg uppercase tracking-wide" style={{ textShadow: '0 0 20px rgba(34,211,238,0.5)', fontFamily: 'Orbitron, sans-serif' }}>
                                 {listing.itemVariation || listing.itemType}
                               </div>
                             </div>
 
                             {/* Stock: Original → Remaining */}
-                            <div className="mb-3 p-2 bg-cyan-900/20 border border-cyan-500/20 rounded">
+                            <div className="mb-3 p-2 rounded-lg" style={{ background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.2)' }}>
                               <div className="flex items-center justify-center gap-2 text-sm">
-                                <span className="text-gray-400">{originalStock}</span>
+                                <span className="text-white/50">{originalStock}</span>
                                 <span className="text-cyan-400">→</span>
                                 <span className="text-cyan-400 font-bold">{remainingStock}</span>
-                                <span className="text-gray-500 text-xs">ESSENCE</span>
+                                <span className="text-white/40 text-xs uppercase tracking-wider">Essence</span>
                               </div>
                             </div>
 
                             {/* Price Per Unit & Profit So Far - Two Columns */}
                             <div className="mb-3 grid grid-cols-2 gap-2">
-                              <div className="p-2 bg-yellow-900/20 border border-yellow-500/20 rounded text-center">
-                                <div className="text-gray-500 text-xs mb-1">PRICE/UNIT</div>
-                                <div className="text-yellow-400 font-bold text-lg">{listing.pricePerUnit.toLocaleString()}g</div>
+                              <div className="p-2 rounded-lg text-center" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                <div className="text-white/40 text-[10px] mb-1 uppercase tracking-wider" style={{ fontFamily: 'Play, sans-serif' }}>Price/Unit</div>
+                                <div className="text-amber-400 font-bold text-lg">{listing.pricePerUnit.toLocaleString()}g</div>
                               </div>
-                              <div className="p-2 bg-yellow-900/20 border border-yellow-500/20 rounded text-center">
-                                <div className="text-gray-500 text-xs mb-1">PROFIT SO FAR</div>
-                                <div className="text-yellow-400 font-bold text-lg">{totalProfit.toLocaleString()}g</div>
+                              <div className="p-2 rounded-lg text-center" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                <div className="text-white/40 text-[10px] mb-1 uppercase tracking-wider" style={{ fontFamily: 'Play, sans-serif' }}>Profit So Far</div>
+                                <div className="text-emerald-400 font-bold text-lg">{totalProfit.toLocaleString()}g</div>
                               </div>
                             </div>
 
                             {/* Transaction Log */}
                             <div className="mb-3">
-                              <div className="text-gray-400 text-xs uppercase mb-2 flex items-center gap-2">
-                                <div className="w-4 h-px bg-gray-600" />
+                              <div className="text-white/40 text-[10px] uppercase mb-2 flex items-center gap-2 tracking-wider" style={{ fontFamily: 'Play, sans-serif' }}>
+                                <div className="w-4 h-px bg-white/20" />
                                 Transactions
-                                <div className="flex-1 h-px bg-gray-600" />
+                                <div className="flex-1 h-px bg-white/20" />
                               </div>
                               <div className="max-h-32 overflow-y-auto space-y-1">
                                 {mockTransactions.map(tx => (
-                                  <div key={tx.id} className="p-2 bg-black/60 border border-gray-700/30 rounded text-xs">
+                                  <div key={tx.id} className="p-2 rounded-lg text-xs" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)' }}>
                                     <div className="flex justify-between mb-1">
-                                      <span className="text-gray-500">{tx.date} {tx.time}</span>
+                                      <span className="text-white/40">{tx.date} {tx.time}</span>
                                       <span className="text-purple-400 font-semibold">{tx.corporation}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                      <span className="text-cyan-400 font-bold" style={{ textShadow: '0 0 8px rgba(6, 182, 212, 0.6)' }}>
+                                      <span className="text-cyan-400 font-bold" style={{ textShadow: '0 0 8px rgba(34, 211, 238, 0.6)' }}>
                                         Siphoned: -{tx.amountSiphoned}
                                       </span>
-                                      <span className="text-yellow-400 font-semibold">+{tx.goldEarned.toLocaleString()}g</span>
+                                      <span className="text-amber-400 font-semibold">+{tx.goldEarned.toLocaleString()}g</span>
                                     </div>
                                   </div>
                                 ))}
                               </div>
                             </div>
 
-                            {/* Recall Button */}
+                            {/* Recall Button - Space Age Style */}
                             <button
                               onClick={() => handleCancelListing(listing._id)}
-                              className="relative w-full px-4 py-2 font-bold uppercase transition-none cursor-pointer overflow-hidden rounded-lg tracking-[0.5em] text-base font-normal bg-red-900/40 border-2 border-red-500/50 hover:bg-red-900/60 hover:border-red-400 text-red-400"
+                              className="relative w-full px-4 py-2.5 uppercase transition-all duration-200 cursor-pointer overflow-hidden rounded-xl tracking-widest text-sm font-medium hover:scale-[1.02]"
+                              style={{
+                                background: 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(239,68,68,0.1))',
+                                border: '1px solid rgba(239,68,68,0.3)',
+                                color: '#f87171',
+                                fontFamily: 'Orbitron, sans-serif'
+                              }}
                             >
-                              ⊗ RECALL
+                              ⊗ Recall
                             </button>
                           </div>
                         )}
@@ -6080,11 +6080,11 @@ export default function EssenceMarketPage() {
                     })}
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <div className="text-gray-400 text-lg">
+                <div className="text-center py-16">
+                  <div className="text-white/60 text-lg" style={{ fontFamily: 'Orbitron, sans-serif' }}>
                     No active listings found.
                   </div>
-                  <p className="text-gray-500 text-sm mt-2">
+                  <p className="text-white/40 text-sm mt-2" style={{ fontFamily: 'Play, sans-serif' }}>
                     Click "LIST ITEM" to create a new essence listing.
                   </p>
                 </div>
