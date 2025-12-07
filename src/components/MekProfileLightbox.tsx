@@ -11,6 +11,7 @@ import LevelProgress from "@/components/LevelProgress";
 import type { LevelProgressStyle } from "@/components/LevelProgress";
 import { DEFAULT_LEVEL_COLORS } from "@/components/MekCard/types";
 import AnimatedBorderButton from "@/components/loaders/AnimatedBorderButton";
+import MekAbilitiesTree from "@/components/MekAbilitiesTree";
 
 export type CardInteriorStyle = 'compact' | 'spacious' | 'modern' | 'tech-badge' | 'cyber-compact' | 'tactical-display';
 export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-terminal' | 'holographic-overlay' | 'cyber-minimal' | 'tech-frame' | 'neon-edge' | 'matrix-grid';
@@ -5857,9 +5858,16 @@ export default function MekProfileLightbox({
                 {/* Abilities Tree */}
                 <div className="mek-card-industrial mek-border-sharp-gold p-4">
                   <div className="mek-label-uppercase mb-3">ABILITIES TREE</div>
-                  <div className="w-full h-64 md:h-80 lg:h-96 bg-black/40 border border-yellow-500/20 flex items-center justify-center relative overflow-hidden">
+                  <div className="w-full h-64 md:h-80 lg:h-96 bg-black/40 border border-yellow-500/20 relative overflow-hidden">
                     <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-                    <span className="text-gray-500 relative z-10">Node Tree / Talent Tree Area</span>
+                    <MekAbilitiesTree
+                      categoryId="jh7dg8xhxvdkxgbj5b4yw2ys4h7anx4h"
+                      rotated={true}
+                      showNodeNames={false}
+                      nodeColor="#fbbf24"
+                      connectionColor="#666"
+                      className="relative z-10"
+                    />
                   </div>
                 </div>
               </div>
