@@ -12,7 +12,7 @@ export const forceUnlockSlot = mutation({
   handler: async (ctx, args) => {
     const slot = await ctx.db
       .query("essenceSlots")
-      .withIndex("", (q: any) =>
+      .withIndex("by_wallet_and_slot", (q: any) =>
         q.eq("walletAddress", args.walletAddress).eq("slotNumber", args.slotNumber)
       )
       .first();

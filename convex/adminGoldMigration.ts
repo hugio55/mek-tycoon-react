@@ -24,7 +24,7 @@ export const testSingleWalletRepair = mutation({
     // Find the wallet
     const miner = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!miner) {

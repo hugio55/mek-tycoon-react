@@ -355,7 +355,7 @@ export const submitAddress = mutation({
     // Update config statistics
     const currentStats = await ctx.db
       .query("airdropSubmissions")
-      .withIndex("", (q: any) => q.eq("campaignName", args.campaignName))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignName", args.campaignName))
       .collect();
 
     await ctx.db.patch(config._id, {

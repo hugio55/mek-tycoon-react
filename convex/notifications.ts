@@ -325,7 +325,7 @@ export const createNotificationPublic = mutation({
     if (args.sourceType && args.sourceId) {
       const existing = await ctx.db
         .query("notifications")
-        .withIndex("", (q: any) =>
+        .withIndex("by_source", (q: any) =>
           q.eq("sourceType", args.sourceType!).eq("sourceId", args.sourceId!)
         )
         .first();
@@ -428,7 +428,7 @@ export const adminGetPlayerNotifications = query({
     // Find the user
     const user = await ctx.db
       .query("users")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!user) {
@@ -442,7 +442,7 @@ export const adminGetPlayerNotifications = query({
     // Get their notifications
     const notifications = await ctx.db
       .query("notifications")
-      .withIndex("", (q: any) => q.eq("userId", user._id))
+      .withIndex("by_user", (q: any) => q.eq("userId", user._id))
       .order("desc")
       .take(limit);
 
@@ -513,7 +513,7 @@ export const adminSendNotification = mutation({
     // Find the user
     const user = await ctx.db
       .query("users")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!user) {
@@ -601,7 +601,7 @@ export const adminClearPlayerNotifications = mutation({
     // Find the user
     const user = await ctx.db
       .query("users")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!user) {
@@ -610,7 +610,7 @@ export const adminClearPlayerNotifications = mutation({
 
     const notifications = await ctx.db
       .query("notifications")
-      .withIndex("", (q: any) => q.eq("userId", user._id))
+      .withIndex("by_user", (q: any) => q.eq("userId", user._id))
       .collect();
 
     for (const notification of notifications) {

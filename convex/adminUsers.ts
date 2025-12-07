@@ -353,7 +353,7 @@ export const getUserDetails = query({
 
     const transactions = await ctx.db
       .query("transactions")
-      .withIndex("", (q: any) => q.eq("userId", args.userId))
+      .filter((q) => q.eq(q.field("userId"), args.userId))
       .order("desc")
       .take(50);
 

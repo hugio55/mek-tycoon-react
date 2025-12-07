@@ -308,7 +308,7 @@ export const adminCreateCompanyListing = mutation({
     // Ensure company account exists
     let companySeller = await ctx.db
       .query("users")
-      .withIndex("", (q: any) => q.eq("walletAddress", "company_overexposed"))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", "company_overexposed"))
       .first();
 
     if (!companySeller) {
