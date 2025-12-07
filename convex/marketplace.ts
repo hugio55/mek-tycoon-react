@@ -18,7 +18,7 @@ export const getActiveListings = query({
     
     let q = ctx.db
       .query("marketListings")
-      .withIndex("", (q: any) => q.eq("status", "active"));
+      .withIndex("by_status", (q: any) => q.eq("status", "active"));
 
     const listings = await q.collect();
 
@@ -51,7 +51,7 @@ export const getActiveListings = query({
         if (listing.itemType === "essence" && listing.itemVariation && seller?.walletAddress) {
           const essenceBalance = await ctx.db
             .query("essenceBalances")
-            .withIndex("", (q: any) => q.eq("walletAddress", seller.walletAddress))
+            .withIndex("by_wallet", (q: any) => q.eq("walletAddress", seller.walletAddress))
             .filter((q) => q.eq(q.field("variationName"), listing.itemVariation))
             .first();
 
@@ -82,7 +82,7 @@ export const getUserListings = query({
   handler: async (ctx, args) => {
     const listings = await ctx.db
       .query("marketListings")
-      .withIndex("", (q: any) => q.eq("sellerId", args.userId))
+      .withIndex("by_seller", (q: any) => q.eq("sellerId", args.userId))
       .filter((q) => q.eq(q.field("status"), "active"))
       .collect();
 
@@ -294,7 +294,7 @@ export const getListings = query({
   handler: async (ctx, args) => {
     let query = ctx.db
       .query("marketListings")
-      .withIndex("", (q: any) => q.eq("status", "active"));
+      .withIndex("by_status", (q: any) => q.eq("status", "active"));
     
     // Filter by item type if specified
     if (args.itemType) {
@@ -376,7 +376,7 @@ export const createListing = mutation({
     // Get seller's REAL gold from goldMining table (not users.gold)
     const goldMining = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", seller.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", seller.walletAddress))
       .first();
 
     if (!goldMining) {
