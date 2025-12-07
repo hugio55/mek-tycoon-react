@@ -870,6 +870,227 @@ export const cascadeDeleteUser = mutation({
     }
     deletedCounts.walletGroupMemberships = walletGroupMemberships.length;
 
+    // === ADDITIONAL TABLES (added for complete coverage) ===
+
+    // marketListingPurchases (as seller)
+    const marketListingPurchases = await ctx.db.query("marketListingPurchases")
+      .withIndex("by_seller", (q: any) => q.eq("sellerId", userId)).collect();
+    for (const record of marketListingPurchases) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.marketListingPurchases = marketListingPurchases.length;
+
+    // tradeAbuseFlags (as seller)
+    const tradeAbuseFlags = await ctx.db.query("tradeAbuseFlags")
+      .withIndex("by_seller", (q: any) => q.eq("sellerId", userId)).collect();
+    for (const record of tradeAbuseFlags) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.tradeAbuseFlags = tradeAbuseFlags.length;
+
+    // goldBackupUserData
+    const goldBackupUserData = await ctx.db.query("goldBackupUserData")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of goldBackupUserData) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.goldBackupUserData = goldBackupUserData.length;
+
+    // levelUpgrades
+    const levelUpgrades = await ctx.db.query("levelUpgrades")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of levelUpgrades) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.levelUpgrades = levelUpgrades.length;
+
+    // activityLogs
+    const activityLogs = await ctx.db.query("activityLogs")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of activityLogs) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.activityLogs = activityLogs.length;
+
+    // federationMemberships
+    const federationMemberships = await ctx.db.query("federationMemberships")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of federationMemberships) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.federationMemberships = federationMemberships.length;
+
+    // essenceSlots
+    const essenceSlots = await ctx.db.query("essenceSlots")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of essenceSlots) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.essenceSlots = essenceSlots.length;
+
+    // essenceSlotRequirements
+    const essenceSlotRequirements = await ctx.db.query("essenceSlotRequirements")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of essenceSlotRequirements) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.essenceSlotRequirements = essenceSlotRequirements.length;
+
+    // essenceTracking
+    const essenceTracking = await ctx.db.query("essenceTracking")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of essenceTracking) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.essenceTracking = essenceTracking.length;
+
+    // essenceBalances
+    const essenceBalances = await ctx.db.query("essenceBalances")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of essenceBalances) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.essenceBalances = essenceBalances.length;
+
+    // essencePlayerBuffs
+    const essencePlayerBuffs = await ctx.db.query("essencePlayerBuffs")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of essencePlayerBuffs) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.essencePlayerBuffs = essencePlayerBuffs.length;
+
+    // essenceBuffSources
+    const essenceBuffSources = await ctx.db.query("essenceBuffSources")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of essenceBuffSources) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.essenceBuffSources = essenceBuffSources.length;
+
+    // airdropSubmissions (by userId)
+    const airdropSubmissions = await ctx.db.query("airdropSubmissions")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+    for (const record of airdropSubmissions) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.airdropSubmissions = airdropSubmissions.length;
+
+    // commemorativePurchases (by walletAddress)
+    const commemorativePurchases = await ctx.db.query("commemorativePurchases")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of commemorativePurchases) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.commemorativePurchases = commemorativePurchases.length;
+
+    // commemorativeNFTClaims
+    const commemorativeNFTClaims = await ctx.db.query("commemorativeNFTClaims")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of commemorativeNFTClaims) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.commemorativeNFTClaims = commemorativeNFTClaims.length;
+
+    // messageUnreadCounts
+    const messageUnreadCounts = await ctx.db.query("messageUnreadCounts")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of messageUnreadCounts) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.messageUnreadCounts = messageUnreadCounts.length;
+
+    // typingIndicators (no index, use filter)
+    const typingIndicators = await ctx.db.query("typingIndicators")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    for (const record of typingIndicators) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.typingIndicators = typingIndicators.length;
+
+    // messageUploadQuotas (has by_wallet_date index, use filter for wallet only)
+    const messageUploadQuotas = await ctx.db.query("messageUploadQuotas")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    for (const record of messageUploadQuotas) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.messageUploadQuotas = messageUploadQuotas.length;
+
+    // notifications (by userId)
+    const notifications = await ctx.db.query("notifications")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+    for (const record of notifications) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.notifications = notifications.length;
+
+    // === STAKE ADDRESS BASED TABLES ===
+    // Get the user's stake address if they have one
+    const stakeAddress = user.walletStakeAddress || walletAddress;
+
+    // walletSessions (by stakeAddress)
+    const walletSessions = await ctx.db.query("walletSessions")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", stakeAddress)).collect();
+    for (const record of walletSessions) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.walletSessions = walletSessions.length;
+
+    // walletSignatures (by stakeAddress)
+    const walletSignatures = await ctx.db.query("walletSignatures")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", stakeAddress)).collect();
+    for (const record of walletSignatures) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.walletSignatures = walletSignatures.length;
+
+    // walletRateLimits (by stakeAddress - needs filter since index is compound)
+    const walletRateLimits = await ctx.db.query("walletRateLimits")
+      .filter((q) => q.eq(q.field("stakeAddress"), stakeAddress)).collect();
+    for (const record of walletRateLimits) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.walletRateLimits = walletRateLimits.length;
+
+    // auditLogs (by stakeAddress)
+    const auditLogs = await ctx.db.query("auditLogs")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", stakeAddress)).collect();
+    for (const record of auditLogs) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.auditLogs = auditLogs.length;
+
+    // betaSignups (by stakeAddress)
+    const betaSignups = await ctx.db.query("betaSignups")
+      .withIndex("by_stakeAddress", (q: any) => q.eq("stakeAddress", stakeAddress)).collect();
+    for (const record of betaSignups) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.betaSignups = betaSignups.length;
+
+    // === MESSAGING TABLES ===
+
+    // conversations (user is participant1 or participant2) - delete entire conversation
+    const conversationsAsP1 = await ctx.db.query("conversations")
+      .withIndex("by_participant1", (q: any) => q.eq("participant1", walletAddress)).collect();
+    const conversationsAsP2 = await ctx.db.query("conversations")
+      .withIndex("by_participant2", (q: any) => q.eq("participant2", walletAddress)).collect();
+    const allConversations = [...conversationsAsP1, ...conversationsAsP2];
+
+    // Delete messages in these conversations first
+    let messagesDeleted = 0;
+    for (const convo of allConversations) {
+      const messages = await ctx.db.query("messages")
+        .withIndex("by_conversation", (q: any) => q.eq("conversationId", convo._id)).collect();
+      for (const msg of messages) {
+        await ctx.db.delete(msg._id);
+        messagesDeleted++;
+      }
+      await ctx.db.delete(convo._id);
+    }
+    deletedCounts.messages = messagesDeleted;
+    deletedCounts.conversations = allConversations.length;
+
     // === FINALLY DELETE THE USER ===
     await ctx.db.delete(userId);
     deletedCounts.users = 1;
