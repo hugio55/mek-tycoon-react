@@ -108,6 +108,7 @@ export default function UnifiedHeader() {
   const [companyNameModalMode, setCompanyNameModalMode] = useState<'initial' | 'edit'>('initial');
   const [showWalletConnect, setShowWalletConnect] = useState(false);
   const [showNameRequiredWarning, setShowNameRequiredWarning] = useState(false);
+  const [showMessaging, setShowMessaging] = useState(false);
 
   // Handle "Remember this device" button click
   const handleRememberDevice = async () => {
@@ -457,8 +458,8 @@ export default function UnifiedHeader() {
 
         {/* Messages/Comms Icon - only show if user is logged in */}
         {userId && (
-          <a
-            href="/comms"
+          <button
+            onClick={() => setShowMessaging(true)}
             className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-black/60 border border-yellow-500/30 hover:bg-black/70 hover:border-yellow-500/50 transition-all cursor-pointer"
             title="Messages"
           >
@@ -469,7 +470,7 @@ export default function UnifiedHeader() {
             >
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
             </svg>
-          </a>
+          </button>
         )}
 
         {/* OE Logo */}
@@ -602,6 +603,60 @@ export default function UnifiedHeader() {
           }
         }}
       />
+
+      {/* Messaging Lightbox */}
+      {showMessaging && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          onClick={() => setShowMessaging(false)}
+        >
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/70"
+            style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+          />
+
+          {/* White Box Container */}
+          <div
+            className="relative w-full max-w-4xl h-[80vh] bg-white rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <div className="flex items-center gap-3">
+                <svg
+                  className="w-6 h-6 text-yellow-500"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                </svg>
+                <h2 className="text-xl font-bold text-gray-800" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                  COMMUNICATIONS
+                </h2>
+              </div>
+              <button
+                onClick={() => setShowMessaging(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors text-gray-500 hover:text-gray-700"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content Area - placeholder for now */}
+            <div className="h-[calc(100%-64px)] overflow-auto p-6">
+              <div className="text-center text-gray-500 py-12">
+                <div className="text-6xl mb-4">💬</div>
+                <div className="text-xl font-medium text-gray-700">Messaging System</div>
+                <div className="text-sm mt-2">Coming soon...</div>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
     </>
   );

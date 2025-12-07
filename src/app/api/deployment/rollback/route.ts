@@ -9,7 +9,7 @@ const execAsync = promisify(exec);
 
 interface BackupMetadata {
   id: string;
-  type: 'quick' | 'full' | 'full-dev';
+  type: 'quick' | 'full' | 'full-dev' | 'complete';
   database?: string;
   timestamp: string;
   commitHash: string;
@@ -17,6 +17,11 @@ interface BackupMetadata {
   branch: string;
   convexExportPath?: string;
   exportSizeBytes?: number;
+  // For complete backups
+  sturgeonExportPath?: string;
+  sturgeonSizeBytes?: number;
+  troutExportPath?: string | null;
+  troutSizeBytes?: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -34,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate backup ID format to prevent path traversal
-    const validIdPattern = /^(quick|full|full-dev)-\d+$/;
+    const validIdPattern = /^(quick|full|full-dev|complete)-\d+$/;
     if (!validIdPattern.test(backupId)) {
       return NextResponse.json({
         success: false,
@@ -43,9 +48,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine backup type from ID
+    const isCompleteBackup = backupId.startsWith('complete-');
     const isFullBackup = backupId.startsWith('full-') && !backupId.startsWith('full-dev-');
     const isFullDevBackup = backupId.startsWith('full-dev-');
-    const backupDir = path.join(process.cwd(), 'backups', isFullDevBackup ? 'full-dev' : (isFullBackup ? 'full' : 'quick'));
+
+    let backupDirName = 'quick';
+    if (isCompleteBackup) backupDirName = 'complete';
+    else if (isFullDevBackup) backupDirName = 'full-dev';
+    else if (isFullBackup) backupDirName = 'full';
+
+    const backupDir = path.join(process.cwd(), 'backups', backupDirName);
     const metadataPath = path.join(backupDir, `${backupId}.json`);
 
     // Load backup metadata
@@ -171,6 +183,42 @@ export async function POST(request: NextRequest) {
           error: 'Failed to restore Convex dev data (code rollback succeeded)',
           steps,
         }, { status: 500 });
+      }
+    }
+
+    // Step 4c: For complete backups, restore BOTH databases
+    if (isCompleteBackup) {
+      const troutUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+
+      // Restore Sturgeon (production)
+      if (metadata.sturgeonExportPath) {
+        const sturgeonPath = path.join(process.cwd(), metadata.sturgeonExportPath.replace('./', ''));
+        try {
+          await execAsync(`npx convex import --prod --replace "${sturgeonPath}"`, {
+            timeout: 600000,
+          });
+          steps.push('Restored Sturgeon (production)');
+        } catch (e) {
+          return NextResponse.json({
+            success: false,
+            error: 'Failed to restore Sturgeon database',
+            steps,
+          }, { status: 500 });
+        }
+      }
+
+      // Restore Trout (development)
+      if (metadata.troutExportPath && troutUrl) {
+        const troutPath = path.join(process.cwd(), metadata.troutExportPath.replace('./', ''));
+        try {
+          await execAsync(`npx convex import --url "${troutUrl}" --replace "${troutPath}"`, {
+            timeout: 600000,
+          });
+          steps.push('Restored Trout (development)');
+        } catch (e) {
+          // Trout restore failed, but Sturgeon succeeded - warn but don't fail
+          steps.push('Warning: Trout restore failed (Sturgeon was restored)');
+        }
       }
     }
 

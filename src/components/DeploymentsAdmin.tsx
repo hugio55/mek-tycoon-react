@@ -765,16 +765,14 @@ export default function DeploymentsAdmin() {
             <div className="text-gray-400 text-sm mb-2">Rolling back to:</div>
             <div className="flex items-center gap-2 mb-2">
               <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                selectedRollbackBackup.type === 'full' ? 'bg-purple-500/20 text-purple-400' :
+                selectedRollbackBackup.type === 'complete' ? 'bg-purple-500/20 text-purple-400' :
+                selectedRollbackBackup.type === 'full' ? 'bg-orange-500/20 text-orange-400' :
                 selectedRollbackBackup.type === 'full-dev' ? 'bg-green-500/20 text-green-400' :
                 'bg-blue-500/20 text-blue-400'
               }`}>
-                {selectedRollbackBackup.type === 'full' ? 'PROD' : selectedRollbackBackup.type === 'full-dev' ? 'DEV' : 'QUICK'}
+                {selectedRollbackBackup.type === 'complete' ? 'FULL' : selectedRollbackBackup.type === 'full' ? 'PROD' : selectedRollbackBackup.type === 'full-dev' ? 'DEV' : 'QUICK'}
               </span>
               <span className="font-mono text-purple-400">{selectedRollbackBackup.commitHash.substring(0, 7)}</span>
-              {selectedRollbackBackup.database && (
-                <span className="text-xs text-gray-500">({selectedRollbackBackup.database.split(' ')[0]})</span>
-              )}
             </div>
             <div className="text-sm text-gray-300 mb-1">{selectedRollbackBackup.commitMessage}</div>
             <div className="text-xs text-gray-500">
@@ -783,10 +781,12 @@ export default function DeploymentsAdmin() {
           </div>
 
           <p className="text-gray-400 text-sm mb-6">
-            {selectedRollbackBackup.type === 'full'
-              ? 'This will restore code AND Sturgeon (PRODUCTION) database to the backup state. Any data added since then will be lost.'
+            {selectedRollbackBackup.type === 'complete'
+              ? 'This will restore code AND BOTH databases (Sturgeon + Trout) to the backup state. Any data added since then will be lost.'
+              : selectedRollbackBackup.type === 'full'
+              ? 'This will restore code AND Sturgeon (PRODUCTION) database. Any production data added since then will be lost.'
               : selectedRollbackBackup.type === 'full-dev'
-              ? 'This will restore code AND Trout (DEV) database to the backup state. Production is NOT affected.'
+              ? 'This will restore code AND Trout (DEV) database. Production is NOT affected.'
               : 'This will restore code only. Database data will remain as-is.'}
           </p>
 

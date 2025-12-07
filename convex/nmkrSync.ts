@@ -191,12 +191,15 @@ export const syncSingleNFT = mutation({
 
     // Handle status-specific updates
     if (newStatus === 'sold') {
-      const finalSoldTo = soldTo || nft.soldTo;
+      // Determine the buyer's address - prefer our reservedBy (known stake address format)
+      // over NMKR's soldTo (may be transaction hash or different address format)
+      const finalSoldTo = nft.reservedBy || soldTo || nft.soldTo;
       updates.soldTo = finalSoldTo;
       updates.soldAt = Date.now();
 
       // Look up company name for historical tracking
-      if (finalSoldTo) {
+      // Only attempt lookup if we have a stake address (starts with "stake1")
+      if (finalSoldTo && finalSoldTo.startsWith("stake1")) {
         const goldMiningRecord = await ctx.db
           .query("goldMining")
           .withIndex("by_wallet", (q: any) => q.eq("walletAddress", finalSoldTo))
@@ -318,12 +321,15 @@ export const syncCampaignInventory = mutation({
         };
 
         if (newStatus === 'sold') {
-          const finalSoldTo = nmkrData.soldTo || nft.soldTo;
+          // Determine the buyer's address - prefer our reservedBy (known stake address format)
+          // over NMKR's soldTo (may be transaction hash or different address format)
+          const finalSoldTo = nft.reservedBy || nmkrData.soldTo || nft.soldTo;
           updates.soldTo = finalSoldTo;
           updates.soldAt = Date.now();
 
           // Look up company name for historical tracking
-          if (finalSoldTo) {
+          // Only attempt lookup if we have a stake address (starts with "stake1")
+          if (finalSoldTo && finalSoldTo.startsWith("stake1")) {
             const goldMiningRecord = await ctx.db
               .query("goldMining")
               .withIndex("by_wallet", (q: any) => q.eq("walletAddress", finalSoldTo))
@@ -726,12 +732,15 @@ export const internalSyncCampaignInventory = internalMutation({
       const updates: Record<string, unknown> = { status: newStatus };
 
       if (newStatus === 'sold') {
-        const finalSoldTo = nmkrData.soldTo || nft.soldTo;
+        // Determine the buyer's address - prefer our reservedBy (known stake address format)
+        // over NMKR's soldTo (may be transaction hash or different address format)
+        const finalSoldTo = nft.reservedBy || nmkrData.soldTo || nft.soldTo;
         updates.soldTo = finalSoldTo;
         updates.soldAt = Date.now();
 
         // Look up company name for historical tracking
-        if (finalSoldTo) {
+        // Only attempt lookup if we have a stake address (starts with "stake1")
+        if (finalSoldTo && finalSoldTo.startsWith("stake1")) {
           const goldMiningRecord = await ctx.db
             .query("goldMining")
             .withIndex("by_wallet", (q: any) => q.eq("walletAddress", finalSoldTo))
