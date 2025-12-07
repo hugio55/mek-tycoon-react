@@ -127,6 +127,7 @@ export const populateInventoryManually = mutation({
 // Use this to add NFTs when inventory already has items
 export const addNewNFTsToInventory = mutation({
   args: {
+    campaignId: v.id("commemorativeCampaigns"),
     nfts: v.array(
       v.object({
         nftUid: v.string(),
@@ -140,15 +141,16 @@ export const addNewNFTsToInventory = mutation({
     const now = Date.now();
     const projectId = PROJECT_ID;
 
-    console.log('[INVENTORY ADD] Adding', args.nfts.length, 'NFTs to existing inventory');
+    console.log('[INVENTORY ADD] Adding', args.nfts.length, 'NFTs to campaign:', args.campaignId);
 
-    // Get existing UIDs to skip duplicates
+    // Get existing UIDs for this campaign to skip duplicates
     const existingInventory = await ctx.db
       .query("commemorativeNFTInventory")
+      .withIndex("by_campaign", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     const existingUids = new Set(existingInventory.map(item => item.nftUid));
-    console.log('[INVENTORY ADD] Found', existingUids.size, 'existing NFTs in inventory');
+    console.log('[INVENTORY ADD] Found', existingUids.size, 'existing NFTs in campaign inventory');
 
     const basePaymentUrl = NMKR_NETWORK === "mainnet"
       ? "https://pay.nmkr.io"
@@ -175,6 +177,7 @@ export const addNewNFTsToInventory = mutation({
       }
 
       await ctx.db.insert("commemorativeNFTInventory", {
+        campaignId: args.campaignId,
         nftUid: nft.nftUid,
         nftNumber: nft.nftNumber,
         name: nft.name,

@@ -7353,6 +7353,7 @@ function NFTAdminTabs({ client }: { client: any }) {
       }));
 
       const result = await client.mutation(api.commemorativeNFTInventorySetup.addNewNFTsToInventory, {
+        campaignId: campaignId as any,
         nfts,
       });
 
