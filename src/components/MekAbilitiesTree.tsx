@@ -42,6 +42,7 @@ interface MekAbilitiesTreeProps {
   nodeColor?: string;
   connectionColor?: string;
   className?: string;
+  fitContent?: boolean; // If true, canvas height matches content (default: false)
 }
 
 export default function MekAbilitiesTree({
@@ -53,7 +54,8 @@ export default function MekAbilitiesTree({
   showNodeNames = false,
   nodeColor = '#fbbf24',
   connectionColor = '#666',
-  className = ''
+  className = '',
+  fitContent = false
 }: MekAbilitiesTreeProps) {
   // Load template by ID if provided
   const templateById = useQuery(
@@ -202,11 +204,17 @@ export default function MekAbilitiesTree({
     return { x: normalX, y: normalY };
   };
 
+  // Calculate aspect ratio for fitContent mode
+  const aspectRatio = viewBox.width / viewBox.height;
+
   return (
-    <div className={`w-full h-full ${className}`}>
+    <div
+      className={`w-full ${fitContent ? '' : 'h-full'} ${className}`}
+      style={fitContent ? { aspectRatio: `${aspectRatio}` } : undefined}
+    >
       <svg
         viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
-        className="w-full h-full"
+        className={`w-full ${fitContent ? '' : 'h-full'}`}
         preserveAspectRatio="xMidYMid meet"
       >
         {/* Background gradient */}

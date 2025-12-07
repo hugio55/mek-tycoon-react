@@ -5824,7 +5824,7 @@ export default function MekProfileLightbox({
 
                   {/* RIGHT SIDEBAR - Abilities Tree (Small Vertical) */}
                   <div className="lg:col-span-3">
-                    <div className="h-full bg-black/40 border border-yellow-500/30 rounded overflow-hidden relative">
+                    <div className="bg-black/40 border border-yellow-500/30 rounded overflow-hidden relative">
                       <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
                       <MekAbilitiesTree
                         categoryId={abilitiesTreeCategoryId}
@@ -5833,7 +5833,8 @@ export default function MekProfileLightbox({
                         showNodeNames={false}
                         nodeColor="#fbbf24"
                         connectionColor="#555"
-                        className="relative z-10 h-full"
+                        className="relative z-10"
+                        fitContent={true}
                       />
                     </div>
                   </div>
