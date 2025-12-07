@@ -540,12 +540,13 @@ export const getCompanyNamesForWallets = query({
     for (const walletAddress of args.walletAddresses) {
       if (!walletAddress) continue;
 
-      const goldMiningRecord = await ctx.db
-        .query("goldMining")
+      // Phase II: Query users table instead of goldMining
+      const user = await ctx.db
+        .query("users")
         .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
         .first();
 
-      results[walletAddress] = goldMiningRecord?.companyName || null;
+      results[walletAddress] = user?.corporationName || null;
     }
 
     return results;
@@ -706,13 +707,13 @@ export const backfillSoldNFTData = mutation({
       if (reservation && reservation.reservedBy) {
         const walletAddress = reservation.reservedBy;
 
-        // Look up company name
-        const goldMiningRecord = await ctx.db
-          .query("goldMining")
+        // Phase II: Look up company name from users table
+        const user = await ctx.db
+          .query("users")
           .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
           .first();
 
-        const companyNameAtSale = goldMiningRecord?.companyName || undefined;
+        const companyNameAtSale = user?.corporationName || undefined;
 
         // Update the NFT with the backfilled data
         await ctx.db.patch(nft._id, {
@@ -775,13 +776,13 @@ export const manuallySetSoldTo = mutation({
       return { success: false, error: "NFT not found" };
     }
 
-    // Look up company name
-    const goldMiningRecord = await ctx.db
-      .query("goldMining")
+    // Phase II: Look up company name from users table
+    const user = await ctx.db
+      .query("users")
       .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
-    const companyNameAtSale = goldMiningRecord?.companyName || undefined;
+    const companyNameAtSale = user?.corporationName || undefined;
 
     await ctx.db.patch(args.nftId, {
       soldTo: args.walletAddress,

@@ -253,11 +253,12 @@ export const completeReservation = mutation({
     let companyNameAtSale: string | undefined;
 
     if (walletAddress) {
-      const goldMiningRecord = await ctx.db
-        .query("goldMining")
+      // Phase II: Look up company name from users table
+      const user = await ctx.db
+        .query("users")
         .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
         .first();
-      companyNameAtSale = goldMiningRecord?.companyName || undefined;
+      companyNameAtSale = user?.corporationName || undefined;
     }
 
     // Update reservation status
@@ -302,13 +303,13 @@ export const completeReservationByWallet = mutation({
 
     console.log('[RESERVATION] Found reservation:', reservation._id, 'NFT:', reservation.nftNumber);
 
-    // Look up company name for historical tracking
+    // Phase II: Look up company name from users table
     let companyNameAtSale: string | undefined;
-    const goldMiningRecord = await ctx.db
-      .query("goldMining")
+    const user = await ctx.db
+      .query("users")
       .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
-    companyNameAtSale = goldMiningRecord?.companyName || undefined;
+    companyNameAtSale = user?.corporationName || undefined;
 
     // Update reservation status
     await ctx.db.patch(reservation._id, {

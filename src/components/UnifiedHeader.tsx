@@ -613,17 +613,17 @@ export default function UnifiedHeader() {
         >
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/70"
-            style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+            className="fixed inset-0 bg-black/50"
+            style={{ backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
           />
 
           {/* Translucent Container - Liquid Glass Style */}
           <div
-            className="relative w-full max-w-5xl h-[85vh] bg-black/60 backdrop-blur-xl rounded-xl border border-gray-700 shadow-2xl overflow-hidden"
+            className="relative w-full max-w-5xl h-[85vh] bg-black/40 backdrop-blur-md rounded-xl border border-gray-600/50 shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 bg-black/40">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700/50 bg-black/30">
               <div className="flex items-center gap-3">
                 <svg
                   className="w-6 h-6 text-yellow-500"
