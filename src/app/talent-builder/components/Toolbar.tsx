@@ -310,7 +310,8 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
           categoryId: selectedCategoryId || undefined,
           nodes: cleanedNodes,
           connections: state.connections,
-          viewportDimensions: state.viewportDimensions
+          viewportDimensions: state.viewportDimensions,
+          viewportPosition: state.viewportPosition || { x: 0, y: 0 }
         });
         dispatch({ type: 'SET_SELECTED_TEMPLATE_ID', payload: templateId });
         actions.setSaveStatus(`Template "${name}" updated!`, 3000);
@@ -321,7 +322,8 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
           categoryId: selectedCategoryId || undefined,
           nodes: cleanedNodes,
           connections: state.connections,
-          viewportDimensions: state.viewportDimensions
+          viewportDimensions: state.viewportDimensions,
+          viewportPosition: state.viewportPosition || { x: 0, y: 0 }
         });
         dispatch({ type: 'SET_SELECTED_TEMPLATE_ID', payload: id });
         actions.setSaveStatus(`Template "${name}" saved!`, 3000);

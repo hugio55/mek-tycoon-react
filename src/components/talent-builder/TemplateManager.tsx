@@ -69,6 +69,14 @@ const TemplateManager: React.FC<TemplateManagerProps> = memo(({
   const handleLoad = useCallback((template: Template) => {
     onLoadTemplate(template.nodes, template.connections, template._id, template.categoryId);
 
+    // Restore viewport settings from template if they exist
+    if (template.viewportDimensions) {
+      dispatch({ type: 'SET_VIEWPORT_DIMENSIONS', payload: template.viewportDimensions });
+    }
+    if (template.viewportPosition) {
+      dispatch({ type: 'SET_VIEWPORT_POSITION', payload: template.viewportPosition });
+    }
+
     // Auto-align to start node
     const startNode = template.nodes.find((n: TalentNode) => n.id === 'start');
     if (startNode && canvasRef.current) {

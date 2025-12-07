@@ -29,21 +29,28 @@ export interface WalletSession {
 
 /**
  * Save wallet session to localStorage (encrypted)
+ * Respects "device remembered" status for session duration
  */
 export async function saveSession(session: Omit<WalletSession, 'createdAt' | 'expiresAt'>): Promise<void> {
   if (typeof window === 'undefined') return;
 
   const now = Date.now();
+  // Use extended duration if device is remembered
+  const duration = isDeviceRemembered() ? EXTENDED_SESSION_DURATION : SESSION_DURATION;
   const fullSession: WalletSession = {
     ...session,
     createdAt: now,
-    expiresAt: now + SESSION_DURATION,
+    expiresAt: now + duration,
   };
 
   try {
     // Encrypt session before storing
     const encryptedSession = await encryptSession(fullSession);
     localStorage.setItem(SESSION_KEY, encryptedSession);
+    console.log('[Session] Saved session:', {
+      duration: isDeviceRemembered() ? '7 days (device remembered)' : '24 hours',
+      expiresAt: new Date(fullSession.expiresAt).toISOString(),
+    });
   } catch (error) {
     console.error('[Session] Failed to save session:', error);
     throw error;
@@ -303,9 +310,6 @@ export async function rememberDevice(): Promise<number | null> {
   const session = await getSession();
   if (!session) return null;
 
-  // Mark device as remembered
-  localStorage.setItem(REMEMBERED_DEVICE_KEY, 'true');
-
   // Extend session by 7 days + 24 hours from now
   const newExpiry = Date.now() + EXTENDED_SESSION_DURATION + SESSION_DURATION;
   session.expiresAt = newExpiry;
@@ -313,6 +317,9 @@ export async function rememberDevice(): Promise<number | null> {
   try {
     const encryptedSession = await encryptSession(session);
     localStorage.setItem(SESSION_KEY, encryptedSession);
+    // Mark device as remembered ONLY after successful session save
+    // This prevents inconsistent state if encryption/save fails
+    localStorage.setItem(REMEMBERED_DEVICE_KEY, 'true');
     console.log('[Session] Device remembered! Extended session to:', {
       newExpiry: new Date(newExpiry).toISOString(),
       duration: '8 days (7 + 1)',

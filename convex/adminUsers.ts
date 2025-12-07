@@ -888,6 +888,57 @@ export const cascadeDeleteUser = mutation({
     }
     deletedCounts.tradeAbuseFlags = tradeAbuseFlags.length;
 
+    // tradeSessionData (as buyer or seller)
+    const tradeSessionDataAsBuyer = await ctx.db.query("tradeSessionData")
+      .withIndex("by_buyer", (q: any) => q.eq("buyerId", userId)).collect();
+    const tradeSessionDataAsSeller = await ctx.db.query("tradeSessionData")
+      .withIndex("by_seller", (q: any) => q.eq("sellerId", userId)).collect();
+    const allTradeSessionData = [...tradeSessionDataAsBuyer, ...tradeSessionDataAsSeller];
+    // Dedupe by _id in case user is both buyer and seller
+    const uniqueTradeSessionIds = new Set(allTradeSessionData.map(r => r._id.toString()));
+    for (const record of allTradeSessionData) {
+      if (uniqueTradeSessionIds.has(record._id.toString())) {
+        await ctx.db.delete(record._id);
+        uniqueTradeSessionIds.delete(record._id.toString());
+      }
+    }
+    deletedCounts.tradeSessionData = allTradeSessionData.length;
+
+    // testMints (by walletAddress)
+    const testMints = await ctx.db.query("testMints")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
+    for (const record of testMints) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.testMints = testMints.length;
+
+    // mintHistory (by receiverAddress)
+    const mintHistory = await ctx.db.query("mintHistory")
+      .withIndex("by_receiver", (q: any) => q.eq("receiverAddress", walletAddress)).collect();
+    for (const record of mintHistory) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.mintHistory = mintHistory.length;
+
+    // commemorativeTokens (by walletAddress - no direct index, use filter)
+    const commemorativeTokens = await ctx.db.query("commemorativeTokens")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    for (const record of commemorativeTokens) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.commemorativeTokens = commemorativeTokens.length;
+
+    // corpTradePairs (as corp1 or corp2)
+    const corpTradePairsAsCorp1 = await ctx.db.query("corpTradePairs")
+      .withIndex("by_corp1", (q: any) => q.eq("corp1Id", userId)).collect();
+    const corpTradePairsAsCorp2 = await ctx.db.query("corpTradePairs")
+      .withIndex("by_corp2", (q: any) => q.eq("corp2Id", userId)).collect();
+    const allCorpTradePairs = [...corpTradePairsAsCorp1, ...corpTradePairsAsCorp2];
+    for (const record of allCorpTradePairs) {
+      await ctx.db.delete(record._id);
+    }
+    deletedCounts.corpTradePairs = allCorpTradePairs.length;
+
     // goldBackupUserData
     const goldBackupUserData = await ctx.db.query("goldBackupUserData")
       .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();

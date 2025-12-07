@@ -363,7 +363,7 @@ export default function MekProfilePage() {
                         style={{
                           left: '50%',
                           top: '50%',
-                          animation: `particleBurst 1.5s ease-out forwards`,
+                          animation: `mek-particle-burst 1.5s ease-out forwards`,
                           animationDelay: `${i * 0.03}s`,
                           '--angle': `${(i * 360 / 30)}deg`,
                           '--distance': `${150 + Math.random() * 100}px`
@@ -392,11 +392,11 @@ export default function MekProfilePage() {
                       >
                         {/* Glowing Animation */}
                         {isGlowing && (
-                          <div 
+                          <div
                             className="absolute inset-0 rounded-full"
                             style={{
                               background: 'radial-gradient(circle, rgba(255, 215, 0, 0.6), transparent)',
-                              animation: 'pulse 1s ease-in-out infinite',
+                              animation: 'mek-equip-pulse 1s ease-in-out infinite',
                               transform: 'scale(1.3)'
                             }}
                           />
@@ -551,29 +551,6 @@ export default function MekProfilePage() {
         </div>
       </div>
       
-      <style jsx>{`
-        @keyframes particleBurst {
-          0% {
-            transform: translate(-50%, -50%) rotate(var(--angle)) translateX(0) scale(1);
-            opacity: 1;
-          }
-          100% {
-            transform: translate(-50%, -50%) rotate(var(--angle)) translateX(var(--distance)) scale(0);
-            opacity: 0;
-          }
-        }
-        
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 0.6;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 1;
-            transform: scale(1.1);
-          }
-        }
-      `}</style>
     </div>
   );
 }
