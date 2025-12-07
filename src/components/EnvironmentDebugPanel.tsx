@@ -1,13 +1,14 @@
 "use client";
 
 /**
- * EnvironmentDebugPanel - SINGLE DATABASE MODE
+ * EnvironmentDebugPanel - DUAL DATABASE MODE
  *
- * Shows single production database (Sturgeon) status.
+ * Shows both Trout (staging) and Sturgeon (production) database status.
  */
 
 import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
+import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 
 /**
@@ -21,9 +22,56 @@ export default function EnvironmentDebugPanel() {
   const [detectedPort, setDetectedPort] = useState<number | null>(null);
   const [detectedHost, setDetectedHost] = useState<string>("");
 
-  // Test query to verify connection
+  // Database URLs
+  const troutUrl = process.env.NEXT_PUBLIC_CONVEX_URL || '';
+  const sturgeonUrl = process.env.NEXT_PUBLIC_STURGEON_URL || '';
+
+  // HTTP clients for testing connections
+  const [troutClient] = useState(() => troutUrl ? new ConvexHttpClient(troutUrl) : null);
+  const [sturgeonClient] = useState(() => sturgeonUrl ? new ConvexHttpClient(sturgeonUrl) : null);
+
+  // Connection status states
+  const [troutStatus, setTroutStatus] = useState<'connecting' | 'online' | 'error'>('connecting');
+  const [sturgeonStatus, setSturgeonStatus] = useState<'connecting' | 'online' | 'error' | 'not-configured'>('connecting');
+  const [troutUserCount, setTroutUserCount] = useState<number | null>(null);
+  const [sturgeonUserCount, setSturgeonUserCount] = useState<number | null>(null);
+
+  // Test query for main connection
   const userGold = useQuery(api.users.getUserGold);
   const users = useQuery(api.users.getAllUsers);
+
+  // Test connections to both databases
+  useEffect(() => {
+    async function testConnections() {
+      // Test Trout
+      if (troutClient) {
+        try {
+          const users = await troutClient.query(api.users.getAllUsers);
+          setTroutStatus('online');
+          setTroutUserCount(users?.length || 0);
+        } catch {
+          setTroutStatus('error');
+        }
+      }
+
+      // Test Sturgeon
+      if (sturgeonClient) {
+        try {
+          const users = await sturgeonClient.query(api.users.getAllUsers);
+          setSturgeonStatus('online');
+          setSturgeonUserCount(users?.length || 0);
+        } catch {
+          setSturgeonStatus('error');
+        }
+      } else {
+        setSturgeonStatus('not-configured');
+      }
+    }
+
+    if (isVisible) {
+      testConnections();
+    }
+  }, [isVisible, troutClient, sturgeonClient]);
 
   useEffect(() => {
     // Expose toggle function to window
@@ -52,10 +100,8 @@ export default function EnvironmentDebugPanel() {
 
   if (!isVisible) return null;
 
-  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || '';
-  const deploymentName = convexUrl.split("//")[1]?.split(".")[0] || "unknown";
-  const isProduction = deploymentName === 'fabulous-sturgeon-691';
-  const databaseLabel = isProduction ? 'Sturgeon (Production)' : deploymentName;
+  const troutDeployment = troutUrl.split("//")[1]?.split(".")[0] || "unknown";
+  const sturgeonDeployment = sturgeonUrl?.split("//")[1]?.split(".")[0] || "not-configured";
 
   return (
     <div
@@ -87,10 +133,68 @@ export default function EnvironmentDebugPanel() {
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {/* Connection Status */}
+          {/* Dual Database Status */}
           <section>
             <h3 className="text-lg font-bold text-yellow-400 mb-3 flex items-center gap-2">
-              <span>🔌</span> Connection Status
+              <span>🐟</span> Dual Database Status
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Trout (Staging) */}
+              <div className="bg-yellow-900/20 border border-yellow-600/50 rounded p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-yellow-400 font-bold">STAGING (Trout)</span>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${
+                      troutStatus === 'online' ? 'bg-green-400' :
+                      troutStatus === 'error' ? 'bg-red-400' : 'bg-yellow-400 animate-pulse'
+                    }`} />
+                    <span className={`text-xs font-mono ${
+                      troutStatus === 'online' ? 'text-green-400' :
+                      troutStatus === 'error' ? 'text-red-400' : 'text-yellow-400'
+                    }`}>
+                      {troutStatus.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-1 text-sm">
+                  <div className="text-gray-400">Deployment: <span className="text-yellow-300 font-mono">{troutDeployment}</span></div>
+                  <div className="text-gray-400">Users: <span className="text-yellow-300 font-mono">{troutUserCount ?? 'Loading...'}</span></div>
+                  <div className="text-gray-400 text-xs break-all mt-2">{troutUrl}</div>
+                </div>
+              </div>
+
+              {/* Sturgeon (Production) */}
+              <div className="bg-green-900/20 border border-green-600/50 rounded p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-green-400 font-bold">PRODUCTION (Sturgeon)</span>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${
+                      sturgeonStatus === 'online' ? 'bg-green-400' :
+                      sturgeonStatus === 'error' ? 'bg-red-400' :
+                      sturgeonStatus === 'not-configured' ? 'bg-gray-400' : 'bg-yellow-400 animate-pulse'
+                    }`} />
+                    <span className={`text-xs font-mono ${
+                      sturgeonStatus === 'online' ? 'text-green-400' :
+                      sturgeonStatus === 'error' ? 'text-red-400' :
+                      sturgeonStatus === 'not-configured' ? 'text-gray-400' : 'text-yellow-400'
+                    }`}>
+                      {sturgeonStatus === 'not-configured' ? 'NOT CONFIGURED' : sturgeonStatus.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-1 text-sm">
+                  <div className="text-gray-400">Deployment: <span className="text-green-300 font-mono">{sturgeonDeployment}</span></div>
+                  <div className="text-gray-400">Users: <span className="text-green-300 font-mono">{sturgeonUserCount ?? (sturgeonStatus === 'not-configured' ? 'N/A' : 'Loading...')}</span></div>
+                  <div className="text-gray-400 text-xs break-all mt-2">{sturgeonUrl || 'Add NEXT_PUBLIC_STURGEON_URL to .env.local'}</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Main Connection Status */}
+          <section>
+            <h3 className="text-lg font-bold text-yellow-400 mb-3 flex items-center gap-2">
+              <span>🔌</span> Main Connection Status
             </h3>
             <div className="bg-gray-800/50 rounded border border-gray-700 p-4 space-y-2">
               <div className="flex items-center justify-between">
@@ -115,7 +219,7 @@ export default function EnvironmentDebugPanel() {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">User Count:</span>
+                <span className="text-gray-400">User Count (via hook):</span>
                 <span className="text-white font-mono text-sm">
                   {users === undefined ? 'Loading...' : users === null ? 'Error' : users.length}
                 </span>
@@ -135,39 +239,14 @@ export default function EnvironmentDebugPanel() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Database Mode:</span>
-                <span className={`font-mono text-sm font-bold ${isProduction ? 'text-green-400' : 'text-yellow-400'}`}>
-                  SINGLE DATABASE ({isProduction ? 'Production' : 'Staging'})
+                <span className="font-mono text-sm font-bold text-cyan-400">
+                  DUAL DATABASE (Trout + Sturgeon)
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Deployment:</span>
-                <span className={`font-mono text-sm ${isProduction ? 'text-green-400' : 'text-yellow-400'}`}>
-                  {isProduction ? 'fabulous-sturgeon-691 (Sturgeon)' : deploymentName}
-                </span>
-              </div>
-            </div>
-          </section>
-
-          {/* Convex Configuration */}
-          <section>
-            <h3 className="text-lg font-bold text-yellow-400 mb-3 flex items-center gap-2">
-              <span>📦</span> Convex Configuration
-            </h3>
-            <div className="bg-gray-800/50 rounded border border-gray-700 p-4 space-y-2">
-              <div className="flex items-start justify-between">
-                <span className="text-gray-400">NEXT_PUBLIC_CONVEX_URL:</span>
-                <span className="text-white font-mono text-sm text-right break-all ml-4">
-                  {convexUrl || <span className="text-red-400">NOT SET</span>}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Deployment Name:</span>
-                <span className="text-white font-mono text-sm">{deploymentName}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Database:</span>
-                <span className={`font-mono text-sm ${isProduction ? 'text-green-400' : 'text-yellow-400'}`}>
-                  {databaseLabel} (Single Database Mode)
+                <span className="text-gray-400">Main Client:</span>
+                <span className="font-mono text-sm text-yellow-400">
+                  {troutDeployment} (Staging)
                 </span>
               </div>
             </div>
@@ -193,24 +272,6 @@ export default function EnvironmentDebugPanel() {
                   ))}
                 </div>
               )}
-            </div>
-          </section>
-
-          {/* Configuration Info */}
-          <section>
-            <h3 className="text-lg font-bold text-yellow-400 mb-3 flex items-center gap-2">
-              <span>📋</span> Database Configuration
-            </h3>
-            <div className="bg-gray-800/50 rounded border border-gray-700 p-4">
-              <div className={`${isProduction ? 'bg-green-900/30 border-green-600/50' : 'bg-yellow-900/30 border-yellow-600/50'} border rounded p-4`}>
-                <div className={`${isProduction ? 'text-green-400' : 'text-yellow-400'} font-bold mb-2`}>
-                  🐟 {isProduction ? 'PRODUCTION' : 'STAGING'} ({deploymentName})
-                </div>
-                <div className="ml-4 space-y-1 text-sm">
-                  <div className="text-gray-300 font-mono">URL: {convexUrl}</div>
-                  <div className="text-gray-400">Single database mode - code uses this database only</div>
-                </div>
-              </div>
             </div>
           </section>
 

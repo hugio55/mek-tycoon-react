@@ -6,10 +6,10 @@ import { checkDeploymentAuth } from '@/lib/deployment/auth';
 const execAsync = promisify(exec);
 
 /**
- * deploy-prod route - SIMPLIFIED FOR SINGLE DATABASE
+ * deploy-prod route - DUAL DATABASE MODE
  *
- * Previously deployed to a separate Sturgeon database.
- * Now deploys to the main Convex database (which IS Sturgeon).
+ * Deploys to Sturgeon (fabulous-sturgeon-691) - the PRODUCTION database.
+ * Requires confirmation token for safety.
  */
 
 export async function POST(request: NextRequest) {
@@ -27,26 +27,34 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Single database mode: use main Convex URL (now points to Sturgeon)
-    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+    // Get Sturgeon URL from env
+    const sturgeonUrl = process.env.NEXT_PUBLIC_STURGEON_URL;
 
-    if (!convexUrl) {
+    if (!sturgeonUrl) {
       return NextResponse.json({
         success: false,
-        error: 'NEXT_PUBLIC_CONVEX_URL not configured',
+        error: 'NEXT_PUBLIC_STURGEON_URL not configured. Add it to .env.local to enable production deployments.',
       }, { status: 500 });
     }
 
-    // Deploy to production using the main Convex URL
+    // Verify we're deploying to Sturgeon
+    if (!sturgeonUrl.includes('sturgeon')) {
+      return NextResponse.json({
+        success: false,
+        error: 'NEXT_PUBLIC_STURGEON_URL does not appear to be the Sturgeon production database.',
+      }, { status: 400 });
+    }
+
+    // Deploy to production using the Sturgeon URL
     // --yes flag skips confirmation prompt (required for non-interactive terminals)
     // --typecheck=disable skips TypeScript checking (matches dev server behavior)
     const { stdout, stderr } = await execAsync(
-      `npx convex deploy --url "${convexUrl}" --yes --typecheck=disable`,
+      `npx convex deploy --url "${sturgeonUrl}" --yes --typecheck=disable`,
       {
         timeout: 180000, // 3 minute timeout for production
         env: {
           ...process.env,
-          CONVEX_URL: convexUrl
+          CONVEX_URL: sturgeonUrl
         }
       }
     );
