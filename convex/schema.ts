@@ -3,11 +3,21 @@ import { v } from "convex/values";
 
 export default defineSchema({
   // Main Mek NFT collection
+  // =============================================================================
+  // Phase II: ownerStakeAddress is THE owner identifier (FK to users.stakeAddress)
+  // Legacy: owner field (payment address) kept for backwards compatibility
+  // =============================================================================
   meks: defineTable({
-    // NFT data
-    assetId: v.string(),
+    // NFT Identity
+    assetId: v.string(), // Unique asset ID - PRIMARY KEY
     assetName: v.string(),
-    owner: v.string(), // wallet address
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // OWNERSHIP (Phase II)
+    // ═══════════════════════════════════════════════════════════════════════════
+    ownerStakeAddress: v.optional(v.string()), // FK to users.stakeAddress (Phase II)
+    owner: v.string(), // LEGACY: payment address (Phase I)
+
     iconUrl: v.optional(v.string()),
     verified: v.boolean(), // blockchain verified
     sourceKey: v.optional(v.string()), // Full source key from metadata (e.g., "HH1-DH1-JI2-B")
@@ -60,11 +70,22 @@ export default defineSchema({
     winStreak: v.optional(v.number()),
     wins: v.optional(v.number()),
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TALENT TREE (bounded 1:1 data, stays on Mek)
+    // ═══════════════════════════════════════════════════════════════════════════
+    talentTree: v.optional(v.object({
+      unlockedNodes: v.array(v.string()), // Node IDs that have been unlocked
+      currentPath: v.optional(v.string()), // Current talent path being pursued
+      totalTalentXP: v.optional(v.number()), // XP invested in talent tree
+      lastTalentUpdate: v.optional(v.number()), // When talent was last modified
+    })),
+
     // Metadata
     lastUpdated: v.optional(v.number()),
     isStaked: v.optional(v.boolean())
   })
-    .index("by_owner", ["owner"])
+    .index("by_owner", ["owner"]) // LEGACY: for backwards compat
+    .index("by_owner_stake", ["ownerStakeAddress"]) // Phase II: PRIMARY owner lookup
     .index("by_asset_id", ["assetId"])
     .index("by_asset_name", ["assetName"])
     .index("by_source_key", ["sourceKey"])
@@ -73,7 +94,8 @@ export default defineSchema({
     .index("by_body", ["bodyVariation"])
     .index("by_rarity", ["rarityTier"])
     .index("by_slotted", ["isSlotted"])
-    .index("by_owner_slotted", ["owner", "isSlotted"]),
+    .index("by_owner_slotted", ["owner", "isSlotted"])
+    .index("by_owner_stake_slotted", ["ownerStakeAddress", "isSlotted"]), // Phase II
 
   // Mek Tree Categories - Parent categories that get assigned to Meks
   // Each category can have multiple template saves, with one "active" template
@@ -406,6 +428,49 @@ export default defineSchema({
     .index("by_user_type", ["stakeAddress", "essenceType"])
     .index("by_type", ["essenceType"])
     .index("by_balance", ["essenceType", "balance"]), // For finding users with specific essence
+
+  // =============================================================================
+  // USER JOB SLOTS (Multiple Items Per User)
+  // =============================================================================
+  // Each user can have multiple job slots (mining, crafting, security, etc.)
+  // Each slot can have a Mek assigned and tracks XP/progress separately.
+  // =============================================================================
+  userJobSlots: defineTable({
+    // Ownership
+    stakeAddress: v.string(), // FK to users.stakeAddress
+
+    // Slot Identity
+    slotType: v.string(), // "mining", "crafting", "security", "research", etc.
+    slotIndex: v.number(), // 1, 2, 3... (for ordering within type)
+
+    // Assignment
+    assignedMekId: v.optional(v.string()), // FK to meks.assetId (null = empty slot)
+    assignedAt: v.optional(v.number()), // When Mek was assigned to this slot
+
+    // Slot Progress (independent of Mek)
+    slotXP: v.optional(v.number()), // XP accumulated in this slot
+    slotLevel: v.optional(v.number()), // Slot level (1-10)
+    lastXPUpdate: v.optional(v.number()), // When XP was last calculated
+
+    // Tenure & Progression
+    tenureDays: v.optional(v.number()), // Days Mek has been in this slot
+    pitStopsCompleted: v.optional(v.number()), // Number of pit stops taken
+    nextPitStopAt: v.optional(v.number()), // When next pit stop is available
+
+    // Slot Configuration
+    isUnlocked: v.boolean(), // Whether slot is available for use
+    unlockedAt: v.optional(v.number()), // When slot was unlocked
+    unlockCost: v.optional(v.number()), // Gold/essence paid to unlock
+
+    // Output tracking
+    totalOutput: v.optional(v.number()), // Total gold/essence produced by this slot
+    lastOutputTime: v.optional(v.number()), // When last output was collected
+  })
+    .index("by_user", ["stakeAddress"])
+    .index("by_user_type", ["stakeAddress", "slotType"])
+    .index("by_assigned_mek", ["assignedMekId"])
+    .index("by_slot_type", ["slotType"])
+    .index("by_user_unlocked", ["stakeAddress", "isUnlocked"]),
 
   // Variations reference table - maps all variations to unique IDs
   variationsReference: defineTable({
@@ -1442,6 +1507,57 @@ export default defineSchema({
   })
     .index("by_wallet", ["walletAddress"])
     .index("by_total_rate", ["totalGoldPerHour"]),
+
+  // =============================================================================
+  // GOLD MINING STATE (Phase II - replaces goldMining)
+  // =============================================================================
+  // Complex gold mining mechanics in separate table.
+  // Does NOT contain ownedMeks array - that data lives on meks.ownerStakeAddress.
+  // 1:1 relationship with users table.
+  // =============================================================================
+  goldMiningState: defineTable({
+    // Primary identifier (FK to users.stakeAddress)
+    stakeAddress: v.string(), // 1:1 with users table
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // GOLD RATES
+    // ═══════════════════════════════════════════════════════════════════════════
+    totalGoldPerHour: v.number(), // Sum of all Mek rates (including boosts)
+    baseGoldPerHour: v.optional(v.number()), // Sum of base Mek rates (without boosts)
+    boostGoldPerHour: v.optional(v.number()), // Sum of level boosts
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ACCUMULATION
+    // ═══════════════════════════════════════════════════════════════════════════
+    accumulatedGold: v.optional(v.number()), // Gold accumulated up to lastSnapshotTime
+    lastActiveTime: v.number(), // Last time user was active
+    lastSnapshotTime: v.optional(v.number()), // Time of last offline accumulation snapshot
+    totalCumulativeGold: v.optional(v.number()), // Total gold earned all-time (never decreases)
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // GOLD SPENDING
+    // ═══════════════════════════════════════════════════════════════════════════
+    totalGoldSpentOnUpgrades: v.optional(v.number()), // Total gold spent on Mek upgrades
+    totalUpgradesPurchased: v.optional(v.number()), // Total number of upgrades bought
+    lastUpgradeSpend: v.optional(v.number()), // Timestamp of last upgrade purchase
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // BLOCKCHAIN VERIFICATION
+    // ═══════════════════════════════════════════════════════════════════════════
+    isBlockchainVerified: v.optional(v.boolean()), // Has user completed blockchain verification?
+    lastVerificationTime: v.optional(v.number()), // When last verification was performed
+    consecutiveSnapshotFailures: v.optional(v.number()), // Track consecutive failed snapshots
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TIMESTAMPS
+    // ═══════════════════════════════════════════════════════════════════════════
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    version: v.optional(v.number()), // For optimistic concurrency control
+  })
+    .index("by_stake_address", ["stakeAddress"])
+    .index("by_total_rate", ["totalGoldPerHour"])
+    .index("by_cumulative_gold", ["totalCumulativeGold"]),
 
   // Duration Configuration for Story Climb nodes
   durationConfigs: defineTable({
