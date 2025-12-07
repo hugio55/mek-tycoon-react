@@ -259,27 +259,10 @@ export const fetchNFTsByStakeAddress = action({
         }
       }
 
-      // Fetch additional metadata for Mek NFTs if needed
-      for (const mek of meks) {
-        try {
-          // Try to fetch asset details for more metadata
-          await rateLimiter.waitForSlot();
-          const assetUrl = `${BLOCKFROST_CONFIG.baseUrl}/assets/${mek.assetId}`;
-          const assetResponse = await fetch(assetUrl, {
-            headers: getBlockfrostHeaders(),
-            signal: AbortSignal.timeout(BLOCKFROST_CONFIG.timeout),
-          });
-
-          if (assetResponse.ok) {
-            const assetData = await assetResponse.json();
-            mek.metadata = assetData.onchain_metadata || assetData.metadata;
-            mek.fingerprint = assetData.fingerprint;
-          }
-        } catch (error) {
-          console.error(`[Blockfrost] Error fetching metadata for ${mek.assetId}:`, error);
-          // Continue without metadata
-        }
-      }
+      // OPTIMIZATION: Skip individual metadata fetching - it's not used!
+      // goldMining.ts uses getMekDataByNumber() from local data files instead.
+      // This saves 1 API call per Mek (~42 calls for typical wallet).
+      // The fingerprint and metadata fields are optional and can be fetched later if needed.
 
       // Cache the results
       const result = { meks, totalAssets: allAssets.length };
