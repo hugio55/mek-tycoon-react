@@ -286,7 +286,11 @@ export default function HomePage() {
       trait: []
     };
 
-    const slottedMeks = essenceState?.slots?.filter((slot: any) => slot.mekAssetId) || []; slottedMeks.forEach((slot: any) => {
+    const slottedMeks = essenceState?.slots?.filter((slot: any) => slot.mekAssetId) || [];
+    slottedMeks.forEach((slot: any) => {
+      const mek = ownedMeks.find((m: any) => (m.assetId || m.assetName) === slot.mekAssetId);
+      if (!mek) return;
+
       const sourceKey = mek.sourceKey || mek.sourceKeyBase;
       const fallback = {
         head: mek.headVariation,
@@ -333,7 +337,7 @@ export default function HomePage() {
     });
 
     return breakdown;
-  }, [ownedMeks]);
+  }, [essenceState, ownedMeks]);
 
   return (
     <div className="min-h-screen text-white relative">
