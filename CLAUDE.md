@@ -68,8 +68,144 @@ npm run dev:all
 | System | Document | Read Before |
 |--------|----------|-------------|
 | **Job Slots** | `SLOTS.md` | Jobs, daily income, tenure progression, pit stop rewards, Attaboy system, Corp/Unit Bias |
+| **Data Architecture** | `USERS_TABLE_CONSOLIDATION_PLAN.md` | Adding new user data, creating tables, database schema changes |
 
 **Why this matters**: These documents contain design decisions, system architecture, and open questions that took hours to define. Reading them first prevents contradicting established designs or re-solving already-solved problems.
+
+---
+
+## 🗄️ DATA ARCHITECTURE: Where New Data Should Live
+
+**CRITICAL: When adding new features that store user data, follow these guidelines.**
+
+### The `users` Table is for IDENTITY ONLY
+
+The `users` table should contain:
+- **Identity**: stakeAddress, corporationName
+- **Authentication**: session tokens, wallet info
+- **Aggregate stats**: gold balance, level, XP (single scalar values)
+- **Status**: isOnline, isBanned, role
+- **Timestamps**: createdAt, lastLogin
+
+### When to Create a SEPARATE Table (Default Choice)
+
+**Create a new table when the data is:**
+
+| Condition | Example | Why Separate |
+|-----------|---------|--------------|
+| **Multiple items per user** | Buffs, perks, achievements | Arrays in documents = bad pattern |
+| **Could grow unbounded** | Transaction history, notifications | Document size limits |
+| **Sparse data (many types, few values)** | 291 essence types | Most users have <50 types |
+| **Changes independently** | Slot XP vs user gold | Avoid unnecessary subscription updates |
+| **Accessed in specific contexts** | Crafting data on crafting page | Don't load what you don't need |
+| **Complex nested objects** | Talent trees, skill builds | Keep documents simple |
+
+### When to Add to `users` Table (Exception)
+
+**Only add to `users` if ALL of these are true:**
+- ✅ Single scalar value (one number, one string, one boolean)
+- ✅ Bounded and small (won't grow)
+- ✅ Core to user identity
+- ✅ Accessed on almost every page
+- ✅ Changes rarely
+
+### Decision Flowchart
+
+```
+New feature needs to store user data
+              │
+              ▼
+     Is it a single value?
+        │           │
+       YES          NO (array/collection)
+        │           │
+        ▼           └──► CREATE SEPARATE TABLE
+  Is it bounded?
+   (won't grow)
+        │           │
+       YES          NO
+        │           │
+        ▼           └──► CREATE SEPARATE TABLE
+  Accessed everywhere?
+        │           │
+       YES          NO
+        │           │
+        ▼           └──► CREATE SEPARATE TABLE
+  Core to identity?
+        │           │
+       YES          NO
+        │           │
+        ▼           └──► CREATE SEPARATE TABLE
+        │
+   ADD TO users TABLE
+   (rare - most data
+    goes in separate tables)
+```
+
+### Current Table Architecture
+
+```
+users (IDENTITY ONLY)
+├── stakeAddress (PK)
+├── corporationName
+├── gold, level
+├── session/auth
+└── timestamps, status
+
+userEssence (SPARSE DATA)
+├── stakeAddress (FK)
+├── essenceType
+└── balance
+
+userJobSlots (MULTIPLE PER USER)
+├── stakeAddress (FK)
+├── slotType, slotIndex
+├── assignedMekId
+└── slotXP, slotLevel
+
+meks (OWNED ITEMS)
+├── assetId (PK)
+├── ownerStakeAddress (FK)
+├── variations, rarity
+└── talentTree {}
+
+goldMiningState (COMPLEX MECHANICS)
+├── stakeAddress (FK)
+├── totalGoldPerHour
+├── accumulatedGold
+└── verification data
+```
+
+### Examples of Correct Decisions
+
+| New Feature | Decision | Why |
+|-------------|----------|-----|
+| "Add total playtime" | `users.totalPlaytime` | Single number, aggregate stat |
+| "Add active buffs" | New `userBuffs` table | Multiple buffs, expire independently |
+| "Add achievement progress" | New `userAchievements` table | Many achievements, sparse completion |
+| "Add corporation perks" | New `corporationPerks` table | Multiple perks, unlocked over time |
+| "Add VIP status" | `users.isVIP` | Single boolean, core status |
+| "Add daily login streak" | `users.loginStreak` | Single number, changes daily |
+| "Add owned cosmetics" | New `userCosmetics` table | Multiple items, grows over time |
+
+### NEVER Do This
+
+```typescript
+// ❌ BAD: Array of items in users table
+users: {
+  buffs: v.array(v.object({...})),        // NO - create userBuffs table
+  achievements: v.array(v.string()),       // NO - create userAchievements table
+  ownedMeks: v.array(v.object({...})),    // NO - already in meks table
+}
+
+// ❌ BAD: Object with many optional fields
+users: {
+  essence_stone: v.optional(v.number()),   // NO - create userEssence table
+  essence_disco: v.optional(v.number()),   // with rows per type
+  essence_paul: v.optional(v.number()),
+  // ... 291 more fields
+}
+```
 
 ---
 
