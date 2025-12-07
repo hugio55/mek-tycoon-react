@@ -20,7 +20,6 @@ import type * as adminEssence from "../adminEssence.js";
 import type * as adminGoldBackup from "../adminGoldBackup.js";
 import type * as adminGoldDiagnostics from "../adminGoldDiagnostics.js";
 import type * as adminGoldInvestigation from "../adminGoldInvestigation.js";
-import type * as adminGoldMigration from "../adminGoldMigration.js";
 import type * as adminMarketplace from "../adminMarketplace.js";
 import type * as adminMigration from "../adminMigration.js";
 import type * as adminResetAllProgress from "../adminResetAllProgress.js";
@@ -268,7 +267,6 @@ declare const fullApi: ApiFromModules<{
   adminGoldBackup: typeof adminGoldBackup;
   adminGoldDiagnostics: typeof adminGoldDiagnostics;
   adminGoldInvestigation: typeof adminGoldInvestigation;
-  adminGoldMigration: typeof adminGoldMigration;
   adminMarketplace: typeof adminMarketplace;
   adminMigration: typeof adminMigration;
   adminResetAllProgress: typeof adminResetAllProgress;
