@@ -1,13 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useConvex } from 'convex/react';
+import { ConvexHttpClient } from 'convex/browser';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import NMKRSyncModal from '@/components/admin/campaign/NMKRSyncModal';
 
+type DatabaseType = 'trout' | 'sturgeon';
+
 export default function AdminCampaignsPage() {
   const convex = useConvex();
+
+  // Database selection state
+  const [selectedDatabase, setSelectedDatabase] = useState<DatabaseType>('trout');
+  const troutUrl = process.env.NEXT_PUBLIC_CONVEX_URL!;
+  const sturgeonUrl = process.env.NEXT_PUBLIC_STURGEON_URL;
+
+  // Create HTTP clients for both databases
+  const [troutClient] = useState(() => new ConvexHttpClient(troutUrl));
+  const [sturgeonClient] = useState(() => sturgeonUrl ? new ConvexHttpClient(sturgeonUrl) : null);
 
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>();
   const [cleaningCampaignId, setCleaningCampaignId] = useState<string | null>(null);
@@ -20,8 +32,40 @@ export default function AdminCampaignsPage() {
   const [isVerifyingNMKR, setIsVerifyingNMKR] = useState(false);
   const [isSyncingNMKR, setIsSyncingNMKR] = useState(false);
 
-  // Standard Convex queries and mutations
-  const campaigns = useQuery(api.campaigns.getAllCampaigns, {}) || [];
+  // Campaigns state for selected database
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [loadingCampaigns, setLoadingCampaigns] = useState(true);
+
+  // Get the active client based on selection
+  const activeClient = selectedDatabase === 'sturgeon' ? sturgeonClient : troutClient;
+
+  // Fetch campaigns from selected database
+  useEffect(() => {
+    async function fetchCampaigns() {
+      if (!activeClient) {
+        setCampaigns([]);
+        setLoadingCampaigns(false);
+        return;
+      }
+
+      setLoadingCampaigns(true);
+      try {
+        const data = await activeClient.query(api.campaigns.getAllCampaigns, {});
+        setCampaigns(data || []);
+      } catch (error) {
+        console.error('[AdminCampaigns] Error fetching campaigns:', error);
+        setCampaigns([]);
+      } finally {
+        setLoadingCampaigns(false);
+      }
+    }
+
+    fetchCampaigns();
+
+    // Poll every 5 seconds
+    const interval = setInterval(fetchCampaigns, 5000);
+    return () => clearInterval(interval);
+  }, [activeClient, selectedDatabase]);
 
   const toggleCleanup = useMutation(api.commemorativeNFTReservationsCampaign.toggleCampaignReservationCleanup);
   const runCleanup = useMutation(api.commemorativeNFTReservationsCampaign.cleanupExpiredCampaignReservationsMutation);
@@ -205,10 +249,21 @@ export default function AdminCampaignsPage() {
             <p className="text-gray-400">Manage NFT minting campaigns and reservations</p>
           </div>
 
-          {/* Database indicator - single database now */}
-          <div className="bg-gray-900 border border-green-500/30 rounded-lg p-3">
+          {/* Database Selector */}
+          <div className={`bg-gray-900 border rounded-lg p-3 ${selectedDatabase === 'sturgeon' ? 'border-green-500/30' : 'border-yellow-500/30'}`}>
             <div className="text-xs text-gray-400 mb-1">Database</div>
-            <div className="text-green-400 font-bold">Production (Sturgeon)</div>
+            <select
+              value={selectedDatabase}
+              onChange={(e) => setSelectedDatabase(e.target.value as DatabaseType)}
+              className={`bg-gray-800 border rounded px-3 py-1.5 font-bold cursor-pointer ${
+                selectedDatabase === 'sturgeon'
+                  ? 'border-green-500/50 text-green-400'
+                  : 'border-yellow-500/50 text-yellow-400'
+              }`}
+            >
+              <option value="trout">Staging (Trout)</option>
+              {sturgeonUrl && <option value="sturgeon">Production (Sturgeon)</option>}
+            </select>
           </div>
         </div>
 
@@ -224,9 +279,11 @@ export default function AdminCampaignsPage() {
               {campaigns.filter((c: any) => c.status === 'active').length}
             </div>
           </div>
-          <div className="bg-black/50 border border-green-500/30 rounded-lg p-4">
+          <div className={`bg-black/50 border rounded-lg p-4 ${selectedDatabase === 'sturgeon' ? 'border-green-500/30' : 'border-yellow-500/30'}`}>
             <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Environment</div>
-            <div className="text-2xl font-bold text-green-400">Production</div>
+            <div className={`text-2xl font-bold ${selectedDatabase === 'sturgeon' ? 'text-green-400' : 'text-yellow-400'}`}>
+              {selectedDatabase === 'sturgeon' ? 'Production' : 'Staging'}
+            </div>
           </div>
         </div>
 
