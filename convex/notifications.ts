@@ -69,11 +69,11 @@ export const getUserIdByWallet = query({
       .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
-    // If not found, try by walletStakeAddress
+    // If not found, try by walletStakeAddress (legacy field)
     if (!user) {
       user = await ctx.db
         .query("users")
-        .withIndex("by_stake_address", (q: any) => q.eq("walletStakeAddress", args.walletAddress))
+        .withIndex("by_legacy_stake_address", (q: any) => q.eq("walletStakeAddress", args.walletAddress))
         .first();
     }
 

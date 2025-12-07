@@ -25,8 +25,80 @@ export const getTopGoldMiners = query({
   handler: async (ctx, { currentWallet, currentDiscordUserId, guildId }) => {
     const now = Date.now();
 
-    // Get all verified miners
-    const allMiners = await ctx.db.query("goldMining").collect();
+    // PHASE II: Collect miners from BOTH new tables and legacy table, then merge
+    const allMiners: any[] = [];
+    const seenWallets = new Set<string>();
+
+    // First: Get miners from new normalized tables
+    const allMiningStates = await ctx.db.query("goldMiningState").collect();
+    const allUsers = await ctx.db.query("users").collect();
+
+    // Build user lookup by stakeAddress
+    const userByStake = new Map<string, any>();
+    for (const user of allUsers) {
+      if (user.stakeAddress) {
+        userByStake.set(user.stakeAddress, user);
+      }
+    }
+
+    // Build mek counts by stakeAddress
+    const allMeks = await ctx.db.query("meks").collect();
+    const mekCountByStake = new Map<string, number>();
+    for (const mek of allMeks) {
+      if (mek.ownerStakeAddress) {
+        mekCountByStake.set(mek.ownerStakeAddress, (mekCountByStake.get(mek.ownerStakeAddress) || 0) + 1);
+      }
+    }
+
+    // Add miners from new tables
+    for (const miningState of allMiningStates) {
+      const stakeAddr = miningState.stakeAddress;
+      if (!stakeAddr) continue;
+
+      const user = userByStake.get(stakeAddr);
+      const walletAddress = stakeAddr; // Use stakeAddress as primary identifier
+
+      seenWallets.add(walletAddress);
+
+      allMiners.push({
+        walletAddress,
+        companyName: user?.companyName,
+        accumulatedGold: miningState.accumulatedGold || 0,
+        isBlockchainVerified: miningState.isBlockchainVerified,
+        lastSnapshotTime: miningState.lastSnapshotTime,
+        updatedAt: miningState.updatedAt,
+        createdAt: miningState.createdAt,
+        totalGoldPerHour: miningState.totalGoldPerHour || 0,
+        totalCumulativeGold: miningState.totalCumulativeGold || 0,
+        totalGoldSpentOnUpgrades: miningState.totalGoldSpentOnUpgrades || 0,
+        mekCount: mekCountByStake.get(stakeAddr) || 0,
+        lastActiveTime: miningState.lastActiveTime,
+        _source: "newTables",
+      });
+    }
+
+    // Second: Get miners from legacy goldMining table (avoid duplicates)
+    const legacyMiners = await ctx.db.query("goldMining").collect();
+    for (const miner of legacyMiners) {
+      if (!miner.walletAddress || seenWallets.has(miner.walletAddress)) continue;
+      seenWallets.add(miner.walletAddress);
+
+      allMiners.push({
+        walletAddress: miner.walletAddress,
+        companyName: miner.companyName,
+        accumulatedGold: miner.accumulatedGold || 0,
+        isBlockchainVerified: miner.isBlockchainVerified,
+        lastSnapshotTime: miner.lastSnapshotTime,
+        updatedAt: miner.updatedAt,
+        createdAt: miner.createdAt,
+        totalGoldPerHour: miner.totalGoldPerHour || 0,
+        totalCumulativeGold: miner.totalCumulativeGold || 0,
+        totalGoldSpentOnUpgrades: miner.totalGoldSpentOnUpgrades || 0,
+        mekCount: miner.ownedMeks?.length || 0,
+        lastActiveTime: miner.lastActiveTime || miner.lastLogin,
+        _source: "legacyTable",
+      });
+    }
 
     const calculateGold = (miner: typeof allMiners[0]) => {
       let currentGold = miner.accumulatedGold || 0;
@@ -59,9 +131,9 @@ export const getTopGoldMiners = query({
           'Unknown'),
         currentGold: Math.floor(totalGold),
         hourlyRate: miner.totalGoldPerHour || 0,
-        mekCount: miner.ownedMeks?.length || 0,
+        mekCount: miner.mekCount || 0,
         isCurrentUser: currentWallet === miner.walletAddress,
-        lastActive: miner.lastActiveTime || miner.lastLogin,
+        lastActive: miner.lastActiveTime,
       });
     }
 
@@ -84,7 +156,87 @@ export const getWalletMeksForDisplay = query({
     walletAddress: v.string(),
   },
   handler: async (ctx, { walletAddress }) => {
-    // Get gold mining data (using index for better performance)
+    // PHASE II: Try new normalized tables first
+    let user = await ctx.db
+      .query("users")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
+      .first();
+
+    // Fallback: try legacy walletAddress field on users table
+    if (!user) {
+      user = await ctx.db
+        .query("users")
+        .filter((q: any) => q.eq(q.field("walletAddress"), walletAddress))
+        .first();
+    }
+
+    if (user) {
+      const stakeAddr = user.stakeAddress || walletAddress;
+
+      // Get meks from new table
+      const ownedMeks = await ctx.db
+        .query("meks")
+        .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", stakeAddr))
+        .collect();
+
+      // Get company name from users table
+      const companyName = user.companyName;
+
+      // Get mining state for totalGoldPerHour
+      const miningState = await ctx.db
+        .query("goldMiningState")
+        .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", stakeAddr))
+        .first();
+
+      if (ownedMeks.length > 0) {
+        // Get level data for the Meks
+        const mekLevels = await ctx.db
+          .query("mekLevels")
+          .withIndex("by_wallet", q => q.eq("walletAddress", walletAddress))
+          .collect();
+
+        const levelMap = new Map(
+          mekLevels.map((level: any) => [level.assetId, level.currentLevel])
+        );
+
+        const meksWithLevels = ownedMeks.map((mek: any) => {
+          const mekNumberMatch = mek.assetName?.match(/#(\d+)/);
+          const mekNumber = mekNumberMatch ? parseInt(mekNumberMatch[1], 10) : null;
+          const sourceKeyCode = mekNumber ? mekNumberToSourceKey.get(mekNumber.toString()) : null;
+
+          return {
+            assetId: mek.assetId,
+            assetName: mek.assetName,
+            level: levelMap.get(mek.assetId) || mek.currentLevel || 1,
+            goldPerHour: mek.goldPerHour || 0,
+            baseGoldPerHour: mek.baseGoldPerHour || mek.goldPerHour || 0,
+            rarityRank: mek.rarityRank,
+            imageUrl: sourceKeyCode ? `/mek-images/500px/${sourceKeyCode}.webp` : mek.imageUrl || null,
+            sourceKey: sourceKeyCode,
+            mekNumber: mekNumber,
+            headVariation: mek.headVariation,
+            bodyVariation: mek.bodyVariation,
+            itemVariation: mek.itemVariation,
+          };
+        });
+
+        meksWithLevels.sort((a: any, b: any) => {
+          if (b.level !== a.level) return b.level - a.level;
+          return b.goldPerHour - a.goldPerHour;
+        });
+
+        return {
+          walletAddress,
+          displayWallet: companyName || `${walletAddress.slice(0, 8)}...${walletAddress.slice(-6)}`,
+          meks: meksWithLevels,
+          totalMeks: meksWithLevels.length,
+          totalGoldPerHour: miningState?.totalGoldPerHour || 0,
+          _source: "newTables",
+        };
+      }
+    }
+
+    // LEGACY FALLBACK: Try old goldMining table
     const goldMiningData = await ctx.db
       .query("goldMining")
       .withIndex("by_wallet", q => q.eq("walletAddress", walletAddress))
@@ -164,8 +316,80 @@ export const getAllCorporations = query({
   handler: async (ctx, { currentWallet, currentDiscordUserId, guildId }) => {
     const now = Date.now();
 
-    // Get all verified miners
-    const allMiners = await ctx.db.query("goldMining").collect();
+    // PHASE II: Collect miners from BOTH new tables and legacy table, then merge
+    const allMiners: any[] = [];
+    const seenWallets = new Set<string>();
+
+    // First: Get miners from new normalized tables
+    const allMiningStates = await ctx.db.query("goldMiningState").collect();
+    const allUsers = await ctx.db.query("users").collect();
+
+    // Build user lookup by stakeAddress
+    const userByStake = new Map<string, any>();
+    for (const user of allUsers) {
+      if (user.stakeAddress) {
+        userByStake.set(user.stakeAddress, user);
+      }
+    }
+
+    // Build mek counts by stakeAddress
+    const allMeks = await ctx.db.query("meks").collect();
+    const mekCountByStake = new Map<string, number>();
+    for (const mek of allMeks) {
+      if (mek.ownerStakeAddress) {
+        mekCountByStake.set(mek.ownerStakeAddress, (mekCountByStake.get(mek.ownerStakeAddress) || 0) + 1);
+      }
+    }
+
+    // Add miners from new tables
+    for (const miningState of allMiningStates) {
+      const stakeAddr = miningState.stakeAddress;
+      if (!stakeAddr) continue;
+
+      const user = userByStake.get(stakeAddr);
+      const walletAddress = stakeAddr;
+
+      seenWallets.add(walletAddress);
+
+      allMiners.push({
+        walletAddress,
+        companyName: user?.companyName,
+        accumulatedGold: miningState.accumulatedGold || 0,
+        isBlockchainVerified: miningState.isBlockchainVerified,
+        lastSnapshotTime: miningState.lastSnapshotTime,
+        updatedAt: miningState.updatedAt,
+        createdAt: miningState.createdAt,
+        totalGoldPerHour: miningState.totalGoldPerHour || 0,
+        totalCumulativeGold: miningState.totalCumulativeGold || 0,
+        totalGoldSpentOnUpgrades: miningState.totalGoldSpentOnUpgrades || 0,
+        mekCount: mekCountByStake.get(stakeAddr) || 0,
+        lastActiveTime: miningState.lastActiveTime,
+        _source: "newTables",
+      });
+    }
+
+    // Second: Get miners from legacy goldMining table (avoid duplicates)
+    const legacyMiners = await ctx.db.query("goldMining").collect();
+    for (const miner of legacyMiners) {
+      if (!miner.walletAddress || seenWallets.has(miner.walletAddress)) continue;
+      seenWallets.add(miner.walletAddress);
+
+      allMiners.push({
+        walletAddress: miner.walletAddress,
+        companyName: miner.companyName,
+        accumulatedGold: miner.accumulatedGold || 0,
+        isBlockchainVerified: miner.isBlockchainVerified,
+        lastSnapshotTime: miner.lastSnapshotTime,
+        updatedAt: miner.updatedAt,
+        createdAt: miner.createdAt,
+        totalGoldPerHour: miner.totalGoldPerHour || 0,
+        totalCumulativeGold: miner.totalCumulativeGold || 0,
+        totalGoldSpentOnUpgrades: miner.totalGoldSpentOnUpgrades || 0,
+        mekCount: miner.ownedMeks?.length || 0,
+        lastActiveTime: miner.lastActiveTime || miner.lastLogin,
+        _source: "legacyTable",
+      });
+    }
 
     const calculateGold = (miner: typeof allMiners[0]) => {
       let currentGold = miner.accumulatedGold || 0;
@@ -198,9 +422,9 @@ export const getAllCorporations = query({
           'Unknown'),
         currentGold: Math.floor(totalGold),
         hourlyRate: miner.totalGoldPerHour || 0,
-        mekCount: miner.ownedMeks?.length || 0,
+        mekCount: miner.mekCount || 0,
         isCurrentUser: currentWallet === miner.walletAddress,
-        lastActive: miner.lastActiveTime || miner.lastLogin,
+        lastActive: miner.lastActiveTime,
       });
     }
 
@@ -224,7 +448,65 @@ export const getCorporationWalletDetails = query({
   handler: async (ctx, { primaryWallet }) => {
     const now = Date.now();
 
-    // In the new model, each wallet is its own corporation
+    // PHASE II: Try new normalized tables first
+    let user = await ctx.db
+      .query("users")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", primaryWallet))
+      .first();
+
+    // Fallback: try legacy walletAddress field on users table
+    if (!user) {
+      user = await ctx.db
+        .query("users")
+        .filter((q: any) => q.eq(q.field("walletAddress"), primaryWallet))
+        .first();
+    }
+
+    if (user) {
+      const stakeAddr = user.stakeAddress || primaryWallet;
+
+      // Get mining state
+      const miningState = await ctx.db
+        .query("goldMiningState")
+        .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", stakeAddr))
+        .first();
+
+      // Get meks count
+      const ownedMeks = await ctx.db
+        .query("meks")
+        .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", stakeAddr))
+        .collect();
+
+      if (miningState || ownedMeks.length > 0) {
+        const calculateGoldFromNewTables = () => {
+          let currentGold = miningState?.accumulatedGold || 0;
+          if (miningState?.isBlockchainVerified === true) {
+            const lastUpdateTime = miningState.lastSnapshotTime || miningState.updatedAt || miningState.createdAt;
+            const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
+            const goldSinceLastUpdate = (miningState.totalGoldPerHour || 0) * hoursSinceLastUpdate;
+            currentGold = (miningState.accumulatedGold || 0) + goldSinceLastUpdate;
+          }
+          const goldEarnedSinceLastUpdate = currentGold - (miningState?.accumulatedGold || 0);
+          let baseCumulativeGold = miningState?.totalCumulativeGold || 0;
+          if (!miningState?.totalCumulativeGold || baseCumulativeGold === 0) {
+            baseCumulativeGold = (miningState?.accumulatedGold || 0) + (miningState?.totalGoldSpentOnUpgrades || 0);
+          }
+          return baseCumulativeGold + goldEarnedSinceLastUpdate;
+        };
+
+        return [{
+          walletAddress: primaryWallet,
+          displayWallet: user.companyName || `${primaryWallet.slice(0, 8)}...${primaryWallet.slice(-6)}`,
+          currentGold: Math.floor(calculateGoldFromNewTables()),
+          hourlyRate: miningState?.totalGoldPerHour || 0,
+          mekCount: ownedMeks.length,
+          nickname: null,
+          _source: "newTables",
+        }];
+      }
+    }
+
+    // LEGACY FALLBACK: Try old goldMining table
     const miner = await ctx.db
       .query("goldMining")
       .withIndex("by_wallet", q => q.eq("walletAddress", primaryWallet))
