@@ -67,11 +67,12 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
 
     if (newMode === 'circutree') {
       // Initialize CiruTree with a start node
+      // Position at 1475 so the 50px node's center lands on the grid center (1500)
       const startNode: TalentNode = {
         id: 'start',
         name: 'START',
-        x: 1500,
-        y: 1500,
+        x: 1500 - 25,
+        y: 1500 - 25,
         tier: 0,
         desc: 'The beginning of your journey',
         xp: 0
@@ -80,11 +81,12 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
       dispatch({ type: 'SET_CONNECTIONS', payload: [] });
     } else if (newMode === 'mek') {
       // Initialize Mek template with a start node
+      // Position at 1475 so the 50px node's center lands on the grid center (1500)
       const startNode: TalentNode = {
         id: 'start',
         name: 'START',
-        x: 1500,
-        y: 1500,
+        x: 1500 - 25,
+        y: 1500 - 25,
         tier: 0,
         desc: 'Mek template start',
         xp: 0

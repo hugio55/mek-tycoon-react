@@ -2921,7 +2921,7 @@ export default function EssenceMarketPage() {
         return {
           className: "relative p-4 rounded-lg overflow-hidden group hover:border-yellow-400/20 transition-all duration-500",
           style: {
-            background: `linear-gradient(105deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0.06) 100%)`,
+            background: `linear-gradient(105deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(105deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0.06) 100%)`,
             backdropFilter: 'blur(4px) brightness(1.25)',
             border: '1px solid rgba(255, 255, 255, 0.12)',
           }
@@ -2930,7 +2930,7 @@ export default function EssenceMarketPage() {
         return {
           className: "relative p-4 rounded-lg overflow-hidden group hover:border-yellow-400/60 transition-all duration-500",
           style: {
-            background: `linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.05) 100%)`,
+            background: `linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.05) 100%)`,
             backdropFilter: 'blur(3px) brightness(1.1)',
             border: '2px solid rgba(250, 182, 23, 0.3)',
             boxShadow: '0 0 10px rgba(250, 182, 23, 0.15)',
@@ -2940,7 +2940,7 @@ export default function EssenceMarketPage() {
         return {
           className: "relative p-4 rounded-lg overflow-hidden group hover:border-white/30 transition-all duration-500",
           style: {
-            background: `linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)`,
+            background: `linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)`,
             backdropFilter: 'blur(4px) brightness(1.12)',
             border: '2px solid rgba(255, 255, 255, 0.2)',
             boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1)',
