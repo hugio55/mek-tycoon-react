@@ -5931,11 +5931,10 @@ export default function EssenceMarketPage() {
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close Button - Animated X */}
-              <div className="absolute top-5 right-5 z-50" style={{ marginTop: 0 }}>
+              <div className="absolute top-5 right-5 z-50">
                 <CloseButton
                   onClick={() => setShowMyListingsModal(false)}
-                  hideLabel
-                  className="!mt-0"
+                  variant="space-age"
                 />
               </div>
 
