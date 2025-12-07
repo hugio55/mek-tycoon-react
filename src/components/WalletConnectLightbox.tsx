@@ -115,14 +115,17 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
     };
   }, [isOpen]);
 
-  // Animate count from 1 to final number - returns Promise that resolves when animation + flourish complete
+  // Easing function: ease-out-cubic - starts fast, slows dramatically at end for impact
+  const easeOutCubic = (t: number): number => 1 - Math.pow(1 - t, 3);
+
+  // Animate count from 1 to final number with FIXED duration and easing
+  // Returns Promise that resolves when animation + flourish complete
   const startCountingAnimation = useCallback((targetCount: number): Promise<void> => {
     return new Promise((resolve) => {
       if (targetCount <= 0) {
         setDisplayCount(0);
         setShowFinalFlourish(true);
         setLoadingPhase('complete');
-        // Brief delay for zero case
         setTimeout(() => {
           setShowFinalFlourish(false);
           resolve();
@@ -130,28 +133,34 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
         return;
       }
 
-      console.log('[🔢COUNT] Starting counting animation to', targetCount);
+      console.log('[🔢COUNT] Starting eased counting animation to', targetCount);
       setIsCountingUp(true);
       setDisplayCount(1);
       setLoadingPhase('animating');
 
-      // Calculate animation speed - faster for larger numbers
-      // Base: 80ms per number, but speed up for larger counts
-      const baseDelay = 80;
-      const speedFactor = Math.max(1, targetCount / 20); // Speed up for counts > 20
-      const delay = Math.max(20, baseDelay / speedFactor); // Min 20ms between updates
+      // FIXED duration regardless of count - animation should always feel consistent
+      // Small counts (1-5): slightly shorter so it doesn't drag
+      // Normal counts: 1.5 seconds
+      const baseDuration = targetCount <= 5 ? 800 : 1500;
+      const startTime = Date.now();
 
-      let current = 1;
-      countingIntervalRef.current = setInterval(() => {
-        current++;
-        setDisplayCount(current);
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const linearProgress = Math.min(elapsed / baseDuration, 1);
 
-        if (current >= targetCount) {
-          // Animation complete!
-          if (countingIntervalRef.current) {
-            clearInterval(countingIntervalRef.current);
-            countingIntervalRef.current = null;
-          }
+        // Apply easing - starts fast, slows dramatically at the end
+        const easedProgress = easeOutCubic(linearProgress);
+
+        // Calculate current display count (1 to targetCount)
+        const currentCount = Math.max(1, Math.round(1 + (targetCount - 1) * easedProgress));
+        setDisplayCount(currentCount);
+
+        if (linearProgress < 1) {
+          // Continue animation
+          requestAnimationFrame(animate);
+        } else {
+          // Animation complete - ensure we show exact final count
+          setDisplayCount(targetCount);
           setIsCountingUp(false);
           setShowFinalFlourish(true);
           setLoadingPhase('complete');
@@ -163,7 +172,10 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
             resolve();
           }, 1500);
         }
-      }, delay);
+      };
+
+      // Start the animation loop
+      requestAnimationFrame(animate);
     });
   }, []);
 
@@ -432,46 +444,77 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
         console.warn('[WalletConnect] Quick count failed, continuing...', quickCountError);
       }
 
-      // PHASE 2: Full initialization with metadata
-      console.log('[WalletConnect] Phase 2: Loading full Mek data...');
-      setLoadingPhase('loading');
-      if (detectedMekCount > 0) {
-        setConnectionStatus(`Loading ${detectedMekCount} Mek${detectedMekCount !== 1 ? 's' : ''}...`);
-      } else {
-        setConnectionStatus('Loading your Meks from blockchain...');
-      }
+      // PHASE 2 & 3: Run animation and full data load IN PARALLEL
+      // This saves ~2 seconds by overlapping the animation with data fetching
+      console.log('[WalletConnect] Phase 2: Loading full Mek data (parallel with animation)...');
 
       let meks: any[] = [];
 
-      try {
-        // Call real Convex Blockfrost action (server-side NFT verification)
-        console.log('[WalletConnect] Calling Convex Blockfrost action...');
-        const initResult = await initializeWithBlockfrostAction({
-          walletAddress: stakeAddress,
-          stakeAddress,
-          walletType: wallet.name.toLowerCase(),
-          paymentAddresses: usedAddresses
-        });
+      if (detectedMekCount > 0) {
+        // Start animation IMMEDIATELY - don't wait for full load
+        setConnectionStatus('');
+        console.log('[WalletConnect] Starting animation and data load in PARALLEL');
 
-        if (initResult.success) {
-          console.log(`[WalletConnect] Successfully fetched ${initResult.mekCount} Meks from blockchain`);
-          meks = initResult.meks || [];
-          setFinalMekCount(initResult.mekCount || 0);
+        // Create both promises but don't await them individually
+        const animationPromise = startCountingAnimation(detectedMekCount);
 
-          // PHASE 3: Trigger counting animation if we have Meks and wait for it
-          if (initResult.mekCount && initResult.mekCount > 0) {
-            setConnectionStatus('');
-            await startCountingAnimation(initResult.mekCount);
-            console.log('[WalletConnect] Counting animation complete, continuing...');
+        const dataLoadPromise = (async () => {
+          try {
+            console.log('[WalletConnect] Calling Convex Blockfrost action (parallel)...');
+            const initResult = await initializeWithBlockfrostAction({
+              walletAddress: stakeAddress,
+              stakeAddress,
+              walletType: wallet.name.toLowerCase(),
+              paymentAddresses: usedAddresses
+            });
+
+            if (initResult.success) {
+              console.log(`[WalletConnect] Data load complete: ${initResult.mekCount} Meks`);
+              meks = initResult.meks || [];
+              setFinalMekCount(initResult.mekCount || 0);
+              return { success: true, meks };
+            } else {
+              console.error('[WalletConnect] Blockfrost initialization failed:', initResult.error);
+              return { success: false, error: initResult.error };
+            }
+          } catch (blockfrostError: any) {
+            console.error('[WalletConnect] Blockfrost action error:', blockfrostError);
+            return { success: false, error: blockfrostError.message };
           }
-        } else {
-          console.error('[WalletConnect] Blockfrost initialization failed:', initResult.error);
-          throw new Error(initResult.error || 'Failed to fetch NFTs from blockchain');
+        })();
+
+        // Wait for BOTH to complete - animation masks the loading time!
+        const [, dataResult] = await Promise.all([animationPromise, dataLoadPromise]);
+        console.log('[WalletConnect] Both animation and data load complete');
+
+        if (!dataResult.success) {
+          console.log('[WalletConnect] Data load failed but continuing - corporation can still be created');
         }
-      } catch (blockfrostError: any) {
-        console.error('[WalletConnect] Blockfrost action error:', blockfrostError);
-        // Continue without Meks if Blockfrost fails - corporation can still be created
-        console.log('[WalletConnect] Continuing without Mek verification - check Blockfrost API');
+      } else {
+        // No Meks detected - just do the data load without animation
+        setLoadingPhase('loading');
+        setConnectionStatus('Loading your Meks from blockchain...');
+
+        try {
+          console.log('[WalletConnect] Calling Convex Blockfrost action (no animation)...');
+          const initResult = await initializeWithBlockfrostAction({
+            walletAddress: stakeAddress,
+            stakeAddress,
+            walletType: wallet.name.toLowerCase(),
+            paymentAddresses: usedAddresses
+          });
+
+          if (initResult.success) {
+            console.log(`[WalletConnect] Successfully fetched ${initResult.mekCount} Meks from blockchain`);
+            meks = initResult.meks || [];
+            setFinalMekCount(initResult.mekCount || 0);
+          } else {
+            console.error('[WalletConnect] Blockfrost initialization failed:', initResult.error);
+          }
+        } catch (blockfrostError: any) {
+          console.error('[WalletConnect] Blockfrost action error:', blockfrostError);
+          console.log('[WalletConnect] Continuing without Mek verification - check Blockfrost API');
+        }
       }
 
       // PHASE II: Create/link corporation using stake address ONLY

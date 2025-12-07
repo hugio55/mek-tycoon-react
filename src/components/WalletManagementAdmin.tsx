@@ -247,11 +247,11 @@ function WalletManagementAdminContent() {
     return await client.query(api.adminUsers.previewTestWallets);
   };
 
-  const bulkDeleteTestWallets = async () => {
+  const cascadeDeleteSingleUser = async (walletAddress: string) => {
     if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
     const client = getClient();
     if (!client) throw new Error('Client not initialized');
-    return await client.mutation(api.adminUsers.bulkDeleteTestWallets);
+    return await client.mutation(api.adminUsers.cascadeDeleteUser, { walletAddress });
   };
 
   const handlePreviewTestWallets = async () => {
@@ -268,6 +268,9 @@ function WalletManagementAdminContent() {
     }
   };
 
+  // State for deletion progress
+  const [deletionProgress, setDeletionProgress] = useState<{ current: number; total: number; currentWallet: string } | null>(null);
+
   const handleDeleteTestWallets = async () => {
     if (!testWalletPreview || testWalletPreview.testWalletCount === 0) return;
 
@@ -278,26 +281,54 @@ function WalletManagementAdminContent() {
     if (!confirmed) return;
 
     const doubleConfirmed = window.confirm(
-      `FINAL CONFIRMATION\n\nType OK to delete ${testWalletPreview.testWalletCount} test wallets permanently.`
+      `FINAL CONFIRMATION\n\nClick OK to delete ${testWalletPreview.testWalletCount} test wallets permanently.`
     );
 
     if (!doubleConfirmed) return;
 
     setIsDeletingTestWallets(true);
-    try {
-      const result = await bulkDeleteTestWallets();
-      setStatusMessage({ type: 'success', message: result.message });
+    const wallets = testWalletPreview.wallets || [];
+    let successCount = 0;
+    let failCount = 0;
+    const errors: string[] = [];
+
+    // Delete wallets one at a time to avoid timeout
+    for (let i = 0; i < wallets.length; i++) {
+      const wallet = wallets[i];
+      setDeletionProgress({
+        current: i + 1,
+        total: wallets.length,
+        currentWallet: wallet.walletAddress.substring(0, 20) + '...'
+      });
+
+      try {
+        await cascadeDeleteSingleUser(wallet.walletAddress);
+        successCount++;
+        console.log(`[Test Wallet Cleanup] Deleted ${i + 1}/${wallets.length}: ${wallet.walletAddress.substring(0, 20)}...`);
+      } catch (error) {
+        failCount++;
+        errors.push(`${wallet.walletAddress.substring(0, 15)}...: ${error}`);
+        console.error(`[Test Wallet Cleanup] Failed to delete ${wallet.walletAddress}:`, error);
+      }
+    }
+
+    setDeletionProgress(null);
+    setIsDeletingTestWallets(false);
+
+    if (failCount === 0) {
+      setStatusMessage({ type: 'success', message: `Successfully deleted ${successCount} test wallet(s)` });
       setShowTestWalletModal(false);
       setTestWalletPreview(null);
-      // Refresh wallet list
-      setWalletsLoaded(false);
-      setTimeout(() => setWalletsLoaded(true), 100);
-    } catch (error) {
-      console.error('[Test Wallet Cleanup] Delete error:', error);
-      setStatusMessage({ type: 'error', message: `Delete failed: ${error}` });
-    } finally {
-      setIsDeletingTestWallets(false);
+    } else {
+      setStatusMessage({
+        type: 'error',
+        message: `Deleted ${successCount}, failed ${failCount}. Errors: ${errors.slice(0, 3).join('; ')}${errors.length > 3 ? '...' : ''}`
+      });
     }
+
+    // Refresh wallet list
+    setWalletsLoaded(false);
+    setTimeout(() => setWalletsLoaded(true), 100);
   };
 
   const [activeSubmenu, setActiveSubmenu] = useState<SubMenu>('wallet-list');
@@ -1375,20 +1406,41 @@ Check console for full timeline.
                   </div>
                 )}
 
+                {/* Progress indicator */}
+                {deletionProgress && (
+                  <div className="mb-4 p-4 bg-yellow-900/30 rounded-lg border border-yellow-500">
+                    <div className="flex items-center gap-3">
+                      <div className="animate-spin h-5 w-5 border-2 border-yellow-400 border-t-transparent rounded-full"></div>
+                      <div>
+                        <p className="text-yellow-200 font-semibold">
+                          Deleting {deletionProgress.current} of {deletionProgress.total}...
+                        </p>
+                        <p className="text-yellow-400/70 text-sm font-mono">{deletionProgress.currentWallet}</p>
+                      </div>
+                    </div>
+                    <div className="mt-2 bg-gray-700 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-yellow-500 h-full transition-all duration-300"
+                        style={{ width: `${(deletionProgress.current / deletionProgress.total) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-4 mt-6">
                   <button
                     onClick={() => setShowTestWalletModal(false)}
-                    className="px-6 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-500 rounded-lg text-white font-semibold transition-colors"
+                    disabled={isDeletingTestWallets}
+                    className="px-6 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-500 rounded-lg text-white font-semibold transition-colors disabled:opacity-50"
                   >
-                    Cancel
+                    {isDeletingTestWallets ? 'Please wait...' : 'Cancel'}
                   </button>
-                  {testWalletPreview.testWalletCount > 0 && canMutate() && (
+                  {testWalletPreview.testWalletCount > 0 && canMutate() && !isDeletingTestWallets && (
                     <button
                       onClick={handleDeleteTestWallets}
-                      disabled={isDeletingTestWallets}
-                      className="px-6 py-2 bg-red-600 hover:bg-red-500 border border-red-400 rounded-lg text-white font-semibold transition-colors disabled:opacity-50"
+                      className="px-6 py-2 bg-red-600 hover:bg-red-500 border border-red-400 rounded-lg text-white font-semibold transition-colors"
                     >
-                      {isDeletingTestWallets ? 'Deleting...' : `Delete ${testWalletPreview.testWalletCount} Test Wallets`}
+                      Delete {testWalletPreview.testWalletCount} Test Wallets
                     </button>
                   )}
                   {!canMutate() && testWalletPreview.testWalletCount > 0 && (

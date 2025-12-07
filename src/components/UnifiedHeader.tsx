@@ -76,34 +76,17 @@ export default function UnifiedHeader() {
   const [companyNameModalMode, setCompanyNameModalMode] = useState<'initial' | 'edit'>('initial');
   const [showWalletConnect, setShowWalletConnect] = useState(false);
 
-  // Track showWalletConnect state changes
-  useEffect(() => {
-    console.log('[🔍PARENT-STATE] UnifiedHeader showWalletConnect changed:', {
-      showWalletConnect,
-      timestamp: Date.now()
-    });
-  }, [showWalletConnect]);
+  // Track showWalletConnect state changes (logging disabled - enable DEBUG_WALLET in console)
 
 
   // Get wallet address from encrypted session storage
   useEffect(() => {
-    // Check for disconnect nonce on page load
-    const nonceCheck = localStorage.getItem('mek_disconnect_nonce');
-    console.log('[🔐PAGE-LOAD] UnifiedHeader mounted - disconnect nonce check:', nonceCheck ? `✅ FOUND: ${nonceCheck.slice(0, 8)}...` : '❌ NOT FOUND');
-
-    let pollCount = 0;
-    let actualStateChanges = 0;
-    let storageEventCount = 0;
+    // Silent init - logging disabled to reduce console noise
+    // Enable DEBUG_WALLET in console for debugging: window.DEBUG_WALLET = true
     let lastAddress: string | null = null;
     let lastExpires: number | null = null;
 
-    const checkWalletAddress = async (source: 'initial' | 'polling' | 'storage') => {
-      if (source === 'polling') pollCount++;
-      if (source === 'storage') storageEventCount++;
-
-      // COMMENTED OUT: Excessive logging that floods console
-      // console.log(`[🔄SYNC] checkWalletAddress called from: ${source}`);
-
+    const checkWalletAddress = async () => {
       try {
         const session = await restoreWalletSession();
 
@@ -111,59 +94,24 @@ export default function UnifiedHeader() {
           const address = session.stakeAddress || session.walletAddress;
           const expiresAt = session.expiresAt || null;
 
-          // Track what changed
-          const addressChanged = lastAddress !== address;
-          const expiresChanged = lastExpires !== expiresAt;
-
-          if (addressChanged || expiresChanged) {
-            actualStateChanges++;
-            console.log(`[🔄SYNC] STATE CHANGE DETECTED from ${source}:`, {
-              addressChanged,
-              expiresChanged,
-              oldAddress: lastAddress,
-              newAddress: address,
-              oldExpires: lastExpires,
-              newExpires: expiresAt,
-              pollCount,
-              actualStateChanges,
-              storageEventCount,
-              changeRate: pollCount > 0 ? `${(actualStateChanges / pollCount * 100).toFixed(2)}%` : 'N/A'
-            });
-
-            lastAddress = address;
-            lastExpires = expiresAt;
-          }
-          // COMMENTED OUT: Excessive logging when no changes
-          // else {
-          //   console.log(`[🔄SYNC] No change from ${source} (poll ${pollCount}, changes ${actualStateChanges})`);
-          // }
-
-          // CRITICAL FIX: Only update state if values actually changed
+          // Only update state if values actually changed
           // This prevents unnecessary re-renders and query re-executions
           setWalletAddress(prevAddress => {
             if (prevAddress !== address) {
-              console.log('[🔄SYNC] setWalletAddress called:', { prev: prevAddress, new: address });
+              lastAddress = address;
               return address;
             }
             return prevAddress;
           });
           setSessionExpiresAt(prevExpires => {
             if (prevExpires !== expiresAt) {
-              console.log('[🔄SYNC] setSessionExpiresAt called:', { prev: prevExpires, new: expiresAt });
+              lastExpires = expiresAt;
               return expiresAt;
             }
             return prevExpires;
           });
-        }
-        // COMMENTED OUT: Excessive "no session" logging
-        // else {
-        //   console.log(`[🔄SYNC] No session from ${source}`);
-        //   // Only clear if not already cleared
-        //   setWalletAddress(prev => prev !== null ? null : prev);
-        //   setSessionExpiresAt(prev => prev !== null ? null : prev);
-        // }
-        else {
-          // Only clear if not already cleared (silent)
+        } else {
+          // Only clear if not already cleared
           setWalletAddress(prev => prev !== null ? null : prev);
           setSessionExpiresAt(prev => prev !== null ? null : prev);
         }

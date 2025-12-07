@@ -55,18 +55,22 @@ export class SecurityStateLogger {
     const elapsed = Date.now() - this.startTime;
     const prefix = `${this.operationId} [+${elapsed}ms]`;
 
-    // Color-coded console output
+    // Only log when DEBUG_SECURITY is enabled (set window.DEBUG_SECURITY = true in console)
+    const debugEnabled = typeof window !== 'undefined' && (window as any).DEBUG_SECURITY;
+
     switch (event) {
       case 'session_encrypt_start':
       case 'session_decrypt_start':
       case 'session_migrate_start':
-        console.log(`${prefix} 🔄 ${event}`, data);
+        if (debugEnabled) {
+          console.log(`${prefix} 🔄 ${event}`, data);
+        }
         break;
       case 'session_encrypt_complete':
       case 'session_decrypt_complete':
       case 'session_migrate_complete':
       case 'signature_success':
-        if (typeof window !== 'undefined' && (window as any).DEBUG_SECURITY) {
+        if (debugEnabled) {
           console.log(`${prefix} ✅ ${event}`, data);
         }
         break;
@@ -74,21 +78,29 @@ export class SecurityStateLogger {
       case 'session_decrypt_error':
       case 'session_migrate_error':
       case 'signature_failure':
+        // Always log errors
         console.error(`${prefix} ❌ ${event}`, data);
         break;
       case 'nonce_generate':
-        console.log(`${prefix} 🔑 ${event}`, data);
+        if (debugEnabled) {
+          console.log(`${prefix} 🔑 ${event}`, data);
+        }
         break;
       case 'nonce_consume':
-        console.log(`${prefix} 🔓 ${event}`, data);
+        if (debugEnabled) {
+          console.log(`${prefix} 🔓 ${event}`, data);
+        }
         break;
       case 'nonce_expire':
       case 'nonce_retry':
       case 'signature_retry':
+        // Always log warnings
         console.warn(`${prefix} ⚠️ ${event}`, data);
         break;
       default:
-        console.log(`${prefix} ${event}`, data);
+        if (debugEnabled) {
+          console.log(`${prefix} ${event}`, data);
+        }
     }
   }
 

@@ -23,14 +23,5 @@ export const sturgeonClient = sturgeonUrl
   ? new ConvexReactClient(sturgeonUrl)
   : null;
 
-// Log client status (only in development)
-if (process.env.NODE_ENV === 'development') {
-  if (sturgeonUrl) {
-    console.log('[STURGEON CLIENT] Read-only client initialized for production monitoring');
-    console.log('[STURGEON CLIENT] Database:', sturgeonUrl);
-    console.log('[STURGEON CLIENT] ⚠️ READ ONLY MODE - No mutations allowed');
-  } else {
-    console.warn('[STURGEON CLIENT] Not configured - Sturgeon monitoring unavailable');
-    console.warn('[STURGEON CLIENT] Add NEXT_PUBLIC_STURGEON_URL to .env.local to enable production monitoring');
-  }
-}
+// Silent initialization - logs removed to reduce console noise
+// Enable DEBUG_STURGEON in console to see status: window.DEBUG_STURGEON = true
