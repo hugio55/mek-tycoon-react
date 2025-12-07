@@ -5,6 +5,94 @@ import { calculateGoldDecrease, validateGoldInvariant } from "./lib/goldCalculat
 import { devLog } from "./lib/devLog";
 import { internal } from "./_generated/api";
 
+// ============================================================================
+// PHASE II: Helper to get gold mining data from new or old tables
+// ============================================================================
+
+async function getGoldMiningDataForWallet(ctx: any, walletAddress: string) {
+  // PHASE II: First try the new normalized tables
+  let user = await ctx.db
+    .query("users")
+    .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
+    .first();
+
+  // Fallback: try legacy walletAddress field
+  if (!user) {
+    user = await ctx.db
+      .query("users")
+      .filter((q: any) => q.eq(q.field("walletAddress"), walletAddress))
+      .first();
+  }
+
+  if (user) {
+    // Get gold mining state from new table
+    const miningState = await ctx.db
+      .query("goldMiningState")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", user.stakeAddress || walletAddress))
+      .first();
+
+    // Get meks from new table
+    const ownedMeks = await ctx.db
+      .query("meks")
+      .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", user.stakeAddress || walletAddress))
+      .collect();
+
+    if (miningState || ownedMeks.length > 0) {
+      // Build compatible format from new tables
+      const formattedMeks = ownedMeks.map((mek: any) => ({
+        assetId: mek.assetId,
+        assetName: mek.assetName,
+        goldPerHour: mek.goldPerHour || 0,
+        baseGoldPerHour: mek.baseGoldPerHour || mek.goldPerHour || 0,
+        effectiveGoldPerHour: mek.effectiveGoldPerHour || mek.goldPerHour || 0,
+        rarityRank: mek.rarityRank,
+        currentLevel: mek.currentLevel || 1,
+        levelBoostPercent: mek.levelBoostPercent || 0,
+        levelBoostAmount: mek.levelBoostAmount || 0,
+      }));
+
+      const totalGoldPerHour = formattedMeks.reduce((sum: number, m: any) => sum + (m.effectiveGoldPerHour || m.goldPerHour || 0), 0);
+
+      return {
+        _id: miningState?._id || user._id,
+        walletAddress: user.stakeAddress || walletAddress,
+        ownedMeks: formattedMeks,
+        accumulatedGold: miningState?.accumulatedGold || 0,
+        totalCumulativeGold: miningState?.totalCumulativeGold || 0,
+        totalGoldPerHour: miningState?.totalGoldPerHour || totalGoldPerHour,
+        baseGoldPerHour: miningState?.baseGoldPerHour || totalGoldPerHour,
+        boostGoldPerHour: miningState?.boostGoldPerHour || 0,
+        lastSnapshotTime: miningState?.lastSnapshotTime,
+        isBlockchainVerified: miningState?.isBlockchainVerified || user.walletVerified || false,
+        totalGoldSpentOnUpgrades: miningState?.totalGoldSpentOnUpgrades || 0,
+        totalUpgradesPurchased: miningState?.totalUpgradesPurchased || 0,
+        version: miningState?.version || 0,
+        updatedAt: miningState?.updatedAt || Date.now(),
+        createdAt: miningState?.createdAt || Date.now(),
+        // Mark as coming from new tables for write operations
+        _source: "newTables",
+        _userId: user._id,
+        _miningStateId: miningState?._id,
+      };
+    }
+  }
+
+  // LEGACY FALLBACK: Try old goldMining table
+  const legacyData = await ctx.db
+    .query("goldMining")
+    .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
+    .first();
+
+  if (legacyData) {
+    return {
+      ...legacyData,
+      _source: "legacyTable",
+    };
+  }
+
+  return null;
+}
+
 // Gold cost structure for each level upgrade
 const UPGRADE_COSTS = [
   0,      // Level 0 (doesn't exist)

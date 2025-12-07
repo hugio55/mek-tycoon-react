@@ -211,9 +211,9 @@ export default function UnifiedHeader() {
     return () => window.removeEventListener('newCorporationCreated', handleNewCorporation as EventListener);
   }, []);
 
-  // Get company name for current wallet
+  // Get company name for current wallet (Phase II: use corporationAuth)
   const companyNameData = useQuery(
-    api.goldMining.getCompanyName,
+    api.corporationAuth.getCompanyName,
     walletAddress ? { walletAddress } : "skip"
   );
 
