@@ -6500,152 +6500,108 @@ export default function AdminMasterDataPage() {
           {activeTab === 'user-flow' && (
             <div className="bg-black/50 backdrop-blur border-2 border-blue-500/30 rounded-lg p-6">
               <p className="text-gray-400 mb-4">
-                <span className="text-blue-400 font-bold">Phase II Architecture:</span> Jobs pay gold directly to users.gold. Mek stats track earnings for display only.
+                <span className="text-blue-400 font-bold">Phase II:</span> 1 user = 1 corporation. Jobs pay gold to users.gold. Mek stats track earnings for display.
               </p>
 
-              {/* Clean Grid Layout */}
-              <div className="relative" style={{ height: '620px' }}>
+              {/* Spider Web Layout - users in TRUE center */}
+              <div className="relative" style={{ height: '500px' }}>
 
-                {/* SVG connection lines - carefully positioned to not overlap */}
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 900 620" preserveAspectRatio="xMidYMid meet">
-                  {/* users → meks (top-left to top-right) */}
-                  <path d="M 300 120 L 550 70" stroke="#22d3ee" strokeWidth="2" fill="none" strokeDasharray="6,4" />
-                  <text x="400" y="80" fill="#22d3ee" fontSize="10" fontFamily="monospace">ownerStakeAddress</text>
+                {/* SVG - lines radiating from center, no overlaps */}
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet">
+                  {/* users (center: 400,220) → meks (top: 400,50) */}
+                  <line x1="400" y1="180" x2="400" y2="95" stroke="#22d3ee" strokeWidth="2" strokeDasharray="5,3" />
+                  <text x="410" y="140" fill="#22d3ee" fontSize="9" fontFamily="monospace">ownerStakeAddress</text>
 
-                  {/* users → userEssence (center-right, horizontal) */}
-                  <path d="M 300 180 L 550 180" stroke="#22c55e" strokeWidth="2" fill="none" strokeDasharray="6,4" />
-                  <text x="400" y="170" fill="#4ade80" fontSize="10" fontFamily="monospace">stakeAddress</text>
+                  {/* users (center) → userEssence (left: 150,220) */}
+                  <line x1="290" y1="220" x2="210" y2="220" stroke="#22c55e" strokeWidth="2" strokeDasharray="5,3" />
+                  <text x="220" y="210" fill="#4ade80" fontSize="9" fontFamily="monospace">stakeAddress</text>
 
-                  {/* users → userJobSlots (down-right diagonal) */}
-                  <path d="M 300 220 L 550 320" stroke="#eab308" strokeWidth="2" fill="none" strokeDasharray="6,4" />
-                  <text x="390" y="290" fill="#facc15" fontSize="10" fontFamily="monospace">stakeAddress</text>
+                  {/* users (center) → userJobSlots (right: 650,220) */}
+                  <line x1="510" y1="220" x2="590" y2="220" stroke="#eab308" strokeWidth="2" strokeDasharray="5,3" />
+                  <text x="530" y="210" fill="#facc15" fontSize="9" fontFamily="monospace">stakeAddress</text>
 
-                  {/* userJobSlots → meks (right side, vertical with offset) */}
-                  <path d="M 720 300 L 720 130" stroke="#f59e0b" strokeWidth="2" fill="none" strokeDasharray="6,4" />
-                  <text x="730" y="215" fill="#fbbf24" fontSize="10" fontFamily="monospace">assignedMekId</text>
+                  {/* userJobSlots → meks (curved to avoid crossing center) */}
+                  <path d="M 650 175 Q 700 120 530 70" stroke="#f59e0b" strokeWidth="2" fill="none" strokeDasharray="5,3" />
+                  <text x="620" y="100" fill="#fbbf24" fontSize="9" fontFamily="monospace">assignedMekId</text>
                 </svg>
 
-                {/* ROW 1: meks and userEssence */}
+                {/* USERS - TRUE CENTER (the hub of the web) */}
+                <div className="absolute bg-blue-900/80 border-2 border-blue-400 rounded-xl p-3 shadow-xl shadow-blue-500/30"
+                     style={{ left: '290px', top: '180px', width: '220px', zIndex: 10 }}>
+                  <div className="text-blue-300 font-bold text-lg mb-1 text-center">users</div>
+                  <div className="text-[10px] text-gray-200 space-y-0.5">
+                    <div className="text-yellow-400 font-bold">stakeAddress (PK)</div>
+                    <div>corporationName, displayName</div>
+                    <div className="text-green-400">gold, totalAccumulatedGold</div>
+                    <div>level, xp</div>
+                  </div>
+                  <div className="text-[9px] text-blue-200 mt-1 text-center border-t border-blue-400/50 pt-1">= CORPORATION</div>
+                </div>
 
-                {/* MEKS - Top right */}
-                <div className="absolute bg-cyan-900/60 border-2 border-cyan-500 rounded-lg p-3"
-                     style={{ left: '550px', top: '20px', width: '190px', zIndex: 5 }}>
-                  <div className="text-cyan-400 font-bold mb-1">meks</div>
-                  <div className="text-[10px] text-gray-300 space-y-0.5">
+                {/* MEKS - TOP */}
+                <div className="absolute bg-cyan-900/70 border-2 border-cyan-500 rounded-lg p-2"
+                     style={{ left: '310px', top: '15px', width: '180px', zIndex: 5 }}>
+                  <div className="text-cyan-400 font-bold text-sm mb-1">meks</div>
+                  <div className="text-[9px] text-gray-300 space-y-0.5">
                     <div className="text-yellow-400">assetId (PK)</div>
                     <div className="text-blue-400">ownerStakeAddress →</div>
                     <div>variations, talentTree</div>
                     <div className="text-green-400">accumulatedGoldForCorp</div>
                     <div className="text-green-400">accumulatedGoldAllTime</div>
                     <div className="text-purple-400">rankEfficiency</div>
-                    <div className="text-gray-500 text-[9px] line-through">goldRate (obsolete)</div>
                   </div>
                 </div>
 
-                {/* userEssence - Middle right */}
-                <div className="absolute bg-green-900/60 border-2 border-green-500 rounded-lg p-3"
-                     style={{ left: '550px', top: '155px', width: '170px', zIndex: 5 }}>
-                  <div className="text-green-400 font-bold mb-1">userEssence</div>
-                  <div className="text-[10px] text-gray-300 space-y-0.5">
+                {/* userEssence - LEFT */}
+                <div className="absolute bg-green-900/70 border-2 border-green-500 rounded-lg p-2"
+                     style={{ left: '30px', top: '180px', width: '170px', zIndex: 5 }}>
+                  <div className="text-green-400 font-bold text-sm mb-1">userEssence</div>
+                  <div className="text-[9px] text-gray-300 space-y-0.5">
                     <div className="text-blue-400">stakeAddress →</div>
                     <div>essenceType (291 types)</div>
                     <div>balance</div>
                   </div>
-                  <div className="text-[9px] text-green-300 mt-1">Sparse: row per type</div>
+                  <div className="text-[8px] text-green-300 mt-1">Sparse: row per type</div>
                 </div>
 
-                {/* USERS - Left center (THE HUB) */}
-                <div className="absolute bg-blue-900/70 border-2 border-blue-400 rounded-xl p-4 shadow-xl shadow-blue-500/30"
-                     style={{ left: '80px', top: '100px', width: '220px', zIndex: 10 }}>
-                  <div className="text-blue-300 font-bold text-lg mb-2 text-center">users</div>
-                  <div className="text-[11px] text-gray-200 space-y-1">
-                    <div className="text-yellow-400 font-bold">stakeAddress (PK)</div>
-                    <div>corporationName, displayName</div>
-                    <div className="text-green-400">gold (spendable)</div>
-                    <div className="text-green-400">totalAccumulatedGold</div>
-                    <div>level, xp</div>
-                    <div className="text-gray-500 text-[9px] line-through">totalEssence (legacy)</div>
-                  </div>
-                  <div className="text-[10px] text-blue-200 mt-2 text-center border-t border-blue-400/50 pt-2 font-bold">CORE IDENTITY = CORPORATION</div>
-                </div>
-
-                {/* userJobSlots - Bottom right - THE INCOME SOURCE */}
-                <div className="absolute bg-yellow-900/70 border-2 border-yellow-400 rounded-lg p-3 shadow-lg shadow-yellow-500/20"
-                     style={{ left: '550px', top: '290px', width: '190px', zIndex: 5 }}>
-                  <div className="text-yellow-300 font-bold mb-1">userJobSlots</div>
-                  <div className="text-[10px] text-gray-200 space-y-0.5">
+                {/* userJobSlots - RIGHT */}
+                <div className="absolute bg-yellow-900/80 border-2 border-yellow-400 rounded-lg p-2 shadow-lg shadow-yellow-500/20"
+                     style={{ left: '600px', top: '165px', width: '170px', zIndex: 5 }}>
+                  <div className="text-yellow-300 font-bold text-sm mb-1">userJobSlots</div>
+                  <div className="text-[9px] text-gray-200 space-y-0.5">
                     <div className="text-blue-400">stakeAddress →</div>
                     <div className="text-cyan-400">assignedMekId → meks</div>
                     <div>slotType, slotIndex</div>
-                    <div>slotXP, slotLevel</div>
-                    <div className="text-green-400">baseGoldPerDay (job rate)</div>
-                    <div className="text-purple-400">attaboyRange, lastAttaboy</div>
+                    <div className="text-green-400">baseGoldPerDay</div>
+                    <div className="text-purple-400">attaboyRange</div>
                   </div>
-                  <div className="text-[9px] text-yellow-200 mt-2 border-t border-yellow-400/50 pt-1 font-bold">★ INCOME SOURCE ★</div>
+                  <div className="text-[8px] text-yellow-200 mt-1 border-t border-yellow-400/50 pt-1">★ INCOME SOURCE</div>
                 </div>
 
-                {/* GOLD FLOW EXPLANATION - Bottom center */}
-                <div className="absolute bg-green-900/40 border border-green-500/50 rounded-lg p-3"
-                     style={{ left: '80px', top: '290px', width: '220px', zIndex: 5 }}>
-                  <div className="text-green-400 font-bold text-xs mb-2">GOLD FLOW (Job Payout)</div>
-                  <div className="text-[9px] text-gray-300 space-y-1">
-                    <div><span className="text-yellow-400">1.</span> Job calculates daily gold</div>
-                    <div><span className="text-yellow-400">2.</span> Gold → <span className="text-blue-400">users.gold</span> (spendable)</div>
-                    <div><span className="text-yellow-400">3.</span> Stats updated:</div>
-                    <div className="ml-3">• <span className="text-cyan-400">meks.forCorp</span> +amount</div>
-                    <div className="ml-3">• <span className="text-cyan-400">meks.allTime</span> +amount</div>
-                    <div className="ml-3">• <span className="text-blue-400">users.totalAccum</span> +amount</div>
-                  </div>
-                  <div className="text-[8px] text-gray-500 mt-2">Mek stats are for DISPLAY only, not routing</div>
-                </div>
-
-                {/* DELETE ZONE - Bottom */}
-                <div className="absolute border-2 border-red-500/30 border-dashed rounded-lg p-3"
-                     style={{ left: '80px', top: '450px', width: '660px', height: '150px', zIndex: 2 }}>
-                  <div className="text-red-400 font-bold text-sm mb-2">🗑️ TO DELETE (Legacy/Duplicate Tables)</div>
-
-                  <div className="flex gap-4">
-                    {/* goldMining */}
-                    <div className="bg-red-900/20 border border-red-500/30 rounded p-2 opacity-50 flex-1">
-                      <div className="text-red-400 font-bold text-xs">goldMining</div>
-                      <div className="text-[9px] text-gray-500 line-through">walletAddress</div>
-                      <div className="text-[9px] text-gray-500 line-through">companyName</div>
-                      <div className="text-[9px] text-gray-500 line-through">ownedMeks[]</div>
-                      <div className="text-[8px] text-red-300 mt-1">Phase I legacy</div>
+                {/* DELETE ZONE - Bottom, separate from web */}
+                <div className="absolute border border-red-500/40 border-dashed rounded-lg p-3 bg-black/30"
+                     style={{ left: '30px', top: '340px', width: '740px', zIndex: 2 }}>
+                  <div className="text-red-400 font-bold text-xs mb-2">TO DELETE (Legacy)</div>
+                  <div className="flex gap-6">
+                    <div className="text-[9px] text-gray-500">
+                      <span className="text-red-400">goldMining:</span> <span className="line-through">walletAddress, companyName, ownedMeks[]</span>
                     </div>
-
-                    {/* goldMiningState */}
-                    <div className="bg-red-900/20 border border-red-500/30 rounded p-2 opacity-50 flex-1">
-                      <div className="text-red-400 font-bold text-xs">goldMiningState</div>
-                      <div className="text-[9px] text-gray-500 line-through">totalGoldPerHour</div>
-                      <div className="text-[9px] text-gray-500 line-through">baseGoldPerHour</div>
-                      <div className="text-[9px] text-gray-500 line-through">accumulatedGold</div>
-                      <div className="text-[8px] text-red-300 mt-1">Passive income obsolete</div>
+                    <div className="text-[9px] text-gray-500">
+                      <span className="text-red-400">goldMiningState:</span> <span className="line-through">totalGoldPerHour, accumulatedGold</span>
                     </div>
-
-                    {/* corporations */}
-                    <div className="bg-red-900/20 border border-red-500/30 rounded p-2 opacity-50 flex-1">
-                      <div className="text-red-400 font-bold text-xs">corporations</div>
-                      <div className="text-[9px] text-gray-500 line-through">stakeAddress</div>
-                      <div className="text-[9px] text-gray-500 line-through">corporationName</div>
-                      <div className="text-[9px] text-gray-500 line-through">gold, totalEssence</div>
-                      <div className="text-[8px] text-red-300 mt-1">Duplicate of users</div>
+                    <div className="text-[9px] text-gray-500">
+                      <span className="text-red-400">corporations:</span> <span className="line-through">duplicate of users</span>
                     </div>
                   </div>
-
-                  <div className="text-[9px] text-red-300 mt-2">users table IS the corporation. These tables duplicate data.</div>
                 </div>
 
-                {/* Legend - Top left */}
-                <div className="absolute bg-gray-900/90 border border-gray-600 rounded p-2"
-                     style={{ left: '80px', top: '20px', zIndex: 5 }}>
-                  <div className="text-gray-400 font-bold text-[10px] mb-1">LEGEND</div>
-                  <div className="text-[9px] space-y-0.5">
-                    <div><span className="text-yellow-400">■</span> Primary Key</div>
-                    <div><span className="text-blue-400">→</span> FK to users</div>
-                    <div><span className="text-cyan-400">→</span> FK to meks</div>
-                    <div><span className="text-green-400">■</span> Gold field</div>
-                    <div><span className="text-purple-400">■</span> Modifier</div>
+                {/* Gold Flow Note - Bottom right */}
+                <div className="absolute bg-black/50 border border-green-500/30 rounded p-2"
+                     style={{ left: '540px', top: '340px', width: '230px', zIndex: 3 }}>
+                  <div className="text-green-400 font-bold text-[9px] mb-1">Gold Flow</div>
+                  <div className="text-[8px] text-gray-400">
+                    Job → users.gold (spendable)<br/>
+                    Also updates: meks.forCorp, meks.allTime, users.totalAccum (stats only)
                   </div>
                 </div>
 
