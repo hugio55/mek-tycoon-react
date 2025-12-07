@@ -234,16 +234,14 @@ export default function UnifiedHeader() {
   const cumulativeGold = goldMiningData?.accumulatedGold || 0;
 
   // PHASE II: Mandatory corporation name enforcement
-  // If logged in but no corporation name, force the user to set one or disconnect
-  const [showMandatoryNameModal, setShowMandatoryNameModal] = useState(false);
-
+  // If logged in but no corporation name, go directly to the CompanyNameModal
+  // Skip the intermediate "Corporation Name Required" modal
   useEffect(() => {
     // Only check when we have a wallet address AND the query has completed
     if (walletAddress && companyNameData !== undefined && !companyNameData?.hasCompanyName) {
-      console.log('[UnifiedHeader] ENFORCEMENT: Wallet connected but no corporation name - showing mandatory modal');
-      setShowMandatoryNameModal(true);
-    } else if (companyNameData?.hasCompanyName) {
-      setShowMandatoryNameModal(false);
+      console.log('[UnifiedHeader] ENFORCEMENT: Wallet connected but no corporation name - opening CompanyNameModal directly');
+      setCompanyNameModalMode('initial');
+      setShowCompanyNameModal(true);
     }
   }, [walletAddress, companyNameData]);
 
