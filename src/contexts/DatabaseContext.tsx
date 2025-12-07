@@ -1,18 +1,47 @@
 'use client';
 
+/**
+ * DatabaseContext - DUAL DATABASE MODE with Smart Environment Detection
+ *
+ * Detects which databases are available based on environment URLs:
+ * - On localhost: CONVEX_URL = Trout, STURGEON_URL = Sturgeon (both available)
+ * - On Vercel: CONVEX_URL = Sturgeon, STURGEON_URL = undefined (Sturgeon only)
+ *
+ * Used by Player Management to toggle between staging and production views.
+ */
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ConvexReactClient } from 'convex/react';
+import { ConvexHttpClient } from 'convex/browser';
 import { sturgeonClient } from '@/lib/sturgeonClient';
 
 type DatabaseType = 'trout' | 'sturgeon';
 
 interface DatabaseContextValue {
+  // Currently selected database
   selectedDatabase: DatabaseType;
   setSelectedDatabase: (db: DatabaseType) => void;
+
+  // The active client based on selection
   client: ConvexReactClient | null;
+
+  // Mutation controls
   canMutate: () => boolean;
   productionMutationsEnabled: boolean;
   setProductionMutationsEnabled: (enabled: boolean) => void;
+
+  // Environment detection - which databases are available
+  hasTrout: boolean;
+  hasSturgeon: boolean;
+  hasDualDatabase: boolean;
+
+  // Database labels for UI
+  troutLabel: string;
+  sturgeonLabel: string;
+
+  // HTTP clients for direct queries (useful for some components)
+  troutHttpClient: ConvexHttpClient | null;
+  sturgeonHttpClient: ConvexHttpClient | null;
 }
 
 const DatabaseContext = createContext<DatabaseContextValue | null>(null);
@@ -22,21 +51,89 @@ interface DatabaseProviderProps {
 }
 
 export function DatabaseProvider({ children }: DatabaseProviderProps) {
-  const [selectedDatabase, setSelectedDatabase] = useState<DatabaseType>('trout');
-  const [productionMutationsEnabled, setProductionMutationsEnabled] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [productionMutationsEnabled, setProductionMutationsEnabled] = useState(false);
+
+  // Environment URLs
+  const mainUrl = process.env.NEXT_PUBLIC_CONVEX_URL || '';
+  const secondaryUrl = process.env.NEXT_PUBLIC_STURGEON_URL || '';
+
+  // Detect which database the main URL points to
+  const mainIsSturgeon = mainUrl.includes('sturgeon');
+  const mainIsTrout = mainUrl.includes('trout');
+
+  // Determine what's available
+  // Trout is available if: main URL is Trout, OR secondary URL contains Trout
+  const hasTrout = mainIsTrout || secondaryUrl.includes('trout');
+  // Sturgeon is available if: main URL is Sturgeon, OR secondary URL contains Sturgeon
+  const hasSturgeon = mainIsSturgeon || secondaryUrl.includes('sturgeon');
+  const hasDualDatabase = hasTrout && hasSturgeon;
+
+  // Default to Trout if available (safer), otherwise Sturgeon
+  const defaultDatabase: DatabaseType = hasTrout ? 'trout' : 'sturgeon';
+  const [selectedDatabase, setSelectedDatabase] = useState<DatabaseType>(defaultDatabase);
+
+  // Create HTTP clients for both databases (if available)
+  const [troutHttpClient] = useState<ConvexHttpClient | null>(() => {
+    if (mainIsTrout) return new ConvexHttpClient(mainUrl);
+    if (secondaryUrl.includes('trout')) return new ConvexHttpClient(secondaryUrl);
+    return null;
+  });
+
+  const [sturgeonHttpClient] = useState<ConvexHttpClient | null>(() => {
+    if (mainIsSturgeon) return new ConvexHttpClient(mainUrl);
+    if (secondaryUrl.includes('sturgeon')) return new ConvexHttpClient(secondaryUrl);
+    return null;
+  });
+
+  // Database labels for UI
+  const troutDeployment = mainIsTrout
+    ? mainUrl.split('//')[1]?.split('.')[0] || 'trout'
+    : secondaryUrl.includes('trout')
+      ? secondaryUrl.split('//')[1]?.split('.')[0] || 'trout'
+      : 'not-configured';
+
+  const sturgeonDeployment = mainIsSturgeon
+    ? mainUrl.split('//')[1]?.split('.')[0] || 'sturgeon'
+    : secondaryUrl.includes('sturgeon')
+      ? secondaryUrl.split('//')[1]?.split('.')[0] || 'sturgeon'
+      : 'not-configured';
+
+  const troutLabel = `Staging (${troutDeployment})`;
+  const sturgeonLabel = `Production (${sturgeonDeployment})`;
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const getClient = () => {
+  // Prevent selecting unavailable database
+  useEffect(() => {
+    if (selectedDatabase === 'trout' && !hasTrout) {
+      setSelectedDatabase('sturgeon');
+    }
+    if (selectedDatabase === 'sturgeon' && !hasSturgeon) {
+      setSelectedDatabase('trout');
+    }
+  }, [selectedDatabase, hasTrout, hasSturgeon]);
+
+  const getClient = (): ConvexReactClient | null => {
     if (!mounted) return null;
-    return selectedDatabase === 'sturgeon' ? sturgeonClient : window.convex;
+
+    if (selectedDatabase === 'sturgeon') {
+      // If main URL is Sturgeon, use window.convex
+      // Otherwise use sturgeonClient (from secondary URL)
+      return mainIsSturgeon ? (window as any).convex : sturgeonClient;
+    } else {
+      // If main URL is Trout, use window.convex
+      // Otherwise we'd need a troutClient (but this case shouldn't happen in practice)
+      return mainIsTrout ? (window as any).convex : null;
+    }
   };
 
   const canMutate = () => {
+    // Trout (staging) = always allowed
     if (selectedDatabase === 'trout') return true;
+    // Sturgeon (production) = only if explicitly enabled
     return productionMutationsEnabled;
   };
 
@@ -47,6 +144,13 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
     canMutate,
     productionMutationsEnabled,
     setProductionMutationsEnabled,
+    hasTrout,
+    hasSturgeon,
+    hasDualDatabase,
+    troutLabel,
+    sturgeonLabel,
+    troutHttpClient,
+    sturgeonHttpClient,
   };
 
   return (
