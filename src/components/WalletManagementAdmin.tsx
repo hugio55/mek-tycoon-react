@@ -1309,6 +1309,15 @@ Check console for full timeline.
             </button>
           )}
 
+          {/* Test Wallet Cleanup Button */}
+          <button
+            onClick={handlePreviewTestWallets}
+            disabled={isPreviewingTestWallets}
+            className="px-4 py-2 bg-red-700 hover:bg-red-600 border border-red-500 rounded-lg text-white font-semibold transition-colors flex items-center gap-2 disabled:opacity-50"
+          >
+            {isPreviewingTestWallets ? '...' : '🧹'} Clean Test Wallets
+          </button>
+
           <input
             type="text"
             placeholder="Search wallets..."
@@ -1318,6 +1327,82 @@ Check console for full timeline.
           />
         </div>
       </div>
+
+      {/* Test Wallet Cleanup Modal */}
+      {showTestWalletModal && mounted && createPortal(
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]" onClick={() => setShowTestWalletModal(false)}>
+          <div
+            className="bg-gray-900 border-2 border-red-500 rounded-lg p-6 max-w-4xl max-h-[80vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-2xl font-bold text-red-400 mb-4" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              Test Wallet Cleanup Preview
+            </h2>
+
+            {testWalletPreview ? (
+              <>
+                <div className="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700">
+                  <p className="text-white text-lg">{testWalletPreview.message}</p>
+                  <p className="text-gray-400 mt-2">
+                    Test wallets are identified by addresses starting with: <code className="text-yellow-400">demo_</code>, <code className="text-yellow-400">addr_test1</code>
+                  </p>
+                </div>
+
+                {testWalletPreview.wallets && testWalletPreview.wallets.length > 0 && (
+                  <div className="mb-4 max-h-96 overflow-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-800 sticky top-0">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-gray-400">Wallet</th>
+                          <th className="px-3 py-2 text-left text-gray-400">Name</th>
+                          <th className="px-3 py-2 text-right text-gray-400">Records</th>
+                          <th className="px-3 py-2 text-right text-gray-400">Meks</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {testWalletPreview.wallets.map((w: any, i: number) => (
+                          <tr key={i} className="border-t border-gray-700 hover:bg-gray-800/50">
+                            <td className="px-3 py-2 text-gray-300 font-mono text-xs">
+                              {w.walletAddress.substring(0, 25)}...
+                            </td>
+                            <td className="px-3 py-2 text-white">{w.displayName}</td>
+                            <td className="px-3 py-2 text-right text-yellow-400">{w.totalRecords}</td>
+                            <td className="px-3 py-2 text-right text-blue-400">{w.relatedRecords.meks}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                <div className="flex gap-4 mt-6">
+                  <button
+                    onClick={() => setShowTestWalletModal(false)}
+                    className="px-6 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-500 rounded-lg text-white font-semibold transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  {testWalletPreview.testWalletCount > 0 && canMutate() && (
+                    <button
+                      onClick={handleDeleteTestWallets}
+                      disabled={isDeletingTestWallets}
+                      className="px-6 py-2 bg-red-600 hover:bg-red-500 border border-red-400 rounded-lg text-white font-semibold transition-colors disabled:opacity-50"
+                    >
+                      {isDeletingTestWallets ? 'Deleting...' : `Delete ${testWalletPreview.testWalletCount} Test Wallets`}
+                    </button>
+                  )}
+                  {!canMutate() && testWalletPreview.testWalletCount > 0 && (
+                    <p className="text-red-400 py-2">Enable mutations to delete (currently in READ ONLY mode)</p>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="text-gray-400">Loading preview...</p>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
 
       {statusMessage && (
         <div

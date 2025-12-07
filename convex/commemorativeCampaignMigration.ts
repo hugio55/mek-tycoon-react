@@ -416,7 +416,7 @@ export const rollbackLabRatMigration = mutation({
     // Remove campaignId from inventory
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     for (const item of inventory) {
@@ -428,7 +428,7 @@ export const rollbackLabRatMigration = mutation({
     // Remove campaignId from reservations
     const reservations = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     for (const reservation of reservations) {
@@ -440,7 +440,7 @@ export const rollbackLabRatMigration = mutation({
     // Remove campaignId from claims
     const claims = await ctx.db
       .query("commemorativeNFTClaims")
-      .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
+      .withIndex("by_campaign", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
 
     for (const claim of claims) {

@@ -37,7 +37,7 @@ export const recordClaim = mutation({
     // Check if claim already exists
     const existingClaim = await ctx.db
       .query("commemorativeNFTClaims")
-      .withIndex("", (q: any) => q.eq("transactionHash", args.transactionHash))
+      .withIndex("by_tx_hash", (q: any) => q.eq("transactionHash", args.transactionHash))
       .first();
 
     if (existingClaim) {
@@ -70,7 +70,7 @@ export const checkClaimed = query({
     // Check 1: Look in the claims table (populated by webhook)
     const claim = await ctx.db
       .query("commemorativeNFTClaims")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (claim) {
@@ -86,7 +86,7 @@ export const checkClaimed = query({
     // This provides a second source of truth in case claims table wasn't updated
     const soldNFT = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("", (q: any) => q.eq("status", "sold"))
+      .withIndex("by_status", (q: any) => q.eq("status", "sold"))
       .filter((q) => q.eq(q.field("soldTo"), args.walletAddress))
       .first();
 
@@ -108,7 +108,7 @@ export const checkClaimed = query({
     // Check 3: Look for completed reservations (backup check)
     const completedReservation = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("", (q: any) => q.eq("reservedBy", args.walletAddress))
+      .withIndex("by_reserved_by", (q: any) => q.eq("reservedBy", args.walletAddress))
       .filter((q) => q.eq(q.field("status"), "completed"))
       .first();
 
@@ -145,7 +145,7 @@ export const getClaimByTransaction = query({
   handler: async (ctx, args) => {
     const claim = await ctx.db
       .query("commemorativeNFTClaims")
-      .withIndex("", (q: any) => q.eq("transactionHash", args.transactionHash))
+      .withIndex("by_tx_hash", (q: any) => q.eq("transactionHash", args.transactionHash))
       .first();
 
     return claim;
@@ -160,7 +160,7 @@ export const getWalletClaims = query({
   handler: async (ctx, args) => {
     const claims = await ctx.db
       .query("commemorativeNFTClaims")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .order("desc")
       .collect();
 
@@ -197,7 +197,7 @@ export const checkRecentClaim = query({
 
     const recentClaim = await ctx.db
       .query("commemorativeNFTClaims")
-      .withIndex("", (q: any) => q.gte("claimedAt", cutoffTime))
+      .withIndex("by_claimed_at", (q: any) => q.gte("claimedAt", cutoffTime))
       .order("desc")
       .first();
 

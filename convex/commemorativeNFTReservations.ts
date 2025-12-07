@@ -40,7 +40,7 @@ export const createReservation = mutation({
       // Check if any NFTs are currently reserved (not sold)
       const reservedNFTs = await ctx.db
         .query("commemorativeNFTInventory")
-        .withIndex("", (q: any) => q.eq("status", "reserved"))
+        .withIndex("by_status", (q: any) => q.eq("status", "reserved"))
         .collect();
 
       if (reservedNFTs.length > 0) {

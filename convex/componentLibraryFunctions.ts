@@ -71,7 +71,7 @@ export const getComponentBySlug = query({
   handler: async (ctx, args) => {
     const component = await ctx.db
       .query("components")
-      .withIndex("", (q: any) => q.eq("slug", args.slug))
+      .withIndex("by_slug", (q: any) => q.eq("slug", args.slug))
       .filter((q) => q.eq(q.field("isArchived"), false))
       .first();
 
@@ -80,8 +80,11 @@ export const getComponentBySlug = query({
     // Get current version
     const currentVersion = await ctx.db
       .query("componentVersions")
-      .withIndex("", (q: any) =>
-        q.eq("componentId", component._id).eq("versionNumber", component.currentVersion)
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("componentId"), component._id),
+          q.eq(q.field("versionNumber"), component.currentVersion)
+        )
       )
       .first();
 
@@ -100,7 +103,7 @@ export const getComponentsByCategory = query({
   handler: async (ctx, args) => {
     let componentsQuery = ctx.db
       .query("components")
-      .withIndex("", (q: any) => q.eq("category", args.category));
+      .withIndex("by_category", (q: any) => q.eq("category", args.category));
 
     if (!args.includeArchived) {
       componentsQuery = componentsQuery.filter((q) =>
@@ -162,8 +165,11 @@ export const updateComponent = mutation({
     // Get previous version for comparison
     const previousVersion = await ctx.db
       .query("componentVersions")
-      .withIndex("", (q: any) =>
-        q.eq("componentId", args.componentId).eq("versionNumber", component.currentVersion)
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("componentId"), args.componentId),
+          q.eq(q.field("versionNumber"), component.currentVersion)
+        )
       )
       .first();
 
@@ -293,7 +299,7 @@ export const getSuccessfulTransformations = query({
   handler: async (ctx, args) => {
     let query = ctx.db
       .query("transformationHistory")
-      .withIndex("", (q: any) => q.eq("isSuccessful", true));
+      .filter((q) => q.eq(q.field("isSuccessful"), true));
 
     if (args.sourceType) {
       query = query.filter((q) =>
@@ -382,8 +388,8 @@ export const getUserPreferences = query({
     let query = ctx.db.query("userPreferences");
 
     if (args.preferenceType) {
-      query = query.withIndex("", (q: any) =>
-        q.eq("preferenceType", args.preferenceType)
+      query = query.filter((q) =>
+        q.eq(q.field("preferenceType"), args.preferenceType)
       );
     }
 
@@ -424,8 +430,11 @@ export const registerComponentUsage = mutation({
     // Get current version
     const currentVersion = await ctx.db
       .query("componentVersions")
-      .withIndex("", (q: any) =>
-        q.eq("componentId", args.componentId).eq("versionNumber", component.currentVersion)
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("componentId"), args.componentId),
+          q.eq(q.field("versionNumber"), component.currentVersion)
+        )
       )
       .first();
 
@@ -455,8 +464,11 @@ export const getComponentUsages = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("componentUsage")
-      .withIndex("", (q: any) =>
-        q.eq("componentId", args.componentId).eq("isActive", true)
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("componentId"), args.componentId),
+          q.eq(q.field("isActive"), true)
+        )
       )
       .collect();
   },

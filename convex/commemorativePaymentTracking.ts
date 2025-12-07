@@ -37,7 +37,7 @@ export const initializePayment = mutation({
     // Check for existing pending payment
     const existingPayment = await ctx.db
       .query("commemorativePurchases")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .filter((q) => q.eq(q.field("status"), "pending"))
       .first();
 
@@ -97,7 +97,7 @@ export const updatePaymentStatus = mutation({
       // Fallback: find most recent pending/confirmed payment for this wallet
       payment = await ctx.db
         .query("commemorativePurchases")
-        .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
         .filter((q) =>
           q.or(
             q.eq(q.field("status"), "pending"),
@@ -139,7 +139,7 @@ export const getPaymentStatus = query({
     // Get most recent payment for this wallet
     const payment = await ctx.db
       .query("commemorativePurchases")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .order("desc")
       .first();
 
@@ -157,7 +157,7 @@ export const getPaymentStatus = query({
     const claim = payment.transactionHash
       ? await ctx.db
           .query("commemorativeNFTClaims")
-          .withIndex("", (q: any) => q.eq("transactionHash", payment.transactionHash!))
+          .withIndex("by_tx_hash", (q: any) => q.eq("transactionHash", payment.transactionHash!))
           .first()
       : null;
 
@@ -206,7 +206,7 @@ export const getPaymentByTransaction = query({
     // Get associated claim if it exists
     const claim = await ctx.db
       .query("commemorativeNFTClaims")
-      .withIndex("", (q: any) => q.eq("transactionHash", args.transactionHash))
+      .withIndex("by_tx_hash", (q: any) => q.eq("transactionHash", args.transactionHash))
       .first();
 
     return {
@@ -226,7 +226,7 @@ export const cancelPayment = mutation({
 
     const payment = await ctx.db
       .query("commemorativePurchases")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .filter((q) => q.eq(q.field("status"), "pending"))
       .first();
 

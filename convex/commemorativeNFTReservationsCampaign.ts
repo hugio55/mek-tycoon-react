@@ -968,7 +968,7 @@ export const internalCleanupExpiredReservations = internalMutation({
     // ALSO check inventory items without campaignId (might be orphaned)
     const allReservedInventory = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("", (q: any) => q.eq("status", "reserved"))
+      .withIndex("by_status", (q: any) => q.eq("status", "reserved"))
       .collect();
 
     console.log('[CRON CLEANUP] Found', allReservedInventory.length, 'total reserved inventory items');
@@ -1010,7 +1010,7 @@ export const internalCleanupExpiredReservations = internalMutation({
     const LEGACY_GRACE_PERIOD = 5 * 1000; // 5 seconds
     const legacyExpiredReservations = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("", (q: any) => q.eq("status", "active"))
+      .withIndex("by_status", (q: any) => q.eq("status", "active"))
       .filter((q) => q.lt(q.field("expiresAt"), now - LEGACY_GRACE_PERIOD))
       .collect();
 

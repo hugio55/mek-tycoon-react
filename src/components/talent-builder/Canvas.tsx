@@ -416,7 +416,8 @@ const Canvas: React.FC<CanvasProps> = memo(({
   // Get node size based on type
   const getNodeSize = (node: TalentNode): number => {
     const isStart = node.id === 'start' || node.id.startsWith('start-');
-    if (isStart) return 50;
+    // Start node is same size as normal nodes (30px)
+    if (isStart) return 30;
 
     if (builderMode === 'story' && node.storyNodeType) {
       if (node.storyNodeType === 'normal') return 40;
@@ -486,7 +487,8 @@ const Canvas: React.FC<CanvasProps> = memo(({
   return (
     <div
       ref={canvasRef}
-      className="absolute inset-0 bg-gray-950 overflow-hidden"
+      className="absolute inset-0 bg-gray-950 overflow-hidden select-none"
+      style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
       onWheel={handleWheel}
     >
       <div

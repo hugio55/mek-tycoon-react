@@ -225,12 +225,12 @@ function TalentBuilderInner() {
         // Ensure START node exists
         const hasStart = loadedNodes.some((n: TalentNode) => n.id === 'start');
         if (!hasStart) {
-          // Position at center - 25 so the 50px node's center lands on the grid center
+          // Position at center - 15 so the 30px node's center lands on the grid center
           loadedNodes.push({
             id: 'start',
             name: 'START',
-            x: 3000 - 25,
-            y: 3000 - 25,
+            x: 3000 - 15,
+            y: 3000 - 15,
             tier: 0,
             desc: 'The beginning of your journey',
             xp: 0
@@ -260,12 +260,12 @@ function TalentBuilderInner() {
       }
     } else {
       // Create initial start node
-      // Position at center - 25 so the 50px node's center lands on the grid center
+      // Position at center - 15 so the 30px node's center lands on the grid center
       const startNodes: TalentNode[] = [{
         id: 'start',
         name: 'START',
-        x: 3000 - 25,
-        y: 3000 - 25,
+        x: 3000 - 15,
+        y: 3000 - 15,
         tier: 0,
         desc: 'The beginning of your journey',
         xp: 0

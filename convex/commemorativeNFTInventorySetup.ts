@@ -655,7 +655,7 @@ export const markInventoryAsSoldByName = mutation({
     if (inventory.status === "reserved") {
       const activeReservation = await ctx.db
         .query("commemorativeNFTReservations")
-        .withIndex("", (q: any) => q.eq("nftInventoryId", inventory._id))
+        .withIndex("by_inventory_id", (q: any) => q.eq("nftInventoryId", inventory._id))
         .filter((q) => q.eq(q.field("status"), "active"))
         .first();
 
