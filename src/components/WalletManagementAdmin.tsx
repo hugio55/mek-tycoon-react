@@ -1254,6 +1254,22 @@ Check console for full timeline.
             👤 Load WrenCo
           </button>
 
+          {/* Auto-Load Toggle */}
+          <label className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-lg cursor-pointer hover:bg-gray-700/50 transition-colors">
+            <input
+              type="checkbox"
+              checked={autoLoadWallets}
+              onChange={(e) => {
+                setAutoLoadWallets(e.target.checked);
+                if (!e.target.checked) {
+                  setWalletsLoaded(false);
+                }
+              }}
+              className="w-4 h-4 accent-yellow-500"
+            />
+            <span className="text-sm text-gray-300">Auto-load</span>
+          </label>
+
           {/* Export CSV Button */}
           {walletsLoaded && wallets && wallets.length > 0 && (
             <button
