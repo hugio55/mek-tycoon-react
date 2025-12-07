@@ -11,7 +11,7 @@ interface NFTInventoryTableProps {
 }
 
 export default function NFTInventoryTable({ campaignId, campaignName, client }: NFTInventoryTableProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const [selectedNFTs, setSelectedNFTs] = useState<Set<Id<"commemorativeNFTInventory">>>(new Set());
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);

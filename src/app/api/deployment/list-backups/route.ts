@@ -5,7 +5,8 @@ import { checkDeploymentAuth } from '@/lib/deployment/auth';
 
 interface BackupMetadata {
   id: string;
-  type: 'quick' | 'full';
+  type: 'quick' | 'full' | 'full-dev';
+  database?: string;
   timestamp: string;
   commitHash: string;
   commitMessage: string;
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
       // Quick directory doesn't exist or is empty
     }
 
-    // Read full backups
+    // Read full backups (production - Sturgeon)
     try {
       const fullDir = path.join(backupsDir, 'full');
       const fullFiles = await readdir(fullDir);
@@ -50,11 +51,32 @@ export async function GET(request: NextRequest) {
           const filePath = path.join(fullDir, file);
           const content = await readFile(filePath, 'utf-8');
           const backup = JSON.parse(content) as BackupMetadata;
+          // Add database label if not present (legacy backups)
+          if (!backup.database) {
+            backup.database = 'Sturgeon (fabulous-sturgeon-691)';
+          }
           backups.push(backup);
         }
       }
     } catch (e) {
       // Full directory doesn't exist or is empty
+    }
+
+    // Read full-dev backups (development - Trout)
+    try {
+      const fullDevDir = path.join(backupsDir, 'full-dev');
+      const fullDevFiles = await readdir(fullDevDir);
+
+      for (const file of fullDevFiles) {
+        if (file.endsWith('.json')) {
+          const filePath = path.join(fullDevDir, file);
+          const content = await readFile(filePath, 'utf-8');
+          const backup = JSON.parse(content) as BackupMetadata;
+          backups.push(backup);
+        }
+      }
+    } catch (e) {
+      // Full-dev directory doesn't exist or is empty
     }
 
     // Sort by timestamp, newest first
@@ -73,6 +95,7 @@ export async function GET(request: NextRequest) {
       count: backups.length,
       quickCount: backups.filter((b) => b.type === 'quick').length,
       fullCount: backups.filter((b) => b.type === 'full').length,
+      fullDevCount: backups.filter((b) => b.type === 'full-dev').length,
       totalSizeBytes: totalSize,
       totalSizeDisplay: totalSizeDisplay,
     });

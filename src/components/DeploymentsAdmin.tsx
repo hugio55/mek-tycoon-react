@@ -24,7 +24,8 @@ interface ActionLog {
 
 interface Backup {
   id: string;
-  type: 'quick' | 'full';
+  type: 'quick' | 'full' | 'full-dev';
+  database?: string;
   timestamp: string;
   commitHash: string;
   commitMessage: string;
@@ -162,7 +163,7 @@ export default function DeploymentsAdmin() {
   const handleFullBackup = async () => {
     setIsBackingUp(true);
     setBackupType('full');
-    addLog('Full Backup', 'pending', 'Creating code + database backup (this may take a minute)...');
+    addLog('Full Backup', 'pending', 'Creating code + Sturgeon (PROD) database backup (this may take a minute)...');
 
     try {
       const res = await fetch('/api/deployment/backup-full', {
@@ -177,6 +178,7 @@ export default function DeploymentsAdmin() {
         setSessionBackup({
           id: data.backupId,
           type: 'full',
+          database: 'Sturgeon (fabulous-sturgeon-691)',
           timestamp: data.timestamp,
           commitHash: data.commitHash,
           commitMessage: data.commitMessage,
@@ -190,6 +192,33 @@ export default function DeploymentsAdmin() {
       }
     } catch (error) {
       addLog('Full Backup', 'error', 'Failed to create backup');
+    } finally {
+      setIsBackingUp(false);
+      setBackupType(null);
+    }
+  };
+
+  const handleFullDevBackup = async () => {
+    setIsBackingUp(true);
+    setBackupType('full');
+    addLog('Dev Backup', 'pending', 'Creating Trout (DEV) database backup (this may take a minute)...');
+
+    try {
+      const res = await fetch('/api/deployment/backup-full-dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: '' })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        addLog('Dev Backup', 'success', data.message);
+        await fetchBackups();
+      } else {
+        addLog('Dev Backup', 'error', data.error);
+      }
+    } catch (error) {
+      addLog('Dev Backup', 'error', 'Failed to create dev backup');
     } finally {
       setIsBackingUp(false);
       setBackupType(null);
@@ -755,11 +784,16 @@ export default function DeploymentsAdmin() {
             <div className="text-gray-400 text-sm mb-2">Rolling back to:</div>
             <div className="flex items-center gap-2 mb-2">
               <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                selectedRollbackBackup.type === 'full' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'
+                selectedRollbackBackup.type === 'full' ? 'bg-purple-500/20 text-purple-400' :
+                selectedRollbackBackup.type === 'full-dev' ? 'bg-green-500/20 text-green-400' :
+                'bg-blue-500/20 text-blue-400'
               }`}>
-                {selectedRollbackBackup.type.toUpperCase()}
+                {selectedRollbackBackup.type === 'full' ? 'PROD' : selectedRollbackBackup.type === 'full-dev' ? 'DEV' : 'QUICK'}
               </span>
               <span className="font-mono text-purple-400">{selectedRollbackBackup.commitHash.substring(0, 7)}</span>
+              {selectedRollbackBackup.database && (
+                <span className="text-xs text-gray-500">({selectedRollbackBackup.database.split(' ')[0]})</span>
+              )}
             </div>
             <div className="text-sm text-gray-300 mb-1">{selectedRollbackBackup.commitMessage}</div>
             <div className="text-xs text-gray-500">
@@ -769,7 +803,9 @@ export default function DeploymentsAdmin() {
 
           <p className="text-gray-400 text-sm mb-6">
             {selectedRollbackBackup.type === 'full'
-              ? 'This will restore both code AND database to the backup state. Any data added since then will be lost.'
+              ? 'This will restore code AND Sturgeon (PRODUCTION) database to the backup state. Any data added since then will be lost.'
+              : selectedRollbackBackup.type === 'full-dev'
+              ? 'This will restore code AND Trout (DEV) database to the backup state. Production is NOT affected.'
               : 'This will restore code only. Database data will remain as-is.'}
           </p>
 
@@ -899,7 +935,7 @@ export default function DeploymentsAdmin() {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <button
             onClick={handleQuickBackup}
             disabled={anyActionRunning}
@@ -928,11 +964,29 @@ export default function DeploymentsAdmin() {
                 : 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600'}
             `}
           >
-            <div className="font-bold text-purple-400">Full Backup</div>
-            <div className="text-xs text-gray-400 mt-1">Code + Database (~30-60 sec)</div>
-            <div className="text-xs text-gray-500">For schema or risky changes</div>
+            <div className="font-bold text-purple-400">Full Backup (PROD)</div>
+            <div className="text-xs text-gray-400 mt-1">Sturgeon + Code (~30-60 sec)</div>
+            <div className="text-xs text-gray-500">Production database backup</div>
             {isBackingUp && backupType === 'full' && (
-              <div className="text-xs text-purple-300 mt-2 animate-pulse">Exporting database...</div>
+              <div className="text-xs text-purple-300 mt-2 animate-pulse">Exporting Sturgeon...</div>
+            )}
+          </button>
+
+          <button
+            onClick={handleFullDevBackup}
+            disabled={anyActionRunning}
+            className={`
+              px-4 py-3 rounded-lg transition-colors text-left
+              ${isBackingUp && backupType === 'full'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600'}
+            `}
+          >
+            <div className="font-bold text-green-400">Full Backup (DEV)</div>
+            <div className="text-xs text-gray-400 mt-1">Trout + Code (~30-60 sec)</div>
+            <div className="text-xs text-gray-500">Development database backup</div>
+            {isBackingUp && backupType === 'full' && (
+              <div className="text-xs text-green-300 mt-2 animate-pulse">Exporting Trout...</div>
             )}
           </button>
         </div>
@@ -941,7 +995,7 @@ export default function DeploymentsAdmin() {
           <div className="mt-4 pt-4 border-t border-gray-700">
             <div className="text-gray-500 text-xs">
               {backups.length} backup{backups.length !== 1 ? 's' : ''} available
-              ({backups.filter(b => b.type === 'quick').length} quick, {backups.filter(b => b.type === 'full').length} full)
+              ({backups.filter(b => b.type === 'quick').length} quick, {backups.filter(b => b.type === 'full').length} prod, {backups.filter(b => b.type === 'full-dev').length} dev)
             </div>
           </div>
         )}
@@ -1109,9 +1163,11 @@ export default function DeploymentsAdmin() {
                 >
                   <div className="flex items-center gap-3">
                     <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                      backup.type === 'full' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'
+                      backup.type === 'full' ? 'bg-purple-500/20 text-purple-400' :
+                      backup.type === 'full-dev' ? 'bg-green-500/20 text-green-400' :
+                      'bg-blue-500/20 text-blue-400'
                     }`}>
-                      {backup.type.toUpperCase()}
+                      {backup.type === 'full' ? 'PROD' : backup.type === 'full-dev' ? 'DEV' : 'QUICK'}
                     </span>
                     <div>
                       <div className="flex items-center gap-2">

@@ -9,7 +9,8 @@ const execAsync = promisify(exec);
 
 interface BackupMetadata {
   id: string;
-  type: 'quick' | 'full';
+  type: 'quick' | 'full' | 'full-dev';
+  database?: string;
   timestamp: string;
   commitHash: string;
   commitMessage: string;
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate backup ID format to prevent path traversal
-    const validIdPattern = /^(quick|full)-\d+$/;
+    const validIdPattern = /^(quick|full|full-dev)-\d+$/;
     if (!validIdPattern.test(backupId)) {
       return NextResponse.json({
         success: false,
@@ -42,8 +43,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine backup type from ID
-    const isFullBackup = backupId.startsWith('full-');
-    const backupDir = path.join(process.cwd(), 'backups', isFullBackup ? 'full' : 'quick');
+    const isFullBackup = backupId.startsWith('full-') && !backupId.startsWith('full-dev-');
+    const isFullDevBackup = backupId.startsWith('full-dev-');
+    const backupDir = path.join(process.cwd(), 'backups', isFullDevBackup ? 'full-dev' : (isFullBackup ? 'full' : 'quick'));
     const metadataPath = path.join(backupDir, `${backupId}.json`);
 
     // Load backup metadata
@@ -130,14 +132,43 @@ export async function POST(request: NextRequest) {
       const exportPath = path.join(process.cwd(), metadata.convexExportPath.replace('./', ''));
 
       try {
+        // Restore to Sturgeon (production)
         await execAsync(`npx convex import --prod --replace "${exportPath}"`, {
           timeout: 600000, // 10 minute timeout for large databases
         });
-        steps.push('Restored Convex production data');
+        steps.push('Restored Convex production data (Sturgeon)');
       } catch (e) {
         return NextResponse.json({
           success: false,
           error: 'Failed to restore Convex data (code rollback succeeded)',
+          steps,
+        }, { status: 500 });
+      }
+    }
+
+    // Step 4b: For full-dev backups, restore Convex dev data
+    if (isFullDevBackup && metadata.convexExportPath) {
+      const exportPath = path.join(process.cwd(), metadata.convexExportPath.replace('./', ''));
+      const troutUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+
+      if (!troutUrl) {
+        return NextResponse.json({
+          success: false,
+          error: 'NEXT_PUBLIC_CONVEX_URL not configured for dev database restore',
+          steps,
+        }, { status: 500 });
+      }
+
+      try {
+        // Restore to Trout (development)
+        await execAsync(`npx convex import --url "${troutUrl}" --replace "${exportPath}"`, {
+          timeout: 600000, // 10 minute timeout for large databases
+        });
+        steps.push('Restored Convex dev data (Trout)');
+      } catch (e) {
+        return NextResponse.json({
+          success: false,
+          error: 'Failed to restore Convex dev data (code rollback succeeded)',
           steps,
         }, { status: 500 });
       }
