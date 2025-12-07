@@ -14,12 +14,12 @@ const NMKR_NETWORK = process.env.NEXT_PUBLIC_NMKR_NETWORK || "mainnet";
 
 // Initialize inventory by fetching all Lab Rat NFTs from NMKR
 export const initializeInventoryFromNMKR = action({
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<{ success: boolean; error?: string; message?: string; stats?: any }> => {
     console.log('[INVENTORY SETUP] Fetching Lab Rat NFTs from NMKR...');
 
     try {
       // Use the existing NMKR action to get NFTs
-      const result = await ctx.runAction(api.nmkr.getProjectStats, {
+      const result: any = await ctx.runAction(api.nmkr.getProjectStats, {
         projectId: PROJECT_ID,
       });
 
@@ -366,15 +366,14 @@ export const repairPaymentUrls = mutation({
     console.log('[🔧FIX] Starting payment URL repair...');
 
     // Get all inventory items (optionally filter by campaign)
-    let inventoryQuery = ctx.db.query("commemorativeNFTInventory");
-
-    if (args.campaignId) {
-      inventoryQuery = inventoryQuery.withIndex("by_campaign", (q: any) =>
-        q.eq("campaignId", args.campaignId)
-      );
-    }
-
-    const inventory = await inventoryQuery.collect();
+    const inventory = args.campaignId
+      ? await ctx.db
+          .query("commemorativeNFTInventory")
+          .withIndex("by_campaign", (q: any) => q.eq("campaignId", args.campaignId))
+          .collect()
+      : await ctx.db
+          .query("commemorativeNFTInventory")
+          .collect();
 
     console.log('[🔧FIX] Found', inventory.length, 'inventory items to check');
 
