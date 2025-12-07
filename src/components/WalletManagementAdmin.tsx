@@ -55,7 +55,6 @@ function WalletManagementAdminContent() {
       const session = await restoreWalletSession();
       if (session?.stakeAddress) {
         setStakeAddress(session.stakeAddress);
-        console.log('[Player Management] Wallet session restored:', session.stakeAddress.slice(0, 12) + '...');
       }
     };
     loadSession();
@@ -1302,9 +1301,6 @@ Check console for full timeline.
                   }
                 };
 
-                // Debug: log first wallet's createdAt
-                console.log('[CSV Export] Sample createdAt values:', wallets.slice(0, 3).map((w: any) => ({ company: w.companyName, createdAt: w.createdAt, formatted: formatDate(w.createdAt) })));
-
                 // Generate CSV content
                 const headers = ['Company Name', 'Stake Address', 'Meks', 'Cumulative Gold', 'Gold Per Hour', 'Gold Spent', 'First Connected'];
                 const rows = wallets.map((w: any) => [
@@ -1621,7 +1617,6 @@ Check console for full timeline.
                                 bottom: window.innerHeight - rect.top, // Position above button
                                 left: rect.right - 220 // 220px is dropdown width
                               };
-                              console.log('[DROPDOWN] Mounted:', mounted, 'Position:', position, 'Wallet:', wallet.walletAddress.slice(0, 12));
                               setDropdownPosition(position);
                               setHoveredDropdown(wallet.walletAddress);
                             }}
@@ -1629,7 +1624,6 @@ Check console for full timeline.
                               // Only close if mouse is not moving to dropdown
                               const relatedTarget = e.relatedTarget as HTMLElement;
                               if (!relatedTarget || !relatedTarget.closest('[data-dropdown]')) {
-                                console.log('[DROPDOWN] Closing dropdown');
                                 setHoveredDropdown(null);
                                 setDropdownPosition(null);
                               }
@@ -1639,7 +1633,6 @@ Check console for full timeline.
                           </button>
 
                           {mounted && hoveredDropdown === wallet.walletAddress && dropdownPosition && (() => {
-                            console.log('[DROPDOWN] Rendering portal for:', wallet.walletAddress.slice(0, 12));
                             return createPortal(
                             <div
                               data-dropdown="true"

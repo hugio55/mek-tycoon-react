@@ -105,16 +105,10 @@ export default function GlobalLightboxHandler() {
     <EssenceProvider walletAddress={walletAddress || null}>
       {/* Essence Distribution Lightbox */}
       {showEssenceLightbox && (
-        <>
-          {console.log('[GlobalLightboxHandler] Rendering EssenceDistributionLightbox (using shared context)')}
-          <EssenceDistributionLightbox
-            isOpen={true}
-            onClose={() => {
-              console.log('[GlobalLightboxHandler] Closing EssenceDistributionLightbox');
-              setShowEssenceLightbox(false);
-            }}
-          />
-        </>
+        <EssenceDistributionLightbox
+          isOpen={true}
+          onClose={() => setShowEssenceLightbox(false)}
+        />
       )}
 
       {/* Mek Levels Lightbox */}

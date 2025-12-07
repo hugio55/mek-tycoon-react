@@ -66,18 +66,23 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
     const savedPreset = localStorage.getItem('mekTalentTreeViewport');
     let width = 327;  // Default
     let height = 614; // Default
+    let posX = 0;     // Default position
+    let posY = 0;
 
     if (savedPreset) {
       try {
         const parsed = JSON.parse(savedPreset);
         width = parsed.width || 327;
         height = parsed.height || 614;
+        posX = parsed.posX || 0;
+        posY = parsed.posY || 0;
       } catch (e) {
         console.error('Failed to parse preset:', e);
       }
     }
 
     dispatch({ type: 'SET_VIEWPORT_DIMENSIONS', payload: { width, height } });
+    dispatch({ type: 'SET_VIEWPORT_POSITION', payload: { x: posX, y: posY } });
     dispatch({ type: 'SET_SHOW_VIEWPORT_BOX', payload: true });
     setActivePreset('mekTalentTree');
   }, [dispatch]);
