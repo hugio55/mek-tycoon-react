@@ -438,11 +438,28 @@ export default function UnifiedHeader() {
         )}
       </div>
 
-      {/* Top right corner: Notification Bell + OE Logo */}
+      {/* Top right corner: Notification Bell + Messages + OE Logo */}
       <div className="absolute right-4 md:right-6 lg:right-8 z-20 top-[8px] md:top-[12px] lg:top-[16px] flex items-center gap-3">
         {/* Notification Bell - only show if user is logged in */}
         {userId && (
           <NotificationBell userId={userId} />
+        )}
+
+        {/* Messages/Comms Icon - only show if user is logged in */}
+        {userId && (
+          <a
+            href="/comms"
+            className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-black/60 border border-yellow-500/30 hover:bg-black/70 hover:border-yellow-500/50 transition-all cursor-pointer"
+            title="Messages"
+          >
+            <svg
+              className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+            </svg>
+          </a>
         )}
 
         {/* OE Logo */}
