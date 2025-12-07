@@ -1152,11 +1152,17 @@ Check console for full timeline.
                 </p>
               </div>
 
-              {/* Database Indicator (Single Database Mode) */}
-              <div className="flex items-center gap-2 px-3 py-2 bg-green-900/30 border border-green-600/50 rounded-lg">
+              {/* Database Indicator - Reflects selected database */}
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+                selectedDatabase === 'trout'
+                  ? 'bg-yellow-900/30 border border-yellow-600/50'
+                  : 'bg-green-900/30 border border-green-600/50'
+              }`}>
                 <span className="text-sm text-gray-400">Database:</span>
-                <span className="text-sm font-bold text-green-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                  🐟 Production (Sturgeon)
+                <span className={`text-sm font-bold ${
+                  selectedDatabase === 'trout' ? 'text-yellow-400' : 'text-green-400'
+                }`} style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                  {selectedDatabase === 'trout' ? `🐟 ${troutLabel}` : `🐟 ${sturgeonLabel}`}
                 </span>
               </div>
             </div>
