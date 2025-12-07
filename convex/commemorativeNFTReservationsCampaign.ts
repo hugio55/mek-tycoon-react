@@ -255,6 +255,7 @@ export const completeCampaignReservation = mutation({
         soldTo: walletAddress,
         soldAt: Date.now(),
         companyNameAtSale,
+        transactionHash: args.transactionHash, // Store blockchain transaction for audit trail
         // Keep reservation fields for record-keeping
       });
 
@@ -316,6 +317,7 @@ export const completeCampaignReservation = mutation({
       soldTo: walletAddress,
       soldAt: Date.now(),
       companyNameAtSale,
+      transactionHash: args.transactionHash, // Store blockchain transaction for audit trail
     });
 
     // Update campaign counters
@@ -379,6 +381,7 @@ export const completeCampaignReservationByWallet = mutation({
       soldTo: args.walletAddress,
       soldAt: Date.now(),
       companyNameAtSale,
+      transactionHash: args.transactionHash, // Store blockchain transaction for audit trail
     });
 
     // Update campaign counters

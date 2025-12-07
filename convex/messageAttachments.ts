@@ -47,7 +47,7 @@ export const getUploadQuota = query({
 
     const quota = await ctx.db
       .query("messageUploadQuotas")
-      .withIndex("", (q: any) =>
+      .withIndex("by_wallet_date", (q: any) =>
         q.eq("walletAddress", args.walletAddress).eq("date", today)
       )
       .first();
@@ -112,7 +112,7 @@ export const validateUpload = mutation({
     // Check daily quota
     const quota = await ctx.db
       .query("messageUploadQuotas")
-      .withIndex("", (q: any) =>
+      .withIndex("by_wallet_date", (q: any) =>
         q.eq("walletAddress", args.walletAddress).eq("date", today)
       )
       .first();
