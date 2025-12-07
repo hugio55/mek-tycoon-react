@@ -17,14 +17,14 @@ export const getConversations = query({
     // Get conversations where user is participant1
     const asParticipant1 = await ctx.db
       .query("conversations")
-      .withIndex("", (q: any) => q.eq("participant1", args.walletAddress))
+      .withIndex("by_participant1", (q: any) => q.eq("participant1", args.walletAddress))
       .order("desc")
       .collect();
 
     // Get conversations where user is participant2
     const asParticipant2 = await ctx.db
       .query("conversations")
-      .withIndex("", (q: any) => q.eq("participant2", args.walletAddress))
+      .withIndex("by_participant2", (q: any) => q.eq("participant2", args.walletAddress))
       .order("desc")
       .collect();
 
