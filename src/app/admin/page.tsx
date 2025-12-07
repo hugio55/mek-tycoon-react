@@ -1880,26 +1880,38 @@ export default function AdminMasterDataPage() {
                   <span className="text-xs text-gray-500 ml-2">(click to copy URL)</span>
                 </div>
                 <div className="max-h-[80vh] overflow-y-auto">
-                  {['Main', 'Contracts', 'Systems', 'Admin'].map((category: any) => (
-                    <div key={category}>
-                      <div className="px-3 py-1.5 bg-gray-800/50 text-xs text-gray-500 uppercase tracking-wider font-bold">
-                        {category}
-                      </div>
-                      {QUICK_ACCESS_PAGES.filter((p: any) => p.category === category).map((page: any) => (
-                        <button
-                          key={page.path}
-                          onClick={() => copyPageUrl(page.path)}
-                          className="w-full px-3 py-2 text-left hover:bg-cyan-600/20 transition-colors flex items-center justify-between group"
-                        >
-                          <span className="text-sm text-gray-300 group-hover:text-cyan-300">{page.name}</span>
-                          {copiedUrl === page.path ? (
-                            <span className="text-xs text-green-400 font-bold">Copied!</span>
-                          ) : (
-                            <span className="text-xs text-gray-600 group-hover:text-cyan-500 font-mono">{page.path}</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
+                  {/* All non-Admin pages without category headers */}
+                  {QUICK_ACCESS_PAGES.filter((p: any) => p.category !== 'Admin').map((page: any) => (
+                    <button
+                      key={page.path}
+                      onClick={() => copyPageUrl(page.path)}
+                      className="w-full px-3 py-2 text-left hover:bg-cyan-600/20 transition-colors flex items-center justify-between group"
+                    >
+                      <span className="text-sm text-gray-300 group-hover:text-cyan-300">{page.name}</span>
+                      {copiedUrl === page.path ? (
+                        <span className="text-xs text-green-400 font-bold">Copied!</span>
+                      ) : (
+                        <span className="text-xs text-gray-600 group-hover:text-cyan-500 font-mono">{page.path}</span>
+                      )}
+                    </button>
+                  ))}
+                  {/* Admin section with header */}
+                  <div className="px-3 py-1.5 bg-gray-800/50 text-xs text-gray-500 uppercase tracking-wider font-bold">
+                    Admin
+                  </div>
+                  {QUICK_ACCESS_PAGES.filter((p: any) => p.category === 'Admin').map((page: any) => (
+                    <button
+                      key={page.path}
+                      onClick={() => copyPageUrl(page.path)}
+                      className="w-full px-3 py-2 text-left hover:bg-cyan-600/20 transition-colors flex items-center justify-between group"
+                    >
+                      <span className="text-sm text-gray-300 group-hover:text-cyan-300">{page.name}</span>
+                      {copiedUrl === page.path ? (
+                        <span className="text-xs text-green-400 font-bold">Copied!</span>
+                      ) : (
+                        <span className="text-xs text-gray-600 group-hover:text-cyan-500 font-mono">{page.path}</span>
+                      )}
+                    </button>
                   ))}
                 </div>
                 <div className="p-2 bg-gray-800/50 border-t border-gray-700">

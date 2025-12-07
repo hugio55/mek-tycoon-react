@@ -88,7 +88,7 @@ export const deleteUserCompletely = mutation({
     // Find user by wallet address
     const user = await ctx.db
       .query("users")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!user) {
@@ -120,7 +120,7 @@ export const resetUserGoldToZero = mutation({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!user) {
@@ -156,7 +156,7 @@ export const updateUserGoldAmount = mutation({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!user) {
@@ -193,7 +193,7 @@ export const resetUserMekLevels = mutation({
     // Find all mekLevels for this wallet
     const mekLevels = await ctx.db
       .query("mekLevels")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     if (mekLevels.length === 0) {
@@ -244,13 +244,13 @@ export const getAllUsers = query({
         // Count meks
         const meks = await ctx.db
           .query("meks")
-          .withIndex("", (q: any) => q.eq("owner", user.walletAddress))
+          .withIndex("by_owner", (q: any) => q.eq("owner", user.walletAddress))
           .collect();
 
         // Get active contracts
         const activeContracts = await ctx.db
           .query("contracts")
-          .withIndex("", (q: any) => q.eq("userId", user._id))
+          .withIndex("by_user", (q: any) => q.eq("userId", user._id))
           .filter((q) => q.eq(q.field("status"), "active"))
           .collect();
 
@@ -333,22 +333,22 @@ export const getUserDetails = query({
     // Get all related data
     const meks = await ctx.db
       .query("meks")
-      .withIndex("", (q: any) => q.eq("owner", user.walletAddress))
+      .withIndex("by_owner", (q: any) => q.eq("owner", user.walletAddress))
       .collect();
 
     const contracts = await ctx.db
       .query("contracts")
-      .withIndex("", (q: any) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q: any) => q.eq("userId", args.userId))
       .collect();
 
     const activeBuffs = await ctx.db
       .query("activeBuffs")
-      .withIndex("", (q: any) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q: any) => q.eq("userId", args.userId))
       .collect();
 
     const inventory = await ctx.db
       .query("inventory")
-      .withIndex("", (q: any) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q: any) => q.eq("userId", args.userId))
       .collect();
 
     const transactions = await ctx.db

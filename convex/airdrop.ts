@@ -293,7 +293,7 @@ export const submitAddress = mutation({
     // Get goldMining record for verification and gold balance
     const miner = await ctx.db
       .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", user.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", user.walletAddress))
       .first();
 
     if (!miner) {
@@ -324,7 +324,7 @@ export const submitAddress = mutation({
     // Check if already submitted
     const existing = await ctx.db
       .query("airdropSubmissions")
-      .withIndex("", (q: any) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q: any) => q.eq("userId", args.userId))
       .filter((q) => q.eq(q.field("campaignName"), args.campaignName))
       .first();
 
@@ -461,3 +461,5 @@ export const addAdminNotes = mutation({
     });
 
     return { success: true };
+  },
+});
