@@ -1671,7 +1671,8 @@ export const setCompanyName = mutation({
 
     if (userRecord) {
       await ctx.db.patch(userRecord._id, {
-        companyName: trimmedName,
+        corporationName: trimmedName,
+        corporationNameLower: trimmedName.toLowerCase(),
       });
       console.log('[setCompanyName] Users table updated successfully');
     } else {

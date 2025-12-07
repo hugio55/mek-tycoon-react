@@ -1,5 +1,20 @@
 import { mutation } from "./_generated/server";
 
+// Clear ALL leaderboard cache entries (safe - repopulates on next cron)
+export const clearAllLeaderboardCache = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const allEntries = await ctx.db.query("leaderboardCache").collect();
+
+    for (const entry of allEntries) {
+      await ctx.db.delete(entry._id);
+    }
+
+    console.log(`Cleared ${allEntries.length} leaderboard cache entries`);
+    return { success: true, deletedCount: allEntries.length };
+  },
+});
+
 // Delete mock/test accounts from the database
 export const deleteMockAccounts = mutation({
   args: {},
