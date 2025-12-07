@@ -2950,7 +2950,7 @@ export default function EssenceMarketPage() {
         return {
           className: "relative p-4 rounded-lg overflow-hidden group hover:border-gray-400 transition-all duration-500",
           style: {
-            background: `linear-gradient(105deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.05) 100%)`,
+            background: `linear-gradient(105deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(105deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.05) 100%)`,
             backdropFilter: 'blur(5px) brightness(1.18)',
             border: '2px solid rgba(150, 150, 150, 0.4)',
           }
@@ -2959,7 +2959,7 @@ export default function EssenceMarketPage() {
         return {
           className: "relative p-4 rounded-lg overflow-hidden group hover:border-yellow-400/50 transition-all duration-500",
           style: {
-            background: `linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.06) 100%)`,
+            background: `linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.06) 100%)`,
             backdropFilter: 'blur(4px) brightness(1.15)',
             border: '2px solid rgba(250, 182, 23, 0.25)',
             boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.15), 0 0 12px rgba(250, 182, 23, 0.12)',
@@ -2969,7 +2969,7 @@ export default function EssenceMarketPage() {
         return {
           className: "relative p-4 rounded-lg overflow-hidden group hover:border-cyan-400/40 transition-all duration-500",
           style: {
-            background: `linear-gradient(135deg, rgba(0, 255, 255, 0.03) 0%, rgba(255, 0, 255, 0.03) 50%, rgba(0, 255, 255, 0.03) 100%)`,
+            background: `linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(135deg, rgba(0, 255, 255, 0.03) 0%, rgba(255, 0, 255, 0.03) 50%, rgba(0, 255, 255, 0.03) 100%)`,
             backdropFilter: 'blur(6px) brightness(1.2) saturate(1.3)',
             border: '2px solid rgba(100, 255, 255, 0.25)',
             boxShadow: '0 0 20px rgba(0, 255, 255, 0.2), inset 0 0 20px rgba(255, 0, 255, 0.1)',
@@ -2989,7 +2989,7 @@ export default function EssenceMarketPage() {
         return {
           className: "relative p-4 rounded-lg overflow-hidden group hover:border-blue-300/20 transition-all duration-500",
           style: {
-            background: `linear-gradient(150deg, rgba(200, 220, 255, 0.08) 0%, rgba(150, 180, 255, 0.12) 100%)`,
+            background: `linear-gradient(150deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(150deg, rgba(200, 220, 255, 0.08) 0%, rgba(150, 180, 255, 0.12) 100%)`,
             backdropFilter: 'blur(12px) brightness(1.3) saturate(0.8)',
             border: '1px solid rgba(200, 220, 255, 0.25)',
             boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.15)',
@@ -3024,7 +3024,7 @@ export default function EssenceMarketPage() {
         return {
           className: "relative p-4 rounded-lg overflow-hidden group hover:border-yellow-400/20 transition-all duration-500",
           style: {
-            background: `linear-gradient(105deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0.06) 100%)`,
+            background: `linear-gradient(105deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.45) 100%), linear-gradient(105deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0.06) 100%)`,
             backdropFilter: 'blur(4px) brightness(1.25)',
             border: '1px solid rgba(255, 255, 255, 0.12)',
           }

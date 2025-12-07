@@ -101,8 +101,8 @@ const Canvas: React.FC<CanvasProps> = memo(({
 
   const snapPosition = useCallback((value: number): number => {
     if (!snapToGrid) return value;
-    const offset = GRID_SIZE / 2;
-    return Math.round((value - offset) / GRID_SIZE) * GRID_SIZE + offset;
+    // Snap to multiples of GRID_SIZE to align with grid dots
+    return Math.round(value / GRID_SIZE) * GRID_SIZE;
   }, [snapToGrid]);
 
   const handleNodeClick = useCallback((nodeId: string, e: React.MouseEvent) => {
