@@ -6499,113 +6499,73 @@ export default function AdminMasterDataPage() {
           {/* User Flow - Database Table Relationships */}
           {activeTab === 'user-flow' && (
             <div className="bg-black/50 backdrop-blur border-2 border-blue-500/30 rounded-lg p-6">
-              <p className="text-gray-400 mb-4">
-                <span className="text-blue-400 font-bold">Phase II:</span> 1 user = 1 corporation. Jobs pay gold to users.gold. Mek stats track earnings for display.
+              <p className="text-gray-400 mb-6">
+                <span className="text-blue-400 font-bold">Phase II:</span> 1 user = 1 corporation. Jobs pay gold.
               </p>
 
-              {/* Spider Web Layout - users in TRUE center */}
-              <div className="relative" style={{ height: '500px' }}>
+              {/* Simple Grid Layout */}
+              <div className="flex flex-col items-center gap-4">
 
-                {/* SVG - lines radiating from center, no overlaps */}
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet">
-                  {/* users (center: 400,220) → meks (top: 400,50) */}
-                  <line x1="400" y1="180" x2="400" y2="95" stroke="#22d3ee" strokeWidth="2" strokeDasharray="5,3" />
-                  <text x="410" y="140" fill="#22d3ee" fontSize="9" fontFamily="monospace">ownerStakeAddress</text>
-
-                  {/* users (center) → userEssence (left: 150,220) */}
-                  <line x1="290" y1="220" x2="210" y2="220" stroke="#22c55e" strokeWidth="2" strokeDasharray="5,3" />
-                  <text x="220" y="210" fill="#4ade80" fontSize="9" fontFamily="monospace">stakeAddress</text>
-
-                  {/* users (center) → userJobSlots (right: 650,220) */}
-                  <line x1="510" y1="220" x2="590" y2="220" stroke="#eab308" strokeWidth="2" strokeDasharray="5,3" />
-                  <text x="530" y="210" fill="#facc15" fontSize="9" fontFamily="monospace">stakeAddress</text>
-
-                  {/* userJobSlots → meks (curved to avoid crossing center) */}
-                  <path d="M 650 175 Q 700 120 530 70" stroke="#f59e0b" strokeWidth="2" fill="none" strokeDasharray="5,3" />
-                  <text x="620" y="100" fill="#fbbf24" fontSize="9" fontFamily="monospace">assignedMekId</text>
-                </svg>
-
-                {/* USERS - TRUE CENTER (the hub of the web) */}
-                <div className="absolute bg-blue-900/80 border-2 border-blue-400 rounded-xl p-3 shadow-xl shadow-blue-500/30"
-                     style={{ left: '290px', top: '180px', width: '220px', zIndex: 10 }}>
-                  <div className="text-blue-300 font-bold text-lg mb-1 text-center">users</div>
-                  <div className="text-[10px] text-gray-200 space-y-0.5">
-                    <div className="text-yellow-400 font-bold">stakeAddress (PK)</div>
-                    <div>corporationName, displayName</div>
-                    <div className="text-green-400">gold, totalAccumulatedGold</div>
-                    <div>level, xp</div>
-                  </div>
-                  <div className="text-[9px] text-blue-200 mt-1 text-center border-t border-blue-400/50 pt-1">= CORPORATION</div>
+                {/* Top Row: meks */}
+                <div className="bg-cyan-900/70 border-2 border-cyan-500 rounded-lg px-6 py-3 text-center">
+                  <div className="text-cyan-400 font-bold text-lg">meks</div>
+                  <div className="text-xs text-gray-400">PK: assetId</div>
                 </div>
 
-                {/* MEKS - TOP */}
-                <div className="absolute bg-cyan-900/70 border-2 border-cyan-500 rounded-lg p-2"
-                     style={{ left: '310px', top: '15px', width: '180px', zIndex: 5 }}>
-                  <div className="text-cyan-400 font-bold text-sm mb-1">meks</div>
-                  <div className="text-[9px] text-gray-300 space-y-0.5">
-                    <div className="text-yellow-400">assetId (PK)</div>
-                    <div className="text-blue-400">ownerStakeAddress →</div>
-                    <div>variations, talentTree</div>
-                    <div className="text-green-400">accumulatedGoldForCorp</div>
-                    <div className="text-green-400">accumulatedGoldAllTime</div>
-                    <div className="text-purple-400">rankEfficiency</div>
+                {/* Arrow: meks ← users (ownerStakeAddress) */}
+                <div className="flex items-center gap-2">
+                  <span className="text-cyan-400">↑</span>
+                  <span className="text-xs text-cyan-300 bg-cyan-900/50 px-2 py-0.5 rounded">ownerStakeAddress</span>
+                </div>
+
+                {/* Middle Row: users (center hub) */}
+                <div className="bg-blue-900/80 border-2 border-blue-400 rounded-xl px-8 py-4 text-center shadow-lg shadow-blue-500/30">
+                  <div className="text-blue-300 font-bold text-xl">users</div>
+                  <div className="text-xs text-gray-400">PK: stakeAddress</div>
+                  <div className="text-[10px] text-blue-200 mt-1 border-t border-blue-400/50 pt-1">= CORPORATION</div>
+                </div>
+
+                {/* Arrows going down to userEssence and userJobSlots */}
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-400">↓</span>
+                  <span className="text-xs text-blue-300 bg-blue-900/50 px-2 py-0.5 rounded">stakeAddress (FK on child tables)</span>
+                  <span className="text-blue-400">↓</span>
+                </div>
+
+                {/* Bottom Row: userEssence and userJobSlots side by side */}
+                <div className="flex gap-8">
+                  <div className="bg-green-900/70 border-2 border-green-500 rounded-lg px-6 py-3 text-center">
+                    <div className="text-green-400 font-bold">userEssence</div>
+                    <div className="text-xs text-gray-400">FK: stakeAddress</div>
+                    <div className="text-[10px] text-green-300 mt-1">1 row per essence type</div>
+                  </div>
+
+                  <div className="bg-yellow-900/80 border-2 border-yellow-400 rounded-lg px-6 py-3 text-center shadow-lg shadow-yellow-500/20">
+                    <div className="text-yellow-300 font-bold">userJobSlots</div>
+                    <div className="text-xs text-gray-400">FK: stakeAddress</div>
+                    <div className="text-[10px] text-yellow-200 mt-1">★ INCOME SOURCE</div>
                   </div>
                 </div>
 
-                {/* userEssence - LEFT */}
-                <div className="absolute bg-green-900/70 border-2 border-green-500 rounded-lg p-2"
-                     style={{ left: '30px', top: '180px', width: '170px', zIndex: 5 }}>
-                  <div className="text-green-400 font-bold text-sm mb-1">userEssence</div>
-                  <div className="text-[9px] text-gray-300 space-y-0.5">
-                    <div className="text-blue-400">stakeAddress →</div>
-                    <div>essenceType (291 types)</div>
-                    <div>balance</div>
-                  </div>
-                  <div className="text-[8px] text-green-300 mt-1">Sparse: row per type</div>
-                </div>
-
-                {/* userJobSlots - RIGHT */}
-                <div className="absolute bg-yellow-900/80 border-2 border-yellow-400 rounded-lg p-2 shadow-lg shadow-yellow-500/20"
-                     style={{ left: '600px', top: '165px', width: '170px', zIndex: 5 }}>
-                  <div className="text-yellow-300 font-bold text-sm mb-1">userJobSlots</div>
-                  <div className="text-[9px] text-gray-200 space-y-0.5">
-                    <div className="text-blue-400">stakeAddress →</div>
-                    <div className="text-cyan-400">assignedMekId → meks</div>
-                    <div>slotType, slotIndex</div>
-                    <div className="text-green-400">baseGoldPerDay</div>
-                    <div className="text-purple-400">attaboyRange</div>
-                  </div>
-                  <div className="text-[8px] text-yellow-200 mt-1 border-t border-yellow-400/50 pt-1">★ INCOME SOURCE</div>
-                </div>
-
-                {/* DELETE ZONE - Bottom, separate from web */}
-                <div className="absolute border border-red-500/40 border-dashed rounded-lg p-3 bg-black/30"
-                     style={{ left: '30px', top: '340px', width: '740px', zIndex: 2 }}>
-                  <div className="text-red-400 font-bold text-xs mb-2">TO DELETE (Legacy)</div>
-                  <div className="flex gap-6">
-                    <div className="text-[9px] text-gray-500">
-                      <span className="text-red-400">goldMining:</span> <span className="line-through">walletAddress, companyName, ownedMeks[]</span>
-                    </div>
-                    <div className="text-[9px] text-gray-500">
-                      <span className="text-red-400">goldMiningState:</span> <span className="line-through">totalGoldPerHour, accumulatedGold</span>
-                    </div>
-                    <div className="text-[9px] text-gray-500">
-                      <span className="text-red-400">corporations:</span> <span className="line-through">duplicate of users</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Gold Flow Note - Bottom right */}
-                <div className="absolute bg-black/50 border border-green-500/30 rounded p-2"
-                     style={{ left: '540px', top: '340px', width: '230px', zIndex: 3 }}>
-                  <div className="text-green-400 font-bold text-[9px] mb-1">Gold Flow</div>
-                  <div className="text-[8px] text-gray-400">
-                    Job → users.gold (spendable)<br/>
-                    Also updates: meks.forCorp, meks.allTime, users.totalAccum (stats only)
-                  </div>
+                {/* userJobSlots → meks link */}
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-yellow-400 text-xs">userJobSlots.assignedMekId</span>
+                  <span className="text-yellow-400">→</span>
+                  <span className="text-cyan-400 text-xs">meks.assetId</span>
                 </div>
 
               </div>
+
+              {/* DELETE ZONE - Simple list at bottom */}
+              <div className="mt-8 border border-red-500/40 border-dashed rounded-lg p-4 bg-black/30">
+                <div className="text-red-400 font-bold text-sm mb-2">TO DELETE (Legacy Phase I)</div>
+                <div className="flex flex-wrap gap-4 text-sm">
+                  <span className="text-gray-500 line-through">goldMining</span>
+                  <span className="text-gray-500 line-through">goldMiningState</span>
+                  <span className="text-gray-500 line-through">corporations</span>
+                </div>
+              </div>
+
             </div>
           )}
 
