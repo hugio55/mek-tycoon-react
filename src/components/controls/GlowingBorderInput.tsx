@@ -14,6 +14,7 @@ interface GlowingBorderInputProps {
   disabled?: boolean;
   autoFocus?: boolean;
   id?: string;
+  animated?: boolean;
 }
 
 const colorSchemes = {
@@ -54,6 +55,7 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
   disabled = false,
   autoFocus = false,
   id,
+  animated = true,
 }) => {
   const [internalValue, setInternalValue] = useState('');
   const [isHovered, setIsHovered] = useState(false);
@@ -70,14 +72,15 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
     onChange?.(newValue);
   };
 
-  // Calculate rotation based on state
+  // Calculate rotation based on state (static when not animated)
   const getRotation = (baseRotation: number) => {
+    if (!animated) return baseRotation;
     if (isFocused) return baseRotation + 360;
     if (isHovered) return baseRotation - 180;
     return baseRotation;
   };
 
-  const transitionDuration = isFocused ? '4s' : '2s';
+  const transitionDuration = animated ? (isFocused ? '4s' : '2s') : '0s';
 
   // Shared style for gradient layer containers
   const layerContainerStyle: React.CSSProperties = {

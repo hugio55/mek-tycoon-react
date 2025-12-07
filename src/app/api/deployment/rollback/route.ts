@@ -24,6 +24,20 @@ interface BackupMetadata {
   troutSizeBytes?: number;
 }
 
+/**
+ * ROLLBACK - Restore from a backup
+ *
+ * This route restores the system to a previous backup state.
+ *
+ * IMPORTANT: This uses direct push to remote master WITHOUT switching branches locally.
+ * This keeps your dev server running and is consistent with the deploy workflow.
+ *
+ * Steps:
+ * 1. Push backup commit directly to origin/master (triggers Vercel rollback)
+ * 2. Sync local master ref to match remote
+ * 3. Restore database(s) from backup exports
+ * 4. Deploy Convex functions to match the restored code
+ */
 export async function POST(request: NextRequest) {
   const authError = checkDeploymentAuth(request);
   if (authError) return authError;
@@ -74,95 +88,73 @@ export async function POST(request: NextRequest) {
 
     const steps: string[] = [];
 
-    // Get current branch before rollback so we can switch back
-    let originalBranch = 'custom-minting-system';
+    // Get current branch for reference
+    let currentBranch = 'custom-minting-system';
     try {
       const { stdout: branchOutput } = await execAsync('git branch --show-current');
-      originalBranch = branchOutput.trim() || 'custom-minting-system';
+      currentBranch = branchOutput.trim() || 'custom-minting-system';
+      steps.push(`Current branch: ${currentBranch}`);
     } catch (e) {
-      // Use default if we can't detect
+      steps.push('Warning: Could not detect current branch');
     }
 
-    // Step 1: Switch to master
+    // ========== STEP 1: Push backup commit directly to origin/master ==========
+    // This does NOT switch branches locally - your dev server keeps running!
     try {
-      await execAsync('git checkout master');
-      steps.push('Switched to master branch');
-    } catch (e) {
-      return NextResponse.json({
-        success: false,
-        error: 'Failed to switch to master branch. You may have uncommitted changes.',
-        steps,
-      }, { status: 500 });
-    }
+      const { stdout: pushOutput, stderr: pushStderr } = await execAsync(
+        `git push origin ${metadata.commitHash}:master --force`,
+        { timeout: 120000 }
+      );
+      const pushResult = pushOutput + pushStderr;
 
-    // Safety check: Verify no uncommitted changes on master before destructive reset
-    try {
-      const { stdout: statusCheck } = await execAsync('git status --porcelain');
-      if (statusCheck.trim()) {
-        // Switch back to original branch before returning error
-        try {
-          await execAsync(`git checkout ${originalBranch}`);
-        } catch (e) { /* ignore */ }
-        return NextResponse.json({
-          success: false,
-          error: 'Master branch has uncommitted changes. Cannot rollback safely. Please commit or stash changes first.',
-          steps,
-        }, { status: 400 });
+      if (pushResult.includes('Everything up-to-date')) {
+        steps.push(`origin/master already at ${metadata.commitHash.substring(0, 7)}`);
+      } else {
+        steps.push(`Pushed ${metadata.commitHash.substring(0, 7)} to origin/master (Vercel rolling back)`);
       }
-      steps.push('Verified master branch is clean');
-    } catch (e) {
-      // Continue anyway - status check is a safety net, not critical
-      steps.push('Warning: Could not verify branch cleanliness');
-    }
-
-    // Step 2: Reset to backup commit (DESTRUCTIVE - destroys uncommitted changes)
-    try {
-      await execAsync(`git reset --hard ${metadata.commitHash}`);
-      steps.push(`Reset to commit ${metadata.commitHash.substring(0, 7)}`);
-    } catch (e) {
+    } catch (e: any) {
       return NextResponse.json({
         success: false,
-        error: `Failed to reset to commit ${metadata.commitHash}`,
+        error: `Failed to push to origin/master: ${e.message?.substring(0, 200) || 'unknown error'}`,
         steps,
       }, { status: 500 });
     }
 
-    // Step 3: Force push to GitHub (triggers Vercel rollback)
+    // ========== STEP 2: Sync local master ref to match remote ==========
+    // This updates your local master reference without switching to it
     try {
-      await execAsync('git push origin master --force');
-      steps.push('Force pushed master to GitHub (Vercel production rolling back)');
+      await execAsync('git fetch origin master:master', { timeout: 30000 });
+      steps.push('Synced local master ref to match origin');
     } catch (e) {
-      return NextResponse.json({
-        success: false,
-        error: 'Failed to force push to GitHub',
-        steps,
-      }, { status: 500 });
+      // Non-critical - local ref sync is nice to have
+      steps.push('Warning: Could not sync local master ref');
     }
 
-    // Step 4: For full backups, restore Convex data
+    // ========== STEP 3: Restore database(s) ==========
+    const troutUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+    const sturgeonUrl = process.env.NEXT_PUBLIC_STURGEON_URL;
+
+    // For legacy full backups (production only)
     if (isFullBackup && metadata.convexExportPath) {
       const exportPath = path.join(process.cwd(), metadata.convexExportPath.replace('./', ''));
+      steps.push('Restoring Sturgeon (production)...');
 
       try {
-        // Restore to Sturgeon (production)
         await execAsync(`npx convex import --prod --replace "${exportPath}"`, {
-          timeout: 600000, // 10 minute timeout for large databases
+          timeout: 600000,
         });
-        steps.push('Restored Convex production data (Sturgeon)');
-      } catch (e) {
+        steps.push('Restored Sturgeon database');
+      } catch (e: any) {
         return NextResponse.json({
           success: false,
-          error: 'Failed to restore Convex data (code rollback succeeded)',
+          error: `Failed to restore Sturgeon: ${e.message?.substring(0, 200) || 'unknown error'}`,
           steps,
         }, { status: 500 });
       }
     }
 
-    // Step 4b: For full-dev backups, restore Convex dev data
+    // For legacy full-dev backups (dev only)
     if (isFullDevBackup && metadata.convexExportPath) {
-      const exportPath = path.join(process.cwd(), metadata.convexExportPath.replace('./', ''));
-      const troutUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-
       if (!troutUrl) {
         return NextResponse.json({
           success: false,
@@ -171,75 +163,103 @@ export async function POST(request: NextRequest) {
         }, { status: 500 });
       }
 
+      const exportPath = path.join(process.cwd(), metadata.convexExportPath.replace('./', ''));
+      steps.push('Restoring Trout (development)...');
+
       try {
-        // Restore to Trout (development)
         await execAsync(`npx convex import --url "${troutUrl}" --replace "${exportPath}"`, {
-          timeout: 600000, // 10 minute timeout for large databases
+          timeout: 600000,
         });
-        steps.push('Restored Convex dev data (Trout)');
-      } catch (e) {
+        steps.push('Restored Trout database');
+      } catch (e: any) {
         return NextResponse.json({
           success: false,
-          error: 'Failed to restore Convex dev data (code rollback succeeded)',
+          error: `Failed to restore Trout: ${e.message?.substring(0, 200) || 'unknown error'}`,
           steps,
         }, { status: 500 });
       }
     }
 
-    // Step 4c: For complete backups, restore BOTH databases
+    // For complete backups (BOTH databases)
     if (isCompleteBackup) {
-      const troutUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-
-      // Restore Sturgeon (production)
+      // Restore Sturgeon (production) - CRITICAL
       if (metadata.sturgeonExportPath) {
         const sturgeonPath = path.join(process.cwd(), metadata.sturgeonExportPath.replace('./', ''));
+        steps.push('Restoring Sturgeon (production)...');
+
         try {
           await execAsync(`npx convex import --prod --replace "${sturgeonPath}"`, {
             timeout: 600000,
           });
-          steps.push('Restored Sturgeon (production)');
-        } catch (e) {
+          steps.push('Restored Sturgeon database');
+        } catch (e: any) {
           return NextResponse.json({
             success: false,
-            error: 'Failed to restore Sturgeon database',
+            error: `Failed to restore Sturgeon: ${e.message?.substring(0, 200) || 'unknown error'}`,
             steps,
           }, { status: 500 });
         }
       }
 
-      // Restore Trout (development)
+      // Restore Trout (development) - Non-critical
       if (metadata.troutExportPath && troutUrl) {
         const troutPath = path.join(process.cwd(), metadata.troutExportPath.replace('./', ''));
+        steps.push('Restoring Trout (development)...');
+
         try {
           await execAsync(`npx convex import --url "${troutUrl}" --replace "${troutPath}"`, {
             timeout: 600000,
           });
-          steps.push('Restored Trout (development)');
-        } catch (e) {
-          // Trout restore failed, but Sturgeon succeeded - warn but don't fail
-          steps.push('Warning: Trout restore failed (Sturgeon was restored)');
+          steps.push('Restored Trout database');
+        } catch (e: any) {
+          // Trout restore failed, but Sturgeon succeeded - warn but continue
+          steps.push(`Warning: Trout restore failed - ${e.message?.substring(0, 100) || 'unknown error'}`);
         }
       }
     }
 
-    // Step 5: Deploy Convex to ensure functions match the code
-    try {
-      await execAsync('npx convex deploy', {
-        timeout: 120000,
-      });
-      steps.push('Deployed Convex functions to production');
-    } catch (e) {
-      // Continue anyway - functions might already be correct
-      steps.push('Warning: Could not redeploy Convex functions');
+    // ========== STEP 4: Deploy Convex functions to match restored code ==========
+    // For complete backups, deploy to BOTH databases
+    // For other backups, deploy to the appropriate database
+
+    if (isCompleteBackup || isFullBackup) {
+      // Deploy to Sturgeon (production)
+      steps.push('Deploying Convex functions to Sturgeon...');
+      try {
+        await execAsync('npx convex deploy --prod --yes --typecheck=disable', {
+          timeout: 180000,
+        });
+        steps.push('Deployed Convex to Sturgeon (production)');
+      } catch (e: any) {
+        steps.push(`Warning: Convex deploy to Sturgeon failed - ${e.message?.substring(0, 100) || 'unknown error'}`);
+      }
     }
 
-    // Step 6: Switch back to working branch
-    if (originalBranch !== 'master') {
+    if (isCompleteBackup || isFullDevBackup) {
+      // Deploy to Trout (development)
+      if (troutUrl) {
+        steps.push('Deploying Convex functions to Trout...');
+        try {
+          await execAsync(`npx convex deploy --url "${troutUrl}" --yes --typecheck=disable`, {
+            timeout: 180000,
+          });
+          steps.push('Deployed Convex to Trout (development)');
+        } catch (e: any) {
+          steps.push(`Warning: Convex deploy to Trout failed - ${e.message?.substring(0, 100) || 'unknown error'}`);
+        }
+      }
+    }
+
+    // For quick backups, just deploy to production (code-only restore)
+    if (!isCompleteBackup && !isFullBackup && !isFullDevBackup) {
+      steps.push('Deploying Convex functions to Sturgeon...');
       try {
-        await execAsync(`git checkout ${originalBranch}`);
-        steps.push(`Switched back to ${originalBranch}`);
-      } catch (e) {
-        steps.push(`Warning: Could not switch back to ${originalBranch}`);
+        await execAsync('npx convex deploy --prod --yes --typecheck=disable', {
+          timeout: 180000,
+        });
+        steps.push('Deployed Convex to Sturgeon (production)');
+      } catch (e: any) {
+        steps.push(`Warning: Convex deploy failed - ${e.message?.substring(0, 100) || 'unknown error'}`);
       }
     }
 
@@ -248,6 +268,7 @@ export async function POST(request: NextRequest) {
       message: `Rolled back to ${metadata.type} backup from ${new Date(metadata.timestamp).toLocaleString()}`,
       type: metadata.type,
       commitHash: metadata.commitHash,
+      commitMessage: metadata.commitMessage,
       steps,
     });
   } catch (error) {

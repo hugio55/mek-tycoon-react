@@ -2070,7 +2070,6 @@ export default defineSchema({
     discordUserId: v.string(), // Discord snowflake ID
     discordUsername: v.string(), // For display
     guildId: v.string(), // Discord server ID
-    groupId: v.optional(v.string()), // Legacy field for old connections
     linkedAt: v.number(),
     active: v.boolean(),
     lastNicknameUpdate: v.optional(v.number()),
@@ -2081,23 +2080,8 @@ export default defineSchema({
     .index("by_guild", ["guildId"])
     .index("by_active", ["active"]),
 
-  // Wallet groups - corporations that can have multiple wallets
-  walletGroups: defineTable({
-    groupId: v.string(),
-    primaryWallet: v.string(),
-    createdAt: v.number(),
-  })
-    .index("by_groupId", ["groupId"]),
-
-  // Wallet group memberships - tracks which wallets belong to which groups
-  walletGroupMemberships: defineTable({
-    groupId: v.string(),
-    walletAddress: v.string(),
-    addedAt: v.number(),
-    originalCompanyName: v.union(v.string(), v.null()),
-  })
-    .index("by_wallet", ["walletAddress"])
-    .index("by_group", ["groupId"]),
+  // NOTE: walletGroups and walletGroupMemberships tables REMOVED
+  // Multi-wallet corporations deprecated in favor of 1 wallet = 1 corp model
 
   // Discord gold tier configuration
   discordGoldTiers: defineTable({

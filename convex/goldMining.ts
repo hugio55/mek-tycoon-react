@@ -1032,130 +1032,84 @@ function calculateGoldRateForMek(mekNumber: number): number {
   return Math.round(rate * 100) / 100; // Round to 2 decimals
 }
 
-// Get all Meks from all wallets in the corporation (wallet group)
+// Get all Meks for a wallet (1 wallet = 1 corp model)
+// NOTE: Multi-wallet group aggregation removed - each wallet is its own corporation
 export const getGroupMeks = query({
   args: {
     walletAddress: v.string(),
   },
   handler: async (ctx, args) => {
-    // Find the wallet group for this wallet
-    const membership = await ctx.db
-      .query("walletGroupMemberships")
+    // Get gold mining data for this wallet only (1 wallet = 1 corp)
+    const goldMining = await ctx.db
+      .query("goldMining")
       .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
-    let walletsToQuery = [args.walletAddress]; // Default to just this wallet
-
-    if (membership) {
-      // Get all wallets in the group
-      const allMemberships = await ctx.db
-        .query("walletGroupMemberships")
-        .withIndex("by_group", (q: any) => q.eq("groupId", membership.groupId))
-        .collect();
-
-      walletsToQuery = allMemberships.map((m: any) => m.walletAddress);
-    }
-
-    // Get gold mining data for all wallets
-    const allMeks = [];
-    for (const wallet of walletsToQuery) {
-      const goldMining = await ctx.db
-        .query("goldMining")
-        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", wallet))
-        .first();
-
-      if (goldMining && goldMining.ownedMeks) {
-        // Add wallet source to each Mek
-        const meksWithSource = goldMining.ownedMeks.map((mek: any) => ({
-          ...mek,
-          sourceWallet: wallet
-        }));
-        allMeks.push(...meksWithSource);
-      }
+    const meks = [];
+    if (goldMining && goldMining.ownedMeks) {
+      // Add wallet source to each Mek
+      const meksWithSource = goldMining.ownedMeks.map((mek: any) => ({
+        ...mek,
+        sourceWallet: args.walletAddress
+      }));
+      meks.push(...meksWithSource);
     }
 
     return {
-      meks: allMeks,
-      wallets: walletsToQuery
+      meks,
+      wallets: [args.walletAddress]
     };
   }
 });
 
-// Get aggregated corporation stats (cumulative gold, total gold per hour, etc.)
+// Get corporation stats for a wallet (1 wallet = 1 corp model)
+// NOTE: Multi-wallet group aggregation removed - each wallet is its own corporation
 export const getCorporationStats = query({
   args: {
     walletAddress: v.string(),
   },
   handler: async (ctx, args) => {
-    const now = Date.now();
-
-    // Find the wallet group for this wallet
-    const membership = await ctx.db
-      .query("walletGroupMemberships")
+    // Get gold mining data for this wallet only (1 wallet = 1 corp)
+    const goldMining = await ctx.db
+      .query("goldMining")
       .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
-    let walletsToQuery = [args.walletAddress]; // Default to just this wallet
-
-    if (membership) {
-      // Get all wallets in the group
-      const allMemberships = await ctx.db
-        .query("walletGroupMemberships")
-        .withIndex("by_group", (q: any) => q.eq("groupId", membership.groupId))
-        .collect();
-
-      walletsToQuery = allMemberships.map((m: any) => m.walletAddress);
+    if (!goldMining) {
+      return {
+        totalCumulativeGold: 0,
+        totalCurrentGold: 0,
+        totalGoldPerHour: 0,
+        totalMeks: 0,
+        walletCount: 1,
+        allVerified: false,
+      };
     }
 
-    // Aggregate stats from all wallets
-    let totalCumulativeGold = 0;
-    let totalCurrentGold = 0;
-    let totalGoldPerHour = 0;
-    let totalMeks = 0;
-    let allVerified = true;
+    // Calculate current gold for this wallet
+    const currentGold = calculateCurrentGold({
+      accumulatedGold: goldMining.accumulatedGold || 0,
+      goldPerHour: goldMining.totalGoldPerHour,
+      lastSnapshotTime: goldMining.lastSnapshotTime || goldMining.updatedAt || goldMining.createdAt,
+      isVerified: goldMining.isBlockchainVerified === true,
+      consecutiveSnapshotFailures: goldMining.consecutiveSnapshotFailures || 0
+    });
 
-    for (const wallet of walletsToQuery) {
-      const goldMining = await ctx.db
-        .query("goldMining")
-        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", wallet))
-        .first();
-
-      if (goldMining) {
-        // Calculate current gold for this wallet
-        const currentGold = calculateCurrentGold({
-          accumulatedGold: goldMining.accumulatedGold || 0,
-          goldPerHour: goldMining.totalGoldPerHour,
-          lastSnapshotTime: goldMining.lastSnapshotTime || goldMining.updatedAt || goldMining.createdAt,
-          isVerified: goldMining.isBlockchainVerified === true,
-          consecutiveSnapshotFailures: goldMining.consecutiveSnapshotFailures || 0
-        });
-
-        // Calculate cumulative gold for this wallet
-        const goldSinceLastUpdate = currentGold - (goldMining.accumulatedGold || 0);
-        let baseCumulativeGold = goldMining.totalCumulativeGold || 0;
-        if (!goldMining.totalCumulativeGold || baseCumulativeGold === 0) {
-          baseCumulativeGold = (goldMining.accumulatedGold || 0) + (goldMining.totalGoldSpentOnUpgrades || 0);
-        }
-        const walletCumulativeGold = baseCumulativeGold + goldSinceLastUpdate;
-
-        totalCumulativeGold += walletCumulativeGold;
-        totalCurrentGold += currentGold;
-        totalGoldPerHour += goldMining.totalGoldPerHour || 0;
-        totalMeks += goldMining.ownedMeks?.length || 0;
-
-        if (goldMining.isBlockchainVerified !== true) {
-          allVerified = false;
-        }
-      }
+    // Calculate cumulative gold for this wallet
+    const goldSinceLastUpdate = currentGold - (goldMining.accumulatedGold || 0);
+    let baseCumulativeGold = goldMining.totalCumulativeGold || 0;
+    if (!goldMining.totalCumulativeGold || baseCumulativeGold === 0) {
+      baseCumulativeGold = (goldMining.accumulatedGold || 0) + (goldMining.totalGoldSpentOnUpgrades || 0);
     }
+    const totalCumulativeGold = baseCumulativeGold + goldSinceLastUpdate;
 
     return {
       totalCumulativeGold,
-      totalCurrentGold,
-      totalGoldPerHour,
-      totalMeks,
-      walletCount: walletsToQuery.length,
-      allVerified,
+      totalCurrentGold: currentGold,
+      totalGoldPerHour: goldMining.totalGoldPerHour || 0,
+      totalMeks: goldMining.ownedMeks?.length || 0,
+      walletCount: 1,
+      allVerified: goldMining.isBlockchainVerified === true,
     };
   }
 });

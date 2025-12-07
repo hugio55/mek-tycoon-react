@@ -274,6 +274,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
                   width={360}
                   disabled={isSubmitting}
                   autoFocus
+                  animated={mode === 'initial'}
                 />
               </div>
 
@@ -344,7 +345,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
                     handleSubmit(syntheticEvent);
                   }}
                   disabled={buttonDisabled}
-                  className="w-full py-3 px-6 rounded-xl text-sm font-semibold uppercase tracking-wider transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full py-3 px-6 rounded-xl text-sm font-semibold uppercase tracking-wider transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
                   style={{
                     background: buttonDisabled
                       ? 'rgba(255,255,255,0.05)'
@@ -352,6 +353,20 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
                     border: `1px solid ${buttonDisabled ? 'rgba(255,255,255,0.1)' : 'rgba(34,211,238,0.5)'}`,
                     color: buttonDisabled ? 'rgba(255,255,255,0.4)' : '#22d3ee',
                     boxShadow: buttonDisabled ? 'none' : '0 0 20px rgba(34,211,238,0.2)',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!buttonDisabled) {
+                      e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6,182,212,0.5) 0%, rgba(34,211,238,0.35) 100%)';
+                      e.currentTarget.style.boxShadow = '0 0 30px rgba(34,211,238,0.4)';
+                      e.currentTarget.style.borderColor = 'rgba(34,211,238,0.8)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!buttonDisabled) {
+                      e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6,182,212,0.3) 0%, rgba(34,211,238,0.2) 100%)';
+                      e.currentTarget.style.boxShadow = '0 0 20px rgba(34,211,238,0.2)';
+                      e.currentTarget.style.borderColor = 'rgba(34,211,238,0.5)';
+                    }
                   }}
                 >
                   {isSubmitting ? 'Updating...' : 'Update Name'}
