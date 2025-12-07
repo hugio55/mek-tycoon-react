@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState, useMemo } from 'react';
+import React, { useCallback, useState, useMemo, useEffect } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { useTalentBuilder } from '../TalentBuilderContext';
@@ -28,6 +28,58 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<Id<"mekTreeCategories"> | null>(null);
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+
+  // Viewport preset state
+  const [activePreset, setActivePreset] = useState<string | null>(null);
+
+  // Load saved Mek Talent Tree preset on mount
+  useEffect(() => {
+    const savedPreset = localStorage.getItem('mekTalentTreeViewport');
+    if (savedPreset) {
+      try {
+        const parsed = JSON.parse(savedPreset);
+        // Just load the saved preset data, don't auto-apply
+        console.log('[VIEWPORT] Loaded Mek Talent Tree preset:', parsed);
+      } catch (e) {
+        console.error('Failed to parse saved viewport preset:', e);
+      }
+    }
+  }, []);
+
+  // Auto-save Mek Talent Tree preset when dimensions change and preset is active
+  useEffect(() => {
+    if (activePreset === 'mekTalentTree') {
+      const presetData = {
+        width: state.viewportDimensions.width,
+        height: state.viewportDimensions.height,
+        // Save position relative to grid center for Mek trees
+        updatedAt: Date.now()
+      };
+      localStorage.setItem('mekTalentTreeViewport', JSON.stringify(presetData));
+      console.log('[VIEWPORT] Auto-saved Mek Talent Tree preset:', presetData);
+    }
+  }, [activePreset, state.viewportDimensions.width, state.viewportDimensions.height]);
+
+  // Helper to apply Mek Talent Tree preset
+  const applyMekTalentTreePreset = useCallback(() => {
+    const savedPreset = localStorage.getItem('mekTalentTreeViewport');
+    let width = 327;  // Default
+    let height = 614; // Default
+
+    if (savedPreset) {
+      try {
+        const parsed = JSON.parse(savedPreset);
+        width = parsed.width || 327;
+        height = parsed.height || 614;
+      } catch (e) {
+        console.error('Failed to parse preset:', e);
+      }
+    }
+
+    dispatch({ type: 'SET_VIEWPORT_DIMENSIONS', payload: { width, height } });
+    dispatch({ type: 'SET_SHOW_VIEWPORT_BOX', payload: true });
+    setActivePreset('mekTalentTree');
+  }, [dispatch]);
 
   // Convex queries for categories
   const categories = useQuery(api.mekTreeCategories.getAllCategoriesWithCounts);
@@ -411,22 +463,36 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
             </div>
 
             <select
-              value="presets"
+              value={activePreset || 'presets'}
               onChange={(e) => {
-                if (e.target.value !== 'presets') {
-                  const [width, height] = e.target.value.split('x').map(Number);
+                const value = e.target.value;
+                if (value === 'presets') {
+                  setActivePreset(null);
+                } else if (value === 'mekTalentTree') {
+                  applyMekTalentTreePreset();
+                } else {
+                  setActivePreset(null);
+                  const [width, height] = value.split('x').map(Number);
                   dispatch({ type: 'SET_VIEWPORT_DIMENSIONS', payload: { width, height } });
                 }
               }}
-              className="px-2 py-1 text-sm rounded bg-gray-700 text-gray-400 border border-gray-600"
+              className={`px-2 py-1 text-sm rounded border ${
+                activePreset === 'mekTalentTree'
+                  ? 'bg-yellow-900/50 text-yellow-400 border-yellow-500/50'
+                  : 'bg-gray-700 text-gray-400 border-gray-600'
+              }`}
             >
               <option value="presets">Presets</option>
+              <option value="mekTalentTree">⚙️ Mek Talent Tree</option>
               <option value="800x600">800x600</option>
               <option value="1024x768">1024x768</option>
               <option value="1920x1080">1920x1080 (HD)</option>
               <option value="1280x720">1280x720 (HD)</option>
               <option value="375x667">375x667 (Phone)</option>
             </select>
+            {activePreset === 'mekTalentTree' && (
+              <span className="text-xs text-yellow-500 ml-1" title="Changes auto-save to this preset">●</span>
+            )}
           </div>
         </div>
       </div>
@@ -521,6 +587,12 @@ export function Toolbar({ onExport, onImport, canvasRef }: ToolbarProps) {
               className="px-3 py-1 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white"
             >
               Load
+            </button>
+            <button
+              onClick={startNewTree}
+              className="px-3 py-1 text-sm rounded bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              New
             </button>
 
             {/* Category info */}

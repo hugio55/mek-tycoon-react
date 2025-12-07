@@ -534,8 +534,7 @@ export const getCompanyNamesForWallets = query({
     walletAddresses: v.array(v.string()),
   },
   handler: async (ctx, args) => {
-    console.log('[🏢CORP-LOOKUP] getCompanyNamesForWallets called with:', args.walletAddresses.length, 'addresses');
-
+    // Note: No logging here - this query is called frequently for polling
     const results: Record<string, string | null> = {};
 
     for (const walletAddress of args.walletAddresses) {
@@ -547,11 +546,8 @@ export const getCompanyNamesForWallets = query({
         .first();
 
       results[walletAddress] = goldMiningRecord?.companyName || null;
-
-      console.log('[🏢CORP-LOOKUP] Wallet:', walletAddress.substring(0, 12) + '... →', goldMiningRecord?.companyName || 'NO CORP');
     }
 
-    console.log('[🏢CORP-LOOKUP] Returning results:', results);
     return results;
   },
 });

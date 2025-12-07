@@ -265,11 +265,12 @@ export function useSaveLoad(): UseSaveLoadReturn {
 
   // Start new tree
   const startNewTree = useCallback(() => {
+    // Position at 1485 so the 30px node's center lands on the grid center (1500)
     const startNode: TalentNode = {
       id: 'start',
       name: 'START',
-      x: 1500,
-      y: 1500,
+      x: 1500 - 15,
+      y: 1500 - 15,
       tier: 0,
       desc: 'The beginning of your journey',
       xp: 0
