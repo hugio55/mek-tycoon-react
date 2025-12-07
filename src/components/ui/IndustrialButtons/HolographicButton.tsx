@@ -171,11 +171,11 @@ export default function HolographicButton({
         gradient: 'from-gray-900/90 via-red-950/90 to-black/90'
       }
     : {
-        primary: '#06b6d4',
-        secondary: '#22d3ee',
-        glow: 'rgba(6,182,212,',
-        glowBright: 'rgba(34,211,238,',
-        gradient: 'from-gray-900/90 via-blue-950/90 to-black/90'
+        primary: '#00d4ff',
+        secondary: '#5ee7ff',
+        glow: 'rgba(0,212,255,',
+        glowBright: 'rgba(94,231,255,',
+        gradient: 'from-gray-900/90 via-cyan-950/90 to-black/90'
       };
 
   return (
@@ -206,7 +206,7 @@ export default function HolographicButton({
                 ? 'from-gray-900/90 via-gray-800/90 to-black/90'
                 : variant === 'red'
                 ? 'from-gray-900/90 via-red-950/90 to-black/90'
-                : 'from-gray-900/90 via-blue-950/90 to-black/90'
+                : 'from-gray-900/90 via-cyan-950/90 to-black/90'
               : 'from-gray-900/90 via-gray-800/90 to-black/90'
             }
             backdrop-blur-md

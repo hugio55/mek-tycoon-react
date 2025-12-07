@@ -6,7 +6,14 @@ interface GlowingBorderInputProps {
   onChange?: (value: string) => void;
   onFilterClick?: () => void;
   showFilterButton?: boolean;
+  showSearchIcon?: boolean;
   accentColor?: 'purple' | 'cyan' | 'gold';
+  maxLength?: number;
+  showCharacterCount?: boolean;
+  width?: number;
+  disabled?: boolean;
+  autoFocus?: boolean;
+  id?: string;
 }
 
 const colorSchemes = {
@@ -39,7 +46,14 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
   onChange,
   onFilterClick,
   showFilterButton = true,
+  showSearchIcon = true,
   accentColor = 'purple',
+  maxLength,
+  showCharacterCount = false,
+  width = 314,
+  disabled = false,
+  autoFocus = false,
+  id,
 }) => {
   const [internalValue, setInternalValue] = useState('');
   const [isHovered, setIsHovered] = useState(false);
@@ -74,18 +88,26 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
     overflow: 'hidden',
   };
 
+  // Calculate dimensions based on width
+  const containerWidth = width;
+  const glowWidth = width + 6;
+  const darkBorderWidth = width - 2;
+  const borderWidth = width - 6;
+  const whiteBorderWidth = width - 9;
+  const inputWidth = width - 13;
+
   return (
     <div
       className="relative flex items-center justify-center"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      style={{ width: 314, height: 70 }}
+      style={{ width: containerWidth, height: 70 }}
     >
       {/* Glow layer - outermost, most blurred */}
       <div
         style={{
           ...layerContainerStyle,
-          width: 320,
+          width: glowWidth,
           height: 70,
           borderRadius: 12,
           filter: 'blur(15px)',
@@ -111,7 +133,7 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
       <div
         style={{
           ...layerContainerStyle,
-          width: 312,
+          width: darkBorderWidth,
           height: 65,
           borderRadius: 12,
           filter: 'blur(3px)',
@@ -136,7 +158,7 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
       <div
         style={{
           ...layerContainerStyle,
-          width: 308,
+          width: borderWidth,
           height: 61,
           borderRadius: 11,
           filter: 'blur(0.5px)',
@@ -162,7 +184,7 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
       <div
         style={{
           ...layerContainerStyle,
-          width: 305,
+          width: whiteBorderWidth,
           height: 58,
           borderRadius: 10,
           filter: 'blur(1px)',
@@ -186,42 +208,63 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
 
       {/* Input field */}
       <input
+        id={id}
         type="text"
         value={inputValue}
         onChange={handleChange}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         placeholder={placeholder}
-        className="relative text-white outline-none z-10"
+        maxLength={maxLength}
+        disabled={disabled}
+        autoFocus={autoFocus}
+        className="relative text-white outline-none z-10 disabled:opacity-50"
         style={{
-          width: 301,
+          width: inputWidth,
           height: 56,
           borderRadius: 10,
           border: 'none',
           backgroundColor: '#010201',
-          paddingLeft: 45,
-          paddingRight: showFilterButton ? 55 : 16,
+          paddingLeft: showSearchIcon ? 45 : 16,
+          paddingRight: showFilterButton ? 55 : (showCharacterCount ? 60 : 16),
           fontSize: 16,
         }}
       />
 
       {/* Search icon */}
-      <svg
-        className="absolute z-20 pointer-events-none"
-        style={{ left: 20, top: '50%', transform: 'translateY(-50%)' }}
-        width="17"
-        height="16"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M7.667 12.667A5.333 5.333 0 107.667 2a5.333 5.333 0 000 10.667zM14.334 14l-2.9-2.9"
-          stroke="#888"
-          strokeWidth="1.333"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      {showSearchIcon && (
+        <svg
+          className="absolute z-20 pointer-events-none"
+          style={{ left: 20, top: '50%', transform: 'translateY(-50%)' }}
+          width="17"
+          height="16"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M7.667 12.667A5.333 5.333 0 107.667 2a5.333 5.333 0 000 10.667zM14.334 14l-2.9-2.9"
+            stroke="#888"
+            strokeWidth="1.333"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+
+      {/* Character count */}
+      {showCharacterCount && maxLength && (
+        <div
+          className="absolute z-20 pointer-events-none text-xs font-medium"
+          style={{
+            right: 16,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: `${colors.primary}99`,
+          }}
+        >
+          {inputValue.length}/{maxLength}
+        </div>
+      )}
 
       {/* Filter button */}
       {showFilterButton && (

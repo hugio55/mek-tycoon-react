@@ -1837,8 +1837,8 @@ export default function AdminMasterDataPage() {
     setLoaderStatusMessage({
       type: 'success',
       text: newValue
-        ? 'Page loader DISABLED for localhost. Refresh the page to see the change.'
-        : 'Page loader ENABLED for localhost. Refresh the page to see the change.'
+        ? 'Page loader BYPASSED on localhost (no loader). Refresh to apply.'
+        : 'Page loader ENABLED on localhost (loader will show). Refresh to apply.'
     });
 
     // Clear message after 5 seconds
@@ -1858,8 +1858,8 @@ export default function AdminMasterDataPage() {
     setLoaderStatusMessage({
       type: 'success',
       text: newValue
-        ? 'Page loader DISABLED for production. Refresh the page to see the change.'
-        : 'Page loader ENABLED for production. Refresh the page to see the change.'
+        ? 'Page loader BYPASSED on production (no loader). Refresh to apply.'
+        : 'Page loader ENABLED on production (loader will show). Refresh to apply.'
     });
 
     // Clear message after 5 seconds
@@ -2209,36 +2209,36 @@ export default function AdminMasterDataPage() {
           {/* Localhost Toggle */}
           <div className="bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-2 inline-flex items-center gap-3">
             <label htmlFor="page-loader-localhost" className="text-sm font-bold text-blue-400 cursor-pointer">
-              Page Loader (Localhost)
+              Skip Page Loader (Localhost)
             </label>
             <Switch.Root
               id="page-loader-localhost"
-              checked={!pageLoaderDisabledLocalhost}
+              checked={pageLoaderDisabledLocalhost}
               onCheckedChange={handleTogglePageLoaderLocalhost}
               className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-green-600 transition-colors"
             >
               <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
             </Switch.Root>
-            <span className={`text-xs font-bold ${pageLoaderDisabledLocalhost ? 'text-red-400' : 'text-green-400'}`}>
-              {pageLoaderDisabledLocalhost ? 'OFF' : 'ON'}
+            <span className={`text-xs font-bold ${pageLoaderDisabledLocalhost ? 'text-green-400' : 'text-red-400'}`}>
+              {pageLoaderDisabledLocalhost ? 'ON' : 'OFF'}
             </span>
           </div>
 
           {/* Production Toggle */}
           <div className="bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-2 inline-flex items-center gap-3">
             <label htmlFor="page-loader-production" className="text-sm font-bold text-blue-400 cursor-pointer">
-              Page Loader (Production)
+              Skip Page Loader (Production)
             </label>
             <Switch.Root
               id="page-loader-production"
-              checked={!pageLoaderDisabledProduction}
+              checked={pageLoaderDisabledProduction}
               onCheckedChange={handleTogglePageLoaderProduction}
               className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-green-600 transition-colors"
             >
               <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
             </Switch.Root>
-            <span className={`text-xs font-bold ${pageLoaderDisabledProduction ? 'text-red-400' : 'text-green-400'}`}>
-              {pageLoaderDisabledProduction ? 'OFF' : 'ON'}
+            <span className={`text-xs font-bold ${pageLoaderDisabledProduction ? 'text-green-400' : 'text-red-400'}`}>
+              {pageLoaderDisabledProduction ? 'ON' : 'OFF'}
             </span>
           </div>
 

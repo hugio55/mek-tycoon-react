@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import HolographicButton from './ui/IndustrialButtons/HolographicButton';
+import GlowingBorderInput from './controls/GlowingBorderInput';
 
 interface CompanyNameModalProps {
   isOpen: boolean;
@@ -259,35 +260,21 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
               <label htmlFor="companyName" className="block text-sm font-semibold text-cyan-400 mb-2 tracking-wide">
                 Corporation Name
               </label>
-              <div className="relative group">
-                {/* Glowing border container */}
-                <div
-                  className="relative rounded-xl overflow-hidden transition-all duration-500"
-                  style={{
-                    padding: '2px',
-                    background: 'linear-gradient(135deg, #00d4ff 0%, #0891b2 50%, #00d4ff 100%)',
-                    boxShadow: '0 0 20px rgba(0, 212, 255, 0.3), 0 0 40px rgba(0, 212, 255, 0.15)',
-                  }}
-                >
-                  <input
-                    id="companyName"
-                    type="text"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="Enter corporation name..."
-                    maxLength={30}
-                    className="w-full px-4 py-3.5 rounded-[10px] text-white placeholder-white/40 focus:outline-none transition-all duration-300"
-                    style={{
-                      background: '#010201',
-                      fontSize: '16px',
-                    }}
-                    disabled={isSubmitting}
-                    autoFocus
-                  />
-                </div>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-cyan-400/70 font-medium">
-                  {companyName.length}/30
-                </div>
+              <div className="flex justify-center">
+                <GlowingBorderInput
+                  id="companyName"
+                  value={companyName}
+                  onChange={(value) => setCompanyName(value)}
+                  placeholder="Enter corporation name..."
+                  maxLength={30}
+                  showCharacterCount={true}
+                  showSearchIcon={false}
+                  showFilterButton={false}
+                  accentColor="cyan"
+                  width={360}
+                  disabled={isSubmitting}
+                  autoFocus
+                />
               </div>
 
               {/* Availability status */}
@@ -354,12 +341,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
                   type="button"
                   onClick={handleClose}
                   disabled={isSubmitting}
-                  className="w-full py-3 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/10 active:scale-[0.98] disabled:opacity-50"
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    color: 'rgba(255, 255, 255, 0.7)',
-                  }}
+                  className="text-center text-white/40 hover:text-white/70 text-sm font-light tracking-wide transition-colors disabled:opacity-50 pt-3"
                 >
                   Cancel
                 </button>
@@ -369,7 +351,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
                   type="button"
                   onClick={onCancel}
                   disabled={isSubmitting}
-                  className="w-full text-center text-white/50 hover:text-white/80 text-sm font-light tracking-wide transition-colors disabled:opacity-50 py-2"
+                  className="text-center text-white/40 hover:text-white/70 text-sm font-light tracking-wide transition-colors disabled:opacity-50 pt-3"
                 >
                   Cancel
                 </button>
