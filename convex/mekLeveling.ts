@@ -87,7 +87,7 @@ export const getMekLevels = query({
   handler: async (ctx, args) => {
     const levels = await ctx.db
       .query("mekLevels")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .filter((q) => q.neq(q.field("ownershipStatus"), "transferred"))
       .collect();
 
@@ -104,7 +104,7 @@ export const getGroupMekLevels = query({
     // Find the wallet group for this wallet
     const membership = await ctx.db
       .query("walletGroupMemberships")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     let walletsToQuery = [args.walletAddress]; // Default to just this wallet
@@ -618,7 +618,7 @@ export const checkAndResetTransferredMeks = mutation({
     // Get all level records for this wallet
     const mekLevels = await ctx.db
       .query("mekLevels")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
     let checkedCount = 0;
@@ -791,7 +791,7 @@ export const resetAllMekLevels = mutation({
     // Get all level records for this wallet
     const mekLevels = await ctx.db
       .query("mekLevels")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .filter((q) => q.eq(q.field("ownershipStatus"), "verified"))
       .collect();
 
