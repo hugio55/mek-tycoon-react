@@ -8,6 +8,7 @@ import { getMediaUrl } from '@/lib/media-url';
 
 import { useLandingStateMachine, TIMINGS } from './hooks/useLandingStateMachine';
 import { useBackgroundAudio } from './hooks/useBackgroundAudio';
+import { useClickSound } from './hooks/useClickSound';
 import LandingContainer from './components/LandingContainer';
 import SoundSelectionState from './components/states/SoundSelectionState';
 import FinalContentState from './components/states/FinalContentState';
@@ -33,6 +34,7 @@ export default function LandingV2() {
   const phaseCards = useQuery(api.phaseCards.getAllPhaseCards);
   const { currentState, next, transitionTo, isState } = useLandingStateMachine();
   const { audioPlaying, toggleAudio, startAudio } = useBackgroundAudio();
+  const { playClickSound } = useClickSound();
 
   // Detect device type and mobile resume on mount
   useEffect(() => {
@@ -314,11 +316,15 @@ export default function LandingV2() {
         phaseCards={phaseCards}
         startDelay={isMobileResume ? 0 : contentDelay}
         skipAnimations={isMobileResume}
+        onPlayClickSound={playClickSound}
       />
 
       <SpeakerButton
         isPlaying={audioPlaying}
-        onClick={toggleAudio}
+        onClick={() => {
+          playClickSound();
+          toggleAudio();
+        }}
         isVisible={showSpeaker}
       />
 

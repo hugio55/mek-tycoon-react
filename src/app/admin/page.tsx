@@ -6981,7 +6981,7 @@ function CampaignManagerWithDatabase({
 
 // NFT Admin Sub-Tabs Component - SIMPLIFIED FOR SINGLE DATABASE
 function NFTAdminTabs({ client }: { client: any }) {
-  const [nftSubTab, setNftSubTab] = useState<'commemorative' | 'whitelist-manager' | 'json-generator' | 'campaigns'>('json-generator');
+  const [nftSubTab, setNftSubTab] = useState<'commemorative' | 'whitelist-manager' | 'json-generator' | 'campaigns'>('campaigns');
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [campaignUpdateTrigger, setCampaignUpdateTrigger] = useState(0);
   const [cleaningCampaignId, setCleaningCampaignId] = useState<string | null>(null);

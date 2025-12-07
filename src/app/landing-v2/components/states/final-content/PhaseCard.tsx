@@ -18,6 +18,7 @@ interface PhaseCardProps {
   shouldShow: boolean;
   onToggle: () => void;
   isPhaseOneExpanded: boolean;
+  onPlayClickSound?: () => void;
 }
 
 const PHASE_LABELS = ['I', 'II', 'III', 'IV'];
@@ -57,7 +58,7 @@ function getPhaseStyles(index: number) {
   return styles;
 }
 
-export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggle, isPhaseOneExpanded }: PhaseCardProps) {
+export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggle, isPhaseOneExpanded, onPlayClickSound }: PhaseCardProps) {
   const [currentBackground, setCurrentBackground] = useState('');
   const [showClaimLightbox, setShowClaimLightbox] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -332,6 +333,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
               <button
                 onClick={() => {
                   console.log('[PhaseCard] Opening NFT claim lightbox');
+                  onPlayClickSound?.();
                   setShowClaimLightbox(true);
                 }}
                 className="px-6 py-2.5 rounded-lg font-medium transition-all duration-300 hover:shadow-2xl hover:scale-[1.01] hover:border-white/50 hover:brightness-125 group relative overflow-hidden"

@@ -18,9 +18,10 @@ interface FinalContentStateProps {
   phaseCards: PhaseCard[] | undefined;
   startDelay?: number;
   skipAnimations?: boolean;
+  onPlayClickSound?: () => void;
 }
 
-export default function FinalContentState({ isActive, phaseCards, startDelay = 0, skipAnimations = false }: FinalContentStateProps) {
+export default function FinalContentState({ isActive, phaseCards, startDelay = 0, skipAnimations = false, onPlayClickSound }: FinalContentStateProps) {
   const [showDescription, setShowDescription] = useState(false);
   const [showButton, setShowButton] = useState(false);
   const [showPhases, setShowPhases] = useState<number>(0);
@@ -84,6 +85,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
         <SubtitleSection show={showDescription} isMobile={isMobile} />
 
         <JoinBetaSection show={showButton} onJoinBeta={() => {
+          onPlayClickSound?.();
           if (isMobile) {
             setTimeout(() => setShowBetaLightbox(true), 300);
           } else {
@@ -91,7 +93,7 @@ export default function FinalContentState({ isActive, phaseCards, startDelay = 0
           }
         }} />
 
-        <PhaseCardsSection phaseCards={phaseCards} showPhases={showPhases} />
+        <PhaseCardsSection phaseCards={phaseCards} showPhases={showPhases} onPlayClickSound={onPlayClickSound} />
       </div>
 
       <BetaSignupLightbox
