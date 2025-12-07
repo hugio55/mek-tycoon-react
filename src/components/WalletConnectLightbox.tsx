@@ -43,7 +43,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
   const [isCountingUp, setIsCountingUp] = useState(false);
   const [showFinalFlourish, setShowFinalFlourish] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState<'connecting' | 'counting' | 'loading' | 'animating' | 'complete'>('connecting');
-  const countingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const animationActiveRef = useRef<boolean>(false); // Track if animation should continue
 
   // Signature help states - show extended instructions after 10 seconds
   const [isAwaitingSignature, setIsAwaitingSignature] = useState(false);
@@ -90,11 +90,8 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       document.body.style.overflow = '';
       setIsConnecting(false);
       setWalletError(null);
-      // Clear counting interval on close
-      if (countingIntervalRef.current) {
-        clearInterval(countingIntervalRef.current);
-        countingIntervalRef.current = null;
-      }
+      // Stop any running animation
+      animationActiveRef.current = false;
       // Clear signature help timeout on close
       if (signatureHelpTimeoutRef.current) {
         clearTimeout(signatureHelpTimeoutRef.current);
@@ -104,10 +101,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
 
     return () => {
       document.body.style.overflow = '';
-      if (countingIntervalRef.current) {
-        clearInterval(countingIntervalRef.current);
-        countingIntervalRef.current = null;
-      }
+      animationActiveRef.current = false;
       if (signatureHelpTimeoutRef.current) {
         clearTimeout(signatureHelpTimeoutRef.current);
         signatureHelpTimeoutRef.current = null;
@@ -134,6 +128,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       }
 
       console.log('[🔢COUNT] Starting eased counting animation to', targetCount);
+      animationActiveRef.current = true;
       setIsCountingUp(true);
       setDisplayCount(1);
       setLoadingPhase('animating');
@@ -145,6 +140,13 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       const startTime = Date.now();
 
       const animate = () => {
+        // Check if animation was cancelled (lightbox closed)
+        if (!animationActiveRef.current) {
+          console.log('[🔢COUNT] Animation cancelled');
+          resolve();
+          return;
+        }
+
         const elapsed = Date.now() - startTime;
         const linearProgress = Math.min(elapsed / baseDuration, 1);
 
@@ -164,6 +166,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
           setIsCountingUp(false);
           setShowFinalFlourish(true);
           setLoadingPhase('complete');
+          animationActiveRef.current = false;
           console.log('[🔢COUNT] Animation complete! Final count:', targetCount);
 
           // Show flourish for 1.5 seconds then resolve

@@ -116,39 +116,21 @@ export default function UnifiedHeader() {
           setSessionExpiresAt(prev => prev !== null ? null : prev);
         }
       } catch (error) {
-        console.error('[🔄SYNC] Error restoring session:', error);
+        console.error('[UnifiedHeader] Error restoring session:', error);
         setWalletAddress(prev => prev !== null ? null : prev);
         setSessionExpiresAt(prev => prev !== null ? null : prev);
       }
     };
 
-    // Log polling statistics every 30 seconds
-    const statsInterval = setInterval(() => {
-      console.log('[🔄SYNC] POLLING STATISTICS:', {
-        totalPolls: pollCount,
-        actualChanges: actualStateChanges,
-        storageEvents: storageEventCount,
-        changeRate: pollCount > 0 ? `${(actualStateChanges / pollCount * 100).toFixed(2)}%` : 'N/A',
-        efficiency: actualStateChanges > 0
-          ? `${storageEventCount} storage events vs ${actualStateChanges} total changes = ${((storageEventCount / actualStateChanges) * 100).toFixed(0)}% event coverage`
-          : 'No changes detected yet'
-      });
-    }, 30000);
-
-    checkWalletAddress('initial');
-    window.addEventListener('storage', () => checkWalletAddress('storage'));
-    const interval = setInterval(() => checkWalletAddress('polling'), 5000); // Check every 5 seconds
+    // Initial check and polling
+    checkWalletAddress();
+    const handleStorageChange = () => checkWalletAddress();
+    window.addEventListener('storage', handleStorageChange);
+    const interval = setInterval(checkWalletAddress, 5000); // Check every 5 seconds
 
     return () => {
-      window.removeEventListener('storage', () => checkWalletAddress('storage'));
+      window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
-      clearInterval(statsInterval);
-      console.log('[🔄SYNC] FINAL STATISTICS:', {
-        totalPolls: pollCount,
-        actualChanges: actualStateChanges,
-        storageEvents: storageEventCount,
-        changeRate: pollCount > 0 ? `${(actualStateChanges / pollCount * 100).toFixed(2)}%` : 'N/A'
-      });
     };
   }, []);
 
