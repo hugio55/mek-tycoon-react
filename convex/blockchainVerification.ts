@@ -369,7 +369,7 @@ export const batchVerifyWallets = action({
   }
 });
 
-// Mark wallet as verified in goldMining table
+// Mark wallet as verified in goldMining table (PHASE II: supports both new and legacy tables)
 export const markWalletAsVerified = mutation({
   args: {
     walletAddress: v.string()
@@ -386,7 +386,65 @@ export const markWalletAsVerified = mutation({
         throw new Error('Database context is not available');
       }
 
-      console.log('[markWalletAsVerified] Querying goldMining table...');
+      const now = Date.now();
+
+      // PHASE II: Try new tables first
+      console.log('[markWalletAsVerified] Checking new tables (users/goldMiningState)...');
+
+      // Try to find user by stake address
+      let user = await ctx.db
+        .query("users")
+        .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.walletAddress))
+        .first();
+
+      // Fallback: try legacy walletAddress field
+      if (!user) {
+        user = await ctx.db
+          .query("users")
+          .filter((q: any) => q.eq(q.field("walletAddress"), args.walletAddress))
+          .first();
+      }
+
+      if (user) {
+        // Get gold mining state
+        const miningState = await ctx.db
+          .query("goldMiningState")
+          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", user.stakeAddress || args.walletAddress))
+          .first();
+
+        if (miningState) {
+          console.log('[markWalletAsVerified] Found goldMiningState record, updating...');
+          await ctx.db.patch(miningState._id, {
+            isBlockchainVerified: true,
+            lastVerificationTime: now,
+            updatedAt: now,
+          });
+
+          console.log(`[markWalletAsVerified] SUCCESS: Marked wallet ${args.walletAddress.substring(0, 20)}... as verified (new tables)`);
+
+          return {
+            success: true,
+            wasAlreadyVerified: miningState.isBlockchainVerified === true,
+            source: 'newTables'
+          };
+        }
+
+        // User exists but no miningState yet - update user's walletVerified
+        console.log('[markWalletAsVerified] No goldMiningState found, updating user.walletVerified...');
+        await ctx.db.patch(user._id, {
+          walletVerified: true,
+          updatedAt: now,
+        });
+
+        return {
+          success: true,
+          wasAlreadyVerified: user.walletVerified === true,
+          source: 'usersTable'
+        };
+      }
+
+      // LEGACY FALLBACK: Try old goldMining table
+      console.log('[markWalletAsVerified] Trying legacy goldMining table...');
       const goldMiningRecord = await ctx.db
         .query("goldMining")
         .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
@@ -400,7 +458,6 @@ export const markWalletAsVerified = mutation({
           accumulatedGold: goldMiningRecord.accumulatedGold
         });
 
-        const now = Date.now();
         console.log('[markWalletAsVerified] Patching record to mark as verified...');
         await ctx.db.patch(goldMiningRecord._id, {
           isBlockchainVerified: true,
@@ -411,10 +468,11 @@ export const markWalletAsVerified = mutation({
 
         return {
           success: true,
-          wasAlreadyVerified: goldMiningRecord.isBlockchainVerified === true
+          wasAlreadyVerified: goldMiningRecord.isBlockchainVerified === true,
+          source: 'legacyTable'
         };
       } else {
-        console.warn(`[markWalletAsVerified] WARNING: No goldMining record found for wallet ${args.walletAddress.substring(0, 20)}...`);
+        console.warn(`[markWalletAsVerified] WARNING: No record found for wallet ${args.walletAddress.substring(0, 20)}...`);
         console.warn('[markWalletAsVerified] This means the wallet has not been initialized yet. This is expected for new wallets.');
 
         return {

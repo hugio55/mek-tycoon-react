@@ -373,26 +373,54 @@ export const createListing = mutation({
     const durationFee = args.durationFee || 0; // Duration fee passed from frontend
     const totalFee = marketFee + durationFee;
 
-    // Get seller's REAL gold from goldMining table (not users.gold)
-    const goldMining = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", seller.walletAddress))
+    // PHASE II: Get seller's REAL gold from new tables or legacy goldMining table
+    let currentGold = 0;
+    let goldRecordId: any = null;
+    let goldSource = "none";
+
+    // Try new tables first
+    const miningState = await ctx.db
+      .query("goldMiningState")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", seller.walletAddress))
       .first();
 
-    if (!goldMining) {
-      throw new Error("Gold mining record not found");
+    if (miningState) {
+      currentGold = miningState.accumulatedGold || 0;
+      goldRecordId = miningState._id;
+      goldSource = "goldMiningState";
+    } else {
+      // Fallback to legacy goldMining table
+      const goldMining = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", seller.walletAddress))
+        .first();
+
+      if (goldMining) {
+        currentGold = goldMining.accumulatedGold || 0;
+        goldRecordId = goldMining._id;
+        goldSource = "goldMining";
+      }
     }
 
-    const currentGold = goldMining.accumulatedGold || 0;
+    if (!goldRecordId) {
+      throw new Error("Gold mining record not found");
+    }
 
     if (currentGold < totalFee) {
       throw new Error(`Insufficient gold. Total fee: ${totalFee}g (Duration: ${durationFee}g + Market: ${marketFee}g)`);
     }
 
-    // Deduct total fee from goldMining.accumulatedGold
-    await ctx.db.patch(goldMining._id, {
-      accumulatedGold: currentGold - totalFee
-    });
+    // Deduct total fee from the correct table
+    if (goldSource === "goldMiningState") {
+      await ctx.db.patch(goldRecordId, {
+        accumulatedGold: currentGold - totalFee,
+        updatedAt: Date.now(),
+      });
+    } else {
+      await ctx.db.patch(goldRecordId, {
+        accumulatedGold: currentGold - totalFee
+      });
+    }
     
     // Validate the listing based on type
     if (args.itemType === "essence") {

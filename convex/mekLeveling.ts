@@ -266,11 +266,8 @@ export const upgradeMekLevel = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    // 1. Get the current gold mining data for the wallet
-    const goldMiningData = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
-      .first();
+    // 1. Get the current gold mining data for the wallet (PHASE II: supports both new and legacy tables)
+    const goldMiningData = await getGoldMiningDataForWallet(ctx, args.walletAddress);
 
     if (!goldMiningData) {
       throw new Error("Wallet not found in gold mining system");
@@ -689,11 +686,8 @@ export const checkAndResetTransferredMeks = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    // Get gold mining data with current Meks
-    const goldMiningData = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
-      .first();
+    // Get gold mining data with current Meks (PHASE II: supports both new and legacy tables)
+    const goldMiningData = await getGoldMiningDataForWallet(ctx, args.walletAddress);
 
     if (!goldMiningData) {
       return { checked: 0, reset: 0 };
@@ -796,11 +790,8 @@ export const initializeMekLevels = mutation({
         }
 
         {
-          // Get base rate from goldMining for this Mek
-          const goldMiningData = await ctx.db
-            .query("goldMining")
-            .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
-            .first();
+          // Get base rate from gold mining data for this Mek (PHASE II: supports both new and legacy tables)
+          const goldMiningData = await getGoldMiningDataForWallet(ctx, args.walletAddress);
 
           const mekBaseRate = goldMiningData?.ownedMeks.find(
             (m: any) => m.assetId === mek.assetId
@@ -898,11 +889,8 @@ export const resetAllMekLevels = mutation({
       resetCount++;
     }
 
-    // Update goldMining record to remove all boosts
-    const goldMiningData = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
-      .first();
+    // Update goldMining record to remove all boosts (PHASE II: supports both new and legacy tables)
+    const goldMiningData = await getGoldMiningDataForWallet(ctx, args.walletAddress);
 
     if (goldMiningData) {
       // Reset all Meks to level 1 with no boosts
