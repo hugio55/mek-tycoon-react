@@ -153,7 +153,9 @@ export default function MekAbilitiesTree({
   if (isLoading) {
     return (
       <div className={`w-full h-full flex items-center justify-center ${className}`}>
-        <div className="text-gray-500 text-sm">Loading tree...</div>
+        <div className="text-yellow-400/60 text-sm border border-yellow-500/20 px-4 py-2 rounded bg-black/30">
+          Loading tree...
+        </div>
       </div>
     );
   }
@@ -162,16 +164,22 @@ export default function MekAbilitiesTree({
   if (categoryId && activeTemplateFromCategory === null) {
     return (
       <div className={`w-full h-full flex items-center justify-center ${className}`}>
-        <div className="text-gray-500 text-sm">No active template set for this category</div>
+        <div className="text-yellow-400/60 text-sm border border-yellow-500/20 px-4 py-2 rounded bg-black/30">
+          No active template set for this category
+        </div>
       </div>
     );
   }
 
-  // Empty state
+  // Empty state - no category or template selected
   if (isEmpty) {
     return (
       <div className={`w-full h-full flex items-center justify-center ${className}`}>
-        <div className="text-gray-500 text-sm">No abilities tree assigned</div>
+        <div className="text-yellow-400/60 text-sm border border-yellow-500/20 px-4 py-2 rounded bg-black/30">
+          {!categoryId && !templateId
+            ? 'Select a category from Style Variations panel'
+            : 'No abilities tree assigned'}
+        </div>
       </div>
     );
   }
