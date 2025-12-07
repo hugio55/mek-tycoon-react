@@ -58,6 +58,7 @@ export default function DeploymentsAdmin() {
   const [isCommitting, setIsCommitting] = useState(false);
   const [isPushing, setIsPushing] = useState(false);
   const [isDeployingProd, setIsDeployingProd] = useState(false);
+  const [isDeployingDev, setIsDeployingDev] = useState(false);
   const [isFullDeploy, setIsFullDeploy] = useState(false);
   const [showProdConfirm, setShowProdConfirm] = useState(false);
   const [prodConfirmStep, setProdConfirmStep] = useState(0);
@@ -347,6 +348,29 @@ export default function DeploymentsAdmin() {
       setIsDeployingProd(false);
       setShowProdConfirm(false);
       setProdConfirmStep(0);
+    }
+  };
+
+  const handleDeployDev = async () => {
+    setIsDeployingDev(true);
+    addLog('Deploy Dev', 'pending', 'Deploying to Trout (STAGING)...');
+
+    try {
+      const res = await fetch('/api/deployment/deploy-dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        addLog('Deploy Dev', 'success', data.message);
+      } else {
+        addLog('Deploy Dev', 'error', data.error);
+      }
+    } catch (error) {
+      addLog('Deploy Dev', 'error', 'Failed to deploy to staging');
+    } finally {
+      setIsDeployingDev(false);
     }
   };
 
@@ -712,7 +736,7 @@ export default function DeploymentsAdmin() {
     );
   }
 
-  const anyActionRunning = isCommitting || isPushing || isDeployingProd || isFullDeploy || isBackingUp || isRollingBack || isSyncingR2;
+  const anyActionRunning = isCommitting || isPushing || isDeployingProd || isDeployingDev || isFullDeploy || isBackingUp || isRollingBack || isSyncingR2;
 
   const rollbackModal = showRollbackConfirm && selectedRollbackBackup && mounted && createPortal(
     <div

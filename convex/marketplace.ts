@@ -405,7 +405,7 @@ export const createListing = mutation({
       // Check if user has enough essence using essenceBalances
       const existingBalances = await ctx.db
         .query("essenceBalances")
-        .withIndex("", (q: any) => q.eq("walletAddress", seller.walletAddress))
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", seller.walletAddress))
         .collect();
 
       const balance = existingBalances.find((b: any) => b.variationName === variationName);
@@ -445,7 +445,7 @@ export const createListing = mutation({
       // Check inventory
       const inventoryItem = await ctx.db
         .query("inventory")
-        .withIndex("", (q: any) => q.eq("userId", args.sellerId))
+        .withIndex("by_user", (q: any) => q.eq("userId", args.sellerId))
         .filter((q) => 
           q.and(
             q.eq(q.field("itemType"), args.itemType),
@@ -589,7 +589,7 @@ export const purchaseListing = mutation({
       // Add to buyer's inventory
       const existingItem = await ctx.db
         .query("inventory")
-        .withIndex("", (q: any) => q.eq("userId", args.buyerId))
+        .withIndex("by_user", (q: any) => q.eq("userId", args.buyerId))
         .filter((q) => 
           q.and(
             q.eq(q.field("itemType"), listing.itemType),
@@ -745,7 +745,7 @@ export const getListingPurchaseHistory = query({
   handler: async (ctx, args) => {
     const purchases = await ctx.db
       .query("marketListingPurchases")
-      .withIndex("", (q: any) => q.eq("listingId", args.listingId))
+      .withIndex("by_listing", (q: any) => q.eq("listingId", args.listingId))
       .order("desc")
       .collect();
 
@@ -804,7 +804,7 @@ export const cancelListing = mutation({
       // Return to inventory
       const existingItem = await ctx.db
         .query("inventory")
-        .withIndex("", (q: any) => q.eq("userId", listing.sellerId))
+        .withIndex("by_user", (q: any) => q.eq("userId", listing.sellerId))
         .filter((q) => 
           q.and(
             q.eq(q.field("itemType"), listing.itemType),
