@@ -204,8 +204,10 @@ export default function UnifiedHeader() {
   }, []);
 
   // Listen for new corporation created event - ensures modal shows on the connecting tab
+  // Skip on admin page to allow admin access without corporation name
   useEffect(() => {
     const handleNewCorporation = (event: CustomEvent) => {
+      if (isAdminPage) return; // Don't show modal on admin page
       console.log('[UnifiedHeader] newCorporationCreated event received:', event.detail);
       // Immediately show the name modal when a new corporation is created
       setCompanyNameModalMode('initial');
@@ -214,7 +216,7 @@ export default function UnifiedHeader() {
 
     window.addEventListener('newCorporationCreated', handleNewCorporation as EventListener);
     return () => window.removeEventListener('newCorporationCreated', handleNewCorporation as EventListener);
-  }, []);
+  }, [isAdminPage]);
 
   // Get company name for current wallet (Phase II: use corporationAuth)
   const companyNameData = useQuery(
@@ -484,8 +486,8 @@ export default function UnifiedHeader() {
         </a>
       </div>
 
-      {/* Company Name Modal */}
-      {showCompanyNameModal && walletAddress && (
+      {/* Company Name Modal - Not enforced on admin page */}
+      {showCompanyNameModal && walletAddress && !isAdminPage && (
         <CompanyNameModal
           isOpen={showCompanyNameModal}
           onClose={() => setShowCompanyNameModal(false)}
