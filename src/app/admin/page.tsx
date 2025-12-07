@@ -5400,7 +5400,7 @@ export default function AdminMasterDataPage() {
                     <div className="text-xs text-zinc-400 space-y-1">
                       <div><span className="text-zinc-500">Source:</span> HTML/SCSS (exact CSS transplant)</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
-                      <div><span className="text-zinc-500">Features:</span> X made from two 4px × 50px bars rotated 45deg/-45deg, hover rotates bars in opposite direction (-45deg/45deg), color changes from soft orange (#F4A259) to tomato red (#F25C66), "close" label fades in (opacity 0→1), all transitions 300ms ease-in</div>
+                      <div><span className="text-zinc-500">Features:</span> X made from two 3px × 37.5px bars rotated 45deg/-45deg, hover rotates bars in opposite direction (-45deg/45deg), color changes from white (rgba 255,255,255,0.7) to cyan (#22d3ee) with glow, "close" label fades in (opacity 0→1), all transitions 300ms ease-in</div>
                     </div>
                   </div>
 

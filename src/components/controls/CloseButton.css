@@ -14,7 +14,7 @@
   width: 37.5px;
   position: absolute;
   margin-top: 18px;
-  background-color: #F4A259;
+  background-color: rgba(255, 255, 255, 0.7);
   border-radius: 2px;
   transform: rotate(45deg);
   transition: all .3s ease-in;
@@ -25,7 +25,7 @@
   width: 37.5px;
   position: absolute;
   margin-top: 18px;
-  background-color: #F4A259;
+  background-color: rgba(255, 255, 255, 0.7);
   border-radius: 2px;
   transform: rotate(-45deg);
   transition: all .3s ease-in;
@@ -48,12 +48,14 @@
 
 .close-container:hover .leftright {
   transform: rotate(-45deg);
-  background-color: #F25C66;
+  background-color: #22d3ee;
+  box-shadow: 0 0 10px #22d3ee;
 }
 
 .close-container:hover .rightleft {
   transform: rotate(45deg);
-  background-color: #F25C66;
+  background-color: #22d3ee;
+  box-shadow: 0 0 10px #22d3ee;
 }
 
 .close-container:hover label {
@@ -62,7 +64,7 @@
 
 /* Focus styles for accessibility */
 .close-container:focus {
-  outline: 2px solid #F4A259;
+  outline: 2px solid #22d3ee;
   outline-offset: 2px;
 }
 

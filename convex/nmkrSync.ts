@@ -110,7 +110,7 @@ export const syncSingleNFT = mutation({
     const { nftUid, soldTo, campaignId } = args;
     const nmkrStatus = args.nmkrStatus as 'free' | 'reserved' | 'sold';
 
-    console.log('[🔄SYNC-MUTATION] syncSingleNFT called with:', { nftUid, nmkrStatus, soldTo, campaignId });
+    console.log('[🔄SYNC-MUTATION] syncSingleNFT called (v2 - indexes fixed):', { nftUid, nmkrStatus, soldTo, campaignId });
 
     // Check for ALL records with this nftUid (detect duplicates/orphans)
     const allMatchingByUid = await ctx.db

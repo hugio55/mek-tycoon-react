@@ -14,8 +14,8 @@ const variantStyles = {
   default: {
     size: 37.5,
     barHeight: 3,
-    color: '#F4A259',
-    hoverColor: '#F25C66',
+    color: 'rgba(255, 255, 255, 0.7)',
+    hoverColor: '#22d3ee', // cyan-400
   },
   'space-age': {
     size: 24,

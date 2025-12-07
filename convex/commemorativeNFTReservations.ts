@@ -30,7 +30,7 @@ export const createReservation = mutation({
     // Find the lowest available NFT (not reserved or sold)
     const availableNFT = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("", (q: any) => q.eq("status", "available"))
+      .withIndex("by_status", (q: any) => q.eq("status", "available"))
       .order("asc") // Get lowest number first
       .first();
 
@@ -65,7 +65,7 @@ export const createReservation = mutation({
     // Check if this user already has an active reservation
     const existingReservation = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("", (q: any) => q.eq("reservedBy", args.walletAddress))
+      .withIndex("by_reserved_by", (q: any) => q.eq("reservedBy", args.walletAddress))
       .filter((q) => q.eq(q.field("status"), "active"))
       .first();
 
@@ -85,7 +85,7 @@ export const createReservation = mutation({
     // Check 1: Look for completed reservations
     const completedReservation = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("", (q: any) => q.eq("reservedBy", args.walletAddress))
+      .withIndex("by_reserved_by", (q: any) => q.eq("reservedBy", args.walletAddress))
       .filter((q) => q.eq(q.field("status"), "completed"))
       .first();
 
@@ -100,7 +100,7 @@ export const createReservation = mutation({
     // Check 2: Look for sold NFTs in inventory (soldTo field is the source of truth)
     const soldNFT = await ctx.db
       .query("commemorativeNFTInventory")
-      .withIndex("", (q: any) => q.eq("status", "sold"))
+      .withIndex("by_status", (q: any) => q.eq("status", "sold"))
       .filter((q) => q.eq(q.field("soldTo"), args.walletAddress))
       .first();
 
@@ -255,7 +255,7 @@ export const completeReservation = mutation({
     if (walletAddress) {
       const goldMiningRecord = await ctx.db
         .query("goldMining")
-        .withIndex("", (q: any) => q.eq("walletAddress", walletAddress))
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
         .first();
       companyNameAtSale = goldMiningRecord?.companyName || undefined;
     }
@@ -291,7 +291,7 @@ export const completeReservationByWallet = mutation({
     // Find active reservation for this wallet
     const reservation = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("", (q: any) => q.eq("reservedBy", args.walletAddress))
+      .withIndex("by_reserved_by", (q: any) => q.eq("reservedBy", args.walletAddress))
       .filter((q) => q.eq(q.field("status"), "active"))
       .first();
 
@@ -374,7 +374,7 @@ export const getActiveReservation = query({
     // Find active reservation for this user
     const reservation = await ctx.db
       .query("commemorativeNFTReservations")
-      .withIndex("", (q: any) => q.eq("reservedBy", args.walletAddress))
+      .withIndex("by_reserved_by", (q: any) => q.eq("reservedBy", args.walletAddress))
       .filter((q) => q.eq(q.field("status"), "active"))
       .first();
 
