@@ -475,7 +475,7 @@ export const initializeFromCSV = action({
   args: {
     csvContent: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{ created: number; skipped: number }> => {
     console.log('[CSV INIT] Parsing CSV content...');
 
     const lines = args.csvContent.trim().split('\n');
@@ -549,7 +549,7 @@ export const initializeFromCSV = action({
     console.log('[CSV INIT] Successfully parsed', nfts.length, 'available NFTs from CSV');
 
     // Use addNewNFTsToInventory which handles existing inventory gracefully
-    const result = await ctx.runMutation(api.commemorativeNFTInventorySetup.addNewNFTsToInventory, {
+    const result: any = await ctx.runMutation(api.commemorativeNFTInventorySetup.addNewNFTsToInventory, {
       nfts,
     });
 
@@ -562,7 +562,7 @@ export const initializeFromCSV = action({
 
 // Add known test NFTs (for testing)
 export const addKnownNFTs = action({
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<{ created: number }> => {
     console.log('[ADD KNOWN] Adding Lab Rat #1 test NFT...');
 
     const testNFTs = [
@@ -573,7 +573,7 @@ export const addKnownNFTs = action({
       },
     ];
 
-    const result = await ctx.runMutation(api.commemorativeNFTInventorySetup.populateInventoryManually, {
+    const result: any = await ctx.runMutation(api.commemorativeNFTInventorySetup.populateInventoryManually, {
       nfts: testNFTs,
     });
 
