@@ -674,17 +674,18 @@ export const setWalletNickname = mutation({
 });
 
 // Get company name for a wallet
+// Phase II: Query users table instead of goldMining
 export const getWalletCompanyName = query({
   args: {
     walletAddress: v.string(),
   },
   handler: async (ctx, args) => {
-    const goldMining = await ctx.db
-      .query("goldMining")
-      .withIndex("", (q: any) => q.eq("walletAddress", args.walletAddress))
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
 
-    return goldMining?.companyName || null;
+    return user?.corporationName || null;
   },
 });
 
