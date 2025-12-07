@@ -1420,3 +1420,102 @@ export const bulkDeleteTestWallets = mutation({
     };
   },
 });
+
+/**
+ * Search for any traces of a wallet address across ALL tables
+ * Used to verify cascade delete worked completely
+ */
+export const searchWalletTraces = query({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const walletAddress = args.walletAddress;
+    const traces: Record<string, number> = {};
+
+    // Search users table
+    const users = await ctx.db.query("users")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    if (users.length > 0) traces.users = users.length;
+
+    // Search meks table
+    const meks = await ctx.db.query("meks")
+      .filter((q) => q.eq(q.field("owner"), walletAddress)).collect();
+    if (meks.length > 0) traces.meks = meks.length;
+
+    // Search goldMining table
+    const goldMining = await ctx.db.query("goldMining")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    if (goldMining.length > 0) traces.goldMining = goldMining.length;
+
+    // Search mekLevels table
+    const mekLevels = await ctx.db.query("mekLevels")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    if (mekLevels.length > 0) traces.mekLevels = mekLevels.length;
+
+    // Search leaderboardCache table
+    const leaderboardCache = await ctx.db.query("leaderboardCache")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    if (leaderboardCache.length > 0) traces.leaderboardCache = leaderboardCache.length;
+
+    // Search goldSnapshots table
+    const goldSnapshots = await ctx.db.query("goldSnapshots")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    if (goldSnapshots.length > 0) traces.goldSnapshots = goldSnapshots.length;
+
+    // Search goldCheckpoints table
+    const goldCheckpoints = await ctx.db.query("goldCheckpoints")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    if (goldCheckpoints.length > 0) traces.goldCheckpoints = goldCheckpoints.length;
+
+    // Search activityLogs table
+    const activityLogs = await ctx.db.query("activityLogs")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    if (activityLogs.length > 0) traces.activityLogs = activityLogs.length;
+
+    // Search essenceBalances table
+    const essenceBalances = await ctx.db.query("essenceBalances")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    if (essenceBalances.length > 0) traces.essenceBalances = essenceBalances.length;
+
+    // Search essenceSlots table
+    const essenceSlots = await ctx.db.query("essenceSlots")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    if (essenceSlots.length > 0) traces.essenceSlots = essenceSlots.length;
+
+    // Search conversations table (as participant)
+    const conversations1 = await ctx.db.query("conversations")
+      .filter((q) => q.eq(q.field("participant1"), walletAddress)).collect();
+    const conversations2 = await ctx.db.query("conversations")
+      .filter((q) => q.eq(q.field("participant2"), walletAddress)).collect();
+    const totalConvos = conversations1.length + conversations2.length;
+    if (totalConvos > 0) traces.conversations = totalConvos;
+
+    // Search corporations table
+    const corporations = await ctx.db.query("corporations")
+      .filter((q) => q.eq(q.field("stakeAddress"), walletAddress)).collect();
+    if (corporations.length > 0) traces.corporations = corporations.length;
+
+    // Search federationMemberships table
+    const federationMemberships = await ctx.db.query("federationMemberships")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    if (federationMemberships.length > 0) traces.federationMemberships = federationMemberships.length;
+
+    // Search discordConnections table
+    const discordConnections = await ctx.db.query("discordConnections")
+      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
+    if (discordConnections.length > 0) traces.discordConnections = discordConnections.length;
+
+    const totalTraces = Object.values(traces).reduce((sum, count) => sum + count, 0);
+
+    return {
+      walletAddress,
+      found: totalTraces > 0,
+      totalTraces,
+      traces,
+      message: totalTraces > 0
+        ? `Found ${totalTraces} trace(s) in ${Object.keys(traces).length} table(s)`
+        : "No traces found - wallet completely deleted"
+    };
+  },
+});

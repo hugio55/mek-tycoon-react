@@ -61,30 +61,33 @@ export default function MekAbilitiesTree({
     templateId ? { templateId: templateId as Id<"mekTreeTemplates"> } : 'skip'
   );
 
-  // Load category to get active template if categoryId provided
-  const category = useQuery(
-    api.mekTreeCategories.getCategory,
+  // Load active template directly from category (single query that handles the lookup)
+  const activeTemplateFromCategory = useQuery(
+    api.mekTreeCategories.getActiveTemplateForCategory,
     categoryId ? { categoryId: categoryId as Id<"mekTreeCategories"> } : 'skip'
   );
 
-  // Load active template from category
-  const activeTemplateFromCategory = useQuery(
-    api.mekTreeTemplates.getTemplate,
-    category?.activeTemplateId ? { templateId: category.activeTemplateId } : 'skip'
-  );
+  // Debug logging
+  console.log('[🌳TREE] Props:', { categoryId, templateId, hasPropNodes: !!propNodes });
+  console.log('[🌳TREE] templateById:', templateById);
+  console.log('[🌳TREE] activeTemplateFromCategory:', activeTemplateFromCategory);
 
   // Determine which nodes/connections to use
   const { nodes, connections } = useMemo(() => {
     // Priority: direct props > templateId > categoryId's active template
     if (propNodes && propConnections) {
+      console.log('[🌳TREE] Using propNodes:', propNodes.length, 'nodes');
       return { nodes: propNodes, connections: propConnections };
     }
     if (templateById) {
+      console.log('[🌳TREE] Using templateById:', templateById.nodes?.length || 0, 'nodes');
       return { nodes: templateById.nodes || [], connections: templateById.connections || [] };
     }
     if (activeTemplateFromCategory) {
+      console.log('[🌳TREE] Using activeTemplateFromCategory:', activeTemplateFromCategory.nodes?.length || 0, 'nodes');
       return { nodes: activeTemplateFromCategory.nodes || [], connections: activeTemplateFromCategory.connections || [] };
     }
+    console.log('[🌳TREE] No data source available');
     return { nodes: [], connections: [] };
   }, [propNodes, propConnections, templateById, activeTemplateFromCategory]);
 
@@ -143,11 +146,23 @@ export default function MekAbilitiesTree({
     };
   }, [nodes, rotated]);
 
-  // Loading state
-  if ((templateId && !templateById) || (categoryId && !category)) {
+  // Loading state - queries return undefined while loading, null if not found
+  const isLoading = (templateId && templateById === undefined) ||
+                    (categoryId && activeTemplateFromCategory === undefined);
+
+  if (isLoading) {
     return (
       <div className={`w-full h-full flex items-center justify-center ${className}`}>
         <div className="text-gray-500 text-sm">Loading tree...</div>
+      </div>
+    );
+  }
+
+  // No active template set for category
+  if (categoryId && activeTemplateFromCategory === null) {
+    return (
+      <div className={`w-full h-full flex items-center justify-center ${className}`}>
+        <div className="text-gray-500 text-sm">No active template set for this category</div>
       </div>
     );
   }
