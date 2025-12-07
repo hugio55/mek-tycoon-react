@@ -49,11 +49,6 @@ export default function NavigationBar() {
     const loadWallet = async () => {
       const session = await restoreWalletSession();
       const address = session?.stakeAddress || null;
-      console.log('[🎯NAV] Wallet session loaded:', {
-        hasSession: !!session,
-        stakeAddress: address ? address.slice(0, 20) + '...' : null,
-        fullAddress: address
-      });
       setWalletAddress(address);
     };
     loadWallet();
@@ -68,16 +63,6 @@ export default function NavigationBar() {
     walletAddress ? { walletAddress } : "skip"
   );
 
-  // Debug log gold mining data
-  useEffect(() => {
-    console.log('[🎯NAV] Gold mining data updated:', {
-      hasData: !!goldMiningData,
-      currentGold: goldMiningData?.currentGold || 0,
-      totalGoldPerHour: goldMiningData?.totalGoldPerHour || 0,
-      mekCount: goldMiningData?.ownedMeks?.length || 0,
-      walletAddress: walletAddress ? walletAddress.slice(0, 20) + '...' : null
-    });
-  }, [goldMiningData, walletAddress]);
 
   // Get essence data for display zones
   const essenceData = useQuery(
@@ -93,7 +78,6 @@ export default function NavigationBar() {
 
   // Handle image load - show immediately
   const handleImageLoad = () => {
-    console.log('[🎯NAV-DEBUG] handleImageLoad fired - setting imageLoaded to TRUE');
     setImageLoaded(true);
     setIsVisible(true);
   };
@@ -103,24 +87,10 @@ export default function NavigationBar() {
     const currentImageKey = activeNavConfig?.overlayImageKey;
     const previousImageKey = imageKeyRef.current;
 
-    console.log('[🔄RESET-EFFECT] Reset effect triggered', {
-      currentImageKey,
-      previousImageKey,
-      isInitialLoad: previousImageKey === null,
-      imageKeysMatch: previousImageKey === currentImageKey,
-      willReset: previousImageKey !== null && previousImageKey !== currentImageKey,
-      imageLoadedState: imageLoaded
-    });
-
     // Only reset if we're switching to a DIFFERENT navigation (not initial load)
     if (previousImageKey !== null && previousImageKey !== currentImageKey) {
-      console.log('[🔄RESET-EFFECT] Navigation changed - resetting imageLoaded to FALSE');
       setImageLoaded(false);
       setIsVisible(false);
-    } else if (previousImageKey === null) {
-      console.log('[🔄RESET-EFFECT] Initial load - NOT resetting imageLoaded (let onLoad handler set it)');
-    } else {
-      console.log('[🔄RESET-EFFECT] Same navigation - no reset needed');
     }
 
     // Update ref to track current image key

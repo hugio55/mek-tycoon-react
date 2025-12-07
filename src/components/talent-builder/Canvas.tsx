@@ -1,5 +1,5 @@
 import React, { memo, useRef, useEffect, useCallback } from 'react';
-import { TalentNode, Connection, DragState, CanvasMode, BoxSelection, LassoSelection, BuilderMode, ViewportDimensions } from '@/app/talent-builder/types';
+import { TalentNode, Connection, DragState, CanvasMode, BoxSelection, LassoSelection, BuilderMode, ViewportDimensions, ViewportPosition } from '@/app/talent-builder/types';
 import { TalentAction } from './talentReducer';
 
 interface CanvasProps {
@@ -21,6 +21,7 @@ interface CanvasProps {
   lassoSelection: LassoSelection;
   showViewportBox: boolean;
   viewportDimensions: ViewportDimensions;
+  viewportPosition: ViewportPosition;
   unconnectedNodes: Set<string>;
   deadEndNodes: Set<string>;
   highlightDisconnected: boolean;
@@ -50,6 +51,7 @@ const Canvas: React.FC<CanvasProps> = memo(({
   lassoSelection,
   showViewportBox,
   viewportDimensions,
+  viewportPosition,
   unconnectedNodes,
   deadEndNodes,
   highlightDisconnected,
@@ -551,13 +553,13 @@ const Canvas: React.FC<CanvasProps> = memo(({
             </div>
           )}
 
-          {/* Viewport Box - Locked to center of grid */}
+          {/* Viewport Box - Positioned relative to grid center with offset */}
           {showViewportBox && (
             <div
               className="absolute border-2 border-dashed border-yellow-500 pointer-events-none"
               style={{
-                left: `${gridSize / 2 - viewportDimensions.width / 2}px`,
-                top: `${gridSize / 2 - viewportDimensions.height / 2}px`,
+                left: `${gridSize / 2 - viewportDimensions.width / 2 + (viewportPosition?.x || 0)}px`,
+                top: `${gridSize / 2 - viewportDimensions.height / 2 + (viewportPosition?.y || 0)}px`,
                 width: `${viewportDimensions.width}px`,
                 height: `${viewportDimensions.height}px`,
                 zIndex: 50
