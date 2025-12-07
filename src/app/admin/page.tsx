@@ -6859,6 +6859,21 @@ function CampaignManagerWithDatabase({
                 >
                   {backfillImagesRunning === campaign._id ? '⏳ Loading Images...' : '🖼️ Backfill Images'}
                 </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (campaign.nmkrProjectId) {
+                      onFetchFromNMKR(campaign._id, campaign.nmkrProjectId);
+                    } else {
+                      alert('⚠️ This campaign has no NMKR Project ID configured.');
+                    }
+                  }}
+                  disabled={fetchingFromNMKRCampaignId === campaign._id}
+                  className="text-xs text-orange-400 hover:text-orange-300 transition-colors underline disabled:opacity-50"
+                  title="Import new NFTs from NMKR into campaign inventory"
+                >
+                  {fetchingFromNMKRCampaignId === campaign._id ? '⏳ Importing...' : '📥 Import from NMKR'}
+                </button>
                 {selectedCampaignId === campaign._id && (
                   <span className="text-xs text-yellow-400 ml-auto">
                     👇 View NFTs below
@@ -7480,11 +7495,13 @@ function NFTAdminTabs({ client }: { client: any }) {
             onVerifyWithNMKR={handleVerifyWithNMKR}
             onBackfillSoldNFTData={handleBackfillSoldNFTData}
             onBackfillImages={handleBackfillImages}
+            onFetchFromNMKR={handleFetchFromNMKR}
             cleaningCampaignId={cleaningCampaignId}
             syncingCampaignId={syncingCampaignId}
             verifyingCampaignId={nmkrVerifying}
             backfillRunning={backfillRunning}
             backfillImagesRunning={backfillImagesRunning}
+            fetchingFromNMKRCampaignId={fetchingFromNMKRCampaignId}
             client={client}
             mutationsEnabled={mutationsEnabled}
           />
