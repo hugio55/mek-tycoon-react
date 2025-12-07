@@ -1287,7 +1287,7 @@ export const cleanupDuplicateNFTs = mutation({
     if (!dryRun && totalDeleted > 0) {
       const remainingInventory = await ctx.db
         .query("commemorativeNFTInventory")
-        .withIndex("", (q: any) => q.eq("campaignId", args.campaignId))
+        .withIndex("by_campaign", (q: any) => q.eq("campaignId", args.campaignId))
         .collect();
 
       await ctx.db.patch(args.campaignId, {

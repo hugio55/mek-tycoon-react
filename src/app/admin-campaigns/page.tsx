@@ -1,5 +1,13 @@
 'use client';
 
+/**
+ * Admin Campaigns Page - PRODUCTION ONLY (Single Source of Truth)
+ *
+ * NFT campaigns exist ONLY in Sturgeon (production database).
+ * There are no testnet/staging versions of campaigns.
+ * This page always queries and modifies Sturgeon.
+ */
+
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useConvex } from 'convex/react';
 import { ConvexHttpClient } from 'convex/browser';
@@ -7,19 +15,28 @@ import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import NMKRSyncModal from '@/components/admin/campaign/NMKRSyncModal';
 
-type DatabaseType = 'trout' | 'sturgeon';
-
 export default function AdminCampaignsPage() {
   const convex = useConvex();
 
-  // Database selection state
-  const [selectedDatabase, setSelectedDatabase] = useState<DatabaseType>('trout');
-  const troutUrl = process.env.NEXT_PUBLIC_CONVEX_URL!;
-  const sturgeonUrl = process.env.NEXT_PUBLIC_STURGEON_URL;
+  // SMART STURGEON URL DETECTION
+  // On localhost: CONVEX_URL = Trout, STURGEON_URL = Sturgeon
+  // On Vercel: CONVEX_URL = Sturgeon, STURGEON_URL = undefined
+  const mainUrl = process.env.NEXT_PUBLIC_CONVEX_URL || '';
+  const secondaryUrl = process.env.NEXT_PUBLIC_STURGEON_URL || '';
 
-  // Create HTTP clients for both databases
-  const [troutClient] = useState(() => new ConvexHttpClient(troutUrl));
-  const [sturgeonClient] = useState(() => sturgeonUrl ? new ConvexHttpClient(sturgeonUrl) : null);
+  // Determine Sturgeon URL based on environment
+  const mainIsSturgeon = mainUrl.includes('sturgeon');
+  const sturgeonUrl = mainIsSturgeon ? mainUrl : (secondaryUrl.includes('sturgeon') ? secondaryUrl : null);
+
+  // Deployment name for display
+  const sturgeonDeployment = sturgeonUrl
+    ? sturgeonUrl.split('//')[1]?.split('.')[0] || 'sturgeon'
+    : 'not-configured';
+
+  // Create HTTP client for Sturgeon (production)
+  const [sturgeonClient] = useState<ConvexHttpClient | null>(() =>
+    sturgeonUrl ? new ConvexHttpClient(sturgeonUrl) : null
+  );
 
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>();
   const [cleaningCampaignId, setCleaningCampaignId] = useState<string | null>(null);
@@ -32,17 +49,14 @@ export default function AdminCampaignsPage() {
   const [isVerifyingNMKR, setIsVerifyingNMKR] = useState(false);
   const [isSyncingNMKR, setIsSyncingNMKR] = useState(false);
 
-  // Campaigns state for selected database
+  // Campaigns state
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loadingCampaigns, setLoadingCampaigns] = useState(true);
 
-  // Get the active client based on selection
-  const activeClient = selectedDatabase === 'sturgeon' ? sturgeonClient : troutClient;
-
-  // Fetch campaigns from selected database
+  // Fetch campaigns from Sturgeon (production)
   useEffect(() => {
     async function fetchCampaigns() {
-      if (!activeClient) {
+      if (!sturgeonClient) {
         setCampaigns([]);
         setLoadingCampaigns(false);
         return;
@@ -50,7 +64,7 @@ export default function AdminCampaignsPage() {
 
       setLoadingCampaigns(true);
       try {
-        const data = await activeClient.query(api.campaigns.getAllCampaigns, {});
+        const data = await sturgeonClient.query(api.campaigns.getAllCampaigns, {});
         setCampaigns(data || []);
       } catch (error) {
         console.error('[AdminCampaigns] Error fetching campaigns:', error);
@@ -65,7 +79,7 @@ export default function AdminCampaignsPage() {
     // Poll every 5 seconds
     const interval = setInterval(fetchCampaigns, 5000);
     return () => clearInterval(interval);
-  }, [activeClient, selectedDatabase]);
+  }, [sturgeonClient]);
 
   const toggleCleanup = useMutation(api.commemorativeNFTReservationsCampaign.toggleCampaignReservationCleanup);
   const runCleanup = useMutation(api.commemorativeNFTReservationsCampaign.cleanupExpiredCampaignReservationsMutation);
@@ -239,6 +253,26 @@ export default function AdminCampaignsPage() {
     }
   };
 
+  // Show error if Sturgeon is not configured
+  if (!sturgeonClient) {
+    return (
+      <div className="min-h-screen bg-black text-white p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-900/30 border-2 border-red-500/50 rounded-lg p-8 text-center">
+            <div className="text-4xl mb-4">⚠️</div>
+            <h1 className="text-2xl font-bold text-red-400 mb-2">Production Database Not Configured</h1>
+            <p className="text-gray-400">
+              NFT Campaigns require access to Sturgeon (production database).
+            </p>
+            <p className="text-gray-500 text-sm mt-4">
+              Add NEXT_PUBLIC_STURGEON_URL to your environment to enable campaign management.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-7xl mx-auto">
@@ -249,21 +283,25 @@ export default function AdminCampaignsPage() {
             <p className="text-gray-400">Manage NFT minting campaigns and reservations</p>
           </div>
 
-          {/* Database Selector */}
-          <div className={`bg-gray-900 border rounded-lg p-3 ${selectedDatabase === 'sturgeon' ? 'border-green-500/30' : 'border-yellow-500/30'}`}>
+          {/* Production Database Indicator (no selector - single source of truth) */}
+          <div className="bg-green-900/20 border-2 border-green-500/50 rounded-lg p-3">
             <div className="text-xs text-gray-400 mb-1">Database</div>
-            <select
-              value={selectedDatabase}
-              onChange={(e) => setSelectedDatabase(e.target.value as DatabaseType)}
-              className={`bg-gray-800 border rounded px-3 py-1.5 font-bold cursor-pointer ${
-                selectedDatabase === 'sturgeon'
-                  ? 'border-green-500/50 text-green-400'
-                  : 'border-yellow-500/50 text-yellow-400'
-              }`}
-            >
-              <option value="trout">Staging (Trout)</option>
-              {sturgeonUrl && <option value="sturgeon">Production (Sturgeon)</option>}
-            </select>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-green-400 font-bold">PRODUCTION</span>
+            </div>
+            <div className="text-xs text-green-300/70 font-mono mt-1">{sturgeonDeployment}</div>
+          </div>
+        </div>
+
+        {/* Production Notice */}
+        <div className="mb-6 p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
+          <div className="flex items-center gap-2 text-sm text-green-300">
+            <span className="text-lg">🔒</span>
+            <span>
+              <strong>Single Source of Truth:</strong> NFT campaigns are production-only.
+              All data shown is from the live Sturgeon database.
+            </span>
           </div>
         </div>
 
@@ -279,20 +317,23 @@ export default function AdminCampaignsPage() {
               {campaigns.filter((c: any) => c.status === 'active').length}
             </div>
           </div>
-          <div className={`bg-black/50 border rounded-lg p-4 ${selectedDatabase === 'sturgeon' ? 'border-green-500/30' : 'border-yellow-500/30'}`}>
+          <div className="bg-black/50 border border-green-500/30 rounded-lg p-4">
             <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Environment</div>
-            <div className={`text-2xl font-bold ${selectedDatabase === 'sturgeon' ? 'text-green-400' : 'text-yellow-400'}`}>
-              {selectedDatabase === 'sturgeon' ? 'Production' : 'Staging'}
-            </div>
+            <div className="text-2xl font-bold text-green-400">Production</div>
           </div>
         </div>
 
         {/* Campaign Cards */}
         <div className="space-y-6">
-          {campaigns.length === 0 ? (
+          {loadingCampaigns ? (
+            <div className="bg-black/30 border border-yellow-500/30 rounded-lg p-12 text-center">
+              <div className="text-4xl mb-3 animate-spin">⚙️</div>
+              <div className="text-gray-400">Loading campaigns from production...</div>
+            </div>
+          ) : campaigns.length === 0 ? (
             <div className="bg-black/30 border border-yellow-500/30 rounded-lg p-12 text-center">
               <div className="text-4xl mb-3">📋</div>
-              <div className="text-gray-400">No campaigns found.</div>
+              <div className="text-gray-400">No campaigns found in production database.</div>
             </div>
           ) : (
             campaigns.map((campaign: any) => (
