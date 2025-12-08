@@ -104,7 +104,7 @@ export default function BlockchainVerificationPanel({
         setVerificationStatus({
           verified: true,
           source: 'blockfrost',
-          lastVerified: walletVerificationStatus.lastVerificationTime,
+          lastVerified: null, // Phase II: lastVerificationTime not stored in users table
           walletCount: meks.length,
           blockchainCount: meks.length,
           discrepancies: 0

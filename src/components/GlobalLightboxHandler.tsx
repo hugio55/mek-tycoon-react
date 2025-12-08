@@ -147,7 +147,7 @@ export default function GlobalLightboxHandler() {
       {showMeksTriangle && userData && (
         <MeksTriangleLightbox
           onClose={() => setShowMeksTriangle(false)}
-          ownedMeks={userData.ownedMeks || []}
+          ownedMeks={(userData.ownedMeks || []) as any}
         />
       )}
 

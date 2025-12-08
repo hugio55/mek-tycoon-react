@@ -28,9 +28,9 @@ export function useWalletData(walletAddress?: string | null) {
     return {
       isDemo: true,
       isLoading: false,
-      data: demoContext.goldData,
-      meks: demoContext.meks,
-      walletAddress: demoContext.walletAddress,
+      data: (demoContext as any).goldData,
+      meks: (demoContext as any).meks,
+      walletAddress: (demoContext as any).walletAddress,
     };
   }
 

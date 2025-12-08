@@ -136,6 +136,7 @@ import type * as seedBuffCategories from "../seedBuffCategories.js";
 import type * as seedData from "../seedData.js";
 import type * as sessionManagement from "../sessionManagement.js";
 import type * as siteSettings from "../siteSettings.js";
+import type * as slotConfigurations from "../slotConfigurations.js";
 import type * as smartContractArchitecture from "../smartContractArchitecture.js";
 import type * as storyClimbOptimized from "../storyClimbOptimized.js";
 import type * as storyNodes from "../storyNodes.js";
@@ -296,6 +297,7 @@ declare const fullApi: ApiFromModules<{
   seedData: typeof seedData;
   sessionManagement: typeof sessionManagement;
   siteSettings: typeof siteSettings;
+  slotConfigurations: typeof slotConfigurations;
   smartContractArchitecture: typeof smartContractArchitecture;
   storyClimbOptimized: typeof storyClimbOptimized;
   storyNodes: typeof storyNodes;

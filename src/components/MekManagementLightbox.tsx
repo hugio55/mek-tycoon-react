@@ -167,7 +167,7 @@ export default function MekManagementLightbox({
 
     // Check availability one more time before submitting
     if (checkAvailability && !checkAvailability.available) {
-      setError(checkAvailability.error || "Name is not available");
+      setError(checkAvailability.reason || "Name is not available");
       return;
     }
 
@@ -326,7 +326,7 @@ export default function MekManagementLightbox({
                         </div>
                       ) : (
                         <div className="text-red-400 font-medium bg-red-500/10 border border-red-500/30 rounded py-2 px-3">
-                          ✗ {checkAvailability.error}
+                          ✗ {checkAvailability.reason}
                         </div>
                       )}
                     </div>
