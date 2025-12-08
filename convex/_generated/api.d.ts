@@ -82,7 +82,6 @@ import type * as diagnosticRequestAnalysis from "../diagnosticRequestAnalysis.js
 import type * as diagnosticSourceKeys from "../diagnosticSourceKeys.js";
 import type * as difficultyConfigs from "../difficultyConfigs.js";
 import type * as discordIntegration from "../discordIntegration.js";
-import type * as discordIntegrationGroups from "../discordIntegrationGroups.js";
 import type * as discordSync from "../discordSync.js";
 import type * as discordTodos from "../discordTodos.js";
 import type * as duplicateWalletDetection from "../duplicateWalletDetection.js";
@@ -98,7 +97,6 @@ import type * as finalWalletFix from "../finalWalletFix.js";
 import type * as fixBadSnapshots from "../fixBadSnapshots.js";
 import type * as fixCampaignProjectId from "../fixCampaignProjectId.js";
 import type * as fixCorruptedGold from "../fixCorruptedGold.js";
-import type * as fixDiscordGroupData from "../fixDiscordGroupData.js";
 import type * as fixGoldRateCalculation from "../fixGoldRateCalculation.js";
 import type * as fixLightningId from "../fixLightningId.js";
 import type * as fixMek3412To000 from "../fixMek3412To000.js";
@@ -235,7 +233,6 @@ import type * as variationsReference from "../variationsReference.js";
 import type * as verifyMigration from "../verifyMigration.js";
 import type * as walletAuth from "../walletAuth.js";
 import type * as walletAuthentication from "../walletAuthentication.js";
-import type * as walletGroups from "../walletGroups.js";
 import type * as walletSession from "../walletSession.js";
 import type * as webhooks from "../webhooks.js";
 import type * as whitelists from "../whitelists.js";
@@ -329,7 +326,6 @@ declare const fullApi: ApiFromModules<{
   diagnosticSourceKeys: typeof diagnosticSourceKeys;
   difficultyConfigs: typeof difficultyConfigs;
   discordIntegration: typeof discordIntegration;
-  discordIntegrationGroups: typeof discordIntegrationGroups;
   discordSync: typeof discordSync;
   discordTodos: typeof discordTodos;
   duplicateWalletDetection: typeof duplicateWalletDetection;
@@ -345,7 +341,6 @@ declare const fullApi: ApiFromModules<{
   fixBadSnapshots: typeof fixBadSnapshots;
   fixCampaignProjectId: typeof fixCampaignProjectId;
   fixCorruptedGold: typeof fixCorruptedGold;
-  fixDiscordGroupData: typeof fixDiscordGroupData;
   fixGoldRateCalculation: typeof fixGoldRateCalculation;
   fixLightningId: typeof fixLightningId;
   fixMek3412To000: typeof fixMek3412To000;
@@ -482,7 +477,6 @@ declare const fullApi: ApiFromModules<{
   verifyMigration: typeof verifyMigration;
   walletAuth: typeof walletAuth;
   walletAuthentication: typeof walletAuthentication;
-  walletGroups: typeof walletGroups;
   walletSession: typeof walletSession;
   webhooks: typeof webhooks;
   whitelists: typeof whitelists;

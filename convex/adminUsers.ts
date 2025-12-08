@@ -874,13 +874,7 @@ export const cascadeDeleteUser = mutation({
     }
     deletedCounts.rateLimitViolations = rateLimitViolations.length;
 
-    // walletGroupMemberships
-    const walletGroupMemberships = await ctx.db.query("walletGroupMemberships")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
-    for (const record of walletGroupMemberships) {
-      await ctx.db.delete(record._id);
-    }
-    deletedCounts.walletGroupMemberships = walletGroupMemberships.length;
+    // NOTE: walletGroupMemberships table removed (1 wallet = 1 corp model)
 
     // === ADDITIONAL TABLES (added for complete coverage) ===
 
@@ -1410,9 +1404,7 @@ export const bulkDeleteTestWallets = mutation({
         .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
       for (const r of rateLimitViolations) { await ctx.db.delete(r._id); recordsDeleted++; }
 
-      const walletGroupMemberships = await ctx.db.query("walletGroupMemberships")
-        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
-      for (const r of walletGroupMemberships) { await ctx.db.delete(r._id); recordsDeleted++; }
+      // NOTE: walletGroupMemberships table removed (1 wallet = 1 corp model)
 
       // Delete user record
       await ctx.db.delete(userId);

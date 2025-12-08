@@ -535,67 +535,51 @@ function calculateChecksum(meks: any[]): string {
 }
 
 /**
- * Manual wallet re-scan - syncs all wallets in the group
+ * Manual wallet re-scan - syncs a single wallet (1 wallet = 1 corp model)
+ * NOTE: Multi-wallet group logic removed - each wallet is its own corporation
  */
 export const manualRescanWalletGroup = action({
   args: {
     walletAddress: v.string(),
   },
   handler: async (ctx, args) => {
-    devLog.log(`[ManualRescan] Starting manual rescan for wallet group: ${args.walletAddress}`);
+    devLog.log(`[ManualRescan] Starting manual rescan for wallet: ${args.walletAddress}`);
 
-    // Get all wallets in this group
-    const walletGroup = await ctx.runQuery(api.walletGroups.getMyGroupWallets, {
-      walletAddress: args.walletAddress,
-    });
+    try {
+      const syncResult = await ctx.runAction(api.nftSyncSaga.syncWalletNFTsWithSaga, {
+        stakeAddress: args.walletAddress,
+        walletType: 'Manual-Rescan',
+        forceResync: true,
+      });
 
-    if (!walletGroup || walletGroup.length === 0) {
-      throw new Error("No wallets found in group");
-    }
+      devLog.log(`[ManualRescan] ✓ Synced ${args.walletAddress}: ${syncResult.mekCount} Meks`);
 
-    const results = [];
-
-    // Re-sync each wallet in the group
-    for (const wallet of walletGroup) {
-      devLog.log(`[ManualRescan] Syncing wallet: ${wallet.walletAddress}`);
-
-      try {
-        const syncResult = await ctx.runAction(api.nftSyncSaga.syncWalletNFTsWithSaga, {
-          stakeAddress: wallet.walletAddress,
-          walletType: 'Manual-Rescan',
-          forceResync: true,
-        });
-
-        results.push({
-          walletAddress: wallet.walletAddress,
+      return {
+        success: syncResult.success,
+        walletsScanned: 1,
+        walletsSucceeded: syncResult.success ? 1 : 0,
+        totalMeks: syncResult.mekCount || 0,
+        results: [{
+          walletAddress: args.walletAddress,
           success: syncResult.success,
           mekCount: syncResult.mekCount,
           error: syncResult.error,
-        });
-
-        devLog.log(`[ManualRescan] ✓ Synced ${wallet.walletAddress}: ${syncResult.mekCount} Meks`);
-      } catch (error: any) {
-        devLog.errorAlways(`[ManualRescan] Failed to sync ${wallet.walletAddress}: ${error.message}`);
-        results.push({
-          walletAddress: wallet.walletAddress,
+        }],
+      };
+    } catch (error: any) {
+      devLog.errorAlways(`[ManualRescan] Failed to sync ${args.walletAddress}: ${error.message}`);
+      return {
+        success: false,
+        walletsScanned: 1,
+        walletsSucceeded: 0,
+        totalMeks: 0,
+        results: [{
+          walletAddress: args.walletAddress,
           success: false,
           mekCount: 0,
           error: error.message,
-        });
-      }
+        }],
+      };
     }
-
-    const totalSuccess = results.filter((r: any) => r.success).length;
-    const totalMeks = results.reduce((sum, r) => sum + (r.mekCount || 0), 0);
-
-    devLog.log(`[ManualRescan] Completed: ${totalSuccess}/${walletGroup.length} wallets synced, ${totalMeks} total Meks`);
-
-    return {
-      success: totalSuccess > 0,
-      walletsScanned: walletGroup.length,
-      walletsSucceeded: totalSuccess,
-      totalMeks,
-      results,
-    };
   },
 });

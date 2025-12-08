@@ -216,19 +216,6 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
         <div
           className="absolute top-0 left-0 right-0 h-1 bg-cyan-500/60"
         />
-        {/* Close button - only in edit mode */}
-        {mode === 'edit' && (
-          <button
-            onClick={handleClose}
-            className="absolute top-4 right-4 text-white/50 hover:text-white/80 transition-colors z-10"
-            style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        )}
 
         <div className="px-6 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8">
           {/* Title with glow */}
@@ -274,7 +261,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
                   width={360}
                   disabled={isSubmitting}
                   autoFocus
-                  animated={mode === 'initial'}
+                  animated={false}
                 />
               </div>
 
