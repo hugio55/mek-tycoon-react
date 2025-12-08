@@ -242,9 +242,15 @@ export const sendMessage = mutation({
     recipientWallet: v.string(),
     content: v.string(),
     conversationId: v.optional(v.id("conversations")),
+    attachments: v.optional(v.array(v.object({
+      storageId: v.id("_storage"),
+      filename: v.string(),
+      mimeType: v.string(),
+      size: v.number(),
+    }))),
   },
   handler: async (ctx, args) => {
-    const { senderWallet, recipientWallet, content, conversationId } = args;
+    const { senderWallet, recipientWallet, content, conversationId, attachments } = args;
 
     // Check if blocked
     const block = await ctx.db
@@ -301,6 +307,7 @@ export const sendMessage = mutation({
       status: "sent",
       createdAt: now,
       isDeleted: false,
+      attachments: attachments,
     });
 
     // Update conversation
