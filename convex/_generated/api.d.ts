@@ -130,6 +130,7 @@ import type * as nodeFeeVersions from "../nodeFeeVersions.js";
 import type * as nodeFees from "../nodeFees.js";
 import type * as normalMekRewards from "../normalMekRewards.js";
 import type * as notifications from "../notifications.js";
+import type * as overlays from "../overlays.js";
 import type * as phaseCards from "../phaseCards.js";
 import type * as phaseILightbox from "../phaseILightbox.js";
 import type * as publicCorporation from "../publicCorporation.js";
@@ -290,6 +291,7 @@ declare const fullApi: ApiFromModules<{
   nodeFees: typeof nodeFees;
   normalMekRewards: typeof normalMekRewards;
   notifications: typeof notifications;
+  overlays: typeof overlays;
   phaseCards: typeof phaseCards;
   phaseILightbox: typeof phaseILightbox;
   publicCorporation: typeof publicCorporation;

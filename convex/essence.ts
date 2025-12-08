@@ -1171,19 +1171,19 @@ export const swapMek = mutation({
             config.swapCostMax
           );
 
-    // Get player's gold
-    const goldMining = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
+    // Phase II: Get player's gold from users table
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
       .first();
 
-    if (!goldMining || (goldMining.accumulatedGold || 0) < swapCost) {
+    if (!user || (user.gold || 0) < swapCost) {
       throw new Error("Insufficient gold");
     }
 
-    // Deduct gold
-    await ctx.db.patch(goldMining._id, {
-      accumulatedGold: (goldMining.accumulatedGold || 0) - swapCost,
+    // Deduct gold from users table
+    await ctx.db.patch(user._id, {
+      gold: (user.gold || 0) - swapCost,
     });
 
     // TODO: Refactor slotMek/unslotMek to use internal helper functions
@@ -1233,13 +1233,13 @@ export const unlockSlot = mutation({
       throw new Error("Slot requirements not found");
     }
 
-    // Check gold
-    const goldMining = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
+    // Phase II: Check gold from users table
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
       .first();
 
-    if (!goldMining || (goldMining.accumulatedGold || 0) < requirements.goldCost) {
+    if (!user || (user.gold || 0) < requirements.goldCost) {
       throw new Error("Insufficient gold");
     }
 
@@ -1257,9 +1257,9 @@ export const unlockSlot = mutation({
       }
     }
 
-    // Deduct gold
-    await ctx.db.patch(goldMining._id, {
-      accumulatedGold: (goldMining.accumulatedGold || 0) - requirements.goldCost,
+    // Phase II: Deduct gold from users table
+    await ctx.db.patch(user._id, {
+      gold: (user.gold || 0) - requirements.goldCost,
     });
 
     // Deduct essences
@@ -2485,19 +2485,11 @@ export const diagnosticCheckSlottedMeksInMeksTable = query({
         .withIndex("by_asset_id", (q: any) => q.eq("assetId", slot.mekAssetId!))
         .first();
 
-      // Check if it exists in goldMining.ownedMeks
-      const goldMining = await ctx.db
-        .query("goldMining")
-        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
-        .first();
-
-      const ownedMek = goldMining?.ownedMeks?.find((m: any) => m.assetId === slot.mekAssetId);
-
+      // Phase II: Only check meks table (no goldMining fallback)
       results.push({
         slotNumber: slot.slotNumber,
         mekAssetId: slot.mekAssetId,
         existsInMeksTable: !!mekRecord,
-        existsInGoldMining: !!ownedMek,
         mekRecordData: mekRecord ? {
           assetId: mekRecord.assetId,
           assetName: mekRecord.assetName,
@@ -2556,23 +2548,9 @@ async function validateSlotOperation(
     .withIndex("by_asset_id", (q: any) => q.eq("assetId", mekAssetId))
     .first();
 
-  // If not in meks table, check goldMining.ownedMeks
+  // Phase II: Mek must exist in meks table (no goldMining fallback)
   if (!mek) {
-    const goldMining = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
-      .first();
-
-    if (goldMining) {
-      const ownedMek = goldMining.ownedMeks?.find((m: any) => m.assetId === mekAssetId);
-      if (ownedMek) {
-        mek = ownedMek as any;
-      }
-    }
-  }
-
-  if (!mek) {
-    throw new Error("Mek not found in database or goldMining records");
+    throw new Error("Mek not found in database");
   }
 
   // Verify ownership
