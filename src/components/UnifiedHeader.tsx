@@ -613,8 +613,8 @@ export default function UnifiedHeader() {
         >
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/50"
-            style={{ backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
+            className="fixed inset-0 bg-black/30"
+            style={{ backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)' }}
           />
 
           {/* Translucent Container - Liquid Glass Style */}

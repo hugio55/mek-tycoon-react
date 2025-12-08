@@ -19,7 +19,8 @@ type LightboxState = 'loading_campaign' | 'no_campaign' | 'address_entry' | 'che
 
 export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: propCampaignId }: NMKRPayLightboxProps) {
   const [mounted, setMounted] = useState(false);
-  const [state, setState] = useState<LightboxState>(propCampaignId ? (walletAddress ? 'creating' : 'address_entry') : 'loading_campaign');
+  // ALWAYS check eligibility when wallet is provided - never skip to 'creating'
+  const [state, setState] = useState<LightboxState>(propCampaignId ? (walletAddress ? 'checking_eligibility' : 'address_entry') : 'loading_campaign');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [paymentWindow, setPaymentWindow] = useState<Window | null>(null);
   const [reservationId, setReservationId] = useState<Id<"commemorativeNFTInventory"> | null>(null);
@@ -1010,10 +1011,10 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
                 </svg>
               </div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-light text-white tracking-wide mb-3">
-                No Corporation Found
+                Not Eligible
               </h2>
               <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed">
-                We could not find a Mek Tycoon corporation associated with this stake address.
+                {storedEligibility?.reason || 'You are not eligible to claim from this campaign.'}
               </p>
               <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mt-3">
                 No worries - there will be more opportunities in the future!

@@ -933,15 +933,20 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
       {/* Blocked Users Lightbox */}
       {mounted && showBlockedUsers && createPortal(
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md"
+          className="fixed inset-0 z-[9999] flex items-center justify-center"
           onClick={() => setShowBlockedUsers(false)}
         >
+          {/* Backdrop - Light like communications lightbox */}
           <div
-            className="w-full max-w-sm bg-black/40 backdrop-blur-xl border border-gray-600/50 rounded-2xl overflow-hidden"
+            className="fixed inset-0 bg-black/30"
+            style={{ backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)' }}
+          />
+          <div
+            className="relative w-full max-w-sm bg-white/5 backdrop-blur-xl border border-white/20 rounded-2xl overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="p-4 border-b border-gray-700/50 flex items-center justify-between">
+            <div className="p-4 border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-red-400">
                   <circle cx="12" cy="12" r="10" />
@@ -1011,8 +1016,8 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-gray-700/50 bg-black/20">
-              <div className="text-xs text-gray-500 text-center">
+            <div className="p-4 border-t border-white/10">
+              <div className="text-xs text-gray-400 text-center">
                 Blocked users cannot send you messages
               </div>
             </div>
