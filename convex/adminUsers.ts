@@ -1778,3 +1778,161 @@ export const deleteInvalidMeks = mutation({
     };
   },
 });
+
+// ============================================================================
+// COMPREHENSIVE MEK DUPLICATION DIAGNOSTIC
+// ============================================================================
+
+/**
+ * Comprehensive diagnostic for duplicate and invalid meks
+ * Returns summary counts only (no full records to avoid session crashes)
+ *
+ * Expected: 4,000 unique meks in collection
+ * Checks for:
+ * - Duplicate assetIds (same assetId appearing multiple times)
+ * - Invalid assetIds (too short, test data, etc.)
+ * - Orphaned meks (no owner or invalid owner)
+ * - Ownership field mismatches (owner vs ownerStakeAddress)
+ */
+export const diagnoseMekDuplicates = query({
+  args: {},
+  handler: async (ctx) => {
+    const allMeks = await ctx.db.query("meks").collect();
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ANALYZE ASSET ID DUPLICATES
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    const assetIdMap = new Map<string, number>();
+    const duplicateAssetIds: string[] = [];
+
+    for (const mek of allMeks) {
+      const count = assetIdMap.get(mek.assetId) || 0;
+      assetIdMap.set(mek.assetId, count + 1);
+    }
+
+    // Find which assetIds appear more than once
+    for (const [assetId, count] of assetIdMap.entries()) {
+      if (count > 1) {
+        duplicateAssetIds.push(assetId);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ANALYZE INVALID ASSET IDS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // Real Cardano assetIds are 56+ characters (policy ID + asset name hex)
+    // Short assetIds like "2922" or "demo_mek_1" are invalid/test data
+    const invalidAssetIds = allMeks.filter(m =>
+      m.assetId.length < 50 ||
+      m.assetId.toLowerCase().includes('demo') ||
+      m.assetId.toLowerCase().includes('test')
+    ).map(m => m.assetId);
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ANALYZE OWNERSHIP ISSUES
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    const meksWithNoOwner = allMeks.filter(m => !m.owner && !m.ownerStakeAddress);
+    const meksWithInvalidOwner = allMeks.filter(m => {
+      const owner = m.owner || '';
+      const stakeOwner = m.ownerStakeAddress || '';
+      // Check if either owner field is suspiciously short (invalid Cardano address)
+      return (owner && owner.length < 30) || (stakeOwner && stakeOwner.length < 30);
+    });
+
+    const meksWithOwnerMismatch = allMeks.filter(m =>
+      m.owner && m.ownerStakeAddress && m.owner !== m.ownerStakeAddress
+    );
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // OWNERSHIP DISTRIBUTION (which users have duplicates)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    const ownerMekCount = new Map<string, number>();
+    const ownerDuplicateCount = new Map<string, number>();
+
+    for (const assetId of duplicateAssetIds) {
+      const meksWithThisId = allMeks.filter(m => m.assetId === assetId);
+      for (const mek of meksWithThisId) {
+        const owner = mek.ownerStakeAddress || mek.owner || 'no_owner';
+        ownerMekCount.set(owner, (ownerMekCount.get(owner) || 0) + 1);
+        ownerDuplicateCount.set(owner, (ownerDuplicateCount.get(owner) || 0) + 1);
+      }
+    }
+
+    // Find users with most duplicates
+    const ownerDuplicates = Array.from(ownerDuplicateCount.entries())
+      .map(([owner, count]) => ({
+        owner: owner.substring(0, 30),
+        duplicateCount: count
+      }))
+      .sort((a, b) => b.duplicateCount - a.duplicateCount)
+      .slice(0, 10); // Top 10 users with duplicates
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PATTERN DETECTION (when were duplicates created?)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // Sample timestamps from duplicate meks to find patterns
+    const duplicateMekTimestamps: number[] = [];
+    for (const assetId of duplicateAssetIds.slice(0, 20)) {
+      const meksWithThisId = allMeks.filter(m => m.assetId === assetId);
+      for (const mek of meksWithThisId) {
+        if (mek.lastUpdated) {
+          duplicateMekTimestamps.push(mek.lastUpdated);
+        }
+      }
+    }
+
+    const hasTimestampPattern = duplicateMekTimestamps.length > 0;
+    const earliestDuplicate = hasTimestampPattern ? Math.min(...duplicateMekTimestamps) : null;
+    const latestDuplicate = hasTimestampPattern ? Math.max(...duplicateMekTimestamps) : null;
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // RETURN SUMMARY
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    const totalDuplicateRecords = duplicateAssetIds.reduce((sum, assetId) => {
+      const count = assetIdMap.get(assetId) || 0;
+      return sum + (count - 1); // Subtract 1 to count only the EXTRA duplicates
+    }, 0);
+
+    return {
+      summary: {
+        totalMeks: allMeks.length,
+        uniqueAssetIds: assetIdMap.size,
+        expectedMeks: 4000,
+        extraRecords: allMeks.length - 4000,
+        duplicateAssetIdCount: duplicateAssetIds.length,
+        totalDuplicateRecords, // How many records need to be deleted
+        invalidAssetIdCount: invalidAssetIds.length,
+      },
+
+      ownershipIssues: {
+        meksWithNoOwner: meksWithNoOwner.length,
+        meksWithInvalidOwner: meksWithInvalidOwner.length,
+        meksWithOwnerMismatch: meksWithOwnerMismatch.length,
+      },
+
+      duplicateAssetIds: duplicateAssetIds.slice(0, 30), // First 30 duplicate assetIds
+      invalidAssetIds: invalidAssetIds.slice(0, 30), // First 30 invalid assetIds
+
+      duplicatesByOwner: ownerDuplicates,
+
+      pattern: {
+        hasTimestampPattern,
+        earliestDuplicate: earliestDuplicate ? new Date(earliestDuplicate).toISOString() : null,
+        latestDuplicate: latestDuplicate ? new Date(latestDuplicate).toISOString() : null,
+        suggestedCause: totalDuplicateRecords > 30
+          ? "Likely batch import created duplicates"
+          : "Possibly individual user imports or test data",
+      },
+
+      recommendation: totalDuplicateRecords > 0
+        ? `Found ${totalDuplicateRecords} duplicate records. ${duplicateAssetIds.length} unique assetIds are duplicated. ${invalidAssetIds.length} meks have invalid assetIds. Consider running deleteInvalidMeks first, then investigate duplicate removal.`
+        : `Database is clean - ${assetIdMap.size} unique meks, no duplicates.`,
+    };
+  },
+});

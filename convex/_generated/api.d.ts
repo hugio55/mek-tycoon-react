@@ -15,6 +15,7 @@ import type * as activeMissions from "../activeMissions.js";
 import type * as activityLogs from "../activityLogs.js";
 import type * as addTotalActiveContracts from "../addTotalActiveContracts.js";
 import type * as addressConversion from "../addressConversion.js";
+import type * as adminDiagnosticMeks from "../adminDiagnosticMeks.js";
 import type * as adminEssence from "../adminEssence.js";
 import type * as adminMarketplace from "../adminMarketplace.js";
 import type * as adminMigration from "../adminMigration.js";
@@ -177,6 +178,7 @@ declare const fullApi: ApiFromModules<{
   activityLogs: typeof activityLogs;
   addTotalActiveContracts: typeof addTotalActiveContracts;
   addressConversion: typeof addressConversion;
+  adminDiagnosticMeks: typeof adminDiagnosticMeks;
   adminEssence: typeof adminEssence;
   adminMarketplace: typeof adminMarketplace;
   adminMigration: typeof adminMigration;
