@@ -61,14 +61,22 @@ export default function AdminShopPage() {
   const [particles, setParticles] = useState<Array<{id: number, left: string, top: string, delay: string, duration: string}>>([]);
   const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean}>>([]);
 
-  // Get or create user
+  // Get or create user - only if real wallet exists in localStorage
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
-  
+
   useEffect(() => {
     const initUser = async () => {
       try {
-        const user = await getOrCreateUser({ 
-          walletAddress: "admin_wallet_123" 
+        // Only use real wallets from localStorage - NO hardcoded test wallets
+        const storedWallet = localStorage.getItem('walletAddress') || localStorage.getItem('stakeAddress');
+
+        if (!storedWallet) {
+          console.log('[ADMIN-SHOP] No wallet found in localStorage - user needs to connect wallet');
+          return; // Don't create test users
+        }
+
+        const user = await getOrCreateUser({
+          walletAddress: storedWallet
         });
         if (user) {
           setUserId(user._id as Id<"users">);
