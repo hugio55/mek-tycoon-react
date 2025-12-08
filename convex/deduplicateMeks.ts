@@ -197,10 +197,11 @@ export const findMisassignedMeks = query({
 });
 
 /**
- * Remove incorrectly assigned short-format meks from a wallet
- * Only removes meks that don't have corresponding long-format (on-chain) entries
+ * Fix incorrectly assigned short-format meks from a wallet
+ * Clears ownership (sets owner to undefined) so mek stays in DB but isn't counted for user
+ * Only affects meks that don't have corresponding long-format (on-chain) entries
  */
-export const removeMisassignedMeks = mutation({
+export const fixMisassignedMeks = mutation({
   args: {
     walletAddress: v.string(),
   },
@@ -228,24 +229,31 @@ export const removeMisassignedMeks = mutation({
       return mekNum === null || !verifiedMekNumbers.has(mekNum);
     });
 
-    // Remove misassigned meks
-    const removedIds: string[] = [];
+    // Clear ownership on misassigned meks (don't delete - keeps total at 4000)
+    // Set owner to empty string since schema requires non-null owner
+    const fixedIds: string[] = [];
     for (const mek of misassigned) {
-      await ctx.db.delete(mek._id);
-      removedIds.push(mek.assetId);
-      console.log(`[Cleanup] Removed misassigned mek ${mek.assetName} from wallet`);
+      await ctx.db.patch(mek._id, {
+        owner: "", // Empty string = no owner
+        ownerStakeAddress: undefined,
+      });
+      fixedIds.push(mek.assetId);
+      console.log(`[Cleanup] Cleared ownership on misassigned mek ${mek.assetName}`);
     }
 
     // Verify count
     const finalUserMeks = (await ctx.db.query("meks").collect())
       .filter(m => m.owner === args.walletAddress);
 
+    const totalMeks = (await ctx.db.query("meks").collect()).length;
+
     return {
       success: true,
-      removedCount: removedIds.length,
-      removedAssetIds: removedIds,
-      finalMekCount: finalUserMeks.length,
-      message: `Removed ${removedIds.length} misassigned meks. User now has ${finalUserMeks.length} meks.`,
+      fixedCount: fixedIds.length,
+      fixedAssetIds: fixedIds,
+      finalUserMekCount: finalUserMeks.length,
+      totalMeksInDb: totalMeks,
+      message: `Fixed ${fixedIds.length} misassigned meks (cleared ownership). User now has ${finalUserMeks.length} meks. Total DB: ${totalMeks}`,
     };
   },
 });
