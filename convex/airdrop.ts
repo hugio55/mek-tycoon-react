@@ -138,53 +138,30 @@ export const getEligibleUsersCount = query({
   },
 });
 
-// Get list of eligible users with details (for minting interface)
+// Phase II: Get list of eligible users with details (for minting interface)
 export const getEligibleUsersList = query({
   args: { minimumGold: v.number() },
   handler: async (ctx, args) => {
-    const miners = await ctx.db
-      .query("goldMining")
+    const users = await ctx.db
+      .query("users")
       .collect();
 
-    const now = Date.now();
-    const eligible = miners.filter((miner: any) => {
-      // Calculate current gold (including ongoing accumulation if verified)
-      let currentGold = miner.accumulatedGold || 0;
-
-      if (miner.isBlockchainVerified === true) {
-        const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
-        const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-        const goldSinceLastUpdate = miner.totalGoldPerHour * hoursSinceLastUpdate;
-        currentGold = (miner.accumulatedGold || 0) + goldSinceLastUpdate;
-      }
-
+    const eligible = users.filter((user: any) => {
       return (
-        currentGold > args.minimumGold &&  // Strictly greater than (not >=)
-        miner.walletAddress &&
-        miner.isBlockchainVerified === true  // Must be blockchain verified
+        (user.gold || 0) > args.minimumGold &&
+        user.stakeAddress &&
+        user.walletVerified === true
       );
     });
 
-    // Return with calculated current gold
-    return eligible.map((miner: any) => {
-      let currentGold = miner.accumulatedGold || 0;
-
-      if (miner.isBlockchainVerified === true) {
-        const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
-        const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-        const goldSinceLastUpdate = miner.totalGoldPerHour * hoursSinceLastUpdate;
-        currentGold = (miner.accumulatedGold || 0) + goldSinceLastUpdate;
-      }
-
-      return {
-        _id: miner._id,
-        walletAddress: miner.walletAddress,
-        companyName: miner.companyName,
-        currentGold: Math.round(currentGold * 100) / 100,
-        totalGoldPerHour: miner.totalGoldPerHour,
-        isBlockchainVerified: miner.isBlockchainVerified,
-      };
-    });
+    return eligible.map((user: any) => ({
+      _id: user._id,
+      walletAddress: user.stakeAddress,
+      companyName: user.corporationName,
+      currentGold: Math.round((user.gold || 0) * 100) / 100,
+      totalGoldPerHour: 0, // Phase II: calculated from job slots
+      isBlockchainVerified: user.walletVerified,
+    }));
   },
 });
 
