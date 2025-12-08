@@ -29,8 +29,9 @@ export default function GlobalLightboxHandler() {
   const [walletAddress, setWalletAddress] = useState<string>('');
 
   // Get owned Meks data for triangle lightbox
-  const goldMiningData = useQuery(
-    api.goldMining.getGoldMiningData,
+  // Phase II: Use userData.getUserData instead of goldMining
+  const userData = useQuery(
+    api.userData.getUserData,
     walletAddress ? { walletAddress } : "skip"
   );
 
@@ -143,10 +144,10 @@ export default function GlobalLightboxHandler() {
       )}
 
       {/* Meks Triangle Lightbox */}
-      {showMeksTriangle && goldMiningData && (
+      {showMeksTriangle && userData && (
         <MeksTriangleLightbox
           onClose={() => setShowMeksTriangle(false)}
-          ownedMeks={goldMiningData.ownedMeks || []}
+          ownedMeks={userData.ownedMeks || []}
         />
       )}
 

@@ -146,6 +146,7 @@ import type * as testSessionManagement from "../testSessionManagement.js";
 import type * as updateTop30Ranks from "../updateTop30Ranks.js";
 import type * as updateVariationImages from "../updateVariationImages.js";
 import type * as updateVariationSourceKeys from "../updateVariationSourceKeys.js";
+import type * as userData from "../userData.js";
 import type * as users from "../users.js";
 import type * as variationBuffs from "../variationBuffs.js";
 import type * as variationsReference from "../variationsReference.js";
@@ -305,6 +306,7 @@ declare const fullApi: ApiFromModules<{
   updateTop30Ranks: typeof updateTop30Ranks;
   updateVariationImages: typeof updateVariationImages;
   updateVariationSourceKeys: typeof updateVariationSourceKeys;
+  userData: typeof userData;
   users: typeof users;
   variationBuffs: typeof variationBuffs;
   variationsReference: typeof variationsReference;

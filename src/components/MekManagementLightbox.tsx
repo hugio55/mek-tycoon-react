@@ -55,7 +55,8 @@ export default function MekManagementLightbox({
   }, [mekData.customName, mekData.assetId, displayName]);
 
   const unslotMekMutation = useMutation(api.essence.unslotMek);
-  const setMekNameMutation = useMutation(api.goldMining.setMekName);
+  // Phase II: Use userData.setMekName instead of goldMining
+  const setMekNameMutation = useMutation(api.userData.setMekName);
 
   // Debounce the name check - only check after 625ms pause in typing
   useEffect(() => {
@@ -69,8 +70,9 @@ export default function MekManagementLightbox({
   }, [tempName]);
 
   // Check name availability in real-time
+  // Phase II: Use userData.checkMekNameAvailability instead of goldMining
   const checkAvailability = useQuery(
-    api.goldMining.checkMekNameAvailability,
+    api.userData.checkMekNameAvailability,
     debouncedTempName.trim().length >= 1 ? {
       mekName: debouncedTempName.trim(),
       currentMekAssetId: mekData.assetId
@@ -172,10 +174,11 @@ export default function MekManagementLightbox({
     setIsSubmitting(true);
 
     try {
+      // Phase II: Use mekName parameter instead of newName
       const result = await setMekNameMutation({
         walletAddress,
         mekAssetId: mekData.assetId,
-        newName: trimmedName
+        mekName: trimmedName
       });
 
       if (result.success) {

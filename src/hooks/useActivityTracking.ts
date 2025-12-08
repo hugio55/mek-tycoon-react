@@ -10,12 +10,17 @@ interface UseActivityTrackingOptions {
   debounceMs?: number;
 }
 
+/**
+ * Track user activity and update lastLogin timestamp
+ * Phase II: Uses userData.updateLastActive instead of goldMining
+ */
 export function useActivityTracking({
   walletAddress,
   enabled = true,
   debounceMs = 30000 // Update max once per 30 seconds
 }: UseActivityTrackingOptions) {
-  const updateLastActive = useMutation(api.goldMining.updateLastActive);
+  // Phase II: Use userData.updateLastActive instead of goldMining
+  const updateLastActive = useMutation(api.userData.updateLastActive);
   const lastActivityTime = useRef<number>(0);
   const activityTimeout = useRef<NodeJS.Timeout | null>(null);
 

@@ -62,7 +62,8 @@ export default function BlockchainVerificationPanel({
     walletAddress ? { stakeAddress: walletAddress, limit: 5 } : 'skip'
   );
   const getContractState = useQuery(api.smartContractArchitecture.getContractState);
-  const walletVerificationStatus = useQuery(api.goldMining.isWalletVerified,
+  // Phase II: Use userData.isWalletVerified instead of goldMining
+  const walletVerificationStatus = useQuery(api.userData.isWalletVerified,
     walletAddress ? { walletAddress } : 'skip'
   );
 

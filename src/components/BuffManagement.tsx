@@ -43,9 +43,10 @@ export default function BuffManagement({ walletAddress, client, selectedDatabase
 
     const fetchData = async () => {
       try {
+        // Phase II: Use userData.getCompanyName instead of goldMining
         const [buffs, company] = await Promise.all([
           client.query(api.essence.getPlayerBuffs, { walletAddress }),
-          client.query(api.goldMining.getCompanyName, { walletAddress })
+          client.query(api.userData.getCompanyName, { walletAddress })
         ]);
 
         if (!cancelled) {

@@ -664,30 +664,14 @@ export const slotMek_ORIGINAL = mutation({
       itemVariationName: passedItemName
     } = args;
 
-    // Try to get Mek from meks table first
-    let mek = await ctx.db
+    // Phase II: Get Mek from meks table (no goldMining fallback)
+    const mek = await ctx.db
       .query("meks")
       .withIndex("by_asset_id", (q: any) => q.eq("assetId", mekAssetId))
       .first();
 
-    // If not in meks table, check goldMining.ownedMeks
     if (!mek) {
-      const goldMining = await ctx.db
-        .query("goldMining")
-        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
-        .first();
-
-      if (goldMining) {
-        const ownedMek = goldMining.ownedMeks?.find((m: any) => m.assetId === mekAssetId);
-        if (ownedMek) {
-          // Use the data from goldMining.ownedMeks
-          mek = ownedMek as any;
-        }
-      }
-    }
-
-    if (!mek) {
-      throw new Error("Mek not found in database or goldMining records");
+      throw new Error("Mek not found in database");
     }
 
     // Verify ownership (check both owner field and walletAddress match)
@@ -843,22 +827,9 @@ export const slotMek_ORIGINAL = mutation({
         console.log(`[🔒TENURE-DEBUG] BEFORE patch - lastTenureUpdate: ${mekRecord.lastTenureUpdate}`);
 
         console.log(`[🔒TENURE-DEBUG] Step 3: Checking for custom name...`);
-        // Check if Mek has custom name (check goldMining.ownedMeks for this)
-        try {
-          const goldMiningRecord = await ctx.db
-            .query("goldMining")
-            .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
-            .first();
-
-          if (goldMiningRecord && goldMiningRecord.ownedMeks) {
-            hasName = !!goldMiningRecord.ownedMeks.find((m: any) => m.assetId === mekAssetId)?.customName;
-            console.log(`[🔒TENURE-DEBUG] Custom name check: hasName = ${hasName}`);
-          } else {
-            console.log(`[🔒TENURE-DEBUG] No goldMining record or ownedMeks found`);
-          }
-        } catch (nameCheckError) {
-          console.error(`[🔒TENURE-DEBUG] ERROR checking custom name:`, nameCheckError);
-        }
+        // Phase II: Check meks table for customName (no goldMining fallback)
+        hasName = !!mekRecord.customName;
+        console.log(`[🔒TENURE-DEBUG] Custom name check: hasName = ${hasName}`);
 
         console.log(`[🔒TENURE-DEBUG] Step 4: Preparing patch data...`);
         // Update Mek with slotted status in meks table

@@ -9,14 +9,17 @@ import { DemoWalletContext } from '@/contexts/DemoWalletContext';
 /**
  * Universal hook that returns wallet data in both demo and production mode
  * Automatically detects demo mode and returns mock data
+ *
+ * Phase II: Uses userData.getUserData instead of goldMining.getGoldMiningData
  */
 export function useWalletData(walletAddress?: string | null) {
   // Try to get demo context (will be null if not in demo mode)
   const demoContext = useContext(DemoWalletContext as any);
 
   // Real data query (only runs if not in demo mode)
-  const realGoldData = useQuery(
-    api.goldMining.getGoldMiningData,
+  // Phase II: Use userData.getUserData instead of goldMining
+  const realUserData = useQuery(
+    api.userData.getUserData,
     !demoContext && walletAddress ? { walletAddress } : 'skip'
   );
 
@@ -33,9 +36,9 @@ export function useWalletData(walletAddress?: string | null) {
 
   return {
     isDemo: false,
-    isLoading: realGoldData === undefined,
-    data: realGoldData,
-    meks: realGoldData?.ownedMeks || [],
+    isLoading: realUserData === undefined,
+    data: realUserData,
+    meks: realUserData?.ownedMeks || [],
     walletAddress: walletAddress,
   };
 }
