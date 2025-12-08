@@ -143,7 +143,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
 
   // Lock body scroll when lightbox is open
   useEffect(() => {
-    if (lightboxImage || showNewConversation || errorLightbox) {
+    if (lightboxImage || showNewConversation || errorLightbox || showBlockedUsers) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -151,7 +151,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     return () => {
       document.body.style.overflow = '';
     };
-  }, [lightboxImage, showNewConversation, errorLightbox]);
+  }, [lightboxImage, showNewConversation, errorLightbox, showBlockedUsers]);
 
   // Mark messages as read when conversation is selected
   useEffect(() => {
@@ -413,12 +413,8 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
         <div className="p-4 border-b border-gray-700 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white">Inbox</h2>
           <button
-            onClick={() => setShowBlockedUsers(!showBlockedUsers)}
-            className={`text-xs px-2 py-1 rounded-full border transition-colors ${
-              showBlockedUsers
-                ? 'bg-red-500/20 text-red-400 border-red-500/50'
-                : 'bg-gray-700/50 text-gray-400 border-gray-600 hover:border-gray-500'
-            }`}
+            onClick={() => setShowBlockedUsers(true)}
+            className="text-xs px-2 py-1 rounded-full border transition-colors bg-gray-700/50 text-gray-400 border-gray-600 hover:border-red-500/50 hover:text-red-400 hover:bg-red-500/10"
           >
             Blocked
           </button>
@@ -440,33 +436,6 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
           </div>
         </button>
 
-        {/* Blocked Users Panel */}
-        {showBlockedUsers && (
-          <div className="border-b border-gray-700 bg-red-500/5">
-            <div className="p-3 border-b border-red-500/20">
-              <div className="text-sm font-medium text-red-400">Blocked Users</div>
-            </div>
-            {blockedUsers && blockedUsers.length > 0 ? (
-              <div className="space-y-2 max-h-40 overflow-y-auto">
-                {blockedUsers.map((block: any) => (
-                  <div key={block._id} className="flex items-center justify-between bg-black/30 rounded px-2 py-1.5">
-                    <span className="text-sm text-white truncate">
-                      {block.blockedUserInfo?.companyName || 'Unknown'}
-                    </span>
-                    <button
-                      onClick={() => handleUnblockUser(block.blockedWallet)}
-                      className="text-xs text-green-400 hover:text-green-300"
-                    >
-                      Unblock
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-xs text-gray-500">No blocked users</div>
-            )}
-          </div>
-        )}
 
         {/* Conversation List */}
         <div className="flex-1 overflow-y-auto">
@@ -955,6 +924,97 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
               >
                 Understood
               </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Blocked Users Lightbox */}
+      {mounted && showBlockedUsers && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md"
+          onClick={() => setShowBlockedUsers(false)}
+        >
+          <div
+            className="w-full max-w-sm bg-black/40 backdrop-blur-xl border border-gray-600/50 rounded-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-4 border-b border-gray-700/50 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-red-400">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                </svg>
+                <h2 className="text-lg font-semibold text-white" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                  BLOCKED USERS
+                </h2>
+              </div>
+              {/* Animated X Close Button */}
+              <button
+                onClick={() => setShowBlockedUsers(false)}
+                className="group relative flex items-center gap-2 p-2 transition-all duration-300"
+              >
+                <div className="relative w-6 h-6 flex items-center justify-center">
+                  <span className="absolute w-[2px] h-[18px] rounded-full bg-white/70 rotate-45 transition-all duration-300 ease-in group-hover:rotate-[-45deg] group-hover:bg-cyan-400 group-hover:shadow-[0_0_10px_#22d3ee]" />
+                  <span className="absolute w-[2px] h-[18px] rounded-full bg-white/70 -rotate-45 transition-all duration-300 ease-in group-hover:rotate-[45deg] group-hover:bg-cyan-400 group-hover:shadow-[0_0_10px_#22d3ee]" />
+                </div>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 max-h-[300px] overflow-y-auto">
+              {blockedUsers && blockedUsers.length > 0 ? (
+                <div className="space-y-2">
+                  {blockedUsers.map((block: any) => (
+                    <div
+                      key={block._id}
+                      className="flex items-center justify-between bg-white/5 border border-white/10 rounded-lg px-4 py-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gray-700 overflow-hidden">
+                          <img
+                            src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(block.blockedWallet)}`)}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <span className="text-white truncate">
+                          {block.blockedUserInfo?.companyName || 'Unknown Corporation'}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleUnblockUser(block.blockedWallet)}
+                        className="text-sm px-3 py-1 rounded-lg bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20 transition-colors"
+                      >
+                        Unblock
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  {/* No Blocked Users Icon */}
+                  <div className="flex justify-center mb-4">
+                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-600">
+                      <circle cx="24" cy="24" r="18" strokeOpacity="0.4" />
+                      <path d="M24 14V24L30 30" strokeLinecap="round" strokeOpacity="0.6" />
+                      <circle cx="24" cy="24" r="3" fill="currentColor" fillOpacity="0.3" />
+                      <path d="M16 34C18.5 36.5 21.5 38 24 38C30.6 38 36 32.6 36 26" strokeLinecap="round" strokeOpacity="0.3" />
+                    </svg>
+                  </div>
+                  <div className="text-gray-400">No blocked users</div>
+                  <div className="text-sm text-gray-600 mt-1">Your communications are open</div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-gray-700/50 bg-black/20">
+              <div className="text-xs text-gray-500 text-center">
+                Blocked users cannot send you messages
+              </div>
             </div>
           </div>
         </div>,

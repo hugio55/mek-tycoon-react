@@ -92,7 +92,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
     if (campaignWithNFTs) {
       console.log('[CAMPAIGN] Auto-selected campaign:', campaignWithNFTs.name, campaignWithNFTs._id);
       setActiveCampaignId(campaignWithNFTs._id);
-      setState(walletAddress ? 'creating' : 'address_entry');
+      // ALWAYS check eligibility first, even with pre-populated wallet
+      // This ensures campaign eligibility snapshot is enforced
+      setState(walletAddress ? 'checking_eligibility' : 'address_entry');
       setHasInitializedCampaign(true);
     } else {
       // All campaigns are sold out

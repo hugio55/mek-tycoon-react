@@ -652,10 +652,6 @@ export default function UnifiedHeader() {
                     className="absolute w-[3px] h-[24px] rounded-full bg-white/70 -rotate-45 transition-all duration-300 ease-in group-hover:rotate-[45deg] group-hover:bg-cyan-400 group-hover:shadow-[0_0_10px_#22d3ee]"
                   />
                 </div>
-                {/* "close" label - fades in on hover */}
-                <span className="text-xs uppercase tracking-wider text-transparent group-hover:text-cyan-400 transition-all duration-300 ease-in">
-                  close
-                </span>
               </button>
             </div>
 
