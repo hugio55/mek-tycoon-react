@@ -1063,7 +1063,7 @@ client.on('interactionCreate', async (interaction) => {
       console.log('[LINKCORP] About to call mutation with wallet:', walletAddress);
       console.log('[LINKCORP] Wallet length before mutation:', walletAddress?.length);
 
-      const result = await convex.mutation('discordIntegrationGroups:linkDiscordToCorporation', {
+      const result = await convex.mutation('discordSync:linkDiscordToCorporation', {
         walletAddress,
         discordUserId,
         discordUsername,
@@ -1088,7 +1088,7 @@ client.on('interactionCreate', async (interaction) => {
 
       console.log('[UNLINKCORP] Unlinking corporation for Discord user:', discordUserId);
 
-      const result = await convex.mutation('discordIntegrationGroups:unlinkDiscordFromCorporation', {
+      const result = await convex.mutation('discordSync:unlinkDiscordFromCorporation', {
         discordUserId,
         guildId: GUILD_ID,
       });
@@ -1115,7 +1115,7 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     if (commandName === 'mygold') {
-      const goldData = await convex.query('discordIntegrationGroups:getUserGoldAndEmoji', {
+      const goldData = await convex.query('discordSync:getUserGoldAndEmoji', {
         discordUserId: interaction.user.id,
         guildId: GUILD_ID,
       });
@@ -1156,7 +1156,7 @@ client.on('interactionCreate', async (interaction) => {
 
         // Get the user's Discord connection
         console.log('[CORP] Querying for Discord connection...');
-        const connection = await convex.query('discordIntegrationGroups:getDiscordConnectionByDiscordUser', {
+        const connection = await convex.query('discordSync:getDiscordConnectionByDiscordUser', {
           discordUserId: interaction.user.id,
           guildId: GUILD_ID,
         });

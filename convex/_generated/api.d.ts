@@ -8,7 +8,6 @@
  * @module
  */
 
-import type * as COMPONENT_LIBRARY_EXAMPLES from "../COMPONENT_LIBRARY_EXAMPLES.js";
 import type * as accordionCraftingTree from "../accordionCraftingTree.js";
 import type * as actions_verifyCardanoSignature from "../actions/verifyCardanoSignature.js";
 import type * as actions_verifyCardanoSignatureSimple from "../actions/verifyCardanoSignatureSimple.js";
@@ -56,7 +55,6 @@ import type * as commemorativeNFTReservationsCampaign from "../commemorativeNFTR
 import type * as commemorativePaymentTracking from "../commemorativePaymentTracking.js";
 import type * as commemorativeTokenCounters from "../commemorativeTokenCounters.js";
 import type * as commemorativeTokens from "../commemorativeTokens.js";
-import type * as componentLibraryFunctions from "../componentLibraryFunctions.js";
 import type * as componentLibrarySchema from "../componentLibrarySchema.js";
 import type * as componentTransformations from "../componentTransformations.js";
 import type * as comprehensiveWalletFix from "../comprehensiveWalletFix.js";
@@ -252,7 +250,6 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  COMPONENT_LIBRARY_EXAMPLES: typeof COMPONENT_LIBRARY_EXAMPLES;
   accordionCraftingTree: typeof accordionCraftingTree;
   "actions/verifyCardanoSignature": typeof actions_verifyCardanoSignature;
   "actions/verifyCardanoSignatureSimple": typeof actions_verifyCardanoSignatureSimple;
@@ -300,7 +297,6 @@ declare const fullApi: ApiFromModules<{
   commemorativePaymentTracking: typeof commemorativePaymentTracking;
   commemorativeTokenCounters: typeof commemorativeTokenCounters;
   commemorativeTokens: typeof commemorativeTokens;
-  componentLibraryFunctions: typeof componentLibraryFunctions;
   componentLibrarySchema: typeof componentLibrarySchema;
   componentTransformations: typeof componentTransformations;
   comprehensiveWalletFix: typeof comprehensiveWalletFix;
