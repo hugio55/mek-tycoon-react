@@ -61,16 +61,18 @@ crons.interval(
   internal.commemorativeNFTReservationsCampaign.internalCleanupExpiredReservations
 );
 
+// PAUSED (Dec 7, 2025): nmkrSync.ts disabled for TypeScript fixes
+// Re-enable when nmkrSync is restored
 // Auto-sync NMKR NFT statuses every 10 minutes
 // This catches any missed webhooks and ensures our database reflects NMKR's actual state
 // If a payment goes through but webhook fails, this will detect and fix it within 10 minutes
-crons.interval(
-  "auto sync NMKR NFT statuses",
-  {
-    minutes: 10
-  },
-  internal.nmkrSync.internalAutoSyncWithNMKR
-);
+// crons.interval(
+//   "auto sync NMKR NFT statuses",
+//   {
+//     minutes: 10
+//   },
+//   internal.nmkrSync.internalAutoSyncWithNMKR
+// );
 
 // PAUSED (Dec 1, 2025): No wallet logins during maintenance - cleanup not needed
 // One-time cleanup ran: 0 expired lockouts found
@@ -124,45 +126,47 @@ crons.interval(
 //   internal.monitoringSummaryGenerator.generateSummary
 // );
 
+// PAUSED (Dec 7, 2025): monitoring.ts disabled for TypeScript fixes
 // Clean up monitoring logs older than 30 days (runs daily at 3 AM UTC)
-crons.daily(
-  "cleanup old monitoring logs",
-  {
-    hourUTC: 3,
-    minuteUTC: 0
-  },
-  internal.monitoring.cleanupOldEvents
-);
+// crons.daily(
+//   "cleanup old monitoring logs",
+//   {
+//     hourUTC: 3,
+//     minuteUTC: 0
+//   },
+//   internal.monitoring.cleanupOldEvents
+// );
 
 // Clean up monitoring summaries older than 30 days (runs daily at 3:15 AM UTC)
-crons.daily(
-  "cleanup old monitoring summaries",
-  {
-    hourUTC: 3,
-    minuteUTC: 15
-  },
-  internal.monitoring.cleanupOldSummaries
-);
+// crons.daily(
+//   "cleanup old monitoring summaries",
+//   {
+//     hourUTC: 3,
+//     minuteUTC: 15
+//   },
+//   internal.monitoring.cleanupOldSummaries
+// );
 
+// PAUSED (Dec 7, 2025): snapshotCleanup.ts disabled for TypeScript fixes
 // Clean up old ownership snapshots (mekOwnershipHistory) older than 30 days (runs daily at 4 AM UTC)
-crons.daily(
-  "cleanup old ownership snapshots",
-  {
-    hourUTC: 4,
-    minuteUTC: 0
-  },
-  internal.snapshotCleanup.cleanupOldSnapshots
-);
+// crons.daily(
+//   "cleanup old ownership snapshots",
+//   {
+//     hourUTC: 4,
+//     minuteUTC: 0
+//   },
+//   internal.snapshotCleanup.cleanupOldSnapshots
+// );
 
 // Clean up old snapshot logs older than 7 days (runs daily at 4:15 AM UTC)
-crons.daily(
-  "cleanup old snapshot logs",
-  {
-    hourUTC: 4,
-    minuteUTC: 15
-  },
-  internal.snapshotCleanup.cleanupOldSnapshotLogs
-);
+// crons.daily(
+//   "cleanup old snapshot logs",
+//   {
+//     hourUTC: 4,
+//     minuteUTC: 15
+//   },
+//   internal.snapshotCleanup.cleanupOldSnapshotLogs
+// );
 
 // ============================================
 // PHASE II: Transaction cleanup crons REMOVED
