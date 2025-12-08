@@ -1702,3 +1702,79 @@ export const findDuplicateMeks = query({
     };
   },
 });
+
+/**
+ * Find Meks with invalid/short assetIds (not real Cardano asset IDs)
+ * Real assetIds are 56+ characters (policy ID + asset name hex)
+ */
+export const findInvalidAssetIds = query({
+  args: {},
+  handler: async (ctx) => {
+    const allMeks = await ctx.db.query("meks").collect();
+
+    // Real Cardano assetIds are long hex strings (policy ID 56 chars + asset name)
+    // Short assetIds like "2922" or "demo_mek_1" are invalid/test data
+    const invalidMeks = allMeks.filter(m => m.assetId.length < 50);
+
+    // Group by owner
+    const byOwner = new Map<string, any[]>();
+    for (const mek of invalidMeks) {
+      const owner = mek.owner || 'no_owner';
+      const list = byOwner.get(owner) || [];
+      list.push({
+        _id: mek._id,
+        assetId: mek.assetId,
+        assetName: mek.assetName,
+      });
+      byOwner.set(owner, list);
+    }
+
+    const ownerBreakdown = Array.from(byOwner.entries()).map(([owner, meks]) => ({
+      owner: owner.substring(0, 30) + '...',
+      count: meks.length,
+      sampleAssetIds: meks.slice(0, 5).map(m => m.assetId),
+    }));
+
+    return {
+      summary: {
+        totalInvalidMeks: invalidMeks.length,
+        ownersAffected: byOwner.size,
+      },
+      ownerBreakdown,
+      allInvalidMekIds: invalidMeks.map(m => ({ _id: m._id, assetId: m.assetId })),
+      recommendation: invalidMeks.length > 0
+        ? `Found ${invalidMeks.length} Meks with invalid assetIds. These should be DELETED.`
+        : 'All Meks have valid Cardano assetIds.',
+    };
+  },
+});
+
+/**
+ * DELETE all Meks with invalid/short assetIds
+ * Use after running findInvalidAssetIds to confirm what will be deleted
+ */
+export const deleteInvalidMeks = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const allMeks = await ctx.db.query("meks").collect();
+    const invalidMeks = allMeks.filter(m => m.assetId.length < 50);
+
+    let deletedCount = 0;
+    const deletedAssetIds: string[] = [];
+
+    for (const mek of invalidMeks) {
+      await ctx.db.delete(mek._id);
+      deletedCount++;
+      deletedAssetIds.push(mek.assetId);
+    }
+
+    console.log(`[Admin] Deleted ${deletedCount} invalid Meks`);
+
+    return {
+      success: true,
+      deletedCount,
+      deletedAssetIds: deletedAssetIds.slice(0, 50), // First 50 for reference
+      message: `Deleted ${deletedCount} Meks with invalid assetIds`,
+    };
+  },
+});
