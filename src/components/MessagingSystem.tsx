@@ -938,7 +938,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
         >
           {/* Backdrop - Light like communications lightbox */}
           <div
-            className="fixed inset-0 bg-black/30"
+            className="fixed inset-0 bg-black/10"
             style={{ backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)' }}
           />
           <div
