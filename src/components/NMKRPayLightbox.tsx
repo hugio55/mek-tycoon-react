@@ -329,18 +329,44 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
   // Detect available wallets and check if mobile browser
   const detectWalletsAndMobile = () => {
-    // Check if mobile browser (no window.cardano)
+    // Check if window.cardano exists (might take a moment for extensions to inject)
     const hasCardano = typeof window !== 'undefined' && window.cardano;
 
+    console.log('[🔐WALLET-DETECT] Starting detection, window.cardano exists:', !!hasCardano);
+    if (hasCardano) {
+      console.log('[🔐WALLET-DETECT] window.cardano keys:', Object.keys(window.cardano));
+    }
+
     if (!hasCardano) {
-      console.log('[🔐VERIFY] No window.cardano - mobile browser detected');
+      console.log('[🔐WALLET-DETECT] No window.cardano - checking if mobile or extensions not loaded yet');
+      // On desktop, extensions might not have injected yet - try again after short delay
+      setTimeout(() => {
+        const retryCardano = typeof window !== 'undefined' && window.cardano;
+        if (retryCardano) {
+          console.log('[🔐WALLET-DETECT] Retry successful - extensions loaded after delay');
+          doWalletDetection();
+        } else {
+          console.log('[🔐WALLET-DETECT] Still no window.cardano after retry - assuming mobile');
+          setIsMobileBrowser(true);
+          setAvailableWallets([]);
+        }
+      }, 500);
+      return;
+    }
+
+    doWalletDetection();
+  };
+
+  // Actual wallet detection logic (extracted for retry use)
+  const doWalletDetection = () => {
+    const cardano = window.cardano;
+    if (!cardano) {
       setIsMobileBrowser(true);
       setAvailableWallets([]);
       return;
     }
 
     setIsMobileBrowser(false);
-    const cardano = window.cardano;
     const wallets: Array<{ name: string; icon: string; api: any }> = [];
 
     // List of known wallets to check for
@@ -357,6 +383,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
     knownWallets.forEach(wallet => {
       const name = wallet.name.toLowerCase();
+      console.log(`[🔐WALLET-DETECT] Checking for ${wallet.name} (${name}):`, !!cardano[name]);
       if (cardano[name]) {
         wallets.push({
           icon: wallet.icon,
@@ -366,7 +393,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
       }
     });
 
-    console.log('[🔐VERIFY] Detected wallets:', wallets.map(w => w.name));
+    console.log('[🔐WALLET-DETECT] Final detected wallets:', wallets.map(w => w.name));
     setAvailableWallets(wallets);
   };
 
