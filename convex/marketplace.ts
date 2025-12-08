@@ -251,10 +251,10 @@ export const purchaseItem = mutation({
     // If essence purchase, transfer essence to buyer
     if (listing.itemType === "essence" && listing.itemVariation) {
       // Find or create buyer's essence balance
-      let buyerEssence = await ctx.db
+      const buyerEssence = await ctx.db
         .query("essenceBalances")
         .withIndex("by_wallet_and_name", (q) =>
-          q.eq("walletAddress", buyer.stakeAddress).eq("variationName", listing.itemVariation!)
+          q.eq("walletAddress", buyerWallet).eq("variationName", listing.itemVariation!)
         )
         .first();
 
@@ -266,7 +266,7 @@ export const purchaseItem = mutation({
         // Need to look up variation data to insert properly
         // For now, we'll create a minimal record - full data can be populated by the essence system
         await ctx.db.insert("essenceBalances", {
-          walletAddress: buyer.stakeAddress,
+          walletAddress: buyerWallet,
           variationId: 0, // Will be populated when essence system runs
           variationName: listing.itemVariation,
           variationType: "head", // Default, will be corrected by essence system
