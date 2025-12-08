@@ -958,7 +958,11 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
             </p>
 
             <button
-              onClick={() => setState('wallet_verification')}
+              onClick={() => {
+                // Detect available wallets before transitioning to verification
+                detectWalletsAndMobile();
+                setState('wallet_verification');
+              }}
               className="w-full py-3 sm:py-4 text-base sm:text-lg font-semibold tracking-wider text-black bg-gradient-to-r from-cyan-400 to-cyan-500 rounded-xl hover:from-cyan-300 hover:to-cyan-400 transition-all duration-300 touch-manipulation shadow-lg shadow-cyan-500/30 active:scale-[0.98]"
               style={{ minHeight: '48px', WebkitTapHighlightColor: 'transparent', fontFamily: "'Inter', 'Arial', sans-serif" }}
             >
@@ -1427,7 +1431,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
             )}
 
             <button
-              onClick={() => setState('reserved')}
+              onClick={() => setState('corporation_verified')}
               className="w-full mt-4 py-2 px-4 text-sm font-medium text-white/60 hover:text-white transition-colors"
             >
               Go Back
