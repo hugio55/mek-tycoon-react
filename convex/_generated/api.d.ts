@@ -140,6 +140,7 @@ import type * as smartContractArchitecture from "../smartContractArchitecture.js
 import type * as storyClimbOptimized from "../storyClimbOptimized.js";
 import type * as storyNodes from "../storyNodes.js";
 import type * as storyTrees from "../storyTrees.js";
+import type * as tenureConfig from "../tenureConfig.js";
 import type * as testSessionManagement from "../testSessionManagement.js";
 import type * as updateTop30Ranks from "../updateTop30Ranks.js";
 import type * as updateVariationImages from "../updateVariationImages.js";
@@ -298,6 +299,7 @@ declare const fullApi: ApiFromModules<{
   storyClimbOptimized: typeof storyClimbOptimized;
   storyNodes: typeof storyNodes;
   storyTrees: typeof storyTrees;
+  tenureConfig: typeof tenureConfig;
   testSessionManagement: typeof testSessionManagement;
   updateTop30Ranks: typeof updateTop30Ranks;
   updateVariationImages: typeof updateVariationImages;
