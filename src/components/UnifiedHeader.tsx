@@ -636,13 +636,26 @@ export default function UnifiedHeader() {
                   COMMUNICATIONS
                 </h2>
               </div>
+              {/* Animated X Close Button */}
               <button
                 onClick={() => setShowMessaging(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+                className="group relative flex items-center gap-2 p-2 transition-all duration-300"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
+                {/* X icon container */}
+                <div className="relative w-8 h-8 flex items-center justify-center">
+                  {/* First bar - rotates from 45deg to -45deg on hover */}
+                  <span
+                    className="absolute w-[3px] h-[24px] rounded-full bg-white/70 rotate-45 transition-all duration-300 ease-in group-hover:rotate-[-45deg] group-hover:bg-cyan-400 group-hover:shadow-[0_0_10px_#22d3ee]"
+                  />
+                  {/* Second bar - rotates from -45deg to 45deg on hover */}
+                  <span
+                    className="absolute w-[3px] h-[24px] rounded-full bg-white/70 -rotate-45 transition-all duration-300 ease-in group-hover:rotate-[45deg] group-hover:bg-cyan-400 group-hover:shadow-[0_0_10px_#22d3ee]"
+                  />
+                </div>
+                {/* "close" label - fades in on hover */}
+                <span className="text-xs uppercase tracking-wider text-transparent group-hover:text-cyan-400 transition-all duration-300 ease-in">
+                  close
+                </span>
               </button>
             </div>
 
