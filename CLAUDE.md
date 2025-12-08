@@ -8,12 +8,42 @@ The directory `mek-tycoon-react-staging` is the PRIMARY and MAIN working directo
 
 - **Primary Directory**: `C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react-staging`
 - **Do NOT use**: The `mek-tycoon-react` directory exists but is NOT used for current work
-- **Databases**: DUAL DATABASE SYSTEM (Trout for dev, Sturgeon for production)
+- **Database**: `fabulous-sturgeon-691.convex.cloud` (UNIFIED PRODUCTION DATABASE)
 - **Port**: localhost:3200
 
 **Naming note**: Despite the word "staging" in the directory name, this is our primary development environment where ALL current work happens.
 
-**⚠️ DUAL DATABASE SYSTEM**: We use TWO separate databases - Trout (dev) for localhost development and Sturgeon (production) for the live site. This allows safe testing before deploying to production.
+**⚠️ UNIFIED DATABASE**: As of December 2025, we use a SINGLE database (Sturgeon/Production) for both localhost development and live site. There is no separate dev database. All changes to the backend affect real users immediately.
+
+---
+
+## 🚨 PHASE II: NO MIGRATION - STARTING COMPLETELY FRESH 🚨
+
+**CRITICAL: We are NOT migrating any Phase I users or data.**
+
+As of December 2025, Mek Tycoon is starting fresh with Phase II architecture:
+
+- **No user migration**: Phase I users will NOT be transferred to Phase II
+- **Legacy tables being deleted**: `goldMining`, `goldMiningState`, `corporations`
+- **New architecture**: `users` table is the single source of truth for identity
+- **Fresh start**: All users will register anew when Phase II launches
+
+**Why this matters for code:**
+- Do NOT write migration code or fallback logic for goldMining data
+- Do NOT reference goldMining/goldMiningState tables in new features
+- Remove legacy fallbacks when updating existing code
+- The `users` table IS the corporation (1 user = 1 corporation)
+
+**Active Tables (Phase II):**
+- `users` - Core identity (stakeAddress, corporationName, gold, level)
+- `meks` - NFTs owned by users (owner field links to users.stakeAddress)
+- `userEssence` - Sparse essence storage (291 types)
+- `userJobSlots` - Job assignments and income source
+
+**Tables Being Deleted:**
+- `goldMining` - Phase I legacy (walletAddress, companyName, ownedMeks[])
+- `goldMiningState` - Obsolete passive income system
+- `corporations` - Duplicate of users table
 
 ## Dev Server Management
 **CRITICAL: User starts their own dev servers. DO NOT automatically run background dev server tasks.**
@@ -142,39 +172,39 @@ New feature needs to store user data
     goes in separate tables)
 ```
 
-### Current Table Architecture
+### Current Table Architecture (Phase II)
 
 ```
-users (IDENTITY ONLY)
+users (IDENTITY = CORPORATION)
 ├── stakeAddress (PK)
 ├── corporationName
-├── gold, level
+├── gold (spendable balance)
+├── level, experience
+├── walletVerified
 ├── session/auth
 └── timestamps, status
+
+meks (OWNED ITEMS)
+├── assetId (PK)
+├── owner (stake address)
+├── variations, rarity, sourceKey
+├── accumulatedGoldForCorp (resets on sale)
+├── accumulatedGoldAllTime (lifetime stat)
+└── talentTree {}
 
 userEssence (SPARSE DATA)
 ├── stakeAddress (FK)
 ├── essenceType
 └── balance
 
-userJobSlots (MULTIPLE PER USER)
+userJobSlots (INCOME SOURCE)
 ├── stakeAddress (FK)
 ├── slotType, slotIndex
 ├── assignedMekId
 └── slotXP, slotLevel
-
-meks (OWNED ITEMS)
-├── assetId (PK)
-├── ownerStakeAddress (FK)
-├── variations, rarity
-└── talentTree {}
-
-goldMiningState (COMPLEX MECHANICS)
-├── stakeAddress (FK)
-├── totalGoldPerHour
-├── accumulatedGold
-└── verification data
 ```
+
+**Note:** `goldMining` and `goldMiningState` tables are OBSOLETE and being deleted.
 
 ### Examples of Correct Decisions
 
