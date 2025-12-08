@@ -530,7 +530,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                 <div className="flex-1 min-w-0">
                   {/* Top row: Name + Timestamp */}
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-white font-medium">
+                    <span className="text-white font-medium text-sm whitespace-nowrap">
                       Overexposed Support
                     </span>
                     <div className="flex items-center gap-2 flex-shrink-0">

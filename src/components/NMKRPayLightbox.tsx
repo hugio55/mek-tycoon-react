@@ -697,10 +697,10 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
     const checkInterval = setInterval(async () => {
       if (paymentWindow.closed && reservationId) {
         clearInterval(checkInterval);
-        console.log('[PAY] Payment window closed - starting payment verification');
+        console.log('[PAY] Payment window closed - showing options immediately');
         await markPaymentWindowClosed({ reservationId });
-        // Start verification period - show spinner while checking for payment
-        setIsVerifyingClosedWindowPayment(true);
+        // Go directly to payment_window_closed state without auto-verification
+        // User can choose to verify payment manually via "I paid - check again" button
         setState('payment_window_closed');
       }
     }, 500);
@@ -1454,7 +1454,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
         );
 
       case 'payment_window_closed':
-        // If we're in the initial verification period, show a spinner
+        // Show verification spinner if actively checking payment
         if (isVerifyingClosedWindowPayment) {
           return (
             <div className="text-center py-6">
@@ -1482,17 +1482,16 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
               <button
                 onClick={() => {
                   setIsVerifyingClosedWindowPayment(false);
-                  setState('reserved');
                 }}
                 className="w-full py-2 px-4 text-sm font-medium text-white/50 hover:text-white/70 transition-colors"
               >
-                I didn't pay - go back
+                Cancel verification
               </button>
             </div>
           );
         }
 
-        // After verification timeout, show manual options
+        // Show options immediately when payment window is closed (no auto-verification delay)
         return (
           <div className="text-center py-6">
             <div className="mb-6">
@@ -1511,24 +1510,27 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
             </div>
 
             <div className="space-y-3">
-              <button
-                onClick={() => setState('reserved')}
-                className="w-full py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200"
-                style={{ fontFamily: 'Inter, sans-serif', background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)', color: '#ffffff', boxShadow: '0 6px 24px rgba(6, 182, 212, 0.4)', border: 'none' }}
-              >
-                Try Again
-              </button>
-
+              {/* Primary action: Check if payment was made */}
               <button
                 onClick={() => {
                   setIsVerifyingClosedWindowPayment(true);
                   // Will auto-clear after 8 seconds if no payment detected
                 }}
-                className="w-full py-2 px-4 text-sm font-medium text-cyan-300 hover:text-cyan-200 transition-colors"
+                className="w-full py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200"
+                style={{ fontFamily: 'Inter, sans-serif', background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)', color: '#ffffff', boxShadow: '0 6px 24px rgba(6, 182, 212, 0.4)', border: 'none' }}
               >
-                I already paid - check again
+                I paid - check again
               </button>
 
+              {/* Secondary action: Go back to reservation screen to re-open payment */}
+              <button
+                onClick={() => setState('reserved')}
+                className="w-full py-2 px-4 text-sm font-medium text-cyan-300 hover:text-cyan-200 transition-colors"
+              >
+                Start Over
+              </button>
+
+              {/* Tertiary action: Cancel the reservation entirely */}
               <button
                 onClick={attemptCancel}
                 className="w-full py-2 px-4 text-sm font-medium text-white/40 hover:text-white/60 transition-colors"
