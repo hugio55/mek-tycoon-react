@@ -1627,3 +1627,78 @@ export const diagnoseMekCount = query({
     };
   },
 });
+
+/**
+ * Find duplicate Meks and extra entries in the database
+ * Expected: 4000 unique Meks (the full Mekanism collection)
+ */
+export const findDuplicateMeks = query({
+  args: {},
+  handler: async (ctx) => {
+    const allMeks = await ctx.db.query("meks").collect();
+
+    // Count assetIds
+    const assetIdCounts = new Map<string, number>();
+    const assetIdRecords = new Map<string, any[]>();
+
+    for (const mek of allMeks) {
+      const count = assetIdCounts.get(mek.assetId) || 0;
+      assetIdCounts.set(mek.assetId, count + 1);
+
+      const records = assetIdRecords.get(mek.assetId) || [];
+      records.push({
+        _id: mek._id,
+        assetId: mek.assetId,
+        assetName: mek.assetName,
+        owner: mek.owner ? mek.owner.substring(0, 20) + '...' : 'null',
+        ownerStakeAddress: mek.ownerStakeAddress ? mek.ownerStakeAddress.substring(0, 20) + '...' : 'null',
+      });
+      assetIdRecords.set(mek.assetId, records);
+    }
+
+    // Find duplicates (count > 1)
+    const duplicates: { assetId: string; count: number; records: any[] }[] = [];
+    for (const [assetId, count] of assetIdCounts.entries()) {
+      if (count > 1) {
+        duplicates.push({
+          assetId,
+          count,
+          records: assetIdRecords.get(assetId) || [],
+        });
+      }
+    }
+
+    // Find test/demo Meks (assetId containing "demo" or "test")
+    const testMeks = allMeks.filter(m =>
+      m.assetId.toLowerCase().includes('demo') ||
+      m.assetId.toLowerCase().includes('test') ||
+      m.assetName?.toLowerCase().includes('demo') ||
+      m.assetName?.toLowerCase().includes('test')
+    ).map(m => ({
+      _id: m._id,
+      assetId: m.assetId,
+      assetName: m.assetName,
+      owner: m.owner ? m.owner.substring(0, 25) + '...' : 'null',
+    }));
+
+    // Count unique assetIds
+    const uniqueAssetIds = assetIdCounts.size;
+    const extraMeks = allMeks.length - 4000;
+
+    return {
+      summary: {
+        totalRecords: allMeks.length,
+        uniqueAssetIds,
+        expectedMeks: 4000,
+        extraEntries: extraMeks,
+        duplicateAssetIds: duplicates.length,
+        testMeks: testMeks.length,
+      },
+      duplicates: duplicates.slice(0, 20), // First 20 duplicates
+      testMeks: testMeks.slice(0, 20), // First 20 test meks
+      recommendation: extraMeks > 0
+        ? `Found ${extraMeks} extra entries. ${duplicates.length} are duplicates, ${testMeks.length} are test/demo Meks.`
+        : 'Database looks clean - exactly 4000 unique Meks.',
+    };
+  },
+});

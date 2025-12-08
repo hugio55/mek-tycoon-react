@@ -611,15 +611,12 @@ export default function UnifiedHeader() {
           className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
           onClick={() => setShowMessaging(false)}
         >
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/30"
-            style={{ backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)' }}
-          />
+          {/* Backdrop - Click capture only, no darkening or blur */}
+          <div className="fixed inset-0" />
 
           {/* Translucent Container - Liquid Glass Style */}
           <div
-            className="relative w-full max-w-5xl h-[85vh] bg-black/40 backdrop-blur-md rounded-xl border border-gray-600/50 shadow-2xl overflow-hidden"
+            className="relative w-full max-w-5xl h-[85vh] backdrop-blur-2xl rounded-xl border border-gray-600/50 shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
