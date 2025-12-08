@@ -303,3 +303,45 @@ export const fixMisassignedMeks = mutation({
     };
   },
 });
+
+/**
+ * Sync ownerStakeAddress from owner field
+ *
+ * The backup data only had `owner` field populated.
+ * Phase II queries use `ownerStakeAddress` index.
+ * This syncs the data so queries work correctly.
+ *
+ * For meks where `owner` starts with "stake1":
+ * - Copy owner to ownerStakeAddress
+ */
+export const syncOwnerStakeAddress = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const allMeks = await ctx.db.query("meks").collect();
+
+    let synced = 0;
+    let skipped = 0;
+
+    for (const mek of allMeks) {
+      // Only sync if owner is a stake address and ownerStakeAddress is empty
+      if (mek.owner?.startsWith("stake1") && !mek.ownerStakeAddress) {
+        await ctx.db.patch(mek._id, {
+          ownerStakeAddress: mek.owner,
+        });
+        synced++;
+      } else {
+        skipped++;
+      }
+    }
+
+    console.log(`[Sync] Synced ownerStakeAddress for ${synced} meks, skipped ${skipped}`);
+
+    return {
+      success: true,
+      synced,
+      skipped,
+      total: allMeks.length,
+      message: `Synced ownerStakeAddress for ${synced} meks`,
+    };
+  },
+});

@@ -528,40 +528,40 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  {/* Top row: Name + Timestamp */}
+                  {/* Top row: Name + X button */}
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-white font-medium text-sm whitespace-nowrap">
                       Overexposed Support
                     </span>
-                    <div className="flex flex-col items-end flex-shrink-0">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowSupportDismissLightbox(true);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-all p-1"
-                        title="Close support chat"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="18" y1="6" x2="6" y2="18" />
-                          <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                      </button>
-                      <span className="text-gray-500 text-xs">
-                        {formatRelativeTime(supportConversation.lastMessageAt)}
-                      </span>
-                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowSupportDismissLightbox(true);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-all p-1 flex-shrink-0"
+                      title="Close support chat"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
                   </div>
-                  {/* Bottom row: Preview + Unread badge */}
+                  {/* Bottom row: Preview + Timestamp + Unread badge */}
                   <div className="flex items-center justify-between">
                     <span className="text-gray-400 text-sm truncate pr-2">
                       {supportConversation.lastMessagePreview || 'How can we help?'}
                     </span>
-                    {supportConversation.unreadCount > 0 && (
-                      <span className="bg-cyan-500 text-black text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0">
-                        {supportConversation.unreadCount}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-gray-500 text-xs">
+                        {formatRelativeTime(supportConversation.lastMessageAt)}
                       </span>
-                    )}
+                      {supportConversation.unreadCount > 0 && (
+                        <span className="bg-cyan-500 text-black text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                          {supportConversation.unreadCount}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
