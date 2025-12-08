@@ -35,7 +35,7 @@ export const getCorporationData = query({
       ) || null;
     }
 
-    if (!userData) {
+    if (!userData || !userData.stakeAddress) {
       return null;
     }
 

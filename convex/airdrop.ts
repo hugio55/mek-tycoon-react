@@ -293,7 +293,7 @@ export const submitAddress = mutation({
     // Create submission
     const submissionId = await ctx.db.insert("airdropSubmissions", {
       userId: args.userId,
-      walletAddress: user.stakeAddress,
+      walletAddress: user.stakeAddress || '',
       receiveAddress: args.receiveAddress,
       goldAtSubmission: currentGold,
       submittedAt: now,

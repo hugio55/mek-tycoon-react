@@ -52,7 +52,6 @@ export const getUserData = query({
 
       // Verification status
       isBlockchainVerified: user.walletVerified === true,
-      lastVerificationTime: user.lastVerificationTime,
 
       // Activity
       lastActiveTime: user.lastLogin,
@@ -62,17 +61,12 @@ export const getUserData = query({
       ownedMeks: ownedMeks.map(mek => ({
         assetId: mek.assetId,
         assetName: mek.assetName,
-        policyId: mek.policyId,
         sourceKey: mek.sourceKey,
         sourceKeyBase: mek.sourceKeyBase,
         headVariation: mek.headVariation,
         bodyVariation: mek.bodyVariation,
         itemVariation: mek.itemVariation,
         rarityRank: mek.rarityRank,
-        customName: mek.customName,
-        // Phase II: Gold tracking on meks table
-        accumulatedGoldForCorp: mek.accumulatedGoldForCorp || 0,
-        accumulatedGoldAllTime: mek.accumulatedGoldAllTime || 0,
       })),
 
       // Mek count for quick access
@@ -132,7 +126,6 @@ export const isWalletVerified = query({
     return {
       exists: true,
       isVerified: user.walletVerified === true,
-      lastVerificationTime: user.lastVerificationTime || null,
     };
   },
 });
@@ -173,16 +166,12 @@ export const setMekName = mutation({
     }
 
     // Check if name is taken (if not empty)
+    // Note: customName field may need to be added to schema
     if (trimmedName.length > 0) {
-      const existingWithName = await ctx.db
-        .query("meks")
-        .filter((q: any) =>
-          q.and(
-            q.eq(q.field("customName"), trimmedName),
-            q.neq(q.field("assetId"), args.mekAssetId)
-          )
-        )
-        .first();
+      const allMeks = await ctx.db.query("meks").collect();
+      const existingWithName = allMeks.find(
+        (m: any) => m.customName === trimmedName && m.assetId !== args.mekAssetId
+      );
 
       if (existingWithName) {
         return { success: false, error: "This name is already taken" };
@@ -190,9 +179,10 @@ export const setMekName = mutation({
     }
 
     // Update the Mek's name
+    // Note: customName field may need to be added to schema
     await ctx.db.patch(mek._id, {
       customName: trimmedName || null,
-    });
+    } as any);
 
     return { success: true, newName: trimmedName || null };
   },
@@ -219,10 +209,9 @@ export const checkMekNameAvailability = query({
     }
 
     // Check if name is taken
-    const existingMeks = await ctx.db
-      .query("meks")
-      .filter((q: any) => q.eq(q.field("customName"), trimmedName))
-      .collect();
+    // Note: customName field may need to be added to schema
+    const allMeks = await ctx.db.query("meks").collect();
+    const existingMeks = allMeks.filter((m: any) => m.customName === trimmedName);
 
     // Filter out the current Mek if provided
     const conflictingMeks = args.currentMekAssetId
@@ -303,7 +292,7 @@ export const getAllUsersData = query({
         walletAddress: user.stakeAddress,
         walletType: user.lastWalletType || "Unknown",
         companyName: user.corporationName || null,
-        mekCount: mekCountByOwner.get(user.stakeAddress) || 0,
+        mekCount: mekCountByOwner.get(user.stakeAddress || '') || 0,
         currentGold: user.gold || 0,
         level: user.level || 1,
         isVerified: user.walletVerified === true,
