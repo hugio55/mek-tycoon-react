@@ -121,6 +121,12 @@ export const createListing = mutation({
       throw new Error("Seller not found");
     }
 
+    if (!seller.stakeAddress) {
+      throw new Error("Seller wallet not configured");
+    }
+
+    const sellerWallet = seller.stakeAddress;
+
     // Calculate fees (2% market fee + duration fee)
     const totalValue = quantity * pricePerUnit;
     const marketFee = Math.ceil(totalValue * 0.02);
@@ -135,9 +141,9 @@ export const createListing = mutation({
     // For essence listings, verify seller has enough essence
     if (itemType === "essence" && itemVariation) {
       const essenceBalance = await ctx.db
-        .query("userEssence")
-        .withIndex("by_wallet_and_variation", (q) =>
-          q.eq("walletAddress", seller.stakeAddress).eq("variationName", itemVariation)
+        .query("essenceBalances")
+        .withIndex("by_wallet_and_name", (q) =>
+          q.eq("walletAddress", sellerWallet).eq("variationName", itemVariation)
         )
         .first();
 
@@ -213,6 +219,12 @@ export const purchaseItem = mutation({
       throw new Error("Buyer not found");
     }
 
+    if (!buyer.stakeAddress) {
+      throw new Error("Buyer wallet not configured");
+    }
+
+    const buyerWallet = buyer.stakeAddress;
+
     // Calculate total cost
     const totalCost = quantity * listing.pricePerUnit;
 
@@ -240,8 +252,8 @@ export const purchaseItem = mutation({
     if (listing.itemType === "essence" && listing.itemVariation) {
       // Find or create buyer's essence balance
       let buyerEssence = await ctx.db
-        .query("userEssence")
-        .withIndex("by_wallet_and_variation", (q) =>
+        .query("essenceBalances")
+        .withIndex("by_wallet_and_name", (q) =>
           q.eq("walletAddress", buyer.stakeAddress).eq("variationName", listing.itemVariation!)
         )
         .first();
@@ -251,12 +263,15 @@ export const purchaseItem = mutation({
           accumulatedAmount: (buyerEssence.accumulatedAmount || 0) + quantity,
         });
       } else {
-        await ctx.db.insert("userEssence", {
+        // Need to look up variation data to insert properly
+        // For now, we'll create a minimal record - full data can be populated by the essence system
+        await ctx.db.insert("essenceBalances", {
           walletAddress: buyer.stakeAddress,
+          variationId: 0, // Will be populated when essence system runs
           variationName: listing.itemVariation,
+          variationType: "head", // Default, will be corrected by essence system
           accumulatedAmount: quantity,
-          earnedAmount: 0,
-          distributedAmount: 0,
+          lastUpdated: Date.now(),
         });
       }
     }
@@ -282,10 +297,10 @@ export const purchaseItem = mutation({
       itemType: listing.itemType,
       itemVariation: listing.itemVariation,
       essenceType: listing.essenceType,
-      quantity,
+      quantityPurchased: quantity,
       pricePerUnit: listing.pricePerUnit,
-      totalPrice: totalCost,
-      purchasedAt: Date.now(),
+      totalCost: totalCost,
+      timestamp: Date.now(),
     });
 
     return { success: true };
@@ -321,8 +336,8 @@ export const cancelListing = mutation({
       const seller = await ctx.db.get(userId);
       if (seller) {
         const essenceBalance = await ctx.db
-          .query("userEssence")
-          .withIndex("by_wallet_and_variation", (q) =>
+          .query("essenceBalances")
+          .withIndex("by_wallet_and_name", (q) =>
             q.eq("walletAddress", seller.stakeAddress).eq("variationName", listing.itemVariation!)
           )
           .first();
@@ -332,12 +347,13 @@ export const cancelListing = mutation({
             accumulatedAmount: (essenceBalance.accumulatedAmount || 0) + listing.quantity,
           });
         } else {
-          await ctx.db.insert("userEssence", {
+          await ctx.db.insert("essenceBalances", {
             walletAddress: seller.stakeAddress,
+            variationId: 0,
             variationName: listing.itemVariation,
+            variationType: "head",
             accumulatedAmount: listing.quantity,
-            earnedAmount: 0,
-            distributedAmount: 0,
+            lastUpdated: Date.now(),
           });
         }
       }

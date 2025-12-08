@@ -7,7 +7,7 @@ export const getUserIdByWallet = query({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("by_stakeAddress", (q) => q.eq("stakeAddress", args.walletAddress))
+      .withIndex("by_stake_address", (q) => q.eq("stakeAddress", args.walletAddress))
       .first();
 
     return user?._id || null;
