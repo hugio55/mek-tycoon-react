@@ -715,7 +715,7 @@ export const slotMek_ORIGINAL = mutation({
     const bodyVariationName = passedBodyName || mek.bodyVariation;
     const itemVariationName = passedItemName || mek.itemVariation;
 
-    // Look up variation IDs if not present (goldMining.ownedMeks doesn't have them)
+    // Look up variation IDs if not present in mekData
     let headVariationId = mek.headVariationId;
     let bodyVariationId = mek.bodyVariationId;
     let itemVariationId = mek.itemVariationId;
@@ -2659,7 +2659,7 @@ async function updateSlotWithMek(
   const bodyVariationName = passedVariationNames.body || mekData.bodyVariation;
   const itemVariationName = passedVariationNames.item || mekData.itemVariation;
 
-  // Look up variation IDs if not present (goldMining.ownedMeks doesn't have them)
+  // Look up variation IDs if not present in mekData
   let headVariationId = mekData.headVariationId;
   let bodyVariationId = mekData.bodyVariationId;
   let itemVariationId = mekData.itemVariationId;

@@ -118,30 +118,19 @@ export const getSubmissionStats = query({
   },
 });
 
-// Count eligible users (connected + verified + gold > minimum)
+// Phase II: Count eligible users (verified + gold > minimum)
 export const getEligibleUsersCount = query({
   args: { minimumGold: v.number() },
   handler: async (ctx, args) => {
-    const miners = await ctx.db
-      .query("goldMining")
+    const users = await ctx.db
+      .query("users")
       .collect();
 
-    const now = Date.now();
-    const eligible = miners.filter((miner: any) => {
-      // Calculate current gold (including ongoing accumulation if verified)
-      let currentGold = miner.accumulatedGold || 0;
-
-      if (miner.isBlockchainVerified === true) {
-        const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
-        const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-        const goldSinceLastUpdate = miner.totalGoldPerHour * hoursSinceLastUpdate;
-        currentGold = (miner.accumulatedGold || 0) + goldSinceLastUpdate;
-      }
-
+    const eligible = users.filter((user: any) => {
       return (
-        currentGold > args.minimumGold &&  // Strictly greater than (not >=)
-        miner.walletAddress &&
-        miner.isBlockchainVerified === true  // Must be blockchain verified
+        (user.gold || 0) > args.minimumGold &&
+        user.stakeAddress &&
+        user.walletVerified === true
       );
     });
 

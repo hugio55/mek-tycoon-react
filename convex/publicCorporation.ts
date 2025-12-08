@@ -12,8 +12,8 @@ mekRarityMaster.forEach((mek: any) => {
   }
 });
 
-// Public query to get corporation data by wallet address or company name
-// Phase II: Try users table first, fallback to goldMining for legacy data
+// Phase II: Public query to get corporation data by wallet address or company name
+// Uses users table for identity + meks table for owned Meks (no goldMining)
 export const getCorporationData = query({
   args: {
     identifier: v.string(), // Can be wallet address or company name
@@ -21,10 +21,10 @@ export const getCorporationData = query({
   handler: async (ctx, { identifier }) => {
     const now = Date.now();
 
-    // Phase II: Try to find in users table first by wallet address
+    // Phase II: Find in users table by stake address
     let userData = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", identifier))
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", identifier))
       .first();
 
     // If not found by wallet, try by corporation name (case insensitive)
@@ -35,71 +35,22 @@ export const getCorporationData = query({
       ) || null;
     }
 
-    // LEGACY FALLBACK: Try goldMining table if not found in users
-    let goldMiningData = null;
     if (!userData) {
-      goldMiningData = await ctx.db
-        .query("goldMining")
-        .filter((q: any) => q.eq(q.field("walletAddress"), identifier))
-        .first();
-
-      if (!goldMiningData) {
-        const allMiners = await ctx.db.query("goldMining").collect();
-        goldMiningData = allMiners.find(
-          miner => miner.companyName?.toLowerCase() === identifier.toLowerCase()
-        ) || null;
-      }
-    }
-
-    // Use userData if available, otherwise goldMiningData
-    const sourceData = userData || goldMiningData;
-    if (!sourceData) {
       return null;
     }
 
-    // For users table, we need to get gold data from goldMining
-    if (userData && !goldMiningData) {
-      goldMiningData = await ctx.db
-        .query("goldMining")
-        .filter((q: any) => q.eq(q.field("walletAddress"), userData.walletAddress))
-        .first();
-    }
+    const walletAddress = userData.stakeAddress;
 
-    // Calculate current cumulative gold
-    let currentGold = goldMiningData?.accumulatedGold || 0;
-
-    if (goldMiningData?.isBlockchainVerified === true) {
-      const lastUpdateTime = goldMiningData.lastSnapshotTime || goldMiningData._creationTime;
-      const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-      const goldSinceLastUpdate = (goldMiningData.totalGoldPerHour || 0) * hoursSinceLastUpdate;
-      // CRITICAL FIX: NO CAP - show true uncapped gold balance
-      currentGold = (goldMiningData.accumulatedGold || 0) + goldSinceLastUpdate;
-    }
-
-    const goldEarnedSinceLastUpdate = currentGold - (goldMiningData?.accumulatedGold || 0);
-    let baseCumulativeGold = goldMiningData?.totalCumulativeGold || 0;
-
-    if (!goldMiningData?.totalCumulativeGold || baseCumulativeGold === 0) {
-      baseCumulativeGold = (goldMiningData?.accumulatedGold || 0) + (goldMiningData?.totalGoldSpentOnUpgrades || 0);
-    }
-
-    const totalCumulativeGold = baseCumulativeGold + goldEarnedSinceLastUpdate;
-
-    // Calculate corporation rank using cached leaderboard (much faster)
-    const cachedLeaderboard = await ctx.db
-      .query("leaderboardCache")
-      .withIndex("by_category_rank", q => q.eq("category", "gold"))
+    // Phase II: Get owned Meks from meks table
+    const ownedMeks = await ctx.db
+      .query("meks")
+      .withIndex("by_owner", (q: any) => q.eq("owner", walletAddress))
       .collect();
 
-    const targetWallet = userData?.walletAddress || goldMiningData?.walletAddress || '';
-    const rank = cachedLeaderboard.find((entry: any) => entry.walletAddress === targetWallet)?.rank ||
-                 cachedLeaderboard.length + 1; // If not in cache, they're below all cached entries
-    const totalCorporations = cachedLeaderboard.length;
-
-    // Get level data for the Meks (using index for better performance)
+    // Get level data for the Meks
     const mekLevels = await ctx.db
       .query("mekLevels")
-      .withIndex("by_wallet", q => q.eq("walletAddress", targetWallet))
+      .withIndex("by_wallet", q => q.eq("walletAddress", walletAddress))
       .collect();
 
     const levelMap = new Map(
@@ -107,8 +58,8 @@ export const getCorporationData = query({
     );
 
     // Format Meks with their levels
-    const meksWithLevels = (goldMiningData?.ownedMeks || []).map((mek: any) => {
-      const mekNumberMatch = mek.assetName.match(/#(\d+)/);
+    const meksWithLevels = ownedMeks.map((mek: any) => {
+      const mekNumberMatch = mek.assetName?.match(/#(\d+)/);
       const mekNumber = mekNumberMatch ? parseInt(mekNumberMatch[1], 10) : null;
       const sourceKeyCode = mekNumber ? mekNumberToSourceKey.get(mekNumber.toString()) : null;
 
@@ -116,12 +67,12 @@ export const getCorporationData = query({
         assetId: mek.assetId,
         assetName: mek.assetName,
         level: levelMap.get(mek.assetId) || 1,
-        goldPerHour: mek.effectiveGoldPerHour || mek.goldPerHour,
-        baseGoldPerHour: mek.baseGoldPerHour || mek.goldPerHour,
+        goldPerHour: mek.effectiveGoldPerHour || mek.goldPerHour || 0,
+        baseGoldPerHour: mek.baseGoldPerHour || mek.goldPerHour || 0,
         rarityRank: mek.rarityRank,
         imageUrl: sourceKeyCode ?
           `/mek-images/500px/${sourceKeyCode}.webp` :
-          mek.imageUrl || null,
+          null,
         sourceKey: sourceKeyCode,
         mekNumber: mekNumber,
         headVariation: mek.headVariation,
@@ -138,30 +89,44 @@ export const getCorporationData = query({
 
     // Calculate average employee level
     const avgLevel = meksWithLevels.length > 0
-      ? meksWithLevels.reduce((sum: any, mek: any) => sum + mek.level, 0) / meksWithLevels.length
+      ? meksWithLevels.reduce((sum: number, mek: any) => sum + mek.level, 0) / meksWithLevels.length
       : 0;
 
     // Calculate corporation age
-    const createdAt = goldMiningData?._creationTime || userData?._creationTime || now;
+    const createdAt = userData._creationTime || now;
     const ageInDays = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
 
-    // Phase II: Prefer corporationName from users table, fallback to goldMining.companyName
-    const walletAddress = userData?.walletAddress || goldMiningData?.walletAddress || '';
-    const companyName = userData?.corporationName || goldMiningData?.companyName || `Corporation ${walletAddress.slice(0, 6)}`;
+    // Calculate total gold per hour from Meks
+    const totalGoldPerHour = meksWithLevels.reduce(
+      (sum: number, mek: any) => sum + (mek.goldPerHour || 0), 0
+    );
+
+    // Calculate corporation rank using cached leaderboard
+    const cachedLeaderboard = await ctx.db
+      .query("leaderboardCache")
+      .withIndex("by_category_rank", q => q.eq("category", "gold"))
+      .collect();
+
+    const rank = cachedLeaderboard.find((entry: any) => entry.walletAddress === walletAddress)?.rank ||
+                 cachedLeaderboard.length + 1;
+    const totalCorporations = cachedLeaderboard.length;
+
+    // Phase II: Corporation name from users table
+    const companyName = userData.corporationName || `Corporation ${walletAddress.slice(0, 6)}`;
 
     return {
       walletAddress,
       companyName,
       displayWallet: `${walletAddress.slice(0, 8)}...${walletAddress.slice(-6)}`,
-      totalCumulativeGold: Math.floor(totalCumulativeGold),
-      goldPerHour: goldMiningData?.totalGoldPerHour || 0,
+      totalCumulativeGold: Math.floor(userData.gold || 0),
+      goldPerHour: totalGoldPerHour,
       mekCount: meksWithLevels.length,
       rank,
       totalCorporations,
       meks: meksWithLevels,
       averageLevel: avgLevel,
       corporationAge: ageInDays,
-      isBlockchainVerified: goldMiningData?.isBlockchainVerified === true,
+      isBlockchainVerified: userData.walletVerified === true,
     };
   },
 });

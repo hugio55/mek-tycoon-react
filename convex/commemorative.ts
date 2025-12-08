@@ -16,21 +16,24 @@ export const checkEligibility = query({
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    // Get user's gold mining data
-    const goldMiningData = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
+    // Phase II: Get user data from users table
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.walletAddress))
       .first();
 
     // Check if wallet is verified
-    const isVerified = goldMiningData?.isBlockchainVerified || false;
+    const isVerified = user?.walletVerified || false;
 
-    // Calculate total gold (accumulated + spent)
-    const totalGold = (goldMiningData?.accumulatedGold || 0) +
-                     (goldMiningData?.totalGoldSpentOnUpgrades || 0);
+    // Phase II: Get gold from users table
+    const totalGold = user?.gold || 0;
 
-    // Get Mek count
-    const mekCount = goldMiningData?.ownedMeks?.length || 0;
+    // Phase II: Get Mek count from meks table
+    const ownedMeks = await ctx.db
+      .query("meks")
+      .withIndex("by_owner", (q: any) => q.eq("owner", args.walletAddress))
+      .collect();
+    const mekCount = ownedMeks.length;
 
     // Eligibility requirements:
     // 1. Wallet must be blockchain verified
