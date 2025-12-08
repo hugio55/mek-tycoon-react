@@ -1,4 +1,5 @@
 import { mutation, query } from "./_generated/server";
+import { v } from "convex/values";
 
 /**
  * Find duplicate meks by mek number (same NFT with different assetId formats)
@@ -142,6 +143,109 @@ export const removeDuplicates = mutation({
       finalMekCount: finalMeks.length,
       deletedAssetIds: deletedIds.slice(0, 20),
       message: `Removed ${deletedCount} duplicates. Final count: ${finalMeks.length} meks`,
+    };
+  },
+});
+
+/**
+ * Find incorrectly assigned short-format meks for a specific wallet
+ * These are meks with short assetIds that shouldn't be owned by this wallet
+ * (the wallet-synced long-format meks are the source of truth)
+ */
+export const findMisassignedMeks = query({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const allMeks = await ctx.db.query("meks").collect();
+
+    // Find meks owned by this wallet
+    const userMeks = allMeks.filter(m => m.owner === args.walletAddress);
+
+    // Separate by format
+    const longFormat = userMeks.filter(m => m.assetId.length > 50);
+    const shortFormat = userMeks.filter(m => m.assetId.length <= 50);
+
+    // Get mek numbers from long format (these are verified on-chain)
+    const verifiedMekNumbers = new Set<number>();
+    longFormat.forEach(m => {
+      const match = m.assetName?.match(/\d+/);
+      if (match) verifiedMekNumbers.add(parseInt(match[0]));
+    });
+
+    // Find short-format meks that are NOT in verified set
+    const misassigned = shortFormat.filter(m => {
+      const match = m.assetName?.match(/\d+/);
+      const mekNum = match ? parseInt(match[0]) : null;
+      return mekNum === null || !verifiedMekNumbers.has(mekNum);
+    });
+
+    return {
+      walletAddress: args.walletAddress.substring(0, 30) + "...",
+      longFormatCount: longFormat.length,
+      shortFormatCount: shortFormat.length,
+      verifiedMekNumbers: longFormat.length,
+      misassignedCount: misassigned.length,
+      misassigned: misassigned.map(m => ({
+        _id: m._id.toString(),
+        assetId: m.assetId,
+        assetName: m.assetName,
+        mekNumber: m.assetName?.match(/\d+/)?.[0] || "unknown",
+      })),
+    };
+  },
+});
+
+/**
+ * Remove incorrectly assigned short-format meks from a wallet
+ * Only removes meks that don't have corresponding long-format (on-chain) entries
+ */
+export const removeMisassignedMeks = mutation({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const allMeks = await ctx.db.query("meks").collect();
+
+    // Find meks owned by this wallet
+    const userMeks = allMeks.filter(m => m.owner === args.walletAddress);
+
+    // Separate by format
+    const longFormat = userMeks.filter(m => m.assetId.length > 50);
+    const shortFormat = userMeks.filter(m => m.assetId.length <= 50);
+
+    // Get mek numbers from long format (verified on-chain)
+    const verifiedMekNumbers = new Set<number>();
+    longFormat.forEach(m => {
+      const match = m.assetName?.match(/\d+/);
+      if (match) verifiedMekNumbers.add(parseInt(match[0]));
+    });
+
+    // Find short-format meks NOT in verified set
+    const misassigned = shortFormat.filter(m => {
+      const match = m.assetName?.match(/\d+/);
+      const mekNum = match ? parseInt(match[0]) : null;
+      return mekNum === null || !verifiedMekNumbers.has(mekNum);
+    });
+
+    // Remove misassigned meks
+    const removedIds: string[] = [];
+    for (const mek of misassigned) {
+      await ctx.db.delete(mek._id);
+      removedIds.push(mek.assetId);
+      console.log(`[Cleanup] Removed misassigned mek ${mek.assetName} from wallet`);
+    }
+
+    // Verify count
+    const finalUserMeks = (await ctx.db.query("meks").collect())
+      .filter(m => m.owner === args.walletAddress);
+
+    return {
+      success: true,
+      removedCount: removedIds.length,
+      removedAssetIds: removedIds,
+      finalMekCount: finalUserMeks.length,
+      message: `Removed ${removedIds.length} misassigned meks. User now has ${finalUserMeks.length} meks.`,
     };
   },
 });
