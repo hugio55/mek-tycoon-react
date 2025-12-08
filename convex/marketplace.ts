@@ -334,11 +334,12 @@ export const cancelListing = mutation({
     // Return essence to seller if applicable
     if (listing.itemType === "essence" && listing.itemVariation && listing.quantity > 0) {
       const seller = await ctx.db.get(userId);
-      if (seller) {
+      if (seller && seller.stakeAddress) {
+        const sellerWallet = seller.stakeAddress;
         const essenceBalance = await ctx.db
           .query("essenceBalances")
           .withIndex("by_wallet_and_name", (q) =>
-            q.eq("walletAddress", seller.stakeAddress).eq("variationName", listing.itemVariation!)
+            q.eq("walletAddress", sellerWallet).eq("variationName", listing.itemVariation!)
           )
           .first();
 
@@ -348,7 +349,7 @@ export const cancelListing = mutation({
           });
         } else {
           await ctx.db.insert("essenceBalances", {
-            walletAddress: seller.stakeAddress,
+            walletAddress: sellerWallet,
             variationId: 0,
             variationName: listing.itemVariation,
             variationType: "head",
