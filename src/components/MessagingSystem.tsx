@@ -891,13 +891,30 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                 ))
               ) : corpSearchQuery ? (
                 <div className="p-8 text-center text-gray-500">
-                  <div className="text-2xl mb-2">🔍</div>
-                  <div>No corporations found</div>
+                  {/* No Results Icon - Radar sweep */}
+                  <div className="flex justify-center mb-3">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-600">
+                      <circle cx="20" cy="20" r="16" strokeOpacity="0.3" />
+                      <circle cx="20" cy="20" r="10" strokeOpacity="0.5" />
+                      <circle cx="20" cy="20" r="4" strokeOpacity="0.7" />
+                      <line x1="20" y1="20" x2="32" y2="8" strokeLinecap="round" />
+                      <circle cx="20" cy="20" r="2" fill="currentColor" fillOpacity="0.5" />
+                    </svg>
+                  </div>
+                  <div className="text-gray-500">No signals detected</div>
                 </div>
               ) : (
                 <div className="p-8 text-center text-gray-500">
-                  <div className="text-2xl mb-2">⏳</div>
-                  <div>Loading corporations...</div>
+                  {/* Loading Icon - Rotating orbital rings */}
+                  <div className="flex justify-center mb-3">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-cyan-500/60 animate-spin" style={{ animationDuration: '3s' }}>
+                      <ellipse cx="20" cy="20" rx="16" ry="6" strokeOpacity="0.4" />
+                      <ellipse cx="20" cy="20" rx="16" ry="6" strokeOpacity="0.4" transform="rotate(60 20 20)" />
+                      <ellipse cx="20" cy="20" rx="16" ry="6" strokeOpacity="0.4" transform="rotate(120 20 20)" />
+                      <circle cx="20" cy="20" r="3" fill="currentColor" fillOpacity="0.6" />
+                    </svg>
+                  </div>
+                  <div className="text-gray-500">Scanning frequencies...</div>
                 </div>
               )}
             </div>

@@ -3,16 +3,16 @@ import { mutation, query, action } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { addEssenceToBalance } from "./lib/essenceHelpers";
 
-// Get all players for admin dropdown
+// Phase II: Get all players for admin dropdown
 export const getAllPlayers = query({
   args: {},
   handler: async (ctx) => {
-    const allMiners = await ctx.db.query("goldMining").collect();
+    const allUsers = await ctx.db.query("users").collect();
 
-    return allMiners.map((miner: any) => ({
-      walletAddress: miner.walletAddress,
-      corporationName: miner.companyName || "Unnamed Corporation",
-      stakeAddress: null, // goldMining doesn't have stake address stored
+    return allUsers.map((user: any) => ({
+      walletAddress: user.stakeAddress,
+      corporationName: user.corporationName || "Unnamed Corporation",
+      stakeAddress: user.stakeAddress,
     }));
   },
 });

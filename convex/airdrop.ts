@@ -165,19 +165,19 @@ export const getEligibleUsersList = query({
   },
 });
 
-// Get company names for wallet addresses
+// Phase II: Get company names for wallet addresses
 export const getWalletCompanyNames = query({
   args: { walletAddresses: v.array(v.string()) },
   handler: async (ctx, args) => {
     const companyMap: Record<string, string | null> = {};
 
     for (const walletAddress of args.walletAddresses) {
-      const miner = await ctx.db
-        .query("goldMining")
-        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
         .first();
 
-      companyMap[walletAddress] = miner?.companyName || null;
+      companyMap[walletAddress] = user?.corporationName || null;
     }
 
     return companyMap;
@@ -232,7 +232,7 @@ export const upsertConfig = mutation({
   },
 });
 
-// Submit receive address (User action)
+// Phase II: Submit receive address (User action)
 export const submitAddress = mutation({
   args: {
     userId: v.id("users"),
@@ -250,37 +250,20 @@ export const submitAddress = mutation({
       throw new Error("This airdrop campaign is not currently active");
     }
 
-    // Get user to get their wallet address
+    // Phase II: Get user data from users table
     const user = await ctx.db.get(args.userId);
     if (!user) {
       throw new Error("User not found");
     }
 
-    // Get goldMining record for verification and gold balance
-    const miner = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", user.walletAddress))
-      .first();
-
-    if (!miner) {
-      throw new Error("No mining record found for this wallet");
-    }
-
-    // Check wallet verification (blockchain verification)
-    if (!miner.isBlockchainVerified) {
+    // Phase II: Check wallet verification from users table
+    if (!user.walletVerified) {
       throw new Error("Your wallet must be verified to claim this airdrop");
     }
 
-    // Calculate current gold (including ongoing accumulation)
+    // Phase II: Get gold from users table
     const now = Date.now();
-    let currentGold = miner.accumulatedGold || 0;
-
-    if (miner.isBlockchainVerified === true) {
-      const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
-      const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-      const goldSinceLastUpdate = miner.totalGoldPerHour * hoursSinceLastUpdate;
-      currentGold = (miner.accumulatedGold || 0) + goldSinceLastUpdate;
-    }
+    const currentGold = user.gold || 0;
 
     // Check eligibility - must have MORE than minimum gold (strictly greater than)
     if (currentGold <= config.minimumGold) {
@@ -310,7 +293,7 @@ export const submitAddress = mutation({
     // Create submission
     const submissionId = await ctx.db.insert("airdropSubmissions", {
       userId: args.userId,
-      walletAddress: user.walletAddress,
+      walletAddress: user.stakeAddress,
       receiveAddress: args.receiveAddress,
       goldAtSubmission: currentGold,
       submittedAt: now,

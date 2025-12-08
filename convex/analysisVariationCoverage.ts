@@ -57,8 +57,8 @@ const ALL_VARIATIONS = [
 export const analyzeVariationCoverage = query({
   args: {},
   handler: async (ctx) => {
-    // Step 1: Get all corporations/players from goldMining table
-    const allCorporations = await ctx.db.query("goldMining").collect();
+    // Phase II: Get all corporations/players from users table
+    const allCorporations = await ctx.db.query("users").collect();
 
     console.log(`Total corporations: ${allCorporations.length}`);
 
@@ -73,7 +73,7 @@ export const analyzeVariationCoverage = query({
       // Get all meks for this corporation
       const corpMeks = await ctx.db
         .query("meks")
-        .withIndex("by_owner", (q: any) => q.eq("owner", corp.walletAddress))
+        .withIndex("by_owner", (q: any) => q.eq("owner", corp.stakeAddress))
         .collect();
 
       // Skip corporations with no meks
@@ -111,8 +111,8 @@ export const analyzeVariationCoverage = query({
       }
 
       userBreakdown.push({
-        walletAddress: corp.walletAddress,
-        displayName: corp.companyName || "Unknown Corporation",
+        walletAddress: corp.stakeAddress,
+        displayName: corp.corporationName || "Unknown Corporation",
         mekCount: corpMeks.length,
         uniqueVariations: corpVariations.size,
       });
