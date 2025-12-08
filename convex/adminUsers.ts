@@ -1507,10 +1507,7 @@ export const searchWalletTraces = query({
       .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
     if (federationMemberships.length > 0) traces.federationMemberships = federationMemberships.length;
 
-    // Search discordConnections table
-    const discordConnections = await ctx.db.query("discordConnections")
-      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
-    if (discordConnections.length > 0) traces.discordConnections = discordConnections.length;
+    // NOTE: discordConnections table removed (Discord bot integration removed)
 
     const totalTraces = Object.values(traces).reduce((sum, count) => sum + count, 0);
 

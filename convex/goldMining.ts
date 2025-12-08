@@ -828,7 +828,7 @@ export const initializeWithBlockfrost = action({
       // Real authentication happens in corporationAuth.connectCorporation
 
       // Fetch NFTs from Blockfrost
-      const nftResult = await ctx.runAction(api.blockfrostNftFetcher.fetchNFTsByStakeAddress, {
+      const nftResult: any = await ctx.runAction(api.blockfrostNftFetcher.fetchNFTsByStakeAddress, {
         stakeAddress: args.stakeAddress,
         useCache: true
       });
@@ -843,7 +843,7 @@ export const initializeWithBlockfrost = action({
       const { getMekDataByNumber, getMekImageUrl } = await import("../src/lib/mekNumberToVariation");
 
       // Map Blockfrost Meks to our format with gold rates
-      const meksWithRates = [];
+      const meksWithRates: any[] = [];
       for (const mek of nftResult.meks) {
         // Get proper Mek data with variation-based gold rates
         const mekData = getMekDataByNumber(mek.mekNumber);
@@ -876,10 +876,10 @@ export const initializeWithBlockfrost = action({
       });
 
       // Create a map for quick level lookup
-      const levelMap = new Map(mekLevels.map((level: any) => [level.assetId, level]));
+      const levelMap: Map<string, any> = new Map(mekLevels.map((level: any) => [level.assetId, level]));
 
       // Apply level boosts to Mek rates
-      const meksWithLevelBoosts = meksWithRates.map((m: any) => {
+      const meksWithLevelBoosts: any[] = meksWithRates.map((m: any) => {
         const levelData = levelMap.get(m.assetId);
         const currentLevel = levelData?.currentLevel || 1;
         const boostPercent = levelData?.currentBoostPercent || 0;
@@ -1784,7 +1784,7 @@ export const syncWalletFromBlockchain = action({
       }
 
       // Fetch NFTs from blockchain using Blockfrost
-      const walletData = await ctx.runAction(api.blockfrostNftFetcher.fetchNFTsByStakeAddress, {
+      const walletData: any = await ctx.runAction(api.blockfrostNftFetcher.fetchNFTsByStakeAddress, {
         stakeAddress: args.walletAddress,
         useCache: false, // Always fetch fresh data
       });
@@ -1801,14 +1801,14 @@ export const syncWalletFromBlockchain = action({
         walletAddress: args.walletAddress
       });
 
-      const mekLevelsMap = new Map(
+      const mekLevelsMap: Map<string, any> = new Map(
         allMekLevels.map((level: any) => [level.assetId, level])
       );
 
       // Get existing MEKs for metadata
       const miner = await ctx.runQuery(internal.goldMiningSnapshot.getAllMinersForSnapshot);
       const minerData = miner.find((m: any) => m.walletAddress === args.walletAddress);
-      const existingMeksMap = new Map(
+      const existingMeksMap: Map<string, any> = new Map(
         minerData?.ownedMeks?.map((mek: any) => [mek.assetId, mek]) || []
       );
 
