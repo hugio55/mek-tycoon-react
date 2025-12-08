@@ -533,7 +533,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                     <span className="text-white font-medium text-sm whitespace-nowrap">
                       Overexposed Support
                     </span>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex flex-col items-end flex-shrink-0">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

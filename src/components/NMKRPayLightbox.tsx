@@ -572,15 +572,16 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
         }
 
         if (verifyResult.success && verifyResult.verified) {
-          console.log('[🔐CLAIM-VERIFY] ✅ BACKEND VERIFIED (full cryptographic verification) - opening payment window');
+          console.log('[🔐CLAIM-VERIFY] ✅ BACKEND VERIFIED (full cryptographic verification) - proceeding to reservation');
           setBackendVerificationStatus('success');
 
           // Clear verification state
           setVerificationNonce(null);
           setVerificationMessage(null);
 
-          // Proceed to NMKR payment
-          await openNMKRPayment();
+          // Proceed to create reservation (wallet ownership now proven)
+          // The reservation will be tied to this verified wallet
+          setState('creating');
         } else {
           console.error('[🔐CLAIM-VERIFY] ❌ BACKEND REJECTED:', verifyResult.error);
           setBackendVerificationStatus('failed');
@@ -953,11 +954,11 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
             </h2>
 
             <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-8">
-              Your commemorative NFT is ready to be claimed.
+              Verify your wallet to reserve your commemorative NFT.
             </p>
 
             <button
-              onClick={() => setState('creating')}
+              onClick={() => setState('wallet_verification')}
               className="w-full py-3 sm:py-4 text-base sm:text-lg font-semibold tracking-wider text-black bg-gradient-to-r from-cyan-400 to-cyan-500 rounded-xl hover:from-cyan-300 hover:to-cyan-400 transition-all duration-300 touch-manipulation shadow-lg shadow-cyan-500/30 active:scale-[0.98]"
               style={{ minHeight: '48px', WebkitTapHighlightColor: 'transparent', fontFamily: "'Inter', 'Arial', sans-serif" }}
             >

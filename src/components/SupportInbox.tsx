@@ -84,12 +84,15 @@ export default function SupportInbox() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Stable reference for messages length (prevents dependency array size changes)
+  const messagesLength = messages?.length ?? 0;
+
   // Mark as read when selecting conversation or new messages arrive
   useEffect(() => {
     if (selectedConversationId) {
       markSupportAsRead({ conversationId: selectedConversationId }).catch(console.error);
     }
-  }, [selectedConversationId, markSupportAsRead, messages?.length]);
+  }, [selectedConversationId, markSupportAsRead, messagesLength]);
 
   // Filter conversations by search
   const filteredConversations = (supportConversations || []).filter((conv: any) =>
