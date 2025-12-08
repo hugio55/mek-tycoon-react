@@ -41,7 +41,7 @@ export default function CommemorativeNFTBanner({ userId, walletAddress, walletNa
   // Extract payment address when wallet is connected
   useEffect(() => {
     async function extractAddress() {
-      if (walletName && walletAddress && walletAddress !== "demo_wallet_123") {
+      if (walletName && walletAddress) {
         try {
           const api = await getWalletApi(walletName);
           if (api) {

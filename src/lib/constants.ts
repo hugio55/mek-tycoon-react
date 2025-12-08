@@ -41,13 +41,13 @@ export const GAME_CONSTANTS = {
     BUFF_UPDATE_INTERVAL: 1000, // ms
   },
   
-  // Demo values
-  DEMO: {
-    WALLET_ADDRESS: 'demo_wallet_123',
-    INITIAL_GOLD: 1000,
-    INITIAL_ESSENCE: 1.5,
-    INITIAL_XP: 1500,
-  },
+  // Demo values (DEPRECATED - demo wallet creation removed Dec 2025)
+  // DEMO: {
+  //   WALLET_ADDRESS: 'demo_wallet_123',
+  //   INITIAL_GOLD: 1000,
+  //   INITIAL_ESSENCE: 1.5,
+  //   INITIAL_XP: 1500,
+  // },
   
   // UI
   UI: {

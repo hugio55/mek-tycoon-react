@@ -383,7 +383,7 @@ export default function NavigationBar() {
                 } else if (action === "lightbox" && actionData) {
                   // Get wallet address from encrypted session storage
                   const session = await restoreWalletSession();
-                  const walletAddress = session?.stakeAddress || session?.walletAddress || 'demo_wallet_123';
+                  const walletAddress = session?.stakeAddress || session?.walletAddress || '';
                   window.dispatchEvent(new CustomEvent('openLightbox', {
                     detail: {
                       lightboxId: actionData,

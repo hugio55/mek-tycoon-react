@@ -113,16 +113,16 @@ export default function MekProfilePage() {
   // Calculate effective gold rate based on equipment
   const effectiveGoldRate = baseGoldRate + equipmentSlots.reduce((sum, slot) => sum + (slot.filled ? slot.stats.goldRate : 0), 0);
   
-  // Create demo mek data if not found in database
-  const demoMeks: Record<string, any> = {
-    "1234": { assetId: "1234", assetName: "Demo Mek #1234", level: 5, goldRate: 20.0, isEmployee: true, headVariation: "000-000-000", bodyVariation: "000-000-000", owner: "demo_wallet_123" },
-    "2468": { assetId: "2468", assetName: "Demo Mek #2468", level: 3, goldRate: 18.2, isEmployee: false, headVariation: "000-000-000", bodyVariation: "000-000-000", owner: "demo_wallet_123" },
-    "3691": { assetId: "3691", assetName: "Demo Mek #3691", level: 7, goldRate: 22.1, isEmployee: true, headVariation: "000-000-000", bodyVariation: "000-000-000", owner: "demo_wallet_123" },
-    "0013": { assetId: "0013", assetName: "Demo Mek #0013", level: 10, goldRate: 25.0, isEmployee: true, headVariation: "000-000-000", bodyVariation: "000-000-000", owner: "demo_wallet_123" },
+  // Create placeholder mek data if not found in database (for UI preview only, no owner)
+  const placeholderMeks: Record<string, any> = {
+    "1234": { assetId: "1234", assetName: "Placeholder Mek #1234", level: 5, goldRate: 20.0, isEmployee: true, headVariation: "000-000-000", bodyVariation: "000-000-000", owner: "" },
+    "2468": { assetId: "2468", assetName: "Placeholder Mek #2468", level: 3, goldRate: 18.2, isEmployee: false, headVariation: "000-000-000", bodyVariation: "000-000-000", owner: "" },
+    "3691": { assetId: "3691", assetName: "Placeholder Mek #3691", level: 7, goldRate: 22.1, isEmployee: true, headVariation: "000-000-000", bodyVariation: "000-000-000", owner: "" },
+    "0013": { assetId: "0013", assetName: "Placeholder Mek #0013", level: 10, goldRate: 25.0, isEmployee: true, headVariation: "000-000-000", bodyVariation: "000-000-000", owner: "" },
   };
   
-  // Use database mek or fall back to demo mek
-  const mek = mekFromDb || demoMeks[mekId];
+  // Use database mek or fall back to placeholder mek
+  const mek = mekFromDb || placeholderMeks[mekId];
   
   // Show tooltip if we have equip params
   useEffect(() => {

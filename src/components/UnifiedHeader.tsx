@@ -305,8 +305,8 @@ export default function UnifiedHeader() {
     }
   };
 
-  // Determine if demo mode
-  const isDemoMode = !walletAddress || walletAddress === 'demo_wallet_123';
+  // Determine if demo mode (no wallet connected)
+  const isDemoMode = !walletAddress;
 
   return (
     <>

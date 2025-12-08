@@ -90,7 +90,7 @@ export const getDuplicateAssetIdDetails = query({
 
     // Find duplicates (count > 1)
     const duplicates: { assetId: string; count: number; records: any[] }[] = [];
-    for (const [assetId, records] of assetIdMap.entries()) {
+    Array.from(assetIdMap.entries()).forEach(([assetId, records]) => {
       if (records.length > 1) {
         duplicates.push({
           assetId: assetId.substring(0, 20) + '...',
@@ -98,7 +98,7 @@ export const getDuplicateAssetIdDetails = query({
           records
         });
       }
-    }
+    });
 
     return {
       totalDuplicateAssetIds: duplicates.length,

@@ -1150,7 +1150,7 @@ export default function AdminMasterDataPage() {
   const QUICK_ACCESS_PAGES = [
     { name: 'Home (Triangle + Slots)', path: '/home', category: 'Main' },
     { name: 'Landing Page', path: '/', category: 'Main' },
-    { name: 'Corporation', path: '/corp/demo_wallet_123', category: 'Main' },
+    { name: 'Corporation (use Player Manager)', path: '/corp', category: 'Main' },
     { name: 'Essence Market', path: '/essence-market', category: 'Main' },
     { name: 'Federation', path: '/federation', category: 'Main' },
     { name: 'Profile', path: '/profile', category: 'Main' },

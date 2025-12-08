@@ -55,9 +55,9 @@ export default function GlobalLightboxHandler() {
           // Use wallet from event detail if provided, otherwise restore from encrypted session
           (async () => {
             let currentWallet = eventWalletAddress;
-            if (!currentWallet || currentWallet === 'demo_wallet_123') {
+            if (!currentWallet) {
               const session = await restoreWalletSession();
-              currentWallet = session?.stakeAddress || 'demo_wallet_123';
+              currentWallet = session?.stakeAddress || '';
             }
             setWalletAddress(currentWallet);
             setShowEssenceLightbox(true);
@@ -80,9 +80,9 @@ export default function GlobalLightboxHandler() {
           // Ensure we have wallet address for querying owned Meks
           (async () => {
             let currentWallet = eventWalletAddress;
-            if (!currentWallet || currentWallet === 'demo_wallet_123') {
+            if (!currentWallet) {
               const session = await restoreWalletSession();
-              currentWallet = session?.stakeAddress || 'demo_wallet_123';
+              currentWallet = session?.stakeAddress || '';
             }
             setWalletAddress(currentWallet);
             setShowMeksTriangle(true);

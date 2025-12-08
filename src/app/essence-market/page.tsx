@@ -346,14 +346,19 @@ export default function EssenceMarketPage() {
     };
   };
 
-  // Get or create user
+  // Get or create user - only if real wallet exists in localStorage
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
 
   useEffect(() => {
     const initUser = async () => {
       try {
-        // SIMPLIFIED: Match hub page pattern - localStorage FIRST (no encrypted session complexity)
-        const storedWallet = localStorage.getItem('walletAddress') || localStorage.getItem('stakeAddress') || "demo_wallet_123";
+        // Only use real wallets from localStorage - NO demo fallback
+        const storedWallet = localStorage.getItem('walletAddress') || localStorage.getItem('stakeAddress');
+
+        if (!storedWallet) {
+          console.log('[💰WALLET] No wallet found in localStorage - user needs to connect wallet');
+          return; // Don't create demo users
+        }
 
         console.log('[💰WALLET] Using wallet address from localStorage:', storedWallet);
         setWalletAddress(storedWallet);
