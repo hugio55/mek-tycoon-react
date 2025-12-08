@@ -60,6 +60,47 @@ export const recordClaim = mutation({
   },
 });
 
+// Check if a SPECIFIC reservation was paid (for payment window monitoring)
+// This prevents false positives from previous claims showing success
+export const checkReservationPaid = query({
+  args: {
+    reservationId: v.id("commemorativeNFTInventory"),
+  },
+  handler: async (ctx, args) => {
+    // Get the specific NFT inventory item
+    const nft = await ctx.db.get(args.reservationId);
+
+    if (!nft) {
+      console.log('[🔨CLAIM-CHECK] Reservation not found:', args.reservationId);
+      return {
+        isPaid: false,
+        claim: null,
+      };
+    }
+
+    // Check if this specific NFT was sold
+    if (nft.status === 'sold') {
+      console.log('[🔨CLAIM-CHECK] ✅ Reservation PAID:', nft.name, '- sold to:', nft.soldTo);
+      return {
+        isPaid: true,
+        claim: {
+          walletAddress: nft.soldTo || '',
+          nftName: nft.name,
+          claimedAt: nft.soldAt || Date.now(),
+          transactionHash: nft.transactionHash || 'pending',
+          nftAssetId: nft.nftUid,
+        },
+      };
+    }
+
+    console.log('[🔨CLAIM-CHECK] Reservation NOT paid yet:', nft.name, '- status:', nft.status);
+    return {
+      isPaid: false,
+      claim: null,
+    };
+  },
+});
+
 // Check if a wallet has claimed (for button state)
 // Now checks BOTH claims table AND inventory table for robust detection
 export const checkClaimed = query({

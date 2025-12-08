@@ -130,11 +130,12 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
     }
   }, [state, activeReservation, reservationId, effectiveWalletAddress, activeCampaignId]);
 
-  // Query for payment completion - runs during processing AND when window closes
-  const claimStatus = useQuery(
-    api.commemorativeNFTClaims.checkClaimed,
-    (state === 'processing' || state === 'payment_window_closed') && effectiveWalletAddress
-      ? { walletAddress: effectiveWalletAddress }
+  // Query for payment completion - checks if THIS SPECIFIC reservation was paid
+  // Uses reservation ID (not wallet) to prevent false positives from previous claims
+  const reservationPaymentStatus = useQuery(
+    api.commemorativeNFTClaims.checkReservationPaid,
+    (state === 'processing' || state === 'payment_window_closed') && reservationId
+      ? { reservationId }
       : "skip"
   );
 
@@ -727,13 +728,14 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   }, []);
 
   // Check for payment completion (works during processing AND after window closes)
+  // Now uses reservation-specific check to prevent false positives from previous claims
   useEffect(() => {
-    if ((state !== 'processing' && state !== 'payment_window_closed') || !claimStatus) return;
-    if (claimStatus.hasClaimed && claimStatus.claim) {
-      console.log('[VERIFY] Payment detected! Claim:', claimStatus.claim);
+    if ((state !== 'processing' && state !== 'payment_window_closed') || !reservationPaymentStatus) return;
+    if (reservationPaymentStatus.isPaid && reservationPaymentStatus.claim) {
+      console.log('[VERIFY] ✅ THIS RESERVATION was paid! Claim:', reservationPaymentStatus.claim);
       setState('success');
     }
-  }, [state, claimStatus]);
+  }, [state, reservationPaymentStatus]);
 
   // Auto-release when timer expires
   useEffect(() => {
