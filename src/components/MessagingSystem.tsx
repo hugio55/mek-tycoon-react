@@ -28,6 +28,9 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_FILES_PER_MESSAGE = 3;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
+// Support chat identifier - must match convex/messaging.ts
+const SUPPORT_WALLET_ID = "SUPPORT_OVEREXPOSED";
+
 // Sample Mek images for random profile pictures
 const SAMPLE_MEK_IMAGES = [
   'aa1-aa1-cd1.webp', 'bc2-dm1-ap1.webp', 'dp2-bf4-il2.webp', 'hb1-gn1-hn1.webp',
@@ -91,6 +94,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   const [selectedRecipient, setSelectedRecipient] = useState<{ walletAddress: string; companyName: string } | null>(null);
   const [showBlockedUsers, setShowBlockedUsers] = useState(false);
   const [errorLightbox, setErrorLightbox] = useState<{ title: string; message: string } | null>(null);
+  const [showSupportDismissLightbox, setShowSupportDismissLightbox] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -123,6 +127,11 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     walletAddress: walletAddress,
   });
 
+  // Support chat queries
+  const supportConversationStatus = useQuery(api.messaging.isSupportConversationDismissed, {
+    walletAddress: walletAddress,
+  });
+
   // Mutations
   const sendMessage = useMutation(api.messaging.sendMessage);
   const markAsRead = useMutation(api.messaging.markConversationAsRead);
@@ -135,6 +144,11 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   const blockUser = useMutation(api.messaging.blockUser);
   const unblockUser = useMutation(api.messaging.unblockUser);
 
+  // Support chat mutations
+  const createSupportConversation = useMutation(api.messaging.createSupportConversation);
+  const dismissSupportConversation = useMutation(api.messaging.dismissSupportConversation);
+  const reopenSupportConversation = useMutation(api.messaging.reopenSupportConversation);
+
   // Mount check for portals
   useEffect(() => {
     setMounted(true);
@@ -143,7 +157,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
 
   // Lock body scroll when lightbox is open
   useEffect(() => {
-    if (lightboxImage || showNewConversation || errorLightbox || showBlockedUsers) {
+    if (lightboxImage || showNewConversation || errorLightbox || showBlockedUsers || showSupportDismissLightbox) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -151,7 +165,14 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     return () => {
       document.body.style.overflow = '';
     };
-  }, [lightboxImage, showNewConversation, errorLightbox, showBlockedUsers]);
+  }, [lightboxImage, showNewConversation, errorLightbox, showBlockedUsers, showSupportDismissLightbox]);
+
+  // Auto-create support conversation if it doesn't exist
+  useEffect(() => {
+    if (supportConversationStatus && !supportConversationStatus.exists && walletAddress) {
+      createSupportConversation({ walletAddress }).catch(console.error);
+    }
+  }, [supportConversationStatus, walletAddress, createSupportConversation]);
 
   // Mark messages as read when conversation is selected
   useEffect(() => {
@@ -165,8 +186,26 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Filter corporations for search
+  // Helper to check if conversation is support chat
+  const isSupportConversation = (conv: any) => {
+    return conv.participant1 === SUPPORT_WALLET_ID ||
+           conv.participant2 === SUPPORT_WALLET_ID ||
+           conv.otherParticipant?.walletAddress === SUPPORT_WALLET_ID;
+  };
+
+  // Get support conversation from the list (if exists and not dismissed)
+  const supportConversation = conversations?.find(isSupportConversation);
+
+  // Regular conversations (excluding support)
+  const regularConversations = conversations?.filter((conv: any) => !isSupportConversation(conv)) || [];
+
+  // Filter corporations for search (include support reopen option)
   const corporationsToSearch = allCorporations || [];
+  const searchLower = corpSearchQuery.toLowerCase();
+  const showSupportOption = corpSearchQuery &&
+    (searchLower.includes('overexposed') || searchLower.includes('support')) &&
+    supportConversationStatus?.isDismissed;
+
   const filteredCorporations = corpSearchQuery
     ? corporationsToSearch.filter((corp: any) =>
         corp.companyName?.toLowerCase().includes(corpSearchQuery.toLowerCase())
@@ -398,6 +437,33 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   // Unblock user
   const handleUnblockUser = async (blockedWallet: string) => {
     await unblockUser({ blockerWallet: walletAddress, blockedWallet });
+  };
+
+  // Dismiss support conversation (with confirmation)
+  const handleDismissSupportConversation = async () => {
+    try {
+      await dismissSupportConversation({ walletAddress });
+      setShowSupportDismissLightbox(false);
+      if (supportConversation && selectedConversationId === supportConversation._id) {
+        setSelectedConversationId(null);
+      }
+    } catch (error) {
+      console.error('Failed to dismiss support conversation:', error);
+    }
+  };
+
+  // Reopen support conversation
+  const handleReopenSupportConversation = async () => {
+    try {
+      const result = await reopenSupportConversation({ walletAddress });
+      setShowNewConversation(false);
+      setCorpSearchQuery('');
+      if (result.conversationId) {
+        setSelectedConversationId(result.conversationId);
+      }
+    } catch (error) {
+      console.error('Failed to reopen support conversation:', error);
+    }
   };
 
   // Get current conversation info

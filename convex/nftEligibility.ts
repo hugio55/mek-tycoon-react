@@ -250,6 +250,9 @@ export const checkClaimEligibility = query({
  * Check if a stake address is eligible to claim from a SPECIFIC CAMPAIGN
  * This is the new per-campaign eligibility system that replaces the global snapshot approach.
  * Each campaign can have its own eligibility snapshot assigned.
+ *
+ * CRITICAL SAFETY: If no snapshot is assigned, ALL wallets are rejected.
+ * This is a security measure to prevent accidental claims when the campaign isn't configured.
  */
 export const checkCampaignEligibility = query({
   args: {
@@ -260,42 +263,67 @@ export const checkCampaignEligibility = query({
     // 1. Get the campaign
     const campaign = await ctx.db.get(args.campaignId);
     if (!campaign) {
+      console.log('[🛡️ELIGIBILITY] Campaign not found:', args.campaignId);
       return {
         eligible: false,
         reason: "Campaign not found",
       };
     }
 
-    // 2. Check if campaign has an eligibility snapshot assigned
+    // 2. CRITICAL SAFETY CHECK: No snapshot = NO ONE can claim
+    // This check happens BEFORE any whitelist checks to ensure maximum security
+    console.log('[🛡️ELIGIBILITY] Campaign:', campaign.name, 'eligibilitySnapshotId:', campaign.eligibilitySnapshotId || 'NONE');
+
     if (!campaign.eligibilitySnapshotId) {
+      console.log('[🛡️ELIGIBILITY] REJECTED - No eligibility snapshot assigned to campaign:', campaign.name);
       return {
         eligible: false,
-        reason: "No eligibility snapshot assigned to this campaign",
+        reason: "No eligibility snapshot assigned to this campaign. Claims are disabled.",
         campaignName: campaign.name,
+        noSnapshotConfigured: true,
       };
     }
 
     // 3. Get the campaign's assigned snapshot
     const snapshot = await ctx.db.get(campaign.eligibilitySnapshotId);
     if (!snapshot) {
+      console.log('[🛡️ELIGIBILITY] REJECTED - Snapshot ID exists but snapshot not found:', campaign.eligibilitySnapshotId);
       return {
         eligible: false,
-        reason: "Campaign's eligibility snapshot not found",
+        reason: "Campaign's eligibility snapshot not found. Claims are disabled.",
         campaignName: campaign.name,
+        snapshotMissing: true,
+      };
+    }
+
+    // 4. ADDITIONAL SAFETY: Check if snapshot has any eligible users
+    const eligibleUserCount = snapshot.eligibleUsers?.length || 0;
+    console.log('[🛡️ELIGIBILITY] Snapshot:', snapshot.snapshotName, 'has', eligibleUserCount, 'eligible users');
+
+    if (eligibleUserCount === 0) {
+      console.log('[🛡️ELIGIBILITY] REJECTED - Snapshot has no eligible users:', snapshot.snapshotName);
+      return {
+        eligible: false,
+        reason: "No users are eligible for this campaign. The eligibility snapshot is empty.",
+        campaignName: campaign.name,
+        snapshotName: snapshot.snapshotName,
+        emptySnapshot: true,
       };
     }
 
     // TESTING BYPASS: Allow whitelisted addresses to mint multiple times
+    // NOTE: This ONLY bypasses the "already claimed" check, NOT the snapshot membership check
     const isTestingWhitelisted = TESTING_MULTI_MINT_WHITELIST.includes(args.walletAddress);
     if (isTestingWhitelisted) {
-      console.log('[TEST] Whitelisted address detected for campaign:', campaign.name, args.walletAddress);
+      console.log('[🧪TEST] Whitelisted address detected for campaign:', campaign.name, args.walletAddress);
 
-      // Still check if in snapshot
+      // Still MUST check if in snapshot - testing whitelist doesn't bypass this
       const isInSnapshot = snapshot.eligibleUsers?.some((user: any) => {
         return user.stakeAddress === args.walletAddress || user.walletAddress === args.walletAddress;
       });
 
       if (!isInSnapshot) {
+        console.log('[🧪TEST] REJECTED - Whitelisted address not in snapshot');
         return {
           eligible: false,
           reason: "Stake address not in campaign's eligibility snapshot (testing whitelist still requires snapshot membership)",
@@ -309,6 +337,7 @@ export const checkCampaignEligibility = query({
         .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
         .first();
 
+      console.log('[🧪TEST] APPROVED - Testing whitelist user in snapshot');
       return {
         eligible: true,
         reason: "Testing whitelist - multiple mints allowed for this campaign",
@@ -319,12 +348,13 @@ export const checkCampaignEligibility = query({
       };
     }
 
-    // 4. Check if wallet is in the campaign's snapshot
+    // 5. Check if wallet is in the campaign's snapshot
     const isInSnapshot = snapshot.eligibleUsers?.some((user: any) => {
       return user.stakeAddress === args.walletAddress || user.walletAddress === args.walletAddress;
     });
 
     if (!isInSnapshot) {
+      console.log('[🛡️ELIGIBILITY] REJECTED - Wallet not in snapshot:', args.walletAddress.substring(0, 20) + '...');
       return {
         eligible: false,
         reason: "Not eligible for this campaign",
@@ -390,6 +420,13 @@ export const checkCampaignEligibility = query({
       .query("users")
       .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
       .first();
+
+    console.log('[🛡️ELIGIBILITY] APPROVED - Wallet passed all checks:', {
+      wallet: args.walletAddress.substring(0, 20) + '...',
+      campaign: campaign.name,
+      snapshot: snapshot.snapshotName,
+      corporation: user?.corporationName || 'unknown',
+    });
 
     return {
       eligible: true,

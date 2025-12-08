@@ -1,6 +1,9 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
+// Support chat identifier - used as a "virtual wallet" for the Overexposed dev team
+export const SUPPORT_WALLET_ID = "SUPPORT_OVEREXPOSED";
+
 // Get conversations for a user
 export const getConversations = query({
   args: { walletAddress: v.string() },
@@ -580,5 +583,429 @@ export const deleteMessageAdmin = mutation({
     });
 
     return { success: true };
+  },
+});
+
+// ============================================
+// SUPPORT CHAT FUNCTIONS
+// ============================================
+
+// Get support conversation for a player (if exists)
+export const getSupportConversation = query({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    const { walletAddress } = args;
+
+    // Check both orderings
+    const conv1 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", SUPPORT_WALLET_ID))
+      .filter((q) => q.eq(q.field("participant2"), walletAddress))
+      .first();
+
+    if (conv1) return conv1;
+
+    const conv2 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", walletAddress))
+      .filter((q) => q.eq(q.field("participant2"), SUPPORT_WALLET_ID))
+      .first();
+
+    return conv2;
+  },
+});
+
+// Create support conversation for a player (with welcome message)
+export const createSupportConversation = mutation({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    const { walletAddress } = args;
+    const now = Date.now();
+
+    // Check if already exists
+    const existing1 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", SUPPORT_WALLET_ID))
+      .filter((q) => q.eq(q.field("participant2"), walletAddress))
+      .first();
+
+    const existing2 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", walletAddress))
+      .filter((q) => q.eq(q.field("participant2"), SUPPORT_WALLET_ID))
+      .first();
+
+    const existing = existing1 || existing2;
+
+    if (existing) {
+      // If it exists but is hidden, unhide it
+      if (existing.participant1 === walletAddress && existing.hiddenForParticipant1) {
+        await ctx.db.patch(existing._id, { hiddenForParticipant1: false });
+      } else if (existing.participant2 === walletAddress && existing.hiddenForParticipant2) {
+        await ctx.db.patch(existing._id, { hiddenForParticipant2: false });
+      }
+      return { success: true, conversationId: existing._id, alreadyExists: true };
+    }
+
+    // Create new support conversation
+    const welcomeMessage = "Welcome to Overexposed Support! How can we help you today?";
+
+    const convId = await ctx.db.insert("conversations", {
+      participant1: SUPPORT_WALLET_ID,
+      participant2: walletAddress,
+      lastMessageAt: now,
+      lastMessagePreview: welcomeMessage.substring(0, 80),
+      lastMessageSender: SUPPORT_WALLET_ID,
+      createdAt: now,
+    });
+
+    // Insert welcome message
+    await ctx.db.insert("messages", {
+      conversationId: convId,
+      senderId: SUPPORT_WALLET_ID,
+      recipientId: walletAddress,
+      content: welcomeMessage,
+      status: "sent",
+      createdAt: now,
+      isDeleted: false,
+    });
+
+    // Create unread count for player (1 unread welcome message)
+    await ctx.db.insert("messageUnreadCounts", {
+      walletAddress: walletAddress,
+      conversationId: convId,
+      count: 1,
+    });
+
+    return { success: true, conversationId: convId, alreadyExists: false };
+  },
+});
+
+// Dismiss (hide) support conversation for a player
+export const dismissSupportConversation = mutation({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    const { walletAddress } = args;
+
+    // Find the support conversation
+    const conv1 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", SUPPORT_WALLET_ID))
+      .filter((q) => q.eq(q.field("participant2"), walletAddress))
+      .first();
+
+    const conv2 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", walletAddress))
+      .filter((q) => q.eq(q.field("participant2"), SUPPORT_WALLET_ID))
+      .first();
+
+    const conversation = conv1 || conv2;
+
+    if (!conversation) {
+      throw new Error("Support conversation not found");
+    }
+
+    // Hide for the player (not for support/admin side)
+    if (conversation.participant1 === walletAddress) {
+      await ctx.db.patch(conversation._id, { hiddenForParticipant1: true });
+    } else {
+      await ctx.db.patch(conversation._id, { hiddenForParticipant2: true });
+    }
+
+    return { success: true };
+  },
+});
+
+// Reopen support conversation for a player
+export const reopenSupportConversation = mutation({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    const { walletAddress } = args;
+    const now = Date.now();
+
+    // Find the support conversation
+    const conv1 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", SUPPORT_WALLET_ID))
+      .filter((q) => q.eq(q.field("participant2"), walletAddress))
+      .first();
+
+    const conv2 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", walletAddress))
+      .filter((q) => q.eq(q.field("participant2"), SUPPORT_WALLET_ID))
+      .first();
+
+    const conversation = conv1 || conv2;
+
+    if (!conversation) {
+      // If no conversation exists, create one with welcome message
+      const welcomeMessage = "Welcome to Overexposed Support! How can we help you today?";
+
+      const convId = await ctx.db.insert("conversations", {
+        participant1: SUPPORT_WALLET_ID,
+        participant2: walletAddress,
+        lastMessageAt: now,
+        lastMessagePreview: welcomeMessage.substring(0, 80),
+        lastMessageSender: SUPPORT_WALLET_ID,
+        createdAt: now,
+      });
+
+      await ctx.db.insert("messages", {
+        conversationId: convId,
+        senderId: SUPPORT_WALLET_ID,
+        recipientId: walletAddress,
+        content: welcomeMessage,
+        status: "sent",
+        createdAt: now,
+        isDeleted: false,
+      });
+
+      await ctx.db.insert("messageUnreadCounts", {
+        walletAddress: walletAddress,
+        conversationId: convId,
+        count: 1,
+      });
+
+      return { success: true, conversationId: convId, created: true };
+    }
+
+    // Unhide for the player
+    if (conversation.participant1 === walletAddress) {
+      await ctx.db.patch(conversation._id, { hiddenForParticipant1: false });
+    } else {
+      await ctx.db.patch(conversation._id, { hiddenForParticipant2: false });
+    }
+
+    return { success: true, conversationId: conversation._id, created: false };
+  },
+});
+
+// Admin: Get all support conversations
+export const getAllSupportConversations = query({
+  args: {},
+  handler: async (ctx) => {
+    // Get all conversations where SUPPORT_WALLET_ID is a participant
+    const asParticipant1 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", SUPPORT_WALLET_ID))
+      .collect();
+
+    const asParticipant2 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant2", (q) => q.eq("participant2", SUPPORT_WALLET_ID))
+      .collect();
+
+    const allConversations = [...asParticipant1, ...asParticipant2];
+
+    // Enrich with player info and unread counts
+    const enriched = await Promise.all(
+      allConversations.map(async (conv) => {
+        const playerWallet = conv.participant1 === SUPPORT_WALLET_ID
+          ? conv.participant2
+          : conv.participant1;
+
+        const player = await ctx.db
+          .query("users")
+          .withIndex("by_stake_address", (q) => q.eq("stakeAddress", playerWallet))
+          .first();
+
+        // Get unread count for support side (messages from player that support hasn't read)
+        // Since support doesn't have a real wallet, we track unread differently
+        // For now, count messages where sender is player and status is not "read"
+        const messages = await ctx.db
+          .query("messages")
+          .withIndex("by_conversation", (q) => q.eq("conversationId", conv._id))
+          .collect();
+
+        const unreadForSupport = messages.filter(
+          (m) => m.senderId === playerWallet && m.status !== "read" && !m.isDeleted
+        ).length;
+
+        return {
+          ...conv,
+          playerWallet,
+          playerCorporationName: player?.corporationName || "Unknown Corp",
+          unreadForSupport,
+        };
+      })
+    );
+
+    // Sort by most recent activity
+    return enriched.sort((a, b) => b.lastMessageAt - a.lastMessageAt);
+  },
+});
+
+// Admin: Get total unread count across all support conversations
+export const getSupportUnreadCount = query({
+  args: {},
+  handler: async (ctx) => {
+    // Get all support conversations
+    const asParticipant1 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", SUPPORT_WALLET_ID))
+      .collect();
+
+    const asParticipant2 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant2", (q) => q.eq("participant2", SUPPORT_WALLET_ID))
+      .collect();
+
+    const allConversations = [...asParticipant1, ...asParticipant2];
+
+    let totalUnread = 0;
+
+    for (const conv of allConversations) {
+      const playerWallet = conv.participant1 === SUPPORT_WALLET_ID
+        ? conv.participant2
+        : conv.participant1;
+
+      const messages = await ctx.db
+        .query("messages")
+        .withIndex("by_conversation", (q) => q.eq("conversationId", conv._id))
+        .collect();
+
+      totalUnread += messages.filter(
+        (m) => m.senderId === playerWallet && m.status !== "read" && !m.isDeleted
+      ).length;
+    }
+
+    return totalUnread;
+  },
+});
+
+// Admin: Send message as support (auto-reopens dismissed conversation for player)
+export const sendSupportMessage = mutation({
+  args: {
+    playerWallet: v.string(),
+    content: v.string(),
+    conversationId: v.id("conversations"),
+  },
+  handler: async (ctx, args) => {
+    const { playerWallet, content, conversationId } = args;
+    const now = Date.now();
+
+    const conversation = await ctx.db.get(conversationId);
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    // Verify this is a support conversation
+    if (conversation.participant1 !== SUPPORT_WALLET_ID && conversation.participant2 !== SUPPORT_WALLET_ID) {
+      throw new Error("This is not a support conversation");
+    }
+
+    // Insert message from support
+    await ctx.db.insert("messages", {
+      conversationId,
+      senderId: SUPPORT_WALLET_ID,
+      recipientId: playerWallet,
+      content,
+      status: "sent",
+      createdAt: now,
+      isDeleted: false,
+    });
+
+    // Update conversation (and auto-reopen for player if dismissed)
+    await ctx.db.patch(conversationId, {
+      lastMessageAt: now,
+      lastMessagePreview: content.substring(0, 80),
+      lastMessageSender: SUPPORT_WALLET_ID,
+      // Auto-reopen for player when support replies
+      hiddenForParticipant1: false,
+      hiddenForParticipant2: false,
+    });
+
+    // Update unread count for player
+    const unreadRecord = await ctx.db
+      .query("messageUnreadCounts")
+      .withIndex("by_wallet_conversation", (q) =>
+        q.eq("walletAddress", playerWallet).eq("conversationId", conversationId)
+      )
+      .first();
+
+    if (unreadRecord) {
+      await ctx.db.patch(unreadRecord._id, { count: unreadRecord.count + 1 });
+    } else {
+      await ctx.db.insert("messageUnreadCounts", {
+        walletAddress: playerWallet,
+        conversationId,
+        count: 1,
+      });
+    }
+
+    return { success: true };
+  },
+});
+
+// Admin: Mark support conversation as read (for support side)
+export const markSupportConversationAsRead = mutation({
+  args: { conversationId: v.id("conversations") },
+  handler: async (ctx, args) => {
+    const { conversationId } = args;
+
+    const conversation = await ctx.db.get(conversationId);
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    // Verify this is a support conversation
+    if (conversation.participant1 !== SUPPORT_WALLET_ID && conversation.participant2 !== SUPPORT_WALLET_ID) {
+      throw new Error("This is not a support conversation");
+    }
+
+    const playerWallet = conversation.participant1 === SUPPORT_WALLET_ID
+      ? conversation.participant2
+      : conversation.participant1;
+
+    // Mark all messages from player as read
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", conversationId))
+      .filter((q) => q.eq(q.field("senderId"), playerWallet))
+      .collect();
+
+    const now = Date.now();
+    for (const msg of messages) {
+      if (msg.status !== "read") {
+        await ctx.db.patch(msg._id, { status: "read", readAt: now });
+      }
+    }
+
+    return { success: true };
+  },
+});
+
+// Check if player has dismissed support conversation
+export const isSupportConversationDismissed = query({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    const { walletAddress } = args;
+
+    // Find the support conversation
+    const conv1 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", SUPPORT_WALLET_ID))
+      .filter((q) => q.eq(q.field("participant2"), walletAddress))
+      .first();
+
+    const conv2 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", walletAddress))
+      .filter((q) => q.eq(q.field("participant2"), SUPPORT_WALLET_ID))
+      .first();
+
+    const conversation = conv1 || conv2;
+
+    if (!conversation) {
+      return { exists: false, isDismissed: false };
+    }
+
+    const isDismissed = conversation.participant1 === walletAddress
+      ? !!conversation.hiddenForParticipant1
+      : !!conversation.hiddenForParticipant2;
+
+    return { exists: true, isDismissed, conversationId: conversation._id };
   },
 });
