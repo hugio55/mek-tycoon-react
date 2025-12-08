@@ -6556,14 +6556,28 @@ export default function AdminMasterDataPage() {
 
               </div>
 
-              {/* DELETE ZONE - Simple list at bottom */}
-              <div className="mt-8 border border-red-500/40 border-dashed rounded-lg p-4 bg-black/30">
-                <div className="text-red-400 font-bold text-sm mb-2">TO DELETE (Legacy Phase I)</div>
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <span className="text-gray-500 line-through">goldMining</span>
-                  <span className="text-gray-500 line-through">goldMiningState</span>
-                  <span className="text-gray-500 line-through">corporations</span>
+              {/* DELETED TABLES - Cleanup completed Dec 2025 */}
+              <div className="mt-8 border border-green-500/40 border-dashed rounded-lg p-4 bg-black/30">
+                <div className="text-green-400 font-bold text-sm mb-2">✓ DELETED (Cleanup Complete)</div>
+                <div className="flex flex-wrap gap-3 text-sm">
+                  <span className="text-gray-500 line-through">walletGroups</span>
+                  <span className="text-gray-500 line-through">walletGroupMemberships</span>
+                  <span className="text-gray-500 line-through">discordConnections</span>
+                  <span className="text-gray-500 line-through">discordGoldTiers</span>
+                  <span className="text-gray-500 line-through">discordTodos</span>
                 </div>
+                <div className="text-xs text-gray-600 mt-2">Multi-wallet corps + Discord bot removed</div>
+              </div>
+
+              {/* PENDING DELETE - Legacy Phase I tables */}
+              <div className="mt-4 border border-red-500/40 border-dashed rounded-lg p-4 bg-black/30">
+                <div className="text-red-400 font-bold text-sm mb-2">⏳ TO DELETE (Legacy Phase I)</div>
+                <div className="flex flex-wrap gap-4 text-sm">
+                  <span className="text-red-400/70">goldMining</span>
+                  <span className="text-red-400/70">goldMiningState</span>
+                  <span className="text-red-400/70">corporations</span>
+                </div>
+                <div className="text-xs text-gray-600 mt-2">Still in use - migrate to users table first</div>
               </div>
 
             </div>

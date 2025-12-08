@@ -2855,22 +2855,9 @@ async function markMekAsSlotted(
       console.log(`[🔒TENURE-DEBUG] BEFORE patch - lastTenureUpdate: ${mekRecord.lastTenureUpdate}`);
 
       console.log(`[🔒TENURE-DEBUG] Step 3: Checking for custom name...`);
-      // Check if Mek has custom name
-      try {
-        const goldMiningRecord = await ctx.db
-          .query("goldMining")
-          .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
-          .first();
-
-        if (goldMiningRecord && goldMiningRecord.ownedMeks) {
-          hasName = !!goldMiningRecord.ownedMeks.find((m: any) => m.assetId === mekAssetId)?.customName;
-          console.log(`[🔒TENURE-DEBUG] Custom name check: hasName = ${hasName}`);
-        } else {
-          console.log(`[🔒TENURE-DEBUG] No goldMining record or ownedMeks found`);
-        }
-      } catch (nameCheckError) {
-        console.error(`[🔒TENURE-DEBUG] ERROR checking custom name:`, nameCheckError);
-      }
+      // Phase II: Check custom name from meks table (no goldMining fallback)
+      hasName = !!mekRecord.customName;
+      console.log(`[🔒TENURE-DEBUG] Custom name check: hasName = ${hasName}`);
 
       console.log(`[🔒TENURE-DEBUG] Step 4: Preparing patch data...`);
       const tenureToSave = mekRecord.tenurePoints ?? 0;
@@ -2914,8 +2901,7 @@ async function markMekAsSlotted(
       console.log(`[🔒TENURE-DEBUG] === SLOTTING COMPLETE ===`);
     } else {
       console.error(`[🔒TENURE-DEBUG] ❌ WARNING: No mek record found in meks table for assetId ${mekAssetId}!`);
-      console.log(`[🔒TENURE-DEBUG] This means the Mek exists in goldMining.ownedMeks but NOT in the meks table.`);
-      console.log(`[🔒TENURE-DEBUG] Tenure tracking CANNOT be enabled for this Mek until it's added to meks table.`);
+      console.log(`[🔒TENURE-DEBUG] Phase II: Mek must exist in meks table for tenure tracking.`);
     }
   } catch (error) {
     console.error(`[🔒TENURE-DEBUG] ❌ FATAL ERROR in tenure update block:`, error);
