@@ -742,7 +742,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                 </div>
               )}
 
-              {messages?.messages?.map((msg: any) => {
+              {messages?.map((msg: any) => {
                 const isMine = msg.senderId === walletAddress;
                 if (msg.deletedForSender && isMine) return null;
                 if (msg.deletedForRecipient && !isMine) return null;

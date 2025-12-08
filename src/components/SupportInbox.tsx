@@ -239,7 +239,7 @@ export default function SupportInbox() {
 
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[400px]">
-              {messages?.messages?.map((msg: any) => {
+              {messages?.map((msg: any) => {
                 const isFromSupport = msg.senderId === SUPPORT_WALLET_ID;
 
                 return (
@@ -297,7 +297,7 @@ export default function SupportInbox() {
               })}
               <div ref={messagesEndRef} />
 
-              {(!messages?.messages || messages.messages.length === 0) && (
+              {(!messages || messages.length === 0) && (
                 <div className="text-center text-gray-500 py-16">
                   <div className="text-4xl mb-2">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="mx-auto text-gray-600">

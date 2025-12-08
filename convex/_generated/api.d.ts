@@ -56,6 +56,7 @@ import type * as contracts from "../contracts.js";
 import type * as corporationAuth from "../corporationAuth.js";
 import type * as crafting from "../crafting.js";
 import type * as crons from "../crons.js";
+import type * as deduplicateMeks from "../deduplicateMeks.js";
 import type * as definitiveWalletFix from "../definitiveWalletFix.js";
 import type * as deleteMockAccounts from "../deleteMockAccounts.js";
 import type * as deleteZeroMekAccounts from "../deleteZeroMekAccounts.js";
@@ -219,6 +220,7 @@ declare const fullApi: ApiFromModules<{
   corporationAuth: typeof corporationAuth;
   crafting: typeof crafting;
   crons: typeof crons;
+  deduplicateMeks: typeof deduplicateMeks;
   definitiveWalletFix: typeof definitiveWalletFix;
   deleteMockAccounts: typeof deleteMockAccounts;
   deleteZeroMekAccounts: typeof deleteZeroMekAccounts;
