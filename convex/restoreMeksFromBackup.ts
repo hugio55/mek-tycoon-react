@@ -1,7 +1,7 @@
 import { mutation } from "./_generated/server";
 
-// Import the backup data
-const backupData = require("../trout_meks.json");
+// Import the backup data (converted to proper JSON array)
+const backupData = require("../trout_meks_array.json");
 
 /**
  * Restore all meks from the trout_meks.json backup file

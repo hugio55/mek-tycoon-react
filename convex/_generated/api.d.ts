@@ -132,6 +132,7 @@ import type * as overlays from "../overlays.js";
 import type * as phaseCards from "../phaseCards.js";
 import type * as phaseILightbox from "../phaseILightbox.js";
 import type * as publicCorporation from "../publicCorporation.js";
+import type * as restoreMeksFromBackup from "../restoreMeksFromBackup.js";
 import type * as saves from "../saves.js";
 import type * as seedBuffCategories from "../seedBuffCategories.js";
 import type * as seedData from "../seedData.js";
@@ -294,6 +295,7 @@ declare const fullApi: ApiFromModules<{
   phaseCards: typeof phaseCards;
   phaseILightbox: typeof phaseILightbox;
   publicCorporation: typeof publicCorporation;
+  restoreMeksFromBackup: typeof restoreMeksFromBackup;
   saves: typeof saves;
   seedBuffCategories: typeof seedBuffCategories;
   seedData: typeof seedData;

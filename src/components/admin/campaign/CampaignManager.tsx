@@ -869,6 +869,7 @@ export default function CampaignManager({
                     <label className="block text-xs text-gray-400 mb-2">
                       Eligibility Snapshot
                       <span className="text-purple-400 ml-2">(Who can claim from this campaign)</span>
+                      <span className="text-gray-500 ml-2">(Enable editing first)</span>
                     </label>
                     <div className="flex items-center gap-2">
                       <select
@@ -888,13 +889,32 @@ export default function CampaignManager({
                         <span className="text-xs text-purple-400 animate-pulse">Saving...</span>
                       )}
                     </div>
+                    {/* DEBUG: Always show raw database value */}
+                    <p className="text-xs text-gray-500 mt-1 font-mono">
+                      DB Value: {campaign.eligibilitySnapshotId || '(empty/null)'}
+                    </p>
+                    {/* ORPHAN DETECTION: Snapshot ID exists but not in dropdown options */}
+                    {campaign.eligibilitySnapshotId && !allSnapshots?.some((s: { _id: string }) => s._id === campaign.eligibilitySnapshotId) && (
+                      <p className="text-xs text-red-400 mt-2 font-mono bg-red-500/10 p-2 rounded">
+                        ⚠️ ORPHANED SNAPSHOT ID DETECTED!
+                        <br />
+                        ID in database doesn&apos;t match any available snapshot.
+                        <br />
+                        <button
+                          onClick={() => handleSnapshotAssignment(campaign._id, null)}
+                          className="mt-1 px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
+                        >
+                          🗑️ Clear Orphaned Snapshot ID Now
+                        </button>
+                      </p>
+                    )}
                     {campaign.eligibilitySnapshotId ? (
                       <p className="text-xs text-green-400 mt-2">
                         ✓ Users in this snapshot can claim NFTs from this campaign
                       </p>
                     ) : (
                       <p className="text-xs text-yellow-400 mt-2">
-                        ⚠ No snapshot assigned - nobody can claim from this campaign
+                        ✓ Corporations can mint multiple NFTs from this campaign (good for testing)
                       </p>
                     )}
                   </div>
