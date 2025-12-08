@@ -157,7 +157,7 @@ export const getPaymentStatus = query({
     const claim = payment.transactionHash
       ? await ctx.db
           .query("commemorativeNFTClaims")
-          .withIndex("by_tx_hash", (q: any) => q.eq("transactionHash", payment.transactionHash!))
+          .withIndex("by_transaction", (q: any) => q.eq("transactionHash", payment.transactionHash!))
           .first()
       : null;
 
@@ -206,7 +206,7 @@ export const getPaymentByTransaction = query({
     // Get associated claim if it exists
     const claim = await ctx.db
       .query("commemorativeNFTClaims")
-      .withIndex("by_tx_hash", (q: any) => q.eq("transactionHash", args.transactionHash))
+      .withIndex("by_transaction", (q: any) => q.eq("transactionHash", args.transactionHash))
       .first();
 
     return {

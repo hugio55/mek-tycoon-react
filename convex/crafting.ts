@@ -25,7 +25,7 @@ export const getActiveSessions = query({
   handler: async (ctx, args) => {
     const sessions = await ctx.db
       .query("craftingSessions")
-      .withIndex("", (q: any) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q: any) => q.eq("userId", args.userId))
       .filter((q) => q.neq(q.field("status"), "claimed"))
       .collect();
     
@@ -60,7 +60,7 @@ export const startCrafting = mutation({
     // Check if slot is available
     const existingSession = await ctx.db
       .query("craftingSessions")
-      .withIndex("", (q: any) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q: any) => q.eq("userId", args.userId))
       .filter((q) => 
         q.and(
           q.eq(q.field("slotNumber"), args.slotNumber),
@@ -171,8 +171,8 @@ export const claimCrafting = mutation({
       // Add to inventory
       const existingItem = await ctx.db
         .query("inventory")
-        .withIndex("", (q: any) => q.eq("userId", args.userId))
-        .filter((q) => 
+        .withIndex("by_type", (q: any) => q.eq("userId", args.userId))
+        .filter((q) =>
           q.and(
             q.eq(q.field("itemType"), recipe.outputType),
             q.eq(q.field("itemVariation"), recipe.outputVariation)

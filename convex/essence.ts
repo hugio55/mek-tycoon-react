@@ -1206,13 +1206,13 @@ export const swapMek = mutation({
       .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
       .first();
 
-    if (!goldMining || goldMining.cumulativeGold < swapCost) {
+    if (!goldMining || goldMining.accumulatedGold < swapCost) {
       throw new Error("Insufficient gold");
     }
 
     // Deduct gold
     await ctx.db.patch(goldMining._id, {
-      cumulativeGold: goldMining.cumulativeGold - swapCost,
+      accumulatedGold: goldMining.accumulatedGold - swapCost,
     });
 
     // Unslot current Mek
@@ -1280,7 +1280,7 @@ export const unlockSlot = mutation({
       .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
       .first();
 
-    if (!goldMining || goldMining.cumulativeGold < requirements.goldCost) {
+    if (!goldMining || goldMining.accumulatedGold < requirements.goldCost) {
       throw new Error("Insufficient gold");
     }
 
@@ -1300,7 +1300,7 @@ export const unlockSlot = mutation({
 
     // Deduct gold
     await ctx.db.patch(goldMining._id, {
-      cumulativeGold: goldMining.cumulativeGold - requirements.goldCost,
+      accumulatedGold: goldMining.accumulatedGold - requirements.goldCost,
     });
 
     // Deduct essences
