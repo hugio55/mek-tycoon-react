@@ -860,7 +860,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                 onChange={(e) => setCorpSearchQuery(e.target.value)}
                 placeholder="Search corporations..."
                 autoFocus
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/50"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
               />
             </div>
             <div className="max-h-[300px] overflow-y-auto">

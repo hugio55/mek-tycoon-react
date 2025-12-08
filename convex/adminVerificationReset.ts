@@ -61,7 +61,7 @@ export const deleteWallet = mutation({
       goldMining: 0,
       ownershipHistory: 0,
       goldBackups: 0,
-      discordConnections: 0,
+      // discordConnections removed (Discord bot integration removed)
     };
 
     // 1. Delete from goldMining table
@@ -99,21 +99,7 @@ export const deleteWallet = mutation({
     //   }
     // }
 
-    // 4. Delete Discord connections (if exists)
-    try {
-      const discordConnection = await ctx.db
-        .query("discordConnections")
-        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
-        .first();
-
-      if (discordConnection) {
-        await ctx.db.delete(discordConnection._id);
-        deletedItems.discordConnections = 1;
-      }
-    } catch (error) {
-      // Discord table might not exist or might not have the index
-      console.log("[Admin] Discord connections table not found or no index");
-    }
+    // 4. Discord connections table removed (Discord bot integration removed)
 
     console.log(`[Admin] NUCLEAR DELETE for wallet ${args.walletAddress.substring(0, 20)}...`);
     console.log(`[Admin] Deleted: ${JSON.stringify(deletedItems)}`);

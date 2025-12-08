@@ -802,13 +802,7 @@ export const cascadeDeleteUser = mutation({
     }
     deletedCounts.leaderboardCache = leaderboardCache.length;
 
-    // discordConnections
-    const discordConnections = await ctx.db.query("discordConnections")
-      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
-    for (const record of discordConnections) {
-      await ctx.db.delete(record._id);
-    }
-    deletedCounts.discordConnections = discordConnections.length;
+    // NOTE: discordConnections table removed (Discord bot integration removed)
 
     // mekOwnershipHistory
     const mekOwnershipHistory = await ctx.db.query("mekOwnershipHistory")
@@ -1368,9 +1362,7 @@ export const bulkDeleteTestWallets = mutation({
         .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
       for (const r of leaderboardCache) { await ctx.db.delete(r._id); recordsDeleted++; }
 
-      const discordConnections = await ctx.db.query("discordConnections")
-        .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
-      for (const r of discordConnections) { await ctx.db.delete(r._id); recordsDeleted++; }
+      // NOTE: discordConnections table removed (Discord bot integration removed)
 
       const mekOwnershipHistory = await ctx.db.query("mekOwnershipHistory")
         .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();

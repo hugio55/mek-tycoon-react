@@ -304,11 +304,8 @@ export default defineSchema({
     preferredWallet: v.optional(v.string()), // User's preferred wallet for auto-connect
     totalConnectionCount: v.optional(v.number()), // Total number of connections made
 
-    // Discord Integration
-    discordUserId: v.optional(v.string()), // Discord user ID (snowflake)
-    discordUsername: v.optional(v.string()), // Discord username for reference
-    discordLinkedAt: v.optional(v.number()), // When Discord was linked
-    
+    // NOTE: Discord integration fields removed (discordUserId, discordUsername, discordLinkedAt)
+
     // Profile fields
     username: v.optional(v.string()),
     displayName: v.optional(v.string()), // The actual display name shown to others (case-sensitive)
@@ -2064,38 +2061,9 @@ export default defineSchema({
     .index("by_wallet", ["walletAddress"])
     .index("by_timestamp", ["timestamp"]),
 
-  // Discord connections - links wallets to Discord accounts (1 wallet = 1 corp)
-  discordConnections: defineTable({
-    walletAddress: v.optional(v.string()), // Wallet address (1 wallet = 1 corp) - optional for legacy entries
-    discordUserId: v.string(), // Discord snowflake ID
-    discordUsername: v.string(), // For display
-    guildId: v.string(), // Discord server ID
-    linkedAt: v.number(),
-    active: v.boolean(),
-    lastNicknameUpdate: v.optional(v.number()),
-    currentEmoji: v.optional(v.string()),
-  })
-    .index("by_wallet", ["walletAddress", "guildId"])
-    .index("by_discord_user", ["discordUserId", "guildId"])
-    .index("by_guild", ["guildId"])
-    .index("by_active", ["active"]),
-
+  // NOTE: Discord bot integration tables REMOVED (discordConnections, discordGoldTiers)
   // NOTE: walletGroups and walletGroupMemberships tables REMOVED
   // Multi-wallet corporations deprecated in favor of 1 wallet = 1 corp model
-
-  // Discord gold tier configuration
-  discordGoldTiers: defineTable({
-    tierName: v.string(),
-    minGold: v.number(),
-    maxGold: v.optional(v.number()),
-    emoji: v.string(),
-    order: v.number(), // Display order (higher gold = higher order)
-    active: v.boolean(),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_order", ["order"])
-    .index("by_active", ["active"]),
 
   // Bot testing system - wallet snapshot
   walletSnapshot: defineTable({
