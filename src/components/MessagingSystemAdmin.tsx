@@ -574,7 +574,7 @@ export default function MessagingSystemAdmin() {
     : MOCK_CORPORATIONS_FOR_TESTING;
 
   const filteredCorporations = corporationsToSearch.filter((corp: { walletAddress: string; companyName: string }) =>
-    corp.companyName.toLowerCase().includes(corpSearchQuery.toLowerCase())
+    corp.companyName?.toLowerCase().includes(corpSearchQuery.toLowerCase()) ?? false
   );
 
   // Legacy function for test corporations
