@@ -1,9 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
 import EssenceDonutChart from "@/components/essence-donut-chart";
 import EssenceDistributionLightbox from "@/components/EssenceDistributionLightbox";
 import "@/styles/global-design-system.css";
@@ -129,7 +126,6 @@ const generateEssenceData = () => {
 };
 
 export default function EssenceDonutPage() {
-  const [userId, setUserId] = useState<Id<"users"> | null>(null);
   const [viewCount, setViewCount] = useState<5 | 10 | 20 | 30 | 100>(20);
   const [essenceData] = useState(generateEssenceData());
   const [chartSize, setChartSize] = useState(525); // Increased by 5%
@@ -147,21 +143,6 @@ export default function EssenceDonutPage() {
   const defaultMaxAmount = Math.max(...generateEssenceData().map(e => e.amount));
   const [maxSliceFilter, setMaxSliceFilter] = useState(defaultMaxAmount); // Default to max (show all)
 
-  // Get or create user
-  const getOrCreateUser = useMutation(api.users.getOrCreateUser);
-
-  useEffect(() => {
-    const initUser = async () => {
-      const user = await getOrCreateUser({
-        walletAddress: "demo_wallet_123"
-      });
-      if (user) {
-        setUserId(user._id as Id<"users">);
-      }
-    };
-    initUser();
-  }, [getOrCreateUser]);
-  
   // Click outside handler for search dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -173,13 +154,7 @@ export default function EssenceDonutPage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-  
-  // Get user profile
-  const userProfile = useQuery(
-    api.users.getUserProfile,
-    userId ? { walletAddress: "demo_wallet_123" } : "skip"
-  );
-  
+
   // Calculate the actual maximum essence amount in the data
   const maxEssenceAmount = useMemo(() => {
     return Math.max(...essenceData.map(e => e.amount));
@@ -465,7 +440,6 @@ export default function EssenceDonutPage() {
       <EssenceDistributionLightbox
         isOpen={isDistributionOpen}
         onClose={() => setIsDistributionOpen(false)}
-        walletAddress="demo_wallet_123"
       />
 
       {/* OLD CONTENT - KEEPING FOR REFERENCE BUT HIDDEN */}
