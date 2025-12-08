@@ -519,7 +519,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                   : 'bg-cyan-500/5 hover:bg-cyan-500/10'
               }`}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3">
                 {/* Support Icon */}
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 flex-shrink-0 flex items-center justify-center border border-cyan-500/40">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-cyan-400">
@@ -528,16 +528,12 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-cyan-400 font-medium">
-                        Overexposed Support
-                      </span>
-                      <span className="text-cyan-500/60 text-xs px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">
-                        Dev Team
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
+                  {/* Top row: Name + Timestamp */}
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-white font-medium">
+                      Overexposed Support
+                    </span>
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -551,17 +547,18 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                           <line x1="6" y1="6" x2="18" y2="18" />
                         </svg>
                       </button>
-                      <div className="text-gray-500 text-xs">
+                      <span className="text-gray-500 text-xs">
                         {formatRelativeTime(supportConversation.lastMessageAt)}
-                      </div>
+                      </span>
                     </div>
                   </div>
+                  {/* Bottom row: Preview + Unread badge */}
                   <div className="flex items-center justify-between">
-                    <div className="text-gray-400 text-sm truncate">
+                    <span className="text-gray-400 text-sm truncate pr-2">
                       {supportConversation.lastMessagePreview || 'How can we help?'}
-                    </div>
+                    </span>
                     {supportConversation.unreadCount > 0 && (
-                      <span className="bg-cyan-500 text-black text-xs px-1.5 py-0.5 rounded-full">
+                      <span className="bg-cyan-500 text-black text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0">
                         {supportConversation.unreadCount}
                       </span>
                     )}
