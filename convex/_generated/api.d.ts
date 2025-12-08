@@ -150,6 +150,7 @@ import type * as users from "../users.js";
 import type * as variationBuffs from "../variationBuffs.js";
 import type * as variationsReference from "../variationsReference.js";
 import type * as verifyMigration from "../verifyMigration.js";
+import type * as walletAuthentication from "../walletAuthentication.js";
 import type * as walletSession from "../walletSession.js";
 
 import type {
@@ -309,6 +310,7 @@ declare const fullApi: ApiFromModules<{
   variationBuffs: typeof variationBuffs;
   variationsReference: typeof variationsReference;
   verifyMigration: typeof verifyMigration;
+  walletAuthentication: typeof walletAuthentication;
   walletSession: typeof walletSession;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

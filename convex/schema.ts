@@ -1970,6 +1970,23 @@ export default defineSchema({
     .index("by_used", ["usedAt"]) // For cleanup queries
     .index("by_nonce_stake_device", ["nonce", "stakeAddress", "deviceId"]), // Unique constraint enforcement
 
+  // Wallet authentication rate limiting - tracks failed attempts
+  walletAuthFailedAttempts: defineTable({
+    stakeAddress: v.string(),
+    timestamp: v.number(),
+  })
+    .index("by_stake_address", ["stakeAddress"]),
+
+  // Wallet authentication lockouts - locks out wallets after too many failed attempts
+  walletAuthLockouts: defineTable({
+    stakeAddress: v.string(),
+    lockedUntil: v.number(),
+    failedAttempts: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_stake_address", ["stakeAddress"])
+    .index("by_locked_until", ["lockedUntil"]),
+
   // Multi-wallet aggregation
   walletLinks: defineTable({
     primaryWallet: v.string(),
