@@ -154,7 +154,7 @@ export default function WalletSnapshotDebug() {
           <p className="text-sm text-gray-300 mb-3">
             Found {duplicates.length} groups of duplicate wallets. Use the "Fix & Merge All" button to clean them up.
           </p>
-          {duplicates.slice(0, 3).map((group, idx) => (
+          {duplicates.slice(0, 3).map((group: any, idx: number) => (
             <div key={idx} className="text-xs text-gray-400 mb-2">
               Group {idx + 1}: {group.wallets.length} duplicates
               {group.wallets.map((w: any) => (

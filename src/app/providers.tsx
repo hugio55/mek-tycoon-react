@@ -1,7 +1,7 @@
 "use client";
 
 import { ConvexReactClient } from "convex/react";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import UnifiedHeader from "@/components/UnifiedHeader";
 import { SoundProvider } from "@/contexts/SoundContext";
@@ -12,13 +12,24 @@ import { LoaderProvider, useLoaderContext } from "@/features/page-loader";
 import { TIMING } from "@/features/page-loader/config/constants";
 import { ConvexProviderWithLoader } from "@/providers/ConvexProviderWithLoader";
 
-const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+// Lazy initialization - only create client when URL is available (not during static build)
+let convexClient: ConvexReactClient | null = null;
+function getConvexClient(): ConvexReactClient {
+  if (!convexClient && typeof window !== "undefined") {
+    const url = process.env.NEXT_PUBLIC_CONVEX_URL;
+    if (!url) {
+      throw new Error("NEXT_PUBLIC_CONVEX_URL is not set");
+    }
+    convexClient = new ConvexReactClient(url);
+  }
+  return convexClient!;
+}
 
 // Component that exposes Convex client to window (client-side only)
 function ConvexWindowBridge() {
   useEffect(() => {
     // Expose Convex client to window for admin components that need direct access
-    (window as any).convex = convex;
+    (window as any).convex = getConvexClient();
   }, []);
 
   return null;
@@ -72,6 +83,11 @@ function ContentWithLoadingState({ children }: { children: ReactNode }) {
 
 export function Providers({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Pages that should NOT have the header
   const isWelcomePage = pathname === "/";
@@ -83,9 +99,16 @@ export function Providers({ children }: { children: ReactNode }) {
   // Show unified header on all pages except welcome, talent-builder, landing, landing-v2, and wen
   const showHeader = !isWelcomePage && !isTalentBuilder && !isLandingPage && !isLandingV2Page && !isMaintenancePage;
 
+  // During SSR/static build, render minimal placeholder
+  if (!mounted) {
+    return <div className="min-h-screen" />;
+  }
+
+  const client = getConvexClient();
+
   return (
     <LoaderProvider>
-      <ConvexProviderWithLoader client={convex}>
+      <ConvexProviderWithLoader client={client}>
         <ConvexWindowBridge />
         <DemoWalletProvider>
           <UserProvider>

@@ -537,9 +537,18 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
 
           {(!conversations || conversations.length === 0) && (
             <div className="p-8 text-center text-gray-500">
-              <div className="text-4xl mb-2">📭</div>
-              <div>No conversations yet</div>
-              <div className="text-sm">Start a new conversation above</div>
+              {/* Empty Inbox Icon - Minimalist transmission dish */}
+              <div className="flex justify-center mb-3">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-600">
+                  <ellipse cx="24" cy="32" rx="16" ry="6" strokeDasharray="4 2" />
+                  <path d="M12 32V38C12 41.3 17.4 44 24 44C30.6 44 36 41.3 36 38V32" />
+                  <line x1="24" y1="4" x2="24" y2="26" />
+                  <circle cx="24" cy="4" r="2" fill="currentColor" />
+                  <path d="M18 10L24 4L30 10" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div className="text-gray-400">No transmissions yet</div>
+              <div className="text-sm text-gray-600">Initiate contact above</div>
             </div>
           )}
         </div>
@@ -590,8 +599,20 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {isNewConversation && !existingConversation && (
                 <div className="text-center text-gray-500 py-8">
-                  <div className="text-4xl mb-2">💬</div>
-                  <div>Start a conversation with {selectedRecipient?.companyName}</div>
+                  {/* New Channel Icon - Signal waves */}
+                  <div className="flex justify-center mb-3">
+                    <svg width="56" height="56" viewBox="0 0 56 56" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-cyan-500/60">
+                      <circle cx="28" cy="28" r="6" />
+                      <path d="M18 18C22.4 13.6 29.6 13.6 34 18" strokeLinecap="round" />
+                      <path d="M38 22C40.7 24.7 40.7 29.3 38 32" strokeLinecap="round" />
+                      <path d="M18 38C13.6 33.6 13.6 26.4 18 22" strokeLinecap="round" />
+                      <path d="M38 38C42.4 33.6 42.4 26.4 38 22" strokeLinecap="round" opacity="0.5" />
+                      <path d="M12 12C19.7 4.3 32.3 4.3 40 12" strokeLinecap="round" opacity="0.3" />
+                      <path d="M44 16C49 21 49 31 44 36" strokeLinecap="round" opacity="0.3" />
+                    </svg>
+                  </div>
+                  <div className="text-gray-400">Open channel with <span className="text-cyan-400">{selectedRecipient?.companyName}</span></div>
+                  <div className="text-sm text-gray-600 mt-1">Send your first transmission</div>
                 </div>
               )}
 
@@ -774,9 +795,25 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-500">
             <div className="text-center">
-              <div className="text-6xl mb-4">💬</div>
-              <div className="text-xl">Select a conversation</div>
-              <div className="text-sm mt-2">or start a new one</div>
+              {/* Comms Terminal Icon - Hexagonal display */}
+              <div className="flex justify-center mb-5">
+                <svg width="72" height="72" viewBox="0 0 72 72" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-600">
+                  {/* Outer hexagon */}
+                  <path d="M36 6L60 18V42L36 54L12 42V18L36 6Z" strokeOpacity="0.3" />
+                  {/* Inner hexagon */}
+                  <path d="M36 16L50 24V40L36 48L22 40V24L36 16Z" strokeOpacity="0.5" />
+                  {/* Center signal icon */}
+                  <circle cx="36" cy="32" r="4" fill="currentColor" fillOpacity="0.4" />
+                  <path d="M28 26C31.3 22.7 38.7 22.7 42 26" strokeLinecap="round" strokeOpacity="0.6" />
+                  <path d="M42 38C38.7 41.3 31.3 41.3 28 38" strokeLinecap="round" strokeOpacity="0.6" />
+                  {/* Corner accents */}
+                  <circle cx="36" cy="6" r="2" fill="currentColor" fillOpacity="0.3" />
+                  <circle cx="60" cy="18" r="2" fill="currentColor" fillOpacity="0.3" />
+                  <circle cx="12" cy="18" r="2" fill="currentColor" fillOpacity="0.3" />
+                </svg>
+              </div>
+              <div className="text-lg text-gray-400">Select a channel</div>
+              <div className="text-sm mt-2 text-gray-600">or initiate a new transmission</div>
             </div>
           </div>
         )}

@@ -169,10 +169,10 @@ export const checkClaimEligibility = query({
       .first();
 
     if (completedReservation) {
-      // Try to find the NFT details from inventory using the reservation's inventoryId
+      // Try to find the NFT details from inventory using the reservation's nftInventoryId
       let claimedNFT = null;
-      if (completedReservation.inventoryId) {
-        claimedNFT = await ctx.db.get(completedReservation.inventoryId);
+      if (completedReservation.nftInventoryId) {
+        claimedNFT = await ctx.db.get(completedReservation.nftInventoryId);
       }
 
       return {
@@ -181,7 +181,7 @@ export const checkClaimEligibility = query({
         alreadyClaimed: true,
         claimedNFTDetails: claimedNFT ? {
           name: claimedNFT.name,
-          editionNumber: claimedNFT.editionNumber,
+          nftNumber: claimedNFT.nftNumber,
           imageUrl: claimedNFT.imageUrl,
           soldAt: claimedNFT.soldAt,
         } : null,
@@ -207,7 +207,7 @@ export const checkClaimEligibility = query({
         alreadyClaimed: true,
         claimedNFTDetails: {
           name: soldNFT.name,
-          editionNumber: soldNFT.editionNumber,
+          nftNumber: soldNFT.nftNumber,
           imageUrl: soldNFT.imageUrl,
           soldAt: soldNFT.soldAt,
         },
@@ -374,7 +374,7 @@ export const checkCampaignEligibility = query({
           campaignName: campaign.name,
           claimedNFTDetails: {
             name: soldNFT.name,
-            editionNumber: soldNFT.editionNumber,
+            nftNumber: soldNFT.nftNumber,
             imageUrl: soldNFT.imageUrl,
             soldAt: soldNFT.soldAt,
           },
