@@ -1553,3 +1553,77 @@ export const clearLeaderboardCache = mutation({
     };
   },
 });
+
+// ============================================================================
+// MEK COUNT DIAGNOSTIC - Debug ownership discrepancies
+// ============================================================================
+
+/**
+ * Diagnose Mek count discrepancies for a specific wallet
+ * Checks both owner fields, finds duplicates, and reports details
+ */
+export const diagnoseMekCount = query({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const walletAddress = args.walletAddress;
+
+    // Get ALL Meks in database
+    const allMeks = await ctx.db.query("meks").collect();
+
+    // Find Meks where owner (legacy) matches
+    const meksByOwner = allMeks.filter(m => m.owner === walletAddress);
+
+    // Find Meks where ownerStakeAddress (Phase II) matches
+    const meksByStakeOwner = allMeks.filter(m => m.ownerStakeAddress === walletAddress);
+
+    // Find unique Meks (by assetId) that belong to this wallet via EITHER field
+    const allOwnedMeks = allMeks.filter(m =>
+      m.owner === walletAddress || m.ownerStakeAddress === walletAddress
+    );
+    const uniqueAssetIds = new Set(allOwnedMeks.map(m => m.assetId));
+
+    // Find duplicate assetIds in the entire database
+    const assetIdCounts = new Map<string, number>();
+    for (const mek of allMeks) {
+      assetIdCounts.set(mek.assetId, (assetIdCounts.get(mek.assetId) || 0) + 1);
+    }
+    const duplicateAssetIds = Array.from(assetIdCounts.entries())
+      .filter(([_, count]) => count > 1)
+      .map(([assetId, count]) => ({ assetId, count }));
+
+    // Find Meks with mismatched owner fields
+    const mismatchedOwners = allOwnedMeks.filter(m =>
+      m.owner && m.ownerStakeAddress && m.owner !== m.ownerStakeAddress
+    );
+
+    // Sample of Meks for this wallet (first 10)
+    const sampleMeks = allOwnedMeks.slice(0, 10).map(m => ({
+      assetId: m.assetId,
+      assetName: m.assetName,
+      owner: m.owner ? m.owner.substring(0, 20) + '...' : 'null',
+      ownerStakeAddress: m.ownerStakeAddress ? m.ownerStakeAddress.substring(0, 20) + '...' : 'null',
+      headVariation: m.headVariation,
+    }));
+
+    return {
+      walletAddress: walletAddress.substring(0, 25) + '...',
+      counts: {
+        byOwnerField: meksByOwner.length,
+        byOwnerStakeAddressField: meksByStakeOwner.length,
+        uniqueAssetIds: uniqueAssetIds.size,
+        totalMeksInDb: allMeks.length,
+      },
+      issues: {
+        duplicateAssetIdsInDb: duplicateAssetIds.length,
+        duplicateAssetIdSamples: duplicateAssetIds.slice(0, 5),
+        mismatchedOwnerFields: mismatchedOwners.length,
+      },
+      explanation: meksByOwner.length !== uniqueAssetIds.size
+        ? `DISCREPANCY: owner field shows ${meksByOwner.length} but only ${uniqueAssetIds.size} unique Meks. Check duplicates.`
+        : `OK: ${meksByOwner.length} Meks match by owner field`,
+      sampleMeks,
+    };
+  },
+});
