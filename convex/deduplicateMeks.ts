@@ -2,6 +2,13 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 /**
+ * MEKS TABLE PROTECTION
+ * The meks table contains exactly 4000 NFTs - this is FIXED and IMMUTABLE.
+ * Deduplication functions require unlock code to prevent accidental data loss.
+ */
+const EMERGENCY_UNLOCK_CODE = "I_UNDERSTAND_THIS_WILL_MODIFY_4000_NFTS";
+
+/**
  * Find duplicate meks by mek number (same NFT with different assetId formats)
  *
  * The issue: Some meks exist twice:
@@ -63,10 +70,30 @@ export const findDuplicates = query({
  * For each duplicate:
  * - If one has long assetId (>50 chars) and one has short, delete the short one
  * - Transfer any important data (tenure, slot info) from short to long if needed
+ *
+ * PROTECTED: Requires unlock code to prevent accidental data loss.
  */
 export const removeDuplicates = mutation({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    unlockCode: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // PROTECTION: Block by default
+    if (args.unlockCode !== EMERGENCY_UNLOCK_CODE) {
+      console.error("[MEKS-PROTECTION] BLOCKED: removeDuplicates called without unlock code");
+      return {
+        success: false,
+        error: "BLOCKED: This function deletes mek records. " +
+               "Provide unlockCode to proceed.",
+        deletedCount: 0,
+        mergedDataCount: 0,
+        finalMekCount: 0,
+        deletedAssetIds: [],
+        message: "Blocked - unlock code required",
+      };
+    }
+
+    console.warn("[MEKS-PROTECTION] Emergency unlock accepted - proceeding with deduplication");
     const allMeks = await ctx.db.query("meks").collect();
 
     // Extract mek number from assetName
@@ -200,12 +227,31 @@ export const findMisassignedMeks = query({
  * Fix incorrectly assigned short-format meks from a wallet
  * Clears ownership (sets owner to undefined) so mek stays in DB but isn't counted for user
  * Only affects meks that don't have corresponding long-format (on-chain) entries
+ *
+ * PROTECTED: Requires unlock code to prevent accidental ownership changes.
  */
 export const fixMisassignedMeks = mutation({
   args: {
     walletAddress: v.string(),
+    unlockCode: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // PROTECTION: Block by default
+    if (args.unlockCode !== EMERGENCY_UNLOCK_CODE) {
+      console.error("[MEKS-PROTECTION] BLOCKED: fixMisassignedMeks called without unlock code");
+      return {
+        success: false,
+        error: "BLOCKED: This function modifies mek ownership. " +
+               "Provide unlockCode to proceed.",
+        fixedCount: 0,
+        fixedAssetIds: [],
+        finalUserMekCount: 0,
+        totalMeksInDb: 0,
+        message: "Blocked - unlock code required",
+      };
+    }
+
+    console.warn("[MEKS-PROTECTION] Emergency unlock accepted - proceeding with ownership fix");
     const allMeks = await ctx.db.query("meks").collect();
 
     // Find meks owned by this wallet

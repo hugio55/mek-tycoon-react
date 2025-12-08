@@ -1751,11 +1751,37 @@ export const findInvalidAssetIds = query({
 
 /**
  * DELETE all Meks with invalid/short assetIds
- * Use after running findInvalidAssetIds to confirm what will be deleted
+ *
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * !! DANGER: THIS FUNCTION DELETED 4000 MEKS ON DEC 2025                    !!
+ * !! DO NOT RUN WITHOUT EXPLICIT USER APPROVAL AND BACKUP                   !!
+ * !! The meks table should contain exactly 4000 NFTs - never more, never less!!
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *
+ * Requires unlock code: "I_UNDERSTAND_THIS_WILL_MODIFY_4000_NFTS"
  */
 export const deleteInvalidMeks = mutation({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    unlockCode: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // PROTECTION: Block by default
+    const EMERGENCY_UNLOCK_CODE = "I_UNDERSTAND_THIS_WILL_MODIFY_4000_NFTS";
+
+    if (args.unlockCode !== EMERGENCY_UNLOCK_CODE) {
+      console.error("[MEKS-PROTECTION] BLOCKED: deleteInvalidMeks called without unlock code");
+      return {
+        success: false,
+        error: "BLOCKED: This function is protected. The meks table contains 4000 immutable NFTs. " +
+               "If you REALLY need to delete meks, provide unlockCode parameter. " +
+               "WARNING: This action previously deleted 4000 meks by accident!",
+        deletedCount: 0,
+        deletedAssetIds: [],
+      };
+    }
+
+    console.warn("[MEKS-PROTECTION] Emergency unlock accepted - proceeding with delete");
+
     const allMeks = await ctx.db.query("meks").collect();
     const invalidMeks = allMeks.filter(m => m.assetId.length < 50);
 

@@ -1,7 +1,15 @@
 import { mutation } from "./_generated/server";
+import { v } from "convex/values";
 
 // Import the backup data (converted to proper JSON array)
 const backupData = require("../trout_meks_array.json");
+
+/**
+ * MEKS TABLE PROTECTION
+ * The meks table contains exactly 4000 NFTs - this is FIXED and IMMUTABLE.
+ * This restore function is for EMERGENCY USE ONLY.
+ */
+const EMERGENCY_UNLOCK_CODE = "I_UNDERSTAND_THIS_WILL_MODIFY_4000_NFTS";
 
 /**
  * HELPER: Extract mek number from assetName
@@ -20,8 +28,24 @@ function getMekNumber(assetName: string): number | null {
  * with different assetId formats (short mint numbers vs long Cardano assetIds)
  */
 export const restoreFromTroutBackup = mutation({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    unlockCode: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // PROTECTION: Block by default
+    if (args.unlockCode !== EMERGENCY_UNLOCK_CODE) {
+      console.error("[MEKS-PROTECTION] BLOCKED: restoreFromTroutBackup called without unlock code");
+      return {
+        success: false,
+        error: "BLOCKED: This function clears and re-imports the entire meks table. " +
+               "Only use for emergency restoration after data loss. " +
+               "Provide unlockCode: 'I_UNDERSTAND_THIS_WILL_MODIFY_4000_NFTS' to proceed.",
+        totalRestored: 0,
+        errors: 0,
+      };
+    }
+
+    console.warn("[MEKS-PROTECTION] Emergency unlock accepted - proceeding with restore");
     console.log(`Starting restore of ${backupData.length} meks from trout_meks.json...`);
 
     // Clear existing meks table

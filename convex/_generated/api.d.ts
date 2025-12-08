@@ -114,6 +114,7 @@ import type * as mekTreeCategories from "../mekTreeCategories.js";
 import type * as mekTreeTableSaves from "../mekTreeTableSaves.js";
 import type * as mekTreeTables from "../mekTreeTables.js";
 import type * as mekTreeTemplates from "../mekTreeTemplates.js";
+import type * as meksProtection from "../meksProtection.js";
 import type * as messageAttachments from "../messageAttachments.js";
 import type * as messaging from "../messaging.js";
 import type * as migrateDesktopSettings from "../migrateDesktopSettings.js";
@@ -279,6 +280,7 @@ declare const fullApi: ApiFromModules<{
   mekTreeTableSaves: typeof mekTreeTableSaves;
   mekTreeTables: typeof mekTreeTables;
   mekTreeTemplates: typeof mekTreeTemplates;
+  meksProtection: typeof meksProtection;
   messageAttachments: typeof messageAttachments;
   messaging: typeof messaging;
   migrateDesktopSettings: typeof migrateDesktopSettings;
