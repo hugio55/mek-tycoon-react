@@ -6,9 +6,10 @@ import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import { getMediaUrl } from '@/lib/media-url';
+import SupportInbox from './SupportInbox';
 
 // Subtab types
-type MessagingSubtab = 'testing' | 'admin';
+type MessagingSubtab = 'testing' | 'admin' | 'support';
 
 // Types for attachments
 interface PendingAttachment {

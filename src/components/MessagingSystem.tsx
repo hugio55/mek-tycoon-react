@@ -505,7 +505,74 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
 
         {/* Conversation List */}
         <div className="flex-1 overflow-y-auto">
-          {conversations?.map((conv: any) => (
+          {/* Support Conversation - Pinned at Top */}
+          {supportConversation && (
+            <div
+              onClick={() => {
+                setSelectedConversationId(supportConversation._id);
+                setIsNewConversation(false);
+                setSelectedRecipient(null);
+              }}
+              className={`group w-full p-4 text-left border-b border-cyan-500/30 transition-colors cursor-pointer ${
+                selectedConversationId === supportConversation._id
+                  ? 'bg-cyan-500/15'
+                  : 'bg-cyan-500/5 hover:bg-cyan-500/10'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                {/* Support Icon */}
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 flex-shrink-0 flex items-center justify-center border border-cyan-500/40">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-cyan-400">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <polyline points="22,6 12,13 2,6" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-cyan-400 font-medium">
+                        Overexposed Support
+                      </span>
+                      <span className="text-cyan-500/60 text-xs px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">
+                        Dev Team
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowSupportDismissLightbox(true);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-all p-1"
+                        title="Close support chat"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                      <div className="text-gray-500 text-xs">
+                        {formatRelativeTime(supportConversation.lastMessageAt)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-gray-400 text-sm truncate">
+                      {supportConversation.lastMessagePreview || 'How can we help?'}
+                    </div>
+                    {supportConversation.unreadCount > 0 && (
+                      <span className="bg-cyan-500 text-black text-xs px-1.5 py-0.5 rounded-full">
+                        {supportConversation.unreadCount}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Regular Conversations */}
+          {regularConversations.map((conv: any) => (
             <div
               key={conv._id}
               onClick={() => {
@@ -594,30 +661,54 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
         {selectedConversationId || isNewConversation ? (
           <>
             {/* Conversation Header */}
-            <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+            <div className={`p-4 border-b flex items-center justify-between ${
+              currentConversation && isSupportConversation(currentConversation)
+                ? 'border-cyan-500/30 bg-cyan-500/5'
+                : 'border-gray-700'
+            }`}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
-                  <img
-                    src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(
-                      selectedRecipient?.walletAddress ||
-                      currentConversation?.otherParticipant?.walletAddress || ''
-                    )}`)}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <div className="text-white font-medium">
-                    {selectedRecipient?.companyName || currentConversation?.otherParticipant?.companyName || 'Unknown'}
+                {/* Profile icon - different for support vs regular */}
+                {currentConversation && isSupportConversation(currentConversation) ? (
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 flex items-center justify-center border border-cyan-500/40">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-cyan-400">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                      <polyline points="22,6 12,13 2,6" />
+                    </svg>
                   </div>
-                  {isNewConversation && (
-                    <div className="text-xs text-yellow-400">New conversation</div>
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
+                    <img
+                      src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(
+                        selectedRecipient?.walletAddress ||
+                        currentConversation?.otherParticipant?.walletAddress || ''
+                      )}`)}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div>
+                  {currentConversation && isSupportConversation(currentConversation) ? (
+                    <>
+                      <div className="text-cyan-400 font-medium">Overexposed Support</div>
+                      <div className="text-xs text-cyan-500/60">Development Team</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-white font-medium">
+                        {selectedRecipient?.companyName || currentConversation?.otherParticipant?.companyName || 'Unknown'}
+                      </div>
+                      {isNewConversation && (
+                        <div className="text-xs text-yellow-400">New conversation</div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
 
-              {/* Block button */}
-              {(currentConversation?.otherParticipant?.walletAddress || selectedRecipient?.walletAddress) && (
+              {/* Block button - hidden for support conversations */}
+              {(currentConversation?.otherParticipant?.walletAddress || selectedRecipient?.walletAddress) &&
+               !(currentConversation && isSupportConversation(currentConversation)) && (
                 <button
                   onClick={() => handleBlockUser(
                     currentConversation?.otherParticipant?.walletAddress || selectedRecipient?.walletAddress || ''
@@ -899,6 +990,27 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
               />
             </div>
             <div className="max-h-[300px] overflow-y-auto">
+              {/* Reopen Support Option - Shows when user searches "overexposed" or "support" */}
+              {showSupportOption && (
+                <button
+                  onClick={handleReopenSupportConversation}
+                  className="w-full p-4 text-left hover:bg-cyan-500/10 transition-colors border-b border-cyan-500/20 bg-cyan-500/5"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 flex items-center justify-center border border-cyan-500/40">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-cyan-400">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-cyan-400 font-medium">Reopen Support Chat</div>
+                      <div className="text-cyan-500/60 text-sm">Contact the Overexposed development team</div>
+                    </div>
+                  </div>
+                </button>
+              )}
+
               {filteredCorporations.length > 0 ? (
                 filteredCorporations.map((corp: any) => (
                   <button
@@ -1086,6 +1198,59 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
               <div className="text-xs text-gray-400 text-center">
                 Blocked users cannot send you messages
               </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Support Dismiss Confirmation Lightbox */}
+      {mounted && showSupportDismissLightbox && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md"
+          onClick={() => setShowSupportDismissLightbox(false)}
+        >
+          <div
+            className="w-full max-w-sm bg-white/5 backdrop-blur-xl border border-cyan-500/30 rounded-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-4 border-b border-cyan-500/20 bg-cyan-500/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 flex items-center justify-center border border-cyan-500/40">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-cyan-400">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <polyline points="22,6 12,13 2,6" />
+                  </svg>
+                </div>
+                <h2 className="text-lg font-semibold text-cyan-400">Close Support Chat?</h2>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-4">
+              <p className="text-gray-300 text-sm leading-relaxed">
+                You are closing this support conversation with the Overexposed development team.
+              </p>
+              <p className="text-gray-400 text-sm mt-3 leading-relaxed">
+                If you ever want to open it back up, search <span className="text-cyan-400 font-medium">&quot;Overexposed&quot;</span> in the New Conversation menu.
+              </p>
+            </div>
+
+            {/* Buttons */}
+            <div className="p-4 border-t border-white/10 flex gap-3">
+              <button
+                onClick={() => setShowSupportDismissLightbox(false)}
+                className="flex-1 py-2 bg-white/5 text-gray-300 border border-white/20 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDismissSupportConversation}
+                className="flex-1 py-2 bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 rounded-lg hover:bg-cyan-500/30 transition-colors"
+              >
+                Close Chat
+              </button>
             </div>
           </div>
         </div>,

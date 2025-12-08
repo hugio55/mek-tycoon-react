@@ -422,40 +422,66 @@ export const assignEligibilitySnapshot = mutation({
     snapshotId: v.optional(v.id("whitelistSnapshots")), // null/undefined to clear
   },
   handler: async (ctx, args) => {
+    console.log('[🔧SNAPSHOT] assignEligibilitySnapshot called with:', {
+      campaignId: args.campaignId,
+      snapshotId: args.snapshotId || 'CLEARING (undefined/null)',
+    });
+
     const campaign = await ctx.db.get(args.campaignId);
     if (!campaign) {
+      console.log('[🔧SNAPSHOT] ERROR - Campaign not found');
       throw new Error("Campaign not found");
     }
+
+    console.log('[🔧SNAPSHOT] Current campaign state:', {
+      name: campaign.name,
+      currentSnapshotId: campaign.eligibilitySnapshotId || 'NONE',
+    });
 
     // Verify snapshot exists if provided
     if (args.snapshotId) {
       const snapshot = await ctx.db.get(args.snapshotId);
       if (!snapshot) {
+        console.log('[🔧SNAPSHOT] ERROR - Snapshot not found');
         throw new Error("Snapshot not found");
       }
       console.log(
-        `[CAMPAIGNS] Assigning snapshot "${snapshot.snapshotName}" to campaign "${campaign.name}"`
+        `[🔧SNAPSHOT] Assigning snapshot "${snapshot.snapshotName}" to campaign "${campaign.name}"`
       );
 
       await ctx.db.patch(args.campaignId, {
         eligibilitySnapshotId: args.snapshotId,
         updatedAt: Date.now(),
       });
+      console.log('[🔧SNAPSHOT] SUCCESS - Snapshot assigned');
     } else {
       // CRITICAL: To clear an optional field in Convex, we must use replace or patch with explicit undefined
       // Convex patch ignores undefined values, so we need to use a workaround
       // Replace the entire document with the snapshot ID removed
       console.log(
-        `[CAMPAIGNS] Clearing eligibility snapshot from campaign "${campaign.name}"`
+        `[🔧SNAPSHOT] CLEARING eligibility snapshot from campaign "${campaign.name}"`
       );
+      console.log('[🔧SNAPSHOT] Using db.replace to remove eligibilitySnapshotId field');
 
       // Get current campaign and rebuild without eligibilitySnapshotId
       const { eligibilitySnapshotId, _id, _creationTime, ...rest } = campaign;
+
+      console.log('[🔧SNAPSHOT] Fields being preserved:', Object.keys(rest));
+      console.log('[🔧SNAPSHOT] Field being REMOVED: eligibilitySnapshotId (was:', eligibilitySnapshotId, ')');
+
       await ctx.db.replace(args.campaignId, {
         ...rest,
         updatedAt: Date.now(),
       });
+      console.log('[🔧SNAPSHOT] SUCCESS - Snapshot cleared via db.replace');
     }
+
+    // Verify the change took effect
+    const updatedCampaign = await ctx.db.get(args.campaignId);
+    console.log('[🔧SNAPSHOT] VERIFICATION - Campaign after update:', {
+      name: updatedCampaign?.name,
+      eligibilitySnapshotId: updatedCampaign?.eligibilitySnapshotId || 'NONE (successfully cleared)',
+    });
 
     return { success: true };
   },
