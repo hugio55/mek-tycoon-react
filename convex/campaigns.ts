@@ -436,16 +436,26 @@ export const assignEligibilitySnapshot = mutation({
       console.log(
         `[CAMPAIGNS] Assigning snapshot "${snapshot.snapshotName}" to campaign "${campaign.name}"`
       );
+
+      await ctx.db.patch(args.campaignId, {
+        eligibilitySnapshotId: args.snapshotId,
+        updatedAt: Date.now(),
+      });
     } else {
+      // CRITICAL: To clear an optional field in Convex, we must use replace or patch with explicit undefined
+      // Convex patch ignores undefined values, so we need to use a workaround
+      // Replace the entire document with the snapshot ID removed
       console.log(
         `[CAMPAIGNS] Clearing eligibility snapshot from campaign "${campaign.name}"`
       );
-    }
 
-    await ctx.db.patch(args.campaignId, {
-      eligibilitySnapshotId: args.snapshotId,
-      updatedAt: Date.now(),
-    });
+      // Get current campaign and rebuild without eligibilitySnapshotId
+      const { eligibilitySnapshotId, _id, _creationTime, ...rest } = campaign;
+      await ctx.db.replace(args.campaignId, {
+        ...rest,
+        updatedAt: Date.now(),
+      });
+    }
 
     return { success: true };
   },
