@@ -787,6 +787,20 @@ export default function MessagingSystemAdmin() {
           >
             Admin View (All Conversations)
           </button>
+          <button
+            onClick={() => setActiveSubtab('support')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+              activeSubtab === 'support'
+                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
+                : 'bg-black/30 text-gray-400 border border-gray-700 hover:border-gray-500'
+            }`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+            Support
+          </button>
         </div>
 
         {/* ============================================================ */}
@@ -1680,6 +1694,13 @@ export default function MessagingSystemAdmin() {
               </div>
             </div>
           </>
+        )}
+
+        {/* ============================================================ */}
+        {/* SUPPORT SUBTAB */}
+        {/* ============================================================ */}
+        {activeSubtab === 'support' && (
+          <SupportInbox />
         )}
       </div>
 
