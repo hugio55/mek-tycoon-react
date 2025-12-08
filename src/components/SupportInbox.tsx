@@ -84,12 +84,12 @@ export default function SupportInbox() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Mark as read when selecting conversation
+  // Mark as read when selecting conversation or new messages arrive
   useEffect(() => {
     if (selectedConversationId) {
       markSupportAsRead({ conversationId: selectedConversationId }).catch(console.error);
     }
-  }, [selectedConversationId, markSupportAsRead]);
+  }, [selectedConversationId, markSupportAsRead, messages?.length]);
 
   // Filter conversations by search
   const filteredConversations = (supportConversations || []).filter((conv: any) =>

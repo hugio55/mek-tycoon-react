@@ -174,12 +174,12 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     }
   }, [supportConversationStatus, walletAddress, createSupportConversation]);
 
-  // Mark messages as read when conversation is selected
+  // Mark messages as read when conversation is selected or new messages arrive
   useEffect(() => {
     if (selectedConversationId && walletAddress) {
       markAsRead({ conversationId: selectedConversationId, walletAddress });
     }
-  }, [selectedConversationId, walletAddress, markAsRead]);
+  }, [selectedConversationId, walletAddress, markAsRead, messages?.length]);
 
   // Auto-scroll to latest messages
   useEffect(() => {
