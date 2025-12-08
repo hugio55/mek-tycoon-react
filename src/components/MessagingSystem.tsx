@@ -783,7 +783,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
 
                       <div className={`flex items-center gap-2 mt-1 text-xs text-gray-500 ${isMine ? 'justify-end' : ''}`}>
                         <span>{formatRelativeTime(msg.createdAt)}</span>
-                        {isMine && msg.status && (
+                        {isMine && msg.status && !(currentConversation && isSupportConversation(currentConversation)) && (
                           <span className={msg.status === 'read' ? 'text-green-400' : ''}>
                             {msg.status === 'read' ? '✓✓' : '✓'}
                           </span>

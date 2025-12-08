@@ -12,7 +12,7 @@ import GameDataLightbox from '@/components/GameDataLightbox';
 import StoryClimbConfig from '@/components/StoryClimbConfig';
 import DifficultyAdminConfig from '@/components/DifficultyAdminConfig';
 import BuffCategoriesAdmin from '@/components/BuffCategoriesAdmin';
-import BuffCategoriesV2Admin from '@/components/BuffCategoriesV2Admin';
+import BuffCategoriesV2 from '@/components/admin/BuffCategoriesV2';
 import MekBaseConfig from '@/components/MekBaseConfig';
 import MekTalentTreeConfig from '@/components/MekTalentTreeConfig';
 import MekDetailViewer from '@/components/MekDetailViewer';
@@ -2499,7 +2499,7 @@ export default function AdminMasterDataPage() {
             </button>
             {expandedSections.has('buff-categories-v2') && (
               <div className="p-4 border-t border-gray-700/50">
-                <BuffCategoriesV2Admin />
+                <BuffCategoriesV2 />
               </div>
             )}
           </div>
