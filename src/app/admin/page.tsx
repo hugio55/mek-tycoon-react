@@ -7385,12 +7385,26 @@ function NFTAdminTabs({ client }: { client: any }) {
       console.log('[🔄NMKR] Sync result:', result);
 
       // Show result to user
+      let message = '';
+
       if (result.syncedCount > 0) {
-        alert(`✅ Synced ${result.syncedCount} NFTs!\n\nUpdates:\n${result.updates.map((u: any) => `• ${u.nftName}: ${u.oldStatus} → ${u.newStatus}`).join('\n')}`);
+        message += `✅ Updated ${result.syncedCount} NFTs:\n${result.updates.map((u: any) => `• ${u.nftName}: ${u.oldStatus} → ${u.newStatus}`).join('\n')}\n\n`;
+      }
+
+      if (result.importedCount > 0) {
+        message += `📥 Imported ${result.importedCount} new NFTs from NMKR:\n${result.imports.slice(0, 10).map((i: any) => `• ${i.nftName} (${i.status})`).join('\n')}${result.imports.length > 10 ? `\n...and ${result.imports.length - 10} more` : ''}\n\n`;
+      }
+
+      if (result.errors.length > 0) {
+        message += `⚠️ Errors:\n${result.errors.join('\n')}\n\n`;
+      }
+
+      if (message) {
+        alert(message.trim());
       } else if (result.skippedCount > 0) {
-        alert(`ℹ️ No changes needed.\n\n${result.skippedCount} NFTs already in sync.\n${result.errors.length > 0 ? `\nErrors: ${result.errors.join(', ')}` : ''}`);
+        alert(`ℹ️ No changes needed.\n\n${result.skippedCount} NFTs already in sync.`);
       } else {
-        alert(`⚠️ No NFTs were synced.\n\nThis might mean:\n• NFT UIDs don't match between NMKR and database\n• No inventory items found for this campaign\n\nCheck browser console for details.`);
+        alert(`⚠️ No NFTs were synced or imported.\n\nCheck browser console for details.`);
       }
 
       // Clear discrepancies and close modal

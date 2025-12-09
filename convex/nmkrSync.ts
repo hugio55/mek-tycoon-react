@@ -145,12 +145,20 @@ export const syncCampaignInventory = mutation({
       nftUid: v.string(),
       nmkrStatus: v.string(),
       soldTo: v.optional(v.string()),
+      name: v.optional(v.string()), // For importing missing NFTs
+      ipfsLink: v.optional(v.string()), // For importing missing NFTs
     })),
   },
   handler: async (ctx, args) => {
     console.log('[🔄SYNC] ========== SYNC CAMPAIGN INVENTORY ==========');
     console.log('[🔄SYNC] Campaign ID:', args.campaignId);
     console.log('[🔄SYNC] NMKR statuses received:', args.nmkrStatuses.length);
+
+    // Get campaign for projectId
+    const campaign = await ctx.db.get(args.campaignId);
+    if (!campaign) {
+      throw new Error('Campaign not found');
+    }
 
     // Get all inventory items for this campaign
     const inventory = await ctx.db
@@ -163,12 +171,17 @@ export const syncCampaignInventory = mutation({
       console.log('[🔄SYNC] DB Item:', item.name, '| UID:', item.nftUid, '| Status:', item.status);
     });
 
+    // Create a set of existing inventory UIDs for quick lookup
+    const existingUids = new Set(inventory.map((i: any) => i.nftUid));
+
     // Create a map of NMKR statuses by UID
-    const nmkrStatusMap = new Map<string, { nmkrStatus: string; soldTo?: string }>();
+    const nmkrStatusMap = new Map<string, { nmkrStatus: string; soldTo?: string; name?: string; ipfsLink?: string }>();
     for (const status of args.nmkrStatuses) {
       nmkrStatusMap.set(status.nftUid, {
         nmkrStatus: status.nmkrStatus,
         soldTo: status.soldTo,
+        name: status.name,
+        ipfsLink: status.ipfsLink,
       });
     }
 
@@ -239,8 +252,65 @@ export const syncCampaignInventory = mutation({
       }
     }
 
-    // Sync campaign counters after updates
-    if (syncedCount > 0) {
+    // IMPORT MISSING NFTs: Create inventory for NFTs in NMKR but not in database
+    let importedCount = 0;
+    const imports: Array<{ nftName: string; status: string }> = [];
+
+    // Find the highest existing nftNumber to continue from
+    let maxNftNumber = 0;
+    for (const item of inventory) {
+      if (item.nftNumber > maxNftNumber) {
+        maxNftNumber = item.nftNumber;
+      }
+    }
+
+    // Iterate through NMKR statuses and create missing NFTs
+    for (const [nftUid, nmkrData] of Array.from(nmkrStatusMap.entries())) {
+      if (!existingUids.has(nftUid)) {
+        // This NFT exists in NMKR but not in our database - import it!
+        const expectedDbStatus = NMKR_TO_DB_STATUS[nmkrData.nmkrStatus] || 'available';
+        maxNftNumber++;
+
+        try {
+          // Extract NFT number from name if possible (e.g., "Lab Rat #5" -> 5)
+          let nftNumber = maxNftNumber;
+          const nameMatch = nmkrData.name?.match(/#(\d+)/);
+          if (nameMatch) {
+            nftNumber = parseInt(nameMatch[1], 10);
+          }
+
+          const newInventory = {
+            campaignId: args.campaignId,
+            nftUid: nftUid,
+            nftNumber: nftNumber,
+            name: nmkrData.name || `NFT #${nftNumber}`,
+            status: expectedDbStatus as 'available' | 'reserved' | 'sold',
+            projectId: campaign.nmkrProjectId || '',
+            paymentUrl: `https://pay.nmkr.io/?p=${campaign.nmkrProjectId}&n=${nftUid}`,
+            imageUrl: nmkrData.ipfsLink,
+            createdAt: Date.now(),
+          };
+
+          await ctx.db.insert("commemorativeNFTInventory", newInventory);
+
+          imports.push({
+            nftName: newInventory.name,
+            status: expectedDbStatus,
+          });
+
+          console.log('[🔄SYNC] ✅ IMPORTED:', newInventory.name, '| Status:', expectedDbStatus);
+          importedCount++;
+        } catch (importError: any) {
+          errors.push(`Failed to import ${nmkrData.name || nftUid}: ${importError.message}`);
+          console.error('[🔄SYNC] ❌ Import error:', importError.message);
+        }
+      }
+    }
+
+    console.log('[🔄SYNC] Imported', importedCount, 'new NFTs from NMKR');
+
+    // Sync campaign counters after updates/imports
+    if (syncedCount > 0 || importedCount > 0) {
       const updatedInventory = await ctx.db
         .query("commemorativeNFTInventory")
         .withIndex("by_campaign", (q: any) => q.eq("campaignId", args.campaignId))
@@ -258,14 +328,16 @@ export const syncCampaignInventory = mutation({
       console.log('[🔄SYNC] Updated campaign counters:', counters);
     }
 
-    console.log('[🔄SYNC] Sync complete. Synced:', syncedCount, 'Skipped:', skippedCount, 'Errors:', errors.length);
+    console.log('[🔄SYNC] Sync complete. Synced:', syncedCount, 'Imported:', importedCount, 'Skipped:', skippedCount, 'Errors:', errors.length);
 
     return {
       success: true,
       syncedCount,
+      importedCount,
       skippedCount,
       errors,
       updates,
+      imports,
     };
   },
 });
