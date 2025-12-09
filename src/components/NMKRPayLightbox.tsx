@@ -135,9 +135,10 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
   // Query for payment completion - checks if THIS SPECIFIC reservation was paid
   // Uses reservation ID (not wallet) to prevent false positives from previous claims
+  // Also runs during 'payment' state for active polling while NMKR window is open
   const reservationPaymentStatus = useQuery(
     api.commemorativeNFTClaims.checkReservationPaid,
-    (state === 'processing' || state === 'payment_window_closed') && reservationId
+    (state === 'payment' || state === 'processing' || state === 'payment_window_closed') && reservationId
       ? { reservationId }
       : "skip"
   );
@@ -757,15 +758,28 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
     return () => clearInterval(interval);
   }, []);
 
-  // Check for payment completion (works during processing AND after window closes)
+  // Check for payment completion (works during payment, processing, AND after window closes)
   // Now uses reservation-specific check to prevent false positives from previous claims
+  // Active polling during 'payment' state allows auto-detection without closing NMKR window
   useEffect(() => {
-    if ((state !== 'processing' && state !== 'payment_window_closed') || !reservationPaymentStatus) return;
+    if ((state !== 'payment' && state !== 'processing' && state !== 'payment_window_closed') || !reservationPaymentStatus) return;
+
+    // Debug logging to help track payment detection
+    console.log('[🔍PAYMENT-CHECK] State:', state, 'Status:', {
+      isPaid: reservationPaymentStatus.isPaid,
+      hasClaim: !!reservationPaymentStatus.claim,
+      nftStatus: reservationPaymentStatus.nftStatus,
+    });
+
     if (reservationPaymentStatus.isPaid && reservationPaymentStatus.claim) {
       console.log('[VERIFY] ✅ THIS RESERVATION was paid! Claim:', reservationPaymentStatus.claim);
+      // Close the payment window if still open
+      if (paymentWindow && !paymentWindow.closed) {
+        paymentWindow.close();
+      }
       setState('success');
     }
-  }, [state, reservationPaymentStatus]);
+  }, [state, reservationPaymentStatus, paymentWindow]);
 
   // Auto-release when timer expires
   useEffect(() => {
@@ -1472,7 +1486,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
               <h2 className="text-2xl font-bold text-yellow-400 mb-4 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
                 Complete Your Purchase
               </h2>
-              <p className="text-gray-400 mb-6">Complete the payment in the NMKR window</p>
+              <p className="text-gray-400 mb-2">Complete the payment in the NMKR window</p>
+              <p className="text-white font-semibold text-sm">Close the NMKR window when your payment is complete.</p>
             </div>
             <button
               onClick={attemptCancel}
@@ -1522,21 +1537,18 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
           );
         }
 
-        // Show options immediately when payment window is closed (no auto-verification delay)
+        // Show options when payment window is closed - friendly tone assuming they may have paid
         return (
           <div className="text-center py-6">
             <div className="mb-6">
               <div className="w-16 h-16 mx-auto rounded-full bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center mb-4">
                 <svg className="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="text-xl font-bold text-white mb-3">Payment Window Closed</h2>
-              <p className="text-white/60 text-sm leading-relaxed mb-2">
-                We noticed the payment window has been closed.
-              </p>
+              <h2 className="text-xl font-bold text-white mb-3">Did you complete your payment?</h2>
               <p className="text-white/60 text-sm leading-relaxed">
-                If this was an accident, you can try again. Your reservation is still active.
+                Click refresh below to check if your payment was received.
               </p>
             </div>
 
@@ -1550,7 +1562,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
                 className="w-full py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200"
                 style={{ fontFamily: 'Inter, sans-serif', background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)', color: '#ffffff', boxShadow: '0 6px 24px rgba(6, 182, 212, 0.4)', border: 'none' }}
               >
-                I paid - check again
+                Refresh
               </button>
 
               {/* Secondary action: Go back to reservation screen to re-open payment */}
@@ -1558,7 +1570,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
                 onClick={() => setState('reserved')}
                 className="w-full py-2 px-4 text-sm font-medium text-cyan-300 hover:text-cyan-200 transition-colors"
               >
-                Start Over
+                Re-open Payment Window
               </button>
 
               {/* Tertiary action: Cancel the reservation entirely */}

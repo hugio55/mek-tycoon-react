@@ -97,6 +97,7 @@ export const checkReservationPaid = query({
     return {
       isPaid: false,
       claim: null,
+      nftStatus: nft.status, // Include for debugging
     };
   },
 });
