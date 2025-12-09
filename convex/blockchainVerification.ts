@@ -276,14 +276,27 @@ export const verifyNFTOwnership = action({
         timestamp: verificationResult.timestamp
       });
 
-      // If verification succeeded, update the users table
+      // If verification succeeded, update the users table AND sync mek ownership
       if (verificationResult.verified) {
         console.log('[Verification] Marking wallet as verified...');
         try {
+          // Mark user as verified
           await ctx.runMutation(api.blockchainVerification.markWalletAsVerified, {
             walletAddress: args.stakeAddress
           });
           console.log('[Verification] Successfully marked wallet as verified');
+
+          // Phase II: Sync mek ownership to meks table
+          console.log('[Verification] Syncing mek ownership to meks table...');
+          const syncResult = await ctx.runMutation(api.blockchainVerification.syncMekOwnership, {
+            stakeAddress: args.stakeAddress,
+            verifiedMeks: blockchainMeks.map(m => ({
+              assetId: m.assetId,
+              assetName: m.assetName,
+              mekNumber: m.mekNumber
+            }))
+          });
+          console.log('[Verification] Mek ownership sync result:', syncResult);
         } catch (mutationError: any) {
           console.error('[Verification] Failed to mark wallet as verified:', mutationError);
           console.error('[Verification] Error details:', {
@@ -365,6 +378,85 @@ export const batchVerifyWallets = action({
       verifications: results,
       totalWallets: args.wallets.length,
       verifiedCount: results.filter((r: any) => r.verified).length
+    };
+  }
+});
+
+// Phase II: Sync mek ownership to meks table
+export const syncMekOwnership = mutation({
+  args: {
+    stakeAddress: v.string(),
+    verifiedMeks: v.array(v.object({
+      assetId: v.string(),
+      assetName: v.string(),
+      mekNumber: v.number(),
+    }))
+  },
+  handler: async (ctx, args) => {
+    console.log('[🔄SYNC] Starting mek ownership sync for:', args.stakeAddress.substring(0, 20) + '...');
+    console.log('[🔄SYNC] Verified meks count:', args.verifiedMeks.length);
+
+    const now = Date.now();
+    let updated = 0;
+    let created = 0;
+    let cleared = 0;
+
+    // Get current meks owned by this stake address
+    const currentlyOwnedMeks = await ctx.db
+      .query("meks")
+      .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", args.stakeAddress))
+      .collect();
+
+    const verifiedAssetIds = new Set(args.verifiedMeks.map(m => m.assetId));
+    const currentAssetIds = new Set(currentlyOwnedMeks.map(m => m.assetId));
+
+    // 1. Update ownership for verified meks
+    for (const verifiedMek of args.verifiedMeks) {
+      const existingMek = await ctx.db
+        .query("meks")
+        .withIndex("by_asset_id", (q: any) => q.eq("assetId", verifiedMek.assetId))
+        .first();
+
+      if (existingMek) {
+        // Mek exists - update ownership if different
+        if (existingMek.ownerStakeAddress !== args.stakeAddress) {
+          // Ownership changed - reset accumulated gold for corp
+          await ctx.db.patch(existingMek._id, {
+            ownerStakeAddress: args.stakeAddress,
+            owner: args.stakeAddress, // Keep legacy field in sync
+            accumulatedGoldForCorp: 0, // Reset on ownership change
+            lastUpdated: now,
+          });
+          updated++;
+        }
+      } else {
+        // Mek doesn't exist in table - this shouldn't happen for the 4000 fixed NFTs
+        // But if it does, log it for investigation
+        console.warn('[🔄SYNC] WARNING: Mek not found in database:', verifiedMek.assetId);
+        created++;
+      }
+    }
+
+    // 2. Clear ownership for meks no longer owned by this user
+    for (const currentMek of currentlyOwnedMeks) {
+      if (!verifiedAssetIds.has(currentMek.assetId)) {
+        // User no longer owns this mek
+        await ctx.db.patch(currentMek._id, {
+          ownerStakeAddress: undefined,
+          lastUpdated: now,
+        });
+        cleared++;
+      }
+    }
+
+    console.log('[🔄SYNC] Sync complete:', { updated, created, cleared });
+
+    return {
+      success: true,
+      updated,
+      created,
+      cleared,
+      totalVerified: args.verifiedMeks.length
     };
   }
 });

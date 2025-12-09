@@ -57,9 +57,9 @@ export default function NavigationBar() {
   // Get active navigation configuration
   const activeNavConfig = useQuery(api.navigation.getActiveNavigationConfig);
 
-  // Get gold mining data for display zones
-  const goldMiningData = useQuery(
-    api.goldMining.getGoldMiningData,
+  // Phase II: Get user data for display zones (replaces goldMining)
+  const userData = useQuery(
+    api.userData.getUserData,
     walletAddress ? { walletAddress } : "skip"
   );
 
@@ -99,12 +99,13 @@ export default function NavigationBar() {
 
   // Accumulate gold in real-time for display zones
   useEffect(() => {
-    if (!goldMiningData) {
+    if (!userData) {
       return;
     }
 
-    const targetGold = goldMiningData.currentGold || 0;
-    const goldPerHour = goldMiningData.totalGoldPerHour || 0;
+    // Phase II: userData.gold is spendable balance, totalGoldPerHour is income rate
+    const targetGold = userData.gold || 0;
+    const goldPerHour = userData.totalGoldPerHour || 0;
     const goldPerMs = goldPerHour / 3600000;
 
     // Initialize current gold if needed
@@ -127,7 +128,7 @@ export default function NavigationBar() {
         cancelAnimationFrame(goldAnimationRef.current);
       }
     };
-  }, [goldMiningData]);
+  }, [userData]);
 
   // ============================================================
   // EARLY RETURNS (after all hooks are called)
@@ -281,13 +282,14 @@ export default function NavigationBar() {
         rawValue = currentGold;
         break;
       case "cumulative-gold":
-        rawValue = goldMiningData?.totalCumulativeGold || 0;
+        // Phase II: Use gold balance for now (cumulative tracking TBD)
+        rawValue = userData?.gold || 0;
         break;
       case "gold-per-hour":
-        rawValue = goldMiningData?.totalGoldPerHour || 0;
+        rawValue = userData?.totalGoldPerHour || 0;
         break;
       case "mek-count":
-        rawValue = goldMiningData?.ownedMeks?.length || 0;
+        rawValue = userData?.mekCount || 0;
         break;
       case "essence":
         const essenceType = zone.metadata?.essenceType || "Fire";

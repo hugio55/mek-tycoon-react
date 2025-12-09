@@ -393,19 +393,19 @@ export default function EssenceMarketPage() {
     });
   }, [userId, walletAddress, userProfile]);
 
-  // Get gold mining data for real-time updates
-  const goldMiningData = useQuery(
-    api.goldMining.getGoldMiningData,
+  // Phase II: Get user data for real-time updates (replaces goldMining)
+  const userData = useQuery(
+    api.userData.getUserData,
     walletAddress ? { walletAddress } : "skip"
   );
 
   // State for real-time gold display
   const [displayGold, setDisplayGold] = useState(0);
 
-  // Debug: Log goldMiningData when it changes
+  // Debug: Log userData when it changes
   useEffect(() => {
-    console.log('[Essence Market DEBUG] goldMiningData:', goldMiningData);
-  }, [goldMiningData]);
+    console.log('[Essence Market DEBUG] userData:', userData);
+  }, [userData]);
 
   // Get essence listings
   const listingsData = useQuery(
@@ -480,22 +480,21 @@ export default function EssenceMarketPage() {
     }
   }, [searchTerm]);
 
-  // Initialize displayGold from goldMiningData.accumulatedGold (matches hub page)
-  // This is the NET GOLD (pending accumulated gold)
+  // Initialize displayGold from userData.gold (Phase II: spendable gold balance)
   useEffect(() => {
-    if (goldMiningData?.accumulatedGold !== undefined) {
-      console.log('[Essence Market] Setting displayGold to NET GOLD:', goldMiningData.accumulatedGold);
-      console.log('[Essence Market] goldMiningData full:', goldMiningData);
-      setDisplayGold(goldMiningData.accumulatedGold);
+    if (userData?.gold !== undefined) {
+      console.log('[Essence Market] Setting displayGold to gold balance:', userData.gold);
+      console.log('[Essence Market] userData full:', userData);
+      setDisplayGold(userData.gold);
     }
-  }, [goldMiningData?.accumulatedGold]);
+  }, [userData?.gold]);
 
-  // Real-time gold increment animation (matches hub page)
+  // Real-time gold increment animation (Phase II: uses totalGoldPerHour)
   useEffect(() => {
-    if (!goldMiningData?.totalGoldPerHour) return;
+    if (!userData?.totalGoldPerHour) return;
 
-    const goldPerSecond = goldMiningData.totalGoldPerHour / 3600;
-    console.log('[Essence Market] Starting gold animation with rate:', goldMiningData.totalGoldPerHour, 'gold/hr');
+    const goldPerSecond = userData.totalGoldPerHour / 3600;
+    console.log('[Essence Market] Starting gold animation with rate:', userData.totalGoldPerHour, 'gold/hr');
     let lastTimestamp = performance.now();
     let animationFrameId: number;
 
@@ -510,7 +509,7 @@ export default function EssenceMarketPage() {
 
     animationFrameId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [goldMiningData?.totalGoldPerHour]);
+  }, [userData?.totalGoldPerHour]);
 
   // Filter and sort listings
   const filteredListings = listings.filter((listing: { sellerId: Id<"users">; expiresAt?: number; itemVariation?: string }) => {

@@ -226,9 +226,9 @@ export default function UnifiedHeader() {
     walletAddress ? { walletAddress } : "skip"
   );
 
-  // Get gold mining data
-  const goldMiningData = useQuery(
-    api.goldMining.getGoldMiningData,
+  // Phase II: Get user data (replaces goldMining)
+  const userData = useQuery(
+    api.userData.getUserData,
     walletAddress ? { walletAddress } : "skip"
   );
 
@@ -238,9 +238,9 @@ export default function UnifiedHeader() {
     walletAddress ? { walletAddress } : "skip"
   );
 
-  // Get owned Meks count
-  const ownedMeksCount = goldMiningData?.ownedMeks?.length || 0;
-  const cumulativeGold = goldMiningData?.accumulatedGold || 0;
+  // Get owned Meks count (Phase II: from userData)
+  const ownedMeksCount = userData?.mekCount || 0;
+  const cumulativeGold = userData?.gold || 0;
 
   // PHASE II: Mandatory corporation name enforcement
   // If logged in but no corporation name, go directly to the CompanyNameModal

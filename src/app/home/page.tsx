@@ -20,14 +20,14 @@ export default function HomePage() {
     userId ? { walletAddress: userId } : "skip"
   );
 
-  // Get user's gold mining data (includes correct Mek list)
-  const goldMiningData = useQuery(
-    api.goldMining.getGoldMiningData,
+  // Phase II: Get user data (includes correct Mek list from meks table)
+  const userData = useQuery(
+    api.userData.getUserData,
     userId ? { walletAddress: userId } : "skip"
   );
 
-  // Extract owned Meks from gold mining data (this is the source of truth)
-  const ownedMeks = goldMiningData?.ownedMeks || [];
+  // Extract owned Meks from user data (Phase II: meks table is source of truth)
+  const ownedMeks = userData?.ownedMeks || [];
 
   // Load triangle overlay data from database
   const triangleOverlayData = useQuery(api.overlays.getOverlay, { imageKey: "variation-triangle" });
