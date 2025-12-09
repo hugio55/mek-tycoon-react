@@ -34,6 +34,8 @@ export const getInventoryDiscrepancies = query({
       nftUid: v.string(),
       nmkrStatus: v.string(),
       soldTo: v.optional(v.string()),
+      name: v.optional(v.string()), // For displaying in UI and importing
+      ipfsLink: v.optional(v.string()), // For importing missing NFTs
     })),
   },
   handler: async (ctx, args) => {
@@ -49,11 +51,13 @@ export const getInventoryDiscrepancies = query({
     console.log('[🔄SYNC] Received', args.nmkrStatuses.length, 'statuses from NMKR');
 
     // Create a map of NMKR statuses by UID
-    const nmkrStatusMap = new Map<string, { nmkrStatus: string; soldTo?: string }>();
+    const nmkrStatusMap = new Map<string, { nmkrStatus: string; soldTo?: string; name?: string; ipfsLink?: string }>();
     for (const status of args.nmkrStatuses) {
       nmkrStatusMap.set(status.nftUid, {
         nmkrStatus: status.nmkrStatus,
         soldTo: status.soldTo,
+        name: status.name,
+        ipfsLink: status.ipfsLink,
       });
     }
 
@@ -111,10 +115,17 @@ export const getInventoryDiscrepancies = query({
     const inventoryUids = new Set(inventory.map(i => i.nftUid));
     Array.from(nmkrStatusMap.entries()).forEach(([nftUid, data]) => {
       if (!inventoryUids.has(nftUid)) {
+        // Extract NFT number from name if possible (e.g., "Lab Rat #5" -> 5)
+        let nftNumber = -1;
+        const nameMatch = data.name?.match(/#(\d+)/);
+        if (nameMatch) {
+          nftNumber = parseInt(nameMatch[1], 10);
+        }
+
         discrepancies.push({
           nftUid,
-          nftName: `Unknown (${nftUid.substring(0, 8)}...)`,
-          nftNumber: -1,
+          nftName: data.name || `Unknown (${nftUid.substring(0, 8)}...)`,
+          nftNumber,
           inventoryId: '',
           dbStatus: 'not_found',
           nmkrStatus: data.nmkrStatus,
