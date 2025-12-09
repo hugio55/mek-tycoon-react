@@ -3567,7 +3567,8 @@ export default defineSchema({
   })
     .index("by_tx_hash", ["transactionHash"])
     .index("by_stake_address", ["stakeAddress"])
-    .index("by_processed_at", ["processedAt"]),
+    .index("by_processed_at", ["processedAt"])
+    .index("by_nft_uid", ["nftUid"]), // For PATH 3 detection in checkReservationPaid
 
   // ===== SIMPLE NFT ELIGIBILITY SYSTEM (NMKR) =====
   // Replaces the complex custom minting system above

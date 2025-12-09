@@ -229,7 +229,29 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
 
       // NEW: Complete reservation if one exists, otherwise mark inventory as sold directly
       if (ReceiverStakeAddress) {
-        // CRITICAL SECURITY FIX #2: Check if buyer is whitelisted
+        // Extract NFT UID early for use in multiple places
+        const nftUid = NotificationSaleNfts?.[0]?.NftUid;
+
+        // CRITICAL FIX: Record webhook BEFORE processing to ensure idempotency
+        // If we record after processing, a retry could process the same sale twice
+        if (txHash && nftUid) {
+          try {
+            await getConvex().mutation(api.webhooks.recordProcessedWebhook, {
+              transactionHash: txHash,
+              stakeAddress: ReceiverStakeAddress,
+              nftUid: nftUid,
+              reservationId: undefined,
+              eventType: EventType,
+            });
+            console.log('[🛡️WEBHOOK-SECURITY] ✓ Webhook recorded BEFORE processing:', txHash);
+          } catch (recordError) {
+            // If this fails due to duplicate, the check at the top should have caught it
+            // If it fails for other reasons, continue - better to process than fail
+            console.error('[🛡️WEBHOOK-SECURITY] Failed to record webhook:', recordError);
+          }
+        }
+
+        // Check if buyer is whitelisted (informational - blockchain tx already succeeded)
         try {
           const eligibility = await getConvex().query(
             api.nftEligibility.checkClaimEligibility,
@@ -240,32 +262,28 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
             console.error('[🛡️WEBHOOK-SECURITY] ❌ Purchase from non-whitelisted address:', ReceiverStakeAddress);
             console.error('[🛡️WEBHOOK-SECURITY] Transaction hash:', txHash);
             console.error('[🛡️WEBHOOK-SECURITY] This requires manual review - blockchain transaction already completed');
-
-            // Log for manual review (still complete the sale since blockchain tx succeeded)
-            // In future, could implement automated refund mechanism here
           } else {
             console.log('[🛡️WEBHOOK-SECURITY] ✓ Whitelisted buyer confirmed:', ReceiverStakeAddress);
           }
         } catch (eligibilityError) {
           console.error('[🛡️WEBHOOK-SECURITY] Error checking eligibility:', eligibilityError);
-          // Continue processing - don't block legitimate sales due to eligibility check errors
         }
 
-        // Extract NFT UID early for use in multiple places
-        const nftUid = NotificationSaleNfts?.[0]?.NftUid;
+        // Normalize wallet address for consistent matching
+        const normalizedWallet = ReceiverStakeAddress.toLowerCase().trim();
 
         try {
           const reservationResult = await getConvex().mutation(
             api.commemorativeNFTReservations.completeReservationByWallet,
             {
-              walletAddress: ReceiverStakeAddress,
+              walletAddress: normalizedWallet,
               transactionHash: txHash,
-              nftUid: nftUid, // Pass NFT UID for fallback lookup strategy
+              nftUid: nftUid,
             }
           );
 
           if (reservationResult.success) {
-            console.log('[🔨WEBHOOK] ✓ Completed reservation for:', ReceiverStakeAddress);
+            console.log('[🔨WEBHOOK] ✓ Completed reservation for:', normalizedWallet);
           } else {
             // No reservation found - this is an external sale (purchased directly from NMKR Studio)
             console.log('[🔨WEBHOOK] No reservation found - external sale detected');
@@ -273,13 +291,12 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
             if (nftUid) {
               console.log('[🔨WEBHOOK] Attempting to mark inventory as sold by UID:', nftUid);
 
-              // Update inventory directly by UID
               const inventoryResult = await getConvex().mutation(
                 api.commemorativeCampaigns.markInventoryAsSoldByUid,
                 {
                   nftUid: nftUid,
                   transactionHash: txHash,
-                  soldTo: ReceiverStakeAddress,
+                  soldTo: normalizedWallet,
                 }
               );
 
@@ -295,23 +312,6 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
           }
         } catch (error) {
           console.error('[🔨WEBHOOK] Error processing sale:', error);
-          // Don't fail the webhook - transaction already succeeded on blockchain
-        }
-
-        // CRITICAL SECURITY FIX #3: Record that this webhook was successfully processed
-        if (txHash && NotificationSaleNfts?.[0]?.NftUid) {
-          try {
-            await getConvex().mutation(api.webhooks.recordProcessedWebhook, {
-              transactionHash: txHash,
-              stakeAddress: ReceiverStakeAddress,
-              nftUid: NotificationSaleNfts[0].NftUid,
-              reservationId: undefined, // We don't have this at this level
-              eventType: EventType,
-            });
-            console.log('[🛡️WEBHOOK-SECURITY] ✓ Webhook processing recorded:', txHash);
-          } catch (recordError) {
-            console.error('[🛡️WEBHOOK-SECURITY] Failed to record webhook (non-critical):', recordError);
-          }
         }
       }
     } catch (dbError) {

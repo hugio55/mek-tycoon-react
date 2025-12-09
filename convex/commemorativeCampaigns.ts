@@ -1414,24 +1414,30 @@ export const markInventoryAsSoldByUid = mutation({
 
     console.log('[WEBHOOK-FALLBACK] Successfully marked NFT as sold:', nft.name);
 
-    // Update campaign counters if campaign exists
-    // Note: In Convex, reads within the same mutation see previous writes,
-    // so the query below will see the NFT with status="sold" after our patch
+    // Update campaign counters using increment/decrement (safer than re-querying)
+    // This avoids any uncertainty about Convex's read-after-write semantics
     if (nft.campaignId) {
-      const inventory = await ctx.db
-        .query("commemorativeNFTInventory")
-        .withIndex("by_campaign", (q: any) => q.eq("campaignId", nft.campaignId))
-        .collect();
+      const campaign = await ctx.db.get(nft.campaignId);
 
-      await ctx.db.patch(nft.campaignId, {
-        totalNFTs: inventory.length,
-        availableNFTs: inventory.filter((i) => i.status === "available").length,
-        reservedNFTs: inventory.filter((i) => i.status === "reserved").length,
-        soldNFTs: inventory.filter((i) => i.status === "sold").length,
-        updatedAt: Date.now(),
-      });
+      if (campaign) {
+        // Determine what to decrement based on previous status
+        const wasAvailable = nft.status === "available";
+        const wasReserved = nft.status === "reserved";
 
-      console.log('[WEBHOOK-FALLBACK] Updated campaign counters for:', nft.campaignId);
+        await ctx.db.patch(nft.campaignId, {
+          soldNFTs: (campaign.soldNFTs || 0) + 1,
+          availableNFTs: wasAvailable
+            ? Math.max(0, (campaign.availableNFTs || 0) - 1)
+            : campaign.availableNFTs,
+          reservedNFTs: wasReserved
+            ? Math.max(0, (campaign.reservedNFTs || 0) - 1)
+            : campaign.reservedNFTs,
+          updatedAt: Date.now(),
+        });
+
+        console.log('[WEBHOOK-FALLBACK] Updated campaign counters for:', nft.campaignId,
+          '- was:', nft.status, '-> sold');
+      }
     }
 
     return {
