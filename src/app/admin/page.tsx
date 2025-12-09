@@ -25,7 +25,7 @@ import SourceKeyMigrationAdmin from '@/components/SourceKeyMigrationAdmin';
 import WhitelistManagerAdmin from '@/components/WhitelistManagerAdmin';
 import RouteVisualization from '@/components/RouteVisualization';
 import NewStylingAdmin from '@/components/NewStylingAdmin';
-import MessagingSystemAdmin from '@/components/MessagingSystemAdmin';
+import MessagingSystemAdmin from '@/components/MessagingSystemAdminWrapper';
 import CoachMarksAdmin from '@/components/CoachMarksAdmin';
 import { getMediaUrl } from '@/lib/media-url';
 import MutationConfirmDialog from '@/components/admin/MutationConfirmDialog';

@@ -143,7 +143,7 @@ function formatRelativeTime(timestamp: number): string {
   return `${month} ${day}, ${year} at ${time}`;
 }
 
-export default function MessagingSystemAdmin() {
+export default function MessagingSystemAdminContent() {
   // Subtab state
   const [activeSubtab, setActiveSubtab] = useState<MessagingSubtab>('support');
 
