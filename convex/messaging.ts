@@ -252,7 +252,7 @@ export const getAllConversationsAdmin = query({
   },
 });
 
-// Admin: Get messages for a conversation (includes deleted)
+// Admin: Get messages for a conversation (includes sender info)
 export const getMessagesAdmin = query({
   args: { conversationId: v.id("conversations") },
   handler: async (ctx, args) => {
@@ -265,23 +265,43 @@ export const getMessagesAdmin = query({
       .filter((m) => !m.isDeleted)
       .sort((a, b) => a.createdAt - b.createdAt);
 
-    // Resolve attachment URLs
-    const messagesWithUrls = await Promise.all(
+    // Resolve attachment URLs and add sender info
+    const messagesWithDetails = await Promise.all(
       filteredMessages.map(async (msg) => {
+        // Get sender info
+        let senderInfo = { companyName: "Unknown" };
+        if (msg.senderId === SUPPORT_WALLET_ID) {
+          senderInfo = { companyName: "Over Exposed Support" };
+        } else {
+          const sender = await ctx.db
+            .query("users")
+            .withIndex("by_stake_address", (q) => q.eq("stakeAddress", msg.senderId))
+            .first();
+          if (sender) {
+            senderInfo = { companyName: sender.corporationName || "Unknown" };
+          }
+        }
+
+        // Resolve attachments
+        let attachments = msg.attachments;
         if (msg.attachments && msg.attachments.length > 0) {
-          const attachmentsWithUrls = await Promise.all(
+          attachments = await Promise.all(
             msg.attachments.map(async (att: any) => ({
               ...att,
               url: await ctx.storage.getUrl(att.storageId),
             }))
           );
-          return { ...msg, attachments: attachmentsWithUrls };
         }
-        return msg;
+
+        return {
+          ...msg,
+          senderInfo,
+          attachments,
+        };
       })
     );
 
-    return messagesWithUrls;
+    return { messages: messagesWithDetails };
   },
 });
 
@@ -294,13 +314,51 @@ export const getDeletedMessagesAdmin = query({
       .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
       .collect();
 
-    return messages
+    const deletedMessages = messages
       .filter((m) => m.isDeleted || m.deletedByAdmin)
       .sort((a, b) => a.createdAt - b.createdAt);
+
+    // Add sender info and resolve attachments
+    const messagesWithDetails = await Promise.all(
+      deletedMessages.map(async (msg) => {
+        // Get sender info
+        let senderInfo = { companyName: "Unknown" };
+        if (msg.senderId === SUPPORT_WALLET_ID) {
+          senderInfo = { companyName: "Over Exposed Support" };
+        } else {
+          const sender = await ctx.db
+            .query("users")
+            .withIndex("by_stake_address", (q) => q.eq("stakeAddress", msg.senderId))
+            .first();
+          if (sender) {
+            senderInfo = { companyName: sender.corporationName || "Unknown" };
+          }
+        }
+
+        // Resolve attachments
+        let attachments = msg.attachments;
+        if (msg.attachments && msg.attachments.length > 0) {
+          attachments = await Promise.all(
+            msg.attachments.map(async (att: any) => ({
+              ...att,
+              url: await ctx.storage.getUrl(att.storageId),
+            }))
+          );
+        }
+
+        return {
+          ...msg,
+          senderInfo,
+          attachments,
+        };
+      })
+    );
+
+    return messagesWithDetails;
   },
 });
 
-// Get message count for a conversation
+// Get message count for a conversation (visible and deleted)
 export const getConversationMessageCount = query({
   args: { conversationId: v.id("conversations") },
   handler: async (ctx, args) => {
@@ -309,7 +367,10 @@ export const getConversationMessageCount = query({
       .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
       .collect();
 
-    return messages.filter((m) => !m.isDeleted).length;
+    const visible = messages.filter((m) => !m.isDeleted && !m.deletedByAdmin).length;
+    const deleted = messages.filter((m) => m.isDeleted || m.deletedByAdmin).length;
+
+    return { visible, deleted };
   },
 });
 
