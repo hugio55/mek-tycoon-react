@@ -129,7 +129,7 @@ export default function SupportInbox() {
   };
 
   return (
-    <div className="grid grid-cols-3 gap-6 h-[700px]">
+    <div className="grid grid-cols-3 gap-6 h-[850px]">
       {/* Conversations Panel */}
       <div className="col-span-1 bg-black/40 rounded-xl border border-gray-700 overflow-hidden flex flex-col">
         {/* Header */}
