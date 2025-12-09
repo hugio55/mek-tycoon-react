@@ -329,12 +329,14 @@ export const generateWhitelist = mutation({
       }
 
       // Build user data object for rule checking
+      // TODO: mekCount and genesisMekCount should be computed from meks table
+      // TODO: totalPlayTime should come from users table or be tracked separately
       const userData: any = {
         goldBalance: currentGold,
         totalGoldEarned: miner.totalCumulativeGold || currentGold,
-        mekCount: miner.mekCount || 0,
-        genesisMekCount: miner.genesisMekCount || 0,
-        totalPlayTime: miner.totalPlayTime || 0,
+        mekCount: 0, // Placeholder - needs to query meks table
+        genesisMekCount: 0, // Placeholder - needs to query meks table for genesis meks
+        totalPlayTime: 0, // Placeholder - needs proper tracking
         walletAddress: miner.walletAddress,
       };
 
