@@ -365,10 +365,21 @@ export const completeReservationByWallet = mutation({
 
     // Phase II: Look up company name from users table
     let companyNameAtSale: string | undefined;
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
-      .first();
+    let user;
+    // Use appropriate index based on address format
+    if (args.walletAddress.startsWith('stake1')) {
+      // Stake address - use by_stake_address index
+      user = await ctx.db
+        .query("users")
+        .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.walletAddress))
+        .first();
+    } else {
+      // Legacy payment address - use by_wallet index
+      user = await ctx.db
+        .query("users")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
+        .first();
+    }
     companyNameAtSale = user?.corporationName || undefined;
 
     // Update reservation status

@@ -1457,10 +1457,21 @@ export const markInventoryAsSoldByUid = mutation({
     // Look up company name for historical tracking
     let companyNameAtSale: string | undefined;
     if (args.soldTo) {
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.soldTo))
-        .first();
+      let user;
+      // Phase II: Use appropriate index based on address format
+      if (args.soldTo.startsWith('stake1')) {
+        // Stake address - use by_stake_address index
+        user = await ctx.db
+          .query("users")
+          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.soldTo))
+          .first();
+      } else {
+        // Legacy payment address - use by_wallet index
+        user = await ctx.db
+          .query("users")
+          .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.soldTo))
+          .first();
+      }
       companyNameAtSale = user?.corporationName || undefined;
     }
 
