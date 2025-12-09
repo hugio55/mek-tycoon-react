@@ -779,7 +779,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                             ? 'bg-gray-700/50 text-gray-500 italic'
                             : isMine
                               ? 'bg-white/15 text-white'
-                              : 'bg-white/10 text-white'
+                              : 'bg-cyan-500/10 text-white'
                         }`}
                       >
                         {msg.isDeleted ? '[Message deleted]' : msg.content}

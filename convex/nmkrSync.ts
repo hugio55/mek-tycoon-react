@@ -226,12 +226,43 @@ export const syncCampaignInventory = mutation({
             status: expectedDbStatus,
           };
 
-          // If sold, add sold metadata
+          // If sold, add sold metadata and try to find buyer info
           if (expectedDbStatus === 'sold') {
             updateData.soldAt = Date.now();
-            if (nmkrData.soldTo) {
-              updateData.soldTo = nmkrData.soldTo;
+
+            // Try to find buyer wallet from multiple sources:
+            let buyerWallet = nmkrData.soldTo;
+
+            // Source 1: Check processedWebhooks table (has stakeAddress and nftUid)
+            if (!buyerWallet) {
+              const webhookRecord = await ctx.db
+                .query("processedWebhooks")
+                .withIndex("by_nft_uid", (q: any) => q.eq("nftUid", item.nftUid))
+                .first();
+              if (webhookRecord) {
+                buyerWallet = webhookRecord.stakeAddress;
+                console.log('[🔄SYNC] Found buyer from processedWebhooks:', buyerWallet?.substring(0, 20) + '...');
+              }
             }
+
+            // Source 2: Check commemorativeNFTClaims table (has walletAddress and nftAssetId)
+            if (!buyerWallet) {
+              const claimRecord = await ctx.db
+                .query("commemorativeNFTClaims")
+                .withIndex("by_asset_id", (q: any) => q.eq("nftAssetId", item.nftUid))
+                .first();
+              if (claimRecord) {
+                buyerWallet = claimRecord.walletAddress;
+                console.log('[🔄SYNC] Found buyer from claims table:', buyerWallet?.substring(0, 20) + '...');
+              }
+            }
+
+            if (buyerWallet) {
+              updateData.soldTo = buyerWallet;
+            } else {
+              console.log('[🔄SYNC] ⚠️ No buyer info found for', item.name, '- marking as sold without buyer');
+            }
+
             // Clear reservation data
             updateData.reservedBy = undefined;
             updateData.reservedAt = undefined;
@@ -399,12 +430,43 @@ export const syncSingleNFT = mutation({
       status: expectedDbStatus,
     };
 
-    // If sold, add sold metadata
+    // If sold, add sold metadata and try to find buyer info
     if (expectedDbStatus === 'sold') {
       updateData.soldAt = Date.now();
-      if (args.soldTo) {
-        updateData.soldTo = args.soldTo;
+
+      // Try to find buyer wallet from multiple sources:
+      let buyerWallet = args.soldTo;
+
+      // Source 1: Check processedWebhooks table (has stakeAddress and nftUid)
+      if (!buyerWallet) {
+        const webhookRecord = await ctx.db
+          .query("processedWebhooks")
+          .withIndex("by_nft_uid", (q: any) => q.eq("nftUid", args.nftUid))
+          .first();
+        if (webhookRecord) {
+          buyerWallet = webhookRecord.stakeAddress;
+          console.log('[🔄SYNC] Found buyer from processedWebhooks:', buyerWallet?.substring(0, 20) + '...');
+        }
       }
+
+      // Source 2: Check commemorativeNFTClaims table (has walletAddress and nftAssetId)
+      if (!buyerWallet) {
+        const claimRecord = await ctx.db
+          .query("commemorativeNFTClaims")
+          .withIndex("by_asset_id", (q: any) => q.eq("nftAssetId", args.nftUid))
+          .first();
+        if (claimRecord) {
+          buyerWallet = claimRecord.walletAddress;
+          console.log('[🔄SYNC] Found buyer from claims table:', buyerWallet?.substring(0, 20) + '...');
+        }
+      }
+
+      if (buyerWallet) {
+        updateData.soldTo = buyerWallet;
+      } else {
+        console.log('[🔄SYNC] ⚠️ No buyer info found for', nft.name, '- marking as sold without buyer');
+      }
+
       // Clear reservation data
       updateData.reservedBy = undefined;
       updateData.reservedAt = undefined;
