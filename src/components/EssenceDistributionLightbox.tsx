@@ -298,7 +298,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
   // Query marketplace listings to get current prices
   const marketListings = useQuery(
     api.marketplace.getActiveListings,
-    { itemType: "essence", limit: 1000 }
+    { itemType: "essence", limit: 1000, offset: 0 }
   );
 
   // Query essence config for base rates
