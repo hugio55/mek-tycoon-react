@@ -7370,11 +7370,28 @@ function NFTAdminTabs({ client }: { client: any }) {
 
       const nmkrData = await response.json();
 
-      // Sync all inventory
-      await client.mutation(api.nmkrSync.syncCampaignInventory, {
+      console.log('[🔄NMKR] Calling syncCampaignInventory with:', {
         campaignId: nmkrSyncCampaign.id,
+        nmkrStatusesCount: nmkrData.statuses?.length,
+        firstFewStatuses: nmkrData.statuses?.slice(0, 3),
+      });
+
+      // Sync all inventory
+      const result = await client.mutation(api.nmkrSync.syncCampaignInventory, {
+        campaignId: nmkrSyncCampaign.id as any,
         nmkrStatuses: nmkrData.statuses,
       });
+
+      console.log('[🔄NMKR] Sync result:', result);
+
+      // Show result to user
+      if (result.syncedCount > 0) {
+        alert(`✅ Synced ${result.syncedCount} NFTs!\n\nUpdates:\n${result.updates.map((u: any) => `• ${u.nftName}: ${u.oldStatus} → ${u.newStatus}`).join('\n')}`);
+      } else if (result.skippedCount > 0) {
+        alert(`ℹ️ No changes needed.\n\n${result.skippedCount} NFTs already in sync.\n${result.errors.length > 0 ? `\nErrors: ${result.errors.join(', ')}` : ''}`);
+      } else {
+        alert(`⚠️ No NFTs were synced.\n\nThis might mean:\n• NFT UIDs don't match between NMKR and database\n• No inventory items found for this campaign\n\nCheck browser console for details.`);
+      }
 
       // Clear discrepancies and close modal
       setNmkrDiscrepancies([]);

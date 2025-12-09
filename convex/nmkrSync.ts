@@ -148,13 +148,20 @@ export const syncCampaignInventory = mutation({
     })),
   },
   handler: async (ctx, args) => {
-    console.log('[🔄SYNC] Syncing campaign inventory:', args.campaignId);
+    console.log('[🔄SYNC] ========== SYNC CAMPAIGN INVENTORY ==========');
+    console.log('[🔄SYNC] Campaign ID:', args.campaignId);
+    console.log('[🔄SYNC] NMKR statuses received:', args.nmkrStatuses.length);
 
     // Get all inventory items for this campaign
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
       .withIndex("by_campaign", (q: any) => q.eq("campaignId", args.campaignId))
       .collect();
+
+    console.log('[🔄SYNC] Database inventory items found:', inventory.length);
+    inventory.forEach((item: any) => {
+      console.log('[🔄SYNC] DB Item:', item.name, '| UID:', item.nftUid, '| Status:', item.status);
+    });
 
     // Create a map of NMKR statuses by UID
     const nmkrStatusMap = new Map<string, { nmkrStatus: string; soldTo?: string }>();
@@ -164,6 +171,8 @@ export const syncCampaignInventory = mutation({
         soldTo: status.soldTo,
       });
     }
+
+    console.log('[🔄SYNC] NMKR UIDs in map:', Array.from(nmkrStatusMap.keys()).slice(0, 5), '...');
 
     let syncedCount = 0;
     let skippedCount = 0;
