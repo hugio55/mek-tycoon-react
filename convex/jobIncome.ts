@@ -457,10 +457,10 @@ export const assignMekToSlot = mutation({
       return { success: false, error: "You do not own this Mek" };
     }
 
-    // Get or create the job slot
+    // Get or create the job slot (use by_user index)
     let slot = await ctx.db
       .query("userJobSlots")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
+      .withIndex("by_user", (q: any) => q.eq("stakeAddress", args.stakeAddress))
       .filter((q: any) =>
         q.and(
           q.eq(q.field("slotType"), args.slotType),
@@ -470,7 +470,7 @@ export const assignMekToSlot = mutation({
       .first();
 
     if (!slot) {
-      // Create new slot
+      // Create new slot (use lastOutputTime instead of lastIncomeCollection)
       await ctx.db.insert("userJobSlots", {
         stakeAddress: args.stakeAddress,
         slotType: args.slotType,
@@ -482,19 +482,20 @@ export const assignMekToSlot = mutation({
         lastXPUpdate: now,
         tenureDays: 0,
         pitStopsCompleted: 0,
-        lastIncomeCollection: now,
+        lastOutputTime: now,
+        isUnlocked: true,
       });
     } else {
       // Collect any pending income before reassigning
       // (This prevents losing income when swapping meks)
       // Note: In a full implementation, call collectSlotIncome first
 
-      // Update existing slot
+      // Update existing slot (use lastOutputTime)
       await ctx.db.patch(slot._id, {
         assignedMekId: args.mekAssetId,
         assignedAt: now,
         tenureDays: 0, // Reset tenure on new assignment
-        lastIncomeCollection: now,
+        lastOutputTime: now,
       });
     }
 
@@ -523,10 +524,10 @@ export const removeMekFromSlot = mutation({
     slotIndex: v.number(),
   },
   handler: async (ctx, args) => {
-    // Get the slot
+    // Get the slot (use by_user index)
     const slot = await ctx.db
       .query("userJobSlots")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
+      .withIndex("by_user", (q: any) => q.eq("stakeAddress", args.stakeAddress))
       .filter((q: any) =>
         q.and(
           q.eq(q.field("slotType"), args.slotType),
@@ -584,9 +585,10 @@ export const getTotalDailyIncomeRate = query({
     stakeAddress: v.string(),
   },
   handler: async (ctx, args) => {
+    // Use by_user index
     const slots = await ctx.db
       .query("userJobSlots")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
+      .withIndex("by_user", (q: any) => q.eq("stakeAddress", args.stakeAddress))
       .collect();
 
     let totalDailyRate = 0;
@@ -630,9 +632,10 @@ export const getAllPendingIncome = query({
   handler: async (ctx, args) => {
     const now = Date.now();
 
+    // Use by_user index
     const slots = await ctx.db
       .query("userJobSlots")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
+      .withIndex("by_user", (q: any) => q.eq("stakeAddress", args.stakeAddress))
       .collect();
 
     let totalPending = 0;
@@ -648,7 +651,8 @@ export const getAllPendingIncome = query({
 
       if (!mek) continue;
 
-      const lastCollection = slot.lastIncomeCollection || slot.assignedAt || now;
+      // Use lastOutputTime instead of lastIncomeCollection
+      const lastCollection = slot.lastOutputTime || slot.assignedAt || now;
       const daysSinceCollection = (now - lastCollection) / (1000 * 60 * 60 * 24);
 
       const baseDailyRate = mek.goldRate || 100;
