@@ -84,7 +84,7 @@ export const getMessages = query({
       .collect();
 
     // Filter deleted messages based on who's viewing
-    return messages
+    const filteredMessages = messages
       .filter((msg) => {
         if (msg.isDeleted) return false;
         if (msg.senderId === walletAddress && msg.deletedForSender) return false;
@@ -92,6 +92,24 @@ export const getMessages = query({
         return true;
       })
       .sort((a, b) => a.createdAt - b.createdAt);
+
+    // Resolve attachment URLs
+    const messagesWithUrls = await Promise.all(
+      filteredMessages.map(async (msg) => {
+        if (msg.attachments && msg.attachments.length > 0) {
+          const attachmentsWithUrls = await Promise.all(
+            msg.attachments.map(async (att: any) => ({
+              ...att,
+              url: await ctx.storage.getUrl(att.storageId),
+            }))
+          );
+          return { ...msg, attachments: attachmentsWithUrls };
+        }
+        return msg;
+      })
+    );
+
+    return messagesWithUrls;
   },
 });
 
@@ -201,9 +219,27 @@ export const getMessagesAdmin = query({
       .withIndex("by_conversation", (q) => q.eq("conversationId", args.conversationId))
       .collect();
 
-    return messages
+    const filteredMessages = messages
       .filter((m) => !m.isDeleted)
       .sort((a, b) => a.createdAt - b.createdAt);
+
+    // Resolve attachment URLs
+    const messagesWithUrls = await Promise.all(
+      filteredMessages.map(async (msg) => {
+        if (msg.attachments && msg.attachments.length > 0) {
+          const attachmentsWithUrls = await Promise.all(
+            msg.attachments.map(async (att: any) => ({
+              ...att,
+              url: await ctx.storage.getUrl(att.storageId),
+            }))
+          );
+          return { ...msg, attachments: attachmentsWithUrls };
+        }
+        return msg;
+      })
+    );
+
+    return messagesWithUrls;
   },
 });
 

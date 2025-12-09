@@ -109,7 +109,7 @@ export const getInventoryDiscrepancies = query({
 
     // Also check for NFTs in NMKR that aren't in our database
     const inventoryUids = new Set(inventory.map(i => i.nftUid));
-    for (const [nftUid, data] of nmkrStatusMap.entries()) {
+    Array.from(nmkrStatusMap.entries()).forEach(([nftUid, data]) => {
       if (!inventoryUids.has(nftUid)) {
         discrepancies.push({
           nftUid,
@@ -123,7 +123,7 @@ export const getInventoryDiscrepancies = query({
           soldTo: data.soldTo,
         });
       }
-    }
+    });
 
     console.log('[🔄SYNC] Found', discrepancies.length, 'discrepancies');
 
@@ -416,17 +416,27 @@ export const getRecentSyncLogs = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let logsQuery = ctx.db.query("nmkrSyncLog");
+    const limitCount = args.limit || 50;
 
+    // Use different query paths based on filters
     if (args.nmkrProjectId) {
-      logsQuery = logsQuery.withIndex("by_project", (q: any) => q.eq("nmkrProjectId", args.nmkrProjectId));
+      return await ctx.db
+        .query("nmkrSyncLog")
+        .withIndex("by_project", (q: any) => q.eq("nmkrProjectId", args.nmkrProjectId))
+        .order("desc")
+        .take(limitCount);
     } else if (args.status) {
-      logsQuery = logsQuery.withIndex("by_status", (q: any) => q.eq("status", args.status));
+      return await ctx.db
+        .query("nmkrSyncLog")
+        .withIndex("by_status", (q: any) => q.eq("status", args.status))
+        .order("desc")
+        .take(limitCount);
+    } else {
+      return await ctx.db
+        .query("nmkrSyncLog")
+        .order("desc")
+        .take(limitCount);
     }
-
-    const logs = await logsQuery.order("desc").take(args.limit || 50);
-
-    return logs;
   },
 });
 
