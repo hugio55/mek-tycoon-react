@@ -126,6 +126,7 @@ import type * as multiWalletAggregation from "../multiWalletAggregation.js";
 import type * as navigation from "../navigation.js";
 import type * as nftEligibility from "../nftEligibility.js";
 import type * as nmkr from "../nmkr.js";
+import type * as nmkrSync from "../nmkrSync.js";
 import type * as nodeFeeVersions from "../nodeFeeVersions.js";
 import type * as nodeFees from "../nodeFees.js";
 import type * as normalMekRewards from "../normalMekRewards.js";
@@ -293,6 +294,7 @@ declare const fullApi: ApiFromModules<{
   navigation: typeof navigation;
   nftEligibility: typeof nftEligibility;
   nmkr: typeof nmkr;
+  nmkrSync: typeof nmkrSync;
   nodeFeeVersions: typeof nodeFeeVersions;
   nodeFees: typeof nodeFees;
   normalMekRewards: typeof normalMekRewards;
