@@ -100,7 +100,6 @@ import type * as lib_nftFetchingService from "../lib/nftFetchingService.js";
 import type * as lib_queryCache from "../lib/queryCache.js";
 import type * as lib_sessionUtils from "../lib/sessionUtils.js";
 import type * as lib_tenureCalculations from "../lib/tenureCalculations.js";
-import type * as listAllGoldMiningAccounts from "../listAllGoldMiningAccounts.js";
 import type * as loaderSettings from "../loaderSettings.js";
 import type * as marketplace from "../marketplace.js";
 import type * as mechanismTiers from "../mechanismTiers.js";
@@ -265,7 +264,6 @@ declare const fullApi: ApiFromModules<{
   "lib/queryCache": typeof lib_queryCache;
   "lib/sessionUtils": typeof lib_sessionUtils;
   "lib/tenureCalculations": typeof lib_tenureCalculations;
-  listAllGoldMiningAccounts: typeof listAllGoldMiningAccounts;
   loaderSettings: typeof loaderSettings;
   marketplace: typeof marketplace;
   mechanismTiers: typeof mechanismTiers;

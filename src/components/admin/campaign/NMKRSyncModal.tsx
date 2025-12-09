@@ -51,7 +51,7 @@ export default function NMKRSyncModal({
     }
   };
 
-  const statusColor = (status: string) => {
+  const statusColor = (status: string | undefined | null) => {
     switch (status) {
       case 'sold':
         return 'text-cyan-400';
@@ -65,7 +65,8 @@ export default function NMKRSyncModal({
     }
   };
 
-  const statusDisplay = (status: string) => {
+  const statusDisplay = (status: string | undefined | null) => {
+    if (!status) return 'UNKNOWN';
     if (status === 'free') return 'AVAILABLE';
     return status.toUpperCase();
   };

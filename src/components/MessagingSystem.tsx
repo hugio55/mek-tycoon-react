@@ -110,6 +110,14 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     selectedConversationId ? { conversationId: selectedConversationId, walletAddress } : 'skip'
   );
 
+  // Debug: Log messages with attachments
+  if (messages?.some((m: any) => m.attachments?.length > 0)) {
+    console.log('[🔍DEBUG] Messages with attachments:', messages.filter((m: any) => m.attachments?.length > 0).map((m: any) => ({
+      content: m.content,
+      attachments: m.attachments
+    })));
+  }
+
   const existingConversation = useQuery(
     api.messaging.getConversationBetween,
     selectedRecipient ? { wallet1: walletAddress, wallet2: selectedRecipient.walletAddress } : 'skip'

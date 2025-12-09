@@ -10,6 +10,46 @@ The `^` means "parent of this commit" (before deletion).
 
 ---
 
+## 2025-12-09: Phase I Legacy Gold Mining Cleanup
+
+**Commit**: (pending commit)
+**Total Deleted**: 6 files
+**Reason**: Phase II architecture no longer uses passive gold income (goldPerHour). Job slots with daily income replace the old mek-ownership-based passive gold system.
+
+### Backend Legacy Files (4 files)
+
+**Phase I Wallet Fix Utilities (Obsolete):**
+- `convex/adminSyncFix.ts` - Admin wallet resync using legacy goldMining system
+- `convex/definitiveWalletFix.ts` - Wallet consolidation for goldMining duplicates
+- `convex/finalWalletFix.ts` - Another wallet consolidation utility
+- `convex/listAllGoldMiningAccounts.ts` - Debug query for goldMining table
+
+### Frontend Broken Pages (2 files)
+
+**Referenced Non-Existent Backend Functions:**
+- `src/app/admin-sync-health/page.tsx` - Referenced deleted `api.syncChecksums.*`
+- `src/components/WalletSnapshotDebug.tsx` - Referenced multiple deleted files (`fixWalletDuplicates`, `debugWalletSnapshot`, `goldMiningSnapshot`, `fixGoldRateCalculation`, `comprehensiveWalletFix`)
+
+### Phase I Files Kept For Now (Flagged for Phase II Update)
+
+**Still Used by Admin Tools:**
+- `convex/fixCorruptedGold.ts` - Used by WalletManagementAdmin (will update for Phase II)
+- `convex/mekGoldRates.ts` - Gold rate configuration (separate from `mekGoldRates.json` data file)
+- `convex/goldMining.ts` - Core file being refactored, not deleted
+
+**Note**: The `mekGoldRates.json` data file is **NOT** deleted - it contains all 4000 mek variation data used by `mekNumberToVariation.ts`.
+
+**Recovery Command**:
+```bash
+# Restore any file from this cleanup
+git checkout HEAD^ -- <file-path>
+
+# Example: Restore adminSyncFix.ts
+git checkout HEAD^ -- convex/adminSyncFix.ts
+```
+
+---
+
 ## 2025-10-29: Diagnostic & Test Page Cleanup
 
 **Commit**: `34991a53` (Remove unused diagnostic files and test pages)
@@ -234,4 +274,4 @@ git diff-tree --no-commit-id --name-only -r --diff-filter=D <commit>
 
 ---
 
-*Last Updated: 2025-10-29*
+*Last Updated: 2025-12-09*
