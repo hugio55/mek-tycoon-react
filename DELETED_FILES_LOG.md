@@ -309,4 +309,59 @@ git diff-tree --no-commit-id --name-only -r --diff-filter=D <commit>
 
 ---
 
+## 2025-12-09: Phase II Code Reorganization
+
+**Commit**: (pending commit)
+**Total New Files**: 2
+**Total Refactored**: 2
+
+### New Files Created
+
+**Phase II Job Income System:**
+- `convex/jobIncome.ts` - Daily job slot income system (replaces passive goldPerHour)
+  - `calculateBaseIncomeRate` - Rarity-based rate calculation (salvaged from goldMining)
+  - `calculateSlotPendingIncome` - Calculate pending income for a slot
+  - `collectSlotIncome` - Collect income from a job slot
+  - `collectAllSlotIncome` - Collect all pending income at once
+  - `assignMekToSlot` - Assign a Mek to a job slot
+  - `removeMekFromSlot` - Remove a Mek from a slot
+  - `getTotalDailyIncomeRate` - Get total income rate across all slots
+  - `getAllPendingIncome` - Preview all pending income
+
+**Mek Table Operations:**
+- `convex/meks.ts` - Mek NFT data and naming functions
+  - `setMekName` - Set custom name for a Mek (moved from goldMining)
+  - `getMekName` - Get custom name for a Mek (moved from goldMining)
+  - `checkMekNameAvailability` - Check if name is available (moved from goldMining)
+  - `getMeksByOwner` - Get all Meks by stake address
+  - `getMekCount` - Get Mek count for a user
+  - `getMekByAssetId` - Get a single Mek by ID
+  - `getMeksByAssetIds` - Get multiple Meks by IDs
+
+### Refactored Files
+
+**goldMining.ts Cleanup:**
+- Added LEGACY header comment marking file for Phase II migration
+- Removed mek name functions (moved to meks.ts)
+- Functions still used by frontend will be migrated incrementally
+
+**MekNamingLightbox.tsx:**
+- Updated to use `api.meks.setMekName` instead of `api.goldMining.setMekName`
+- Updated to use `api.meks.checkMekNameAvailability`
+
+### Phase II Architecture Summary
+
+**Phase I (Legacy - goldMining.ts):**
+- Meks earn goldPerHour passively by existing in wallet
+- Gold accumulates automatically over time
+- Being phased out
+
+**Phase II (New - jobIncome.ts):**
+- Meks must be assigned to job slots to earn income
+- Income is goldPerDay (not goldPerHour)
+- Requires active slot assignment
+- Includes tenure bonuses and slot XP
+
+---
+
 *Last Updated: 2025-12-09*

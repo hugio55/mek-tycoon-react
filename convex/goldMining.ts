@@ -1,24 +1,32 @@
 /**
- * GOLD MINING SYSTEM
+ * ═══════════════════════════════════════════════════════════════════════════
+ * GOLD MINING SYSTEM - PHASE I LEGACY
+ * ═══════════════════════════════════════════════════════════════════════════
  *
- * ARCHITECTURE - DATA SEPARATION:
- * This file manages gold production and Mek ownership metadata.
+ * ⚠️  STATUS: LEGACY - Being replaced by Phase II architecture
  *
- * IMPORTANT: goldMining.ownedMeks does NOT store tenure or slotting data.
- * - Tenure data lives in `meks` table (single source of truth)
- * - Slotting data lives in `meks` table (isSlotted, slotNumber)
- * - Use api.tenure.getMekTenureData() to access tenure/slotting data
+ * PHASE I (THIS FILE): Passive gold income based on mek ownership
+ * - Meks earn goldPerHour just by existing in wallet
+ * - Gold accumulates passively over time
  *
- * goldMining.ownedMeks stores:
- * - assetId, policyId, assetName (NFT identity)
- * - goldPerHour, baseGoldPerHour (gold production rates)
- * - currentLevel, levelBoostPercent, levelBoostAmount (leveling system)
- * - customName (user-assigned Mek names)
- * - rarityRank, variations, sourceKey (metadata)
+ * PHASE II (NEW): Job slot income system
+ * - See: convex/jobIncome.ts - Daily income from job slot assignments
+ * - See: convex/meks.ts - Mek name functions moved here
+ * - Meks must be ASSIGNED to job slots to earn income
+ * - Income is goldPerDay, not goldPerHour
  *
- * goldMining.ownedMeks does NOT store:
- * - isSlotted, slotNumber (use meks table)
- * - tenurePoints, tenureRate (use meks table)
+ * FUNCTIONS MOVED TO OTHER FILES:
+ * - setMekName, getMekName, checkMekNameAvailability → meks.ts
+ * - calculateGoldRates → jobIncome.ts (adapted for daily rates)
+ *
+ * STILL USED BY (update these to Phase II when ready):
+ * - NavigationBar.tsx (getGoldMiningData for gold display)
+ * - UnifiedHeader.tsx (getGoldMiningData for gold display)
+ * - home/page.tsx (getGoldMiningData)
+ * - Various admin components
+ *
+ * TODO: Migrate frontend to use jobIncome.ts functions
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 
 import { v } from "convex/values";
@@ -1899,212 +1907,15 @@ export const syncWalletFromBlockchain = action({
   },
 });
 
-// Mek name validation helper
-function validateMekName(name: string): { valid: boolean; error?: string } {
-  if (!name || typeof name !== 'string') {
-    return { valid: false, error: "Mek name is required" };
-  }
-
-  const trimmed = name.trim();
-
-  if (trimmed.length < 1) {
-    return { valid: false, error: "Mek name cannot be empty" };
-  }
-
-  if (trimmed.length > 20) {
-    return { valid: false, error: "Mek name must be 20 characters or less" };
-  }
-
-  // Allow letters, numbers, spaces, and basic punctuation (-, ', .)
-  const allowedCharsRegex = /^[a-zA-Z0-9\s\-'.]+$/;
-  if (!allowedCharsRegex.test(trimmed)) {
-    return { valid: false, error: "Mek name can only contain letters, numbers, spaces, hyphens, apostrophes, and periods" };
-  }
-
-  return { valid: true };
-}
-
-// Set custom name for a Mek
-export const setMekName = mutation({
-  args: {
-    walletAddress: v.string(),
-    mekAssetId: v.string(),
-    newName: v.string(),
-  },
-  handler: async (ctx, args) => {
-    console.log('[🔍MEKNAME] ========== setMekName MUTATION START ==========');
-    console.log('[🔍MEKNAME] Input:', {
-      wallet: args.walletAddress.substring(0, 20) + '...',
-      mekAssetId: args.mekAssetId,
-      newName: args.newName,
-      timestamp: new Date().toISOString()
-    });
-
-    // Validate the name
-    const validation = validateMekName(args.newName);
-    if (!validation.valid) {
-      console.log('[🔍MEKNAME] Validation failed:', validation.error);
-      return {
-        success: false,
-        error: validation.error
-      };
-    }
-
-    const trimmedName = args.newName.trim();
-
-    // Find the user's gold mining record
-    const existing = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
-      .first();
-
-    if (!existing) {
-      console.log('[🔍MEKNAME] ERROR: Wallet not found');
-      return {
-        success: false,
-        error: "Wallet not found. Please connect your wallet first."
-      };
-    }
-
-    console.log('[🔍MEKNAME] Found wallet record, total Meks:', existing.ownedMeks.length);
-
-    // Check if name is unique GLOBALLY (across all wallets in the game)
-    const allWallets = await ctx.db.query("goldMining").collect();
-
-    for (const wallet of allWallets) {
-      const nameExists = wallet.ownedMeks?.some(
-        mek => mek.customName?.toLowerCase() === trimmedName.toLowerCase() && mek.assetId !== args.mekAssetId
-      );
-
-      if (nameExists) {
-        console.log('[🔍MEKNAME] Name already taken by another wallet');
-        return {
-          success: false,
-          error: "This name is already taken by another player. Please choose a unique name."
-        };
-      }
-    }
-
-    // Find the Mek in the ownedMeks array and update its name
-    const updatedMeks = existing.ownedMeks.map((mek: any) => {
-      if (mek.assetId === args.mekAssetId) {
-        console.log('[🔍MEKNAME] FOUND target Mek, updating name:', {
-          assetId: mek.assetId,
-          oldName: mek.customName || '(unnamed)',
-          newName: trimmedName
-        });
-        return {
-          ...mek,
-          customName: trimmedName
-        };
-      }
-      return mek;
-    });
-
-    // Check if we actually found and updated the Mek
-    const mekFound = updatedMeks.some((mek: any) => mek.assetId === args.mekAssetId);
-    if (!mekFound) {
-      console.log('[🔍MEKNAME] ERROR: Mek not found in collection');
-      return {
-        success: false,
-        error: "Mek not found in your collection"
-      };
-    }
-
-    // Update the database
-    console.log('[🔍MEKNAME] Saving to database...');
-    await ctx.db.patch(existing._id, {
-      ownedMeks: updatedMeks,
-      updatedAt: Date.now(),
-    });
-
-    console.log('[🔍MEKNAME] ✅ DATABASE UPDATED SUCCESSFULLY');
-    console.log('[🔍MEKNAME] Verifying update...');
-
-    // Re-fetch to verify the update persisted
-    const verification = await ctx.db.get(existing._id);
-    const verifiedMek = verification?.ownedMeks.find((m: any) => m.assetId === args.mekAssetId);
-    console.log('[🔍MEKNAME] Verification check:', {
-      mekFound: !!verifiedMek,
-      customName: verifiedMek?.customName,
-      matches: verifiedMek?.customName === trimmedName
-    });
-
-    console.log('[🔍MEKNAME] ========== setMekName MUTATION END ==========');
-    return {
-      success: true,
-      customName: trimmedName
-    };
-  },
-});
-
-// Check if a Mek name is available (for real-time validation)
-export const checkMekNameAvailability = query({
-  args: {
-    mekName: v.string(),
-    currentMekAssetId: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    // First validate the name format
-    const validation = validateMekName(args.mekName);
-    if (!validation.valid) {
-      return {
-        available: false,
-        error: validation.error
-      };
-    }
-
-    const trimmedName = args.mekName.trim();
-
-    // Check if name is unique GLOBALLY (across all wallets)
-    const allWallets = await ctx.db.query("goldMining").collect();
-
-    for (const wallet of allWallets) {
-      const nameExists = wallet.ownedMeks?.some(
-        mek => mek.customName?.toLowerCase() === trimmedName.toLowerCase() &&
-               mek.assetId !== args.currentMekAssetId
-      );
-
-      if (nameExists) {
-        return {
-          available: false,
-          error: "This name is already taken. Please choose a unique name."
-        };
-      }
-    }
-
-    return {
-      available: true
-    };
-  },
-});
-
-// Get custom name for a Mek
-export const getMekName = query({
-  args: {
-    walletAddress: v.string(),
-    mekAssetId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const data = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
-      .first();
-
-    if (!data) {
-      return {
-        customName: null,
-        hasName: false
-      };
-    }
-
-    // Find the Mek in the ownedMeks array
-    const mek = data.ownedMeks.find((m: any) => m.assetId === args.mekAssetId);
-
-    return {
-      customName: mek?.customName || null,
-      hasName: !!mek?.customName
-    };
-  },
-});
+// ═══════════════════════════════════════════════════════════════════════════
+// MEK NAME FUNCTIONS - MOVED TO meks.ts
+// ═══════════════════════════════════════════════════════════════════════════
+// The following functions have been moved to convex/meks.ts for Phase II:
+// - validateMekName (helper)
+// - setMekName (mutation)
+// - checkMekNameAvailability (query)
+// - getMekName (query)
+//
+// Use api.meks.* instead of api.goldMining.* for mek naming functionality.
+// ═══════════════════════════════════════════════════════════════════════════
 

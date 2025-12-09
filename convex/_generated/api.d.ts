@@ -79,6 +79,7 @@ import type * as goldMining from "../goldMining.js";
 import type * as goldTrackingOptimized from "../goldTrackingOptimized.js";
 import type * as importFullMekCollection from "../importFullMekCollection.js";
 import type * as initializeCache from "../initializeCache.js";
+import type * as jobIncome from "../jobIncome.js";
 import type * as jobs from "../jobs.js";
 import type * as landingDebugSettings from "../landingDebugSettings.js";
 import type * as landingDebugSettingsMobile from "../landingDebugSettingsMobile.js";
@@ -238,6 +239,7 @@ declare const fullApi: ApiFromModules<{
   goldTrackingOptimized: typeof goldTrackingOptimized;
   importFullMekCollection: typeof importFullMekCollection;
   initializeCache: typeof initializeCache;
+  jobIncome: typeof jobIncome;
   jobs: typeof jobs;
   landingDebugSettings: typeof landingDebugSettings;
   landingDebugSettingsMobile: typeof landingDebugSettingsMobile;

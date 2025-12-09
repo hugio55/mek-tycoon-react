@@ -34,7 +34,8 @@ export default function MekNamingLightbox({
   const [nameWasSet, setNameWasSet] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
-  const setMekNameMutation = useMutation(api.goldMining.setMekName);
+  // Phase II: Use meks.ts instead of goldMining.ts
+  const setMekNameMutation = useMutation(api.meks.setMekName);
 
   // Debounce the name check - only check after 625ms pause in typing
   useEffect(() => {
@@ -47,9 +48,9 @@ export default function MekNamingLightbox({
     return () => clearTimeout(timer);
   }, [mekName]);
 
-  // Check name availability in real-time
+  // Check name availability in real-time (Phase II: meks.ts)
   const checkAvailability = useQuery(
-    api.goldMining.checkMekNameAvailability,
+    api.meks.checkMekNameAvailability,
     debouncedMekName.trim().length >= 1 ? {
       mekName: debouncedMekName.trim(),
       currentMekAssetId: mekAssetId
@@ -124,8 +125,9 @@ export default function MekNamingLightbox({
     setIsSubmitting(true);
 
     try {
+      // Phase II: Use stakeAddress instead of walletAddress
       const result = await setMekNameMutation({
-        walletAddress,
+        stakeAddress: walletAddress,
         mekAssetId,
         newName: trimmedName
       });
