@@ -1415,6 +1415,8 @@ export const markInventoryAsSoldByUid = mutation({
     console.log('[WEBHOOK-FALLBACK] Successfully marked NFT as sold:', nft.name);
 
     // Update campaign counters if campaign exists
+    // Note: In Convex, reads within the same mutation see previous writes,
+    // so the query below will see the NFT with status="sold" after our patch
     if (nft.campaignId) {
       const inventory = await ctx.db
         .query("commemorativeNFTInventory")
@@ -1425,8 +1427,7 @@ export const markInventoryAsSoldByUid = mutation({
         totalNFTs: inventory.length,
         availableNFTs: inventory.filter((i) => i.status === "available").length,
         reservedNFTs: inventory.filter((i) => i.status === "reserved").length,
-        // +1 for the one we just sold (since query returned old state)
-        soldNFTs: inventory.filter((i) => i.status === "sold").length + 1,
+        soldNFTs: inventory.filter((i) => i.status === "sold").length,
         updatedAt: Date.now(),
       });
 

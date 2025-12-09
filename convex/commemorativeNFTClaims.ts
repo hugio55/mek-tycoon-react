@@ -98,9 +98,10 @@ export const checkReservationPaid = query({
     }
 
     // PATH 2: Check claims table by NFT UID (webhook may have recorded claim but not updated inventory)
+    // Using by_asset_id index for efficient lookup
     const claimByNftUid = await ctx.db
       .query("commemorativeNFTClaims")
-      .filter((q) => q.eq(q.field("nftAssetId"), nft.nftUid))
+      .withIndex("by_asset_id", (q: any) => q.eq("nftAssetId", nft.nftUid))
       .first();
 
     if (claimByNftUid) {
