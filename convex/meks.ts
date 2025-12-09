@@ -289,3 +289,220 @@ export const getMeksByAssetIds = query({
     return meks;
   },
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MEK LEVELING SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Level up cost formula (same as Phase I):
+ * Level 1→2: 500 gold
+ * Level 2→3: 1000 gold
+ * Level 3→4: 2000 gold
+ * ...doubles each level
+ * Max level: 10
+ */
+const LEVEL_COSTS = [
+  0,      // Level 1 (base, no cost)
+  500,    // Level 2
+  1000,   // Level 3
+  2000,   // Level 4
+  4000,   // Level 5
+  8000,   // Level 6
+  16000,  // Level 7
+  32000,  // Level 8
+  64000,  // Level 9
+  128000, // Level 10
+];
+
+const MAX_MEK_LEVEL = 10;
+const BOOST_PER_LEVEL = 10; // 10% boost per level
+
+/**
+ * Get the cost to level up a Mek
+ */
+export const getMekLevelCost = query({
+  args: {
+    currentLevel: v.number(),
+  },
+  handler: async (_ctx, args) => {
+    if (args.currentLevel >= MAX_MEK_LEVEL) {
+      return {
+        canLevelUp: false,
+        cost: 0,
+        nextLevel: MAX_MEK_LEVEL,
+        error: "Mek is already at max level"
+      };
+    }
+
+    const cost = LEVEL_COSTS[args.currentLevel] || 0;
+    return {
+      canLevelUp: true,
+      cost,
+      nextLevel: args.currentLevel + 1,
+      boostGain: BOOST_PER_LEVEL
+    };
+  },
+});
+
+/**
+ * Level up a Mek by spending gold
+ */
+export const levelUpMek = mutation({
+  args: {
+    stakeAddress: v.string(),
+    mekAssetId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    console.log('[⬆️LEVEL] ========== levelUpMek MUTATION START ==========');
+    console.log('[⬆️LEVEL] Input:', {
+      stakeAddress: args.stakeAddress.substring(0, 20) + '...',
+      mekAssetId: args.mekAssetId,
+    });
+
+    // Get the user from users table
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
+      .first();
+
+    if (!user) {
+      console.log('[⬆️LEVEL] ERROR: User not found');
+      return {
+        success: false,
+        error: "User not found"
+      };
+    }
+
+    // Get the Mek
+    const mek = await ctx.db
+      .query("meks")
+      .withIndex("by_asset_id", (q: any) => q.eq("assetId", args.mekAssetId))
+      .first();
+
+    if (!mek) {
+      console.log('[⬆️LEVEL] ERROR: Mek not found');
+      return {
+        success: false,
+        error: "Mek not found"
+      };
+    }
+
+    // Verify ownership
+    if (mek.ownerStakeAddress !== args.stakeAddress && mek.owner !== args.stakeAddress) {
+      console.log('[⬆️LEVEL] ERROR: Not owner of this Mek');
+      return {
+        success: false,
+        error: "You do not own this Mek"
+      };
+    }
+
+    // Get current level (default to 1 if not set)
+    const currentLevel = mek.mekLevel || 1;
+
+    if (currentLevel >= MAX_MEK_LEVEL) {
+      console.log('[⬆️LEVEL] ERROR: Already at max level');
+      return {
+        success: false,
+        error: "Mek is already at max level (10)"
+      };
+    }
+
+    // Calculate cost
+    const cost = LEVEL_COSTS[currentLevel] || 0;
+    const userGold = user.gold || 0;
+
+    if (userGold < cost) {
+      console.log('[⬆️LEVEL] ERROR: Not enough gold');
+      return {
+        success: false,
+        error: `Not enough gold. Need ${cost}, have ${userGold}`
+      };
+    }
+
+    // Calculate new values
+    const newLevel = currentLevel + 1;
+    const newBoostPercent = (newLevel - 1) * BOOST_PER_LEVEL; // Level 1 = 0%, Level 10 = 90%
+    const baseRate = mek.baseGoldRate || mek.goldRate || 0;
+    const newBoostAmount = Math.floor(baseRate * (newBoostPercent / 100));
+    const newEffectiveRate = baseRate + newBoostAmount;
+
+    console.log('[⬆️LEVEL] Leveling up:', {
+      currentLevel,
+      newLevel,
+      cost,
+      baseRate,
+      newBoostPercent,
+      newBoostAmount,
+      newEffectiveRate
+    });
+
+    // Deduct gold from user
+    await ctx.db.patch(user._id, {
+      gold: userGold - cost,
+    });
+
+    // Update the Mek
+    await ctx.db.patch(mek._id, {
+      mekLevel: newLevel,
+      levelBoostPercent: newBoostPercent,
+      levelBoostAmount: newBoostAmount,
+      effectiveGoldRate: newEffectiveRate,
+      // Initialize baseGoldRate if not set
+      baseGoldRate: baseRate,
+    });
+
+    console.log('[⬆️LEVEL] ✅ Level up successful!');
+    console.log('[⬆️LEVEL] ========== levelUpMek MUTATION END ==========');
+
+    return {
+      success: true,
+      newLevel,
+      boostPercent: newBoostPercent,
+      effectiveGoldRate: newEffectiveRate,
+      goldSpent: cost,
+      remainingGold: userGold - cost
+    };
+  },
+});
+
+/**
+ * Get level info for a Mek (for UI display)
+ */
+export const getMekLevelInfo = query({
+  args: {
+    mekAssetId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const mek = await ctx.db
+      .query("meks")
+      .withIndex("by_asset_id", (q: any) => q.eq("assetId", args.mekAssetId))
+      .first();
+
+    if (!mek) {
+      return null;
+    }
+
+    const currentLevel = mek.mekLevel || 1;
+    const baseRate = mek.baseGoldRate || mek.goldRate || 0;
+    const boostPercent = mek.levelBoostPercent || 0;
+    const boostAmount = mek.levelBoostAmount || 0;
+    const effectiveRate = mek.effectiveGoldRate || baseRate;
+
+    const isMaxLevel = currentLevel >= MAX_MEK_LEVEL;
+    const nextLevelCost = isMaxLevel ? 0 : (LEVEL_COSTS[currentLevel] || 0);
+    const nextBoostGain = isMaxLevel ? 0 : BOOST_PER_LEVEL;
+
+    return {
+      currentLevel,
+      maxLevel: MAX_MEK_LEVEL,
+      isMaxLevel,
+      baseRate,
+      boostPercent,
+      boostAmount,
+      effectiveRate,
+      nextLevelCost,
+      nextBoostGain,
+    };
+  },
+});

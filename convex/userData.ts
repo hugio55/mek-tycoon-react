@@ -17,7 +17,7 @@ import { mutation, query } from "./_generated/server";
  * Get user data for wallet connection and display
  * Replaces: goldMining.getGoldMiningData
  *
- * Returns user profile + owned Meks
+ * Returns user profile + owned Meks with full Phase II data
  */
 export const getUserData = query({
   args: {
@@ -34,16 +34,41 @@ export const getUserData = query({
       return null;
     }
 
-    // Get owned Meks from meks table
-    const ownedMeks = await ctx.db
+    // Get owned Meks from meks table using Phase II index
+    // Try ownerStakeAddress first (Phase II), fall back to owner (legacy)
+    let ownedMeks = await ctx.db
       .query("meks")
-      .withIndex("by_owner", (q: any) => q.eq("owner", args.walletAddress))
+      .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", args.walletAddress))
       .collect();
+
+    // If no results with Phase II field, try legacy owner field
+    if (ownedMeks.length === 0) {
+      ownedMeks = await ctx.db
+        .query("meks")
+        .withIndex("by_owner", (q: any) => q.eq("owner", args.walletAddress))
+        .collect();
+    }
+
+    // Calculate gold rate totals
+    let totalBaseGoldRate = 0;
+    let totalBoostGoldRate = 0;
+    let totalEffectiveGoldRate = 0;
+
+    for (const mek of ownedMeks) {
+      const baseRate = mek.baseGoldRate || mek.goldRate || 0;
+      const boostAmount = mek.levelBoostAmount || 0;
+      const effectiveRate = mek.effectiveGoldRate || baseRate;
+
+      totalBaseGoldRate += baseRate;
+      totalBoostGoldRate += boostAmount;
+      totalEffectiveGoldRate += effectiveRate;
+    }
 
     return {
       // User identity
       walletAddress: user.stakeAddress,
       companyName: user.corporationName,
+      corporationName: user.corporationName, // Alias for compatibility
 
       // User stats
       gold: user.gold || 0,
@@ -57,16 +82,52 @@ export const getUserData = query({
       lastActiveTime: user.lastLogin,
       createdAt: user.createdAt,
 
-      // Owned Meks (formatted for frontend compatibility)
+      // Gold rate totals (Phase II)
+      totalBaseGoldRate,
+      totalBoostGoldRate,
+      totalEffectiveGoldRate,
+      totalGoldPerHour: totalEffectiveGoldRate, // Alias for goldMining compatibility
+
+      // Owned Meks (formatted for frontend compatibility with full Phase II data)
       ownedMeks: ownedMeks.map(mek => ({
+        // Identity
         assetId: mek.assetId,
         assetName: mek.assetName,
+        policyId: mek.policyId,
+        customName: mek.customName,
+
+        // Visual
         sourceKey: mek.sourceKey,
         sourceKeyBase: mek.sourceKeyBase,
+        iconUrl: mek.iconUrl,
+        imageUrl: mek.iconUrl, // Alias for goldMining compatibility
+
+        // Variations
         headVariation: mek.headVariation,
         bodyVariation: mek.bodyVariation,
         itemVariation: mek.itemVariation,
+
+        // Rarity
         rarityRank: mek.rarityRank,
+        rarityTier: mek.rarityTier,
+
+        // Gold rates (Phase II)
+        goldRate: mek.goldRate,
+        goldPerHour: mek.effectiveGoldRate || mek.goldRate || 0, // goldMining compatibility
+        baseGoldRate: mek.baseGoldRate || mek.goldRate || 0,
+        baseGoldPerHour: mek.baseGoldRate || mek.goldRate || 0, // goldMining compatibility
+
+        // Level system (Phase II)
+        mekLevel: mek.mekLevel || 1,
+        currentLevel: mek.mekLevel || 1, // goldMining compatibility
+        levelBoostPercent: mek.levelBoostPercent || 0,
+        levelBoostAmount: mek.levelBoostAmount || 0,
+        effectiveGoldRate: mek.effectiveGoldRate || mek.goldRate || 0,
+        effectiveGoldPerHour: mek.effectiveGoldRate || mek.goldRate || 0, // goldMining compatibility
+
+        // Accumulated gold (Phase II)
+        accumulatedGoldForCorp: mek.accumulatedGoldForCorp || 0,
+        accumulatedGoldAllTime: mek.accumulatedGoldAllTime || 0,
       })),
 
       // Mek count for quick access

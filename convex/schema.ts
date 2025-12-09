@@ -90,6 +90,16 @@ export default defineSchema({
     customName: v.optional(v.string()), // Player-assigned name for this Mek
     accumulatedGoldForCorp: v.optional(v.number()), // Gold earned for current owner (resets on sale)
     accumulatedGoldAllTime: v.optional(v.number()), // Lifetime gold earned by this Mek
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PHASE II: Mek Leveling System
+    // ═══════════════════════════════════════════════════════════════════════════
+    policyId: v.optional(v.string()), // Policy ID for blockchain verification
+    baseGoldRate: v.optional(v.number()), // Original gold rate from rarity (immutable)
+    mekLevel: v.optional(v.number()), // Current level (1-10), default 1
+    levelBoostPercent: v.optional(v.number()), // Boost percentage from level (0-90%)
+    levelBoostAmount: v.optional(v.number()), // Actual boost amount in gold/hr
+    effectiveGoldRate: v.optional(v.number()), // baseGoldRate + levelBoostAmount
   })
     .index("by_owner", ["owner"]) // LEGACY: for backwards compat
     .index("by_owner_stake", ["ownerStakeAddress"]) // Phase II: PRIMARY owner lookup
