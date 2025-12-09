@@ -10,13 +10,13 @@ The `^` means "parent of this commit" (before deletion).
 
 ---
 
-## 2025-12-09: Phase I Legacy Gold Mining Cleanup
+## 2025-12-09: Phase I Legacy Gold Mining Cleanup (Pass 2)
 
 **Commit**: (pending commit)
-**Total Deleted**: 6 files
-**Reason**: Phase II architecture no longer uses passive gold income (goldPerHour). Job slots with daily income replace the old mek-ownership-based passive gold system.
+**Total Deleted**: 29 files
+**Reason**: Phase II architecture no longer uses passive gold income (goldPerHour). Job slots with daily income replace the old mek-ownership-based passive gold system. Tenure system also being removed.
 
-### Backend Legacy Files (4 files)
+### Backend Legacy Files - Pass 1 (4 files)
 
 **Phase I Wallet Fix Utilities (Obsolete):**
 - `convex/adminSyncFix.ts` - Admin wallet resync using legacy goldMining system
@@ -24,11 +24,46 @@ The `^` means "parent of this commit" (before deletion).
 - `convex/finalWalletFix.ts` - Another wallet consolidation utility
 - `convex/listAllGoldMiningAccounts.ts` - Debug query for goldMining table
 
-### Frontend Broken Pages (2 files)
+### Backend Legacy Files - Pass 2 (7 files)
+
+**Phase I Gold System (Obsolete):**
+- `convex/leaderboardDiagnostics.ts` - Queried goldMining table directly
+- `convex/leaderboardUpdater.ts` - Phase I leaderboard from goldMining
+- `convex/adminVerificationReset.ts` - Admin tool for goldMining verification
+- `convex/deleteMockAccounts.ts` - Queried goldMining for cleanup
+- `convex/deleteZeroMekAccounts.ts` - Queried goldMining for cleanup
+- `convex/getTop50MekHolders.ts` - Queried goldMining for holder ranking
+
+### Frontend Broken Pages (3 files)
 
 **Referenced Non-Existent Backend Functions:**
 - `src/app/admin-sync-health/page.tsx` - Referenced deleted `api.syncChecksums.*`
-- `src/components/WalletSnapshotDebug.tsx` - Referenced multiple deleted files (`fixWalletDuplicates`, `debugWalletSnapshot`, `goldMiningSnapshot`, `fixGoldRateCalculation`, `comprehensiveWalletFix`)
+- `src/components/WalletSnapshotDebug.tsx` - Referenced multiple deleted files
+- `src/app/admin-cleanup-mocks/page.tsx` - Referenced deleted `listAllGoldMiningAccounts`
+
+### Documentation - Phase I Gold System (10 files)
+
+**Obsolete Gold System Docs:**
+- `GOLD_MIGRATION_PLAN.md` - Phase I gold corruption fixes
+- `PAUSE_SYSTEM_PLAN.md` - Phase I pause system (already completed)
+- `docs/GOLD_SYNC_BUG_FIX.md` - Phase I time-based gold bugs
+- `docs/GOLD_BACKUP_SYSTEM.md` - Phase I gold backup system
+- `docs/IMPLEMENTATION_GUIDE_MEK_OPTIMIZATION.md` - Referenced goldMining
+- `docs/ADVANCED_MEK_OPTIMIZATION.md` - Referenced goldMining architecture
+- `docs/ARCHITECTURE_MEK_DATA_FETCHING.md` - Phase I data flow diagrams
+- `docs/QUICK_REFERENCE_MEK_OPTIMIZATION.md` - goldMining optimization
+- `docs/README_MEK_OPTIMIZATION.md` - goldMining optimization
+- `docs/mek-leveling-architecture.md` - Mek leveling (simplified in Phase II)
+
+### Documentation - Tenure System (6 files)
+
+**Tenure Being Removed from Phase II:**
+- `TENURE_COLUMN_INTEGRATION.md`
+- `TENURE_PROGRESS_BAR.md`
+- `TENURE_SYNC_DESIGN.md`
+- `TENURE_DISPLAY_INTEGRATION.md`
+- `convex/TENURE_SCHEMA_ADDITIONS.md`
+- `convex/TENURE_IMPLEMENTATION_GUIDE.md`
 
 ### Phase I Files Kept For Now (Flagged for Phase II Update)
 
@@ -44,8 +79,8 @@ The `^` means "parent of this commit" (before deletion).
 # Restore any file from this cleanup
 git checkout HEAD^ -- <file-path>
 
-# Example: Restore adminSyncFix.ts
-git checkout HEAD^ -- convex/adminSyncFix.ts
+# Example: Restore leaderboardUpdater.ts
+git checkout HEAD^ -- convex/leaderboardUpdater.ts
 ```
 
 ---
