@@ -82,7 +82,14 @@ export default defineSchema({
 
     // Metadata
     lastUpdated: v.optional(v.number()),
-    isStaked: v.optional(v.boolean())
+    isStaked: v.optional(v.boolean()),
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PHASE II: Custom naming and gold tracking
+    // ═══════════════════════════════════════════════════════════════════════════
+    customName: v.optional(v.string()), // Player-assigned name for this Mek
+    accumulatedGoldForCorp: v.optional(v.number()), // Gold earned for current owner (resets on sale)
+    accumulatedGoldAllTime: v.optional(v.number()), // Lifetime gold earned by this Mek
   })
     .index("by_owner", ["owner"]) // LEGACY: for backwards compat
     .index("by_owner_stake", ["ownerStakeAddress"]) // Phase II: PRIMARY owner lookup

@@ -139,10 +139,10 @@ export const calculateSlotPendingIncome = query({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    // Get the job slot
+    // Get the job slot (use by_user index, not by_stake_address)
     const slot = await ctx.db
       .query("userJobSlots")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
+      .withIndex("by_user", (q: any) => q.eq("stakeAddress", args.stakeAddress))
       .filter((q: any) =>
         q.and(
           q.eq(q.field("slotType"), args.slotType),
@@ -182,8 +182,8 @@ export const calculateSlotPendingIncome = query({
       };
     }
 
-    // Calculate time since last collection
-    const lastCollection = slot.lastIncomeCollection || slot.assignedAt || now;
+    // Calculate time since last collection (use lastOutputTime instead of lastIncomeCollection)
+    const lastCollection = slot.lastOutputTime || slot.assignedAt || now;
     const daysSinceCollection = (now - lastCollection) / (1000 * 60 * 60 * 24);
 
     // Get base daily rate for this mek
@@ -227,10 +227,10 @@ export const collectSlotIncome = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    // Get the job slot
+    // Get the job slot (use by_user index)
     const slot = await ctx.db
       .query("userJobSlots")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
+      .withIndex("by_user", (q: any) => q.eq("stakeAddress", args.stakeAddress))
       .filter((q: any) =>
         q.and(
           q.eq(q.field("slotType"), args.slotType),
@@ -269,8 +269,8 @@ export const collectSlotIncome = mutation({
       };
     }
 
-    // Calculate time since last collection
-    const lastCollection = slot.lastIncomeCollection || slot.assignedAt || now;
+    // Calculate time since last collection (use lastOutputTime)
+    const lastCollection = slot.lastOutputTime || slot.assignedAt || now;
     const daysSinceCollection = (now - lastCollection) / (1000 * 60 * 60 * 24);
 
     // Minimum collection interval (prevent spam clicking)
@@ -297,10 +297,10 @@ export const collectSlotIncome = mutation({
     const collectedIncome = baseDailyRate * daysSinceCollection * slotBonus * tenureBonus;
     const roundedIncome = Math.floor(collectedIncome * 100) / 100;
 
-    // Update slot with new collection time and add XP
+    // Update slot with new collection time and add XP (use lastOutputTime)
     const xpGain = Math.floor(roundedIncome / 10); // 1 XP per 10 gold
     await ctx.db.patch(slot._id, {
-      lastIncomeCollection: now,
+      lastOutputTime: now,
       slotXP: (slot.slotXP || 0) + xpGain,
       lastXPUpdate: now,
     });
@@ -345,10 +345,10 @@ export const collectAllSlotIncome = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    // Get all job slots for this user
+    // Get all job slots for this user (use by_user index)
     const slots = await ctx.db
       .query("userJobSlots")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.stakeAddress))
+      .withIndex("by_user", (q: any) => q.eq("stakeAddress", args.stakeAddress))
       .collect();
 
     let totalCollected = 0;
@@ -366,8 +366,8 @@ export const collectAllSlotIncome = mutation({
 
       if (!mek) continue;
 
-      // Calculate time since last collection
-      const lastCollection = slot.lastIncomeCollection || slot.assignedAt || now;
+      // Calculate time since last collection (use lastOutputTime)
+      const lastCollection = slot.lastOutputTime || slot.assignedAt || now;
       const daysSinceCollection = (now - lastCollection) / (1000 * 60 * 60 * 24);
 
       if (daysSinceCollection < 0.001) continue; // Skip if too recent
@@ -383,9 +383,9 @@ export const collectAllSlotIncome = mutation({
       const roundedIncome = Math.floor(collectedIncome * 100) / 100;
       const xpGain = Math.floor(roundedIncome / 10);
 
-      // Update slot
+      // Update slot (use lastOutputTime)
       await ctx.db.patch(slot._id, {
-        lastIncomeCollection: now,
+        lastOutputTime: now,
         slotXP: (slot.slotXP || 0) + xpGain,
         lastXPUpdate: now,
       });
