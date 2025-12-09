@@ -201,10 +201,8 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
 
   // Filter corporations for search (include support reopen option)
   const corporationsToSearch = allCorporations || [];
-  const searchLower = corpSearchQuery.toLowerCase();
-  const showSupportOption = corpSearchQuery &&
-    (searchLower.includes('overexposed') || searchLower.includes('support')) &&
-    supportConversationStatus?.isDismissed;
+  // Always show support option in New Conversation modal
+  const showSupportOption = true;
 
   const filteredCorporations = corpSearchQuery
     ? corporationsToSearch.filter((corp: any) =>
@@ -452,17 +450,34 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     }
   };
 
-  // Reopen support conversation
-  const handleReopenSupportConversation = async () => {
+  // Open/reopen/create support conversation
+  const handleOpenSupportConversation = async () => {
     try {
-      const result = await reopenSupportConversation({ walletAddress });
       setShowNewConversation(false);
       setCorpSearchQuery('');
+
+      // If support conversation already exists and is visible, just open it
+      if (supportConversation) {
+        setSelectedConversationId(supportConversation._id);
+        return;
+      }
+
+      // If dismissed, reopen it
+      if (supportConversationStatus?.isDismissed) {
+        const result = await reopenSupportConversation({ walletAddress });
+        if (result.conversationId) {
+          setSelectedConversationId(result.conversationId);
+        }
+        return;
+      }
+
+      // Otherwise create a new one
+      const result = await createSupportConversation({ walletAddress });
       if (result.conversationId) {
         setSelectedConversationId(result.conversationId);
       }
     } catch (error) {
-      console.error('Failed to reopen support conversation:', error);
+      console.error('Failed to open support conversation:', error);
     }
   };
 
@@ -987,10 +1002,10 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
               />
             </div>
             <div className="max-h-[300px] overflow-y-auto">
-              {/* Reopen Support Option - Shows when user searches "overexposed" or "support" */}
+              {/* Overexposed Support - Always visible at top */}
               {showSupportOption && (
                 <button
-                  onClick={handleReopenSupportConversation}
+                  onClick={handleOpenSupportConversation}
                   className="w-full p-4 text-left hover:bg-cyan-500/10 transition-colors border-b border-cyan-500/20 bg-cyan-500/5"
                 >
                   <div className="flex items-center gap-3">
@@ -1001,8 +1016,8 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-cyan-400 font-medium">Reopen Support Chat</div>
-                      <div className="text-cyan-500/60 text-sm">Contact the Overexposed development team</div>
+                      <div className="text-cyan-400 font-medium">Overexposed Support</div>
+                      <div className="text-cyan-500/60 text-sm">Contact the development team</div>
                     </div>
                   </div>
                 </button>
