@@ -136,10 +136,11 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   // Query for payment completion - checks if THIS SPECIFIC reservation was paid
   // Uses reservation ID (not wallet) to prevent false positives from previous claims
   // Also runs during 'payment' state for active polling while NMKR window is open
+  // ENHANCED: Now passes walletAddress for additional detection paths (claims table, webhooks table)
   const reservationPaymentStatus = useQuery(
     api.commemorativeNFTClaims.checkReservationPaid,
     (state === 'payment' || state === 'processing' || state === 'payment_window_closed') && reservationId
-      ? { reservationId }
+      ? { reservationId, walletAddress: effectiveWalletAddress || undefined }
       : "skip"
   );
 

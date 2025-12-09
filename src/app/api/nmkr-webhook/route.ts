@@ -251,12 +251,16 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
           // Continue processing - don't block legitimate sales due to eligibility check errors
         }
 
+        // Extract NFT UID early for use in multiple places
+        const nftUid = NotificationSaleNfts?.[0]?.NftUid;
+
         try {
           const reservationResult = await getConvex().mutation(
             api.commemorativeNFTReservations.completeReservationByWallet,
             {
               walletAddress: ReceiverStakeAddress,
               transactionHash: txHash,
+              nftUid: nftUid, // Pass NFT UID for fallback lookup strategy
             }
           );
 
@@ -265,9 +269,6 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
           } else {
             // No reservation found - this is an external sale (purchased directly from NMKR Studio)
             console.log('[🔨WEBHOOK] No reservation found - external sale detected');
-
-            // Extract NFT UID from webhook payload
-            const nftUid = NotificationSaleNfts?.[0]?.NftUid;
 
             if (nftUid) {
               console.log('[🔨WEBHOOK] Attempting to mark inventory as sold by UID:', nftUid);

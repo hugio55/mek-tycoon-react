@@ -281,23 +281,72 @@ export const completeReservation = mutation({
 });
 
 // Complete reservation by wallet address (called by webhook)
+// ENHANCED: Now tries multiple lookup strategies and includes transaction hash
 export const completeReservationByWallet = mutation({
   args: {
     walletAddress: v.string(),
     transactionHash: v.string(),
+    nftUid: v.optional(v.string()), // Optional: for fallback lookup by NFT
   },
   handler: async (ctx, args) => {
-    console.log('[RESERVATION] Webhook attempting to complete reservation for wallet:', args.walletAddress);
+    const normalizedWallet = args.walletAddress.toLowerCase().trim();
+    console.log('[RESERVATION] Webhook attempting to complete reservation for wallet:', normalizedWallet);
 
-    // Find active reservation for this wallet
-    const reservation = await ctx.db
+    // STRATEGY 1: Find active reservation for this wallet (exact match)
+    let reservation = await ctx.db
       .query("commemorativeNFTReservations")
       .withIndex("by_reserved_by", (q: any) => q.eq("reservedBy", args.walletAddress))
       .filter((q) => q.eq(q.field("status"), "active"))
       .first();
 
+    // STRATEGY 2: Try normalized wallet address if different
+    if (!reservation && normalizedWallet !== args.walletAddress) {
+      console.log('[RESERVATION] Trying normalized wallet address...');
+      reservation = await ctx.db
+        .query("commemorativeNFTReservations")
+        .withIndex("by_reserved_by", (q: any) => q.eq("reservedBy", normalizedWallet))
+        .filter((q) => q.eq(q.field("status"), "active"))
+        .first();
+    }
+
+    // STRATEGY 3: If NFT UID provided, try finding reservation by NFT
+    if (!reservation && args.nftUid) {
+      console.log('[RESERVATION] Trying lookup by NFT UID:', args.nftUid);
+      reservation = await ctx.db
+        .query("commemorativeNFTReservations")
+        .withIndex("by_nft_uid", (q: any) => q.eq("nftUid", args.nftUid))
+        .filter((q) => q.eq(q.field("status"), "active"))
+        .first();
+
+      if (reservation) {
+        console.log('[RESERVATION] Found reservation by NFT UID! Wallet was:', reservation.reservedBy);
+      }
+    }
+
+    // STRATEGY 4: Check for recently expired reservation (user might have paid just after expiry)
     if (!reservation) {
-      console.log('[RESERVATION] No active reservation found for wallet:', args.walletAddress);
+      console.log('[RESERVATION] Checking for recently expired reservation...');
+      const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+
+      reservation = await ctx.db
+        .query("commemorativeNFTReservations")
+        .withIndex("by_reserved_by", (q: any) => q.eq("reservedBy", args.walletAddress))
+        .filter((q) =>
+          q.and(
+            q.eq(q.field("status"), "expired"),
+            q.gte(q.field("expiresAt"), fiveMinutesAgo)
+          )
+        )
+        .first();
+
+      if (reservation) {
+        console.log('[RESERVATION] Found recently expired reservation, completing it anyway');
+      }
+    }
+
+    if (!reservation) {
+      console.log('[RESERVATION] No reservation found for wallet:', args.walletAddress);
+      console.log('[RESERVATION] Fallback to markInventoryAsSoldByUid will be used');
       return { success: false, error: "No active reservation found" };
     }
 
@@ -314,14 +363,23 @@ export const completeReservationByWallet = mutation({
     // Update reservation status
     await ctx.db.patch(reservation._id, {
       status: "completed",
+      transactionHash: args.transactionHash,
+      completedAt: Date.now(),
     });
 
-    // Update NFT inventory to sold
+    // Update NFT inventory to sold WITH transaction hash
     await ctx.db.patch(reservation.nftInventoryId, {
       status: "sold",
       soldTo: args.walletAddress,
       soldAt: Date.now(),
+      transactionHash: args.transactionHash,
       companyNameAtSale,
+      // Clear reservation fields
+      reservedBy: undefined,
+      reservedAt: undefined,
+      expiresAt: undefined,
+      paymentWindowOpenedAt: undefined,
+      paymentWindowClosedAt: undefined,
     });
 
     console.log('[RESERVATION] Completed reservation from webhook:', reservation._id, 'for NFT:', reservation.nftNumber);
