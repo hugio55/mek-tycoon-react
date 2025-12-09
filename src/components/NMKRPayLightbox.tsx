@@ -397,14 +397,13 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
     setAvailableWallets(wallets);
   };
 
-  // Handle "Open Payment Window" click - go to verification first
+  // Handle "Open Payment Window" click - open payment directly
+  // Wallet verification already happened before reservation was created
   const handleOpenPayment = async () => {
     if (!activeReservation || !reservationId) return;
 
-    console.log('[🔐VERIFY] User clicked Open Payment Window - starting verification');
-    setWalletVerificationError(null);
-    detectWalletsAndMobile();
-    setState('wallet_verification');
+    console.log('[PAY] User clicked Open Payment Window - opening payment directly (already verified)');
+    await openNMKRPayment();
   };
 
   // Actually open the NMKR payment window (called after verification succeeds)
