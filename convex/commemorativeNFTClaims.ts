@@ -62,9 +62,11 @@ export const recordClaim = mutation({
 
 // Check if a SPECIFIC reservation was paid (for payment window monitoring)
 // This prevents false positives from previous claims showing success
+// ENHANCED: Now has multiple detection paths for robust payment detection
 export const checkReservationPaid = query({
   args: {
     reservationId: v.id("commemorativeNFTInventory"),
+    walletAddress: v.optional(v.string()), // Optional: for additional detection paths
   },
   handler: async (ctx, args) => {
     // Get the specific NFT inventory item
@@ -75,12 +77,13 @@ export const checkReservationPaid = query({
       return {
         isPaid: false,
         claim: null,
+        detectionPath: 'none',
       };
     }
 
-    // Check if this specific NFT was sold
+    // PATH 1: Check if this specific NFT was sold (PRIMARY CHECK)
     if (nft.status === 'sold') {
-      console.log('[🔨CLAIM-CHECK] ✅ Reservation PAID:', nft.name, '- sold to:', nft.soldTo);
+      console.log('[🔨CLAIM-CHECK] ✅ PATH 1 - Inventory shows SOLD:', nft.name);
       return {
         isPaid: true,
         claim: {
@@ -90,14 +93,83 @@ export const checkReservationPaid = query({
           transactionHash: nft.transactionHash || 'pending',
           nftAssetId: nft.nftUid,
         },
+        detectionPath: 'inventory_status',
       };
+    }
+
+    // PATH 2: Check claims table by NFT UID (webhook may have recorded claim but not updated inventory)
+    const claimByNftUid = await ctx.db
+      .query("commemorativeNFTClaims")
+      .filter((q) => q.eq(q.field("nftAssetId"), nft.nftUid))
+      .first();
+
+    if (claimByNftUid) {
+      console.log('[🔨CLAIM-CHECK] ✅ PATH 2 - Found claim in claims table for NFT:', nft.name);
+      return {
+        isPaid: true,
+        claim: {
+          walletAddress: claimByNftUid.walletAddress,
+          nftName: claimByNftUid.nftName,
+          claimedAt: claimByNftUid.claimedAt,
+          transactionHash: claimByNftUid.transactionHash,
+          nftAssetId: claimByNftUid.nftAssetId,
+        },
+        detectionPath: 'claims_table_by_nft',
+      };
+    }
+
+    // PATH 3: Check processed webhooks by NFT UID (webhook was processed but DB update may have failed)
+    const webhookByNftUid = await ctx.db
+      .query("processedWebhooks")
+      .filter((q) => q.eq(q.field("nftUid"), nft.nftUid))
+      .first();
+
+    if (webhookByNftUid) {
+      console.log('[🔨CLAIM-CHECK] ✅ PATH 3 - Found processed webhook for NFT:', nft.name);
+      return {
+        isPaid: true,
+        claim: {
+          walletAddress: webhookByNftUid.stakeAddress,
+          nftName: nft.name,
+          claimedAt: webhookByNftUid.processedAt,
+          transactionHash: webhookByNftUid.transactionHash,
+          nftAssetId: nft.nftUid,
+        },
+        detectionPath: 'processed_webhook',
+        needsInventorySync: true, // Flag that inventory needs to be synced
+      };
+    }
+
+    // PATH 4: If wallet address provided, check claims table by wallet
+    if (args.walletAddress) {
+      const claimByWallet = await ctx.db
+        .query("commemorativeNFTClaims")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
+        .first();
+
+      // Only count as match if claimed AFTER reservation was created
+      if (claimByWallet && nft.reservedAt && claimByWallet.claimedAt > nft.reservedAt) {
+        console.log('[🔨CLAIM-CHECK] ✅ PATH 4 - Found recent claim for wallet:', args.walletAddress);
+        return {
+          isPaid: true,
+          claim: {
+            walletAddress: claimByWallet.walletAddress,
+            nftName: claimByWallet.nftName,
+            claimedAt: claimByWallet.claimedAt,
+            transactionHash: claimByWallet.transactionHash,
+            nftAssetId: claimByWallet.nftAssetId,
+          },
+          detectionPath: 'claims_table_by_wallet',
+        };
+      }
     }
 
     console.log('[🔨CLAIM-CHECK] Reservation NOT paid yet:', nft.name, '- status:', nft.status);
     return {
       isPaid: false,
       claim: null,
-      nftStatus: nft.status, // Include for debugging
+      nftStatus: nft.status,
+      detectionPath: 'none',
     };
   },
 });

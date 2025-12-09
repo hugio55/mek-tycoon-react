@@ -157,6 +157,7 @@ import type * as variationsReference from "../variationsReference.js";
 import type * as verifyMigration from "../verifyMigration.js";
 import type * as walletAuthentication from "../walletAuthentication.js";
 import type * as walletSession from "../walletSession.js";
+import type * as webhooks from "../webhooks.js";
 import type * as whitelists from "../whitelists.js";
 
 import type {
@@ -323,6 +324,7 @@ declare const fullApi: ApiFromModules<{
   verifyMigration: typeof verifyMigration;
   walletAuthentication: typeof walletAuthentication;
   walletSession: typeof walletSession;
+  webhooks: typeof webhooks;
   whitelists: typeof whitelists;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

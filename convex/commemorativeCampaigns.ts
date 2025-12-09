@@ -1347,3 +1347,98 @@ export const fixPaymentUrls = mutation({
     };
   },
 });
+
+/**
+ * Mark NFT inventory as sold by UID (called by webhook when no reservation found)
+ *
+ * This is the CRITICAL fallback function for external sales or when reservations expire.
+ * When NMKR sends a webhook but no active reservation exists, this function
+ * directly marks the inventory as sold.
+ */
+export const markInventoryAsSoldByUid = mutation({
+  args: {
+    nftUid: v.string(),
+    transactionHash: v.string(),
+    soldTo: v.optional(v.string()), // Stake address of buyer (from webhook)
+  },
+  handler: async (ctx, args) => {
+    console.log('[WEBHOOK-FALLBACK] markInventoryAsSoldByUid called:', {
+      nftUid: args.nftUid,
+      tx: args.transactionHash,
+      soldTo: args.soldTo?.substring(0, 20) + '...',
+    });
+
+    // Find the NFT by UID
+    const nft = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_uid", (q: any) => q.eq("nftUid", args.nftUid))
+      .first();
+
+    if (!nft) {
+      console.error('[WEBHOOK-FALLBACK] NFT not found:', args.nftUid);
+      return { success: false, error: "NFT not found" };
+    }
+
+    console.log('[WEBHOOK-FALLBACK] Found NFT:', nft.name, 'current status:', nft.status);
+
+    // Check if already sold (idempotency)
+    if (nft.status === "sold") {
+      console.log('[WEBHOOK-FALLBACK] NFT already sold, skipping:', nft.name);
+      return { success: true, alreadySold: true, nftNumber: nft.nftNumber };
+    }
+
+    // Look up company name for historical tracking
+    let companyNameAtSale: string | undefined;
+    if (args.soldTo) {
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.soldTo))
+        .first();
+      companyNameAtSale = user?.corporationName || undefined;
+    }
+
+    // Update the NFT to sold status
+    await ctx.db.patch(nft._id, {
+      status: "sold",
+      soldTo: args.soldTo,
+      soldAt: Date.now(),
+      transactionHash: args.transactionHash,
+      companyNameAtSale,
+      // Clear reservation fields since sale is complete
+      reservedBy: undefined,
+      reservedAt: undefined,
+      expiresAt: undefined,
+      paymentWindowOpenedAt: undefined,
+      paymentWindowClosedAt: undefined,
+    });
+
+    console.log('[WEBHOOK-FALLBACK] Successfully marked NFT as sold:', nft.name);
+
+    // Update campaign counters if campaign exists
+    if (nft.campaignId) {
+      const inventory = await ctx.db
+        .query("commemorativeNFTInventory")
+        .withIndex("by_campaign", (q: any) => q.eq("campaignId", nft.campaignId))
+        .collect();
+
+      await ctx.db.patch(nft.campaignId, {
+        totalNFTs: inventory.length,
+        availableNFTs: inventory.filter((i) => i.status === "available").length,
+        reservedNFTs: inventory.filter((i) => i.status === "reserved").length,
+        // +1 for the one we just sold (since query returned old state)
+        soldNFTs: inventory.filter((i) => i.status === "sold").length + 1,
+        updatedAt: Date.now(),
+      });
+
+      console.log('[WEBHOOK-FALLBACK] Updated campaign counters for:', nft.campaignId);
+    }
+
+    return {
+      success: true,
+      nftNumber: nft.nftNumber,
+      nftName: nft.name,
+      soldTo: args.soldTo,
+      companyNameAtSale,
+    };
+  },
+});

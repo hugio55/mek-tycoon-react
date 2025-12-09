@@ -274,10 +274,11 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
 
               // Update inventory directly by UID
               const inventoryResult = await getConvex().mutation(
-                api.commemorativeNFTInventorySetup.markInventoryAsSoldByUid,
+                api.commemorativeCampaigns.markInventoryAsSoldByUid,
                 {
                   nftUid: nftUid,
                   transactionHash: txHash,
+                  soldTo: ReceiverStakeAddress,
                 }
               );
 
