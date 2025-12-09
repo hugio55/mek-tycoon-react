@@ -200,7 +200,6 @@ export const syncCampaignInventory = mutation({
         try {
           const updateData: any = {
             status: expectedDbStatus,
-            updatedAt: Date.now(),
           };
 
           // If sold, add sold metadata
@@ -212,14 +211,12 @@ export const syncCampaignInventory = mutation({
             // Clear reservation data
             updateData.reservedBy = undefined;
             updateData.reservedAt = undefined;
-            updateData.expiresAt = undefined;
           }
 
           // If available, clear all reservation/sold data
           if (expectedDbStatus === 'available') {
             updateData.reservedBy = undefined;
             updateData.reservedAt = undefined;
-            updateData.expiresAt = undefined;
             updateData.soldTo = undefined;
             updateData.soldAt = undefined;
           }
@@ -314,10 +311,9 @@ export const syncSingleNFT = mutation({
 
     const oldStatus = nft.status;
 
-    // Build update data
+    // Build update data (only fields that exist in schema)
     const updateData: any = {
       status: expectedDbStatus,
-      updatedAt: Date.now(),
     };
 
     // If sold, add sold metadata
@@ -329,14 +325,12 @@ export const syncSingleNFT = mutation({
       // Clear reservation data
       updateData.reservedBy = undefined;
       updateData.reservedAt = undefined;
-      updateData.expiresAt = undefined;
     }
 
     // If available, clear all reservation/sold data
     if (expectedDbStatus === 'available') {
       updateData.reservedBy = undefined;
       updateData.reservedAt = undefined;
-      updateData.expiresAt = undefined;
       updateData.soldTo = undefined;
       updateData.soldAt = undefined;
     }
