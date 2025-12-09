@@ -115,7 +115,7 @@ export function Providers({ children }: { children: ReactNode }) {
             <EssenceProviderWrapper>
               <SoundProvider>
                 <ContentWithLoadingState>
-                  <div className={showHeader ? "min-h-screen relative" : "min-h-screen relative w-full"} style={!showHeader ? { margin: 0, padding: 0, width: '100vw', maxWidth: '100vw' } : undefined}>
+                  <div className={showHeader ? "min-h-screen relative" : "min-h-screen relative w-full"} style={!showHeader ? { margin: 0, padding: 0, width: '100%', maxWidth: '100%' } : undefined}>
                     {showHeader ? (
                       // Pages with header - wrapped in centered container
                       <div className="max-w-7xl mx-auto relative px-4 sm:px-8">
@@ -126,7 +126,7 @@ export function Providers({ children }: { children: ReactNode }) {
                       </div>
                     ) : (
                       // Pages without header - no wrapper, full viewport
-                      <div className="relative z-10 w-full" style={{ margin: 0, padding: 0, width: '100vw', maxWidth: '100vw' }}>
+                      <div className="relative z-10 w-full" style={{ margin: 0, padding: 0, width: '100%', maxWidth: '100%' }}>
                         {children}
                       </div>
                     )}

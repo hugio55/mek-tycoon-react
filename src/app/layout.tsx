@@ -177,13 +177,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" translate="no" className="notranslate" style={{ margin: 0, padding: 0, width: '100vw', height: 'auto', overflowX: 'hidden', overflowY: 'scroll', backgroundColor: '#000000' }} suppressHydrationWarning>
+    <html lang="en" translate="no" className="notranslate" style={{ margin: 0, padding: 0, width: '100%', height: 'auto', overflowX: 'hidden', overflowY: 'scroll', backgroundColor: '#000000' }} suppressHydrationWarning>
       <head>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} ${inter.variable} ${cinzel.variable} ${lora.variable} ${rajdhani.variable} ${spaceGrotesk.variable} ${exo2.variable} ${sairaCondensed.variable} ${teko.variable} ${abel.variable} ${josefinSans.variable} ${economica.variable} ${adventPro.variable} ${archivoNarrow.variable} ${electrolize.variable} ${audiowide.variable} ${michroma.variable} ${play.variable} ${quantico.variable} ${saira.variable} antialiased min-h-screen overflow-x-hidden overflow-y-scroll`}
-        style={{ backgroundColor: 'transparent', width: '100vw', maxWidth: '100vw', height: 'auto', margin: 0, padding: 0 }}
+        style={{ backgroundColor: 'transparent', width: '100%', maxWidth: '100%', height: 'auto', margin: 0, padding: 0 }}
         suppressHydrationWarning
       >
         {/* Content layer */}
