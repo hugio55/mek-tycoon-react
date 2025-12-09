@@ -560,19 +560,19 @@ export default function EssenceMarketPage() {
 
     if (!durationOption) return;
 
-    // Debug: Log gold values
+    // Debug: Log gold values (Phase II: using userData)
     console.log('[💰GOLD] walletAddress:', walletAddress);
-    console.log('[💰GOLD] goldMiningData:', goldMiningData);
-    console.log('[💰GOLD] goldMiningData.accumulatedGold:', goldMiningData?.accumulatedGold);
+    console.log('[💰GOLD] userData:', userData);
+    console.log('[💰GOLD] userData.gold:', userData?.gold);
 
-    const currentGold = goldMiningData?.accumulatedGold ?? 0;
+    const currentGold = userData?.gold ?? 0;
     const totalFee = durationOption.cost + Math.ceil((amount * price) * 0.02); // duration + market fee
     console.log('[💰GOLD] Current gold:', currentGold);
     console.log('[💰GOLD] Total fee:', totalFee, '(Duration:', durationOption.cost, '+ Market:', Math.ceil((amount * price) * 0.02) + ')');
     console.log('[💰GOLD] Can afford?', currentGold >= totalFee);
 
-    // Check if goldMiningData has loaded
-    if (!goldMiningData) {
+    // Check if userData has loaded (Phase II)
+    if (!userData) {
       alert('Loading gold data, please try again in a moment.');
       return;
     }
@@ -5256,19 +5256,19 @@ export default function EssenceMarketPage() {
 
               if (!durationOption) return;
 
-              // Debug: Log gold values
+              // Debug: Log gold values (Phase II: using userData)
               console.log('[💰GOLD] walletAddress:', walletAddress);
-              console.log('[💰GOLD] goldMiningData:', goldMiningData);
-              console.log('[💰GOLD] goldMiningData.accumulatedGold:', goldMiningData?.accumulatedGold);
+              console.log('[💰GOLD] userData:', userData);
+              console.log('[💰GOLD] userData.gold:', userData?.gold);
 
-              const currentGold = goldMiningData?.accumulatedGold ?? 0;
+              const currentGold = userData?.gold ?? 0;
               const totalFee = durationOption.cost + Math.ceil((amount * price) * 0.02); // duration + market fee
               console.log('[💰GOLD] Current gold:', currentGold);
               console.log('[💰GOLD] Total fee:', totalFee, '(Duration:', durationOption.cost, '+ Market:', Math.ceil((amount * price) * 0.02) + ')');
               console.log('[💰GOLD] Can afford?', currentGold >= totalFee);
 
-              // Check if goldMiningData has loaded
-              if (!goldMiningData) {
+              // Check if userData has loaded (Phase II)
+              if (!userData) {
                 alert('Loading gold data, please try again in a moment.');
                 return;
               }
