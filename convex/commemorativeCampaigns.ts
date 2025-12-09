@@ -528,6 +528,8 @@ export const getCampaignInventory = query({
 /**
  * Look up current company names for wallet addresses
  * Used to compare with historical names to detect name changes
+ *
+ * Handles both Phase II stake addresses (stake1...) and legacy payment addresses (addr1...)
  */
 export const getCompanyNamesForWallets = query({
   args: {
@@ -540,11 +542,22 @@ export const getCompanyNamesForWallets = query({
     for (const walletAddress of args.walletAddresses) {
       if (!walletAddress) continue;
 
-      // Phase II: Query users table instead of goldMining
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
-        .first();
+      let user;
+
+      // Phase II: Use appropriate index based on address format
+      if (walletAddress.startsWith('stake1')) {
+        // Stake address - use by_stake_address index
+        user = await ctx.db
+          .query("users")
+          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
+          .first();
+      } else {
+        // Legacy payment address - use by_wallet index
+        user = await ctx.db
+          .query("users")
+          .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
+          .first();
+      }
 
       results[walletAddress] = user?.corporationName || null;
     }
@@ -748,10 +761,21 @@ export const backfillSoldNFTData = mutation({
 
       if (walletAddress) {
         // Look up company name from users table
-        const user = await ctx.db
-          .query("users")
-          .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
-          .first();
+        // Use appropriate index based on address format
+        let user;
+        if (walletAddress.startsWith('stake1')) {
+          // Stake address - use by_stake_address index
+          user = await ctx.db
+            .query("users")
+            .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
+            .first();
+        } else {
+          // Legacy payment address - use by_wallet index
+          user = await ctx.db
+            .query("users")
+            .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
+            .first();
+        }
 
         const companyNameAtSale = user?.corporationName || undefined;
 

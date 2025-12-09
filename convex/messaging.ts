@@ -182,14 +182,22 @@ export const getTotalUnreadCount = query({
   },
 });
 
-// Admin: Get all conversations
+// Admin: Get all conversations (excluding support conversations - those go to Support tab)
 export const getAllConversationsAdmin = query({
-  args: {},
-  handler: async (ctx) => {
-    const conversations = await ctx.db.query("conversations").collect();
+  args: {
+    searchQuery: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const allConversations = await ctx.db.query("conversations").collect();
+
+    // Filter out support conversations - those are handled by the Support tab
+    const nonSupportConversations = allConversations.filter(
+      conv => conv.participant1 !== SUPPORT_WALLET_ID && conv.participant2 !== SUPPORT_WALLET_ID
+    );
 
     const enriched = await Promise.all(
-      conversations.map(async (conv) => {
+      nonSupportConversations.map(async (conv) => {
+        // Get participant info
         const user1 = await ctx.db
           .query("users")
           .withIndex("by_stake_address", (q) => q.eq("stakeAddress", conv.participant1))
@@ -199,15 +207,48 @@ export const getAllConversationsAdmin = query({
           .withIndex("by_stake_address", (q) => q.eq("stakeAddress", conv.participant2))
           .first();
 
+        // Get message count
+        const messages = await ctx.db
+          .query("messages")
+          .withIndex("by_conversation", (q) => q.eq("conversationId", conv._id))
+          .collect();
+        const messageCount = messages.filter(m => !m.isDeleted).length;
+
         return {
           ...conv,
-          participant1Name: user1?.corporationName || "Unknown",
-          participant2Name: user2?.corporationName || "Unknown",
+          participant1Info: {
+            companyName: user1?.corporationName || "Unknown",
+            walletAddress: conv.participant1,
+          },
+          participant2Info: {
+            companyName: user2?.corporationName || "Unknown",
+            walletAddress: conv.participant2,
+          },
+          messageCount,
         };
       })
     );
 
-    return enriched.sort((a, b) => b.lastMessageAt - a.lastMessageAt);
+    // Apply search filter if provided
+    let filtered = enriched;
+    if (args.searchQuery && args.searchQuery.trim()) {
+      const query = args.searchQuery.toLowerCase();
+      filtered = enriched.filter(conv =>
+        conv.participant1Info.companyName.toLowerCase().includes(query) ||
+        conv.participant2Info.companyName.toLowerCase().includes(query) ||
+        conv.participant1.toLowerCase().includes(query) ||
+        conv.participant2.toLowerCase().includes(query)
+      );
+    }
+
+    // Sort by most recent activity
+    const sorted = filtered.sort((a, b) => b.lastMessageAt - a.lastMessageAt);
+
+    // Return in expected format
+    return {
+      conversations: sorted.slice(0, 50), // Limit to 50 for performance
+      hasMore: sorted.length > 50,
+    };
   },
 });
 
