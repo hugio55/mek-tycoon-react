@@ -312,14 +312,25 @@ export const completeReservationByWallet = mutation({
     // STRATEGY 3: If NFT UID provided, try finding reservation by NFT
     if (!reservation && args.nftUid) {
       console.log('[RESERVATION] Trying lookup by NFT UID:', args.nftUid);
-      reservation = await ctx.db
+      const reservationByNft = await ctx.db
         .query("commemorativeNFTReservations")
         .withIndex("by_nft_uid", (q: any) => q.eq("nftUid", args.nftUid))
         .filter((q) => q.eq(q.field("status"), "active"))
         .first();
 
-      if (reservation) {
-        console.log('[RESERVATION] Found reservation by NFT UID! Wallet was:', reservation.reservedBy);
+      if (reservationByNft) {
+        // SECURITY: Verify wallet matches to prevent wrong person getting credit
+        const reservationWallet = reservationByNft.reservedBy.toLowerCase().trim();
+        if (reservationWallet === normalizedWallet || reservationByNft.reservedBy === args.walletAddress) {
+          reservation = reservationByNft;
+          console.log('[RESERVATION] Found reservation by NFT UID! Wallet matches:', reservation.reservedBy);
+        } else {
+          // Wallet mismatch - different person paid for someone else's reservation
+          // Don't use this reservation, let the fallback handle it correctly
+          console.warn('[RESERVATION] ⚠️ Wallet mismatch! Reservation wallet:', reservationByNft.reservedBy,
+            'Payment wallet:', args.walletAddress);
+          console.log('[RESERVATION] Skipping Strategy 3 - will use fallback to credit correct buyer');
+        }
       }
     }
 

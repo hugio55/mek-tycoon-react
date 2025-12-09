@@ -120,9 +120,10 @@ export const checkReservationPaid = query({
     }
 
     // PATH 3: Check processed webhooks by NFT UID (webhook was processed but DB update may have failed)
+    // Using by_nft_uid index for efficient lookup
     const webhookByNftUid = await ctx.db
       .query("processedWebhooks")
-      .filter((q) => q.eq(q.field("nftUid"), nft.nftUid))
+      .withIndex("by_nft_uid", (q: any) => q.eq("nftUid", nft.nftUid))
       .first();
 
     if (webhookByNftUid) {

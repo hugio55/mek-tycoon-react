@@ -147,6 +147,13 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
       return;
     }
 
+    // Validate transaction hash format (Cardano tx hashes are 64-character hex strings)
+    const TX_HASH_REGEX = /^[a-f0-9]{64}$/i;
+    if (!TX_HASH_REGEX.test(txHash)) {
+      console.error('[🛡️WEBHOOK-SECURITY] Invalid transaction hash format:', txHash);
+      return; // Reject webhook with invalid tx hash
+    }
+
     // Handle different transaction events
     if (EventType === 'transactionconfirmed') {
       // Payment received, transaction confirmed on blockchain, minting started
