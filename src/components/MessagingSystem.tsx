@@ -554,7 +554,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                   {/* Top row: Name + X button */}
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-white font-medium text-sm whitespace-nowrap">
-                      Overexposed Support
+                      Over exposed Support
                     </span>
                     <button
                       onClick={(e) => {
@@ -710,7 +710,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                 <div>
                   {currentConversation && isSupportConversation(currentConversation) ? (
                     <>
-                      <div className="text-cyan-400 font-medium">Overexposed Support</div>
+                      <div className="text-cyan-400 font-medium">Over exposed Support</div>
                       <div className="text-xs text-cyan-500/60">Development Team</div>
                     </>
                   ) : (
@@ -1025,7 +1025,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
               />
             </div>
             <div className="max-h-[300px] overflow-y-auto">
-              {/* Overexposed Support - Always visible at top */}
+              {/* Over exposed Support - Always visible at top */}
               {showSupportOption && (
                 <button
                   onClick={handleOpenSupportConversation}
@@ -1039,7 +1039,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-cyan-400 font-medium">Overexposed Support</div>
+                      <div className="text-cyan-400 font-medium">Over exposed Support</div>
                       <div className="text-cyan-500/60 text-sm">Contact the development team</div>
                     </div>
                   </div>
@@ -1265,10 +1265,10 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
             {/* Content */}
             <div className="p-4">
               <p className="text-gray-300 text-sm leading-relaxed">
-                You are closing this support conversation with the Overexposed development team.
+                You are closing this support conversation with the Over exposed development team.
               </p>
               <p className="text-gray-400 text-sm mt-3 leading-relaxed">
-                If you ever want to open it back up, search <span className="text-cyan-400 font-medium">&quot;Overexposed&quot;</span> in the New Conversation menu.
+                If you ever want to open it back up, search <span className="text-cyan-400 font-medium">&quot;Over exposed&quot;</span> in the New Conversation menu.
               </p>
             </div>
 

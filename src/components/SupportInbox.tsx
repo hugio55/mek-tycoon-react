@@ -253,7 +253,7 @@ export default function SupportInbox() {
                     <div className={`max-w-[70%] ${isFromSupport ? 'order-2' : ''}`}>
                       {/* Sender label */}
                       <div className={`text-xs mb-1 ${isFromSupport ? 'text-right text-cyan-400' : 'text-gray-500'}`}>
-                        {isFromSupport ? 'Overexposed Support' : selectedConversation.playerCorporationName}
+                        {isFromSupport ? 'Over exposed Support' : selectedConversation.playerCorporationName}
                       </div>
                       <div
                         className={`rounded-2xl px-4 py-2 ${
@@ -337,7 +337,7 @@ export default function SupportInbox() {
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Reply as Overexposed Support..."
+                  placeholder="Reply as Over exposed Support..."
                   maxLength={MAX_MESSAGE_LENGTH}
                   className="flex-1 bg-transparent text-white placeholder-gray-500 focus:outline-none"
                 />
@@ -363,7 +363,7 @@ export default function SupportInbox() {
                 </div>
               )}
               <div className="text-xs text-gray-500 mt-2 text-center">
-                Replies are sent as &quot;Overexposed Support&quot;
+                Replies are sent as &quot;Over exposed Support&quot;
               </div>
             </div>
           </>
