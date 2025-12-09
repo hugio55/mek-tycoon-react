@@ -451,8 +451,7 @@ export default function UnifiedHeader() {
       </div>
 
       {/* Top right corner: Notification Bell + Messages + OE Logo */}
-      {/* Using fixed positioning to ensure it stays visible relative to viewport, not container */}
-      <div className="fixed right-4 md:right-6 lg:right-8 z-20 top-[8px] md:top-[12px] lg:top-[16px] flex items-center gap-3">
+      <div className="absolute right-4 md:right-6 lg:right-8 z-20 top-[8px] md:top-[12px] lg:top-[16px] flex items-center gap-3">
         {/* Notification Bell - only show if user is logged in */}
         {userId && (
           <NotificationBell userId={userId} />

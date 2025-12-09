@@ -129,7 +129,11 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
         console.log('Test webhook with payloadHash but no TxHash, skipping verification');
       }
     } else if (process.env.NMKR_WEBHOOK_SECRET && !payloadHash) {
-      console.warn('NMKR webhook received without HMAC signature');
+      // STRICT MODE: Reject webhooks without signature when secret is configured
+      // This prevents attackers from sending fake webhooks to our endpoint
+      console.error('[🛡️WEBHOOK-SECURITY] Rejected: Webhook received without HMAC signature');
+      console.error('[🛡️WEBHOOK-SECURITY] Secret is configured but no payloadHash provided');
+      return; // Reject the webhook - do not process
     }
 
     // Extract data from NMKR payload (avoid destructuring to prevent webpack loader conflicts)
