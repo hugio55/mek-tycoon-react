@@ -656,8 +656,12 @@ export const backfillInventoryImages = mutation({
 /**
  * Backfill soldTo and companyNameAtSale for NFTs that were sold before these fields existed
  *
- * Looks up the completed reservation record to find the wallet address,
- * then looks up the current company name for that wallet.
+ * Checks multiple sources for buyer wallet:
+ * 1. commemorativeNFTReservations table (reservedBy)
+ * 2. processedWebhooks table (stakeAddress by nftUid)
+ * 3. commemorativeNFTClaims table (walletAddress by nftAssetId)
+ *
+ * Then looks up the corporation name from users table.
  */
 export const backfillSoldNFTData = mutation({
   args: {},
@@ -679,12 +683,18 @@ export const backfillSoldNFTData = mutation({
 
     let backfilled = 0;
     let notFound = 0;
+    const sources: Record<string, number> = {
+      reservation: 0,
+      webhook: 0,
+      claims: 0,
+    };
 
     for (const nft of soldNFTs) {
-      // Try to find the completed reservation for this NFT
-      // Check both legacy and campaign reservation tables
+      let walletAddress: string | undefined = undefined;
+      let source = '';
+      let soldAt = Date.now();
 
-      // Try to find completed reservations
+      // SOURCE 1: Check commemorativeNFTReservations table
       let reservation = await ctx.db
         .query("commemorativeNFTReservations")
         .filter((q) =>
@@ -695,7 +705,7 @@ export const backfillSoldNFTData = mutation({
         )
         .first();
 
-      // If still not found, try ANY reservation for this NFT (maybe sale was completed externally)
+      // Also try ANY reservation for this NFT
       if (!reservation) {
         reservation = await ctx.db
           .query("commemorativeNFTReservations")
@@ -705,9 +715,39 @@ export const backfillSoldNFTData = mutation({
       }
 
       if (reservation && reservation.reservedBy) {
-        const walletAddress = reservation.reservedBy;
+        walletAddress = reservation.reservedBy;
+        soldAt = reservation.completedAt || reservation.reservedAt || Date.now();
+        source = 'reservation';
+      }
 
-        // Phase II: Look up company name from users table
+      // SOURCE 2: Check processedWebhooks table (by nftUid)
+      if (!walletAddress && nft.nftUid) {
+        const webhookRecord = await ctx.db
+          .query("processedWebhooks")
+          .withIndex("by_nft_uid", (q: any) => q.eq("nftUid", nft.nftUid))
+          .first();
+        if (webhookRecord && webhookRecord.stakeAddress) {
+          walletAddress = webhookRecord.stakeAddress;
+          soldAt = webhookRecord.processedAt || Date.now();
+          source = 'webhook';
+        }
+      }
+
+      // SOURCE 3: Check commemorativeNFTClaims table (by nftAssetId = nftUid)
+      if (!walletAddress && nft.nftUid) {
+        const claimRecord = await ctx.db
+          .query("commemorativeNFTClaims")
+          .withIndex("by_asset_id", (q: any) => q.eq("nftAssetId", nft.nftUid))
+          .first();
+        if (claimRecord && claimRecord.walletAddress) {
+          walletAddress = claimRecord.walletAddress;
+          soldAt = claimRecord.claimedAt || Date.now();
+          source = 'claims';
+        }
+      }
+
+      if (walletAddress) {
+        // Look up company name from users table
         const user = await ctx.db
           .query("users")
           .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
@@ -718,25 +758,28 @@ export const backfillSoldNFTData = mutation({
         // Update the NFT with the backfilled data
         await ctx.db.patch(nft._id, {
           soldTo: walletAddress,
-          soldAt: reservation.completedAt || reservation.reservedAt || Date.now(),
+          soldAt,
           companyNameAtSale,
         });
 
-        console.log('[BACKFILL] Updated', nft.name, '- wallet:', walletAddress.substring(0, 12) + '...', '- corp:', companyNameAtSale || 'none');
+        console.log('[BACKFILL] Updated', nft.name, '- source:', source, '- wallet:', walletAddress.substring(0, 12) + '...', '- corp:', companyNameAtSale || 'none');
         backfilled++;
+        sources[source]++;
       } else {
-        console.log('[BACKFILL] No reservation found for:', nft.name);
+        console.log('[BACKFILL] No buyer data found for:', nft.name, '(nftUid:', nft.nftUid, ')');
         notFound++;
       }
     }
 
     console.log('[BACKFILL] Complete:', backfilled, 'backfilled,', notFound, 'not found');
+    console.log('[BACKFILL] Sources:', sources);
 
     return {
       success: true,
       backfilled,
       notFound,
       total: soldNFTs.length,
+      sources,
     };
   },
 });
