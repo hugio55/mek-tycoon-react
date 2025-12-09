@@ -98,10 +98,11 @@ export const getMessages = query({
       filteredMessages.map(async (msg) => {
         if (msg.attachments && msg.attachments.length > 0) {
           const attachmentsWithUrls = await Promise.all(
-            msg.attachments.map(async (att: any) => ({
-              ...att,
-              url: await ctx.storage.getUrl(att.storageId),
-            }))
+            msg.attachments.map(async (att: any) => {
+              const url = await ctx.storage.getUrl(att.storageId);
+              console.log('[📎ATTACH] storageId:', att.storageId, 'url:', url);
+              return { ...att, url };
+            })
           );
           return { ...msg, attachments: attachmentsWithUrls };
         }
