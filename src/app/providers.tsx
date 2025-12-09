@@ -115,11 +115,13 @@ export function Providers({ children }: { children: ReactNode }) {
             <EssenceProviderWrapper>
               <SoundProvider>
                 <ContentWithLoadingState>
+                  {/* UnifiedHeader rendered in fixed position, independent of page content */}
+                  {showHeader && <UnifiedHeader />}
+
                   <div className={showHeader ? "min-h-screen relative" : "min-h-screen relative w-full"} style={!showHeader ? { margin: 0, padding: 0, width: '100%', maxWidth: '100%' } : undefined}>
                     {showHeader ? (
                       // Pages with header - wrapped in centered container
                       <div className="max-w-7xl mx-auto relative px-4 sm:px-8">
-                        <UnifiedHeader />
                         <div className="relative z-10 pt-16 sm:pt-20">
                           {children}
                         </div>

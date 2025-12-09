@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { action, mutation, query } from "./_generated/server";
+import { api } from "./_generated/api";
 
 // =============================================================================
 // PHASE II: User Authentication (Stake-Address-Only)
@@ -796,5 +797,210 @@ export const setCompanyName = mutation({
     });
 
     return { success: true, companyName: trimmedName };
+  },
+});
+
+// =============================================================================
+// PHASE II: CORPORATION CREATION WITH AUTOMATIC VERIFICATION
+// =============================================================================
+
+/**
+ * Internal mutation to sync meks ownership from blockchain verification
+ * Updates the meks table to assign ownership to the verified wallet
+ */
+export const syncMeksOwnership = mutation({
+  args: {
+    stakeAddress: v.string(),
+    verifiedMeks: v.array(v.object({
+      assetId: v.string(),
+      assetName: v.string(),
+      mekNumber: v.number(),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    let synced = 0;
+    let notFound = 0;
+
+    for (const mek of args.verifiedMeks) {
+      // Find the mek in database by assetId
+      const existingMek = await ctx.db
+        .query("meks")
+        .withIndex("by_asset_id", (q: any) => q.eq("assetId", mek.assetId))
+        .first();
+
+      if (existingMek) {
+        // Update ownership
+        await ctx.db.patch(existingMek._id, {
+          owner: args.stakeAddress,
+          ownerStakeAddress: args.stakeAddress,
+          lastUpdated: now,
+        });
+        synced++;
+      } else {
+        // Mek not in database - log but don't fail
+        console.warn(`[syncMeksOwnership] Mek ${mek.assetId} not found in database`);
+        notFound++;
+      }
+    }
+
+    console.log(`[syncMeksOwnership] Synced ${synced} meks, ${notFound} not found`);
+    return { synced, notFound };
+  },
+});
+
+/**
+ * Internal mutation to clear meks ownership for a wallet
+ * Used before re-syncing to handle meks that were transferred away
+ */
+export const clearMeksOwnership = mutation({
+  args: {
+    stakeAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Find all meks currently owned by this wallet
+    const ownedMeks = await ctx.db
+      .query("meks")
+      .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", args.stakeAddress))
+      .collect();
+
+    let cleared = 0;
+    for (const mek of ownedMeks) {
+      await ctx.db.patch(mek._id, {
+        owner: "",
+        ownerStakeAddress: undefined,
+      });
+      cleared++;
+    }
+
+    console.log(`[clearMeksOwnership] Cleared ownership on ${cleared} meks`);
+    return { cleared };
+  },
+});
+
+/**
+ * PHASE II: Create corporation with automatic blockchain verification
+ *
+ * This ACTION is called when user submits their corporation name.
+ * It automatically:
+ * 1. Validates the corporation name
+ * 2. Calls Blockfrost to verify NFT ownership
+ * 3. Syncs verified meks to the meks table
+ * 4. Sets the corporation name
+ * 5. Marks the wallet as verified
+ *
+ * If Blockfrost is down, returns a clear error message.
+ * Users with 0 meks are still allowed to create corporations.
+ */
+export const createCorporationWithVerification = action({
+  args: {
+    stakeAddress: v.string(),
+    companyName: v.string(),
+  },
+  handler: async (ctx, args): Promise<{
+    success: boolean;
+    error?: string;
+    companyName?: string;
+    mekCount?: number;
+    walletVerified?: boolean;
+    blockfrostDown?: boolean;
+  }> => {
+    console.log("[createCorporationWithVerification] Starting for:", args.stakeAddress.substring(0, 20) + "...");
+    console.log("[createCorporationWithVerification] Company name:", args.companyName);
+
+    // STEP 1: Validate company name format
+    const trimmedName = args.companyName.trim();
+    if (!trimmedName || trimmedName.length < 2) {
+      return { success: false, error: "Corporation name must be at least 2 characters" };
+    }
+    if (trimmedName.length > 30) {
+      return { success: false, error: "Corporation name must be 30 characters or less" };
+    }
+
+    // STEP 2: Check if name is available (call the mutation internally)
+    const nameCheckResult: any = await ctx.runQuery(api.corporationAuth.checkCompanyNameAvailability, {
+      companyName: trimmedName,
+      currentWalletAddress: args.stakeAddress,
+    });
+
+    if (!nameCheckResult.available && !nameCheckResult.isCurrentName) {
+      return { success: false, error: nameCheckResult.error || "Corporation name is not available" };
+    }
+
+    // STEP 3: Fetch meks from blockchain via Blockfrost
+    console.log("[createCorporationWithVerification] Calling Blockfrost...");
+    let blockchainMeks: any[] = [];
+    let blockfrostSuccess = false;
+
+    try {
+      const blockfrostResult: any = await ctx.runAction(api.blockfrostService.getWalletAssets, {
+        stakeAddress: args.stakeAddress,
+      });
+
+      if (blockfrostResult.success && blockfrostResult.meks) {
+        blockchainMeks = blockfrostResult.meks;
+        blockfrostSuccess = true;
+        console.log(`[createCorporationWithVerification] Blockfrost found ${blockchainMeks.length} meks`);
+      } else {
+        console.error("[createCorporationWithVerification] Blockfrost returned error:", blockfrostResult.error);
+        throw new Error(blockfrostResult.error || "Blockfrost verification failed");
+      }
+    } catch (blockfrostError: any) {
+      console.error("[createCorporationWithVerification] Blockfrost exception:", blockfrostError.message);
+
+      // Return user-friendly error for Blockfrost being down
+      return {
+        success: false,
+        error: "Blockchain verification is temporarily unavailable. Blockfrost (our verification service) is currently down, which is out of our control and very rare. Please check back in a few minutes and try again.",
+        blockfrostDown: true,
+      };
+    }
+
+    // STEP 4: Clear any existing meks ownership for this wallet (handles transfers)
+    console.log("[createCorporationWithVerification] Clearing existing ownership...");
+    await ctx.runMutation(api.corporationAuth.clearMeksOwnership, {
+      stakeAddress: args.stakeAddress,
+    });
+
+    // STEP 5: Sync verified meks to database
+    if (blockchainMeks.length > 0) {
+      console.log("[createCorporationWithVerification] Syncing", blockchainMeks.length, "meks...");
+
+      const meksToSync = blockchainMeks.map((m: any) => ({
+        assetId: m.assetId,
+        assetName: m.assetName || `Mek #${m.mekNumber}`,
+        mekNumber: m.mekNumber,
+      }));
+
+      await ctx.runMutation(api.corporationAuth.syncMeksOwnership, {
+        stakeAddress: args.stakeAddress,
+        verifiedMeks: meksToSync,
+      });
+    }
+
+    // STEP 6: Set corporation name
+    console.log("[createCorporationWithVerification] Setting corporation name...");
+    const nameResult: any = await ctx.runMutation(api.corporationAuth.setCompanyName, {
+      walletAddress: args.stakeAddress,
+      companyName: trimmedName,
+    });
+
+    if (!nameResult.success) {
+      return { success: false, error: nameResult.error || "Failed to set corporation name" };
+    }
+
+    // STEP 7: Mark wallet as verified
+    console.log("[createCorporationWithVerification] Marking wallet as verified...");
+    await ctx.runMutation(api.blockchainVerification.markWalletAsVerified, {
+      walletAddress: args.stakeAddress,
+    });
+
+    console.log("[createCorporationWithVerification] SUCCESS!");
+    return {
+      success: true,
+      companyName: trimmedName,
+      mekCount: blockchainMeks.length,
+      walletVerified: true,
+    };
   },
 });

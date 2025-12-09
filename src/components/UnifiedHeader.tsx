@@ -311,7 +311,8 @@ export default function UnifiedHeader() {
   return (
     <>
       {/* Wallet dropdown and company name in top left corner */}
-      <div className="absolute top-4 md:top-6 lg:top-8 left-4 md:left-6 lg:left-8 z-20 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+      {/* Using fixed positioning to stay relative to viewport, independent of page content */}
+      <div className="fixed top-4 md:top-6 lg:top-8 left-4 md:left-6 lg:left-8 z-[100] flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
         <div className="relative wallet-dropdown">
           <button
             onClick={() => setWalletDropdownOpen(!walletDropdownOpen)}
@@ -451,7 +452,8 @@ export default function UnifiedHeader() {
       </div>
 
       {/* Top right corner: Notification Bell + Messages + OE Logo */}
-      <div className="absolute right-4 md:right-6 lg:right-8 z-20 top-[8px] md:top-[12px] lg:top-[16px] flex items-center gap-3">
+      {/* Using fixed positioning to stay relative to viewport, independent of page content */}
+      <div className="fixed right-4 md:right-6 lg:right-8 z-[100] top-[8px] md:top-[12px] lg:top-[16px] flex items-center gap-3">
         {/* Notification Bell - only show if user is logged in */}
         {userId && (
           <NotificationBell userId={userId} />
