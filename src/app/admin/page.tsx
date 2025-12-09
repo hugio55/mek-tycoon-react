@@ -4413,7 +4413,7 @@ export default function AdminMasterDataPage() {
                 </p>
 
                 {/* NFT Sub-Tabs */}
-                <NFTAdminTabs client={httpClient} />
+                <NFTAdminTabs client={sturgeonClient || httpClient} />
               </div>
           </div>
           )}
