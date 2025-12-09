@@ -129,9 +129,9 @@ export default function SupportInbox() {
   };
 
   return (
-    <div className="grid grid-cols-3 gap-6">
+    <div className="grid grid-cols-3 gap-6 h-[700px]">
       {/* Conversations Panel */}
-      <div className="col-span-1 bg-black/40 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="col-span-1 bg-black/40 rounded-xl border border-gray-700 overflow-hidden flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-gray-700">
           <div className="flex items-center justify-between mb-3">
@@ -159,7 +159,7 @@ export default function SupportInbox() {
         </div>
 
         {/* Conversation List */}
-        <div className="max-h-[500px] overflow-y-auto">
+        <div className="flex-1 overflow-y-auto">
           {filteredConversations.map((conv: any) => (
             <div
               key={conv._id}
@@ -241,7 +241,7 @@ export default function SupportInbox() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[400px]">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages?.map((msg: any) => {
                 const isFromSupport = msg.senderId === SUPPORT_WALLET_ID;
 
