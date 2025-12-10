@@ -488,16 +488,16 @@ export default function DeploymentsAdmin() {
       // Continue anyway
     }
 
-    // Step 3: Push current branch to GitHub (backup)
+    // Step 3: Push current branch to GitHub (backup) - pushes custom-minting-system first
     setDeployStep(3);
-    console.log('[🚀DEPLOY] Step 3: Pushing to GitHub...');
-    addLog('Full Deploy', 'pending', `Step 3/5: Pushing ${currentBranch} to GitHub (backup)...`);
+    console.log('[🚀DEPLOY] Step 3: Pushing custom-minting-system to GitHub...');
+    addLog('Full Deploy', 'pending', `Step 3/5: Pushing to origin/${currentBranch} (branch backup)...`);
     try {
       const res = await fetch('/api/deployment/push', { method: 'POST' });
       const data = await res.json();
       console.log('[🚀DEPLOY] Step 3 result:', data);
       if (data.success) {
-        addLog('Full Deploy', 'success', `${currentBranch} backed up to GitHub`);
+        addLog('Full Deploy', 'success', `✓ origin/${currentBranch} updated`);
       } else {
         addLog('Full Deploy', 'error', `Push warning: ${data.error} - continuing...`);
         // Continue anyway - backup is nice to have but not critical
@@ -508,10 +508,10 @@ export default function DeploymentsAdmin() {
     }
 
     // Step 4: Push current branch directly to origin/master (triggers Vercel production)
-    // This is the NEW approach - no branch switching, dev server stays running!
+    // This pushes AFTER custom-minting-system, so both branches stay in sync!
     setDeployStep(4);
     console.log('[🚀DEPLOY] Step 4: Push directly to origin/master...');
-    addLog('Full Deploy', 'pending', `Step 4/5: Pushing ${currentBranch} to origin/master (Vercel production)...`);
+    addLog('Full Deploy', 'pending', `Step 4/5: Pushing to origin/master (Vercel production)...`);
     try {
       const res = await fetch('/api/deployment/merge-to-master', { method: 'POST' });
       const data = await res.json();
@@ -524,8 +524,8 @@ export default function DeploymentsAdmin() {
         return;
       }
       addLog('Full Deploy', 'success', data.alreadyUpToDate
-        ? 'origin/master already up to date'
-        : `Pushed ${currentBranch} to origin/master - Vercel PRODUCTION deploying!`);
+        ? '✓ origin/master already up to date'
+        : '✓ origin/master updated - Vercel PRODUCTION deploying!');
     } catch (error) {
       console.error('[🚀DEPLOY] Step 4 error:', error);
       addLog('Full Deploy', 'error', 'Push to master failed - server may be down');
@@ -670,7 +670,7 @@ export default function DeploymentsAdmin() {
             <div className="text-gray-300 text-sm mb-4">
               {deployStep === 1 && 'Committing changes...'}
               {deployStep === 2 && 'Syncing media to R2...'}
-              {deployStep === 3 && 'Pushing branch to GitHub (backup)...'}
+              {deployStep === 3 && 'Pushing to origin/custom-minting-system...'}
               {deployStep === 4 && 'Pushing to origin/master (Vercel production)...'}
               {deployStep === 5 && 'Deploying Convex to production...'}
             </div>
@@ -1004,9 +1004,12 @@ export default function DeploymentsAdmin() {
         <div>
           <span className="text-gray-400">1.</span> Commit →
           <span className="text-gray-400">2.</span> <span className="text-cyan-400">Sync R2</span> →
-          <span className="text-gray-400">3.</span> Push <span className="text-cyan-500">{gitStatus?.currentBranch || 'branch'}</span> to GitHub →
+          <span className="text-gray-400">3.</span> Push to <span className="text-cyan-500">origin/{gitStatus?.currentBranch || 'branch'}</span> →
           <span className="text-gray-400">4.</span> Push to <span className="text-green-500">origin/master</span> (Vercel) →
           <span className="text-gray-400">5.</span> Deploy Convex
+        </div>
+        <div className="text-xs text-gray-600 mt-1">
+          Both branches stay in sync: {gitStatus?.currentBranch || 'branch'} first, then master
         </div>
       </div>
 
@@ -1269,12 +1272,12 @@ export default function DeploymentsAdmin() {
           <ol className="list-decimal list-inside space-y-1 text-gray-500">
             <li>Commits your changes (if any)</li>
             <li><span className="text-cyan-400">Syncs media files to Cloudflare R2</span> (images, sounds, videos)</li>
-            <li>Pushes your branch to GitHub (backs up your work)</li>
-            <li>Pushes directly to <span className="text-green-400">origin/master</span> (triggers Vercel production - no branch switching!)</li>
+            <li>Pushes to <span className="text-cyan-400">origin/custom-minting-system</span> (backs up your working branch)</li>
+            <li>Pushes to <span className="text-green-400">origin/master</span> (triggers Vercel production)</li>
             <li>Deploys Convex to Sturgeon (production database functions)</li>
           </ol>
           <div className="mt-2 text-xs text-gray-600">
-            Note: This uses direct push (git push origin branch:master) so the dev server stays running!
+            Note: Both branches are pushed - custom-minting-system first, then master. Dev server stays running!
           </div>
         </div>
       </div>

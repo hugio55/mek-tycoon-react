@@ -148,6 +148,7 @@ export const connectCorporation = mutation({
   args: {
     stakeAddress: v.string(),
     walletType: v.optional(v.string()),
+    signatureVerified: v.optional(v.boolean()), // True if frontend verified wallet ownership via signature
   },
   handler: async (ctx, args) => {
     // Validate stake address format
@@ -173,7 +174,7 @@ export const connectCorporation = mutation({
     if (existingUser) {
       // Update existing user
       try {
-        await ctx.db.patch(existingUser._id, {
+        const updateFields: any = {
           lastLogin: Date.now(),
           lastConnectionTime: Date.now(),
           walletType: args.walletType || existingUser.walletType,
@@ -181,7 +182,14 @@ export const connectCorporation = mutation({
           sessionToken,
           sessionExpiresAt,
           updatedAt: Date.now(),
-        });
+        };
+
+        // Mark as verified if frontend verified signature
+        if (args.signatureVerified) {
+          updateFields.walletVerified = true;
+        }
+
+        await ctx.db.patch(existingUser._id, updateFields);
       } catch (error) {
         authError("Update user", error);
       }
@@ -238,6 +246,9 @@ export const connectCorporation = mutation({
         isBanned: false,
         role: "user",
 
+        // Verification - set if frontend verified signature
+        walletVerified: args.signatureVerified || false,
+
         // Session
         sessionToken,
         sessionExpiresAt,
@@ -253,13 +264,17 @@ export const connectCorporation = mutation({
 
         if (retryExisting) {
           // Update the existing one instead
-          await ctx.db.patch(retryExisting._id, {
+          const retryFields: any = {
             lastLogin: now,
             isOnline: true,
             sessionToken,
             sessionExpiresAt,
             updatedAt: now,
-          });
+          };
+          if (args.signatureVerified) {
+            retryFields.walletVerified = true;
+          }
+          await ctx.db.patch(retryExisting._id, retryFields);
           return {
             corporation: await ctx.db.get(retryExisting._id),
             user: await ctx.db.get(retryExisting._id),

@@ -303,6 +303,9 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       const requireSignature = !!disconnectNonce || !hasMatchingSession;
       console.log('[🔐SECURITY] Signature required:', requireSignature ? '✅ YES' : '❌ NO (trusted session)');
 
+      // Track if signature verification passed (for database update)
+      let signatureVerified = false;
+
       if (requireSignature) {
         const reason = disconnectNonce ? 'manual disconnect detected' : 'new user or different wallet';
         console.log('[🔐SIGNATURE] ✅ Requiring signature verification -', reason);
@@ -420,6 +423,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
 
           console.log('[🔐SIGNATURE] Signature received successfully!');
           setConnectionStatus('Wallet verified!');
+          signatureVerified = true; // Mark as verified for database update
 
           // Signature succeeded - user proved they own the wallet
           // CRITICAL: Clear nonce IMMEDIATELY after successful signature
