@@ -239,6 +239,12 @@ export default function UnifiedHeader() {
     walletAddress ? { walletAddress } : "skip"
   );
 
+  // Get total unread message count for the badge
+  const totalUnreadMessages = useQuery(
+    api.messaging.getTotalUnreadCount,
+    walletAddress ? { walletAddress } : "skip"
+  );
+
   // Get owned Meks count (Phase II: from userData)
   const ownedMeksCount = userData?.mekCount || 0;
   const cumulativeGold = userData?.gold || 0;
@@ -464,7 +470,7 @@ export default function UnifiedHeader() {
         {userId && (
           <button
             onClick={() => setShowMessaging(true)}
-            className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-black/60 border border-yellow-500/30 hover:bg-black/70 hover:border-yellow-500/50 transition-all cursor-pointer"
+            className="relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-black/60 border border-yellow-500/30 hover:bg-black/70 hover:border-yellow-500/50 transition-all cursor-pointer"
             title="Messages"
           >
             <svg
@@ -474,6 +480,12 @@ export default function UnifiedHeader() {
             >
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
             </svg>
+            {/* Unread message badge */}
+            {totalUnreadMessages && totalUnreadMessages > 0 && (
+              <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full shadow-lg animate-pulse">
+                {totalUnreadMessages > 99 ? '99+' : totalUnreadMessages}
+              </span>
+            )}
           </button>
         )}
 

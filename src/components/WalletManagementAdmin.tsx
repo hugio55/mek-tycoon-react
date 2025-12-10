@@ -222,6 +222,13 @@ function WalletManagementAdminContent({ onMessagePlayer }: WalletManagementAdmin
     return await client.mutation(api.adminVerificationReset.reconstructCumulativeGoldExact, args);
   };
 
+  const markWalletVerified = async (args: { walletAddress: string }) => {
+    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
+    const client = getClient();
+    if (!client) throw new Error('Client not initialized');
+    return await client.mutation(api.blockchainVerification.markWalletAsVerified, args);
+  };
+
   const cleanupDuplicates = async (args: any) => {
     if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
     const client = getClient();
@@ -1528,9 +1535,31 @@ Check console for full timeline.
                             ✓ Verified
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/30 text-red-400 border border-red-700">
+                          <button
+                            onClick={async () => {
+                              if (!canMutate()) {
+                                setStatusMessage({ type: 'error', message: 'Mutations disabled in READ ONLY mode' });
+                                setTimeout(() => setStatusMessage(null), 3000);
+                                return;
+                              }
+                              if (confirm(`Mark ${wallet.corporationName || wallet.companyName || 'this wallet'} as verified?`)) {
+                                try {
+                                  await markWalletVerified({ walletAddress: wallet.walletAddress });
+                                  setStatusMessage({ type: 'success', message: `Wallet verified successfully!` });
+                                  setTimeout(() => setStatusMessage(null), 3000);
+                                  // Refresh wallet data
+                                  setWalletsData(null);
+                                } catch (error: any) {
+                                  setStatusMessage({ type: 'error', message: error.message || 'Failed to verify wallet' });
+                                  setTimeout(() => setStatusMessage(null), 3000);
+                                }
+                              }
+                            }}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/30 text-red-400 border border-red-700 hover:bg-green-900/30 hover:text-green-400 hover:border-green-700 transition-colors cursor-pointer"
+                            title="Click to manually verify this wallet"
+                          >
                             ✗ Not Verified
-                          </span>
+                          </button>
                         )}
                       </td>
                       <td className="px-2 py-2 text-right">
