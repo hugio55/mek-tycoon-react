@@ -78,6 +78,17 @@ interface MekProfileLightboxProps {
   // Abilities Tree props
   abilitiesTreeCategoryId?: string;
   abilitiesTreeTemplateId?: string;
+  // Dynamic Mek data (optional - uses demo data if not provided)
+  mekData?: {
+    mekNumber?: string;
+    rank?: number;
+    corporation?: string;
+    customName?: string;
+    sourceKey?: string;
+    headVariation?: string;
+    bodyVariation?: string;
+    itemVariation?: string;
+  };
 }
 
 export default function MekProfileLightbox({

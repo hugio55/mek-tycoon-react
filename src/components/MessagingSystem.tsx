@@ -7,7 +7,8 @@ import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import { getMediaUrl } from '@/lib/media-url';
 import MekSelectorLightbox, { SelectedMek } from './MekSelectorLightbox';
-import MekDetailsSpaceAge from './MekDetailsSpaceAge';
+import MekPreviewLightbox from './MekPreviewLightbox';
+import MekProfileLightbox from './MekProfileLightbox';
 
 // Types for attachments
 interface PendingAttachment {
@@ -98,7 +99,8 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   const [errorLightbox, setErrorLightbox] = useState<{ title: string; message: string } | null>(null);
   const [showSupportDismissLightbox, setShowSupportDismissLightbox] = useState(false);
   const [showMekSelector, setShowMekSelector] = useState(false);
-  const [mekDetailLightbox, setMekDetailLightbox] = useState<any | null>(null);
+  const [mekPreviewLightbox, setMekPreviewLightbox] = useState<any | null>(null);
+  const [showFullMekProfile, setShowFullMekProfile] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -889,7 +891,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                         {msg.mekAttachment && !msg.isDeleted && (
                           <div className="mt-2">
                             <button
-                              onClick={() => setMekDetailLightbox(msg.mekAttachment)}
+                              onClick={() => setMekPreviewLightbox(msg.mekAttachment)}
                               className="block border-2 border-yellow-500/50 rounded-lg overflow-hidden hover:border-yellow-400 transition-colors group"
                             >
                               <img
@@ -1401,13 +1403,27 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
         onSelect={handleMekSelect}
       />
 
-      {/* Mek Detail Lightbox (for viewing shared Meks) */}
-      {mekDetailLightbox && (
-        <MekDetailsSpaceAge
-          isOpen={!!mekDetailLightbox}
-          onClose={() => setMekDetailLightbox(null)}
-          mek={mekDetailLightbox}
-          corporationName={companyName || 'Unknown'}
+      {/* Mek Preview Lightbox (simple preview when clicking shared Mek) */}
+      {mekPreviewLightbox && (
+        <MekPreviewLightbox
+          isOpen={!!mekPreviewLightbox}
+          onClose={() => setMekPreviewLightbox(null)}
+          mek={mekPreviewLightbox}
+          onViewFullProfile={() => {
+            setShowFullMekProfile(true);
+          }}
+        />
+      )}
+
+      {/* Full Mek Profile Lightbox (Space Age style) */}
+      {showFullMekProfile && mekPreviewLightbox && (
+        <MekProfileLightbox
+          isOpen={showFullMekProfile}
+          onClose={() => {
+            setShowFullMekProfile(false);
+            setMekPreviewLightbox(null);
+          }}
+          styleVariation="space-age"
         />
       )}
     </div>
