@@ -8,10 +8,44 @@
  * - Comprehensive leetspeak detection (based on research from pc.net/resources/leet_sheet)
  * - Spacing trick detection ("f u c k" → "fuck")
  * - Only allows standard keyboard characters (a-z, 0-9, spaces)
+ * - Reserved names to prevent impersonation
+ * - Violence/terrorism term blocking
+ * - Repeating character limits
+ * - Protected name patterns (Wren)
  */
 
-// Blocklist of inappropriate words (lowercase for case-insensitive matching)
-// This list includes common profanity, slurs, and inappropriate terms
+// ═══════════════════════════════════════════════════════════════════════════
+// RESERVED NAMES - Prevent impersonation of staff/official accounts
+// ═══════════════════════════════════════════════════════════════════════════
+
+// These are blocked as exact matches OR as part of the name (case insensitive)
+const RESERVED_NAMES: string[] = [
+  // Staff/Authority
+  'admin', 'administrator', 'moderator', 'mod', 'support',
+  'developer', 'dev', 'staff', 'team',
+  'official', 'verified',
+  'founder', 'owner', 'ceo',
+
+  // Brand protection
+  'mektycoon', 'mek tycoon',
+  'overexposed',
+
+  // System terms
+  'system', 'bot', 'server',
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PROTECTED NAMES - Special protection (blocked unless truly in middle of word)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const PROTECTED_NAMES: string[] = [
+  'wren',
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PROFANITY BLOCKLIST - Substring matches
+// ═══════════════════════════════════════════════════════════════════════════
+
 const PROFANITY_BLOCKLIST: string[] = [
   // Common profanity
   'fuck', 'shit', 'damn', 'ass', 'bitch', 'bastard', 'crap', 'piss', 'dick', 'cock',
@@ -37,6 +71,17 @@ const PROFANITY_BLOCKLIST: string[] = [
   // Hate speech related
   'nazi', 'hitler', 'kkk', 'holocaust', 'genocide',
 
+  // Historical figures/dictators
+  'stalin', 'mussolini', 'bin laden', 'binladen',
+
+  // Terrorism/Violence
+  'isis', 'isil', 'taliban', 'alqaeda', 'al qaeda', 'jihad', 'jihadist',
+  'terrorist', 'terrorism',
+
+  // School violence references
+  'columbine', 'school shoot', 'schoolshoot', 'mass shoot', 'massshoot',
+  'sandy hook', 'sandyhook', 'parkland',
+
   // Drug references
   'cocaine', 'heroin', 'meth', 'crack',
 ];
@@ -47,12 +92,31 @@ const EXACT_MATCH_BLOCKLIST: string[] = [
   'ass', 'cum', 'sex', 'gay', 'nut', 'hoe', 'ho', 'fuk', 'suk', 'fuc',
 ];
 
+// ═══════════════════════════════════════════════════════════════════════════
+// HELPER FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
 /**
  * Check if a name contains only allowed characters (a-z, A-Z, 0-9, spaces)
  * This blocks Unicode homoglyphs and special characters
  */
 function hasOnlyAllowedCharacters(name: string): boolean {
   return /^[a-zA-Z0-9\s]+$/.test(name);
+}
+
+/**
+ * Check if name contains at least one letter (prevents "12345" style names)
+ */
+function hasAtLeastOneLetter(name: string): boolean {
+  return /[a-zA-Z]/.test(name);
+}
+
+/**
+ * Check for excessive repeating characters (e.g., "aaaaa" or "xxxxx")
+ * Returns true if 4+ of the same character in a row
+ */
+function hasExcessiveRepeats(name: string): boolean {
+  return /(.)\1{3,}/.test(name);
 }
 
 /**
@@ -103,6 +167,84 @@ function deobfuscateLeetspeak(name: string): string {
 }
 
 /**
+ * Check if name contains a reserved name pattern
+ */
+function containsReservedName(name: string): { blocked: boolean; reason?: string } {
+  const lowerName = name.toLowerCase();
+  const spacelessLower = lowerName.replace(/\s+/g, '');
+
+  for (const reserved of RESERVED_NAMES) {
+    const spacelessReserved = reserved.replace(/\s+/g, '');
+
+    // Check if the name contains the reserved word
+    if (lowerName.includes(reserved) || spacelessLower.includes(spacelessReserved)) {
+      return {
+        blocked: true,
+        reason: 'This name is reserved and cannot be used'
+      };
+    }
+  }
+
+  return { blocked: false };
+}
+
+/**
+ * Check if name contains a protected name (like "Wren")
+ * Blocks if the protected name appears at start, end, or as a standalone word
+ * Allows if it's truly embedded in the middle of another word (rare)
+ */
+function containsProtectedName(name: string): { blocked: boolean; reason?: string } {
+  const lowerName = name.toLowerCase();
+  const words = lowerName.split(/\s+/);
+
+  for (const protected_name of PROTECTED_NAMES) {
+    // Check each word in the name
+    for (const word of words) {
+      // Exact match - blocked
+      if (word === protected_name) {
+        return {
+          blocked: true,
+          reason: 'This name is protected and cannot be used'
+        };
+      }
+
+      // Starts with protected name - blocked (e.g., "WrenMaster")
+      if (word.startsWith(protected_name)) {
+        return {
+          blocked: true,
+          reason: 'This name is protected and cannot be used'
+        };
+      }
+
+      // Ends with protected name - blocked (e.g., "CoolWren")
+      if (word.endsWith(protected_name)) {
+        return {
+          blocked: true,
+          reason: 'This name is protected and cannot be used'
+        };
+      }
+    }
+
+    // Also check the spaceless version
+    const spacelessName = lowerName.replace(/\s+/g, '');
+    if (spacelessName.startsWith(protected_name) ||
+        spacelessName.endsWith(protected_name) ||
+        spacelessName === protected_name) {
+      return {
+        blocked: true,
+        reason: 'This name is protected and cannot be used'
+      };
+    }
+  }
+
+  return { blocked: false };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MAIN PROFANITY CHECK FUNCTION
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
  * Check if a name contains profanity
  * @param name - The name to check
  * @returns Object with isClean boolean and reason if not clean
@@ -122,9 +264,43 @@ export function checkProfanity(name: string): { isClean: boolean; reason?: strin
     };
   }
 
+  // STEP 2: Check for at least one letter (prevents "12345" style names)
+  if (!hasAtLeastOneLetter(trimmedName)) {
+    return {
+      isClean: false,
+      reason: 'Name must contain at least one letter'
+    };
+  }
+
+  // STEP 3: Check for excessive repeating characters
+  if (hasExcessiveRepeats(trimmedName)) {
+    return {
+      isClean: false,
+      reason: 'Name cannot have more than 3 repeating characters in a row'
+    };
+  }
+
+  // STEP 4: Check for reserved names (impersonation prevention)
+  const reservedCheck = containsReservedName(trimmedName);
+  if (reservedCheck.blocked) {
+    return {
+      isClean: false,
+      reason: reservedCheck.reason
+    };
+  }
+
+  // STEP 5: Check for protected names (like "Wren")
+  const protectedCheck = containsProtectedName(trimmedName);
+  if (protectedCheck.blocked) {
+    return {
+      isClean: false,
+      reason: protectedCheck.reason
+    };
+  }
+
   const normalizedName = trimmedName.toLowerCase();
 
-  // STEP 2: Create multiple versions for comprehensive checking
+  // STEP 6: Create multiple versions for comprehensive checking
   // Version 1: Just lowercase
   // Version 2: Leetspeak deobfuscated
   // Version 3: Spaces removed (catches "f u c k")
@@ -133,7 +309,7 @@ export function checkProfanity(name: string): { isClean: boolean; reason?: strin
   const spacelessName = removeSpacingTricks(normalizedName);
   const deobfuscatedSpaceless = deobfuscateLeetspeak(spacelessName);
 
-  // STEP 3: Check for exact match blocklist (word boundaries)
+  // STEP 7: Check for exact match blocklist (word boundaries)
   // Check both original words and deobfuscated words
   const originalWords = normalizedName.split(/[\s\-_.,!?]+/);
   const deobfuscatedWords = deobfuscatedName.split(/[\s\-_.,!?]+/);
@@ -148,7 +324,7 @@ export function checkProfanity(name: string): { isClean: boolean; reason?: strin
     }
   }
 
-  // STEP 4: Check for substring matches in main blocklist
+  // STEP 8: Check for substring matches in main blocklist
   // Check ALL versions to catch various bypass attempts
   const versionsToCheck = [
     normalizedName,
@@ -170,6 +346,10 @@ export function checkProfanity(name: string): { isClean: boolean; reason?: strin
 
   return { isClean: true };
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VALIDATION FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════
 
 /**
  * Validate a corporation name (combines profanity check with other validations)
@@ -197,7 +377,7 @@ export function validateCorporationName(name: string): { isValid: boolean; error
     return { isValid: false, error: 'Corporation name can only contain letters, numbers, and spaces' };
   }
 
-  // Profanity check
+  // Profanity check (includes all other checks)
   const profanityResult = checkProfanity(trimmedName);
   if (!profanityResult.isClean) {
     return { isValid: false, error: profanityResult.reason };
@@ -227,7 +407,7 @@ export function validateMekName(name: string): { isValid: boolean; error?: strin
     return { isValid: false, error: 'Mek name must be 20 characters or less' };
   }
 
-  // Profanity check
+  // Profanity check (includes all other checks)
   const profanityResult = checkProfanity(trimmedName);
   if (!profanityResult.isClean) {
     return { isValid: false, error: profanityResult.reason };

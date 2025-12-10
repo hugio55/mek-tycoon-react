@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
+import { setUserEssenceBalance, deleteAllUserEssence, addUserEssence } from "./lib/userEssenceHelpers";
 
 // ============================================================================
 // PLAYER MANAGEMENT - Primary query for admin panel
@@ -28,6 +29,14 @@ export const getAllUsersForAdmin = query({
       }
     }
 
+    // Get all userEssence records and sum by stakeAddress (Phase II)
+    const allEssence = await ctx.db.query("userEssence").collect();
+    const essenceSumByUser = new Map<string, number>();
+    for (const record of allEssence) {
+      const current = essenceSumByUser.get(record.stakeAddress) || 0;
+      essenceSumByUser.set(record.stakeAddress, current + (record.balance || 0));
+    }
+
     return allUsers.map((user: any) => {
       // Time since last login
       const lastActiveTime = user.lastLogin || user.createdAt || now;
@@ -44,9 +53,9 @@ export const getAllUsersForAdmin = query({
         lastActiveDisplay = `${minutesSinceActive}m ago`;
       }
 
-      // Calculate total essence value
-      const totalEssenceValue = user.totalEssence
-        ? (Object.values(user.totalEssence) as number[]).reduce((sum, val) => sum + val, 0)
+      // Calculate total essence value from userEssence table (Phase II)
+      const totalEssenceValue = user.stakeAddress
+        ? essenceSumByUser.get(user.stakeAddress) || 0
         : 0;
 
       return {
@@ -254,8 +263,15 @@ export const getAllUsers = query({
           .filter((q) => q.eq(q.field("status"), "active"))
           .collect();
 
-        // Calculate total essence value
-        const totalEssenceValue = Object.values(user.totalEssence).reduce((sum, val) => sum + val, 0);
+        // Calculate total essence value from userEssence table (Phase II)
+        let totalEssenceValue = 0;
+        if (user.stakeAddress) {
+          const essenceRecords = await ctx.db
+            .query("userEssence")
+            .withIndex("by_user", (q: any) => q.eq("stakeAddress", user.stakeAddress))
+            .collect();
+          totalEssenceValue = essenceRecords.reduce((sum: number, rec: any) => sum + (rec.balance || 0), 0);
+        }
 
         return {
           ...user,
@@ -379,11 +395,13 @@ export const updateUserField = mutation({
     const user = await ctx.db.get(args.userId);
     if (!user) throw new Error("User not found");
 
-    // Special handling for nested objects
-    if (args.field === "totalEssence") {
-      await ctx.db.patch(args.userId, {
-        totalEssence: args.value as Doc<"users">["totalEssence"],
-      });
+    // Special handling for essence - use userEssence table (Phase II)
+    if (args.field === "totalEssence" || args.field === "essence") {
+      if (!user.stakeAddress) throw new Error("User does not have a stake address");
+      const essenceValues = args.value as Record<string, number>;
+      for (const [essenceType, amount] of Object.entries(essenceValues)) {
+        await setUserEssenceBalance(ctx, user.stakeAddress, essenceType, amount, "admin");
+      }
     } else {
       // Generic field update
       await ctx.db.patch(args.userId, {
@@ -395,7 +413,7 @@ export const updateUserField = mutation({
   },
 });
 
-// Update essence for a specific type
+// Update essence for a specific type (uses userEssence table - Phase II)
 export const updateEssence = mutation({
   args: {
     userId: v.id("users"),
@@ -405,15 +423,10 @@ export const updateEssence = mutation({
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
     if (!user) throw new Error("User not found");
+    if (!user.stakeAddress) throw new Error("User does not have a stake address");
 
-    const updatedEssence = {
-      ...user.totalEssence,
-      [args.essenceType]: args.amount,
-    };
-
-    await ctx.db.patch(args.userId, {
-      totalEssence: updatedEssence,
-    });
+    // Update userEssence table (Phase II)
+    await setUserEssenceBalance(ctx, user.stakeAddress, args.essenceType, args.amount, "admin");
 
     return await ctx.db.get(args.userId);
   },
@@ -489,24 +502,24 @@ export const resetUserProgress = mutation({
 
     const updates: Partial<Doc<"users">> = {};
 
+    // Reset essence using userEssence table (Phase II)
     if (args.resetEssence) {
-      updates.totalEssence = {
-        stone: 10,
-        disco: 5,
-        paul: 0,
-        cartoon: 5,
-        candy: 5,
-        tiles: 5,
-        moss: 5,
-        bullish: 0,
-        journalist: 0,
-        laser: 0,
-        flashbulb: 0,
-        accordion: 0,
-        turret: 0,
-        drill: 0,
-        security: 0,
-      };
+      if (user.stakeAddress) {
+        // Delete all existing essence
+        await deleteAllUserEssence(ctx, user.stakeAddress);
+        // Add starting essence values
+        const startingEssence = [
+          { type: "stone", amount: 10 },
+          { type: "disco", amount: 5 },
+          { type: "cartoon", amount: 5 },
+          { type: "candy", amount: 5 },
+          { type: "tiles", amount: 5 },
+          { type: "moss", amount: 5 },
+        ];
+        for (const { type, amount } of startingEssence) {
+          await addUserEssence(ctx, user.stakeAddress, type, amount, "admin-reset");
+        }
+      }
     }
 
     if (args.resetGold) {
@@ -519,7 +532,9 @@ export const resetUserProgress = mutation({
       updates.experience = 0;
     }
 
-    await ctx.db.patch(args.userId, updates);
+    if (Object.keys(updates).length > 0) {
+      await ctx.db.patch(args.userId, updates);
+    }
 
     return await ctx.db.get(args.userId);
   },
