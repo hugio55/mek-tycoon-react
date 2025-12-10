@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Id } from "@/convex/_generated/dataModel";
 import { getMediaUrl } from "@/lib/media-url";
+import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
 
 interface DesiredVariation {
   variationName: string;
@@ -78,6 +79,40 @@ export default function TradeListingCard({
   const imagePath = cleanSourceKey
     ? getMediaUrl(`/mek-images/150px/${cleanSourceKey}.webp`)
     : getMediaUrl("/mek-images/placeholder.webp");
+
+  // Extract Mek number from asset name (e.g., "Mekanism #1234" -> "1234")
+  const mekNumber = useMemo(() => {
+    if (!listing.listedMekAssetName) return null;
+    const match = listing.listedMekAssetName.match(/#(\d+)/);
+    return match ? match[1] : null;
+  }, [listing.listedMekAssetName]);
+
+  // Look up variation details from source key
+  const mekVariations = useMemo(() => {
+    if (!cleanSourceKey) return null;
+
+    // Source key format: "aa1-bb2-cc3" (head-body-trait, lowercase)
+    const parts = cleanSourceKey.toUpperCase().split("-");
+    if (parts.length !== 3) return null;
+
+    const [headCode, bodyCode, traitCode] = parts;
+
+    // Look up each variation by sourceKey
+    const head = COMPLETE_VARIATION_RARITY.find(v => v.sourceKey === headCode && v.type === "head");
+    const body = COMPLETE_VARIATION_RARITY.find(v => v.sourceKey === bodyCode && v.type === "body");
+    const trait = COMPLETE_VARIATION_RARITY.find(v => v.sourceKey === traitCode && v.type === "trait");
+
+    return { head, body, trait };
+  }, [cleanSourceKey]);
+
+  // Calculate overall rarity rank (average of the 3 variation ranks, lower = rarer)
+  const overallRank = useMemo(() => {
+    if (!mekVariations?.head || !mekVariations?.body || !mekVariations?.trait) return null;
+    const avgRank = Math.round(
+      (mekVariations.head.rank + mekVariations.body.rank + mekVariations.trait.rank) / 3
+    );
+    return avgRank;
+  }, [mekVariations]);
 
   const timeAgo = getTimeAgo(listing.createdAt);
 
