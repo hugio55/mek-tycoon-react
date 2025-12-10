@@ -111,6 +111,7 @@ export default function CreateListingLightbox({
     x: number;
     y: number;
   } | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Get user's Meks
   const userMeks = useQuery(api.meks.getMeksByOwner, { stakeAddress });
@@ -181,7 +182,7 @@ export default function CreateListingLightbox({
       }
       onClose();
     } catch (error: any) {
-      alert(error.message || "Failed to create listing");
+      setErrorMessage(error.message || "Failed to create listing");
     } finally {
       setIsSubmitting(false);
     }
@@ -636,6 +637,85 @@ export default function CreateListingLightbox({
             />
           </div>,
           document.body
+        )}
+
+        {/* Error Lightbox */}
+        {errorMessage && (
+          <div
+            className="absolute inset-0 z-[10001] flex items-center justify-center"
+            onClick={(e) => {
+              e.stopPropagation();
+              setErrorMessage(null);
+            }}
+          >
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: 'rgba(0,0,0,0.6)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+              }}
+            />
+
+            {/* Error content */}
+            <div
+              className="relative z-10 p-6 rounded-2xl max-w-sm mx-4 text-center"
+              style={{
+                background: 'linear-gradient(135deg, rgba(30,30,40,0.98), rgba(20,20,30,0.98))',
+                backdropFilter: 'blur(30px)',
+                WebkitBackdropFilter: 'blur(30px)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 30px rgba(239, 68, 68, 0.1)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Error Icon */}
+              <div
+                className="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full"
+                style={{
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                }}
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              </div>
+
+              {/* Title */}
+              <h3
+                className="text-lg font-semibold text-white mb-2"
+                style={{ fontFamily: 'Orbitron, sans-serif' }}
+              >
+                Unable to Create Listing
+              </h3>
+
+              {/* Message */}
+              <p
+                className="mb-6"
+                style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.7)' }}
+              >
+                {errorMessage}
+              </p>
+
+              {/* OK Button */}
+              <button
+                onClick={() => setErrorMessage(null)}
+                className="px-8 py-2.5 rounded-xl font-medium transition-all hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: 'white',
+                }}
+              >
+                OK
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Mek Detail Lightbox (Nested - clicking outside only closes this, not parent) */}
