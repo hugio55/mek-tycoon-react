@@ -59,6 +59,9 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
   // Quick Mek count action (fast lookup without metadata)
   const quickMekCountAction = useAction(api.blockfrostNftFetcher.quickMekCount);
 
+  // Mutation to sync Mek ownership to database after Blockfrost fetch
+  const syncMeksOwnershipMutation = useMutation(api.corporationAuth.syncMeksOwnership);
+
   // Mount/unmount for portal rendering
   useEffect(() => {
     setMounted(true);
@@ -582,6 +585,26 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
         } catch (blockfrostError: any) {
           console.error('[WalletConnect] Blockfrost action error:', blockfrostError);
           console.log('[WalletConnect] Continuing without Mek verification - check Blockfrost API');
+        }
+      }
+
+      // PHASE II: Sync Mek ownership to database if any Meks were found
+      if (meks.length > 0) {
+        console.log('[WalletConnect] Syncing', meks.length, 'Meks to database...');
+        setConnectionStatus('Syncing Meks...');
+        try {
+          const syncResult = await syncMeksOwnershipMutation({
+            stakeAddress: stakeAddress,
+            verifiedMeks: meks.map((m: any) => ({
+              assetId: m.assetId,
+              assetName: m.assetName,
+              mekNumber: m.mekNumber,
+            })),
+          });
+          console.log('[WalletConnect] Mek sync complete:', syncResult);
+        } catch (syncError) {
+          console.warn('[WalletConnect] Could not sync Meks:', syncError);
+          // Non-fatal - continue with connection
         }
       }
 
