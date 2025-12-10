@@ -882,19 +882,8 @@ export default defineSchema({
     .index("by_user_category", ["userId", "category"])
     .index("by_updated", ["lastUpdated"]),
 
-  // User Stats Cache - pre-computed user statistics
-  userStatsCache: defineTable({
-    userId: v.id("users"),
-    mekCount: v.number(),
-    totalEssence: v.number(),
-    netWorth: v.number(),
-    goldPerHour: v.number(),
-    bankBalance: v.number(),
-    stockValue: v.number(),
-    lastUpdated: v.number(),
-  })
-    .index("by_user", ["userId"])
-    .index("by_updated", ["lastUpdated"]),
+  // PHASE II: userStatsCache table DELETED
+  // The old stats cache included goldPerHour which is obsolete - income comes from Job Slots
 
   // Spells for spell caster minigame
   spells: defineTable({
@@ -1551,57 +1540,8 @@ export default defineSchema({
     .index("by_wallet", ["walletAddress"])
     .index("by_status", ["status"]),
 
-  // Mek Ownership History - stores snapshots of which Meks were in which wallets over time
-  mekOwnershipHistory: defineTable({
-    walletAddress: v.string(), // Which wallet this snapshot is for
-    snapshotTime: v.number(), // When this snapshot was taken
-
-    // Multi-wallet fields (for backward compatibility with old snapshots)
-    companyName: v.optional(v.string()),
-    groupId: v.optional(v.string()),
-
-    meks: v.array(v.object({
-      assetId: v.string(), // Unique asset ID
-      assetName: v.string(), // Mek name
-      goldPerHour: v.number(), // Gold rate for this Mek at this time
-      rarityRank: v.optional(v.number()),
-      baseGoldPerHour: v.optional(v.number()), // Base rate before level boosts
-      currentLevel: v.optional(v.number()), // Mek level at time of snapshot
-      levelBoostPercent: v.optional(v.number()), // Level boost percentage
-      levelBoostAmount: v.optional(v.number()), // Level boost gold amount
-      policyId: v.optional(v.string()), // NFT policy ID
-      imageUrl: v.optional(v.string()), // Image URL for this Mek
-      headVariation: v.optional(v.string()), // Head variation code
-      bodyVariation: v.optional(v.string()), // Body variation code
-      itemVariation: v.optional(v.string()), // Item variation code
-      sourceKey: v.optional(v.string()), // Full variation code (e.g., "AE1-BJ2-JI1-B")
-    })),
-    totalGoldPerHour: v.number(), // Total rate at time of snapshot
-    totalMekCount: v.number(), // How many Meks were present
-
-    // Complete game state (added for full restoration)
-    accumulatedGold: v.optional(v.number()), // Gold accumulated at time of snapshot
-    totalCumulativeGold: v.optional(v.number()), // Total cumulative gold earned
-    totalGoldSpentOnUpgrades: v.optional(v.number()), // Total gold spent on upgrades
-    lastActiveTime: v.optional(v.number()), // Last active time at snapshot
-    lastSnapshotTime: v.optional(v.number()), // Previous snapshot time
-
-    // New gold tracking fields for blockchain snapshot system
-    spendableGold: v.optional(v.number()), // Current spendable gold at time of snapshot
-    cumulativeGoldEarned: v.optional(v.number()), // Total gold earned over all time (never decreases)
-
-    verificationStatus: v.optional(v.union(
-      v.literal("verified"), // Blockchain lookup succeeded
-      v.literal("lookup_failed"), // Blockchain lookup failed - data preserved
-      v.literal("validation_failed"), // Data didn't pass validation checks
-      v.literal("uncertain") // Unknown status (for old snapshots)
-    )),
-    verificationError: v.optional(v.string()), // Error message if lookup failed
-  })
-    .index("by_wallet", ["walletAddress"])
-    .index("by_wallet_and_time", ["walletAddress", "snapshotTime"])
-    .index("by_status", ["verificationStatus"])
-    .index("by_snapshotTime", ["snapshotTime"]), // CRITICAL FIX: Index for efficient cleanup
+  // PHASE II: mekOwnershipHistory table DELETED
+  // The old Phase I snapshot system stored per-Mek gold rates - obsolete in Phase II
 
   // Node Fee Configuration for Story Climb
   nodeFeeConfig: defineTable({
@@ -1657,68 +1597,8 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_start_time", ["startTime"]),
 
-  // Gold Backups - disaster recovery snapshots of all user gold states
-  goldBackups: defineTable({
-    // Backup metadata
-    backupTimestamp: v.number(), // When this backup was created
-    backupName: v.optional(v.string()), // Optional name for manual backups
-    backupType: v.union(
-      v.literal("auto_daily"),
-      v.literal("manual"),
-      v.literal("pre_update"),
-      v.literal("pre_migration"),
-      v.literal("emergency")
-    ),
-    triggeredBy: v.optional(v.string()), // Who/what triggered this backup
-    totalUsersBackedUp: v.number(), // Count of users in this backup
-    notes: v.optional(v.string()), // Optional notes about this backup
-
-    // Snapshot metadata
-    snapshotVersion: v.number(), // Version number for backup format
-    systemVersion: v.optional(v.string()), // App version when backup was made
-  })
-    .index("by_timestamp", ["backupTimestamp"])
-    .index("by_type", ["backupType"])
-    .index("by_name", ["backupName"]),
-
-  // Gold Backup User Data - individual user gold states within each backup
-  goldBackupUserData: defineTable({
-    // Reference to the backup
-    backupId: v.id("goldBackups"),
-
-    // User identification
-    walletAddress: v.string(),
-    userId: v.optional(v.id("users")), // Reference to users table if exists
-
-    // Gold state at time of backup
-    currentGold: v.number(), // Gold amount calculated at backup time
-    goldPerHour: v.number(), // Gold generation rate per hour
-    accumulatedGold: v.optional(v.number()), // Previously accumulated gold
-    lastSnapshotTime: v.optional(v.number()), // Last rate update timestamp
-
-    // Mining data
-    totalGoldPerHour: v.optional(v.number()), // Sum of mek gold rates
-    mekCount: v.number(), // Number of meks owned
-    lastActiveTime: v.optional(v.number()), // When user was last active
-
-    // Backup metadata
-    backupTimestamp: v.number(), // When this user's data was backed up
-    calculationMethod: v.optional(v.string()), // How gold was calculated
-
-    // Mek data snapshot (for verification)
-    topMekGoldRate: v.optional(v.number()), // Highest gold rate mek
-    topMekAssetId: v.optional(v.string()), // Asset ID of top mek
-    totalMekGoldRate: v.optional(v.number()), // Sum of all mek rates
-
-    // Additional game state
-    level: v.optional(v.number()),
-    experience: v.optional(v.number()),
-    bankBalance: v.optional(v.number()), // From bank account if exists
-  })
-    .index("by_backup", ["backupId"])
-    .index("by_wallet", ["walletAddress"])
-    .index("by_backup_wallet", ["backupId", "walletAddress"])
-    .index("by_timestamp", ["backupTimestamp"]),
+  // PHASE II: goldBackups and goldBackupUserData tables DELETED
+  // The old Phase I backup system tracked per-Mek gold rates - obsolete in Phase II
 
   // Audit logs for blockchain verification and security
   auditLogs: defineTable({
@@ -1881,33 +1761,8 @@ export default defineSchema({
     .index("by_linked", ["linkedWallet"])
     .index("by_primary_active", ["primaryWallet", "active"]),
 
-  // Gold checkpoints for on-chain verification
-  goldCheckpoints: defineTable({
-    walletAddress: v.string(),
-    goldAmount: v.number(),
-    goldPerHour: v.number(),
-    timestamp: v.number(),
-    type: v.string(), // 'manual', 'automatic', 'restore'
-    merkleRoot: v.optional(v.string()),
-    blockHeight: v.optional(v.number()),
-    mekCount: v.optional(v.number()),
-    totalGoldRate: v.optional(v.number()),
-    verified: v.optional(v.boolean()),
-  })
-    .index("by_wallet", ["walletAddress"])
-    .index("by_timestamp", ["timestamp"])
-    .index("by_type", ["type"]),
-
-  // Gold snapshots for historical tracking
-  goldSnapshots: defineTable({
-    walletAddress: v.string(),
-    accumulatedGold: v.number(),
-    goldPerHour: v.number(),
-    mekCount: v.number(),
-    timestamp: v.number(),
-  })
-    .index("by_wallet", ["walletAddress"])
-    .index("by_timestamp", ["timestamp"]),
+  // PHASE II: goldCheckpoints and goldSnapshots tables DELETED
+  // The old Phase I gold tracking system is obsolete - gold now comes from Job Slots
 
   // CIP-25 NFT metadata cache
   nftMetadata: defineTable({

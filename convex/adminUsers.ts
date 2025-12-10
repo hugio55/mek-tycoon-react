@@ -581,8 +581,7 @@ export const previewTestWallets = query({
         .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
       const activeBuffs = await ctx.db.query("activeBuffs")
         .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
-      const userStatsCache = await ctx.db.query("userStatsCache")
-        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
+      // PHASE II: userStatsCache table deleted - goldPerHour is obsolete
       const contracts = await ctx.db.query("contracts")
         .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
       const chipInstances = await ctx.db.query("chipInstances")
