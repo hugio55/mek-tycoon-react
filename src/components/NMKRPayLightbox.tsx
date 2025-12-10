@@ -334,8 +334,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   // On mobile, we need the reservation BEFORE showing Copy Link (for resume URL)
   // On desktop, reservation is created AFTER wallet verification signature
   useEffect(() => {
-    // Only run if: in wallet_verification, mobile detected, no reservation yet, not already creating
-    if (state !== 'wallet_verification' || !isMobileBrowser || reservationId || isCreatingMobileReservation) {
+    // Guard: ensure component is mounted and all conditions are met
+    if (!mounted || state !== 'wallet_verification' || !isMobileBrowser || reservationId || isCreatingMobileReservation) {
       return;
     }
 
@@ -344,29 +344,49 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
       return;
     }
 
-    console.log('[📱MOBILE] Auto-creating reservation for mobile user before Copy Link');
-    setIsCreatingMobileReservation(true);
+    // Track if effect is still active (for cleanup)
+    let isActive = true;
 
-    createReservation({
-      campaignId: activeCampaignId,
-      walletAddress: effectiveWalletAddress
-    }).then(result => {
-      if (result.success && result.reservation) {
-        console.log('[📱MOBILE] ✓ Reservation created:', result.reservation._id);
-        setReservationId(result.reservation._id as Id<"commemorativeNFTInventory">);
-      } else {
-        console.error('[📱MOBILE] Failed to create reservation:', result.error);
-        setErrorMessage(result.message || result.error || 'Failed to reserve NFT');
+    const createMobileReservation = async () => {
+      console.log('[📱MOBILE] Auto-creating reservation for mobile user before Copy Link');
+      setIsCreatingMobileReservation(true);
+
+      try {
+        const result = await createReservation({
+          campaignId: activeCampaignId,
+          walletAddress: effectiveWalletAddress
+        });
+
+        // Only update state if component is still mounted and effect is active
+        if (!isActive) return;
+
+        if (result.success && result.reservation) {
+          console.log('[📱MOBILE] ✓ Reservation created:', result.reservation._id);
+          setReservationId(result.reservation._id as Id<"commemorativeNFTInventory">);
+        } else {
+          console.error('[📱MOBILE] Failed to create reservation:', result.error);
+          setErrorMessage(result.message || result.error || 'Failed to reserve NFT');
+          setState('error');
+        }
+        setIsCreatingMobileReservation(false);
+      } catch (error) {
+        // Only update state if component is still mounted and effect is active
+        if (!isActive) return;
+
+        console.error('[📱MOBILE] Error creating reservation:', error);
+        setErrorMessage('Failed to create reservation');
         setState('error');
+        setIsCreatingMobileReservation(false);
       }
-      setIsCreatingMobileReservation(false);
-    }).catch(error => {
-      console.error('[📱MOBILE] Error creating reservation:', error);
-      setErrorMessage('Failed to create reservation');
-      setState('error');
-      setIsCreatingMobileReservation(false);
-    });
-  }, [state, isMobileBrowser, reservationId, isCreatingMobileReservation, effectiveWalletAddress, activeCampaignId, createReservation]);
+    };
+
+    createMobileReservation();
+
+    // Cleanup function - prevent state updates if effect re-runs or component unmounts
+    return () => {
+      isActive = false;
+    };
+  }, [mounted, state, isMobileBrowser, reservationId, isCreatingMobileReservation, effectiveWalletAddress, activeCampaignId, createReservation]);
 
   // Detect available wallets and check if mobile browser
   const detectWalletsAndMobile = () => {
