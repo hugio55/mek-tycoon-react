@@ -64,12 +64,18 @@ export async function POST(request: NextRequest) {
           const details = await fetchNFTDetails(nft.uid, apiKey);
           // DEBUG: Log full response to see what fields are available
           console.log(`[NMKR Backfill Images] NFT ${nft.uid} details:`, JSON.stringify(details, null, 2));
+
+          // NMKR API uses various field names for images - check all possibilities
+          const det = details as any;
           return {
             uid: nft.uid,
             name: nft.displayName || nft.name,
-            ipfslink: details.ipfslink,
-            // Also capture previewimagenhash in case that's where the image is
-            previewHash: (details as any).previewimagenhash || (details as any).previewImageNftHash,
+            // Check multiple field names (NMKR uses camelCase in API responses)
+            ipfslink: det.ipfslink || det.ipfsLink || det.ipfsGatewayAddress,
+            gatewayLink: det.gatewayLink || det.gatewaylink,
+            previewHash: det.previewimagenhash || det.previewImageNftHash || det.previewImageNfthash,
+            // Also check metadata for CIP-25 standard image field
+            metadataImage: det.metadata?.image,
           };
         } catch (error) {
           console.warn(`[NMKR Backfill Images] Failed to fetch details for ${nft.uid}:`, error);
@@ -77,7 +83,9 @@ export async function POST(request: NextRequest) {
             uid: nft.uid,
             name: nft.displayName || nft.name,
             ipfslink: undefined,
+            gatewayLink: undefined,
             previewHash: undefined,
+            metadataImage: undefined,
           };
         }
       });
@@ -85,10 +93,27 @@ export async function POST(request: NextRequest) {
       const results = await Promise.all(detailsPromises);
 
       for (const result of results) {
-        // Try ipfslink first, then construct URL from previewHash if available
+        // Try multiple sources for image URL (in order of preference)
         let imageUrl = result.ipfslink;
+
+        // Fallback 1: gatewayLink (direct HTTP URL)
+        if (!imageUrl && result.gatewayLink) {
+          imageUrl = result.gatewayLink;
+          console.log(`[NMKR Backfill Images] Using gatewayLink for ${result.name}: ${imageUrl}`);
+        }
+
+        // Fallback 2: metadata.image (CIP-25 standard)
+        if (!imageUrl && result.metadataImage) {
+          imageUrl = result.metadataImage;
+          // Convert ipfs:// to https:// gateway URL if needed
+          if (imageUrl.startsWith('ipfs://')) {
+            imageUrl = imageUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
+          }
+          console.log(`[NMKR Backfill Images] Using metadata.image for ${result.name}: ${imageUrl}`);
+        }
+
+        // Fallback 3: previewHash (construct IPFS URL)
         if (!imageUrl && result.previewHash) {
-          // Construct IPFS URL from hash
           imageUrl = `https://ipfs.io/ipfs/${result.previewHash}`;
           console.log(`[NMKR Backfill Images] Using previewHash for ${result.name}: ${imageUrl}`);
         }

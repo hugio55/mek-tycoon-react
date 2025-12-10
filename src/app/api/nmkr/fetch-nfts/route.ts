@@ -72,11 +72,37 @@ export async function POST(request: NextRequest) {
 
         try {
           const details = await fetchNFTDetails(nft.uid, apiKey);
+          const det = details as any;
+
+          // Try multiple sources for image URL (NMKR uses various field names)
+          let imageUrl = det.ipfslink || det.ipfsLink || det.ipfsGatewayAddress;
+
+          // Fallback 1: gatewayLink
+          if (!imageUrl && (det.gatewayLink || det.gatewaylink)) {
+            imageUrl = det.gatewayLink || det.gatewaylink;
+          }
+
+          // Fallback 2: metadata.image (CIP-25 standard)
+          if (!imageUrl && det.metadata?.image) {
+            imageUrl = det.metadata.image;
+            if (imageUrl.startsWith('ipfs://')) {
+              imageUrl = imageUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
+            }
+          }
+
+          // Fallback 3: previewHash
+          if (!imageUrl) {
+            const hash = det.previewimagenhash || det.previewImageNftHash;
+            if (hash) {
+              imageUrl = `https://ipfs.io/ipfs/${hash}`;
+            }
+          }
+
           return {
             nftUid: nft.uid,
             nftNumber,
             name,
-            imageUrl: details.ipfslink || undefined,
+            imageUrl: imageUrl || undefined,
             state: nft.state,
           };
         } catch (error) {
