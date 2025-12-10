@@ -315,52 +315,53 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
         console.log('[🔐SIGNATURE] Challenge message generated');
 
         try {
-          // Check if wallet supports signData
+          // Check if wallet supports signData (CIP-8)
           if (!api.signData) {
             console.error('[🔐SIGNATURE] Wallet does not support signData() method');
-            throw new Error(`${wallet.name} does not support message signing. Please use a different wallet or contact support.`);
+            throw new Error(`${wallet.name} does not support message signing (CIP-8). Please use Eternl, Nami, or another CIP-8 compatible wallet.`);
           }
 
           // Get payment addresses for signing
-          const usedAddressesHex = await api.getUsedAddresses();
-          console.log('[🔐SIGNATURE] Payment addresses (hex):', usedAddressesHex?.length || 0, 'addresses');
+          // NOTE: Different wallets return addresses in different formats:
+          // - Eternl/Nami: Often return hex-encoded addresses
+          // - LACE/Vespr: May return bech32 (addr1...) directly
+          const usedAddresses = await api.getUsedAddresses();
+          console.log(`[🔐SIGNATURE] ${wallet.name} returned ${usedAddresses?.length || 0} addresses`);
 
-          if (!usedAddressesHex || usedAddressesHex.length === 0) {
-            throw new Error('No payment addresses found in wallet');
+          if (!usedAddresses || usedAddresses.length === 0) {
+            throw new Error('No payment addresses found in wallet. Please ensure your wallet has at least one address.');
           }
 
-          const paymentAddressHex = usedAddressesHex[0];
+          const rawAddress = usedAddresses[0];
+          const isAlreadyBech32 = rawAddress.startsWith('addr1') || rawAddress.startsWith('addr_test');
+          console.log(`[🔐SIGNATURE] Address format from ${wallet.name}:`, isAlreadyBech32 ? 'bech32' : 'hex');
 
-          // Convert hex address to bech32 format for CIP-8 signing
-          // Most wallets expect bech32 format (addr1...) not hex
-          let addressForSigning = paymentAddressHex;
+          // Prepare both address formats - some wallets need bech32, others accept hex
+          let bech32Address = rawAddress;
+          let hexAddress = rawAddress;
 
-          // If address is hex (doesn't start with addr), convert it
-          if (!paymentAddressHex.startsWith('addr')) {
+          if (isAlreadyBech32) {
+            // Already bech32 - try to get hex version for fallback
+            console.log('[🔐SIGNATURE] Using bech32 address directly:', rawAddress.substring(0, 20) + '...');
+          } else {
+            // Convert hex to bech32
             try {
-              // Import cardano-serialization-lib for address conversion
               const CSL = await import('@emurgo/cardano-serialization-lib-browser');
-              const address = CSL.Address.from_bytes(
-                Buffer.from(paymentAddressHex, 'hex')
-              );
-              addressForSigning = address.to_bech32();
-              console.log('[🔐SIGNATURE] Converted hex to bech32:', addressForSigning.substring(0, 20) + '...');
+              const address = CSL.Address.from_bytes(Buffer.from(rawAddress, 'hex'));
+              bech32Address = address.to_bech32();
+              console.log('[🔐SIGNATURE] Converted hex to bech32:', bech32Address.substring(0, 20) + '...');
             } catch (conversionError) {
-              console.error('[🔐SIGNATURE] Address conversion failed:', conversionError);
-              // Fall back to hex if conversion fails
-              console.log('[🔐SIGNATURE] Using hex address as fallback');
+              console.warn('[🔐SIGNATURE] Address conversion failed, will try hex format:', conversionError);
+              bech32Address = rawAddress; // Use raw as fallback
             }
           }
 
-          console.log('[🔐SIGNATURE] Address for signing:', addressForSigning.substring(0, 20) + '...');
-
-          // All wallets use hex-encoded message
+          // All wallets use hex-encoded UTF-8 message per CIP-8
           const encoder = new TextEncoder();
           const messageBytes = encoder.encode(challengeMessage);
           const messagePayload = Array.from(messageBytes)
             .map(b => b.toString(16).padStart(2, '0'))
             .join('');
-          console.log('[🔐SIGNATURE] Using hex-encoded message');
 
           // Set up signature waiting state with delayed help message
           setIsAwaitingSignature(true);
@@ -372,11 +373,39 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
             console.log('[🔐SIGNATURE] Showing extended help - user may not see the popup');
           }, 10000);
 
-          // Request signature from wallet
-          console.log('[🔐SIGNATURE] Calling api.signData()...');
-          const signResult = await api.signData(addressForSigning, messagePayload);
+          // Try signing with bech32 first (most compatible), fall back to hex if needed
+          let signResult: any = null;
+          let lastError: any = null;
 
-          // Clear the help timeout - signature received
+          // Attempt 1: bech32 address (preferred)
+          console.log(`[🔐SIGNATURE] Attempting signData with ${wallet.name} using bech32 format...`);
+          try {
+            signResult = await api.signData(bech32Address, messagePayload);
+            console.log('[🔐SIGNATURE] ✅ Signature successful with bech32 format');
+          } catch (bech32Error: any) {
+            lastError = bech32Error;
+            console.warn(`[🔐SIGNATURE] bech32 format failed for ${wallet.name}:`, bech32Error?.message || bech32Error);
+
+            // Check if this is a user rejection (don't retry)
+            const isRejection = bech32Error?.message?.toLowerCase().includes('declined') ||
+                                bech32Error?.message?.toLowerCase().includes('cancelled') ||
+                                bech32Error?.message?.toLowerCase().includes('canceled') ||
+                                bech32Error?.message?.toLowerCase().includes('reject');
+
+            if (!isRejection && !isAlreadyBech32 && hexAddress !== bech32Address) {
+              // Attempt 2: hex address (fallback for some wallets)
+              console.log(`[🔐SIGNATURE] Retrying signData with ${wallet.name} using hex format...`);
+              try {
+                signResult = await api.signData(hexAddress, messagePayload);
+                console.log('[🔐SIGNATURE] ✅ Signature successful with hex format');
+              } catch (hexError: any) {
+                console.error(`[🔐SIGNATURE] hex format also failed for ${wallet.name}:`, hexError?.message || hexError);
+                lastError = hexError; // Keep the more recent error
+              }
+            }
+          }
+
+          // Clear the help timeout
           if (signatureHelpTimeoutRef.current) {
             clearTimeout(signatureHelpTimeoutRef.current);
             signatureHelpTimeoutRef.current = null;
@@ -384,12 +413,16 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
           setIsAwaitingSignature(false);
           setShowSignatureHelp(false);
 
+          if (!signResult) {
+            // Signature failed - throw the last error
+            throw lastError || new Error('Signature failed');
+          }
+
           console.log('[🔐SIGNATURE] Signature received successfully!');
           setConnectionStatus('Wallet verified!');
 
           // Signature succeeded - user proved they own the wallet
           // CRITICAL: Clear nonce IMMEDIATELY after successful signature
-          // This prevents requiring re-signing if later steps (Blockfrost, session save) fail
           if (disconnectNonce) {
             localStorage.removeItem('mek_disconnect_nonce');
             console.log('[🔐SIGNATURE] Cleared disconnect nonce after successful signature');
@@ -405,19 +438,34 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
 
           console.error('[🔐SIGNATURE] Signature verification failed:', signError);
           console.error('[🔐SIGNATURE] Error details:', {
+            wallet: wallet.name,
             name: signError?.name,
             message: signError?.message,
             code: signError?.code,
             info: signError?.info
           });
-          // Friendlier message for "user declined" (often accidental clicks away)
-          const isUserDeclined = signError?.message?.toLowerCase().includes('declined') ||
-                                  signError?.message?.toLowerCase().includes('cancelled') ||
-                                  signError?.message?.toLowerCase().includes('canceled');
-          if (isUserDeclined) {
+
+          // Categorize error for user-friendly message
+          const errorMsg = signError?.message?.toLowerCase() || '';
+
+          // User declined/cancelled
+          if (errorMsg.includes('declined') || errorMsg.includes('cancelled') ||
+              errorMsg.includes('canceled') || errorMsg.includes('reject')) {
             throw new Error('Signature cancelled. Please click your wallet again and sign the message when prompted.');
           }
-          throw new Error(`Wallet verification failed: ${signError?.message || 'Unknown error'}. You must sign a message to verify wallet ownership.`);
+
+          // CIP-8 not supported
+          if (errorMsg.includes('not supported') || errorMsg.includes('not implemented')) {
+            throw new Error(`${wallet.name} may not fully support message signing. Try using Eternl or Nami wallet instead.`);
+          }
+
+          // Address format error
+          if (errorMsg.includes('address') || errorMsg.includes('invalid')) {
+            throw new Error(`${wallet.name} had trouble with the address format. Please try disconnecting and reconnecting your wallet.`);
+          }
+
+          // Generic error with wallet name
+          throw new Error(`${wallet.name} verification failed: ${signError?.message || 'Unknown error'}. Please try again or use a different wallet.`);
         }
       } else {
         console.log('[🔐SECURITY] ✅ Trusted session found - skipping signature verification');
