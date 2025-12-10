@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/convex/_generated/api";
@@ -15,6 +15,7 @@ import ConfirmationLightbox from "@/components/tradefloor/ConfirmationLightbox";
 import OfferCard from "@/components/tradefloor/OfferCard";
 
 type Tab = "browse" | "my-listings" | "my-offers";
+type SortOption = "newest" | "oldest" | "most-offers" | "least-offers";
 
 interface ConfirmAction {
   type: "cancel-listing" | "withdraw-offer";
@@ -32,6 +33,7 @@ export default function TradeFloorPage() {
   const [selectedListingForViewOffers, setSelectedListingForViewOffers] = useState<any>(null);
   const [selectedListingForEdit, setSelectedListingForEdit] = useState<any>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+  const [browseSortOption, setBrowseSortOption] = useState<SortOption>("newest");
 
   // Read tab from URL query parameter (for notification deep links)
   useEffect(() => {
@@ -77,6 +79,26 @@ export default function TradeFloorPage() {
     api.tradeFloor.getActiveListingCount,
     stakeAddress ? { stakeAddress } : "skip"
   );
+
+  // Sort browse listings based on selected option
+  const sortedBrowseListings = useMemo(() => {
+    if (!browseListings) return undefined;
+
+    const listings = [...browseListings];
+
+    switch (browseSortOption) {
+      case "newest":
+        return listings.sort((a: any, b: any) => b.createdAt - a.createdAt);
+      case "oldest":
+        return listings.sort((a: any, b: any) => a.createdAt - b.createdAt);
+      case "most-offers":
+        return listings.sort((a: any, b: any) => (b.offerCount || 0) - (a.offerCount || 0));
+      case "least-offers":
+        return listings.sort((a: any, b: any) => (a.offerCount || 0) - (b.offerCount || 0));
+      default:
+        return listings;
+    }
+  }, [browseListings, browseSortOption]);
 
   // Mutations
   const cancelListing = useMutation(api.tradeFloor.cancelListing);
@@ -321,15 +343,43 @@ export default function TradeFloorPage() {
           </div>
 
           {/* Subtitle/Description Row */}
-          <div className="px-4 py-3">
+          <div className="px-4 py-3 flex items-center justify-between">
             <p
               className="text-sm"
               style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
             >
-              {activeTab === "browse" && "Sorted by how many of your Meks match the desired variations"}
+              {activeTab === "browse" && "Browse trade listings from other players"}
               {activeTab === "my-listings" && `${activeListingCount !== undefined ? `${activeListingCount}/5 listings used` : "Loading..."}`}
               {activeTab === "my-offers" && "Offers you've made on other players' listings"}
             </p>
+
+            {/* Sort Dropdown - Browse Tab Only */}
+            {activeTab === "browse" && (
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-xs uppercase tracking-wider"
+                  style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
+                >
+                  Sort by:
+                </span>
+                <select
+                  value={browseSortOption}
+                  onChange={(e) => setBrowseSortOption(e.target.value as SortOption)}
+                  className="px-3 py-1.5 rounded-lg text-sm cursor-pointer transition-all focus:outline-none"
+                  style={{
+                    fontFamily: 'Play, sans-serif',
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: 'rgba(255,255,255,0.8)',
+                  }}
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="most-offers">Most Offers</option>
+                  <option value="least-offers">Least Offers</option>
+                </select>
+              </div>
+            )}
           </div>
         </div>
 
@@ -373,14 +423,14 @@ export default function TradeFloorPage() {
         {/* Browse Listings Tab */}
         {stakeAddress && activeTab === "browse" && (
           <div>
-            {browseListings === undefined ? (
+            {sortedBrowseListings === undefined ? (
               <div
                 className="text-center py-12"
                 style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
               >
                 Loading listings...
               </div>
-            ) : browseListings.length === 0 ? (
+            ) : sortedBrowseListings.length === 0 ? (
               <div
                 className="text-center py-12 rounded-2xl relative overflow-hidden"
                 style={{
@@ -462,7 +512,7 @@ export default function TradeFloorPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {browseListings.map((listing: any) => (
+                {sortedBrowseListings.map((listing: any) => (
                   <TradeListingCard
                     key={listing._id}
                     listing={listing}
@@ -670,6 +720,7 @@ export default function TradeFloorPage() {
         <CreateListingLightbox
           stakeAddress={stakeAddress}
           onClose={() => setShowCreateListing(false)}
+          onSuccess={() => setActiveTab("my-listings")}
         />
       )}
 

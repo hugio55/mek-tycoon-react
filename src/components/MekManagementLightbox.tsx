@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import ConfirmationLightbox from "./ConfirmationLightbox";
+import { getMediaUrl } from "@/lib/media-url";
 
 interface MekManagementLightboxProps {
   isOpen: boolean;
@@ -108,7 +109,7 @@ export default function MekManagementLightbox({
   const cleanSourceKey = mekData.sourceKey
     .replace(/-[A-Z]$/, '')  // Remove suffix like -B, -C
     .toLowerCase();           // Convert to lowercase
-  const imagePath = `/mek-images/500px/${cleanSourceKey}.webp`;
+  const imagePath = getMediaUrl(`/mek-images/500px/${cleanSourceKey}.webp`);
 
   const handleTerminate = async () => {
     try {
@@ -260,7 +261,7 @@ export default function MekManagementLightbox({
                 alt={mekData.customName || mekData.assetName || "Mek"}
                 className="relative z-10 w-full h-auto max-w-[384px] mx-auto"
                 onError={(e) => {
-                  e.currentTarget.src = `/mek-images/150px/${cleanSourceKey}.webp`;
+                  e.currentTarget.src = getMediaUrl(`/mek-images/150px/${cleanSourceKey}.webp`);
                 }}
               />
             </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { MekAsset } from './types';
+import { getMediaUrl } from '@/lib/media-url';
 
 interface MekCardImageProps {
   mek: MekAsset;
@@ -18,11 +19,11 @@ export const MekCardImage = React.memo(({ mek, getMekImageUrl }: MekCardImagePro
   } else if (mek.sourceKey) {
     // Construct image path directly from sourceKey
     const cleanKey = mek.sourceKey.replace(/-[A-Z]$/, '').toLowerCase();
-    imagePath = `/mek-images/1000px/${cleanKey}.webp`;
+    imagePath = getMediaUrl(`/mek-images/1000px/${cleanKey}.webp`);
   } else if (mek.mekNumber) {
     imagePath = getMekImageUrl(mek.mekNumber, '1000px');
   } else {
-    imagePath = '/mek-images/1000px/000-000-000.webp';
+    imagePath = getMediaUrl('/mek-images/1000px/000-000-000.webp');
   }
 
   return (

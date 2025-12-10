@@ -195,17 +195,13 @@ export const getBrowseListings = query({
     const now = Date.now();
 
     // Get all active listings
-    let listings = await ctx.db
+    const listings = await ctx.db
       .query("tradeListings")
       .withIndex("by_status", (q) => q.eq("status", "active"))
       .collect();
 
-    // Filter out viewer's own listings
-    if (args.viewerStakeAddress) {
-      listings = listings.filter(
-        (l) => l.ownerStakeAddress !== args.viewerStakeAddress
-      );
-    }
+    // Note: We no longer filter out viewer's own listings
+    // They will be marked with isOwnListing flag instead
 
     // Filter out listings from inactive users (30+ days)
     const filteredListings = await Promise.all(

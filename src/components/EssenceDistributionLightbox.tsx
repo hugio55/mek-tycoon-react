@@ -1320,13 +1320,13 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                           }}>
                             <div className="absolute inset-0 mek-overlay-glass opacity-50 pointer-events-none"></div>
                             <img
-                              src={slice.image || '/essence-images/bumble0000.png'}
+                              src={slice.image || getMediaUrl('/essence-images/bumble0000.png')}
                               alt={`${slice.name} essence`}
                               className="relative z-10 w-full h-full object-contain"
                               style={{ maxHeight: '200px' }}
                               onError={(e) => {
                                 // Fallback to generic essence bottle if specific image not found
-                                (e.target as HTMLImageElement).src = '/essence-images/bumble0000.png';
+                                (e.target as HTMLImageElement).src = getMediaUrl('/essence-images/bumble0000.png');
                               }}
                             />
                           </div>

@@ -887,11 +887,11 @@ export default function EssenceDistributionLightboxSpaceAge({ isOpen, onClose }:
                             }}
                           >
                             <img
-                              src={slice.image || '/essence-images/bumble0000.png'}
+                              src={slice.image || getMediaUrl('/essence-images/bumble0000.png')}
                               alt={`${slice.name} essence`}
                               className="relative z-10 w-full h-full object-contain p-4"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/essence-images/bumble0000.png';
+                                (e.target as HTMLImageElement).src = getMediaUrl('/essence-images/bumble0000.png');
                               }}
                             />
                           </div>
