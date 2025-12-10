@@ -541,8 +541,8 @@ export const addUserToWhitelistByCompanyName = mutation({
       success: true,
       newCount: updatedUsers.length,
       addedUser: {
-        stakeAddress: miner.walletAddress,
-        displayName: miner.companyName,
+        stakeAddress: user.stakeAddress,
+        displayName: user.corporationName,
       },
     };
   },
