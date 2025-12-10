@@ -1272,12 +1272,12 @@ export default function DeploymentsAdmin() {
           <ol className="list-decimal list-inside space-y-1 text-gray-500">
             <li>Commits your changes (if any)</li>
             <li><span className="text-cyan-400">Syncs media files to Cloudflare R2</span> (images, sounds, videos)</li>
-            <li>Pushes to <span className="text-cyan-400">origin/custom-minting-system</span> (backs up your working branch)</li>
+            <li>Pushes to <span className="text-cyan-400">origin/{gitStatus?.currentBranch || 'branch'}</span> (backs up your working branch)</li>
             <li>Pushes to <span className="text-green-400">origin/master</span> (triggers Vercel production)</li>
             <li>Deploys Convex to Sturgeon (production database functions)</li>
           </ol>
           <div className="mt-2 text-xs text-gray-600">
-            Note: Both branches are pushed - custom-minting-system first, then master. Dev server stays running!
+            Note: Both branches are pushed - {gitStatus?.currentBranch || 'branch'} first, then master. Dev server stays running!
           </div>
         </div>
       </div>

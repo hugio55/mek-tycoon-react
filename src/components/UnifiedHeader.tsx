@@ -8,6 +8,7 @@ import { api } from "@/convex/_generated/api";
 import { restoreWalletSession, clearWalletSession, extendSessionOnActivity, rememberDevice, isDeviceRemembered } from "@/lib/walletSessionManager";
 import { CompanyNameModal } from "@/components/CompanyNameModal";
 import WalletConnectLightbox from "@/components/WalletConnectLightbox";
+import ConfirmationLightbox from "@/components/ConfirmationLightbox";
 import { getMediaUrl } from "@/lib/media-url";
 import { NotificationBell } from "@/components/notifications";
 import MessagingSystem from "@/components/MessagingSystem";
@@ -111,6 +112,7 @@ export default function UnifiedHeader() {
   const [showWalletConnect, setShowWalletConnect] = useState(false);
   const [showNameRequiredWarning, setShowNameRequiredWarning] = useState(false);
   const [showMessaging, setShowMessaging] = useState(false);
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
   // Handle "Remember this device" button click
   const handleRememberDevice = async () => {
@@ -282,34 +284,32 @@ export default function UnifiedHeader() {
     }
   }, [walletDropdownOpen]);
 
-  // Handle disconnect
-  const handleDisconnect = async () => {
-    console.log('[🔓DISCONNECT] Disconnect button clicked');
+  // Handle disconnect button click - shows confirmation lightbox
+  const handleDisconnect = () => {
+    console.log('[🔓DISCONNECT] Disconnect button clicked, showing confirmation');
+    setShowDisconnectConfirm(true);
+  };
 
-    const confirmed = window.confirm(
-      'Disconnect wallet?\n\n' +
-      'This will log you out and you\'ll need to reconnect your wallet to access Mek Tycoon again.'
-    );
+  // Handle confirmed disconnect
+  const handleDisconnectConfirmed = async () => {
+    console.log('[🔓DISCONNECT] User confirmed disconnect');
+    console.log('[🔓DISCONNECT] Calling clearWalletSession()...');
 
-    if (confirmed) {
-      console.log('[🔓DISCONNECT] User confirmed disconnect');
-      console.log('[🔓DISCONNECT] Calling clearWalletSession()...');
+    // Clear session storage and invalidate session
+    await clearWalletSession();
 
-      // Clear session storage and invalidate session
-      await clearWalletSession();
+    console.log('[🔓DISCONNECT] Session cleared, checking localStorage for nonce...');
+    const nonceCheck = localStorage.getItem('mek_disconnect_nonce');
+    console.log('[🔓DISCONNECT] Nonce after clearWalletSession:', nonceCheck ? (nonceCheck.slice(0, 8) + '...') : 'NOT FOUND');
 
-      console.log('[🔓DISCONNECT] Session cleared, checking localStorage for nonce...');
-      const nonceCheck = localStorage.getItem('mek_disconnect_nonce');
-      console.log('[🔓DISCONNECT] Nonce after clearWalletSession:', nonceCheck ? (nonceCheck.slice(0, 8) + '...') : 'NOT FOUND');
+    setWalletAddress(null);
+    setSessionExpiresAt(null);
+    setWalletDropdownOpen(false);
+    setShowDisconnectConfirm(false);
 
-      setWalletAddress(null);
-      setSessionExpiresAt(null);
-      setWalletDropdownOpen(false);
-
-      console.log('[🔓DISCONNECT] Reloading page...');
-      // Reload to reset all state
-      window.location.reload();
-    }
+    console.log('[🔓DISCONNECT] Reloading page...');
+    // Reload to reset all state
+    window.location.reload();
   };
 
   // Determine if demo mode (no wallet connected)
@@ -625,6 +625,17 @@ export default function UnifiedHeader() {
         </div>,
         document.body
       )}
+
+      {/* Disconnect Confirmation Lightbox */}
+      <ConfirmationLightbox
+        isOpen={showDisconnectConfirm}
+        onConfirm={handleDisconnectConfirmed}
+        onCancel={() => setShowDisconnectConfirm(false)}
+        title="DISCONNECT WALLET"
+        message="This will log you out and you'll need to reconnect your wallet to access Mek Tycoon again."
+        confirmText="Disconnect"
+        cancelText="Cancel"
+      />
 
       {/* Wallet Connect Lightbox */}
       <WalletConnectLightbox
