@@ -114,7 +114,7 @@ export default function OfferCard({ offer, onWithdraw }: OfferCardProps) {
               alt={listing?.listedMekAssetName || "Listed Mek"}
               className="w-12 h-12 object-contain"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = "/mek-images/placeholder.webp";
+                (e.target as HTMLImageElement).src = getMediaUrl("/mek-images/placeholder.webp");
               }}
             />
             <div>
@@ -178,7 +178,7 @@ export default function OfferCard({ offer, onWithdraw }: OfferCardProps) {
                   alt={mek.assetName || "Offered Mek"}
                   className="w-full aspect-square object-contain mb-1"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = "/mek-images/placeholder.webp";
+                    (e.target as HTMLImageElement).src = getMediaUrl("/mek-images/placeholder.webp");
                   }}
                 />
                 <div

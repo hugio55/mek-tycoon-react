@@ -244,7 +244,7 @@ export default function ViewOffersLightbox({
                           alt={mek.assetName}
                           className="w-full aspect-square object-contain mb-2"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = "/mek-images/placeholder.webp";
+                            (e.target as HTMLImageElement).src = getMediaUrl("/mek-images/placeholder.webp");
                           }}
                         />
                         <div

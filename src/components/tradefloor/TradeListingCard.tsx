@@ -142,7 +142,7 @@ export default function TradeListingCard({
             alt={listing.listedMekAssetName || "Listed Mek"}
             className="w-full h-full object-contain"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = "/mek-images/placeholder.webp";
+              (e.target as HTMLImageElement).src = getMediaUrl("/mek-images/placeholder.webp");
             }}
           />
         </div>
@@ -347,6 +347,79 @@ export default function TradeListingCard({
           )}
         </div>
       </div>
+
+      {/* Own Listing Badge (shown in header corner) */}
+      {isOwnListing && (
+        <div
+          className="absolute top-2 right-2 px-2 py-1 rounded text-xs uppercase tracking-wider"
+          style={{
+            background: 'rgba(168, 85, 247, 0.2)',
+            border: '1px solid rgba(168, 85, 247, 0.3)',
+            color: '#c084fc',
+            fontFamily: 'Play, sans-serif',
+          }}
+        >
+          Your Listing
+        </div>
+      )}
+
+      {/* Mobile Lightbox for Own Listing */}
+      {showMobileLightbox && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center"
+          onClick={() => setShowMobileLightbox(false)}
+        >
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'rgba(0, 0, 0, 0.6)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+            }}
+          />
+          <div
+            className="relative mx-4 p-6 rounded-2xl text-center"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.15)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="text-4xl mb-4"
+              style={{ filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.5))' }}
+            >
+              🤖
+            </div>
+            <h3
+              className="text-lg font-semibold text-white mb-2"
+              style={{ fontFamily: 'Orbitron, sans-serif' }}
+            >
+              This is Your Listing
+            </h3>
+            <p
+              className="mb-4"
+              style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.6)' }}
+            >
+              You can't make an offer on your own listing. View it in the "My Listings" tab to manage offers.
+            </p>
+            <button
+              onClick={() => setShowMobileLightbox(false)}
+              className="px-6 py-2 rounded-xl font-medium transition-all hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08))',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: 'white',
+              }}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
