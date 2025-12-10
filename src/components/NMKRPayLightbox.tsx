@@ -67,43 +67,70 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   // - If not (production site), use regular useQuery (which already points to production)
   // ==========================================
 
+  // Determine if we should use production client for campaign queries
+  // Skip production fetch if campaignId is already provided via props
+  const shouldFetchProductionCampaigns = !!sturgeonClient && !propCampaignId;
+
   // State for production campaigns (fetched via sturgeonClient when available)
   const [productionCampaigns, setProductionCampaigns] = useState<any[] | null>(null);
-  const [productionCampaignsLoading, setProductionCampaignsLoading] = useState(!!sturgeonClient);
+  const [productionCampaignsLoading, setProductionCampaignsLoading] = useState(shouldFetchProductionCampaigns);
+  const [productionCampaignsFailed, setProductionCampaignsFailed] = useState(false);
 
   // Fetch campaigns from production database when in dual-database mode
   useEffect(() => {
     // Skip if campaignId prop provided or no sturgeonClient
-    if (propCampaignId || !sturgeonClient) return;
+    if (!shouldFetchProductionCampaigns) {
+      setProductionCampaignsLoading(false);
+      return;
+    }
+
+    // Track if effect is still active (for cleanup on unmount)
+    let isActive = true;
+
+    // Additional null check for TypeScript (already guaranteed by shouldFetchProductionCampaigns)
+    if (!sturgeonClient) return;
 
     console.log('[🎯NFT-PROD] Fetching campaigns from PRODUCTION database (Sturgeon)');
     setProductionCampaignsLoading(true);
+    setProductionCampaignsFailed(false);
 
     // Use sturgeonClient.query() directly for production reads
     sturgeonClient.query(api.campaigns.getActiveCampaigns, {})
       .then((campaigns) => {
+        if (!isActive) return; // Don't update state if unmounted
         console.log('[🎯NFT-PROD] Production campaigns fetched:', campaigns?.length || 0, 'campaigns');
         setProductionCampaigns(campaigns || []);
         setProductionCampaignsLoading(false);
       })
       .catch((error) => {
-        console.error('[🎯NFT-PROD] Failed to fetch production campaigns:', error);
+        if (!isActive) return; // Don't update state if unmounted
+        console.error('[🎯NFT-PROD] Failed to fetch production campaigns, falling back to dev:', error);
         setProductionCampaignsLoading(false);
-        // Fall through to dev database query as fallback
+        setProductionCampaignsFailed(true); // Signal to use dev fallback
       });
-  }, [propCampaignId]);
 
-  // Query for active campaigns from default client (used when not in dual-database mode)
+    return () => { isActive = false; };
+  }, [shouldFetchProductionCampaigns]);
+
+  // Query for active campaigns from default client
+  // Used when: (1) not in dual-database mode, OR (2) production fetch failed as fallback
   const devCampaigns = useQuery(
     api.campaigns.getActiveCampaigns,
-    !propCampaignId && !sturgeonClient ? {} : "skip"
+    !propCampaignId && (!sturgeonClient || productionCampaignsFailed) ? {} : "skip"
   );
 
   // Use production campaigns if available, otherwise fall back to dev
-  // This ensures accurate NFT availability regardless of environment
-  const activeCampaigns = sturgeonClient
-    ? (productionCampaignsLoading ? undefined : productionCampaigns)
-    : devCampaigns;
+  // Priority: production success > dev fallback > undefined (loading)
+  const activeCampaigns = (() => {
+    // If not using production client, use dev directly
+    if (!shouldFetchProductionCampaigns) return devCampaigns;
+    // If production is still loading, return undefined
+    if (productionCampaignsLoading) return undefined;
+    // If production failed, use dev fallback
+    if (productionCampaignsFailed) return devCampaigns;
+    // Production succeeded, use production data
+    return productionCampaigns;
+  })();
 
   // Auto-select first active campaign with available NFTs
   // CRITICAL: Only run this effect ONCE on initial load, not on every campaign update
@@ -198,49 +225,73 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   // to prevent users from claiming NFTs they already received in production.
   // ==========================================
 
+  // Determine if we should use production client for eligibility
+  const shouldFetchProductionEligibility = !!sturgeonClient && state === 'checking_eligibility' && !!effectiveWalletAddress && !!activeCampaignId;
+
   // State for production eligibility (fetched via sturgeonClient when available)
   const [productionEligibility, setProductionEligibility] = useState<any>(null);
   const [productionEligibilityLoading, setProductionEligibilityLoading] = useState(false);
+  const [productionEligibilityFailed, setProductionEligibilityFailed] = useState(false);
 
   // Fetch eligibility from production database when in dual-database mode
   useEffect(() => {
-    // Only fetch when in checking state with required params
-    if (state !== 'checking_eligibility' || !effectiveWalletAddress || !activeCampaignId) return;
+    // Only fetch when conditions are met
+    if (!shouldFetchProductionEligibility) {
+      return;
+    }
 
-    // Skip if no sturgeonClient (production site uses default query)
+    // Track if effect is still active (for cleanup on unmount)
+    let isActive = true;
+
+    // Additional null check for TypeScript (already guaranteed by shouldFetchProductionEligibility)
     if (!sturgeonClient) return;
 
     console.log('[🎯NFT-PROD] Checking eligibility against PRODUCTION database');
     setProductionEligibilityLoading(true);
     setProductionEligibility(null);
+    setProductionEligibilityFailed(false);
 
     sturgeonClient.query(api.nftEligibility.checkCampaignEligibility, {
       walletAddress: effectiveWalletAddress,
       campaignId: activeCampaignId
     })
       .then((result) => {
+        if (!isActive) return; // Don't update state if unmounted
         console.log('[🎯NFT-PROD] Production eligibility result:', result);
         setProductionEligibility(result);
         setProductionEligibilityLoading(false);
       })
       .catch((error) => {
-        console.error('[🎯NFT-PROD] Failed to check production eligibility:', error);
+        if (!isActive) return; // Don't update state if unmounted
+        console.error('[🎯NFT-PROD] Failed to check production eligibility, falling back to dev:', error);
         setProductionEligibilityLoading(false);
+        setProductionEligibilityFailed(true); // Signal to use dev fallback
       });
-  }, [state, effectiveWalletAddress, activeCampaignId]);
 
-  // Query for eligibility from default client (used when not in dual-database mode)
+    return () => { isActive = false; };
+  }, [shouldFetchProductionEligibility, effectiveWalletAddress, activeCampaignId]);
+
+  // Query for eligibility from default client
+  // Used when: (1) not in dual-database mode, OR (2) production fetch failed as fallback
   const devEligibility = useQuery(
     api.nftEligibility.checkCampaignEligibility,
-    state === 'checking_eligibility' && effectiveWalletAddress && activeCampaignId && !sturgeonClient
+    state === 'checking_eligibility' && effectiveWalletAddress && activeCampaignId && (!sturgeonClient || productionEligibilityFailed)
       ? { walletAddress: effectiveWalletAddress, campaignId: activeCampaignId }
       : "skip"
   );
 
   // Use production eligibility if available, otherwise fall back to dev
-  const eligibility = sturgeonClient
-    ? (productionEligibilityLoading ? undefined : productionEligibility)
-    : devEligibility;
+  // Priority: production success > dev fallback > undefined (loading)
+  const eligibility = (() => {
+    // If not using production client for eligibility, use dev directly
+    if (!sturgeonClient) return devEligibility;
+    // If production is still loading, return undefined
+    if (productionEligibilityLoading) return undefined;
+    // If production failed, use dev fallback
+    if (productionEligibilityFailed) return devEligibility;
+    // Production succeeded, use production data
+    return productionEligibility;
+  })();
 
   useEffect(() => {
     setMounted(true);
