@@ -335,55 +335,59 @@ export default function HolographicButton({
             </div>
           </div>
 
-          {/* Frame corners */}
-          <svg className="absolute top-0 left-0 w-8 h-8" viewBox="0 0 32 32">
-            <path
-              d="M0 8 L0 0 L8 0"
-              stroke={isActive ? (isHovered ? colors.secondary : colors.primary) : "#6b7280"}
-              strokeWidth="2"
-              fill="none"
-              style={{
-                filter: isActive ? `drop-shadow(0 0 ${isHovered ? '8px' : '5px'} ${isHovered ? colors.secondary : colors.primary})` : 'none',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </svg>
-          <svg className="absolute top-0 right-0 w-8 h-8" viewBox="0 0 32 32">
-            <path
-              d="M24 0 L32 0 L32 8"
-              stroke={isActive ? (isHovered ? colors.secondary : colors.primary) : "#6b7280"}
-              strokeWidth="2"
-              fill="none"
-              style={{
-                filter: isActive ? `drop-shadow(0 0 ${isHovered ? '8px' : '5px'} ${isHovered ? colors.secondary : colors.primary})` : 'none',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </svg>
-          <svg className="absolute bottom-0 left-0 w-8 h-8" viewBox="0 0 32 32">
-            <path
-              d="M0 24 L0 32 L8 32"
-              stroke={isActive ? (isHovered ? colors.secondary : colors.primary) : "#6b7280"}
-              strokeWidth="2"
-              fill="none"
-              style={{
-                filter: isActive ? `drop-shadow(0 0 ${isHovered ? '8px' : '5px'} ${isHovered ? colors.secondary : colors.primary})` : 'none',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </svg>
-          <svg className="absolute bottom-0 right-0 w-8 h-8" viewBox="0 0 32 32">
-            <path
-              d="M24 32 L32 32 L32 24"
-              stroke={isActive ? (isHovered ? colors.secondary : colors.primary) : "#6b7280"}
-              strokeWidth="2"
-              fill="none"
-              style={{
-                filter: isActive ? `drop-shadow(0 0 ${isHovered ? '8px' : '5px'} ${isHovered ? colors.secondary : colors.primary})` : 'none',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </svg>
+          {/* Frame corners - hidden when rounded */}
+          {!rounded && (
+            <>
+              <svg className="absolute top-0 left-0 w-8 h-8" viewBox="0 0 32 32">
+                <path
+                  d="M0 8 L0 0 L8 0"
+                  stroke={isActive ? (isHovered ? colors.secondary : colors.primary) : "#6b7280"}
+                  strokeWidth="2"
+                  fill="none"
+                  style={{
+                    filter: isActive ? `drop-shadow(0 0 ${isHovered ? '8px' : '5px'} ${isHovered ? colors.secondary : colors.primary})` : 'none',
+                    transition: 'all 0.3s ease'
+                  }}
+                />
+              </svg>
+              <svg className="absolute top-0 right-0 w-8 h-8" viewBox="0 0 32 32">
+                <path
+                  d="M24 0 L32 0 L32 8"
+                  stroke={isActive ? (isHovered ? colors.secondary : colors.primary) : "#6b7280"}
+                  strokeWidth="2"
+                  fill="none"
+                  style={{
+                    filter: isActive ? `drop-shadow(0 0 ${isHovered ? '8px' : '5px'} ${isHovered ? colors.secondary : colors.primary})` : 'none',
+                    transition: 'all 0.3s ease'
+                  }}
+                />
+              </svg>
+              <svg className="absolute bottom-0 left-0 w-8 h-8" viewBox="0 0 32 32">
+                <path
+                  d="M0 24 L0 32 L8 32"
+                  stroke={isActive ? (isHovered ? colors.secondary : colors.primary) : "#6b7280"}
+                  strokeWidth="2"
+                  fill="none"
+                  style={{
+                    filter: isActive ? `drop-shadow(0 0 ${isHovered ? '8px' : '5px'} ${isHovered ? colors.secondary : colors.primary})` : 'none',
+                    transition: 'all 0.3s ease'
+                  }}
+                />
+              </svg>
+              <svg className="absolute bottom-0 right-0 w-8 h-8" viewBox="0 0 32 32">
+                <path
+                  d="M24 32 L32 32 L32 24"
+                  stroke={isActive ? (isHovered ? colors.secondary : colors.primary) : "#6b7280"}
+                  strokeWidth="2"
+                  fill="none"
+                  style={{
+                    filter: isActive ? `drop-shadow(0 0 ${isHovered ? '8px' : '5px'} ${isHovered ? colors.secondary : colors.primary})` : 'none',
+                    transition: 'all 0.3s ease'
+                  }}
+                />
+              </svg>
+            </>
+          )}
         </div>
       </div>
     </button>

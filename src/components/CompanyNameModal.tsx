@@ -331,10 +331,10 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
             </div>
 
             {/* Buttons */}
-            <div className="flex flex-col gap-3 pt-2">
+            <div className="flex flex-col items-center gap-3 pt-2">
               {/* Fancy HolographicButton for initial creation only */}
               {mode === 'initial' && (
-                <div className="w-full">
+                <div style={{ width: 360 }}>
                   <HolographicButton
                     text={
                       isSubmitting

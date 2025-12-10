@@ -517,38 +517,43 @@ export default function UnifiedHeader() {
         />
       )}
 
-      {/* Name Required Warning Modal - Not shown on admin page */}
+      {/* Name Required Warning Modal - Space Age Style - Not shown on admin page */}
       {showNameRequiredWarning && !isAdminPage && createPortal(
         <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4">
-          {/* Backdrop */}
+          {/* Space Age backdrop */}
           <div
-            className="fixed inset-0 bg-black/80"
+            className="fixed inset-0 bg-black/70"
             style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
           />
 
-          {/* Modal content */}
+          {/* Modal content - Space Age glass style */}
           <div
-            className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-yellow-500/30"
+            className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-cyan-500/20"
             style={{
-              background: 'rgba(20, 15, 10, 0.95)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(250, 182, 23, 0.1)',
+              background: 'rgba(255,255,255,0.04)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset, 0 0 40px rgba(0, 200, 220, 0.08)',
               backdropFilter: 'blur(30px)',
               WebkitBackdropFilter: 'blur(30px)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Top accent bar */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-yellow-500/60" />
+            {/* Top accent bar - cyan */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-cyan-500/60" />
 
             <div className="px-6 pt-8 pb-6">
-              {/* Warning icon */}
+              {/* Warning icon - cyan themed */}
               <div className="text-center mb-4">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/30 mb-4">
-                  <svg className="w-8 h-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cyan-500/10 border border-cyan-500/30 mb-4">
+                  <svg className="w-8 h-8 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-light text-white tracking-wide mb-2">
+                <h3
+                  className="text-xl font-light text-white tracking-wide mb-2"
+                  style={{
+                    textShadow: '0 0 20px rgba(0, 220, 220, 0.4), 0 0 40px rgba(0, 220, 220, 0.2)',
+                  }}
+                >
                   Corporation Name Required
                 </h3>
                 <p className="text-white/60 text-sm font-light leading-relaxed">
@@ -556,19 +561,33 @@ export default function UnifiedHeader() {
                 </p>
               </div>
 
+              {/* Subtle divider */}
+              <div className="h-px bg-cyan-500/20 mb-6" />
+
               {/* Buttons */}
-              <div className="flex flex-col gap-3 mt-6">
+              <div className="flex flex-col gap-3">
                 <button
                   onClick={() => {
                     setShowNameRequiredWarning(false);
                     setCompanyNameModalMode('initial');
                     setShowCompanyNameModal(true);
                   }}
-                  className="w-full py-3 rounded-xl text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full py-3 rounded-[10px] text-sm font-semibold uppercase tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                   style={{
-                    background: 'linear-gradient(135deg, #fab617 0%, #d4a00f 100%)',
-                    color: '#000',
-                    boxShadow: '0 0 20px rgba(250, 182, 23, 0.3)',
+                    background: 'linear-gradient(135deg, rgba(6,182,212,0.3) 0%, rgba(34,211,238,0.2) 100%)',
+                    border: '1px solid rgba(34,211,238,0.5)',
+                    color: '#22d3ee',
+                    boxShadow: '0 0 20px rgba(34,211,238,0.2)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6,182,212,0.5) 0%, rgba(34,211,238,0.35) 100%)';
+                    e.currentTarget.style.boxShadow = '0 0 30px rgba(34,211,238,0.4)';
+                    e.currentTarget.style.borderColor = 'rgba(34,211,238,0.8)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6,182,212,0.3) 0%, rgba(34,211,238,0.2) 100%)';
+                    e.currentTarget.style.boxShadow = '0 0 20px rgba(34,211,238,0.2)';
+                    e.currentTarget.style.borderColor = 'rgba(34,211,238,0.5)';
                   }}
                 >
                   Set Corporation Name
@@ -581,11 +600,21 @@ export default function UnifiedHeader() {
                     setSessionExpiresAt(null);
                     window.location.reload();
                   }}
-                  className="w-full py-3 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-red-500/20 active:scale-[0.98]"
+                  className="w-full py-3 rounded-[10px] text-sm font-medium uppercase tracking-wider transition-all duration-300 active:scale-[0.98]"
                   style={{
                     background: 'rgba(239, 68, 68, 0.1)',
                     border: '1px solid rgba(239, 68, 68, 0.3)',
-                    color: 'rgba(239, 68, 68, 0.9)',
+                    color: 'rgba(248, 113, 113, 0.9)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)';
+                    e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+                    e.currentTarget.style.color = 'rgba(248, 113, 113, 1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                    e.currentTarget.style.color = 'rgba(248, 113, 113, 0.9)';
                   }}
                 >
                   Disconnect Wallet
