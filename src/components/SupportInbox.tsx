@@ -81,11 +81,44 @@ export default function SupportInbox({
   // Mutations
   const sendSupportMessage = useMutation(api.messaging.sendSupportMessage);
   const markSupportAsRead = useMutation(api.messaging.markSupportConversationAsRead);
+  const createSupportConversation = useMutation(api.messaging.createSupportConversation);
 
   // Mount check
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Handle messageTarget from Player Management
+  useEffect(() => {
+    if (messageTarget && supportConversations) {
+      const handleMessageTarget = async () => {
+        try {
+          // Create or get the support conversation for this player
+          const result = await createSupportConversation({
+            walletAddress: messageTarget.walletAddress,
+          });
+
+          if (result.success && result.conversationId) {
+            // Select this conversation
+            setSelectedConversationId(result.conversationId);
+          }
+
+          // Clear the target after handling
+          if (onClearMessageTarget) {
+            onClearMessageTarget();
+          }
+        } catch (error) {
+          console.error('Failed to create/open support conversation:', error);
+          // Still clear the target on error
+          if (onClearMessageTarget) {
+            onClearMessageTarget();
+          }
+        }
+      };
+
+      handleMessageTarget();
+    }
+  }, [messageTarget, supportConversations, createSupportConversation, onClearMessageTarget]);
 
   // Auto-scroll
   useEffect(() => {
