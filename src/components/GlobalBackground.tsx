@@ -104,6 +104,13 @@ export default function GlobalBackground() {
     return null;
   }
 
+  // Don't render on admin page - saves GPU resources for the heavy admin interface
+  // EXCEPTION: This is a specific exclusion for /admin only, not a general pattern
+  // The global background should remain on all other pages unless explicitly excluded here
+  if (pathname === '/admin' || pathname?.startsWith('/admin/')) {
+    return null;
+  }
+
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
     return (

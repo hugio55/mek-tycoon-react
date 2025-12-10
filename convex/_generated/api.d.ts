@@ -134,6 +134,7 @@ import type * as storyNodes from "../storyNodes.js";
 import type * as storyTrees from "../storyTrees.js";
 import type * as tenureConfig from "../tenureConfig.js";
 import type * as testSessionManagement from "../testSessionManagement.js";
+import type * as tradeFloor from "../tradeFloor.js";
 import type * as updateTop30Ranks from "../updateTop30Ranks.js";
 import type * as updateVariationImages from "../updateVariationImages.js";
 import type * as updateVariationSourceKeys from "../updateVariationSourceKeys.js";
@@ -288,6 +289,7 @@ declare const fullApi: ApiFromModules<{
   storyTrees: typeof storyTrees;
   tenureConfig: typeof tenureConfig;
   testSessionManagement: typeof testSessionManagement;
+  tradeFloor: typeof tradeFloor;
   updateTop30Ranks: typeof updateTop30Ranks;
   updateVariationImages: typeof updateVariationImages;
   updateVariationSourceKeys: typeof updateVariationSourceKeys;
