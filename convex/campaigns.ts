@@ -589,7 +589,7 @@ export const debugSnapshotsAndCampaigns = query({
       let snapshotError = null;
 
       if (camp.eligibilitySnapshotId) {
-        const snap = await ctx.db.get(camp.eligibilitySnapshotId);
+        const snap = allSnapshots.find((s: any) => s._id === camp.eligibilitySnapshotId);
         if (snap) {
           snapshotDetails = {
             snapshotId: snap._id,
