@@ -342,7 +342,7 @@ function WalletManagementAdminContent() {
   const [viewingEssence, setViewingEssence] = useState<string | null>(null);
   const [viewingBuffs, setViewingBuffs] = useState<string | null>(null);
   const [viewingActivityLog, setViewingActivityLog] = useState<string | null>(null);
-  const [diagnosticWallet, setDiagnosticWallet] = useState<string | null>(null);
+  // Phase II: Removed diagnosticWallet - boost diagnostic compared goldMining vs mekLevels (goldMining deleted)
   // Test wallet cleanup state
   const [testWalletPreview, setTestWalletPreview] = useState<any>(null);
   const [isPreviewingTestWallets, setIsPreviewingTestWallets] = useState(false);
@@ -360,11 +360,7 @@ function WalletManagementAdminContent() {
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [scrollPos, setScrollPos] = useState({ left: 0, top: 0 });
 
-  // Diagnostic query to check boost sync
-  const boostDiagnostic = useQuery(
-    api.diagnosticMekBoosts.compareMekDataSources,
-    diagnosticWallet ? { walletAddress: diagnosticWallet } : 'skip'
-  );
+  // Phase II: Removed boostDiagnostic query - goldMining table was deleted
 
   // Drag-to-scroll handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -1481,13 +1477,7 @@ Check console for full timeline.
                                   Reset Verify
                                 </button>
                               )}
-                              <button
-                                onClick={() => { setDiagnosticWallet(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-purple-900/50 text-purple-400 transition-colors"
-                                title="Diagnose boost sync issues - compare ownedMeks vs mekLevels"
-                              >
-                                🔍 Boost Sync
-                              </button>
+                              {/* Phase II: Removed Boost Sync button - goldMining table was deleted */}
                               <button
                                 onClick={() => { setViewingActivityLog(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors"
@@ -1701,186 +1691,7 @@ Check console for full timeline.
         />
       )}
 
-      {/* Boost Sync Diagnostic Modal */}
-      {diagnosticWallet && boostDiagnostic && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-purple-500/50 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-purple-500/30 bg-purple-900/20">
-              <div>
-                <h2 className="text-xl font-bold text-purple-400">Boost Sync Diagnostic</h2>
-                <p className="text-sm text-gray-400 mt-1">
-                  Comparing ownedMeks (UI data) vs mekLevels (source of truth)
-                </p>
-              </div>
-              <button
-                onClick={() => setDiagnosticWallet(null)}
-                className="text-gray-400 hover:text-white text-2xl font-bold px-3"
-              >
-                ×
-              </button>
-            </div>
-
-            {/* Summary Stats */}
-            {!('error' in boostDiagnostic) && (
-              <div className="p-4 bg-gray-800/50 border-b border-purple-500/20">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  <div className="bg-gray-900/50 p-3 rounded border border-gray-700">
-                    <div className="text-xs text-gray-500 uppercase">Total Meks</div>
-                    <div className="text-2xl font-bold text-white">{boostDiagnostic.totalMeks}</div>
-                  </div>
-                  <div className="bg-gray-900/50 p-3 rounded border border-gray-700">
-                    <div className="text-xs text-gray-500 uppercase">Upgraded Meks</div>
-                    <div className="text-2xl font-bold text-yellow-400">{boostDiagnostic.upgradedMeks}</div>
-                  </div>
-                  <div className="bg-gray-900/50 p-3 rounded border border-gray-700">
-                    <div className="text-xs text-gray-500 uppercase">Boosts in UI</div>
-                    <div className={`text-2xl font-bold ${
-                      boostDiagnostic.boostsShowingInUI === boostDiagnostic.upgradedMeks
-                        ? 'text-green-400'
-                        : 'text-red-400 animate-pulse'
-                    }`}>
-                      {boostDiagnostic.boostsShowingInUI}
-                    </div>
-                  </div>
-                  <div className="bg-gray-900/50 p-3 rounded border border-gray-700">
-                    <div className="text-xs text-gray-500 uppercase">Out of Sync</div>
-                    <div className={`text-2xl font-bold ${
-                      boostDiagnostic.outOfSync === 0 ? 'text-green-400' : 'text-red-400 animate-pulse'
-                    }`}>
-                      {boostDiagnostic.outOfSync}
-                    </div>
-                  </div>
-                  <div className="bg-gray-900/50 p-3 rounded border border-gray-700">
-                    <div className="text-xs text-gray-500 uppercase">mekLevels Records</div>
-                    <div className="text-2xl font-bold text-blue-400">{boostDiagnostic.mekLevelsRecords}</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Error Display */}
-            {'error' in boostDiagnostic && (
-              <div className="p-4 bg-red-900/20 border border-red-500/30 m-4 rounded">
-                <p className="text-red-400">{boostDiagnostic.error}</p>
-              </div>
-            )}
-
-            {/* Mek Comparison Table */}
-            {!('error' in boostDiagnostic) && (
-              <div className="flex-1 overflow-auto p-4">
-                <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-gray-800 border-b border-purple-500/30">
-                    <tr>
-                      <th className="text-left p-2 text-purple-400">Mek</th>
-                      <th className="text-center p-2 text-blue-400">Level</th>
-                      <th className="text-center p-2 text-green-400">goldPerHour<br/>(should be total)</th>
-                      <th className="text-center p-2 text-green-400">Base g/hr</th>
-                      <th className="text-center p-2 text-yellow-400">Boost g/hr</th>
-                      <th className="text-center p-2 text-purple-400">Calculated Boost</th>
-                      <th className="text-center p-2 text-red-400">UI Shows Boost?</th>
-                      <th className="text-center p-2 text-gray-400">In Sync?</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {boostDiagnostic.comparison.map((mek: any, index: number) => (
-                      <tr
-                        key={index}
-                        className={`border-b border-gray-800 ${
-                          !mek.inSync ? 'bg-red-900/20' : mek.hasBoost ? 'bg-yellow-900/10' : ''
-                        }`}
-                      >
-                        <td className="p-2 font-mono text-xs">
-                          <div className="font-bold text-white">{mek.assetName}</div>
-                          <div className="text-gray-500 text-[10px]">{mek.assetId}</div>
-                        </td>
-                        <td className="p-2 text-center">
-                          <div className="flex flex-col gap-1">
-                            <span className="text-xs text-gray-400">Owned: {mek.ownedMeks_currentLevel || 1}</span>
-                            <span className={`text-xs font-bold ${
-                              mek.mekLevels_currentLevel && mek.mekLevels_currentLevel > 1 ? 'text-yellow-400' : 'text-gray-500'
-                            }`}>
-                              Actual: {mek.mekLevels_currentLevel || 1}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="p-2 text-center">
-                          <div className="text-sm font-bold text-white">
-                            {mek.ownedMeks_goldPerHour?.toFixed(1) || 'N/A'}
-                          </div>
-                          <div className="text-[10px] text-gray-500">
-                            (effective: {mek.ownedMeks_effectiveGoldPerHour?.toFixed(1) || 'N/A'})
-                          </div>
-                        </td>
-                        <td className="p-2 text-center">
-                          <div className="flex flex-col gap-1">
-                            <span className="text-xs text-gray-400">
-                              {mek.ownedMeks_baseGoldPerHour?.toFixed(1) || 'N/A'}
-                            </span>
-                            <span className="text-xs font-bold text-blue-400">
-                              {mek.mekLevels_baseGoldPerHour?.toFixed(1) || 'N/A'}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="p-2 text-center">
-                          <div className="flex flex-col gap-1">
-                            <span className="text-xs text-gray-400">
-                              {mek.ownedMeks_levelBoostAmount?.toFixed(1) || '0.0'}
-                            </span>
-                            <span className="text-xs font-bold text-yellow-400">
-                              {mek.mekLevels_currentBoostAmount?.toFixed(1) || '0.0'}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="p-2 text-center">
-                          <span className={`text-sm font-bold ${
-                            mek.calculatedBoost > 0 ? 'text-green-400' : 'text-gray-500'
-                          }`}>
-                            {mek.calculatedBoost > 0 ? '+' : ''}{mek.calculatedBoost.toFixed(1)}
-                          </span>
-                        </td>
-                        <td className="p-2 text-center">
-                          {mek.boostShowsInUI ? (
-                            <span className="text-green-400 font-bold">✓ YES</span>
-                          ) : mek.hasBoost ? (
-                            <span className="text-red-400 font-bold animate-pulse">✗ NO</span>
-                          ) : (
-                            <span className="text-gray-500">N/A</span>
-                          )}
-                        </td>
-                        <td className="p-2 text-center">
-                          {mek.inSync ? (
-                            <span className="text-green-400">✓</span>
-                          ) : (
-                            <span className="text-red-400 font-bold">✗</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Footer Actions */}
-            <div className="p-4 border-t border-purple-500/30 bg-gray-800/50 flex justify-between items-center">
-              <div className="text-xs text-gray-400">
-                {!('error' in boostDiagnostic) && (
-                  <span>
-                    Wallet: <span className="font-mono text-purple-400">{boostDiagnostic.walletAddress.substring(0, 20)}...</span>
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={() => setDiagnosticWallet(null)}
-                className="px-4 py-2 bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-700 rounded transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Phase II: Removed Boost Sync Diagnostic Modal - goldMining table was deleted */}
       </div>
     </DatabaseProvider>
   );

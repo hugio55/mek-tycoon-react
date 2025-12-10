@@ -5,14 +5,13 @@ import { api } from "@/convex/_generated/api";
 import { useEffect, useMemo } from "react";
 import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
 
+// Phase II: Removed goldPerHour, baseGoldPerHour, levelBoostAmount from MekAsset
+// Gold income now comes from Job Slots, not individual Meks
 interface MekAsset {
   assetId: string;
   policyId: string;
   assetName: string;
   imageUrl?: string;
-  goldPerHour: number;
-  baseGoldPerHour?: number;
-  levelBoostAmount?: number;
   currentLevel?: number;
   rarityRank?: number;
   mekNumber: number;

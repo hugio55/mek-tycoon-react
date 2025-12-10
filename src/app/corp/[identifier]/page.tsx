@@ -9,12 +9,11 @@ import { getVariationInfoFromFullKey } from '@/lib/variationNameLookup';
 import Link from 'next/link';
 import { OverlayRenderer } from '@/components/OverlayRenderer';
 
+// Phase II: Removed goldPerHour, baseGoldPerHour - gold income comes from Job Slots
 interface WalletMek {
   assetId: string;
   assetName: string;
   level: number;
-  goldPerHour: number;
-  baseGoldPerHour?: number;
   imageUrl: string | null;
   sourceKey?: string;
   mekNumber?: number;
@@ -25,8 +24,7 @@ export default function CorporationPage() {
   const params = useParams();
   const identifier = params?.identifier as string;
   const [selectedMek, setSelectedMek] = useState<WalletMek | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [hasSynced, setHasSynced] = useState(false);
+  // Phase II: Removed isSyncing, hasSynced - goldMining sync deleted
 
   // Decode the identifier (in case it has URL encoding)
   const decodedIdentifier = decodeURIComponent(identifier);

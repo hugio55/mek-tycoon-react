@@ -17,12 +17,11 @@ interface LeaderboardEntry {
   isCurrentUser: boolean;
 }
 
+// Phase II: Removed goldPerHour, baseGoldPerHour - gold income comes from Job Slots
 interface WalletMek {
   assetId: string;
   assetName: string;
   level: number;
-  goldPerHour: number;
-  baseGoldPerHour?: number;
   imageUrl: string | null;
   sourceKey?: string;
   mekNumber?: number;
