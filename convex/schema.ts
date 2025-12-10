@@ -373,10 +373,11 @@ export default defineSchema({
     // Calculated totals (with buffs applied) - computed at runtime
     totalContractSlots: v.optional(v.number()),       // Base + buffs from talent tree, chips, etc.
     
-    // Gold generation tracking
-    goldPerHour: v.optional(v.number()), // Total gold per hour from all sources
-    lastGoldCollection: v.optional(v.number()), // Timestamp of last gold collection
-    pendingGold: v.optional(v.number()), // Gold accumulated but not collected
+    // Phase II: Passive gold fields DEPRECATED - kept for existing data compatibility
+    // Gold income now comes from Job Slots, not passive accumulation
+    goldPerHour: v.optional(v.number()), // DEPRECATED: was total gold per hour
+    lastGoldCollection: v.optional(v.number()), // DEPRECATED: was timestamp of last collection
+    pendingGold: v.optional(v.number()), // DEPRECATED: was accumulated uncollected gold
     employeeCount: v.optional(v.number()), // Number of Meks assigned as employees
 
     // User stats

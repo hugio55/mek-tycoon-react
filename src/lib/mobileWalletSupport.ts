@@ -13,7 +13,8 @@
 
 // Re-export from new modules for backwards compatibility
 export { MOBILE_WALLET_SCHEMES } from './mobileWalletConnection';
-export type { MobileWalletType } from './walletDetection';
+import type { MobileWalletType } from './walletDetection';
+export type { MobileWalletType };
 
 // WalletConnect project configuration
 // NOTE: You'll need to create a free project at https://cloud.walletconnect.com/

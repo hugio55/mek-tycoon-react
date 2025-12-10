@@ -49,9 +49,8 @@ export const createOrUpdate = mutation({
         security: 0,
       },
       gold: 100,        // Starting gold
-      goldPerHour: 50,  // Starting gold rate
-      lastGoldCollection: Date.now(),
-      pendingGold: 0,
+      // Phase II: goldPerHour, lastGoldCollection, pendingGold REMOVED
+      // Gold income now comes from Job Slots, not passive accumulation
       craftingSlots: 1, // Start with 1 slot
       // Base slot values
       baseContractSlots: 2,        // Can run 2 contracts at once to start
@@ -113,9 +112,8 @@ export const getOrCreateUser = mutation({
         security: 0,
       },
       gold: 100,        // Starting gold
-      goldPerHour: 50,  // Starting gold rate
-      lastGoldCollection: Date.now(),
-      pendingGold: 0,
+      // Phase II: goldPerHour, lastGoldCollection, pendingGold REMOVED
+      // Gold income now comes from Job Slots, not passive accumulation
       craftingSlots: 1, // Start with 1 slot
       // Base slot values
       baseContractSlots: 2,        // Can run 2 contracts at once to start

@@ -308,7 +308,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
         if (!result.success) {
           console.error('[🔨RESERVE] Failed to create reservation:', result.error);
-          setErrorMessage(result.message || result.error || 'Failed to reserve NFT');
+          setErrorMessage(result.error || 'Failed to reserve NFT');
           setState('error');
           return;
         }
@@ -363,9 +363,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
         if (result.success && result.reservation) {
           console.log('[📱MOBILE] ✓ Reservation created:', result.reservation._id);
           setReservationId(result.reservation._id as Id<"commemorativeNFTInventory">);
-        } else {
+        } else if (!result.success) {
           console.error('[📱MOBILE] Failed to create reservation:', result.error);
-          setErrorMessage(result.message || result.error || 'Failed to reserve NFT');
+          setErrorMessage(result.error || 'Failed to reserve NFT');
           setState('error');
         }
         setIsCreatingMobileReservation(false);

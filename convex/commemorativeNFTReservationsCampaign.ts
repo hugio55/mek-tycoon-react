@@ -102,14 +102,14 @@ export const createCampaignReservation = mutation({
 
     if (!campaign) {
       return {
-        success: false,
+        success: false as const,
         error: "Campaign not found",
       };
     }
 
     if (campaign.status !== "active") {
       return {
-        success: false,
+        success: false as const,
         error: `Campaign "${campaign.name}" is not currently active`,
       };
     }
@@ -117,7 +117,7 @@ export const createCampaignReservation = mutation({
     // Check if campaign has ended
     if (campaign.endDate && now > campaign.endDate) {
       return {
-        success: false,
+        success: false as const,
         error: `Campaign "${campaign.name}" has ended`,
       };
     }
@@ -125,7 +125,7 @@ export const createCampaignReservation = mutation({
     // Check if campaign hasn't started yet
     if (campaign.startDate && now < campaign.startDate) {
       return {
-        success: false,
+        success: false as const,
         error: `Campaign "${campaign.name}" hasn't started yet`,
       };
     }
@@ -146,7 +146,7 @@ export const createCampaignReservation = mutation({
       console.log('[CAMPAIGN RESERVATION] User already has active reservation in this campaign:', existingInventoryReservation.nftNumber);
 
       return {
-        success: true,
+        success: true as const,
         reservation: {
           _id: existingInventoryReservation._id,
           campaignId: args.campaignId,
@@ -161,7 +161,7 @@ export const createCampaignReservation = mutation({
           paymentWindowClosedAt: existingInventoryReservation.paymentWindowClosedAt,
         },
         nft: existingInventoryReservation,
-        isExisting: true,
+        isExisting: true as const,
       };
     }
 
@@ -182,7 +182,7 @@ export const createCampaignReservation = mutation({
     if (hasCompleted && !isTestingWhitelisted) {
       console.log('[CAMPAIGN RESERVATION] User already claimed NFT:', hasCompleted.nftNumber, hasCompleted.name);
       return {
-        success: false,
+        success: false as const,
         error: `You have already claimed an NFT from the "${campaign.name}" campaign`,
       };
     }
@@ -203,7 +203,7 @@ export const createCampaignReservation = mutation({
     if (!availableNFT) {
       console.log('[CAMPAIGN RESERVATION] No available NFTs in campaign:', campaign.name);
       return {
-        success: false,
+        success: false as const,
         error: `All NFTs have been claimed from the "${campaign.name}" campaign`,
       };
     }
@@ -246,7 +246,7 @@ export const createCampaignReservation = mutation({
     // PHASE 2: Return inventory ID as primary reservation ID
     // The inventory row IS the reservation now
     return {
-      success: true,
+      success: true as const,
       reservation: {
         _id: availableNFT._id, // Inventory ID is now the reservation ID
         campaignId: args.campaignId,
@@ -264,7 +264,7 @@ export const createCampaignReservation = mutation({
         name: campaign.name,
         description: campaign.description,
       },
-      isExisting: false,
+      isExisting: false as const,
     };
   },
 });
