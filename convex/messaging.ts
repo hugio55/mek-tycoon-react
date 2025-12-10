@@ -50,7 +50,7 @@ export const getConversations = query({
           ...conv,
           otherParticipant: {
             walletAddress: otherWallet,
-            corporationName: otherUser?.corporationName || "Unknown Corp",
+            companyName: otherUser?.corporationName || "Unknown Corp",
           },
           unreadCount: unreadCount?.count || 0,
         };
@@ -151,7 +151,8 @@ export const getAllCorporations = query({
       .filter((u) => u.stakeAddress && u.stakeAddress !== args.excludeWallet && u.corporationName)
       .map((u) => ({
         walletAddress: u.stakeAddress!,
-        corporationName: u.corporationName || "Unknown Corp",
+        companyName: u.corporationName || "Unknown Corp",
+        achievementPoints: u.achievementPoints || 0,
       }));
   },
 });
