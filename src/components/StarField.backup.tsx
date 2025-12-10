@@ -2,17 +2,10 @@
 
 import { useEffect, useRef } from 'react';
 
-// ============================================
-// INTERPOLATION TOGGLE
-// Set to false to revert to original behavior
-// ============================================
-const USE_INTERPOLATION = true;
-
 interface Star {
   x: number;
   y: number;
   z: number;
-  prevZ: number;
   age: number;
   size: number;
 }
@@ -36,8 +29,8 @@ const StarField = () => {
     };
     setCanvasSize();
 
-    const STAR_COUNT_LAYER1 = 120;
-    const STAR_COUNT_LAYER2 = 20;
+    const STAR_COUNT_LAYER1 = 120; // Reduced from 220 for better performance
+    const STAR_COUNT_LAYER2 = 20;  // Reduced from 40 for better performance
     const SPEED_LAYER1 = 1.5;
     const SPEED_LAYER2 = 30;
     const MAX_DEPTH = 1000;
@@ -49,35 +42,29 @@ const StarField = () => {
     let CANVAS_WIDTH = canvas.width;
     let CANVAS_HEIGHT = canvas.height;
 
-    // Initialize Layer 1 stars
     const starsLayer1: Star[] = [];
     for (let i = 0; i < STAR_COUNT_LAYER1; i++) {
-      const z = Math.random() * MAX_DEPTH;
       starsLayer1.push({
         x: (Math.random() - 0.5) * 2000,
         y: (Math.random() - 0.5) * 2000,
-        z,
-        prevZ: z,
+        z: Math.random() * MAX_DEPTH,
         age: 1000,
         size: 1 + Math.random() * 0.3
       });
     }
 
-    // Initialize Layer 2 stars
     const starsLayer2: Star[] = [];
     for (let i = 0; i < STAR_COUNT_LAYER2; i++) {
-      const z = Math.random() * MAX_DEPTH;
       starsLayer2.push({
         x: (Math.random() - 0.5) * 2000,
         y: (Math.random() - 0.5) * 2000,
-        z,
-        prevZ: z,
+        z: Math.random() * MAX_DEPTH,
         age: 1000,
         size: 2
       });
     }
 
-    // Pre-allocate RGBA strings to avoid garbage collection
+    // Pre-allocate RGBA strings to avoid garbage collection during animation
     const opacityCache = new Map<number, string>();
     const getRGBA = (opacity: number): string => {
       const key = Math.round(opacity * 100);
@@ -91,48 +78,50 @@ const StarField = () => {
 
     let lastFrameTime = 0;
     let accumulator = 0;
-    const FIXED_TIMESTEP = 16.67;
+    const FIXED_TIMESTEP = 16.67; // Fixed 60fps timestep for consistent physics
 
     const animate = (currentTime: number) => {
+      // Skip first frame to avoid huge deltaTime on initial render
       if (lastFrameTime === 0) {
         lastFrameTime = currentTime;
         animationId = requestAnimationFrame(animate);
         return;
       }
 
-      const deltaTime = Math.min(currentTime - lastFrameTime, 50);
+      const deltaTime = Math.min(currentTime - lastFrameTime, 50); // Cap at 50ms to prevent spiral of death
       lastFrameTime = currentTime;
       accumulator += deltaTime;
 
+      // Fixed timestep updates - stars move EXACTLY the same distance each update
+      // Limit to max 3 iterations to prevent performance spiral
       let iterations = 0;
       while (accumulator >= FIXED_TIMESTEP && iterations < 3) {
         updateStars();
         accumulator -= FIXED_TIMESTEP;
         iterations++;
       }
+      // If we hit limit, discard excess accumulator to prevent spiral
       if (iterations >= 3) {
         accumulator = 0;
       }
 
-      // Calculate interpolation factor (0.0 to 1.0)
-      const alpha = USE_INTERPOLATION ? accumulator / FIXED_TIMESTEP : 1;
-
+      // Render every frame for smooth 60fps display
       ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      renderStars(alpha);
+      renderStars();
       animationId = requestAnimationFrame(animate);
     };
 
+    // Fixed timestep physics update - consistent movement every time
     const updateStars = () => {
-      // Layer 1: Slow dots
+
+      // Layer 1: Slow dots - FIXED distance movement
       for (let i = 0; i < STAR_COUNT_LAYER1; i++) {
         const star = starsLayer1[i];
-        star.prevZ = star.z;
-        star.z -= SPEED_LAYER1;
+        star.z -= SPEED_LAYER1; // No multiplier - moves exact same distance every update
         star.age += FIXED_TIMESTEP;
 
         if (star.z <= MIN_DEPTH) {
           star.z = MAX_DEPTH;
-          star.prevZ = star.z; // Prevent backward interpolation on respawn
           star.x = (Math.random() - 0.5) * 2000;
           star.y = (Math.random() - 0.5) * 2000;
           star.age = 0;
@@ -140,16 +129,14 @@ const StarField = () => {
         }
       }
 
-      // Layer 2: Fast streaks
+      // Layer 2: Fast streaks - FIXED distance movement
       for (let i = 0; i < STAR_COUNT_LAYER2; i++) {
         const star = starsLayer2[i];
-        star.prevZ = star.z;
-        star.z -= SPEED_LAYER2;
+        star.z -= SPEED_LAYER2; // No multiplier - moves exact same distance every update
         star.age += FIXED_TIMESTEP;
 
         if (star.z <= MIN_DEPTH) {
           star.z = MAX_DEPTH;
-          star.prevZ = star.z; // Prevent backward interpolation on respawn
           star.x = (Math.random() - 0.5) * 2000;
           star.y = (Math.random() - 0.5) * 2000;
           star.age = 0;
@@ -157,17 +144,12 @@ const StarField = () => {
       }
     };
 
-    const renderStars = (alpha: number) => {
+    // Rendering function - draws current state every frame
+    const renderStars = () => {
       // Layer 1: Slow dots
       for (let i = 0; i < STAR_COUNT_LAYER1; i++) {
         const star = starsLayer1[i];
-
-        // Interpolate Z for smooth rendering
-        const renderZ = USE_INTERPOLATION
-          ? star.prevZ + (star.z - star.prevZ) * alpha
-          : star.z;
-
-        const scale = MAX_DEPTH / renderZ;
+        const scale = MAX_DEPTH / star.z;
         const screenX = star.x * scale + HALF_WIDTH;
         const screenY = star.y * scale + HALF_HEIGHT;
 
@@ -190,20 +172,16 @@ const StarField = () => {
       for (let i = 0; i < STAR_COUNT_LAYER2; i++) {
         const star = starsLayer2[i];
 
-        // Interpolate Z for smooth rendering
-        const renderZ = USE_INTERPOLATION
-          ? star.prevZ + (star.z - star.prevZ) * alpha
-          : star.z;
-
-        const scale = MAX_DEPTH / renderZ;
+        // Calculate current position
+        const scale = MAX_DEPTH / star.z;
         const screenX = star.x * scale + HALF_WIDTH;
         const screenY = star.y * scale + HALF_HEIGHT;
 
-        // Calculate trail position (one speed unit behind interpolated position)
-        const trailZ = renderZ + SPEED_LAYER2;
-        const trailScale = MAX_DEPTH / trailZ;
-        const trailX = star.x * trailScale + HALF_WIDTH;
-        const trailY = star.y * trailScale + HALF_HEIGHT;
+        // Calculate previous position for streak trail
+        const oldZ = star.z + SPEED_LAYER2;
+        const oldScale = MAX_DEPTH / oldZ;
+        const oldScreenX = star.x * oldScale + HALF_WIDTH;
+        const oldScreenY = star.y * oldScale + HALF_HEIGHT;
 
         if (screenX < -50 || screenX > CANVAS_WIDTH + 50 ||
             screenY < -50 || screenY > CANVAS_HEIGHT + 50) {
@@ -217,7 +195,7 @@ const StarField = () => {
         ctx.strokeStyle = getRGBA(opacity);
         ctx.lineWidth = 6;
         ctx.beginPath();
-        ctx.moveTo(trailX, trailY);
+        ctx.moveTo(oldScreenX, oldScreenY);
         ctx.lineTo(screenX, screenY);
         ctx.stroke();
       }
@@ -246,8 +224,8 @@ const StarField = () => {
       className="fixed inset-0 pointer-events-none"
       style={{
         zIndex: 1,
-        willChange: 'auto',
-        transform: 'translateZ(0)'
+        willChange: 'auto', // Canvas is already GPU-accelerated, don't force layer
+        transform: 'translateZ(0)'  // Force GPU compositor layer
       }}
     />
   );
