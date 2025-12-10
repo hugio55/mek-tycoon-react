@@ -585,22 +585,58 @@ export default function TradeFloorPage() {
               <div
                 className="text-center py-12 rounded-2xl relative overflow-hidden"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
                   backdropFilter: 'blur(12px)',
                   WebkitBackdropFilter: 'blur(12px)',
                   border: '1px solid rgba(255,255,255,0.1)',
                 }}
               >
-                <div
-                  className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                  style={{
-                    backgroundImage: "url('/random-images/honey-png-big.webp')",
-                    backgroundSize: '50%',
-                    backgroundPosition: 'center',
-                  }}
-                />
                 <div className="relative z-10">
-                  <div className="text-6xl mb-4">🤝</div>
+                  {/* Space Age Handshake Icon */}
+                  <div className="mb-4 flex justify-center">
+                    <svg
+                      width="64"
+                      height="64"
+                      viewBox="0 0 80 80"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      style={{
+                        filter: 'drop-shadow(0 0 15px rgba(34, 211, 238, 0.4))',
+                      }}
+                    >
+                      <circle cx="40" cy="40" r="30" stroke="url(#offerGradient)" strokeWidth="1.5" opacity="0.3"/>
+                      <path
+                        d="M22 42c0-1 0.5-2 1.5-2.5l6-2.5c1-0.4 2-0.2 2.8 0.5l4 3.5c0.8 0.7 1.2 1.8 1 2.8l-0.5 2"
+                        stroke="url(#offerGradient)"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        fill="none"
+                      />
+                      <path
+                        d="M58 42c0-1-0.5-2-1.5-2.5l-6-2.5c-1-0.4-2-0.2-2.8 0.5l-4 3.5c-0.8 0.7-1.2 1.8-1 2.8l0.5 2"
+                        stroke="url(#offerGradient)"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        fill="none"
+                      />
+                      <path
+                        d="M35 41l2.5 2c1 0.8 2.5 0.8 3.5 0l2.5-2"
+                        stroke="url(#offerGradient)"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        fill="none"
+                      />
+                      <path d="M40 28v-4" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
+                      <path d="M48 31l2-3" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+                      <path d="M32 31l-2-3" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+                      <defs>
+                        <linearGradient id="offerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#22d3ee"/>
+                          <stop offset="100%" stopColor="#06b6d4"/>
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
                   <h3
                     className="text-xl font-semibold text-white mb-2"
                     style={{ fontFamily: 'Orbitron, sans-serif' }}

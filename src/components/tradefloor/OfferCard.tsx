@@ -1,6 +1,7 @@
 "use client";
 
 import { Id } from "@/convex/_generated/dataModel";
+import { getMediaUrl } from "@/lib/media-url";
 
 interface OfferCardProps {
   offer: {
@@ -42,7 +43,7 @@ export default function OfferCard({ offer, onWithdraw }: OfferCardProps) {
   // Clean source key for image
   const getMekImagePath = (sourceKey?: string) => {
     const cleanKey = (sourceKey || "").replace(/-[A-Z]$/i, "").toLowerCase();
-    return cleanKey ? `/mek-images/150px/${cleanKey}.webp` : "/mek-images/placeholder.webp";
+    return cleanKey ? getMediaUrl(`/mek-images/150px/${cleanKey}.webp`) : getMediaUrl("/mek-images/placeholder.webp");
   };
 
   const timeAgo = getTimeAgo(offer.createdAt);

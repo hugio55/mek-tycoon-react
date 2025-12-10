@@ -155,7 +155,7 @@ export default function InventoryPage() {
     const cleanKey = sourceKey
       .replace(/-[A-Z]$/, '')
       .toLowerCase();
-    return `/mek-images/150px/${cleanKey}.webp`;
+    return getMediaUrl(`/mek-images/150px/${cleanKey}.webp`);
   };
 
   // Helper to get essence image path

@@ -6,6 +6,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useRouter } from "next/navigation";
+import { getMediaUrl } from "@/lib/media-url";
 
 interface ViewOffersLightboxProps {
   listing: {
@@ -78,7 +79,7 @@ export default function ViewOffersLightbox({
   // Clean source key for image
   const getMekImagePath = (sourceKey?: string) => {
     const cleanKey = (sourceKey || "").replace(/-[A-Z]$/i, "").toLowerCase();
-    return cleanKey ? `/mek-images/150px/${cleanKey}.webp` : "/mek-images/placeholder.webp";
+    return cleanKey ? getMediaUrl(`/mek-images/150px/${cleanKey}.webp`) : getMediaUrl("/mek-images/placeholder.webp");
   };
 
   const listedMekImage = getMekImagePath(listing.listedMekSourceKey);

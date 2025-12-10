@@ -32,9 +32,9 @@ The database schema is designed with the following principles:
 #### **Primary Indexes** (Most Used)
 ```typescript
 // Meks table indexes
-.index("by_owner", ["owner"])        // Most common query pattern
-.index("by_asset_id", ["assetId"])   // Single mek lookups
-.index("by_power", ["powerScore"])   // Leaderboards
+.index("by_owner_stake", ["ownerStakeAddress"])  // Primary owner lookup (Phase II)
+.index("by_asset_id", ["assetId"])               // Single mek lookups
+.index("by_power", ["powerScore"])               // Leaderboards
 ```
 
 #### **Secondary Indexes** (Specific Use Cases)
@@ -47,7 +47,7 @@ The database schema is designed with the following principles:
 ### 3. Field Organization
 
 #### **Essential Fields** (Always Fetched)
-- `_id`, `assetId`, `assetName`, `owner`
+- `_id`, `assetId`, `assetName`, `ownerStakeAddress`
 - `headVariation`, `bodyVariation`
 - `level`, `rarityRank`, `powerScore`
 

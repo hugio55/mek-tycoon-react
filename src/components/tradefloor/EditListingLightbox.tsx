@@ -6,6 +6,7 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
+import { getMediaUrl } from "@/lib/media-url";
 
 interface DesiredVariation {
   variationName: string;
@@ -113,7 +114,7 @@ export default function EditListingLightbox({
   // Clean source key for image
   const getMekImagePath = (sourceKey?: string) => {
     const cleanKey = (sourceKey || "").replace(/-[A-Z]$/i, "").toLowerCase();
-    return cleanKey ? `/mek-images/150px/${cleanKey}.webp` : "/mek-images/placeholder.webp";
+    return cleanKey ? getMediaUrl(`/mek-images/150px/${cleanKey}.webp`) : getMediaUrl("/mek-images/placeholder.webp");
   };
 
   const hasChanges = JSON.stringify(selectedVariations) !== JSON.stringify(listing.desiredVariations);

@@ -874,8 +874,10 @@ export const clearMeksOwnership = mutation({
     let cleared = 0;
     for (const mek of ownedMeks) {
       await ctx.db.patch(mek._id, {
-        owner: "",
+        owner: undefined,
         ownerStakeAddress: undefined,
+        // Note: accumulatedGoldForCorp NOT reset here - that's only done in cascade delete
+        // This function is for re-sync preparation, not user deletion
       });
       cleared++;
     }

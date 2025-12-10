@@ -1,6 +1,7 @@
 "use client";
 
 import { Id } from "@/convex/_generated/dataModel";
+import { getMediaUrl } from "@/lib/media-url";
 
 interface DesiredVariation {
   variationName: string;
@@ -61,8 +62,8 @@ export default function TradeListingCard({
     .toLowerCase();
 
   const imagePath = cleanSourceKey
-    ? `/mek-images/150px/${cleanSourceKey}.webp`
-    : "/mek-images/placeholder.webp";
+    ? getMediaUrl(`/mek-images/150px/${cleanSourceKey}.webp`)
+    : getMediaUrl("/mek-images/placeholder.webp");
 
   const timeAgo = getTimeAgo(listing.createdAt);
 

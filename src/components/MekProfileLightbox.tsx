@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import "@/styles/global-design-system.css";
+import { getMediaUrl } from "@/lib/media-url";
 import PowerSwitch from "@/components/controls/PowerSwitch";
 import CloseButton from "@/components/controls/CloseButton";
 import LevelProgress from "@/components/LevelProgress";
@@ -5645,7 +5646,7 @@ export default function MekProfileLightbox({
                             }}
                           >
                             <img
-                              src={`/mek-images/150px/${mockMekSourceKey.toLowerCase()}.webp`}
+                              src={getMediaUrl(`/mek-images/150px/${mockMekSourceKey.toLowerCase()}.webp`)}
                               alt="Mek"
                               className="w-full h-full object-contain"
                               onError={(e) => {
@@ -5822,7 +5823,7 @@ export default function MekProfileLightbox({
                               }}
                             >
                               <img
-                                src={`/mek-images/150px/${mockMekSourceKey.toLowerCase()}.webp`}
+                                src={getMediaUrl(`/mek-images/150px/${mockMekSourceKey.toLowerCase()}.webp`)}
                                 alt="Mek"
                                 className="w-full h-full object-contain"
                                 onError={(e) => {
