@@ -744,15 +744,28 @@ export const cascadeDeleteUser = mutation({
     }
     deletedCounts.mekTalentTrees = mekTalentTrees.length;
 
-    // === DELETE FROM TABLES WITH walletAddress ===
+    // === CLEAR OWNERSHIP FROM TABLES WITH walletAddress ===
 
-    // meks (IMPORTANT: This removes Mek ownership - they'll become unowned)
+    // meks - CLEAR OWNERSHIP, do NOT delete the MEK record!
+    // The meks table has exactly 4000 NFT records that should NEVER be deleted.
+    // MEKs have lifetime stats (accumulatedGoldAllTime) that must be preserved.
+    // Only ownership fields are cleared; the MEK becomes unowned and can be re-verified by new owner.
     const meks = await ctx.db.query("meks")
       .withIndex("by_owner", (q: any) => q.eq("owner", walletAddress)).collect();
     for (const record of meks) {
-      await ctx.db.delete(record._id);
+      await ctx.db.patch(record._id, {
+        // Clear ownership
+        owner: undefined,
+        ownerStakeAddress: undefined,
+        // Reset per-corporation stat (this resets on transfer/sale)
+        accumulatedGoldForCorp: 0,
+        // PRESERVE accumulatedGoldAllTime - this is the lifetime stat that NEVER resets
+        // Clear slot assignment (they'll need to be re-assigned by new owner)
+        isSlotted: false,
+        slotNumber: undefined,
+      });
     }
-    deletedCounts.meks = meks.length;
+    deletedCounts.meksCleared = meks.length; // Renamed to clarify we're clearing, not deleting
 
     // mekLevels
     const mekLevels = await ctx.db.query("mekLevels")

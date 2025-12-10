@@ -239,6 +239,55 @@ users: {
 
 ---
 
+## 🚨 CRITICAL: MEKS TABLE PROTECTION 🚨
+**The `meks` table contains exactly 4000 NFT records - NEVER DELETE THEM**
+
+### The Golden Rule
+**MEK records should NEVER be deleted from the database.** Only ownership fields should be modified.
+
+### Why This Matters
+Each MEK has lifetime statistics that must persist across:
+- User deletions
+- MEK transfers/sales between corporations
+- Corporation name changes
+- Any other user-related operations
+
+### Key Fields on Each MEK
+
+| Field | Behavior | Description |
+|-------|----------|-------------|
+| `accumulatedGoldAllTime` | **NEVER RESET** | Lifetime gold earned by this MEK across ALL owners |
+| `accumulatedGoldForCorp` | Resets on transfer/sale | Gold earned for current corporation only |
+| `owner` / `ownerStakeAddress` | Cleared on user delete | Current ownership |
+| `isSlotted` / `slotNumber` | Cleared on user delete | Job slot assignment |
+
+### When Deleting a User (Cascade Delete)
+```typescript
+// ✅ CORRECT: Clear ownership, preserve lifetime stats
+await ctx.db.patch(mek._id, {
+  owner: undefined,
+  ownerStakeAddress: undefined,
+  accumulatedGoldForCorp: 0,  // Reset per-corp stat
+  isSlotted: false,
+  slotNumber: undefined,
+  // accumulatedGoldAllTime is PRESERVED - never touch it
+});
+
+// ❌ WRONG: Never delete MEK records
+await ctx.db.delete(mek._id);  // NEVER DO THIS
+```
+
+### When Transferring/Selling a MEK
+- Clear old owner's ownership fields
+- Set new owner's stake address
+- Reset `accumulatedGoldForCorp` to 0
+- **PRESERVE `accumulatedGoldAllTime`** - it keeps climbing
+
+### Emergency Restoration Only
+The `restoreFromTroutBackup` function in `convex/restoreMeksFromBackup.ts` is protected with an unlock code. This is the ONLY way to bulk-modify the meks table, and it requires explicit confirmation.
+
+---
+
 ## 🚨 CRITICAL: DUAL DATABASE SYSTEM 🚨
 **Trout = Development | Sturgeon = Production**
 
