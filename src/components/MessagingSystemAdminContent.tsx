@@ -278,11 +278,20 @@ export default function MessagingSystemAdminContent({
   }, [messageTarget]);
 
   // Auto-scroll to bottom when new messages arrive (instant - directly set scrollTop)
+  // Use requestAnimationFrame to ensure layout is complete before scrolling
   useLayoutEffect(() => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    const container = messagesContainerRef.current;
+    if (container) {
+      // Double RAF ensures layout is fully calculated
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+          }
+        });
+      });
     }
-  }, [messages]);
+  }, [messages, adminSelectedConversationId]);
 
   // Mark conversation as read when opened
   useEffect(() => {
