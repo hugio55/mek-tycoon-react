@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { action, mutation, query } from "./_generated/server";
 import { api } from "./_generated/api";
+import { checkProfanity } from "./profanityFilter";
 
 // =============================================================================
 // PHASE II: User Authentication (Stake-Address-Only)
@@ -759,6 +760,12 @@ export const setCompanyName = mutation({
       return { success: false, error: "Corporation name must be 30 characters or less" };
     }
 
+    // Profanity check
+    const profanityResult = checkProfanity(trimmedName);
+    if (!profanityResult.isClean) {
+      return { success: false, error: profanityResult.reason || "Name contains inappropriate language" };
+    }
+
     // Find user by stake address
     let user = await ctx.db
       .query("users")
@@ -915,6 +922,12 @@ export const createCorporationWithVerification = action({
     }
     if (trimmedName.length > 30) {
       return { success: false, error: "Corporation name must be 30 characters or less" };
+    }
+
+    // Profanity check
+    const profanityResult = checkProfanity(trimmedName);
+    if (!profanityResult.isClean) {
+      return { success: false, error: profanityResult.reason || "Name contains inappropriate language" };
     }
 
     // STEP 2: Check if name is available (call the mutation internally)

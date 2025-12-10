@@ -120,6 +120,7 @@ import type * as notifications from "../notifications.js";
 import type * as overlays from "../overlays.js";
 import type * as phaseCards from "../phaseCards.js";
 import type * as phaseILightbox from "../phaseILightbox.js";
+import type * as profanityFilter from "../profanityFilter.js";
 import type * as publicCorporation from "../publicCorporation.js";
 import type * as restoreMeksFromBackup from "../restoreMeksFromBackup.js";
 import type * as saves from "../saves.js";
@@ -275,6 +276,7 @@ declare const fullApi: ApiFromModules<{
   overlays: typeof overlays;
   phaseCards: typeof phaseCards;
   phaseILightbox: typeof phaseILightbox;
+  profanityFilter: typeof profanityFilter;
   publicCorporation: typeof publicCorporation;
   restoreMeksFromBackup: typeof restoreMeksFromBackup;
   saves: typeof saves;

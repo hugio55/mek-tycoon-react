@@ -6,6 +6,7 @@ import { useAction, useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import HolographicButton from './ui/IndustrialButtons/HolographicButton';
 import GlowingBorderInput from './controls/GlowingBorderInput';
+import { checkProfanity } from '@/lib/profanityFilter';
 
 interface CompanyNameModalProps {
   isOpen: boolean;
@@ -127,6 +128,13 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
 
     if (trimmedName.length > 30) {
       setError('Corporation name must be 30 characters or less');
+      return;
+    }
+
+    // Profanity check
+    const profanityResult = checkProfanity(trimmedName);
+    if (!profanityResult.isClean) {
+      setError(profanityResult.reason || 'Name contains inappropriate language');
       return;
     }
 
