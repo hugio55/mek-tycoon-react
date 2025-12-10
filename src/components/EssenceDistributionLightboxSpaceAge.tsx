@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import EssenceDonutChart from "@/components/essence-donut-chart";
 import { useEssence } from "@/contexts/EssenceContext";
 import { clampEssenceToCap, isEssenceFull, ESSENCE_CAP_EPSILON } from "../../convex/lib/essenceCalculations";
+import { getMediaUrl } from "@/lib/media-url";
 
 interface EssenceDistributionLightboxSpaceAgeProps {
   isOpen: boolean;
@@ -999,7 +1000,7 @@ export default function EssenceDistributionLightboxSpaceAge({ isOpen, onClose }:
                             }}
                           >
                             <img
-                              src="/essence-images/bumble0000.png"
+                              src={getMediaUrl("/essence-images/bumble0000.png")}
                               alt="Essence placeholder"
                               className="relative z-10 w-full h-full object-contain p-4 opacity-30"
                             />

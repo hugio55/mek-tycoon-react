@@ -479,20 +479,6 @@ export default function TradeFloorPage() {
         {/* My Listings Tab */}
         {stakeAddress && activeTab === "my-listings" && (
           <div>
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h2
-                  className="text-xl font-semibold text-white"
-                  style={{ fontFamily: 'Saira, sans-serif' }}
-                >
-                  My Active Listings
-                </h2>
-                <p className="text-sm" style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
-                  {activeListingCount !== undefined ? `${activeListingCount}/5 listings used` : "Loading..."}
-                </p>
-              </div>
-            </div>
-
             {myListings === undefined ? (
               <div
                 className="text-center py-12"
@@ -582,18 +568,6 @@ export default function TradeFloorPage() {
         {/* My Offers Tab */}
         {stakeAddress && activeTab === "my-offers" && (
           <div>
-            <div className="mb-6">
-              <h2
-                className="text-xl font-semibold text-white"
-                style={{ fontFamily: 'Saira, sans-serif' }}
-              >
-                My Pending Offers
-              </h2>
-              <p className="text-sm" style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
-                Offers you've made on other players' listings
-              </p>
-            </div>
-
             {myOffers === undefined ? (
               <div
                 className="text-center py-12"

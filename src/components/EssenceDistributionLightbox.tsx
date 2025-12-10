@@ -9,6 +9,7 @@ import "@/styles/global-design-system.css";
 import { useEssence } from "@/contexts/EssenceContext";
 import { clampEssenceToCap, isEssenceFull, ESSENCE_CAP_EPSILON } from "../../convex/lib/essenceCalculations";
 import EssenceDistributionLightboxSpaceAge from "@/components/EssenceDistributionLightboxSpaceAge";
+import { getMediaUrl } from "@/lib/media-url";
 
 // Custom styles for range sliders
 const sliderStyles = `
@@ -1439,7 +1440,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                           }}>
                             <div className="absolute inset-0 mek-overlay-glass opacity-50 pointer-events-none"></div>
                             <img
-                              src="/essence-images/bumble0000.png"
+                              src={getMediaUrl("/essence-images/bumble0000.png")}
                               alt="Essence placeholder"
                               className="relative z-10 w-full h-full object-contain opacity-30"
                               style={{ maxHeight: '200px' }}

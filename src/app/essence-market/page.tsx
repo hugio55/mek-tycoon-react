@@ -838,12 +838,12 @@ export default function EssenceMarketPage() {
 
       if (variation?.sourceKey) {
         // Use sourceKey format: "aztec-ak1.png" or "rust-am1.png"
-        return `/essence-images/named-bottles-1k/${normalizedName.toLowerCase()}-${variation.sourceKey.toLowerCase()}.png`;
+        return getMediaUrl(`/essence-images/named-bottles-1k/${normalizedName.toLowerCase()}-${variation.sourceKey.toLowerCase()}.png`);
       }
     }
 
     // Default: use sanitized name for all other variations
-    return `/essence-images/named-bottles-1k/${sanitizeVariationName(variationName)}.png`;
+    return getMediaUrl(`/essence-images/named-bottles-1k/${sanitizeVariationName(variationName)}.png`);
   };
 
   // Calculate dynamic font size for essence label based on name length
@@ -5874,10 +5874,10 @@ export default function EssenceMarketPage() {
                             <div className="flex justify-center mb-3">
                               <div className="w-24 h-24 relative">
                                 <img
-                                  src={`/essence-images/named-bottles-1k/${(listing.itemVariation || 'default').toLowerCase().replace(/\s+/g, '-')}.png`}
+                                  src={getMediaUrl(`/essence-images/named-bottles-1k/${(listing.itemVariation || 'default').toLowerCase().replace(/\s+/g, '-')}.png`)}
                                   alt={listing.itemVariation}
                                   className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]"
-                                  onError={(e) => { e.currentTarget.src = '/essence-images/named-bottles-1k/default.png'; }}
+                                  onError={(e) => { e.currentTarget.src = getMediaUrl('/essence-images/named-bottles-1k/default.png'); }}
                                 />
                               </div>
                             </div>
@@ -6125,11 +6125,11 @@ export default function EssenceMarketPage() {
                         </div>
                         <div className="w-32 h-32 relative">
                           <img
-                            src={`/essence-images/named-bottles-1k/${successListingData.variation.toLowerCase().replace(/\s+/g, '-')}.png`}
+                            src={getMediaUrl(`/essence-images/named-bottles-1k/${successListingData.variation.toLowerCase().replace(/\s+/g, '-')}.png`)}
                             alt={successListingData.variation}
                             className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]"
                             onError={(e) => {
-                              e.currentTarget.src = '/essence-images/named-bottles-1k/default.png';
+                              e.currentTarget.src = getMediaUrl('/essence-images/named-bottles-1k/default.png');
                             }}
                           />
                         </div>

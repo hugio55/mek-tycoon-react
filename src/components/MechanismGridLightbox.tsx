@@ -319,13 +319,13 @@ export default function MechanismGridLightbox({
                 } else if (mek.sourceKey) {
                   // Construct image path directly from sourceKey
                   const cleanKey = mek.sourceKey.replace(/-[A-Z]$/, '').toLowerCase();
-                  imagePath = `/mek-images/150px/${cleanKey}.webp`;
+                  imagePath = getMediaUrl(`/mek-images/150px/${cleanKey}.webp`);
                 } else if (mek.imageUrl) {
                   // Fallback to imageUrl if available
                   imagePath = mek.imageUrl;
                 } else {
                   // Last resort: placeholder
-                  imagePath = '/mek-images/150px/000-000-000.webp';
+                  imagePath = getMediaUrl('/mek-images/150px/000-000-000.webp');
                 }
 
                 // Log first few meks to debug image path generation
