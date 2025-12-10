@@ -10,9 +10,9 @@ export function isPublicRoute(pathname: string): boolean {
 }
 
 export function isGameRoute(pathname: string): boolean {
-  // Game routes: hub, profile, crafting, admin, etc.
+  // Game routes: home, profile, crafting, admin, etc.
   const gameRoutes = [
-    '/hub',
+    '/home',
     '/profile',
     '/crafting',
     '/admin-master-data',
@@ -48,10 +48,10 @@ export function getRedirectForHostname(hostname: string, pathname: string): stri
     }
   }
 
-  // If on game domain (play.mektycoon.com or mektycoon.com), redirect / to /hub
+  // If on game domain (play.mektycoon.com or mektycoon.com), redirect / to /home
   if (hostname.includes('play.') || hostname.includes('mektycoon.com')) {
     if (pathname === '/' || pathname === '/mek-rate-logging') {
-      return '/hub';
+      return '/home';
     }
   }
 

@@ -779,10 +779,10 @@ export default function XPAllocationPage() {
 
         {/* Back Button */}
         <button
-          onClick={() => window.location.href = '/hub'}
+          onClick={() => window.location.href = '/home'}
           className="mt-6 px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 rounded border border-gray-700 hover:border-gray-600 transition-all transform hover:translate-x-[-2px]"
         >
-          ← Back to Hub
+          ← Back to Home
         </button>
       </div>
 

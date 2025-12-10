@@ -44,6 +44,7 @@ import type * as commemorative from "../commemorative.js";
 import type * as commemorativeCampaignMigration from "../commemorativeCampaignMigration.js";
 import type * as commemorativeCampaigns from "../commemorativeCampaigns.js";
 import type * as commemorativeNFTClaims from "../commemorativeNFTClaims.js";
+import type * as commemorativeNFTInventorySetup from "../commemorativeNFTInventorySetup.js";
 import type * as commemorativeNFTReservations from "../commemorativeNFTReservations.js";
 import type * as commemorativeNFTReservationsCampaign from "../commemorativeNFTReservationsCampaign.js";
 import type * as commemorativePaymentTracking from "../commemorativePaymentTracking.js";
@@ -199,6 +200,7 @@ declare const fullApi: ApiFromModules<{
   commemorativeCampaignMigration: typeof commemorativeCampaignMigration;
   commemorativeCampaigns: typeof commemorativeCampaigns;
   commemorativeNFTClaims: typeof commemorativeNFTClaims;
+  commemorativeNFTInventorySetup: typeof commemorativeNFTInventorySetup;
   commemorativeNFTReservations: typeof commemorativeNFTReservations;
   commemorativeNFTReservationsCampaign: typeof commemorativeNFTReservationsCampaign;
   commemorativePaymentTracking: typeof commemorativePaymentTracking;

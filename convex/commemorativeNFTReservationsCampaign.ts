@@ -8,6 +8,56 @@ const TESTING_MULTI_MINT_WHITELIST = [
   "stake1u8zevs34vf4wrsz6xs64zuztdk4agzvpg6c8zv4plesp9ughgq076", // Corporation testing account
 ];
 
+// ============================================================================
+// RETURN TYPE VALIDATORS
+// ============================================================================
+
+// Reservation object shape (returned on success)
+const reservationValidator = v.object({
+  _id: v.id("commemorativeNFTInventory"),
+  campaignId: v.id("commemorativeCampaigns"),
+  nftInventoryId: v.id("commemorativeNFTInventory"),
+  nftUid: v.string(),
+  nftNumber: v.number(),
+  reservedBy: v.string(),
+  reservedAt: v.number(),
+  expiresAt: v.number(),
+  status: v.literal("active"),
+  paymentWindowOpenedAt: v.optional(v.number()),
+  paymentWindowClosedAt: v.optional(v.number()),
+  legacyReservationId: v.optional(v.id("commemorativeNFTReservations")),
+});
+
+// Campaign summary (returned on new reservation)
+const campaignSummaryValidator = v.object({
+  name: v.string(),
+  description: v.optional(v.string()),
+});
+
+// Return type: discriminated union for createCampaignReservation
+const createReservationReturnValidator = v.union(
+  // Failure case
+  v.object({
+    success: v.literal(false),
+    error: v.string(),
+  }),
+  // Success case (existing reservation)
+  v.object({
+    success: v.literal(true),
+    reservation: reservationValidator,
+    nft: v.any(), // Full inventory document
+    isExisting: v.literal(true),
+  }),
+  // Success case (new reservation)
+  v.object({
+    success: v.literal(true),
+    reservation: reservationValidator,
+    nft: v.any(), // Full inventory document
+    campaign: campaignSummaryValidator,
+    isExisting: v.literal(false),
+  })
+);
+
 /**
  * Campaign-Aware Commemorative NFT Reservation System
  *
@@ -41,6 +91,7 @@ export const createCampaignReservation = mutation({
     campaignId: v.id("commemorativeCampaigns"),
     walletAddress: v.string(),
   },
+  returns: createReservationReturnValidator,
   handler: async (ctx, args) => {
     const now = Date.now();
 
