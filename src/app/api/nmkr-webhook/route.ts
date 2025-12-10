@@ -262,23 +262,11 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
           }
         }
 
-        // Check if buyer is whitelisted (informational - blockchain tx already succeeded)
-        try {
-          const eligibility = await getConvex().query(
-            api.nftEligibility.checkClaimEligibility,
-            { walletAddress: ReceiverStakeAddress }
-          );
-
-          if (!eligibility.eligible) {
-            console.error('[🛡️WEBHOOK-SECURITY] ❌ Purchase from non-whitelisted address:', ReceiverStakeAddress);
-            console.error('[🛡️WEBHOOK-SECURITY] Transaction hash:', txHash);
-            console.error('[🛡️WEBHOOK-SECURITY] This requires manual review - blockchain transaction already completed');
-          } else {
-            console.log('[🛡️WEBHOOK-SECURITY] ✓ Whitelisted buyer confirmed:', ReceiverStakeAddress);
-          }
-        } catch (eligibilityError) {
-          console.error('[🛡️WEBHOOK-SECURITY] Error checking eligibility:', eligibilityError);
-        }
+        // NOTE: Global eligibility check removed (December 2025)
+        // The legacy checkClaimEligibility function was part of the global eligibility system
+        // that has been replaced by per-campaign eligibility (checkCampaignEligibility)
+        // Since we don't know which campaign this sale is from at this point,
+        // we skip the eligibility check here - the campaign-based system handles this at purchase time
 
         // Normalize wallet address for consistent matching
         const normalizedWallet = ReceiverStakeAddress.toLowerCase().trim();

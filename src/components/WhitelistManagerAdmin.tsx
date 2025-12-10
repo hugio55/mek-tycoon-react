@@ -15,9 +15,10 @@ import { Id } from '@/convex/_generated/dataModel';
 interface WhitelistManagerAdminProps {
   client: any;
   mutationsEnabled: boolean;
+  onToggleMutations: (enabled: boolean) => void;
 }
 
-function WhitelistManagerAdminContent({ client, mutationsEnabled }: WhitelistManagerAdminProps) {
+function WhitelistManagerAdminContent({ client, mutationsEnabled, onToggleMutations }: WhitelistManagerAdminProps) {
   // canMutate helper - production mutations require explicit enablement
   const canMutate = () => mutationsEnabled;
 
@@ -241,21 +242,33 @@ function WhitelistManagerAdminContent({ client, mutationsEnabled }: WhitelistMan
             : 'bg-emerald-900/20 border border-emerald-500/30'
         }`}
       >
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className={`w-3 h-3 rounded-full ${mutationsEnabled ? 'bg-red-500' : 'bg-emerald-500'}`} />
-            <div className={`absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-75 ${mutationsEnabled ? 'bg-red-500' : 'bg-emerald-500'}`} />
-          </div>
-          <div>
-            <div className={`font-bold ${mutationsEnabled ? 'text-red-400' : 'text-emerald-400'}`}>
-              Whitelist Manager - Production Data
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className={`w-3 h-3 rounded-full ${mutationsEnabled ? 'bg-red-500' : 'bg-emerald-500'}`} />
+              <div className={`absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-75 ${mutationsEnabled ? 'bg-red-500' : 'bg-emerald-500'}`} />
             </div>
-            <div className="text-sm text-gray-400">
-              {mutationsEnabled
-                ? '⚠️ EDITING ENABLED - Changes affect live users!'
-                : 'Read-only mode - Viewing live production data'}
+            <div>
+              <div className={`font-bold ${mutationsEnabled ? 'text-red-400' : 'text-emerald-400'}`}>
+                Whitelist Manager - Production Data
+              </div>
+              <div className="text-sm text-gray-400">
+                {mutationsEnabled
+                  ? '⚠️ EDITING ENABLED - Changes affect live users!'
+                  : 'Read-only mode - Viewing live production data'}
+              </div>
             </div>
           </div>
+          <button
+            onClick={() => onToggleMutations(!mutationsEnabled)}
+            className={`px-4 py-2 rounded font-bold transition-all ${
+              mutationsEnabled
+                ? 'bg-gray-600 hover:bg-gray-700 text-white'
+                : 'bg-yellow-500 hover:bg-yellow-600 text-black'
+            }`}
+          >
+            {mutationsEnabled ? 'Disable Editing' : 'Enable Editing'}
+          </button>
         </div>
       </div>
 
@@ -708,9 +721,9 @@ function WhitelistManagerAdminContent({ client, mutationsEnabled }: WhitelistMan
   );
 }
 
-// Export component - receives client and mutationsEnabled from parent (NFTAdminTabs)
-export default function WhitelistManagerAdmin({ client, mutationsEnabled }: WhitelistManagerAdminProps) {
-  return <WhitelistManagerAdminContent client={client} mutationsEnabled={mutationsEnabled} />;
+// Export component - receives client, mutationsEnabled, and toggle callback from parent (NFTAdminTabs)
+export default function WhitelistManagerAdmin({ client, mutationsEnabled, onToggleMutations }: WhitelistManagerAdminProps) {
+  return <WhitelistManagerAdminContent client={client} mutationsEnabled={mutationsEnabled} onToggleMutations={onToggleMutations} />;
 }
 
 // Create/Edit Whitelist Modal Component
