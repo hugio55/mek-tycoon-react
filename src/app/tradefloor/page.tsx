@@ -135,38 +135,92 @@ export default function TradeFloorPage() {
 
   return (
     <div className="min-h-screen text-white relative overflow-hidden">
-      {/* Header - Liquid Glass */}
+      {/* Header - Liquid Glass with Create Listing Button */}
       <div
-        className="relative"
+        className="relative mt-4"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          background: 'transparent',
         }}
       >
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1
-            className="text-3xl font-bold tracking-wider uppercase"
-            style={{
-              fontFamily: 'Orbitron, sans-serif',
-              background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              textShadow: '0 0 40px rgba(34, 211, 238, 0.5)',
-            }}
-          >
-            Trade Floor
-          </h1>
-          <p
-            className="mt-1"
-            style={{
-              fontFamily: 'Play, sans-serif',
-              color: 'rgba(255,255,255,0.6)',
-            }}
-          >
-            List your Meks for trade and find others looking for variations you have
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1
+                className="text-3xl font-bold tracking-wider uppercase"
+                style={{
+                  fontFamily: 'Orbitron, sans-serif',
+                  background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  textShadow: '0 0 40px rgba(34, 211, 238, 0.5)',
+                }}
+              >
+                Trade Floor
+              </h1>
+              <p
+                className="mt-1"
+                style={{
+                  fontFamily: 'Play, sans-serif',
+                  color: 'rgba(255,255,255,0.6)',
+                }}
+              >
+                List your Meks for trade and find others looking for variations you have
+              </p>
+            </div>
+
+            {/* Create Listing Button - Right aligned in header */}
+            <button
+              onClick={() => stakeAddress && setShowCreateListing(true)}
+              disabled={!stakeAddress}
+              className="px-5 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 group overflow-hidden relative"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                background: stakeAddress
+                  ? 'linear-gradient(135deg, #22d3ee, #06b6d4)'
+                  : 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                color: stakeAddress ? 'black' : 'rgba(255,255,255,0.4)',
+                boxShadow: stakeAddress
+                  ? '0 0 30px rgba(34, 211, 238, 0.4)'
+                  : 'none',
+                border: stakeAddress ? 'none' : '1px solid rgba(255,255,255,0.2)',
+                cursor: stakeAddress ? 'pointer' : 'not-allowed',
+              }}
+              onMouseEnter={(e) => {
+                if (stakeAddress) {
+                  e.currentTarget.style.transform = 'scale(1.02)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              {/* Sliding particles animation for logged in state */}
+              {stakeAddress && (
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+                    animation: 'slideParticles 2s linear infinite',
+                  }}
+                />
+              )}
+              <span className="text-xl relative z-10">+</span>
+              <span className="relative z-10">Create Listing</span>
+              {stakeAddress && activeListingCount !== undefined && (
+                <span
+                  className="px-2 py-0.5 rounded-full text-xs relative z-10"
+                  style={{ background: 'rgba(0,0,0,0.2)' }}
+                >
+                  {activeListingCount}/5
+                </span>
+              )}
+              {!stakeAddress && (
+                <span className="text-xs relative z-10" style={{ opacity: 0.6 }}>
+                  (Login)
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -516,60 +570,6 @@ export default function TradeFloorPage() {
           </div>
         )}
       </div>
-
-      {/* Floating Create Listing Button - ALWAYS VISIBLE */}
-      <button
-        onClick={() => stakeAddress && setShowCreateListing(true)}
-        disabled={!stakeAddress}
-        className="fixed bottom-6 right-6 z-50 px-6 py-4 rounded-2xl font-semibold transition-all flex items-center gap-3 group overflow-hidden"
-        style={{
-          fontFamily: 'Inter, sans-serif',
-          background: stakeAddress
-            ? 'linear-gradient(135deg, #22d3ee, #06b6d4)'
-            : 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-          color: stakeAddress ? 'black' : 'rgba(255,255,255,0.4)',
-          boxShadow: stakeAddress
-            ? '0 0 50px rgba(34, 211, 238, 0.5), 0 10px 40px rgba(0,0,0,0.4)'
-            : '0 0 20px rgba(255,255,255,0.1)',
-          border: stakeAddress ? 'none' : '1px solid rgba(255,255,255,0.2)',
-          cursor: stakeAddress ? 'pointer' : 'not-allowed',
-          transform: stakeAddress ? 'scale(1)' : 'scale(0.95)',
-        }}
-        onMouseEnter={(e) => {
-          if (stakeAddress) {
-            e.currentTarget.style.transform = 'scale(1.05)';
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = stakeAddress ? 'scale(1)' : 'scale(0.95)';
-        }}
-      >
-        {/* Sliding particles animation for logged in state */}
-        {stakeAddress && (
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
-              animation: 'slideParticles 2s linear infinite',
-            }}
-          />
-        )}
-        <span className="text-2xl relative z-10">+</span>
-        <span className="relative z-10">Create Listing</span>
-        {stakeAddress && activeListingCount !== undefined && (
-          <span
-            className="px-2 py-0.5 rounded-full text-xs relative z-10"
-            style={{ background: 'rgba(0,0,0,0.2)' }}
-          >
-            {activeListingCount}/5
-          </span>
-        )}
-        {!stakeAddress && (
-          <span className="text-xs relative z-10" style={{ opacity: 0.6 }}>
-            (Login Required)
-          </span>
-        )}
-      </button>
 
       {/* Sliding particles animation keyframe */}
       <style>{`
