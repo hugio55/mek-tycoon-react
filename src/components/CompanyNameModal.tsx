@@ -263,7 +263,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
               {mode === 'initial' ? 'Name Your Corporation' : 'Edit Corporation Name'}
             </h2>
             {mode === 'initial' && (
-              <p className="text-white/60 text-sm font-light tracking-wide leading-relaxed">
+              <p className="text-white/60 text-sm sm:text-base font-light tracking-wide leading-relaxed">
                 Choose a name for your mining corporation. This will be displayed on the leaderboard.
               </p>
             )}
@@ -325,7 +325,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
             </div>
 
             {/* Rules */}
-            <div className="text-xs text-white/40 space-y-1 font-light tracking-wide">
+            <div className="text-sm text-white/40 space-y-1 font-light tracking-wide">
               <p>Letters, numbers, and spaces allowed</p>
               <p>2-30 characters required</p>
             </div>
