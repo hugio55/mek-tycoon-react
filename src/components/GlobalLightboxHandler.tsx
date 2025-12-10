@@ -143,7 +143,7 @@ export default function GlobalLightboxHandler() {
       {/* Mek Grid Lightbox */}
       {showMekGrid && userData && (
         <MechanismGridLightbox
-          ownedMeks={(userData.ownedMeks || []) as unknown as MekData[]}
+          ownedMeks={(userData.ownedMeks || []) as any}
           currentGold={userData.gold || 0}
           walletAddress={walletAddress}
           getMekImageUrl={(mekNumber: number, size?: '150px' | '500px' | '1000px') => {
@@ -158,7 +158,8 @@ export default function GlobalLightboxHandler() {
           upgradingMeks={new Set()}
           onClose={() => setShowMekGrid(false)}
           onMekClick={(mek) => {
-            setSelectedMek(mek);
+            // Cast MekAsset to MekData (compatible shapes)
+            setSelectedMek(mek as unknown as MekData);
             setShowMekGrid(false); // Close grid when selecting a Mek
           }}
         />
