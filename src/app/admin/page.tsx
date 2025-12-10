@@ -7619,7 +7619,7 @@ function NFTAdminTabs({ client }: { client: any }) {
 
       {/* Tab Content */}
       {nftSubTab === 'commemorative' && <CommemorativeToken1Admin />}
-      {nftSubTab === 'whitelist-manager' && <WhitelistManagerAdmin />}
+      {nftSubTab === 'whitelist-manager' && <WhitelistManagerAdmin client={client} mutationsEnabled={mutationsEnabled} />}
       {nftSubTab === 'json-generator' && <NMKRJSONGenerator />}
       {nftSubTab === 'campaigns' && (
         <div className="space-y-4">

@@ -469,7 +469,7 @@ export default function CreateListingLightbox({
                         });
                       }}
                       onMouseLeave={() => setHoveredVariation(null)}
-                      className="px-3 py-2 text-sm rounded text-left transition-all hover:scale-[1.02]"
+                      className="px-3 py-2 text-sm rounded text-left transition-all hover:brightness-125"
                       style={{
                         background: colors.bg,
                         border: `1px solid ${colors.border}`,
@@ -480,18 +480,16 @@ export default function CreateListingLightbox({
                       }}
                     >
                       <div className="flex justify-between items-center">
-                        <span>
-                          <span style={{ opacity: 0.6, marginRight: '4px' }}>{v.type[0].toUpperCase()}</span>
-                          {v.name}
-                        </span>
+                        <span>{v.name}</span>
                         <span
-                          className="text-xs px-1.5 py-0.5 rounded"
+                          className="text-xs px-1.5 py-0.5 rounded flex items-center gap-1"
                           style={{
                             background: 'rgba(0,0,0,0.2)',
                             opacity: 0.7,
                           }}
                           title={`Rank ${v.rank} of 291`}
                         >
+                          <span style={{ opacity: 0.7 }}>{v.type[0].toUpperCase()}</span>
                           #{v.rank}
                         </span>
                       </div>

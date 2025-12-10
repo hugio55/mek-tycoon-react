@@ -1,21 +1,25 @@
 'use client';
 
 /**
- * WhitelistManagerAdmin - SIMPLIFIED FOR SINGLE DATABASE
+ * WhitelistManagerAdmin - PRODUCTION DATABASE ONLY
  *
- * Previously used ProductionDatabaseContext for Sturgeon access.
- * Now uses the main DatabaseContext which always points to Sturgeon.
+ * Always reads from and writes to Sturgeon (production) database.
+ * Accepts client prop from parent (NFTAdminTabs passes sturgeonClient).
  */
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
-import { useDatabaseContext, DatabaseProvider } from '@/contexts/DatabaseContext';
 
-function WhitelistManagerAdminContent() {
-  // Get database context (always Sturgeon now - single database mode)
-  const { client, canMutate, productionMutationsEnabled: mutationsEnabled } = useDatabaseContext();
+interface WhitelistManagerAdminProps {
+  client: any;
+  mutationsEnabled: boolean;
+}
+
+function WhitelistManagerAdminContent({ client, mutationsEnabled }: WhitelistManagerAdminProps) {
+  // canMutate helper - production mutations require explicit enablement
+  const canMutate = () => mutationsEnabled;
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
@@ -678,13 +682,9 @@ function WhitelistManagerAdminContent() {
   );
 }
 
-// Export component wrapped with DatabaseProvider
-export default function WhitelistManagerAdmin() {
-  return (
-    <DatabaseProvider>
-      <WhitelistManagerAdminContent />
-    </DatabaseProvider>
-  );
+// Export component - receives client and mutationsEnabled from parent (NFTAdminTabs)
+export default function WhitelistManagerAdmin({ client, mutationsEnabled }: WhitelistManagerAdminProps) {
+  return <WhitelistManagerAdminContent client={client} mutationsEnabled={mutationsEnabled} />;
 }
 
 // Create/Edit Whitelist Modal Component

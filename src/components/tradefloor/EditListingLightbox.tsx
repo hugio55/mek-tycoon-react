@@ -299,7 +299,7 @@ export default function EditListingLightbox({
                     key={v.id}
                     onClick={() => handleSelectVariation(v)}
                     disabled={selectedVariations.length >= 6}
-                    className="px-3 py-2 text-sm rounded text-left transition-all hover:scale-[1.02] whitespace-nowrap overflow-hidden"
+                    className="px-3 py-2 text-sm rounded text-left transition-all hover:brightness-125 whitespace-nowrap overflow-hidden"
                     style={{
                       fontFamily: 'Play, sans-serif',
                       background: colors.bg,
@@ -310,15 +310,13 @@ export default function EditListingLightbox({
                     }}
                   >
                     <div className="flex justify-between items-center">
-                      <span className="truncate">
-                        <span style={{ opacity: 0.6, marginRight: '4px' }}>{v.type[0].toUpperCase()}</span>
-                        {v.name}
-                      </span>
+                      <span className="truncate">{v.name}</span>
                       <span
-                        className="text-xs px-1.5 py-0.5 rounded ml-2 flex-shrink-0"
+                        className="text-xs px-1.5 py-0.5 rounded ml-2 flex-shrink-0 flex items-center gap-1"
                         style={{ background: 'rgba(0,0,0,0.2)', opacity: 0.7 }}
                         title={`Rank ${v.rank} of 291`}
                       >
+                        <span style={{ opacity: 0.7 }}>{v.type[0].toUpperCase()}</span>
                         #{v.rank}
                       </span>
                     </div>
