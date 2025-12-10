@@ -12,6 +12,7 @@
 
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { checkProfanity } from "./profanityFilter";
 
 /**
  * Get user data for wallet connection and display
@@ -186,6 +187,19 @@ export const setMekName = mutation({
       return { success: false, error: "Name must be 20 characters or less" };
     }
 
+    // Only allow letters, numbers, and spaces (blocks Unicode homoglyphs)
+    if (trimmedName.length > 0 && !/^[a-zA-Z0-9\s]+$/.test(trimmedName)) {
+      return { success: false, error: "Name can only contain letters, numbers, and spaces" };
+    }
+
+    // Profanity check (if name is not empty)
+    if (trimmedName.length > 0) {
+      const profanityResult = checkProfanity(trimmedName);
+      if (!profanityResult.isClean) {
+        return { success: false, error: profanityResult.reason || "Name contains inappropriate language" };
+      }
+    }
+
     // Find the Mek
     const mek = await ctx.db
       .query("meks")
@@ -202,7 +216,6 @@ export const setMekName = mutation({
     }
 
     // Check if name is taken (if not empty)
-    // Note: customName field may need to be added to schema
     if (trimmedName.length > 0) {
       const allMeks = await ctx.db.query("meks").collect();
       const existingWithName = allMeks.find(
@@ -215,7 +228,6 @@ export const setMekName = mutation({
     }
 
     // Update the Mek's name
-    // Note: customName field may need to be added to schema
     await ctx.db.patch(mek._id, {
       customName: trimmedName || null,
     } as any);
@@ -227,6 +239,7 @@ export const setMekName = mutation({
 /**
  * Check if a Mek name is available
  * Replaces: goldMining.checkMekNameAvailability
+ * Includes profanity filtering
  */
 export const checkMekNameAvailability = query({
   args: {
@@ -244,8 +257,18 @@ export const checkMekNameAvailability = query({
       return { available: false, reason: "Name must be 20 characters or less" };
     }
 
+    // Only allow letters, numbers, and spaces (blocks Unicode homoglyphs)
+    if (!/^[a-zA-Z0-9\s]+$/.test(trimmedName)) {
+      return { available: false, reason: "Name can only contain letters, numbers, and spaces" };
+    }
+
+    // Profanity check
+    const profanityResult = checkProfanity(trimmedName);
+    if (!profanityResult.isClean) {
+      return { available: false, reason: profanityResult.reason || "Name contains inappropriate language" };
+    }
+
     // Check if name is taken
-    // Note: customName field may need to be added to schema
     const allMeks = await ctx.db.query("meks").collect();
     const existingMeks = allMeks.filter((m: any) => m.customName === trimmedName);
 

@@ -17,6 +17,7 @@
 
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { checkProfanity } from "./profanityFilter";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MEK NAME FUNCTIONS
@@ -24,6 +25,7 @@ import { mutation, query } from "./_generated/server";
 
 /**
  * Mek name validation helper
+ * Includes profanity filtering
  */
 function validateMekName(name: string): { valid: boolean; error?: string } {
   if (!name || typeof name !== 'string') {
@@ -40,10 +42,16 @@ function validateMekName(name: string): { valid: boolean; error?: string } {
     return { valid: false, error: "Mek name must be 20 characters or less" };
   }
 
-  // Allow letters, numbers, spaces, and basic punctuation (-, ', .)
-  const allowedCharsRegex = /^[a-zA-Z0-9\s\-'.]+$/;
+  // Only allow letters, numbers, and spaces (blocks Unicode homoglyphs)
+  const allowedCharsRegex = /^[a-zA-Z0-9\s]+$/;
   if (!allowedCharsRegex.test(trimmed)) {
-    return { valid: false, error: "Mek name can only contain letters, numbers, spaces, hyphens, apostrophes, and periods" };
+    return { valid: false, error: "Mek name can only contain letters, numbers, and spaces" };
+  }
+
+  // Profanity check
+  const profanityResult = checkProfanity(trimmed);
+  if (!profanityResult.isClean) {
+    return { valid: false, error: profanityResult.reason || "Name contains inappropriate language" };
   }
 
   return { valid: true };

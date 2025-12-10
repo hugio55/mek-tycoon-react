@@ -10,6 +10,7 @@ import { getMediaUrl } from "@/lib/media-url";
 interface CreateListingLightboxProps {
   stakeAddress: string;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 type Step = "select-mek" | "select-variations";
@@ -43,6 +44,7 @@ const variationTypeColors: Record<string, { bg: string; border: string; text: st
 export default function CreateListingLightbox({
   stakeAddress,
   onClose,
+  onSuccess,
 }: CreateListingLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<Step>("select-mek");
@@ -121,6 +123,10 @@ export default function CreateListingLightbox({
         mekAssetId: selectedMek.assetId,
         desiredVariations: selectedVariations,
       });
+      // Call onSuccess if provided (to navigate to My Listings tab)
+      if (onSuccess) {
+        onSuccess();
+      }
       onClose();
     } catch (error: any) {
       alert(error.message || "Failed to create listing");
