@@ -424,7 +424,13 @@ export default function BetaSignupLightbox({
       </div>
 
       {/* Name Reservation Option */}
-      <div className="p-4 rounded-xl bg-white/5 border border-white/10 mb-6">
+      <div
+        className="p-4 rounded-xl border border-blue-500/30 mb-6"
+        style={{
+          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%)',
+          boxShadow: '0 0 20px rgba(59, 130, 246, 0.15), 0 0 40px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255,255,255,0.05)',
+        }}
+      >
         <p className="text-sm sm:text-base text-white/70 mb-3">
           {veteranInfo?.hasReservedName ? (
             <>
@@ -443,7 +449,7 @@ export default function BetaSignupLightbox({
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div>
         <button
           onClick={handleStartNameReservation}
           className="w-full py-3 sm:py-4 text-base font-semibold tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl hover:from-yellow-300 hover:to-yellow-400 transition-all duration-300 touch-manipulation shadow-lg shadow-yellow-500/20 active:scale-[0.98]"
@@ -454,8 +460,8 @@ export default function BetaSignupLightbox({
 
         <button
           onClick={handleSkipNameReservation}
-          className="w-full py-3 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
-          style={{ minHeight: '44px', WebkitTapHighlightColor: 'transparent' }}
+          className="w-full py-2 mt-2 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           Skip for now
         </button>
@@ -778,28 +784,8 @@ export default function BetaSignupLightbox({
             WebkitBackdropFilter: 'blur(30px)',
           }}
         >
-          {/* Close Button */}
-          <button
-            onClick={handleClose}
-            className="absolute top-4 right-4 text-white/50 hover:text-white/80 transition-colors z-10 touch-manipulation"
-            style={{
-              minWidth: '44px',
-              minHeight: '44px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-            aria-label="Close"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-
           {/* Content */}
-          <div className="p-6 sm:p-8 md:p-10">
+          <div className="p-6 sm:p-8">
             {renderContent()}
           </div>
         </div>
