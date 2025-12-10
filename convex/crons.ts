@@ -16,16 +16,8 @@ const crons = cronJobs();
 //   api.goldMiningSnapshot.triggerSnapshot
 // );
 
-// PAUSED (Dec 1, 2025): No active users during maintenance - backups not needed
-// Re-enable when site is live again
-// Create automatic gold backups every 12 hours
-// crons.interval(
-//   "create gold backups",
-//   {
-//     hours: 12
-//   },
-//   api.goldBackups.triggerManualDailyBackup
-// );
+// PHASE II: goldBackups table DELETED - Phase I backup system obsolete
+// Gold now comes from Job Slots, not individual Mek rarity
 
 // PAUSED (Dec 1, 2025): Leaderboard not visible during maintenance
 // Re-enable when site is live again
@@ -147,26 +139,8 @@ crons.interval(
 //   internal.monitoring.cleanupOldSummaries
 // );
 
-// PAUSED (Dec 7, 2025): snapshotCleanup.ts disabled for TypeScript fixes
-// Clean up old ownership snapshots (mekOwnershipHistory) older than 30 days (runs daily at 4 AM UTC)
-// crons.daily(
-//   "cleanup old ownership snapshots",
-//   {
-//     hourUTC: 4,
-//     minuteUTC: 0
-//   },
-//   internal.snapshotCleanup.cleanupOldSnapshots
-// );
-
-// Clean up old snapshot logs older than 7 days (runs daily at 4:15 AM UTC)
-// crons.daily(
-//   "cleanup old snapshot logs",
-//   {
-//     hourUTC: 4,
-//     minuteUTC: 15
-//   },
-//   internal.snapshotCleanup.cleanupOldSnapshotLogs
-// );
+// PHASE II: mekOwnershipHistory table DELETED - Phase I gold snapshot system obsolete
+// The old cron jobs for cleanup are no longer needed
 
 // ============================================
 // PHASE II: Transaction cleanup crons REMOVED

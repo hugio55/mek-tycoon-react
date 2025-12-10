@@ -30,7 +30,11 @@ const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryVie
 type SubMenu = 'wallet-list' | 'snapshot-history' | 'snapshot-health' | 'variation-spread' | 'beta-signups';
 type SnapshotHealthTab = 'health' | 'logging';
 
-function WalletManagementAdminContent() {
+interface WalletManagementAdminProps {
+  onMessagePlayer?: (walletAddress: string, corporationName: string) => void;
+}
+
+function WalletManagementAdminContent({ onMessagePlayer }: WalletManagementAdminProps) {
   // Get database context with environment detection
   const {
     selectedDatabase,
@@ -1498,6 +1502,20 @@ Check console for full timeline.
                               >
                                 View Levels
                               </button>
+                              <div className="border-t border-gray-700 my-1"></div>
+                              <button
+                                onClick={() => {
+                                  if (onMessagePlayer) {
+                                    onMessagePlayer(wallet.walletAddress, wallet.corporationName || wallet.companyName || 'Unknown');
+                                  }
+                                  setHoveredDropdown(null);
+                                  setDropdownPosition(null);
+                                }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-purple-900/50 text-purple-300 transition-colors"
+                                title="Open messaging system to chat with this player"
+                              >
+                                💬 Message Player
+                              </button>
                             </div>,
                             document.body
                             );
@@ -1686,10 +1704,10 @@ Check console for full timeline.
   );
 }
 
-export default function WalletManagementAdmin() {
+export default function WalletManagementAdmin({ onMessagePlayer }: WalletManagementAdminProps) {
   return (
     <DatabaseProvider>
-      <WalletManagementAdminContent />
+      <WalletManagementAdminContent onMessagePlayer={onMessagePlayer} />
     </DatabaseProvider>
   );
 }

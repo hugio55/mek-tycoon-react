@@ -601,7 +601,7 @@ export const previewTestWallets = query({
 
       const totalRecords =
         craftingSessions.length + inventory.length + transactions.length +
-        achievements.length + activeBuffs.length + userStatsCache.length +
+        achievements.length + activeBuffs.length +
         contracts.length + chipInstances.length + marketListings.length +
         mekTalentTrees.length + meks.length +
         mekLevels.length + leaderboardCache.length + 1; // +1 for user record
@@ -617,7 +617,6 @@ export const previewTestWallets = query({
           transactions: transactions.length,
           achievements: achievements.length,
           activeBuffs: activeBuffs.length,
-          userStatsCache: userStatsCache.length,
           contracts: contracts.length,
           chipInstances: chipInstances.length,
           marketListings: marketListings.length,
@@ -711,13 +710,7 @@ export const cascadeDeleteUser = mutation({
     }
     deletedCounts.activeBuffs = activeBuffs.length;
 
-    // userStatsCache
-    const userStatsCache = await ctx.db.query("userStatsCache")
-      .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
-    for (const record of userStatsCache) {
-      await ctx.db.delete(record._id);
-    }
-    deletedCounts.userStatsCache = userStatsCache.length;
+    // PHASE II: userStatsCache table deleted - goldPerHour is obsolete
 
     // contracts
     const contracts = await ctx.db.query("contracts")
@@ -778,30 +771,7 @@ export const cascadeDeleteUser = mutation({
     deletedCounts.leaderboardCache = leaderboardCache.length;
 
     // NOTE: discordConnections table removed (Discord bot integration removed)
-
-    // mekOwnershipHistory
-    const mekOwnershipHistory = await ctx.db.query("mekOwnershipHistory")
-      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
-    for (const record of mekOwnershipHistory) {
-      await ctx.db.delete(record._id);
-    }
-    deletedCounts.mekOwnershipHistory = mekOwnershipHistory.length;
-
-    // goldCheckpoints
-    const goldCheckpoints = await ctx.db.query("goldCheckpoints")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
-    for (const record of goldCheckpoints) {
-      await ctx.db.delete(record._id);
-    }
-    deletedCounts.goldCheckpoints = goldCheckpoints.length;
-
-    // goldSnapshots
-    const goldSnapshots = await ctx.db.query("goldSnapshots")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
-    for (const record of goldSnapshots) {
-      await ctx.db.delete(record._id);
-    }
-    deletedCounts.goldSnapshots = goldSnapshots.length;
+    // PHASE II: mekOwnershipHistory, goldCheckpoints, goldSnapshots tables deleted - Phase I gold system obsolete
 
     // syncChecksums
     const syncChecksums = await ctx.db.query("syncChecksums")
@@ -914,13 +884,7 @@ export const cascadeDeleteUser = mutation({
     }
     deletedCounts.corpTradePairs = allCorpTradePairs.length;
 
-    // goldBackupUserData
-    const goldBackupUserData = await ctx.db.query("goldBackupUserData")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
-    for (const record of goldBackupUserData) {
-      await ctx.db.delete(record._id);
-    }
-    deletedCounts.goldBackupUserData = goldBackupUserData.length;
+    // PHASE II: goldBackupUserData table deleted - Phase I backup system obsolete
 
     // levelUpgrades
     const levelUpgrades = await ctx.db.query("levelUpgrades")
@@ -1295,9 +1259,7 @@ export const bulkDeleteTestWallets = mutation({
         .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
       for (const r of activeBuffs) { await ctx.db.delete(r._id); recordsDeleted++; }
 
-      const userStatsCache = await ctx.db.query("userStatsCache")
-        .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
-      for (const r of userStatsCache) { await ctx.db.delete(r._id); recordsDeleted++; }
+      // PHASE II: userStatsCache table deleted
 
       const contracts = await ctx.db.query("contracts")
         .withIndex("by_user", (q: any) => q.eq("userId", userId)).collect();
@@ -1329,18 +1291,7 @@ export const bulkDeleteTestWallets = mutation({
       for (const r of leaderboardCache) { await ctx.db.delete(r._id); recordsDeleted++; }
 
       // NOTE: discordConnections table removed (Discord bot integration removed)
-
-      const mekOwnershipHistory = await ctx.db.query("mekOwnershipHistory")
-        .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
-      for (const r of mekOwnershipHistory) { await ctx.db.delete(r._id); recordsDeleted++; }
-
-      const goldCheckpoints = await ctx.db.query("goldCheckpoints")
-        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
-      for (const r of goldCheckpoints) { await ctx.db.delete(r._id); recordsDeleted++; }
-
-      const goldSnapshots = await ctx.db.query("goldSnapshots")
-        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
-      for (const r of goldSnapshots) { await ctx.db.delete(r._id); recordsDeleted++; }
+      // PHASE II: mekOwnershipHistory, goldCheckpoints, goldSnapshots tables deleted
 
       const syncChecksums = await ctx.db.query("syncChecksums")
         .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
@@ -1420,15 +1371,7 @@ export const searchWalletTraces = query({
       .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
     if (leaderboardCache.length > 0) traces.leaderboardCache = leaderboardCache.length;
 
-    // Search goldSnapshots table
-    const goldSnapshots = await ctx.db.query("goldSnapshots")
-      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
-    if (goldSnapshots.length > 0) traces.goldSnapshots = goldSnapshots.length;
-
-    // Search goldCheckpoints table
-    const goldCheckpoints = await ctx.db.query("goldCheckpoints")
-      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
-    if (goldCheckpoints.length > 0) traces.goldCheckpoints = goldCheckpoints.length;
+    // PHASE II: goldSnapshots and goldCheckpoints tables deleted
 
     // Search activityLogs table
     const activityLogs = await ctx.db.query("activityLogs")
