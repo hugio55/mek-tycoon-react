@@ -1,15 +1,56 @@
 'use client';
 
-import { useQuery } from 'convex/react';
+import { useState, useEffect } from 'react';
 import { api } from '@/convex/_generated/api';
+import { useDatabaseContext } from '@/contexts/DatabaseContext';
+
+interface BetaSignup {
+  _id: string;
+  stakeAddress: string;
+  submittedAt: number;
+  ipAddress?: string | null;
+}
 
 export default function BetaSignupsViewer() {
-  const signups = useQuery(api.betaSignups.getAllBetaSignups);
+  const { client, selectedDatabase } = useDatabaseContext();
+  const [signups, setSignups] = useState<BetaSignup[] | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!signups) {
+  // Fetch signups from the selected database
+  useEffect(() => {
+    if (!client) return;
+
+    let cancelled = false;
+
+    const fetchSignups = async () => {
+      try {
+        const data = await client.query(api.betaSignups.getAllBetaSignups, {});
+        if (!cancelled) {
+          setSignups(data || []);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('[BetaSignupsViewer] Error fetching signups:', error);
+        if (!cancelled) {
+          setSignups([]);
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchSignups();
+    const interval = setInterval(fetchSignups, 5000); // Refresh every 5 seconds
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [client, selectedDatabase]);
+
+  if (loading || !signups) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-white/70 text-lg">Loading beta signups...</div>
+        <div className="text-white/70 text-lg">Loading beta signups from {selectedDatabase}...</div>
       </div>
     );
   }
@@ -28,7 +69,7 @@ export default function BetaSignupsViewer() {
           <div className="flex gap-3">
             <button
               onClick={() => {
-                const addresses = signups.map((s: any) => s.stakeAddress).join('\n');
+                const addresses = signups.map((s) => s.stakeAddress).join('\n');
                 navigator.clipboard.writeText(addresses);
                 alert('All stake addresses copied to clipboard!');
               }}
@@ -40,7 +81,7 @@ export default function BetaSignupsViewer() {
               onClick={() => {
                 const csv = [
                   'Stake Address,Submitted At',
-                  ...signups.map((s: any) => `${s.stakeAddress},${formatDate(s.submittedAt)}`)
+                  ...signups.map((s) => `${s.stakeAddress},${formatDate(s.submittedAt)}`)
                 ].join('\n');
                 const blob = new Blob([csv], { type: 'text/csv' });
                 const url = URL.createObjectURL(blob);
@@ -80,7 +121,7 @@ export default function BetaSignupsViewer() {
                 </td>
               </tr>
             ) : (
-              signups.map((signup: any, index: number) => (
+              signups.map((signup, index) => (
                 <tr
                   key={signup._id}
                   className="border-b border-white/5 hover:bg-white/5 transition-colors"

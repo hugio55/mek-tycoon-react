@@ -47,11 +47,6 @@ const variationTypeColors = {
   trait: { bg: "rgba(168, 85, 247, 0.15)", border: "rgba(168, 85, 247, 0.3)", text: "#c084fc" },
 };
 
-const variationTypeLabels = {
-  head: "H",
-  body: "B",
-  trait: "T",
-};
 
 export default function TradeListingCard({
   listing,
@@ -70,6 +65,12 @@ export default function TradeListingCard({
   const [showMobileLightbox, setShowMobileLightbox] = useState(false);
   const [showImageLightbox, setShowImageLightbox] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [hoveredVariation, setHoveredVariation] = useState<{
+    variation: DesiredVariation;
+    fullVariation: typeof COMPLETE_VARIATION_RARITY[0] | null;
+    x: number;
+    y: number;
+  } | null>(null);
 
   // Analytics: Record view mutation
   const recordView = useMutation(api.tradeFloor.recordListingView);
@@ -256,10 +257,14 @@ export default function TradeListingCard({
         <div className="flex flex-wrap gap-1.5">
           {listing.desiredVariations.map((v, i) => {
             const colors = variationTypeColors[v.variationType];
+            // Look up full variation data for tooltip
+            const fullVariation = COMPLETE_VARIATION_RARITY.find(
+              (fv) => fv.name.toLowerCase() === v.variationName.toLowerCase() && fv.type === v.variationType
+            );
             return (
               <span
                 key={i}
-                className="px-2 py-1 text-xs rounded"
+                className="px-2 py-1 text-xs rounded cursor-pointer transition-all hover:brightness-125"
                 style={{
                   background: colors.bg,
                   border: `1px solid ${colors.border}`,
@@ -267,10 +272,17 @@ export default function TradeListingCard({
                   fontFamily: 'Play, sans-serif',
                 }}
                 title={`${v.variationType}: ${v.variationName}`}
+                onMouseEnter={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setHoveredVariation({
+                    variation: v,
+                    fullVariation: fullVariation || null,
+                    x: rect.left + rect.width / 2,
+                    y: rect.top,
+                  });
+                }}
+                onMouseLeave={() => setHoveredVariation(null)}
               >
-                <span style={{ opacity: 0.6, marginRight: '4px' }}>
-                  {variationTypeLabels[v.variationType]}
-                </span>
                 {v.variationName}
               </span>
             );
@@ -719,6 +731,69 @@ export default function TradeListingCard({
               </button>
             </div>
           </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Variation Hover Tooltip - Rendered via portal */}
+      {mounted && hoveredVariation && createPortal(
+        <div
+          className="fixed z-[99999] pointer-events-none"
+          style={{
+            left: hoveredVariation.x,
+            top: hoveredVariation.y - 10,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
+          <div
+            className="p-3 rounded-xl"
+            style={{
+              background: 'linear-gradient(135deg, rgba(30,30,40,0.95), rgba(20,20,30,0.95))',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+            }}
+          >
+            <img
+              src="/variation-images-art-400px/ae1-gn3-ev1.png"
+              alt={hoveredVariation.variation.variationName}
+              className="w-32 h-32 object-contain mb-2"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+            <div
+              className="text-sm font-medium text-center"
+              style={{ fontFamily: 'Saira, sans-serif', color: '#22d3ee' }}
+            >
+              {hoveredVariation.variation.variationName}
+            </div>
+            <div
+              className="text-xs text-center mt-1"
+              style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+            >
+              {hoveredVariation.variation.variationType.charAt(0).toUpperCase() + hoveredVariation.variation.variationType.slice(1)}
+              {hoveredVariation.fullVariation && ` | Rank #${hoveredVariation.fullVariation.rank}`}
+            </div>
+            {hoveredVariation.fullVariation && (
+              <div
+                className="text-xs text-center"
+                style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
+              >
+                {hoveredVariation.fullVariation.count} exist ({hoveredVariation.fullVariation.percentage}%)
+              </div>
+            )}
+          </div>
+          {/* Arrow pointing down */}
+          <div
+            className="w-0 h-0 mx-auto"
+            style={{
+              borderLeft: '8px solid transparent',
+              borderRight: '8px solid transparent',
+              borderTop: '8px solid rgba(30,30,40,0.95)',
+            }}
+          />
         </div>,
         document.body
       )}
