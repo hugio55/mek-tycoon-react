@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 
+// Phase II: Removed baseGoldRate - gold income now comes from Job Slots, not individual Meks
 interface MekLevelUpgradeProps {
   assetId: string;
   mekNumber?: number;
   walletAddress: string;
   currentGold: number;
-  baseGoldRate?: number; // Base gold rate for boost calculation
   onUpgradeSuccess?: () => void;
 }
 
@@ -57,7 +57,6 @@ export default function MekLevelUpgrade({
   mekNumber,
   walletAddress,
   currentGold,
-  baseGoldRate = 0,
   onUpgradeSuccess,
 }: MekLevelUpgradeProps) {
   const [isUpgrading, setIsUpgrading] = useState(false);
@@ -81,13 +80,10 @@ export default function MekLevelUpgrade({
   const displayGold = optimisticGold ?? currentGold;
   const canAfford = displayGold >= upgradeCost;
 
-  // Calculate current and next level boosts using progressive formula
-  const baseRate = mekLevel?.baseGoldPerHour || baseGoldRate;
-  const currentBoostPercent = calculateLevelBoostPercent(currentLevel);
-  const currentBoostAmount = (baseRate * currentBoostPercent) / 100;
+  // Phase II: Level boosts no longer directly affect gold rates
+  // Gold income comes from Job Slots, not individual Mek properties
+  // Keeping percentage for display purposes (may affect other systems)
   const nextBoostPercent = calculateLevelBoostPercent(currentLevel + 1);
-  const nextBoostAmount = (baseRate * nextBoostPercent) / 100;
-  const boostIncrease = nextBoostAmount - currentBoostAmount;
 
   const handleUpgrade = async () => {
     if (!canAfford || isMaxLevel || isUpgrading) return;
@@ -215,22 +211,7 @@ export default function MekLevelUpgrade({
             </div>
           </div>
 
-          {/* Rate Increase Preview */}
-          {baseRate > 0 && !isMaxLevel && (
-            <div className="bg-green-900/20 border border-green-500/30 p-2 rounded-sm">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-400 font-mono uppercase">Rate Boost</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-green-400 font-bold">
-                    +{boostIncrease.toFixed(1)} g/hr
-                  </span>
-                  <span className="text-gray-500 text-[10px]">
-                    ({nextBoostPercent}% total)
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Phase II: Removed "Rate Increase Preview" - gold rates don't come from Meks anymore */}
 
           {/* Upgrade Button - Mobile Optimized (44px minimum height) */}
           <button

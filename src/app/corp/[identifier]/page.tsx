@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useQuery, useAction } from 'convex/react';
+import { useQuery } from 'convex/react';
+// Phase II: Removed useAction - goldMining sync was deleted
 import { api } from '@/convex/_generated/api';
 import { useParams } from 'next/navigation';
 import { getMekImageUrl } from '@/lib/mekNumberToVariation';
@@ -42,38 +43,9 @@ export default function CorporationPage() {
     imageKey: "slot test 1"
   });
 
-  // Sync action
-  const syncWallet = useAction(api.goldMining.syncWalletFromBlockchain);
-
-  // Auto-detect incomplete data and trigger sync
-  useEffect(() => {
-    if (!corpData || hasSynced || isSyncing) return;
-
-    // Check if any MEKs have incomplete data
-    const hasIncompleteData = corpData.meks.some(mek =>
-      !mek.assetName ||
-      mek.assetName.includes('???') ||
-      !mek.mekNumber ||
-      !mek.imageUrl
-    );
-
-    if (hasIncompleteData) {
-      console.log('[Corp Page] Detected incomplete MEK data - triggering sync...');
-      setIsSyncing(true);
-
-      syncWallet({ walletAddress: corpData.walletAddress })
-        .then(() => {
-          console.log('[Corp Page] Sync completed successfully');
-          setHasSynced(true);
-        })
-        .catch((err) => {
-          console.error('[Corp Page] Sync failed:', err);
-        })
-        .finally(() => {
-          setIsSyncing(false);
-        });
-    }
-  }, [corpData, hasSynced, isSyncing, syncWallet]);
+  // Phase II: Removed syncWallet action and auto-sync useEffect
+  // The goldMining.syncWalletFromBlockchain action was deleted
+  // MEK data is now managed through the meks table directly
 
   // Get top 3 Meks
   const topThreeMeks = corpData?.meks.slice(0, 3) || [];

@@ -496,25 +496,10 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
                           <p className="mek-label-uppercase text-gray-400 truncate mb-2">
                             {mek.assetName}
                           </p>
+                          {/* Phase II: Show rarity rank instead of gold rates (gold comes from Job Slots) */}
                           <div className="font-mono font-bold">
-                            {(() => {
-                              const baseRate = mek.baseGoldPerHour || mek.goldPerHour;
-                              const bonus = mek.goldPerHour - baseRate;
-
-                              if (bonus > 0) {
-                                return (
-                                  <>
-                                    <span className="mek-value-primary text-base">{baseRate.toFixed(1)}</span>
-                                    <span className="text-green-400 text-sm font-bold"> +{bonus.toFixed(1)}</span>
-                                    <span className="text-gray-500 text-xs"> g/hr</span>
-                                  </>
-                                );
-                              } else {
-                                return (
-                                  <span className="mek-value-primary text-base">{mek.goldPerHour.toFixed(1)} <span className="text-xs text-gray-500">g/hr</span></span>
-                                );
-                              }
-                            })()}
+                            <span className="mek-value-primary text-base">#{mek.rarityRank || '?'}</span>
+                            <span className="text-gray-500 text-xs"> / 4000</span>
                           </div>
                         </div>
                       </div>

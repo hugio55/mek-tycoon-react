@@ -316,9 +316,7 @@ export default function MekLevelsViewer({ walletAddress, client, selectedDatabas
               </thead>
               <tbody className="divide-y divide-gray-700">
                 {sortedMeks.map((mek) => {
-                  const baseRate = mek.baseGoldPerHour || 0;
-                  const boostAmount = mek.currentBoostAmount || 0;
-                  const totalRate = baseRate + boostAmount;
+                  // Phase II: Removed gold rate calculations - gold comes from Job Slots
                   const tenureInfo = tenureData.get(mek.assetId);
 
                   return (
@@ -395,24 +393,13 @@ export default function MekLevelsViewer({ walletAddress, client, selectedDatabas
               </tbody>
             </table>
 
+            {/* Phase II: Removed gold rate summaries - gold comes from Job Slots */}
             <div className="mt-6 p-4 bg-gray-800/30 rounded border border-gray-700">
               <h3 className="text-sm font-semibold text-gray-300 mb-2">Summary</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-400">Total Meks:</span>
                   <span className="ml-2 text-white font-semibold">{sortedMeks.length}</span>
-                </div>
-                <div>
-                  <span className="text-gray-400">Total Base Gold/hr:</span>
-                  <span className="ml-2 text-white font-semibold">
-                    {sortedMeks.reduce((sum, mek) => sum + (mek.baseGoldPerHour || 0), 0).toFixed(2)}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-400">Total Boost Gold/hr:</span>
-                  <span className="ml-2 text-green-400 font-semibold">
-                    +{sortedMeks.reduce((sum, mek) => sum + (mek.currentBoostAmount || 0), 0).toFixed(2)}
-                  </span>
                 </div>
                 <div>
                   <span className="text-gray-400">Total Gold Spent:</span>
