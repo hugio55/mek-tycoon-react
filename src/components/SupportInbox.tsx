@@ -6,9 +6,23 @@ import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import { getMediaUrl } from '@/lib/media-url';
+import MekSelectorLightbox, { SelectedMek } from './MekSelectorLightbox';
 
 // Support chat identifier - must match convex/messaging.ts
 const SUPPORT_WALLET_ID = "SUPPORT_OVEREXPOSED";
+
+// Upload limits for images
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILES_PER_MESSAGE = 3;
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+interface PendingAttachment {
+  file: File;
+  previewUrl: string;
+  storageId?: Id<"_storage">;
+  uploading?: boolean;
+  error?: string;
+}
 
 // Sample Mek images for random profile pictures
 const SAMPLE_MEK_IMAGES = [
@@ -69,6 +83,14 @@ export default function SupportInbox({
   const [lightboxImage, setLightboxImage] = useState<{ url: string; filename: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Image upload state
+  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
+
+  // MEK selector state
+  const [showMekSelector, setShowMekSelector] = useState(false);
+  const [selectedMek, setSelectedMek] = useState<SelectedMek | null>(null);
 
   // Queries
   const supportConversations = useQuery(api.messaging.getAllSupportConversations);
@@ -83,6 +105,8 @@ export default function SupportInbox({
   const sendSupportMessage = useMutation(api.messaging.sendSupportMessage);
   const markSupportAsRead = useMutation(api.messaging.markSupportConversationAsRead);
   const createSupportConversation = useMutation(api.messaging.createSupportConversation);
+  const generateUploadUrl = useMutation(api.messageAttachments.generateUploadUrl);
+  const validateUpload = useMutation(api.messageAttachments.validateUpload);
 
   // Mount check
   useEffect(() => {
@@ -156,17 +180,125 @@ export default function SupportInbox({
   // Get selected conversation
   const selectedConversation = supportConversations?.find((c: any) => c._id === selectedConversationId);
 
+  // Handle file selection
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    if (pendingAttachments.length + files.length > MAX_FILES_PER_MESSAGE) {
+      alert(`Maximum ${MAX_FILES_PER_MESSAGE} images per message`);
+      return;
+    }
+
+    for (const file of files) {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        alert(`Invalid file type: ${file.name}. Only images allowed.`);
+        continue;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`File too large: ${file.name}. Max 5MB.`);
+        continue;
+      }
+
+      const previewUrl = URL.createObjectURL(file);
+      const pending: PendingAttachment = { file, previewUrl, uploading: true };
+      setPendingAttachments(prev => [...prev, pending]);
+
+      try {
+        const uploadUrl = await generateUploadUrl();
+        const response = await fetch(uploadUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': file.type },
+          body: file,
+        });
+
+        if (!response.ok) throw new Error('Upload failed');
+        const { storageId } = await response.json();
+
+        await validateUpload({
+          walletAddress: SUPPORT_WALLET_ID,
+          storageId,
+          filename: file.name,
+          mimeType: file.type,
+          size: file.size,
+        });
+
+        setPendingAttachments(prev =>
+          prev.map(p => p.file === file ? { ...p, storageId, uploading: false } : p)
+        );
+      } catch (error) {
+        console.error('Upload failed:', error);
+        setPendingAttachments(prev =>
+          prev.map(p => p.file === file ? { ...p, uploading: false, error: 'Upload failed' } : p)
+        );
+      }
+    }
+
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // Remove pending attachment
+  const removePendingAttachment = (index: number) => {
+    setPendingAttachments(prev => {
+      const att = prev[index];
+      if (att.previewUrl) URL.revokeObjectURL(att.previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  // Handle MEK selection
+  const handleMekSelect = (mek: SelectedMek) => {
+    setSelectedMek(mek);
+    setShowMekSelector(false);
+  };
+
   // Send message handler
   const handleSendMessage = async () => {
-    if (!messageInput.trim() || !selectedConversationId || !selectedConversation) return;
+    const hasContent = messageInput.trim().length > 0;
+    const hasAttachments = pendingAttachments.some(a => a.storageId && !a.error);
+    const hasMek = selectedMek !== null;
+
+    if (!hasContent && !hasAttachments && !hasMek) return;
+    if (!selectedConversationId || !selectedConversation) return;
+    if (pendingAttachments.some(a => a.uploading)) {
+      alert('Please wait for uploads to complete');
+      return;
+    }
 
     try {
+      const attachments = pendingAttachments
+        .filter(a => a.storageId && !a.error)
+        .map(a => ({
+          storageId: a.storageId!,
+          filename: a.file.name,
+          mimeType: a.file.type,
+          size: a.file.size,
+        }));
+
       await sendSupportMessage({
         playerWallet: selectedConversation.playerWallet,
-        content: messageInput.trim(),
+        content: messageInput.trim() || (selectedMek ? `Sharing Mek #${selectedMek.assetName.match(/\d+/)?.[0] || selectedMek.assetId}` : ''),
         conversationId: selectedConversationId,
+        attachments: attachments.length > 0 ? attachments : undefined,
+        mekAttachment: selectedMek ? {
+          assetId: selectedMek.assetId,
+          assetName: selectedMek.assetName,
+          sourceKey: selectedMek.sourceKey,
+          sourceKeyBase: selectedMek.sourceKeyBase,
+          headVariation: selectedMek.headVariation,
+          bodyVariation: selectedMek.bodyVariation,
+          itemVariation: selectedMek.itemVariation,
+          customName: selectedMek.customName,
+          rarityRank: selectedMek.rarityRank,
+          gameRank: selectedMek.gameRank,
+        } : undefined,
       });
+
+      // Clear inputs
       setMessageInput('');
+      pendingAttachments.forEach(a => { if (a.previewUrl) URL.revokeObjectURL(a.previewUrl); });
+      setPendingAttachments([]);
+      setSelectedMek(null);
     } catch (error) {
       console.error('Failed to send support message:', error);
       alert(error instanceof Error ? error.message : 'Failed to send message');
@@ -406,7 +538,101 @@ export default function SupportInbox({
 
             {/* Compose Area */}
             <div className="p-4 border-t border-gray-700">
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+
+              {/* Pending attachments preview */}
+              {(pendingAttachments.length > 0 || selectedMek) && (
+                <div className="flex gap-2 mb-3 flex-wrap">
+                  {/* Image previews */}
+                  {pendingAttachments.map((att, idx) => (
+                    <div key={idx} className="relative">
+                      <img
+                        src={att.previewUrl}
+                        alt={att.file.name}
+                        className={`w-16 h-16 rounded-lg object-cover ${att.error ? 'opacity-50' : ''}`}
+                      />
+                      {att.uploading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+                          <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                        </div>
+                      )}
+                      {att.error && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-red-500/30 rounded-lg">
+                          <span className="text-red-400 text-xs">!</span>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => removePendingAttachment(idx)}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600"
+                      >
+                        x
+                      </button>
+                    </div>
+                  ))}
+                  {/* Selected Mek preview */}
+                  {selectedMek && (
+                    <div className="relative">
+                      <img
+                        src={getMediaUrl(`/mek-images/150px/${(selectedMek.sourceKeyBase || selectedMek.sourceKey).replace(/-[A-Z]$/, '').toLowerCase()}.webp`)}
+                        alt={`Mek #${selectedMek.assetId}`}
+                        className="w-16 h-16 rounded-lg object-cover border border-cyan-500/50"
+                      />
+                      <button
+                        onClick={() => setSelectedMek(null)}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600"
+                      >
+                        x
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="flex items-center gap-2 bg-white/5 rounded-xl px-3 py-2">
+                {/* Image button */}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={pendingAttachments.length >= MAX_FILES_PER_MESSAGE}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                    pendingAttachments.length < MAX_FILES_PER_MESSAGE
+                      ? 'text-gray-400 hover:text-cyan-400 hover:bg-cyan-400/10'
+                      : 'text-gray-600 cursor-not-allowed'
+                  }`}
+                  title="Add image"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                </button>
+
+                {/* MEK button */}
+                <button
+                  onClick={() => setShowMekSelector(true)}
+                  disabled={selectedMek !== null}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                    !selectedMek
+                      ? 'text-yellow-500/70 hover:text-yellow-400 hover:bg-yellow-400/10'
+                      : 'text-yellow-500 bg-yellow-400/10'
+                  }`}
+                  title="Share a Mekanism"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                  </svg>
+                </button>
+
                 <input
                   type="text"
                   value={messageInput}
@@ -418,9 +644,9 @@ export default function SupportInbox({
                 />
                 <button
                   onClick={handleSendMessage}
-                  disabled={!messageInput.trim() || messageInput.length > MAX_MESSAGE_LENGTH}
+                  disabled={!messageInput.trim() && !pendingAttachments.some(a => a.storageId && !a.error) && !selectedMek}
                   className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                    messageInput.trim() && messageInput.length <= MAX_MESSAGE_LENGTH
+                    (messageInput.trim() || pendingAttachments.some(a => a.storageId && !a.error) || selectedMek)
                       ? 'text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10'
                       : 'text-gray-600 cursor-not-allowed'
                   }`}
