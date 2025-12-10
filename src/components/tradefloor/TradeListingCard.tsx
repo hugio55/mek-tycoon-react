@@ -23,9 +23,11 @@ interface TradeListingCardProps {
   viewerMatchCount?: number;
   isOwner?: boolean;
   pendingOfferCount?: number;
+  newOfferCount?: number; // New/unseen offers
   showMakeOffer?: boolean;
   onMakeOffer?: () => void;
   onViewOffers?: () => void;
+  onEditListing?: () => void;
   onCancel?: () => void;
 }
 
@@ -46,9 +48,11 @@ export default function TradeListingCard({
   viewerMatchCount,
   isOwner,
   pendingOfferCount,
+  newOfferCount,
   showMakeOffer,
   onMakeOffer,
   onViewOffers,
+  onEditListing,
   onCancel,
 }: TradeListingCardProps) {
   // Clean source key for image path
@@ -213,15 +217,55 @@ export default function TradeListingCard({
           {isOwner && onViewOffers && (
             <button
               onClick={onViewOffers}
-              className="px-4 py-1.5 text-sm rounded-lg font-medium transition-all hover:scale-[1.05] active:scale-[0.95]"
+              className="px-4 py-1.5 text-sm rounded-lg font-medium transition-all hover:scale-[1.05] active:scale-[0.95] flex items-center gap-2"
               style={{
                 fontFamily: 'Inter, sans-serif',
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08))',
-                border: '1px solid rgba(255,255,255,0.2)',
+                background: newOfferCount && newOfferCount > 0
+                  ? 'linear-gradient(135deg, rgba(34, 211, 238, 0.25), rgba(34, 211, 238, 0.15))'
+                  : 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08))',
+                border: newOfferCount && newOfferCount > 0
+                  ? '1px solid rgba(34, 211, 238, 0.4)'
+                  : '1px solid rgba(255,255,255,0.2)',
                 color: 'white',
+                boxShadow: newOfferCount && newOfferCount > 0
+                  ? '0 0 20px rgba(34, 211, 238, 0.3)'
+                  : 'none',
               }}
             >
               Trade Offers
+              {pendingOfferCount !== undefined && pendingOfferCount > 0 && (
+                <span
+                  className="px-1.5 py-0.5 text-xs rounded-full min-w-[20px] text-center"
+                  style={{
+                    background: newOfferCount && newOfferCount > 0
+                      ? 'rgba(34, 211, 238, 0.4)'
+                      : 'rgba(255, 255, 255, 0.15)',
+                    color: newOfferCount && newOfferCount > 0
+                      ? '#22d3ee'
+                      : 'rgba(255, 255, 255, 0.6)',
+                    textShadow: newOfferCount && newOfferCount > 0
+                      ? '0 0 10px rgba(34, 211, 238, 0.8)'
+                      : 'none',
+                  }}
+                >
+                  {pendingOfferCount}
+                </span>
+              )}
+            </button>
+          )}
+
+          {isOwner && onEditListing && (
+            <button
+              onClick={onEditListing}
+              className="px-3 py-1.5 text-sm rounded-lg font-medium transition-all hover:scale-[1.05] active:scale-[0.95]"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                background: 'rgba(168, 85, 247, 0.1)',
+                border: '1px solid rgba(168, 85, 247, 0.3)',
+                color: '#c084fc',
+              }}
+            >
+              Edit
             </button>
           )}
 

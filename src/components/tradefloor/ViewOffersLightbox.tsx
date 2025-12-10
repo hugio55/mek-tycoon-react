@@ -37,14 +37,22 @@ export default function ViewOffersLightbox({
   });
 
   const startTradeConversation = useMutation(api.tradeFloor.startTradeConversation);
+  const markOffersAsViewed = useMutation(api.tradeFloor.markOffersAsViewed);
 
   useEffect(() => {
     setMounted(true);
     document.body.style.overflow = "hidden";
+
+    // Mark offers as viewed when lightbox opens
+    markOffersAsViewed({
+      listingId: listing._id,
+      ownerStakeAddress,
+    }).catch((err) => console.error("Failed to mark offers as viewed:", err));
+
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, []);
+  }, [listing._id, ownerStakeAddress]);
 
   const handleMessagePlayer = async (offer: any, offeredMekAssetId: string) => {
     setIsStartingConversation(true);

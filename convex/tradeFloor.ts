@@ -516,6 +516,51 @@ export const submitOffer = mutation({
       updatedAt: now,
     });
 
+    // Create notification for listing owner about new offer
+    const listingOwner = await ctx.db
+      .query("users")
+      .withIndex("by_stake_address", (q) =>
+        q.eq("stakeAddress", listing.ownerStakeAddress)
+      )
+      .first();
+
+    if (listingOwner) {
+      // Check for existing unread TradeFloor notification to clump offers
+      const existingNotification = await ctx.db
+        .query("notifications")
+        .withIndex("by_user_unread", (q) =>
+          q.eq("userId", listingOwner._id).eq("isRead", false)
+        )
+        .filter((q) => q.eq(q.field("type"), "TradeFloor"))
+        .filter((q) => q.eq(q.field("sourceType"), "trade_offers_clump"))
+        .first();
+
+      if (existingNotification) {
+        // Update existing notification with new count
+        const currentCount = (existingNotification.linkParams as { count?: number })?.count || 1;
+        await ctx.db.patch(existingNotification._id, {
+          title: `${currentCount + 1} New Trade Offers`,
+          subtitle: "You have new offers on your trade listings",
+          linkParams: { tab: "my-listings", count: currentCount + 1 },
+          createdAt: now, // Bump to top
+        });
+      } else {
+        // Create new notification
+        await ctx.db.insert("notifications", {
+          userId: listingOwner._id,
+          type: "TradeFloor",
+          title: "New Trade Offer",
+          subtitle: `${offerer?.corporationName || "A player"} made an offer on ${listing.listedMekAssetName || "your Mek"}`,
+          linkTo: "/tradefloor",
+          linkParams: { tab: "my-listings", count: 1 },
+          isRead: false,
+          createdAt: now,
+          sourceType: "trade_offers_clump",
+          sourceId: listingOwner._id, // Use owner ID so clumping persists
+        });
+      }
+    }
+
     return offerId;
   },
 });
@@ -540,6 +585,45 @@ export const withdrawOffer = mutation({
 
     await ctx.db.patch(args.offerId, {
       status: "withdrawn",
+      updatedAt: Date.now(),
+    });
+
+    return true;
+  },
+});
+
+// Update listing's desired variations
+export const updateListingVariations = mutation({
+  args: {
+    listingId: v.id("tradeListings"),
+    ownerStakeAddress: v.string(),
+    desiredVariations: v.array(
+      v.object({
+        variationName: v.string(),
+        variationType: v.union(v.literal("head"), v.literal("body"), v.literal("trait")),
+        variationId: v.optional(v.number()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const listing = await ctx.db.get(args.listingId);
+    if (!listing) {
+      throw new Error("Listing not found");
+    }
+    if (listing.ownerStakeAddress !== args.ownerStakeAddress) {
+      throw new Error("You don't own this listing");
+    }
+    if (listing.status !== "active") {
+      throw new Error("Listing is not active");
+    }
+
+    // Validate 1-6 variations
+    if (args.desiredVariations.length < 1 || args.desiredVariations.length > 6) {
+      throw new Error("Must specify 1-6 desired variations");
+    }
+
+    await ctx.db.patch(args.listingId, {
+      desiredVariations: args.desiredVariations,
       updatedAt: Date.now(),
     });
 
