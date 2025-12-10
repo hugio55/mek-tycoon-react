@@ -132,7 +132,7 @@ export const resetUserGoldToZero = mutation({
 
     await ctx.db.patch(user._id, {
       gold: 0,
-      pendingGold: 0,
+      // Phase II: pendingGold removed from schema
       updatedAt: Date.now(),
     });
 
@@ -511,8 +511,7 @@ export const resetUserProgress = mutation({
 
     if (args.resetGold) {
       updates.gold = 100;
-      // Phase II: goldPerHour removed - income comes from Job Slots
-      updates.pendingGold = 0;
+      // Phase II: goldPerHour/pendingGold removed - income comes from Job Slots
     }
 
     if (args.resetLevel) {
