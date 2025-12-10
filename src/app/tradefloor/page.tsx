@@ -96,23 +96,7 @@ export default function TradeFloorPage() {
   const canCreateListing = stakeAddress && activeListingCount !== undefined && activeListingCount < 5;
 
   return (
-    <div className="min-h-screen text-white relative overflow-hidden" style={{ background: '#030712' }}>
-      {/* Animated background gradient */}
-      <div
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse 120% 60% at 50% -10%, rgba(34, 211, 238, 0.15) 0%, transparent 60%)',
-        }}
-      />
-
-      {/* Secondary glow */}
-      <div
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse 80% 40% at 80% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 50%)',
-        }}
-      />
-
+    <div className="min-h-screen text-white relative overflow-hidden">
       {/* Header - Liquid Glass */}
       <div
         className="relative"
