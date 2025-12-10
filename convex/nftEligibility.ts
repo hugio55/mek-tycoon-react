@@ -196,7 +196,14 @@ export const checkClaimEligibility = query({
       .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.walletAddress))
       .first();
 
-    const corporationName = user?.corporationName || null;
+    // Fallback: Try to get displayName from the snapshot if user table lookup fails
+    let corporationName = user?.corporationName || null;
+    if (!corporationName) {
+      const snapshotUser = snapshot.eligibleUsers?.find((u: any) =>
+        u.stakeAddress === args.walletAddress || u.walletAddress === args.walletAddress
+      );
+      corporationName = snapshotUser?.displayName || null;
+    }
 
     return {
       eligible: true,
@@ -345,11 +352,25 @@ export const checkCampaignEligibility = query({
       .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.walletAddress))
       .first();
 
+    // Fallback: Try to get displayName from the snapshot if user table lookup fails
+    // This handles cases where user exists in snapshot but not in users table
+    let corporationName = user?.corporationName || null;
+    if (!corporationName) {
+      const snapshotUser = snapshot.eligibleUsers?.find((u: any) =>
+        u.stakeAddress === args.walletAddress || u.walletAddress === args.walletAddress
+      );
+      corporationName = snapshotUser?.displayName || null;
+      if (snapshotUser?.displayName) {
+        console.log('[🛡️ELIGIBILITY] Using displayName from snapshot as fallback:', snapshotUser.displayName);
+      }
+    }
+
     console.log('[🛡️ELIGIBILITY] APPROVED - Wallet passed all checks:', {
       wallet: args.walletAddress.substring(0, 20) + '...',
       campaign: campaign.name,
       snapshot: snapshot.snapshotName,
-      corporation: user?.corporationName || 'unknown',
+      corporation: corporationName || 'unknown',
+      source: user?.corporationName ? 'users_table' : 'snapshot_displayName',
     });
 
     return {
@@ -357,7 +378,7 @@ export const checkCampaignEligibility = query({
       reason: "Eligible for this campaign",
       campaignName: campaign.name,
       snapshotName: snapshot.snapshotName,
-      corporationName: user?.corporationName || null,
+      corporationName: corporationName,
     };
   },
 });

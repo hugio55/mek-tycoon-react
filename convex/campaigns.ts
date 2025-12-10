@@ -546,3 +546,88 @@ export const getCampaignWithSnapshot = query({
     };
   },
 });
+
+/**
+ * DIAGNOSTIC: Get full snapshot and campaign relationship overview
+ * Use this to debug eligibility issues between whitelists and campaigns
+ */
+export const debugSnapshotsAndCampaigns = query({
+  handler: async (ctx) => {
+    // Get all snapshots
+    const allSnapshots = await ctx.db.query("whitelistSnapshots").collect();
+
+    // Get all campaigns
+    const allCampaigns = await ctx.db.query("commemorativeCampaigns").collect();
+
+    // Get all whitelists (parent of snapshots)
+    const allWhitelists = await ctx.db.query("whitelists").collect();
+
+    // Build snapshot info with user details
+    const snapshotInfo = allSnapshots.map((snap: any) => {
+      const parentWhitelist = allWhitelists.find((w: any) => w._id === snap.whitelistId);
+      // Get first 5 users for inspection
+      const sampleUsers = (snap.eligibleUsers || []).slice(0, 5).map((u: any) => ({
+        stakeAddress: u.stakeAddress?.substring(0, 30) + '...',
+        walletAddress: u.walletAddress?.substring(0, 30) + '...',
+        corporationName: u.corporationName || u.displayName || 'N/A',
+      }));
+
+      return {
+        snapshotId: snap._id,
+        snapshotName: snap.snapshotName,
+        whitelistId: snap.whitelistId,
+        whitelistName: parentWhitelist?.name || 'ORPHANED (no parent whitelist)',
+        userCount: snap.eligibleUsers?.length || 0,
+        takenAt: new Date(snap.takenAt).toISOString(),
+        sampleUsers,
+      };
+    });
+
+    // Build campaign info with snapshot resolution
+    const campaignInfo = await Promise.all(allCampaigns.map(async (camp: any) => {
+      let snapshotDetails = null;
+      let snapshotError = null;
+
+      if (camp.eligibilitySnapshotId) {
+        const snap = await ctx.db.get(camp.eligibilitySnapshotId);
+        if (snap) {
+          snapshotDetails = {
+            snapshotId: snap._id,
+            snapshotName: snap.snapshotName,
+            userCount: snap.eligibleUsers?.length || 0,
+          };
+        } else {
+          snapshotError = `BROKEN REFERENCE: Snapshot ${camp.eligibilitySnapshotId} does not exist!`;
+        }
+      }
+
+      return {
+        campaignId: camp._id,
+        campaignName: camp.name,
+        status: camp.status,
+        eligibilitySnapshotId: camp.eligibilitySnapshotId || 'NOT SET',
+        snapshotDetails,
+        snapshotError,
+        availableNFTs: camp.availableNFTs,
+        soldNFTs: camp.soldNFTs,
+      };
+    }));
+
+    return {
+      summary: {
+        totalSnapshots: allSnapshots.length,
+        totalCampaigns: allCampaigns.length,
+        totalWhitelists: allWhitelists.length,
+        campaignsWithSnapshots: allCampaigns.filter((c: any) => c.eligibilitySnapshotId).length,
+        campaignsWithoutSnapshots: allCampaigns.filter((c: any) => !c.eligibilitySnapshotId).length,
+      },
+      snapshots: snapshotInfo,
+      campaigns: campaignInfo,
+      whitelists: allWhitelists.map((w: any) => ({
+        whitelistId: w._id,
+        name: w.name,
+        description: w.description,
+      })),
+    };
+  },
+});
