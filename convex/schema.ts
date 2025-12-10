@@ -16,7 +16,7 @@ export default defineSchema({
     // OWNERSHIP (Phase II)
     // ═══════════════════════════════════════════════════════════════════════════
     ownerStakeAddress: v.optional(v.string()), // FK to users.stakeAddress (Phase II)
-    owner: v.string(), // LEGACY: payment address (Phase I)
+    owner: v.optional(v.string()), // LEGACY: payment address (Phase I) - now optional for unowned meks
 
     iconUrl: v.optional(v.string()),
     verified: v.boolean(), // blockchain verified

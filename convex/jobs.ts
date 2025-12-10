@@ -287,7 +287,7 @@ export const seedMiningJobs = mutation({
         createdAt: now,
         updatedAt: now,
       });
-      miningUmbrella = await ctx.db.get(umbrellaId);
+      miningUmbrella = await ctx.db.get(umbrellaId) ?? undefined;
     }
 
     if (!miningUmbrella) {

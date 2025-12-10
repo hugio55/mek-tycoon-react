@@ -89,50 +89,67 @@ export default function TradeFloorPage() {
     { id: "my-offers" as Tab, label: "My Offers" },
   ];
 
-  const canCreateListing = activeListingCount !== undefined && activeListingCount < 5;
+  const canCreateListing = stakeAddress && activeListingCount !== undefined && activeListingCount < 5;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white relative overflow-hidden">
-      {/* Background gradient */}
+    <div className="min-h-screen text-white relative overflow-hidden" style={{ background: '#030712' }}>
+      {/* Animated background gradient */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="fixed inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse at 50% 0%, rgba(34, 211, 238, 0.08) 0%, transparent 50%)',
+          background: 'radial-gradient(ellipse 120% 60% at 50% -10%, rgba(34, 211, 238, 0.15) 0%, transparent 60%)',
         }}
       />
 
-      {/* Header */}
+      {/* Secondary glow */}
       <div
-        className="relative border-b"
+        className="fixed inset-0 pointer-events-none"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+          background: 'radial-gradient(ellipse 80% 40% at 80% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 50%)',
+        }}
+      />
+
+      {/* Header - Liquid Glass */}
+      <div
+        className="relative"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderColor: 'rgba(255,255,255,0.1)',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
         }}
       >
         <div className="max-w-7xl mx-auto px-4 py-6">
           <h1
-            className="text-3xl font-bold text-white tracking-wider uppercase"
-            style={{ fontFamily: 'Orbitron, sans-serif' }}
+            className="text-3xl font-bold tracking-wider uppercase"
+            style={{
+              fontFamily: 'Orbitron, sans-serif',
+              background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              textShadow: '0 0 40px rgba(34, 211, 238, 0.5)',
+            }}
           >
             Trade Floor
           </h1>
           <p
-            className="text-white/60 mt-1"
-            style={{ fontFamily: 'Play, sans-serif' }}
+            className="mt-1"
+            style={{
+              fontFamily: 'Play, sans-serif',
+              color: 'rgba(255,255,255,0.6)',
+            }}
           >
             List your Meks for trade and find others looking for variations you have
           </p>
         </div>
       </div>
 
-      {/* Tab Navigation */}
+      {/* Tab Navigation - Glass Effect */}
       <div
-        className="relative border-b"
+        className="relative"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
-          borderColor: 'rgba(255,255,255,0.1)',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
         }}
       >
         <div className="max-w-7xl mx-auto px-4">
@@ -144,15 +161,15 @@ export default function TradeFloorPage() {
                 className="relative px-6 py-3 text-sm font-medium tracking-wide transition-all overflow-hidden group"
                 style={{
                   fontFamily: 'Saira, sans-serif',
-                  color: activeTab === tab.id ? 'white' : 'rgba(255,255,255,0.5)',
+                  color: activeTab === tab.id ? '#22d3ee' : 'rgba(255,255,255,0.5)',
                   background: activeTab === tab.id
-                    ? 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))'
+                    ? 'linear-gradient(135deg, rgba(34, 211, 238, 0.15), rgba(34, 211, 238, 0.05))'
                     : 'transparent',
                 }}
               >
                 {/* Honeycomb hover effect */}
                 <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-[0.05] transition-opacity duration-300 pointer-events-none"
+                  className="absolute inset-0 opacity-0 group-hover:opacity-[0.07] transition-opacity duration-300 pointer-events-none"
                   style={{
                     backgroundImage: "url('/random-images/honey-png-big.webp')",
                     backgroundSize: '100%',
@@ -162,8 +179,11 @@ export default function TradeFloorPage() {
                 <span className="relative z-10">{tab.label}</span>
                 {activeTab === tab.id && (
                   <div
-                    className="absolute bottom-0 left-0 right-0 h-0.5"
-                    style={{ background: 'linear-gradient(90deg, #22d3ee, #22d3ee)' }}
+                    className="absolute bottom-0 left-0 right-0 h-[2px]"
+                    style={{
+                      background: 'linear-gradient(90deg, #22d3ee, #06b6d4)',
+                      boxShadow: '0 0 10px rgba(34, 211, 238, 0.8)',
+                    }}
                   />
                 )}
                 {/* Badge for my-offers */}
@@ -202,23 +222,47 @@ export default function TradeFloorPage() {
         {/* Not logged in message */}
         {!stakeAddress && (
           <div
-            className="text-center py-12 rounded-2xl"
+            className="text-center py-12 rounded-2xl relative overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              boxShadow: '0 0 40px rgba(34, 211, 238, 0.1)',
             }}
           >
-            <div className="text-6xl mb-4">🔒</div>
-            <h2
-              className="text-2xl font-bold text-white mb-2"
-              style={{ fontFamily: 'Orbitron, sans-serif' }}
-            >
-              Connect Your Wallet
-            </h2>
-            <p className="text-white/50" style={{ fontFamily: 'Play, sans-serif' }}>
-              Connect your wallet to browse listings and make trade offers
-            </p>
+            {/* Honeycomb pattern */}
+            <div
+              className="absolute inset-0 opacity-[0.03] pointer-events-none"
+              style={{
+                backgroundImage: "url('/random-images/honey-png-big.webp')",
+                backgroundSize: '50%',
+                backgroundPosition: 'center',
+              }}
+            />
+            <div className="relative z-10">
+              <div
+                className="text-6xl mb-4"
+                style={{
+                  filter: 'drop-shadow(0 0 20px rgba(234, 179, 8, 0.5))',
+                }}
+              >
+                🔒
+              </div>
+              <h2
+                className="text-2xl font-bold mb-2"
+                style={{
+                  fontFamily: 'Orbitron, sans-serif',
+                  color: '#22d3ee',
+                  textShadow: '0 0 20px rgba(34, 211, 238, 0.5)',
+                }}
+              >
+                Connect Your Wallet
+              </h2>
+              <p style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.6)' }}>
+                Connect your wallet to browse listings and make trade offers
+              </p>
+            </div>
           </div>
         )}
 
@@ -233,33 +277,49 @@ export default function TradeFloorPage() {
                 >
                   Available Listings
                 </h2>
-                <p className="text-sm text-white/50" style={{ fontFamily: 'Play, sans-serif' }}>
+                <p className="text-sm" style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
                   Sorted by how many of your Meks match the desired variations
                 </p>
               </div>
             </div>
 
             {browseListings === undefined ? (
-              <div className="text-center py-12 text-white/50">Loading listings...</div>
+              <div
+                className="text-center py-12"
+                style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+              >
+                Loading listings...
+              </div>
             ) : browseListings.length === 0 ? (
               <div
-                className="text-center py-12 rounded-2xl"
+                className="text-center py-12 rounded-2xl relative overflow-hidden"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
                   backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
                   border: '1px solid rgba(255,255,255,0.1)',
                 }}
               >
-                <div className="text-6xl mb-4">📭</div>
-                <h3
-                  className="text-xl font-semibold text-white mb-2"
-                  style={{ fontFamily: 'Orbitron, sans-serif' }}
-                >
-                  No Listings Yet
-                </h3>
-                <p className="text-white/50" style={{ fontFamily: 'Play, sans-serif' }}>
-                  Be the first to list a Mek for trade!
-                </p>
+                <div
+                  className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                  style={{
+                    backgroundImage: "url('/random-images/honey-png-big.webp')",
+                    backgroundSize: '50%',
+                    backgroundPosition: 'center',
+                  }}
+                />
+                <div className="relative z-10">
+                  <div className="text-6xl mb-4">📭</div>
+                  <h3
+                    className="text-xl font-semibold text-white mb-2"
+                    style={{ fontFamily: 'Orbitron, sans-serif' }}
+                  >
+                    No Listings Yet
+                  </h3>
+                  <p style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
+                    Be the first to list a Mek for trade!
+                  </p>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -288,45 +348,61 @@ export default function TradeFloorPage() {
                 >
                   My Active Listings
                 </h2>
-                <p className="text-sm text-white/50" style={{ fontFamily: 'Play, sans-serif' }}>
+                <p className="text-sm" style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
                   {activeListingCount !== undefined ? `${activeListingCount}/5 listings used` : "Loading..."}
                 </p>
               </div>
             </div>
 
             {myListings === undefined ? (
-              <div className="text-center py-12 text-white/50">Loading your listings...</div>
+              <div
+                className="text-center py-12"
+                style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+              >
+                Loading your listings...
+              </div>
             ) : myListings.length === 0 ? (
               <div
-                className="text-center py-12 rounded-2xl"
+                className="text-center py-12 rounded-2xl relative overflow-hidden"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
                   backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
                   border: '1px solid rgba(255,255,255,0.1)',
                 }}
               >
-                <div className="text-6xl mb-4">📦</div>
-                <h3
-                  className="text-xl font-semibold text-white mb-2"
-                  style={{ fontFamily: 'Orbitron, sans-serif' }}
-                >
-                  No Active Listings
-                </h3>
-                <p className="text-white/50 mb-4" style={{ fontFamily: 'Play, sans-serif' }}>
-                  List a Mek you want to trade and specify the variations you're looking for
-                </p>
-                <button
-                  onClick={() => setShowCreateListing(true)}
-                  className="px-8 py-3 rounded-xl font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
+                <div
+                  className="absolute inset-0 opacity-[0.03] pointer-events-none"
                   style={{
-                    fontFamily: 'Inter, sans-serif',
-                    background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
-                    color: 'black',
-                    boxShadow: '0 0 30px rgba(34, 211, 238, 0.3)',
+                    backgroundImage: "url('/random-images/honey-png-big.webp')",
+                    backgroundSize: '50%',
+                    backgroundPosition: 'center',
                   }}
-                >
-                  Create Your First Listing
-                </button>
+                />
+                <div className="relative z-10">
+                  <div className="text-6xl mb-4">📦</div>
+                  <h3
+                    className="text-xl font-semibold text-white mb-2"
+                    style={{ fontFamily: 'Orbitron, sans-serif' }}
+                  >
+                    No Active Listings
+                  </h3>
+                  <p className="mb-4" style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
+                    List a Mek you want to trade and specify the variations you're looking for
+                  </p>
+                  <button
+                    onClick={() => setShowCreateListing(true)}
+                    className="px-8 py-3 rounded-xl font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
+                      color: 'black',
+                      boxShadow: '0 0 30px rgba(34, 211, 238, 0.4)',
+                    }}
+                  >
+                    Create Your First Listing
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -355,32 +431,48 @@ export default function TradeFloorPage() {
               >
                 My Pending Offers
               </h2>
-              <p className="text-sm text-white/50" style={{ fontFamily: 'Play, sans-serif' }}>
+              <p className="text-sm" style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
                 Offers you've made on other players' listings
               </p>
             </div>
 
             {myOffers === undefined ? (
-              <div className="text-center py-12 text-white/50">Loading your offers...</div>
+              <div
+                className="text-center py-12"
+                style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+              >
+                Loading your offers...
+              </div>
             ) : myOffers.length === 0 ? (
               <div
-                className="text-center py-12 rounded-2xl"
+                className="text-center py-12 rounded-2xl relative overflow-hidden"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
                   backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
                   border: '1px solid rgba(255,255,255,0.1)',
                 }}
               >
-                <div className="text-6xl mb-4">🤝</div>
-                <h3
-                  className="text-xl font-semibold text-white mb-2"
-                  style={{ fontFamily: 'Orbitron, sans-serif' }}
-                >
-                  No Pending Offers
-                </h3>
-                <p className="text-white/50" style={{ fontFamily: 'Play, sans-serif' }}>
-                  Browse listings to find Meks you want and make offers
-                </p>
+                <div
+                  className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                  style={{
+                    backgroundImage: "url('/random-images/honey-png-big.webp')",
+                    backgroundSize: '50%',
+                    backgroundPosition: 'center',
+                  }}
+                />
+                <div className="relative z-10">
+                  <div className="text-6xl mb-4">🤝</div>
+                  <h3
+                    className="text-xl font-semibold text-white mb-2"
+                    style={{ fontFamily: 'Orbitron, sans-serif' }}
+                  >
+                    No Pending Offers
+                  </h3>
+                  <p style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
+                    Browse listings to find Meks you want and make offers
+                  </p>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -397,38 +489,59 @@ export default function TradeFloorPage() {
         )}
       </div>
 
-      {/* Floating Create Listing Button - Always visible when logged in */}
-      {stakeAddress && (
-        <button
-          onClick={() => setShowCreateListing(true)}
-          disabled={!canCreateListing}
-          className="fixed bottom-6 right-6 z-50 px-6 py-4 rounded-2xl font-semibold transition-all hover:scale-[1.05] active:scale-[0.98] flex items-center gap-3 group"
-          style={{
-            fontFamily: 'Inter, sans-serif',
-            background: canCreateListing
-              ? 'linear-gradient(135deg, #22d3ee, #06b6d4)'
-              : 'rgba(255,255,255,0.1)',
-            color: canCreateListing ? 'black' : 'rgba(255,255,255,0.3)',
-            boxShadow: canCreateListing
-              ? '0 0 40px rgba(34, 211, 238, 0.4), 0 10px 40px rgba(0,0,0,0.3)'
-              : 'none',
-            cursor: canCreateListing ? 'pointer' : 'not-allowed',
-          }}
-        >
-          <span className="text-2xl">+</span>
-          <span>Create Listing</span>
-          {activeListingCount !== undefined && (
-            <span
-              className="px-2 py-0.5 rounded-full text-xs"
-              style={{
-                background: canCreateListing ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.1)',
-              }}
-            >
-              {activeListingCount}/5
-            </span>
-          )}
-        </button>
-      )}
+      {/* Floating Create Listing Button - ALWAYS VISIBLE */}
+      <button
+        onClick={() => stakeAddress && setShowCreateListing(true)}
+        disabled={!stakeAddress}
+        className="fixed bottom-6 right-6 z-50 px-6 py-4 rounded-2xl font-semibold transition-all flex items-center gap-3 group overflow-hidden"
+        style={{
+          fontFamily: 'Inter, sans-serif',
+          background: stakeAddress
+            ? 'linear-gradient(135deg, #22d3ee, #06b6d4)'
+            : 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+          color: stakeAddress ? 'black' : 'rgba(255,255,255,0.4)',
+          boxShadow: stakeAddress
+            ? '0 0 50px rgba(34, 211, 238, 0.5), 0 10px 40px rgba(0,0,0,0.4)'
+            : '0 0 20px rgba(255,255,255,0.1)',
+          border: stakeAddress ? 'none' : '1px solid rgba(255,255,255,0.2)',
+          cursor: stakeAddress ? 'pointer' : 'not-allowed',
+          transform: stakeAddress ? 'scale(1)' : 'scale(0.95)',
+        }}
+        onMouseEnter={(e) => {
+          if (stakeAddress) {
+            e.currentTarget.style.transform = 'scale(1.05)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = stakeAddress ? 'scale(1)' : 'scale(0.95)';
+        }}
+      >
+        {/* Sliding particles animation for logged in state */}
+        {stakeAddress && (
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+              animation: 'slideParticles 2s linear infinite',
+            }}
+          />
+        )}
+        <span className="text-2xl relative z-10">+</span>
+        <span className="relative z-10">Create Listing</span>
+        {stakeAddress && activeListingCount !== undefined && (
+          <span
+            className="px-2 py-0.5 rounded-full text-xs relative z-10"
+            style={{ background: 'rgba(0,0,0,0.2)' }}
+          >
+            {activeListingCount}/5
+          </span>
+        )}
+        {!stakeAddress && (
+          <span className="text-xs relative z-10" style={{ opacity: 0.6 }}>
+            (Login Required)
+          </span>
+        )}
+      </button>
 
       {/* Sliding particles animation keyframe */}
       <style>{`
