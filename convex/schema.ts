@@ -3578,6 +3578,22 @@ export default defineSchema({
       size: v.number(), // File size in bytes
       url: v.optional(v.string()), // Generated URL (populated at query time)
     }))),
+    // Verified Mek attachment (proves ownership)
+    mekAttachment: v.optional(v.object({
+      assetId: v.string(), // Unique Mek identifier
+      assetName: v.string(), // Mek name (e.g., "Mekanism0123")
+      sourceKey: v.string(), // For image path
+      sourceKeyBase: v.optional(v.string()), // Clean source key for image lookup
+      headVariation: v.string(), // Head variation name
+      bodyVariation: v.string(), // Body variation name
+      itemVariation: v.optional(v.string()), // Trait variation name
+      customName: v.optional(v.string()), // Player-assigned name
+      rarityRank: v.optional(v.number()), // Rarity rank
+      gameRank: v.optional(v.number()), // Game rank
+      // Verification data (proves ownership at send time)
+      verifiedOwner: v.string(), // Wallet address of verified owner
+      verifiedAt: v.number(), // Timestamp of verification
+    })),
   })
     .index("by_conversation", ["conversationId", "createdAt"])
     .index("by_sender", ["senderId", "createdAt"])
