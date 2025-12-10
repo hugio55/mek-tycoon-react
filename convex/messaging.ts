@@ -1157,9 +1157,29 @@ export const sendSupportMessage = mutation({
     playerWallet: v.string(),
     content: v.string(),
     conversationId: v.id("conversations"),
+    // Optional attachments (images)
+    attachments: v.optional(v.array(v.object({
+      storageId: v.id("_storage"),
+      filename: v.string(),
+      mimeType: v.string(),
+      size: v.number(),
+    }))),
+    // Optional Mek attachment (admin can share any Mek)
+    mekAttachment: v.optional(v.object({
+      assetId: v.string(),
+      assetName: v.string(),
+      sourceKey: v.string(),
+      sourceKeyBase: v.optional(v.string()),
+      headVariation: v.string(),
+      bodyVariation: v.string(),
+      itemVariation: v.optional(v.string()),
+      customName: v.optional(v.string()),
+      rarityRank: v.optional(v.number()),
+      gameRank: v.optional(v.number()),
+    })),
   },
   handler: async (ctx, args) => {
-    const { playerWallet, content, conversationId } = args;
+    const { playerWallet, content, conversationId, attachments, mekAttachment } = args;
     const now = Date.now();
 
     const conversation = await ctx.db.get(conversationId);
@@ -1172,8 +1192,8 @@ export const sendSupportMessage = mutation({
       throw new Error("This is not a support conversation");
     }
 
-    // Insert message from support
-    await ctx.db.insert("messages", {
+    // Build message object
+    const messageData: any = {
       conversationId,
       senderId: SUPPORT_WALLET_ID,
       recipientId: playerWallet,
@@ -1181,7 +1201,24 @@ export const sendSupportMessage = mutation({
       status: "sent",
       createdAt: now,
       isDeleted: false,
-    });
+    };
+
+    // Add attachments if provided
+    if (attachments && attachments.length > 0) {
+      messageData.attachments = attachments;
+    }
+
+    // Add Mek attachment if provided (admin doesn't need ownership verification)
+    if (mekAttachment) {
+      messageData.mekAttachment = {
+        ...mekAttachment,
+        verifiedAt: now,
+        verifiedOwner: "SUPPORT_ADMIN", // Mark as admin-sent
+      };
+    }
+
+    // Insert message from support
+    await ctx.db.insert("messages", messageData);
 
     // Update conversation (and auto-reopen for player if dismissed)
     await ctx.db.patch(conversationId, {

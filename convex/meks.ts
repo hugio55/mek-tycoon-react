@@ -243,6 +243,21 @@ export const getMeksByOwner = query({
 });
 
 /**
+ * Get ALL Meks (admin only - for support/admin use)
+ * Returns all 4000+ Meks for admin to select from
+ */
+export const getAllMeksForAdmin = query({
+  args: {},
+  handler: async (ctx) => {
+    const meks = await ctx.db
+      .query("meks")
+      .collect();
+
+    return meks;
+  },
+});
+
+/**
  * Get Mek count for a stake address
  */
 export const getMekCount = query({

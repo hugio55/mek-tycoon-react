@@ -26,6 +26,8 @@ interface MekSelectorLightboxProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (mek: SelectedMek) => void;
+  /** When true, shows ALL Meks instead of just owned Meks (for admin use) */
+  showAllMeks?: boolean;
 }
 
 export default function MekSelectorLightbox({
@@ -33,14 +35,17 @@ export default function MekSelectorLightbox({
   isOpen,
   onClose,
   onSelect,
+  showAllMeks = false,
 }: MekSelectorLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Query user's owned Meks
+  // Query user's owned Meks OR all Meks (admin mode)
   const ownedMeks = useQuery(
-    api.meks.getMeksByOwner,
-    walletAddress ? { stakeAddress: walletAddress } : 'skip'
+    showAllMeks ? api.meks.getAllMeksForAdmin : api.meks.getMeksByOwner,
+    showAllMeks
+      ? {}
+      : (walletAddress ? { stakeAddress: walletAddress } : 'skip')
   );
 
   // Mount check for portal
@@ -197,7 +202,10 @@ export default function MekSelectorLightbox({
               Select a Mekanism
             </h2>
             <p className="text-sm text-white/50">
-              {ownedMeks?.length || 0} Meks in your collection
+              {showAllMeks
+                ? `${ownedMeks?.length || 0} total Meks (Admin Mode)`
+                : `${ownedMeks?.length || 0} Meks in your collection`
+              }
             </p>
           </div>
         </div>
