@@ -27,7 +27,7 @@ import { DatabaseProvider, useDatabaseContext } from '@/contexts/DatabaseContext
 // Lazy load heavy components
 const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryViewer'));
 
-type SubMenu = 'wallet-list' | 'snapshot-history' | 'snapshot-health' | 'gold-repair' | 'variation-spread' | 'beta-signups';
+type SubMenu = 'wallet-list' | 'snapshot-history' | 'snapshot-health' | 'variation-spread' | 'beta-signups';
 type SnapshotHealthTab = 'health' | 'logging';
 
 function WalletManagementAdminContent() {
@@ -149,7 +149,7 @@ function WalletManagementAdminContent() {
     if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
     const client = getClient();
     if (!client) throw new Error('Client not initialized');
-    // CASCADE DELETE: Removes user from ALL tables (users, meks, goldMining, etc.)
+    // CASCADE DELETE: Removes user from ALL tables (users, meks, userEssence, userJobSlots, etc.)
     return await client.mutation(api.adminUsers.cascadeDeleteUser, args);
   };
 
@@ -172,13 +172,6 @@ function WalletManagementAdminContent() {
     const client = getClient();
     if (!client) throw new Error('Client not initialized');
     return await client.mutation(api.manualWalletMerge.manualMergeWalletsBySuffix, args);
-  };
-
-  const triggerSnapshot = async (args: any) => {
-    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
-    const client = getClient();
-    if (!client) throw new Error('Client not initialized');
-    return await client.action(api.goldMiningSnapshot.triggerSnapshot, args);
   };
 
   const manualSetMeks = async (args: any) => {
@@ -238,20 +231,6 @@ function WalletManagementAdminContent() {
     if (!client) throw new Error('Client not initialized');
     // PHASE II: Reset mek levels for user
     return await client.mutation(api.adminUsers.resetUserMekLevels, args);
-  };
-
-  const findCorruptedGoldRecords = async (args: any) => {
-    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
-    const client = getClient();
-    if (!client) throw new Error('Client not initialized');
-    return await client.mutation(api.diagnosticCorruptedGold.findCorruptedGoldRecords, args);
-  };
-
-  const fixCorruptedCumulativeGold = async (args: any) => {
-    if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
-    const client = getClient();
-    if (!client) throw new Error('Client not initialized');
-    return await client.mutation(api.fixCorruptedGold.fixCorruptedCumulativeGold, args);
   };
 
   const resetAllProgress = async (args: any) => {
@@ -358,16 +337,12 @@ function WalletManagementAdminContent() {
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [isMerging, setIsMerging] = useState(false);
   const [suffixToMerge, setSuffixToMerge] = useState('fe6012f1');
-  const [isRunningSnapshot, setIsRunningSnapshot] = useState(false);
   const [editingGold, setEditingGold] = useState<{ walletAddress: string; value: string } | null>(null);
   const [viewingMekLevels, setViewingMekLevels] = useState<string | null>(null);
   const [viewingEssence, setViewingEssence] = useState<string | null>(null);
   const [viewingBuffs, setViewingBuffs] = useState<string | null>(null);
   const [viewingActivityLog, setViewingActivityLog] = useState<string | null>(null);
   const [diagnosticWallet, setDiagnosticWallet] = useState<string | null>(null);
-  const [goldDiagnosticResults, setGoldDiagnosticResults] = useState<any>(null);
-  const [goldFixResults, setGoldFixResults] = useState<any>(null);
-  const [isRunningGoldRepair, setIsRunningGoldRepair] = useState(false);
   // Test wallet cleanup state
   const [testWalletPreview, setTestWalletPreview] = useState<any>(null);
   const [isPreviewingTestWallets, setIsPreviewingTestWallets] = useState(false);
@@ -607,112 +582,6 @@ Check console for full timeline.
     }
   };
 
-  const handleRunSnapshot = async () => {
-    if (!confirm('Run 6-hour blockchain snapshot NOW? This will query Blockfrost for all active wallets.')) return;
-
-    setIsRunningSnapshot(true);
-    setStatusMessage({
-      type: 'success',
-      message: 'Snapshot starting... This may take a minute.'
-    });
-
-    console.log('[WalletManagementAdmin] 🚀 Starting snapshot at:', new Date().toISOString());
-
-    try {
-      console.log('[WalletManagementAdmin] ⏳ Calling triggerSnapshot action...');
-      const result = await triggerSnapshot({});
-      console.log('[WalletManagementAdmin] ✅ Snapshot action completed:', {
-        totalMiners: result.totalMiners,
-        updatedCount: result.updatedCount,
-        skippedCount: result.skippedCount,
-        errorCount: result.errorCount,
-        timestamp: new Date().toISOString()
-      });
-
-      setStatusMessage({
-        type: 'success',
-        message: `Snapshot complete! Updated ${result.updatedCount}/${result.totalMiners} wallets (${result.skippedCount} skipped, ${result.errorCount} errors)`
-      });
-      setTimeout(() => setStatusMessage(null), 10000);
-    } catch (error) {
-      console.error('[WalletManagementAdmin] ❌ Snapshot failed:', error);
-      setStatusMessage({ type: 'error', message: 'Snapshot failed - check console' });
-      setTimeout(() => setStatusMessage(null), 5000);
-    } finally {
-      setIsRunningSnapshot(false);
-      console.log('[WalletManagementAdmin] 🏁 Snapshot process finished');
-    }
-  };
-
-  const handleSingleWalletSnapshot = async (walletAddress: string) => {
-    if (!confirm(`Run blockchain snapshot for wallet ${walletAddress.substring(0, 20)}...?\n\nThis will query Blockfrost and update Mek ownership data.`)) return;
-
-    setIsRunningSnapshot(true);
-    setStatusMessage({
-      type: 'success',
-      message: `Snapshot starting for ${walletAddress.substring(0, 20)}... Check console for debug logs.`
-    });
-
-    try {
-      // The triggerSnapshot action will process all wallets, but we can filter the logs by watching console
-      console.log(`[Admin] Triggering snapshot - watch for wallet: ${walletAddress}`);
-      const result = await triggerSnapshot({});
-      setStatusMessage({
-        type: 'success',
-        message: `Snapshot complete! Check console for detailed logs. Updated ${result.updatedCount} wallets total.`
-      });
-      setTimeout(() => setStatusMessage(null), 10000);
-    } catch (error) {
-      setStatusMessage({ type: 'error', message: 'Snapshot failed - check console' });
-      setTimeout(() => setStatusMessage(null), 5000);
-    } finally {
-      setIsRunningSnapshot(false);
-    }
-  };
-
-  const handleGoldDiagnostic = async () => {
-    setIsRunningGoldRepair(true);
-    try {
-      const results = await findCorruptedGoldRecords({});
-      setGoldDiagnosticResults(results);
-      setStatusMessage({
-        type: results.corruptedCount > 0 ? 'error' : 'success',
-        message: `Scan complete: ${results.corruptedCount} corrupted records found out of ${results.totalRecords} total`
-      });
-      setTimeout(() => setStatusMessage(null), 5000);
-    } catch (error: any) {
-      setStatusMessage({ type: 'error', message: 'Diagnostic failed: ' + error.message });
-      setTimeout(() => setStatusMessage(null), 5000);
-    } finally {
-      setIsRunningGoldRepair(false);
-    }
-  };
-
-  const handleGoldFix = async () => {
-    if (!confirm('Are you sure you want to fix all corrupted gold records? This will update the database.')) {
-      return;
-    }
-
-    setIsRunningGoldRepair(true);
-    try {
-      const results = await fixCorruptedCumulativeGold({});
-      setGoldFixResults(results);
-      setStatusMessage({
-        type: 'success',
-        message: `Fixed ${results.fixedCount} records out of ${results.totalRecords} total`
-      });
-      setTimeout(() => setStatusMessage(null), 5000);
-      // Re-run diagnostic to confirm fix
-      const newDiagnostic = await findCorruptedGoldRecords({});
-      setGoldDiagnosticResults(newDiagnostic);
-    } catch (error: any) {
-      setStatusMessage({ type: 'error', message: 'Fix failed: ' + error.message });
-      setTimeout(() => setStatusMessage(null), 5000);
-    } finally {
-      setIsRunningGoldRepair(false);
-    }
-  };
-
   const handleSort = (column: string) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -885,17 +754,6 @@ Check console for full timeline.
         </button>
 
         <button
-          onClick={() => setActiveSubmenu('gold-repair')}
-          className={`px-4 py-2 text-sm font-semibold transition-colors ${
-            activeSubmenu === 'gold-repair'
-              ? 'text-yellow-400 border-b-2 border-yellow-400'
-              : 'text-gray-400 hover:text-gray-200'
-          }`}
-        >
-          🔧 Gold Repair
-        </button>
-
-        <button
           onClick={() => setActiveSubmenu('variation-spread')}
           className={`px-4 py-2 text-sm font-semibold transition-colors ${
             activeSubmenu === 'variation-spread'
@@ -1003,130 +861,6 @@ Check console for full timeline.
           ) : (
             <SystemMonitoringDashboard stakeAddress={stakeAddress} />
           )}
-        </div>
-      ) : activeSubmenu === 'gold-repair' ? (
-        <div className="space-y-6">
-          {/* Gold Repair Tool */}
-          <div className="bg-gray-900/50 rounded-lg border border-yellow-500/30 p-6">
-            <h2 className="text-2xl font-bold text-yellow-400 mb-4">Gold Repair Tool</h2>
-            <p className="text-gray-300 mb-6">
-              Scan and repair corrupted cumulative gold values. The gold invariant requires:
-              <span className="text-yellow-400 font-mono block mt-2">totalCumulativeGold ≥ accumulatedGold + totalSpent</span>
-            </p>
-
-            {/* Diagnostic Section */}
-            <div className="bg-gray-800/50 border border-blue-500/30 rounded-lg p-6 mb-6">
-              <h3 className="text-xl font-bold mb-4">1. Diagnostic Scan</h3>
-              <p className="text-gray-300 mb-4">
-                Scan all gold mining records to find any with corrupted cumulative gold values.
-              </p>
-              <button
-                onClick={handleGoldDiagnostic}
-                disabled={isRunningGoldRepair}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isRunningGoldRepair ? 'Scanning...' : 'Run Diagnostic'}
-              </button>
-
-              {goldDiagnosticResults && (
-                <div className="mt-6 p-4 bg-gray-900 rounded border border-yellow-500/20">
-                  <h4 className="text-lg font-bold mb-2">Diagnostic Results:</h4>
-                  <div className="space-y-2 text-sm">
-                    <p>Total Records: <span className="text-yellow-500">{goldDiagnosticResults.totalRecords}</span></p>
-                    <p>Corrupted Records: <span className={goldDiagnosticResults.corruptedCount > 0 ? "text-red-500" : "text-green-500"}>
-                      {goldDiagnosticResults.corruptedCount}
-                    </span></p>
-
-                    {goldDiagnosticResults.corruptedCount > 0 && (
-                      <div className="mt-4">
-                        <h5 className="font-bold mb-2">Corrupted Wallets:</h5>
-                        <div className="space-y-2 max-h-64 overflow-y-auto">
-                          {goldDiagnosticResults.corruptedRecords.map((record: any, idx: number) => (
-                            <div key={idx} className="bg-gray-800 p-2 rounded text-xs">
-                              <p><span className="text-gray-400">Wallet:</span> {record.wallet}</p>
-                              <p><span className="text-gray-400">Accumulated:</span> {record.accumulated.toFixed(2)}</p>
-                              <p><span className="text-gray-400">Cumulative:</span> {record.cumulative.toFixed(2)}</p>
-                              <p><span className="text-gray-400">Spent:</span> {record.spent.toFixed(2)}</p>
-                              <p><span className="text-red-400">Deficit:</span> {record.deficit.toFixed(2)}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Fix Section */}
-            <div className="bg-gray-800/50 border border-yellow-500/30 rounded-lg p-6 mb-6">
-              <h3 className="text-xl font-bold mb-4">2. Repair Corrupted Records</h3>
-              <p className="text-gray-300 mb-4">
-                Fix all corrupted records by setting totalCumulativeGold = accumulatedGold + totalSpent.
-                This ensures the gold invariant is maintained.
-              </p>
-              <button
-                onClick={handleGoldFix}
-                disabled={isRunningGoldRepair || (goldDiagnosticResults && goldDiagnosticResults.corruptedCount === 0)}
-                className="bg-yellow-600 hover:bg-yellow-700 text-black px-6 py-3 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isRunningGoldRepair ? 'Fixing...' : 'Fix Corrupted Records'}
-              </button>
-
-              {goldFixResults && (
-                <div className="mt-6 p-4 bg-gray-900 rounded border border-green-500/20">
-                  <h4 className="text-lg font-bold mb-2 text-green-500">Fix Results:</h4>
-                  <div className="space-y-2 text-sm">
-                    <p>Total Records: <span className="text-yellow-500">{goldFixResults.totalRecords}</span></p>
-                    <p>Fixed Records: <span className="text-green-500">{goldFixResults.fixedCount}</span></p>
-
-                    {goldFixResults.fixedCount > 0 && (
-                      <div className="mt-4">
-                        <h5 className="font-bold mb-2">Fixed Wallets:</h5>
-                        <div className="space-y-2 max-h-64 overflow-y-auto">
-                          {goldFixResults.fixedWallets.map((record: any, idx: number) => (
-                            <div key={idx} className="bg-gray-800 p-2 rounded text-xs">
-                              <p><span className="text-gray-400">Wallet:</span> {record.wallet}</p>
-                              <p><span className="text-gray-400">Old Cumulative:</span> {record.oldCumulative.toFixed(2)}</p>
-                              <p><span className="text-green-400">New Cumulative:</span> {record.newCumulative.toFixed(2)}</p>
-                              <p><span className="text-yellow-400">Deficit Fixed:</span> +{record.deficit.toFixed(2)}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Info Section */}
-            <div className="bg-gray-800/50 border border-blue-500/30 rounded-lg p-6">
-              <h3 className="text-xl font-bold mb-4">What This Does</h3>
-              <div className="text-gray-300 space-y-2 text-sm">
-                <p>
-                  <strong>The Gold Invariant:</strong> totalCumulativeGold ≥ accumulatedGold + totalSpent
-                </p>
-                <p>
-                  This invariant ensures that the total gold ever earned is always greater than or equal to
-                  the sum of current gold plus gold spent on upgrades.
-                </p>
-                <p className="mt-4">
-                  <strong>Why it breaks:</strong> Database initialization bugs, incomplete migrations, or
-                  manual database edits can cause cumulative gold to be less than it should be.
-                </p>
-                <p className="mt-4">
-                  <strong>How the fix works:</strong> Sets totalCumulativeGold to the minimum valid value
-                  (accumulatedGold + totalSpent) for any corrupted records. This prevents errors while
-                  preserving the integrity of gold tracking.
-                </p>
-                <p className="mt-4 text-yellow-500">
-                  <strong>Note:</strong> The auto-fix in calculateGoldIncrease() will now prevent new
-                  corruption, but existing corrupted records need to be repaired using this tool.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       ) : activeSubmenu === 'variation-spread' ? (
         <VariationSpreadViewer />
@@ -1747,14 +1481,6 @@ Check console for full timeline.
                                   Reset Verify
                                 </button>
                               )}
-                              <button
-                                onClick={() => { if (selectedDatabase !== 'sturgeon' || productionMutationsEnabled) { handleSingleWalletSnapshot(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); } }}
-                                disabled={isRunningSnapshot || (selectedDatabase === 'sturgeon' && !productionMutationsEnabled)}
-                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-indigo-900/50 text-indigo-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                title={(selectedDatabase === 'sturgeon' && !productionMutationsEnabled) ? '🔒 Disabled in READ ONLY mode' : 'Run blockchain snapshot for this wallet (with debug logging)'}
-                              >
-                                📸 Snapshot
-                              </button>
                               <button
                                 onClick={() => { setDiagnosticWallet(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-purple-900/50 text-purple-400 transition-colors"
