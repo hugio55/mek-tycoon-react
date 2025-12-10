@@ -27,6 +27,7 @@ interface TradeListingCardProps {
     createdAt: number;
     isOwnListing?: boolean;
     viewCount?: number; // Analytics: unique views
+    offerCount?: number; // Number of pending offers
   };
   viewerStakeAddress?: string; // For recording views
   viewerMatchCount?: number;
@@ -304,6 +305,20 @@ export default function TradeListingCard({
                 <circle cx="12" cy="12" r="3"/>
               </svg>
               {listing.viewCount}
+            </span>
+          )}
+          {/* Offer count - show for browse tab */}
+          {listing.offerCount !== undefined && listing.offerCount > 0 && (
+            <span
+              className="text-xs flex items-center gap-1"
+              style={{ fontFamily: 'Play, sans-serif', color: '#4ade80' }}
+              title="Pending offers"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              {listing.offerCount}
             </span>
           )}
         </div>

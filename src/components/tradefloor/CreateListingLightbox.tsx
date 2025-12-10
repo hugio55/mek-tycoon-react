@@ -58,6 +58,21 @@ const getMekRank = (sourceKey: string): number | null => {
   return Math.round((head.rank + body.rank + trait.rank) / 3);
 };
 
+// Helper to get all three variations from a Mek's sourceKey
+const getMekVariations = (sourceKey: string) => {
+  if (!sourceKey) return null;
+  const cleanKey = sourceKey.replace(/-[A-Z]$/i, "").toUpperCase();
+  const parts = cleanKey.split("-");
+  if (parts.length !== 3) return null;
+
+  const [headCode, bodyCode, traitCode] = parts;
+  const head = getVariationBySourceKey(headCode, "head");
+  const body = getVariationBySourceKey(bodyCode, "body");
+  const trait = getVariationBySourceKey(traitCode, "trait");
+
+  return { head, body, trait };
+};
+
 const variationTypeColors: Record<string, { bg: string; border: string; text: string }> = {
   head: { bg: "rgba(59, 130, 246, 0.15)", border: "rgba(59, 130, 246, 0.3)", text: "#60a5fa" },
   body: { bg: "rgba(34, 197, 94, 0.15)", border: "rgba(34, 197, 94, 0.3)", text: "#4ade80" },
@@ -336,9 +351,12 @@ export default function CreateListingLightbox({
                   style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
                 >
                   <span>Mek <span style={{ color: '#22d3ee' }}>#{getMekNumber(selectedMek.assetName)}</span></span>
-                  {getMekRank(selectedMek.sourceKey || selectedMek.sourceKeyBase) && (
-                    <span>Rank <span style={{ color: '#fbbf24' }}>#{getMekRank(selectedMek.sourceKey || selectedMek.sourceKeyBase)}</span></span>
-                  )}
+                  {(() => {
+                    const rank = getMekRank(selectedMek.sourceKey || selectedMek.sourceKeyBase || "");
+                    return rank ? (
+                      <span>Rank <span style={{ color: '#fbbf24' }}>#{rank}</span></span>
+                    ) : null;
+                  })()}
                 </div>
                 <button
                   onClick={() => setStep("select-mek")}
@@ -656,37 +674,92 @@ export default function CreateListingLightbox({
                   style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.6)' }}
                 >
                   <span>Mek <span style={{ color: '#22d3ee' }}>#{getMekNumber(selectedMek.assetName)}</span></span>
-                  {getMekRank(selectedMek.sourceKey || selectedMek.sourceKeyBase) && (
-                    <span>Rank <span style={{ color: '#fbbf24' }}>#{getMekRank(selectedMek.sourceKey || selectedMek.sourceKeyBase)}</span></span>
-                  )}
+                  {(() => {
+                    const rank = getMekRank(selectedMek.sourceKey || selectedMek.sourceKeyBase || "");
+                    return rank ? (
+                      <span>Rank <span style={{ color: '#fbbf24' }}>#{rank}</span></span>
+                    ) : null;
+                  })()}
                 </div>
 
-                {/* Variations if available */}
-                {selectedMek.variations && (
-                  <div className="mt-4 pt-4 border-t border-white/10">
-                    <div
-                      className="text-xs uppercase tracking-wider mb-2"
-                      style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
-                    >
-                      Variations
+                {/* Variations parsed from sourceKey - always show head, body, trait in order */}
+                {(() => {
+                  const variations = getMekVariations(selectedMek.sourceKey || selectedMek.sourceKeyBase || "");
+                  if (!variations) return null;
+
+                  return (
+                    <div className="mt-4 pt-4 border-t border-white/10">
+                      <div className="flex flex-col items-center gap-2">
+                        {/* Head */}
+                        {variations.head && (
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="px-2 py-0.5 rounded text-xs uppercase"
+                              style={{
+                                background: variationTypeColors.head.bg,
+                                border: `1px solid ${variationTypeColors.head.border}`,
+                                color: variationTypeColors.head.text,
+                                fontFamily: 'Play, sans-serif',
+                              }}
+                            >
+                              HEAD
+                            </span>
+                            <span style={{ color: 'rgba(255,255,255,0.9)', fontFamily: 'Play, sans-serif', fontSize: '14px' }}>
+                              {variations.head.name}
+                            </span>
+                            <span style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'Play, sans-serif', fontSize: '13px' }}>
+                              ({variations.head.count} {variations.head.count === 1 ? 'copy' : 'copies'})
+                            </span>
+                          </div>
+                        )}
+                        {/* Body */}
+                        {variations.body && (
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="px-2 py-0.5 rounded text-xs uppercase"
+                              style={{
+                                background: variationTypeColors.body.bg,
+                                border: `1px solid ${variationTypeColors.body.border}`,
+                                color: variationTypeColors.body.text,
+                                fontFamily: 'Play, sans-serif',
+                              }}
+                            >
+                              BODY
+                            </span>
+                            <span style={{ color: 'rgba(255,255,255,0.9)', fontFamily: 'Play, sans-serif', fontSize: '14px' }}>
+                              {variations.body.name}
+                            </span>
+                            <span style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'Play, sans-serif', fontSize: '13px' }}>
+                              ({variations.body.count} {variations.body.count === 1 ? 'copy' : 'copies'})
+                            </span>
+                          </div>
+                        )}
+                        {/* Trait */}
+                        {variations.trait && (
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="px-2 py-0.5 rounded text-xs uppercase"
+                              style={{
+                                background: variationTypeColors.trait.bg,
+                                border: `1px solid ${variationTypeColors.trait.border}`,
+                                color: variationTypeColors.trait.text,
+                                fontFamily: 'Play, sans-serif',
+                              }}
+                            >
+                              TRAIT
+                            </span>
+                            <span style={{ color: 'rgba(255,255,255,0.9)', fontFamily: 'Play, sans-serif', fontSize: '14px' }}>
+                              {variations.trait.name}
+                            </span>
+                            <span style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'Play, sans-serif', fontSize: '13px' }}>
+                              ({variations.trait.count} {variations.trait.count === 1 ? 'copy' : 'copies'})
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap justify-center gap-2">
-                      {Object.entries(selectedMek.variations || {}).map(([key, value]) => (
-                        <span
-                          key={key}
-                          className="px-2 py-1 text-xs rounded"
-                          style={{
-                            background: 'rgba(255,255,255,0.1)',
-                            color: 'rgba(255,255,255,0.7)',
-                            fontFamily: 'Play, sans-serif',
-                          }}
-                        >
-                          {String(value)}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
           </div>

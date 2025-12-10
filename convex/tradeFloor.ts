@@ -203,7 +203,7 @@ export const getBrowseListings = query({
     // Note: We no longer filter out viewer's own listings
     // They will be marked with isOwnListing flag instead
 
-    // Filter out listings from inactive users (30+ days)
+    // Filter out listings from inactive users (30+ days) and get offer counts
     const filteredListings = await Promise.all(
       listings.map(async (listing) => {
         const owner = await ctx.db
@@ -218,7 +218,18 @@ export const getBrowseListings = query({
         const lastLogin = owner.lastLogin || owner.createdAt || 0;
         if (now - lastLogin > THIRTY_DAYS_MS) return null;
 
-        return listing;
+        // Get offer count for this listing
+        const offers = await ctx.db
+          .query("tradeOffers")
+          .withIndex("by_listing_status", (q) =>
+            q.eq("listingId", listing._id).eq("status", "pending")
+          )
+          .collect();
+
+        return {
+          ...listing,
+          offerCount: offers.length,
+        };
       })
     );
 

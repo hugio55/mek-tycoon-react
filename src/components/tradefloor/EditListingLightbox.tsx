@@ -291,7 +291,7 @@ export default function EditListingLightbox({
               border: '1px solid rgba(255,255,255,0.1)',
             }}
           >
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 content-start">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 content-start">
               {filteredVariations.map((v) => {
                 const colors = variationTypeColors[v.type];
                 return (
@@ -299,15 +299,29 @@ export default function EditListingLightbox({
                     key={v.id}
                     onClick={() => handleSelectVariation(v)}
                     disabled={selectedVariations.length >= 6}
-                    className="px-3 py-2 rounded-lg text-sm text-left transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-2 text-sm rounded text-left transition-all hover:scale-[1.02] whitespace-nowrap overflow-hidden"
                     style={{
                       fontFamily: 'Play, sans-serif',
                       background: colors.bg,
                       border: `1px solid ${colors.border}`,
                       color: colors.text,
+                      opacity: selectedVariations.length >= 6 ? 0.5 : 1,
+                      cursor: selectedVariations.length >= 6 ? 'not-allowed' : 'pointer',
                     }}
                   >
-                    {v.name}
+                    <div className="flex justify-between items-center">
+                      <span className="truncate">
+                        <span style={{ opacity: 0.6, marginRight: '4px' }}>{v.type[0].toUpperCase()}</span>
+                        {v.name}
+                      </span>
+                      <span
+                        className="text-xs px-1.5 py-0.5 rounded ml-2 flex-shrink-0"
+                        style={{ background: 'rgba(0,0,0,0.2)', opacity: 0.7 }}
+                        title={`Rank ${v.rank} of 291`}
+                      >
+                        #{v.rank}
+                      </span>
+                    </div>
                   </button>
                 );
               })}
