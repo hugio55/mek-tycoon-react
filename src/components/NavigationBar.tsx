@@ -17,7 +17,7 @@ export default function NavigationBar() {
   // ============================================================
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [currentGold, setCurrentGold] = useState(0);
-  const goldAnimationRef = useRef<number | null>(null);
+  // Phase II: goldAnimationRef removed - passive gold animation no longer needed
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const imageKeyRef = useRef<string | null>(null);

@@ -489,27 +489,9 @@ export default function EssenceMarketPage() {
     }
   }, [userData?.gold]);
 
-  // Real-time gold increment animation (Phase II: uses totalGoldPerHour)
-  useEffect(() => {
-    if (!userData?.totalGoldPerHour) return;
-
-    const goldPerSecond = userData.totalGoldPerHour / 3600;
-    console.log('[Essence Market] Starting gold animation with rate:', userData.totalGoldPerHour, 'gold/hr');
-    let lastTimestamp = performance.now();
-    let animationFrameId: number;
-
-    const animate = (timestamp: number) => {
-      const deltaTime = (timestamp - lastTimestamp) / 1000; // Convert to seconds
-      lastTimestamp = timestamp;
-
-      setDisplayGold(prev => prev + (goldPerSecond * deltaTime));
-
-      animationFrameId = requestAnimationFrame(animate);
-    };
-
-    animationFrameId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [userData?.totalGoldPerHour]);
+  // Phase II: Passive gold animation REMOVED
+  // Gold income now comes from Job Slots (daily claims), not passive accumulation
+  // The displayGold state is synced directly from userData.gold above
 
   // Filter and sort listings
   const filteredListings = listings.filter((listing: { sellerId: Id<"users">; expiresAt?: number; itemVariation?: string }) => {

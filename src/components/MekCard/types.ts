@@ -1,11 +1,11 @@
+// Phase II: Gold rate fields REMOVED from MekAsset
+// Gold income now comes from Job Slots, not individual Mek properties
 export interface MekAsset {
   assetId: string;
   policyId: string;
   assetName: string;
   imageUrl?: string;
-  goldPerHour: number;
-  baseGoldPerHour?: number;
-  levelBoostAmount?: number;
+  // goldPerHour, baseGoldPerHour, levelBoostAmount REMOVED - Phase II
   currentLevel?: number;
   rarityRank?: number;
   mekNumber: number;
@@ -15,10 +15,10 @@ export interface MekAsset {
   sourceKey?: string;
 }
 
+// Phase II: AnimatedMekValues gold fields removed
 export interface AnimatedMekValues {
   level: number;
-  goldRate: number;
-  bonusRate: number;
+  // goldRate, bonusRate REMOVED - Phase II
 }
 
 // Default colors for levels 1-10 (fallback only)
