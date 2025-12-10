@@ -7057,8 +7057,9 @@ function CampaignManagerWithDatabase({
 }
 
 // NFT Admin Sub-Tabs Component - SIMPLIFIED FOR SINGLE DATABASE
+// NOTE: 'commemorative' tab removed - legacy global eligibility system replaced by campaign-based eligibility
 function NFTAdminTabs({ client }: { client: any }) {
-  const [nftSubTab, setNftSubTab] = useState<'commemorative' | 'whitelist-manager' | 'json-generator' | 'campaigns'>('campaigns');
+  const [nftSubTab, setNftSubTab] = useState<'whitelist-manager' | 'json-generator' | 'campaigns'>('campaigns');
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [campaignUpdateTrigger, setCampaignUpdateTrigger] = useState(0);
   const [cleaningCampaignId, setCleaningCampaignId] = useState<string | null>(null);
@@ -7574,17 +7575,8 @@ function NFTAdminTabs({ client }: { client: any }) {
   return (
     <div className="space-y-6">
       {/* Sub-Tab Navigation */}
+      {/* NOTE: Commemorative tab removed - legacy global eligibility system replaced by campaign-based eligibility */}
       <div className="flex flex-wrap gap-2 border-b-2 border-yellow-500/30 pb-2">
-        <button
-          onClick={() => setNftSubTab('commemorative')}
-          className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
-            nftSubTab === 'commemorative'
-              ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30'
-              : 'bg-black/50 text-gray-400 hover:text-yellow-400 border border-yellow-500/30'
-          }`}
-        >
-          🏆 Commemorative
-        </button>
         <button
           onClick={() => setNftSubTab('whitelist-manager')}
           className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
@@ -7618,7 +7610,6 @@ function NFTAdminTabs({ client }: { client: any }) {
       </div>
 
       {/* Tab Content */}
-      {nftSubTab === 'commemorative' && <CommemorativeToken1Admin />}
       {nftSubTab === 'whitelist-manager' && <WhitelistManagerAdmin client={client} mutationsEnabled={mutationsEnabled} />}
       {nftSubTab === 'json-generator' && <NMKRJSONGenerator />}
       {nftSubTab === 'campaigns' && (

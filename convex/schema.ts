@@ -3312,14 +3312,10 @@ export default defineSchema({
     .index("by_processed_at", ["processedAt"])
     .index("by_nft_uid", ["nftUid"]), // For PATH 3 detection in checkReservationPaid
 
-  // ===== SIMPLE NFT ELIGIBILITY SYSTEM (NMKR) =====
-  // Replaces the complex custom minting system above
-  // Just stores which snapshot controls who sees the "Claim NFT" button
-  nftEligibilityConfig: defineTable({
-    activeSnapshotId: v.optional(v.id("whitelistSnapshots")), // Currently active snapshot
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  }),
+  // ===== LEGACY NFT ELIGIBILITY SYSTEM (REMOVED December 2025) =====
+  // nftEligibilityConfig table removed - global eligibility replaced by per-campaign eligibility
+  // Each campaign now has its own eligibilitySnapshotId field in commemorativeCampaigns table
+  // CommemorativeToken1Admin and related functions have been removed
 
   // ===== TENURE SYSTEM =====
   // Configuration for tenure system (base rates, multipliers, etc.)
