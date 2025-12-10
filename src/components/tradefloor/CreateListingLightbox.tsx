@@ -549,8 +549,8 @@ export default function CreateListingLightbox({
         >
           <button
             onClick={onClose}
-            className="px-4 py-2 transition-colors hover:text-white"
-            style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(255,255,255,0.6)' }}
+            className="px-4 py-2 text-white/60 transition-all duration-200 hover:text-white hover:scale-105"
+            style={{ fontFamily: 'Inter, sans-serif' }}
           >
             Cancel
           </button>

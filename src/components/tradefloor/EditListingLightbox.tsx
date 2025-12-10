@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -43,6 +43,9 @@ export default function EditListingLightbox({
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | "head" | "body" | "trait">("all");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  const [typeDropdownRect, setTypeDropdownRect] = useState<DOMRect | null>(null);
+  const typeDropdownBtnRef = useRef<HTMLButtonElement>(null);
 
   const updateListing = useMutation(api.tradeFloor.updateListingVariations);
 
@@ -53,6 +56,17 @@ export default function EditListingLightbox({
       document.body.style.overflow = "unset";
     };
   }, []);
+
+  // Close type dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (typeDropdownOpen && typeDropdownBtnRef.current && !typeDropdownBtnRef.current.contains(event.target as Node)) {
+        setTypeDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [typeDropdownOpen]);
 
   // Filter variations for picker
   const filteredVariations = useMemo(() => {
@@ -360,8 +374,8 @@ export default function EditListingLightbox({
         >
           <button
             onClick={onClose}
-            className="px-4 py-2 transition-colors hover:text-white"
-            style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(255,255,255,0.6)' }}
+            className="px-4 py-2 text-white/60 transition-all duration-200 hover:text-white hover:scale-105"
+            style={{ fontFamily: 'Inter, sans-serif' }}
           >
             Cancel
           </button>

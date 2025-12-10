@@ -410,35 +410,29 @@ export default function TradeListingCard({
           {isOwner && onViewOffers && (
             <button
               onClick={onViewOffers}
-              className="px-4 py-1.5 text-sm rounded-lg font-medium transition-all hover:scale-[1.05] active:scale-[0.95] flex items-center gap-2"
+              className="px-3 py-1 text-xs rounded font-medium transition-all hover:brightness-125 flex items-center gap-1.5"
               style={{
-                fontFamily: 'Inter, sans-serif',
+                fontFamily: 'Play, sans-serif',
                 background: newOfferCount && newOfferCount > 0
-                  ? 'linear-gradient(135deg, rgba(34, 211, 238, 0.25), rgba(34, 211, 238, 0.15))'
-                  : 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08))',
+                  ? 'rgba(34, 211, 238, 0.15)'
+                  : 'rgba(255,255,255,0.08)',
                 border: newOfferCount && newOfferCount > 0
-                  ? '1px solid rgba(34, 211, 238, 0.4)'
-                  : '1px solid rgba(255,255,255,0.2)',
-                color: 'white',
-                boxShadow: newOfferCount && newOfferCount > 0
-                  ? '0 0 20px rgba(34, 211, 238, 0.3)'
-                  : 'none',
+                  ? '1px solid rgba(34, 211, 238, 0.3)'
+                  : '1px solid rgba(255,255,255,0.15)',
+                color: newOfferCount && newOfferCount > 0 ? '#22d3ee' : 'rgba(255,255,255,0.7)',
               }}
             >
-              Trade Offers
+              Offers
               {pendingOfferCount !== undefined && pendingOfferCount > 0 && (
                 <span
-                  className="px-1.5 py-0.5 text-xs rounded-full min-w-[20px] text-center"
+                  className="px-1 py-0 text-[10px] rounded-full min-w-[16px] text-center"
                   style={{
                     background: newOfferCount && newOfferCount > 0
-                      ? 'rgba(34, 211, 238, 0.4)'
-                      : 'rgba(255, 255, 255, 0.15)',
+                      ? 'rgba(34, 211, 238, 0.3)'
+                      : 'rgba(255, 255, 255, 0.1)',
                     color: newOfferCount && newOfferCount > 0
                       ? '#22d3ee'
-                      : 'rgba(255, 255, 255, 0.6)',
-                    textShadow: newOfferCount && newOfferCount > 0
-                      ? '0 0 10px rgba(34, 211, 238, 0.8)'
-                      : 'none',
+                      : 'rgba(255, 255, 255, 0.5)',
                   }}
                 >
                   {pendingOfferCount}
@@ -450,12 +444,12 @@ export default function TradeListingCard({
           {isOwner && onEditListing && (
             <button
               onClick={onEditListing}
-              className="px-3 py-1.5 text-sm rounded-lg font-medium transition-all hover:scale-[1.05] active:scale-[0.95]"
+              className="px-3 py-1 text-xs rounded font-medium transition-all hover:brightness-125"
               style={{
-                fontFamily: 'Inter, sans-serif',
-                background: 'rgba(168, 85, 247, 0.1)',
-                border: '1px solid rgba(168, 85, 247, 0.3)',
-                color: '#c084fc',
+                fontFamily: 'Play, sans-serif',
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                color: 'rgba(255,255,255,0.7)',
               }}
             >
               Edit
@@ -465,15 +459,15 @@ export default function TradeListingCard({
           {isOwner && onCancel && (
             <button
               onClick={onCancel}
-              className="px-3 py-1.5 text-sm rounded-lg font-medium transition-all hover:scale-[1.05] active:scale-[0.95]"
+              className="px-3 py-1 text-xs rounded font-medium transition-all hover:brightness-125"
               style={{
-                fontFamily: 'Inter, sans-serif',
+                fontFamily: 'Play, sans-serif',
                 background: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
                 color: '#f87171',
               }}
             >
-              Cancel
+              De-list
             </button>
           )}
         </div>

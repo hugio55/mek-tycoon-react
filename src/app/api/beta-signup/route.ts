@@ -3,10 +3,16 @@ import { ConvexHttpClient } from 'convex/browser';
 import { api } from '@/convex/_generated/api';
 
 // Lazy initialization to avoid build-time errors
+// IMPORTANT: Beta signups ALWAYS go to Sturgeon (production) regardless of environment
+// This ensures all signups from localhost dev AND live site end up in production database
 let convex: ConvexHttpClient | null = null;
 function getConvex() {
   if (!convex) {
-    convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+    // Use Sturgeon (production) for beta signups, fallback to default Convex URL
+    const sturgeonUrl = process.env.NEXT_PUBLIC_STURGEON_URL;
+    const convexUrl = sturgeonUrl || process.env.NEXT_PUBLIC_CONVEX_URL!;
+    console.log('[🎮BETA-API] Using database:', sturgeonUrl ? 'Sturgeon (Production)' : 'Trout (Dev)');
+    convex = new ConvexHttpClient(convexUrl);
   }
   return convex;
 }
