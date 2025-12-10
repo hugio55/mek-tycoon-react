@@ -35,19 +35,10 @@ export const getUserData = query({
     }
 
     // Get owned Meks from meks table using Phase II index
-    // Try ownerStakeAddress first (Phase II), fall back to owner (legacy)
-    let ownedMeks = await ctx.db
+    const ownedMeks = await ctx.db
       .query("meks")
       .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", args.walletAddress))
       .collect();
-
-    // If no results with Phase II field, try legacy owner field
-    if (ownedMeks.length === 0) {
-      ownedMeks = await ctx.db
-        .query("meks")
-        .withIndex("by_owner", (q: any) => q.eq("owner", args.walletAddress))
-        .collect();
-    }
 
     // Phase II: Gold rate calculations REMOVED
     // Gold income now comes from Job Slots, not individual Mek properties

@@ -163,7 +163,7 @@ export const getUserProfile = query({
     // Get user's Meks
     const meks = await ctx.db
       .query("meks")
-      .withIndex("by_owner", (q: any) => q.eq("owner", args.walletAddress))
+      .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", args.walletAddress))
       .collect();
 
     // Get user's inventory

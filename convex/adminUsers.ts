@@ -750,28 +750,10 @@ export const cascadeDeleteUser = mutation({
     // The meks table has exactly 4000 NFT records that should NEVER be deleted.
     // MEKs have lifetime stats (accumulatedGoldAllTime) that must be preserved.
     // Only ownership fields are cleared; the MEK becomes unowned and can be re-verified by new owner.
-    //
-    // Query BOTH indexes to ensure complete coverage:
-    // - by_owner (legacy): Uses the "owner" field
-    // - by_owner_stake (Phase II): Uses the "ownerStakeAddress" field
-    // Both should have the same value, but querying both ensures no MEKs are missed.
-
-    const meksByOwner = await ctx.db.query("meks")
-      .withIndex("by_owner", (q: any) => q.eq("owner", walletAddress)).collect();
-
-    const meksByStake = await ctx.db.query("meks")
+    const meks = await ctx.db.query("meks")
       .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", walletAddress)).collect();
 
-    // Combine and deduplicate by _id
-    const mekIds = new Set<string>();
-    const allMeks = [...meksByOwner, ...meksByStake].filter(mek => {
-      const idStr = mek._id.toString();
-      if (mekIds.has(idStr)) return false;
-      mekIds.add(idStr);
-      return true;
-    });
-
-    for (const record of allMeks) {
+    for (const record of meks) {
       await ctx.db.patch(record._id, {
         // Clear ownership
         owner: undefined,
@@ -784,7 +766,7 @@ export const cascadeDeleteUser = mutation({
         slotNumber: undefined,
       });
     }
-    deletedCounts.meksCleared = allMeks.length; // Renamed to clarify we're clearing, not deleting
+    deletedCounts.meksCleared = meks.length;
 
     // mekLevels
     const mekLevels = await ctx.db.query("mekLevels")
@@ -1400,7 +1382,7 @@ export const searchWalletTraces = query({
 
     // Search meks table
     const meks = await ctx.db.query("meks")
-      .filter((q) => q.eq(q.field("owner"), walletAddress)).collect();
+      .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", walletAddress)).collect();
     if (meks.length > 0) traces.meks = meks.length;
 
     // Search mekLevels table
