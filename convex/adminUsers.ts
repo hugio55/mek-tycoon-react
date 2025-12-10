@@ -1310,9 +1310,19 @@ export const bulkDeleteTestWallets = mutation({
       for (const r of mekTalentTrees) { await ctx.db.delete(r._id); recordsDeleted++; }
 
       // Tables with walletAddress
+      // meks - CLEAR OWNERSHIP, do NOT delete! MEKs are permanent NFT records.
       const meks = await ctx.db.query("meks")
         .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", walletAddress)).collect();
-      for (const r of meks) { await ctx.db.delete(r._id); recordsDeleted++; }
+      for (const r of meks) {
+        await ctx.db.patch(r._id, {
+          owner: undefined,
+          ownerStakeAddress: undefined,
+          accumulatedGoldForCorp: 0,
+          isSlotted: false,
+          slotNumber: undefined,
+        });
+        recordsDeleted++; // Count as "cleared" for reporting
+      }
 
       const mekLevels = await ctx.db.query("mekLevels")
         .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();

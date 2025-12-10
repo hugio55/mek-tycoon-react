@@ -515,7 +515,6 @@ export const checkOwnerFieldConsistency = query({
 
     const problemMeks: Array<{
       assetId: string;
-      mekNumber: number;
       owner: string | undefined;
       ownerStakeAddress: string | undefined;
       issue: string;
@@ -532,7 +531,6 @@ export const checkOwnerFieldConsistency = query({
         hasOwnerOnly++;
         problemMeks.push({
           assetId: mek.assetId,
-          mekNumber: mek.mekNumber || 0,
           owner: mek.owner,
           ownerStakeAddress: mek.ownerStakeAddress,
           issue: "owner set but ownerStakeAddress missing"
@@ -541,7 +539,6 @@ export const checkOwnerFieldConsistency = query({
         hasStakeOnly++;
         problemMeks.push({
           assetId: mek.assetId,
-          mekNumber: mek.mekNumber || 0,
           owner: mek.owner,
           ownerStakeAddress: mek.ownerStakeAddress,
           issue: "ownerStakeAddress set but owner missing"
@@ -554,7 +551,6 @@ export const checkOwnerFieldConsistency = query({
           bothMismatch++;
           problemMeks.push({
             assetId: mek.assetId,
-            mekNumber: mek.mekNumber || 0,
             owner: mek.owner,
             ownerStakeAddress: mek.ownerStakeAddress,
             issue: "owner and ownerStakeAddress don't match"
