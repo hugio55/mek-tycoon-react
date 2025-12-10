@@ -398,9 +398,12 @@ export const updateUserField = mutation({
     // Special handling for essence - use userEssence table (Phase II)
     if (args.field === "totalEssence" || args.field === "essence") {
       if (!user.stakeAddress) throw new Error("User does not have a stake address");
-      const essenceValues = args.value as Record<string, number>;
+      const essenceValues = args.value as Record<string, number | undefined>;
       for (const [essenceType, amount] of Object.entries(essenceValues)) {
-        await setUserEssenceBalance(ctx, user.stakeAddress, essenceType, amount, "admin");
+        // Skip undefined values (from optional fields)
+        if (amount !== undefined && amount !== null) {
+          await setUserEssenceBalance(ctx, user.stakeAddress, essenceType, amount, "admin");
+        }
       }
     } else {
       // Generic field update

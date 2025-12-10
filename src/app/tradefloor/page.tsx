@@ -622,6 +622,7 @@ export default function TradeFloorPage() {
                   <TradeListingCard
                     key={listing._id}
                     listing={listing}
+                    viewerStakeAddress={stakeAddress || undefined}
                     viewerMatchCount={listing.viewerMatchCount}
                     onMakeOffer={() => setSelectedListingForOffer(listing)}
                     showMakeOffer={true}
@@ -708,6 +709,7 @@ export default function TradeFloorPage() {
                   <TradeListingCard
                     key={listing._id}
                     listing={listing}
+                    viewerStakeAddress={stakeAddress || undefined}
                     isOwner={true}
                     pendingOfferCount={listing.pendingOfferCount}
                     newOfferCount={listing.newOfferCount}
