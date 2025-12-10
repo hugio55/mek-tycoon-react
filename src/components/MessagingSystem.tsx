@@ -97,6 +97,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   const [showSupportDismissLightbox, setShowSupportDismissLightbox] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -189,9 +190,11 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     }
   }, [selectedConversationId, walletAddress, markAsRead, messages?.length]);
 
-  // Auto-scroll to latest messages (instant to avoid visible scroll animation on load)
+  // Auto-scroll to latest messages (instant - directly set scrollTop to start at bottom)
   useLayoutEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   // Helper to check if conversation is support chat
@@ -742,7 +745,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
               {isNewConversation && !existingConversation && (
                 <div className="text-center text-gray-500 py-8">
                   {/* New Channel Icon - Signal waves */}

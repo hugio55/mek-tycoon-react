@@ -1,0 +1,203 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import { useRouter } from "next/navigation";
+
+interface ViewOffersLightboxProps {
+  listing: {
+    _id: Id<"tradeListings">;
+    ownerStakeAddress: string;
+    ownerCorpName?: string;
+    listedMekAssetId: string;
+    listedMekSourceKey?: string;
+    listedMekAssetName?: string;
+  };
+  ownerStakeAddress: string;
+  onClose: () => void;
+}
+
+export default function ViewOffersLightbox({
+  listing,
+  ownerStakeAddress,
+  onClose,
+}: ViewOffersLightboxProps) {
+  const [mounted, setMounted] = useState(false);
+  const [selectedOffer, setSelectedOffer] = useState<any>(null);
+  const [isStartingConversation, setIsStartingConversation] = useState(false);
+  const router = useRouter();
+
+  // Get offers for this listing
+  const offers = useQuery(api.tradeFloor.getListingOffers, {
+    listingId: listing._id,
+    ownerStakeAddress,
+  });
+
+  const startTradeConversation = useMutation(api.tradeFloor.startTradeConversation);
+
+  useEffect(() => {
+    setMounted(true);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
+
+  const handleMessagePlayer = async (offer: any, offeredMekAssetId: string) => {
+    setIsStartingConversation(true);
+    try {
+      await startTradeConversation({
+        listerStakeAddress: ownerStakeAddress,
+        offererStakeAddress: offer.offererStakeAddress,
+        listedMekAssetId: listing.listedMekAssetId,
+        offeredMekAssetId,
+      });
+      // Navigate to comms page
+      router.push("/comms");
+    } catch (error) {
+      console.error("Failed to start conversation:", error);
+      alert("Failed to start conversation. Please try again.");
+    } finally {
+      setIsStartingConversation(false);
+    }
+  };
+
+  if (!mounted) return null;
+
+  // Clean source key for image
+  const getMekImagePath = (sourceKey?: string) => {
+    const cleanKey = (sourceKey || "").replace(/-[A-Z]$/i, "").toLowerCase();
+    return cleanKey ? `/mek-images/150px/${cleanKey}.webp` : "/mek-images/placeholder.webp";
+  };
+
+  const listedMekImage = getMekImagePath(listing.listedMekSourceKey);
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/80" onClick={onClose} />
+
+      {/* Content */}
+      <div
+        className="relative bg-gray-900 border border-yellow-500/30 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center bg-black/30">
+          <div>
+            <h2 className="text-xl font-bold text-yellow-400">View Offers</h2>
+            <p className="text-sm text-gray-400">
+              Offers received for {listing.listedMekAssetName}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white text-2xl font-light"
+          >
+            &times;
+          </button>
+        </div>
+
+        {/* Your Listed Mek */}
+        <div className="px-6 py-4 bg-black/20 border-b border-gray-800">
+          <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">
+            Your Listed Mek:
+          </div>
+          <div className="flex items-center gap-4">
+            <img
+              src={listedMekImage}
+              alt={listing.listedMekAssetName}
+              className="w-16 h-16 object-contain"
+            />
+            <div className="text-white font-medium">{listing.listedMekAssetName}</div>
+          </div>
+        </div>
+
+        {/* Offers Grid */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {offers === undefined ? (
+            <div className="text-center py-12 text-gray-400">Loading offers...</div>
+          ) : offers.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📭</div>
+              <h3 className="text-xl font-semibold text-gray-300 mb-2">No Offers Yet</h3>
+              <p className="text-gray-500">
+                When other players make offers on your listing, they'll appear here
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {offers.map((offer: any) => (
+                <div
+                  key={offer._id}
+                  className="bg-gray-800/50 border border-gray-700 rounded-lg p-4"
+                >
+                  {/* Offerer Info */}
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="text-white font-medium">
+                      {offer.offererCorpName || "Unknown Corp"}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {new Date(offer.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+
+                  {/* Offered Meks */}
+                  <div className="text-xs text-gray-500 mb-2">
+                    Offered {offer.offeredMeks.length} Mek{offer.offeredMeks.length !== 1 ? "s" : ""}:
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {offer.offeredMeks.map((mek: any, i: number) => (
+                      <div
+                        key={i}
+                        className="bg-black/30 border border-gray-700 rounded-lg p-3 group relative"
+                      >
+                        <img
+                          src={getMekImagePath(mek.sourceKey)}
+                          alt={mek.assetName}
+                          className="w-full aspect-square object-contain mb-2"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/mek-images/placeholder.webp";
+                          }}
+                        />
+                        <div className="text-xs text-gray-400 truncate">{mek.assetName}</div>
+                        {mek.matchedVariations.length > 0 && (
+                          <div className="text-xs text-green-400 mt-1">
+                            Matches: {mek.matchedVariations.join(", ")}
+                          </div>
+                        )}
+
+                        {/* Message Player Button */}
+                        <button
+                          onClick={() => handleMessagePlayer(offer, mek.assetId)}
+                          disabled={isStartingConversation}
+                          className="mt-2 w-full px-3 py-1.5 text-xs bg-blue-500 hover:bg-blue-400 text-white font-medium rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isStartingConversation ? "..." : "Message Player"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-800 flex justify-end bg-black/30">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-400 hover:text-white transition-all"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from "convex/react";
+import { usePathname } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import GlobalBackground from "./GlobalBackground";
 import StarField from "./StarField";
@@ -15,6 +16,7 @@ import { getMediaUrl } from "@/lib/media-url";
  * - "planet": The StarField canvas animation with planet image overlay
  */
 export default function DynamicBackground() {
+  const pathname = usePathname();
   const siteSettings = useQuery(api.siteSettings.getSiteSettings);
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -25,6 +27,13 @@ export default function DynamicBackground() {
     const mobile = /iphone|ipod|android/.test(userAgent);
     setIsMobile(mobile);
   }, []);
+
+  // Don't render any background on admin pages - saves GPU resources
+  // EXCEPTION: This is a specific exclusion for /admin only, not a general pattern
+  // The global background should remain on all other pages unless explicitly excluded
+  if (pathname === '/admin' || pathname?.startsWith('/admin/')) {
+    return null;
+  }
 
   // Default to current background while loading
   const backgroundType = siteSettings?.backgroundType ?? "current";

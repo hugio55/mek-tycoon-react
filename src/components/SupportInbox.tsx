@@ -68,6 +68,7 @@ export default function SupportInbox({
   const [mounted, setMounted] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<{ url: string; filename: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Queries
   const supportConversations = useQuery(api.messaging.getAllSupportConversations);
