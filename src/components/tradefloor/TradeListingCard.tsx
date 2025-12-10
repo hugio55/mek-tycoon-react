@@ -200,6 +200,17 @@ export default function TradeListingCard({
       <div className="relative p-4 flex justify-center">
         <button
           onClick={() => {
+            // Debug logging - fires when lightbox opens
+            console.log("[🔍LIGHTBOX] Opening lightbox for:", listing.listedMekAssetName);
+            console.log("[🔍LIGHTBOX] Raw sourceKey from listing:", listing.listedMekSourceKey);
+            console.log("[🔍LIGHTBOX] cleanSourceKey:", cleanSourceKey);
+            console.log("[🔍LIGHTBOX] mekVariations result:", mekVariations);
+            if (mekVariations) {
+              console.log("[🔍LIGHTBOX] HEAD found:", mekVariations.head?.name ?? "NOT FOUND");
+              console.log("[🔍LIGHTBOX] BODY found:", mekVariations.body?.name ?? "NOT FOUND");
+              console.log("[🔍LIGHTBOX] TRAIT found:", mekVariations.trait?.name ?? "NOT FOUND");
+            }
+
             setShowImageLightbox(true);
             // Record view for analytics (only if viewer is logged in)
             if (viewerStakeAddress) {

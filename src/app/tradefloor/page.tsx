@@ -898,6 +898,100 @@ export default function TradeFloorPage() {
           onCancel={() => setConfirmAction(null)}
         />
       )}
+
+      {/* Unlock More Slots Informative Lightbox */}
+      {mounted && showUnlockSlotsLightbox && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          onClick={() => setShowUnlockSlotsLightbox(false)}
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'rgba(0, 0, 0, 0.7)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+            }}
+          />
+
+          {/* Content */}
+          <div
+            className="relative max-w-md w-full p-6 rounded-2xl"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
+              backdropFilter: 'blur(30px)',
+              WebkitBackdropFilter: 'blur(30px)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Icon */}
+            <div className="text-center mb-4">
+              <div
+                className="inline-flex items-center justify-center w-16 h-16 rounded-full"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.1))',
+                  border: '1px solid rgba(251, 191, 36, 0.3)',
+                }}
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2
+              className="text-xl font-bold text-center text-white mb-3"
+              style={{ fontFamily: 'Orbitron, sans-serif' }}
+            >
+              Unlock More Listing Slots
+            </h2>
+
+            {/* Description */}
+            <p
+              className="text-center mb-6"
+              style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}
+            >
+              Additional listing slots can be unlocked by playing the game and accumulating achievement points. Keep exploring, trading, and completing challenges to expand your trading capacity!
+            </p>
+
+            {/* Info Box */}
+            <div
+              className="p-4 rounded-lg mb-6"
+              style={{
+                background: 'rgba(34, 211, 238, 0.1)',
+                border: '1px solid rgba(34, 211, 238, 0.2)',
+              }}
+            >
+              <div
+                className="text-sm text-center"
+                style={{ fontFamily: 'Play, sans-serif', color: '#22d3ee' }}
+              >
+                Current Limit: <span className="font-bold">5 Active Listings</span>
+              </div>
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setShowUnlockSlotsLightbox(false)}
+              className="w-full py-3 rounded-xl font-medium transition-all hover:brightness-110"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                border: '1px solid rgba(255,255,255,0.15)',
+                color: 'rgba(255,255,255,0.8)',
+              }}
+            >
+              Got It
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
