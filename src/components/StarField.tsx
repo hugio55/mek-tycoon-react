@@ -212,10 +212,10 @@ const StarField = () => {
 
         const fadeInDuration = 3000;
         const fadeInProgress = Math.min(star.age / fadeInDuration, 1);
-        const opacity = fadeInProgress * 0.6;
+        const opacity = fadeInProgress * 0.8;
 
         ctx.strokeStyle = getRGBA(opacity);
-        ctx.lineWidth = 6;
+        ctx.lineWidth = 7;
         ctx.beginPath();
         ctx.moveTo(trailX, trailY);
         ctx.lineTo(screenX, screenY);

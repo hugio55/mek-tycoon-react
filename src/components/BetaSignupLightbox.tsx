@@ -262,8 +262,8 @@ export default function BetaSignupLightbox({
 
   const handleSkipNameReservation = () => {
     // Veteran doesn't want to change name, just show success
+    // Don't auto-close - let them read and dismiss manually
     setStep('success');
-    setTimeout(() => handleClose(), 2000);
   };
 
   const handleVerifyWallet = async (wallet: { name: string; icon: string; api: any }) => {
@@ -460,7 +460,7 @@ export default function BetaSignupLightbox({
 
         <button
           onClick={handleSkipNameReservation}
-          className="w-full py-2 mt-2 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
+          className="w-full pt-3 pb-0 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           Skip for now
