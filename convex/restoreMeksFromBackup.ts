@@ -114,7 +114,7 @@ export const restoreFromTroutBackup = mutation({
           gameRank: mek.gameRank,
           cnftRank: mek.cnftRank,
           rarityTier: mek.rarityTier,
-          goldRate: mek.goldRate,
+          // Phase II: goldRate removed from schema
           tenurePoints: mek.tenurePoints,
           lastTenureUpdate: mek.lastTenureUpdate,
           isSlotted: mek.isSlotted,

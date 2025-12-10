@@ -596,7 +596,8 @@ export const getAllPendingIncome = query({
       const lastCollection = slot.lastOutputTime || slot.assignedAt || now;
       const daysSinceCollection = (now - lastCollection) / (1000 * 60 * 60 * 24);
 
-      const baseDailyRate = mek.goldRate || 100;
+      // Phase II: goldRate removed - using default base rate
+      const baseDailyRate = 100;
       const slotLevel = slot.slotLevel || 1;
       const slotBonus = 1 + (slotLevel - 1) * 0.01;
       const tenureDays = slot.tenureDays || 0;
