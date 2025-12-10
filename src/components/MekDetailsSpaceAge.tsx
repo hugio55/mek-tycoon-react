@@ -2,25 +2,46 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { MekAsset } from '@/components/MekCard/types';
 import { getMediaUrl } from '@/lib/media-url';
-import { getVariationInfoFromFullKey } from '@/lib/variationNameLookup';
+import { getVariationInfoFromFullKey, VariationInfo } from '@/lib/variationNameLookup';
 import { getMekDataByNumber } from '@/lib/mekNumberToVariation';
+
+// Extended Mek type that includes all properties from userData.ownedMeks
+interface MekData {
+  assetId: string;
+  assetName?: string;
+  mekNumber?: number;
+  sourceKey?: string;
+  imageUrl?: string;
+  iconUrl?: string;
+  rarityRank?: number;
+  currentLevel?: number;
+  mekLevel?: number;
+  customName?: string;
+  accumulatedGoldForCorp?: number;
+  accumulatedGoldAllTime?: number;
+  headVariation?: string;
+  bodyVariation?: string;
+  itemVariation?: string;
+}
 
 interface MekDetailsSpaceAgeProps {
   isOpen: boolean;
   onClose: () => void;
-  mek: MekAsset;
+  mek: MekData;
   corporationName?: string;
 }
 
-interface VariationInfo {
+interface LocalVariationInfo {
   name: string;
-  count?: number;
-  percentage?: number;
-  essencePerDay?: number;
-  imageUrl?: string;
+  count: number;
+  percentage: number;
+  essencePerDay: number;
+  color: string;
 }
+
+// Total Meks for percentage calculation
+const TOTAL_MEKS = 4000;
 
 export default function MekDetailsSpaceAge({
   isOpen,
@@ -29,9 +50,9 @@ export default function MekDetailsSpaceAge({
   corporationName = 'Unknown Corp'
 }: MekDetailsSpaceAgeProps) {
   const [mounted, setMounted] = useState(false);
-  const [headVariation, setHeadVariation] = useState<VariationInfo | null>(null);
-  const [bodyVariation, setBodyVariation] = useState<VariationInfo | null>(null);
-  const [traitVariation, setTraitVariation] = useState<VariationInfo | null>(null);
+  const [headVariation, setHeadVariation] = useState<LocalVariationInfo | null>(null);
+  const [bodyVariation, setBodyVariation] = useState<LocalVariationInfo | null>(null);
+  const [traitVariation, setTraitVariation] = useState<LocalVariationInfo | null>(null);
 
   // Mount check for portal
   useEffect(() => {
@@ -41,6 +62,15 @@ export default function MekDetailsSpaceAge({
       document.body.style.overflow = 'unset';
     };
   }, []);
+
+  // Helper to convert VariationInfo to LocalVariationInfo
+  const toLocalVariation = (info: VariationInfo): LocalVariationInfo => ({
+    name: info.name,
+    count: info.count,
+    percentage: (info.count / TOTAL_MEKS) * 100,
+    essencePerDay: 0.1, // Placeholder - will come from essence config
+    color: info.color
+  });
 
   // Parse variation info from sourceKey
   useEffect(() => {
@@ -59,30 +89,15 @@ export default function MekDetailsSpaceAge({
         const variations = getVariationInfoFromFullKey(sourceKey);
 
         if (variations.head) {
-          setHeadVariation({
-            name: variations.head.name || 'Unknown',
-            count: variations.head.count || 0,
-            percentage: variations.head.percentage || 0,
-            essencePerDay: 0.1, // Placeholder
-          });
+          setHeadVariation(toLocalVariation(variations.head));
         }
 
         if (variations.body) {
-          setBodyVariation({
-            name: variations.body.name || 'Unknown',
-            count: variations.body.count || 0,
-            percentage: variations.body.percentage || 0,
-            essencePerDay: 0.1,
-          });
+          setBodyVariation(toLocalVariation(variations.body));
         }
 
         if (variations.trait) {
-          setTraitVariation({
-            name: variations.trait.name || 'Unknown',
-            count: variations.trait.count || 0,
-            percentage: variations.trait.percentage || 0,
-            essencePerDay: 0.1,
-          });
+          setTraitVariation(toLocalVariation(variations.trait));
         }
       } catch (error) {
         console.error('[MekDetailsSpaceAge] Failed to parse variations:', error);
@@ -338,7 +353,6 @@ export default function MekDetailsSpaceAge({
             <VariationCard
               type="HEAD VARIATION"
               variation={headVariation}
-              mek={mek}
               variationType="head"
             />
 
@@ -346,7 +360,6 @@ export default function MekDetailsSpaceAge({
             <VariationCard
               type="BODY VARIATION"
               variation={bodyVariation}
-              mek={mek}
               variationType="body"
             />
 
@@ -354,7 +367,6 @@ export default function MekDetailsSpaceAge({
             <VariationCard
               type="TRAIT VARIATION"
               variation={traitVariation}
-              mek={mek}
               variationType="trait"
             />
           </div>
@@ -370,12 +382,10 @@ export default function MekDetailsSpaceAge({
 function VariationCard({
   type,
   variation,
-  mek,
   variationType
 }: {
   type: string;
-  variation: VariationInfo | null;
-  mek: MekAsset;
+  variation: LocalVariationInfo | null;
   variationType: 'head' | 'body' | 'trait';
 }) {
   // Get variation-specific image if available

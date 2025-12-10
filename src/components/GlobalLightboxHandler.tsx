@@ -12,10 +12,25 @@ import MeksTriangleLightbox from '@/components/MeksTriangleLightbox';
 import BetaSignupLightbox from '@/components/BetaSignupLightbox';
 import { restoreWalletSession } from '@/lib/walletSessionManager';
 import { EssenceProvider } from '@/contexts/EssenceContext';
-import { MekAsset } from '@/components/MekCard/types';
 import { getMekDataByNumber } from '@/lib/mekNumberToVariation';
 import { getMediaUrl } from '@/lib/media-url';
 import MekDetailsSpaceAge from '@/components/MekDetailsSpaceAge';
+
+// Extended Mek type for details lightbox (matches userData.ownedMeks shape)
+interface MekData {
+  assetId: string;
+  assetName?: string;
+  mekNumber?: number;
+  sourceKey?: string;
+  imageUrl?: string;
+  iconUrl?: string;
+  rarityRank?: number;
+  currentLevel?: number;
+  mekLevel?: number;
+  customName?: string;
+  accumulatedGoldForCorp?: number;
+  accumulatedGoldAllTime?: number;
+}
 
 /**
  * Global handler for navigation button lightbox events
@@ -24,7 +39,7 @@ import MekDetailsSpaceAge from '@/components/MekDetailsSpaceAge';
 export default function GlobalLightboxHandler() {
   const [showEssenceLightbox, setShowEssenceLightbox] = useState(false);
   const [showMekGrid, setShowMekGrid] = useState(false);
-  const [selectedMek, setSelectedMek] = useState<MekAsset | null>(null);
+  const [selectedMek, setSelectedMek] = useState<MekData | null>(null);
   const [showActivityLog, setShowActivityLog] = useState(false);
   const [showEssenceBalances, setShowEssenceBalances] = useState(false);
   const [showEssenceBuffs, setShowEssenceBuffs] = useState(false);
@@ -128,7 +143,7 @@ export default function GlobalLightboxHandler() {
       {/* Mek Grid Lightbox */}
       {showMekGrid && userData && (
         <MechanismGridLightbox
-          ownedMeks={(userData.ownedMeks || []) as unknown as MekAsset[]}
+          ownedMeks={(userData.ownedMeks || []) as unknown as MekData[]}
           currentGold={userData.gold || 0}
           walletAddress={walletAddress}
           getMekImageUrl={(mekNumber: number, size?: '150px' | '500px' | '1000px') => {
