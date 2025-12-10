@@ -702,7 +702,8 @@ export default function TradeListingCard({
               {/* Make Trade Offer Button - Only show if not own listing and handler exists */}
               {!isOwnListing && onMakeOffer && (
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setShowImageLightbox(false);
                     onMakeOffer();
                   }}
