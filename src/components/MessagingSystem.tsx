@@ -6,6 +6,8 @@ import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import { getMediaUrl } from '@/lib/media-url';
+import MekSelectorLightbox, { SelectedMek } from './MekSelectorLightbox';
+import MekDetailsSpaceAge from './MekDetailsSpaceAge';
 
 // Types for attachments
 interface PendingAttachment {
@@ -95,6 +97,8 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   const [showBlockedUsers, setShowBlockedUsers] = useState(false);
   const [errorLightbox, setErrorLightbox] = useState<{ title: string; message: string } | null>(null);
   const [showSupportDismissLightbox, setShowSupportDismissLightbox] = useState(false);
+  const [showMekSelector, setShowMekSelector] = useState(false);
+  const [mekDetailLightbox, setMekDetailLightbox] = useState<any | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -157,6 +161,9 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   const createSupportConversation = useMutation(api.messaging.createSupportConversation);
   const dismissSupportConversation = useMutation(api.messaging.dismissSupportConversation);
   const reopenSupportConversation = useMutation(api.messaging.reopenSupportConversation);
+
+  // Mek attachment mutation
+  const sendMessageWithMek = useMutation(api.messaging.sendMessageWithMek);
 
   // Mount check for portals
   useEffect(() => {
@@ -412,6 +419,54 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
       } else {
         setErrorLightbox({ title: 'Message Failed', message: errorMessage });
       }
+    }
+  };
+
+  // Handle Mek selection from selector lightbox
+  const handleMekSelect = async (mek: SelectedMek) => {
+    setShowMekSelector(false);
+
+    // Determine recipient
+    const recipientWallet = selectedRecipient?.walletAddress ||
+      currentConversation?.otherParticipant?.walletAddress;
+
+    if (!recipientWallet) {
+      setErrorLightbox({
+        title: 'Cannot Send Mek',
+        message: 'Please select a conversation first.',
+      });
+      return;
+    }
+
+    // Check if conversation is disabled
+    const currentConv = conversations?.find((c: any) => c._id === selectedConversationId);
+    const isDisabled = currentConv?.disabledByAdmin ||
+      (isNewConversation && existingConversation?.disabledByAdmin);
+
+    if (isDisabled) {
+      const reason = currentConv?.disabledReason || existingConversation?.disabledReason || 'Terms of Service violation';
+      setErrorLightbox({
+        title: 'Conversation Disabled',
+        message: `This conversation has been disabled.\n\nReason: ${reason}`,
+      });
+      return;
+    }
+
+    try {
+      const result = await sendMessageWithMek({
+        senderWallet: walletAddress,
+        recipientWallet: recipientWallet,
+        mekAssetId: mek.assetId,
+        conversationId: selectedConversationId || undefined,
+      });
+
+      setSelectedConversationId(result.conversationId);
+      setIsNewConversation(false);
+      setSelectedRecipient(null);
+    } catch (error) {
+      console.error('Failed to send Mek:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send Mek';
+      setErrorLightbox({ title: 'Failed to Send Mek', message: errorMessage });
     }
   };
 
@@ -919,6 +974,17 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                         <line x1="8" y1="12" x2="16" y2="12" />
                       </svg>
                     </button>
+
+                    {/* MEK Button - Share verified Mek ownership */}
+                    {!(currentConversation && isSupportConversation(currentConversation)) && (
+                      <button
+                        onClick={() => setShowMekSelector(true)}
+                        className="px-2 py-1 rounded-lg text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 hover:bg-yellow-500/30 hover:border-yellow-500/60 transition-all"
+                        title="Share a Mek you own"
+                      >
+                        MEK
+                      </button>
+                    )}
 
                     <input
                       type="text"

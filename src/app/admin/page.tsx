@@ -2289,7 +2289,7 @@ export default function AdminMasterDataPage() {
                   const sectionsToExpand = [system.id, ...(subsections[system.id as keyof typeof subsections] || [])];
                   setExpandedSections(new Set(sectionsToExpand));
                 }}
-                className={`group relative px-4 py-2 rounded-lg border-2 transition-all text-sm font-semibold cursor-move ${
+                className={`group relative px-4 py-2 rounded-lg border-2 transition-all text-sm font-semibold cursor-pointer ${
                   draggedTabId === system.id
                     ? 'opacity-50 scale-95'
                     : activeTab === system.id

@@ -480,6 +480,136 @@ export const sendMessage = mutation({
   },
 });
 
+// Send a message with a verified Mek attachment (proves ownership)
+export const sendMessageWithMek = mutation({
+  args: {
+    senderWallet: v.string(),
+    recipientWallet: v.string(),
+    conversationId: v.optional(v.id("conversations")),
+    mekAssetId: v.string(), // The Mek to send
+  },
+  handler: async (ctx, args) => {
+    const { senderWallet, recipientWallet, mekAssetId, conversationId } = args;
+
+    // Check if blocked
+    const block = await ctx.db
+      .query("messageBlocks")
+      .withIndex("by_blocker_blocked", (q) =>
+        q.eq("blockerWallet", recipientWallet).eq("blockedWallet", senderWallet)
+      )
+      .first();
+
+    if (block) {
+      throw new Error("You cannot message this user");
+    }
+
+    // Verify the sender owns this Mek
+    const mek = await ctx.db
+      .query("meks")
+      .withIndex("by_asset_id", (q: any) => q.eq("assetId", mekAssetId))
+      .first();
+
+    if (!mek) {
+      throw new Error("Mek not found");
+    }
+
+    if (mek.ownerStakeAddress !== senderWallet) {
+      throw new Error("You don't own this Mek");
+    }
+
+    const now = Date.now();
+    let convId = conversationId;
+
+    // Create or get conversation
+    if (!convId) {
+      // Check for existing conversation
+      const existing1 = await ctx.db
+        .query("conversations")
+        .withIndex("by_participant1", (q) => q.eq("participant1", senderWallet))
+        .filter((q) => q.eq(q.field("participant2"), recipientWallet))
+        .first();
+
+      const existing2 = await ctx.db
+        .query("conversations")
+        .withIndex("by_participant1", (q) => q.eq("participant1", recipientWallet))
+        .filter((q) => q.eq(q.field("participant2"), senderWallet))
+        .first();
+
+      const existing = existing1 || existing2;
+
+      if (existing) {
+        convId = existing._id;
+      } else {
+        convId = await ctx.db.insert("conversations", {
+          participant1: senderWallet,
+          participant2: recipientWallet,
+          lastMessageAt: now,
+          lastMessagePreview: `[Mekanism #${mek.assetId}]`,
+          lastMessageSender: senderWallet,
+          createdAt: now,
+        });
+      }
+    }
+
+    // Create the mekAttachment with verified ownership snapshot
+    const mekAttachment = {
+      assetId: mek.assetId,
+      assetName: mek.assetName,
+      sourceKey: mek.sourceKey || "",
+      sourceKeyBase: mek.sourceKeyBase,
+      headVariation: mek.headVariation,
+      bodyVariation: mek.bodyVariation,
+      itemVariation: mek.itemVariation,
+      customName: mek.customName,
+      rarityRank: mek.rarityRank,
+      gameRank: mek.gameRank,
+      verifiedOwner: senderWallet,
+      verifiedAt: now,
+    };
+
+    // Insert message with Mek attachment
+    await ctx.db.insert("messages", {
+      conversationId: convId,
+      senderId: senderWallet,
+      recipientId: recipientWallet,
+      content: "", // No text content for Mek messages
+      status: "sent",
+      createdAt: now,
+      isDeleted: false,
+      mekAttachment,
+    });
+
+    // Update conversation
+    await ctx.db.patch(convId, {
+      lastMessageAt: now,
+      lastMessagePreview: `[Mekanism #${mek.assetId}]`,
+      lastMessageSender: senderWallet,
+      hiddenForParticipant1: false,
+      hiddenForParticipant2: false,
+    });
+
+    // Update unread count for recipient
+    const unreadRecord = await ctx.db
+      .query("messageUnreadCounts")
+      .withIndex("by_wallet_conversation", (q) =>
+        q.eq("walletAddress", recipientWallet).eq("conversationId", convId)
+      )
+      .first();
+
+    if (unreadRecord) {
+      await ctx.db.patch(unreadRecord._id, { count: unreadRecord.count + 1 });
+    } else {
+      await ctx.db.insert("messageUnreadCounts", {
+        walletAddress: recipientWallet,
+        conversationId: convId,
+        count: 1,
+      });
+    }
+
+    return { success: true, conversationId: convId };
+  },
+});
+
 // Mark conversation as read
 export const markConversationAsRead = mutation({
   args: {
