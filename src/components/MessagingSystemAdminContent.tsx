@@ -169,6 +169,7 @@ export default function MessagingSystemAdminContent({
   const [corpSearchQuery, setCorpSearchQuery] = useState('');
   const [selectedRecipient, setSelectedRecipient] = useState<{ walletAddress: string; companyName: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -276,9 +277,11 @@ export default function MessagingSystemAdminContent({
     }
   }, [messageTarget]);
 
-  // Auto-scroll to bottom when new messages arrive (instant to avoid visible scroll animation)
+  // Auto-scroll to bottom when new messages arrive (instant - directly set scrollTop)
   useLayoutEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   // Mark conversation as read when opened
@@ -978,7 +981,7 @@ export default function MessagingSystemAdminContent({
                     </div>
 
                     {/* Messages Area */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar min-h-[400px]">
+                    <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar min-h-[400px]">
                       {/* ToS Disabled Banner - Admin View */}
                       {selectedAdminConversation?.disabledByAdmin && (
                         <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-xl">

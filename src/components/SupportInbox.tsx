@@ -121,9 +121,11 @@ export default function SupportInbox({
     }
   }, [messageTarget, supportConversations, createSupportConversation, onClearMessageTarget]);
 
-  // Auto-scroll (instant to avoid visible scroll animation on load)
+  // Auto-scroll (instant - directly set scrollTop to start at bottom)
   useLayoutEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   // Stable reference for messages length (prevents dependency array size changes)
@@ -283,7 +285,7 @@ export default function SupportInbox({
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages?.messages?.map((msg: any) => {
                 const isFromSupport = msg.senderId === SUPPORT_WALLET_ID;
 
