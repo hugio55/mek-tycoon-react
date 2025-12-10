@@ -1469,7 +1469,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
               </button>
 
               <button
-                onClick={() => setState('reserved')}
+                onClick={() => setState('corporation_verified')}
                 className="w-full mt-3 py-2 px-4 text-sm font-medium text-white/60 hover:text-white transition-colors"
               >
                 Go Back

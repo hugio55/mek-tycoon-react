@@ -2,12 +2,6 @@ import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
-// TESTING WHITELIST: These stake addresses can mint multiple times for testing
-// REMOVE THIS AFTER TESTING IS COMPLETE
-const TESTING_MULTI_MINT_WHITELIST = [
-  "stake1u8zevs34vf4wrsz6xs64zuztdk4agzvpg6c8zv4plesp9ughgq076", // Corporation testing account
-];
-
 // ============================================================================
 // RETURN TYPE VALIDATORS
 // ============================================================================
@@ -166,29 +160,27 @@ export const createCampaignReservation = mutation({
     }
 
     // PHASE 2: Check if user has already completed (sold NFT in inventory)
-    // CRITICAL FIX: Must check soldTo field, not reservedBy (reservedBy is cleared on sale)
-    // Since we don't have a by_campaign_and_soldTo index, we query by campaign+status then filter
-    const hasCompleted = await ctx.db
-      .query("commemorativeNFTInventory")
-      .withIndex("by_campaign_and_status", (q: any) =>
-        q.eq("campaignId", args.campaignId).eq("status", "sold")
-      )
-      .filter((q) => q.eq(q.field("soldTo"), args.walletAddress))
-      .first();
+    // Skip this check if campaign allows multiple mints (configured in admin UI)
+    if (!campaign.allowMultipleMints) {
+      // CRITICAL FIX: Must check soldTo field, not reservedBy (reservedBy is cleared on sale)
+      // Since we don't have a by_campaign_and_soldTo index, we query by campaign+status then filter
+      const hasCompleted = await ctx.db
+        .query("commemorativeNFTInventory")
+        .withIndex("by_campaign_and_status", (q: any) =>
+          q.eq("campaignId", args.campaignId).eq("status", "sold")
+        )
+        .filter((q) => q.eq(q.field("soldTo"), args.walletAddress))
+        .first();
 
-    // TESTING BYPASS: Allow whitelisted addresses to mint multiple times
-    const isTestingWhitelisted = TESTING_MULTI_MINT_WHITELIST.includes(args.walletAddress);
-
-    if (hasCompleted && !isTestingWhitelisted) {
-      console.log('[CAMPAIGN RESERVATION] User already claimed NFT:', hasCompleted.nftNumber, hasCompleted.name);
-      return {
-        success: false as const,
-        error: `You have already claimed an NFT from the "${campaign.name}" campaign`,
-      };
-    }
-
-    if (hasCompleted && isTestingWhitelisted) {
-      console.log('[🧪TEST] Whitelisted address bypassing "already claimed" check:', args.walletAddress);
+      if (hasCompleted) {
+        console.log('[CAMPAIGN RESERVATION] User already claimed NFT:', hasCompleted.nftNumber, hasCompleted.name);
+        return {
+          success: false as const,
+          error: `You have already claimed an NFT from the "${campaign.name}" campaign`,
+        };
+      }
+    } else {
+      console.log('[CAMPAIGN] Multiple mints allowed - skipping "already claimed" check for campaign:', campaign.name);
     }
 
     // Find the lowest available NFT in this campaign
