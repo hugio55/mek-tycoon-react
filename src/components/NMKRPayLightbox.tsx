@@ -7,6 +7,7 @@ import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { ensureBech32StakeAddress } from '@/lib/cardanoAddressConverter';
 import { getMediaUrl } from '@/lib/media-url';
+import { sturgeonClient } from '@/lib/sturgeonClient';
 
 interface NMKRPayLightboxProps {
   walletAddress: string | null;
@@ -53,11 +54,56 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
   const effectiveWalletAddress = walletAddress || manualAddress;
 
-  // Query for active campaigns (only if no campaignId prop provided)
-  const activeCampaigns = useQuery(
+  // ==========================================
+  // DUAL-DATABASE FIX: Read NFT availability from PRODUCTION
+  // ==========================================
+  // On localhost with dual-database mode, the default Convex client points to Trout (dev).
+  // NFT inventory/campaigns live in Sturgeon (production), so we need to query production
+  // to show accurate availability. This prevents showing "available" for NFTs that are
+  // actually sold in production (like Lab Rat #3 issue).
+  //
+  // Logic:
+  // - If sturgeonClient is available (dual-database mode on localhost), use it for reads
+  // - If not (production site), use regular useQuery (which already points to production)
+  // ==========================================
+
+  // State for production campaigns (fetched via sturgeonClient when available)
+  const [productionCampaigns, setProductionCampaigns] = useState<any[] | null>(null);
+  const [productionCampaignsLoading, setProductionCampaignsLoading] = useState(!!sturgeonClient);
+
+  // Fetch campaigns from production database when in dual-database mode
+  useEffect(() => {
+    // Skip if campaignId prop provided or no sturgeonClient
+    if (propCampaignId || !sturgeonClient) return;
+
+    console.log('[🎯NFT-PROD] Fetching campaigns from PRODUCTION database (Sturgeon)');
+    setProductionCampaignsLoading(true);
+
+    // Use sturgeonClient.query() directly for production reads
+    sturgeonClient.query(api.campaigns.getActiveCampaigns, {})
+      .then((campaigns) => {
+        console.log('[🎯NFT-PROD] Production campaigns fetched:', campaigns?.length || 0, 'campaigns');
+        setProductionCampaigns(campaigns || []);
+        setProductionCampaignsLoading(false);
+      })
+      .catch((error) => {
+        console.error('[🎯NFT-PROD] Failed to fetch production campaigns:', error);
+        setProductionCampaignsLoading(false);
+        // Fall through to dev database query as fallback
+      });
+  }, [propCampaignId]);
+
+  // Query for active campaigns from default client (used when not in dual-database mode)
+  const devCampaigns = useQuery(
     api.campaigns.getActiveCampaigns,
-    !propCampaignId ? {} : "skip"
+    !propCampaignId && !sturgeonClient ? {} : "skip"
   );
+
+  // Use production campaigns if available, otherwise fall back to dev
+  // This ensures accurate NFT availability regardless of environment
+  const activeCampaigns = sturgeonClient
+    ? (productionCampaignsLoading ? undefined : productionCampaigns)
+    : devCampaigns;
 
   // Auto-select first active campaign with available NFTs
   // CRITICAL: Only run this effect ONCE on initial load, not on every campaign update
@@ -145,13 +191,56 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
       : "skip"
   );
 
-  // Query for eligibility checking (per-campaign)
-  const eligibility = useQuery(
+  // ==========================================
+  // DUAL-DATABASE FIX: Check eligibility against PRODUCTION
+  // ==========================================
+  // Eligibility checks (already claimed, active reservation) must query production
+  // to prevent users from claiming NFTs they already received in production.
+  // ==========================================
+
+  // State for production eligibility (fetched via sturgeonClient when available)
+  const [productionEligibility, setProductionEligibility] = useState<any>(null);
+  const [productionEligibilityLoading, setProductionEligibilityLoading] = useState(false);
+
+  // Fetch eligibility from production database when in dual-database mode
+  useEffect(() => {
+    // Only fetch when in checking state with required params
+    if (state !== 'checking_eligibility' || !effectiveWalletAddress || !activeCampaignId) return;
+
+    // Skip if no sturgeonClient (production site uses default query)
+    if (!sturgeonClient) return;
+
+    console.log('[🎯NFT-PROD] Checking eligibility against PRODUCTION database');
+    setProductionEligibilityLoading(true);
+    setProductionEligibility(null);
+
+    sturgeonClient.query(api.nftEligibility.checkCampaignEligibility, {
+      walletAddress: effectiveWalletAddress,
+      campaignId: activeCampaignId
+    })
+      .then((result) => {
+        console.log('[🎯NFT-PROD] Production eligibility result:', result);
+        setProductionEligibility(result);
+        setProductionEligibilityLoading(false);
+      })
+      .catch((error) => {
+        console.error('[🎯NFT-PROD] Failed to check production eligibility:', error);
+        setProductionEligibilityLoading(false);
+      });
+  }, [state, effectiveWalletAddress, activeCampaignId]);
+
+  // Query for eligibility from default client (used when not in dual-database mode)
+  const devEligibility = useQuery(
     api.nftEligibility.checkCampaignEligibility,
-    state === 'checking_eligibility' && effectiveWalletAddress && activeCampaignId
+    state === 'checking_eligibility' && effectiveWalletAddress && activeCampaignId && !sturgeonClient
       ? { walletAddress: effectiveWalletAddress, campaignId: activeCampaignId }
       : "skip"
   );
+
+  // Use production eligibility if available, otherwise fall back to dev
+  const eligibility = sturgeonClient
+    ? (productionEligibilityLoading ? undefined : productionEligibility)
+    : devEligibility;
 
   useEffect(() => {
     setMounted(true);

@@ -53,8 +53,8 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
   // PHASE II: Convex mutation to create/link corporation (stake-address-only)
   const connectCorporationMutation = useMutation(api.corporationAuth.connectCorporation);
 
-  // Blockfrost NFT verification action (server-side) - Phase II: uses userMiningState
-  const initializeWithBlockfrostAction = useAction(api.userMiningState.initializeWithBlockfrost);
+  // Blockfrost NFT verification action (server-side) - Phase II: uses blockfrostNftFetcher
+  const fetchNFTsAction = useAction(api.blockfrostNftFetcher.fetchNFTsByStakeAddress);
 
   // Quick Mek count action (fast lookup without metadata)
   const quickMekCountAction = useAction(api.blockfrostNftFetcher.quickMekCount);
@@ -467,17 +467,14 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
         const dataLoadPromise = (async () => {
           try {
             console.log('[WalletConnect] Calling Convex Blockfrost action (parallel)...');
-            const initResult = await initializeWithBlockfrostAction({
-              walletAddress: stakeAddress,
-              stakeAddress,
-              walletType: wallet.name.toLowerCase(),
-              paymentAddresses: usedAddresses
+            const initResult = await fetchNFTsAction({
+              stakeAddress: stakeAddress,
             });
 
             if (initResult.success) {
-              console.log(`[WalletConnect] Data load complete: ${initResult.mekCount} Meks`);
+              console.log(`[WalletConnect] Data load complete: ${initResult.meks.length} Meks`);
               meks = initResult.meks || [];
-              setFinalMekCount(initResult.mekCount || 0);
+              setFinalMekCount(initResult.meks.length || 0);
               return { success: true, meks };
             } else {
               console.error('[WalletConnect] Blockfrost initialization failed:', initResult.error);
