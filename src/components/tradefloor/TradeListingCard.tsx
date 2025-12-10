@@ -30,9 +30,9 @@ interface TradeListingCardProps {
 }
 
 const variationTypeColors = {
-  head: "text-blue-400 bg-blue-500/20 border-blue-500/30",
-  body: "text-green-400 bg-green-500/20 border-green-500/30",
-  trait: "text-purple-400 bg-purple-500/20 border-purple-500/30",
+  head: { bg: "rgba(59, 130, 246, 0.15)", border: "rgba(59, 130, 246, 0.3)", text: "#60a5fa" },
+  body: { bg: "rgba(34, 197, 94, 0.15)", border: "rgba(34, 197, 94, 0.3)", text: "#4ade80" },
+  trait: { bg: "rgba(168, 85, 247, 0.15)", border: "rgba(168, 85, 247, 0.3)", text: "#c084fc" },
 };
 
 const variationTypeLabels = {
@@ -60,31 +60,70 @@ export default function TradeListingCard({
     ? `/mek-images/150px/${cleanSourceKey}.webp`
     : "/mek-images/placeholder.webp";
 
-  // Format date
-  const createdDate = new Date(listing.createdAt);
   const timeAgo = getTimeAgo(listing.createdAt);
 
   return (
-    <div className="bg-gray-900/80 border border-yellow-500/30 rounded-lg overflow-hidden hover:border-yellow-500/50 transition-all">
+    <div
+      className="relative rounded-xl overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] group"
+      style={{
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255,255,255,0.1)',
+      }}
+    >
+      {/* Honeycomb hover overlay */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-[0.05] transition-opacity duration-300 pointer-events-none"
+        style={{
+          backgroundImage: "url('/random-images/honey-png-big.webp')",
+          backgroundSize: '100%',
+          backgroundPosition: 'center',
+        }}
+      />
+
       {/* Header with match count or offer count */}
-      <div className="flex justify-between items-center px-4 py-2 bg-black/30 border-b border-gray-800">
-        <span className="text-sm text-gray-400">
+      <div
+        className="relative flex justify-between items-center px-4 py-2"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+        }}
+      >
+        <span
+          className="text-sm"
+          style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.6)' }}
+        >
           {listing.ownerCorpName || "Unknown Corp"}
         </span>
         {viewerMatchCount !== undefined && viewerMatchCount > 0 && (
-          <span className="px-2 py-0.5 text-xs bg-yellow-500/20 text-yellow-400 rounded-full">
+          <span
+            className="px-2 py-0.5 text-xs rounded-full"
+            style={{
+              background: 'rgba(34, 211, 238, 0.2)',
+              color: '#22d3ee',
+              textShadow: '0 0 10px rgba(34, 211, 238, 0.5)',
+            }}
+          >
             {viewerMatchCount} match{viewerMatchCount !== 1 ? "es" : ""}
           </span>
         )}
         {isOwner && pendingOfferCount !== undefined && pendingOfferCount > 0 && (
-          <span className="px-2 py-0.5 text-xs bg-green-500/20 text-green-400 rounded-full">
+          <span
+            className="px-2 py-0.5 text-xs rounded-full"
+            style={{
+              background: 'rgba(34, 197, 94, 0.2)',
+              color: '#4ade80',
+              textShadow: '0 0 10px rgba(34, 197, 94, 0.5)',
+            }}
+          >
             {pendingOfferCount} offer{pendingOfferCount !== 1 ? "s" : ""}
           </span>
         )}
       </div>
 
       {/* Mek Image */}
-      <div className="p-4 flex justify-center bg-gradient-to-b from-gray-800/50 to-transparent">
+      <div className="relative p-4 flex justify-center">
         <div className="relative w-32 h-32">
           <img
             src={imagePath}
@@ -98,40 +137,74 @@ export default function TradeListingCard({
       </div>
 
       {/* Mek Name */}
-      <div className="px-4 pb-2">
-        <h3 className="text-white font-medium text-center truncate">
+      <div className="relative px-4 pb-2">
+        <h3
+          className="text-white font-medium text-center truncate"
+          style={{ fontFamily: 'Saira, sans-serif' }}
+        >
           {listing.listedMekAssetName || "Unknown Mek"}
         </h3>
       </div>
 
       {/* Desired Variations */}
-      <div className="px-4 pb-3">
-        <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">
+      <div className="relative px-4 pb-3">
+        <div
+          className="text-xs uppercase tracking-wider mb-2"
+          style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
+        >
           Looking for:
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {listing.desiredVariations.map((v, i) => (
-            <span
-              key={i}
-              className={`px-2 py-1 text-xs rounded border ${variationTypeColors[v.variationType]}`}
-              title={`${v.variationType}: ${v.variationName}`}
-            >
-              <span className="opacity-60 mr-1">{variationTypeLabels[v.variationType]}</span>
-              {v.variationName}
-            </span>
-          ))}
+          {listing.desiredVariations.map((v, i) => {
+            const colors = variationTypeColors[v.variationType];
+            return (
+              <span
+                key={i}
+                className="px-2 py-1 text-xs rounded"
+                style={{
+                  background: colors.bg,
+                  border: `1px solid ${colors.border}`,
+                  color: colors.text,
+                  fontFamily: 'Play, sans-serif',
+                }}
+                title={`${v.variationType}: ${v.variationName}`}
+              >
+                <span style={{ opacity: 0.6, marginRight: '4px' }}>
+                  {variationTypeLabels[v.variationType]}
+                </span>
+                {v.variationName}
+              </span>
+            );
+          })}
         </div>
       </div>
 
       {/* Footer with time and actions */}
-      <div className="px-4 py-3 bg-black/30 border-t border-gray-800 flex justify-between items-center">
-        <span className="text-xs text-gray-500">{timeAgo}</span>
+      <div
+        className="relative px-4 py-3 flex justify-between items-center"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
+          borderTop: '1px solid rgba(255,255,255,0.05)',
+        }}
+      >
+        <span
+          className="text-xs"
+          style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
+        >
+          {timeAgo}
+        </span>
 
         <div className="flex gap-2">
           {showMakeOffer && onMakeOffer && (
             <button
               onClick={onMakeOffer}
-              className="px-3 py-1.5 text-sm bg-yellow-500 hover:bg-yellow-400 text-black font-medium rounded transition-all"
+              className="px-4 py-1.5 text-sm rounded-lg font-medium transition-all hover:scale-[1.05] active:scale-[0.95]"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
+                color: 'black',
+                boxShadow: '0 0 20px rgba(34, 211, 238, 0.3)',
+              }}
             >
               Make Offer
             </button>
@@ -140,7 +213,13 @@ export default function TradeListingCard({
           {isOwner && onViewOffers && (
             <button
               onClick={onViewOffers}
-              className="px-3 py-1.5 text-sm bg-blue-500 hover:bg-blue-400 text-white font-medium rounded transition-all"
+              className="px-4 py-1.5 text-sm rounded-lg font-medium transition-all hover:scale-[1.05] active:scale-[0.95]"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08))',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: 'white',
+              }}
             >
               View Offers
             </button>
@@ -149,7 +228,13 @@ export default function TradeListingCard({
           {isOwner && onCancel && (
             <button
               onClick={onCancel}
-              className="px-3 py-1.5 text-sm bg-red-500/20 hover:bg-red-500/30 text-red-400 font-medium rounded border border-red-500/30 transition-all"
+              className="px-3 py-1.5 text-sm rounded-lg font-medium transition-all hover:scale-[1.05] active:scale-[0.95]"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                color: '#f87171',
+              }}
             >
               Cancel
             </button>

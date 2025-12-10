@@ -44,7 +44,7 @@ export const getCorporationData = query({
     // Phase II: Get owned Meks from meks table
     const ownedMeks = await ctx.db
       .query("meks")
-      .withIndex("by_owner", (q: any) => q.eq("owner", walletAddress))
+      .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", walletAddress))
       .collect();
 
     // Get level data for the Meks
