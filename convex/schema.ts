@@ -3962,6 +3962,7 @@ export default defineSchema({
     // Timestamps
     createdAt: v.number(),
     updatedAt: v.number(),
+    lastViewedOffersAt: v.optional(v.number()), // When owner last clicked "Trade Offers"
 
     // Cached data for display (denormalized for performance)
     listedMekSourceKey: v.optional(v.string()), // For quick image lookup

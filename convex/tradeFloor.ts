@@ -44,7 +44,7 @@ export const getActiveListingCount = query({
   },
 });
 
-// Get user's own listings with offer counts
+// Get user's own listings with offer counts (total and new/unseen)
 export const getMyListings = query({
   args: {
     stakeAddress: v.string(),
@@ -57,7 +57,7 @@ export const getMyListings = query({
       )
       .collect();
 
-    // Get offer counts for each listing
+    // Get offer counts for each listing (total and new)
     const listingsWithCounts = await Promise.all(
       listings.map(async (listing) => {
         const offers = await ctx.db
@@ -66,9 +66,15 @@ export const getMyListings = query({
             q.eq("listingId", listing._id).eq("status", "pending")
           )
           .collect();
+
+        // Count new offers (created after lastViewedOffersAt)
+        const lastViewed = listing.lastViewedOffersAt || 0;
+        const newOfferCount = offers.filter(o => o.createdAt > lastViewed).length;
+
         return {
           ...listing,
           pendingOfferCount: offers.length,
+          newOfferCount, // New/unseen offers
         };
       })
     );
@@ -535,6 +541,29 @@ export const withdrawOffer = mutation({
     await ctx.db.patch(args.offerId, {
       status: "withdrawn",
       updatedAt: Date.now(),
+    });
+
+    return true;
+  },
+});
+
+// Mark offers as viewed (called when owner opens Trade Offers lightbox)
+export const markOffersAsViewed = mutation({
+  args: {
+    listingId: v.id("tradeListings"),
+    ownerStakeAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const listing = await ctx.db.get(args.listingId);
+    if (!listing) {
+      throw new Error("Listing not found");
+    }
+    if (listing.ownerStakeAddress !== args.ownerStakeAddress) {
+      throw new Error("You don't own this listing");
+    }
+
+    await ctx.db.patch(args.listingId, {
+      lastViewedOffersAt: Date.now(),
     });
 
     return true;

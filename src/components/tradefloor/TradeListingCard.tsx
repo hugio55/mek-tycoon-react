@@ -221,7 +221,7 @@ export default function TradeListingCard({
                 color: 'white',
               }}
             >
-              View Offers
+              Trade Offers
             </button>
           )}
 

@@ -112,7 +112,7 @@ export default function ViewOffersLightbox({
               className="text-xl font-bold text-white"
               style={{ fontFamily: 'Orbitron, sans-serif' }}
             >
-              View Offers
+              Trade Offers
             </h2>
             <p
               className="text-sm"
@@ -176,7 +176,6 @@ export default function ViewOffersLightbox({
                 border: '1px solid rgba(255,255,255,0.1)',
               }}
             >
-              <div className="text-6xl mb-4">📭</div>
               <h3
                 className="text-xl font-semibold text-white mb-2"
                 style={{ fontFamily: 'Orbitron, sans-serif' }}
