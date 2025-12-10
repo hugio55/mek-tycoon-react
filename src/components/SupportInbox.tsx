@@ -706,6 +706,15 @@ export default function SupportInbox({
         </div>,
         document.body
       )}
+
+      {/* MEK Selector Lightbox - shows ALL Meks for admin */}
+      <MekSelectorLightbox
+        walletAddress={SUPPORT_WALLET_ID}
+        isOpen={showMekSelector}
+        onClose={() => setShowMekSelector(false)}
+        onSelect={handleMekSelect}
+        showAllMeks={true}
+      />
     </div>
   );
 }
