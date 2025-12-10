@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { getMediaUrl } from "@/lib/media-url";
 
 // Background style options for the MEK info plate
 const PLATE_BACKGROUNDS = {
@@ -108,12 +109,12 @@ export default function MekCardStyles() {
             {/* MEK Image */}
             <div className="relative bg-gray-900 border border-gray-700 overflow-hidden">
               <img
-                src={`/mek-images/150px/${mek.image}.webp`}
+                src={getMediaUrl(`/mek-images/150px/${mek.image}.webp`)}
                 alt={`Mek ${mek.number}`}
                 className="w-full aspect-square object-cover"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.src = '/mek-images/150px/000-000-000.webp';
+                  target.src = getMediaUrl('/mek-images/150px/000-000-000.webp');
                 }}
               />
             </div>

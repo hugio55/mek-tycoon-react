@@ -135,170 +135,204 @@ export default function TradeFloorPage() {
 
   return (
     <div className="min-h-screen text-white relative overflow-hidden">
-      {/* Header - Liquid Glass with Create Listing Button */}
-      <div
-        className="relative mt-4"
-        style={{
-          background: 'transparent',
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1
-                className="text-3xl font-bold tracking-wider uppercase"
-                style={{
-                  fontFamily: 'Orbitron, sans-serif',
-                  background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  textShadow: '0 0 40px rgba(34, 211, 238, 0.5)',
-                }}
-              >
-                Trade Floor
-              </h1>
-              <p
-                className="mt-1"
-                style={{
-                  fontFamily: 'Play, sans-serif',
-                  color: 'rgba(255,255,255,0.6)',
-                }}
-              >
-                List your Meks for trade and find others looking for variations you have
-              </p>
-            </div>
+      {/* Main Content Container with padding */}
+      <div className="relative z-10 py-6 px-4 md:px-[100px]">
+        {/* Header Card - Space Age Glass Style (matching Market) */}
+        <div
+          className="relative mb-6 rounded-2xl p-5 overflow-hidden transition-all duration-500"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.05)',
+          }}
+        >
+          {/* Subtle gradient shimmer overlay */}
+          <div
+            className="absolute inset-0 pointer-events-none opacity-30"
+            style={{
+              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%)',
+              animation: 'slideParticles 8s linear infinite',
+            }}
+          />
 
-            {/* Create Listing Button - Right aligned in header */}
-            <button
-              onClick={() => stakeAddress && setShowCreateListing(true)}
-              disabled={!stakeAddress}
-              className="px-5 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 group overflow-hidden relative"
+          {/* Header Layout */}
+          <div className="relative flex justify-between items-center">
+            <h1
+              className="text-5xl font-bold tracking-wider uppercase"
               style={{
-                fontFamily: 'Inter, sans-serif',
-                background: stakeAddress
-                  ? 'linear-gradient(135deg, #22d3ee, #06b6d4)'
-                  : 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-                color: stakeAddress ? 'black' : 'rgba(255,255,255,0.4)',
-                boxShadow: stakeAddress
-                  ? '0 0 30px rgba(34, 211, 238, 0.4)'
-                  : 'none',
-                border: stakeAddress ? 'none' : '1px solid rgba(255,255,255,0.2)',
-                cursor: stakeAddress ? 'pointer' : 'not-allowed',
-              }}
-              onMouseEnter={(e) => {
-                if (stakeAddress) {
-                  e.currentTarget.style.transform = 'scale(1.02)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
+                fontFamily: "'Saira', 'Orbitron', sans-serif",
+                color: '#ffffff',
+                textShadow: '0 0 20px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.5)',
+                letterSpacing: '0.15em',
               }}
             >
-              {/* Sliding particles animation for logged in state */}
-              {stakeAddress && (
-                <div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
-                    animation: 'slideParticles 2s linear infinite',
-                  }}
-                />
-              )}
-              <span className="text-xl relative z-10">+</span>
-              <span className="relative z-10">Create Listing</span>
-              {stakeAddress && activeListingCount !== undefined && (
-                <span
-                  className="px-2 py-0.5 rounded-full text-xs relative z-10"
-                  style={{ background: 'rgba(0,0,0,0.2)' }}
-                >
-                  {activeListingCount}/5
-                </span>
-              )}
-              {!stakeAddress && (
-                <span className="text-xs relative z-10" style={{ opacity: 0.6 }}>
-                  (Login)
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Tab Navigation - Glass Effect */}
-      <div
-        className="relative"
-        style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex gap-1">
-            {tabs.map((tab) => (
+              TRADE FLOOR
+            </h1>
+            <div className="flex items-center gap-3">
+              {/* List Item Button - Cyan style (matching Market) */}
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className="relative px-6 py-3 text-sm font-medium tracking-wide transition-all overflow-hidden group"
+                onClick={() => stakeAddress && setShowCreateListing(true)}
+                disabled={!stakeAddress}
+                className="group relative px-6 py-2.5 rounded-xl font-semibold uppercase tracking-wider text-sm transition-all duration-300 overflow-hidden hover:scale-[1.02] active:scale-[0.98]"
                 style={{
-                  fontFamily: 'Saira, sans-serif',
-                  color: activeTab === tab.id ? '#22d3ee' : 'rgba(255,255,255,0.5)',
-                  background: activeTab === tab.id
-                    ? 'linear-gradient(135deg, rgba(34, 211, 238, 0.15), rgba(34, 211, 238, 0.05))'
-                    : 'transparent',
+                  background: stakeAddress
+                    ? 'linear-gradient(135deg, rgba(34,211,238,0.2) 0%, rgba(34,211,238,0.1) 100%)'
+                    : 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
+                  border: stakeAddress
+                    ? '1px solid rgba(34,211,238,0.4)'
+                    : '1px solid rgba(255,255,255,0.2)',
+                  color: stakeAddress ? '#22d3ee' : 'rgba(255,255,255,0.4)',
+                  fontFamily: "'Play', sans-serif",
+                  cursor: stakeAddress ? 'pointer' : 'not-allowed',
                 }}
               >
-                {/* Honeycomb hover effect */}
                 <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-[0.07] transition-opacity duration-300 pointer-events-none"
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                   style={{
-                    backgroundImage: "url('/random-images/honey-png-big.webp')",
-                    backgroundSize: '100%',
+                    backgroundImage: "url('/random-images/honey-png1.webp')",
+                    backgroundSize: '150%',
                     backgroundPosition: 'center',
                   }}
                 />
-                <span className="relative z-10">{tab.label}</span>
-                {activeTab === tab.id && (
-                  <div
-                    className="absolute bottom-0 left-0 right-0 h-[2px]"
-                    style={{
-                      background: 'linear-gradient(90deg, #22d3ee, #06b6d4)',
-                      boxShadow: '0 0 10px rgba(34, 211, 238, 0.8)',
-                    }}
-                  />
-                )}
-                {/* Badge for my-offers */}
-                {tab.id === "my-offers" && myOffers && myOffers.length > 0 && (
+                <span className="relative z-10 transition-all duration-300 group-hover:[text-shadow:0_0_10px_rgba(34,211,238,0.8)]">
+                  LIST ITEM
+                </span>
+                {stakeAddress && activeListingCount !== undefined && (
                   <span
-                    className="ml-2 px-2 py-0.5 text-xs rounded-full"
-                    style={{
-                      background: 'rgba(34, 211, 238, 0.2)',
-                      color: '#22d3ee',
-                      textShadow: '0 0 10px rgba(34, 211, 238, 0.5)',
-                    }}
+                    className="ml-2 px-1.5 py-0.5 rounded text-xs relative z-10"
+                    style={{ background: 'rgba(34,211,238,0.2)' }}
                   >
-                    {myOffers.length}
-                  </span>
-                )}
-                {/* Badge for my-listings */}
-                {tab.id === "my-listings" && myListings && myListings.length > 0 && (
-                  <span
-                    className="ml-2 px-2 py-0.5 text-xs rounded-full"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      color: 'rgba(255, 255, 255, 0.7)',
-                    }}
-                  >
-                    {myListings.length}/5
+                    {activeListingCount}/5
                   </span>
                 )}
               </button>
-            ))}
+
+              {/* My Listings Button - Ghost style (matching Market) */}
+              <button
+                onClick={() => setActiveTab("my-listings")}
+                className="group relative px-6 py-2.5 rounded-xl font-medium uppercase tracking-wider text-sm transition-all duration-300 overflow-hidden hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  background: activeTab === "my-listings"
+                    ? 'linear-gradient(135deg, rgba(34,211,238,0.15) 0%, rgba(34,211,238,0.05) 100%)'
+                    : 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
+                  border: activeTab === "my-listings"
+                    ? '1px solid rgba(34,211,238,0.3)'
+                    : '1px solid rgba(255,255,255,0.2)',
+                  color: activeTab === "my-listings" ? '#22d3ee' : 'rgba(255,255,255,0.8)',
+                  fontFamily: "'Play', sans-serif",
+                }}
+              >
+                <div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                  style={{
+                    backgroundImage: "url('/random-images/honey-png1.webp')",
+                    backgroundSize: '150%',
+                    backgroundPosition: 'center',
+                  }}
+                />
+                <span className="relative z-10 transition-all duration-300 group-hover:text-white group-hover:[text-shadow:0_0_6px_rgba(255,255,255,0.6)]">
+                  MY LISTINGS
+                </span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="relative max-w-7xl mx-auto px-4 py-6">
+        {/* Tab Navigation + Filters Card (matching Market) */}
+        <div
+          className="mb-6 rounded-2xl relative z-50"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          }}
+        >
+          {/* Category Tabs Row */}
+          <div
+            className="flex items-stretch px-2 pt-2"
+            style={{
+              borderBottom: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            {tabs.map((tab, index) => (
+              <div key={tab.id} className="flex items-stretch">
+                {/* Vertical divider between tabs */}
+                {index > 0 && (
+                  <div
+                    className="w-px my-2"
+                    style={{ background: 'rgba(255,255,255,0.1)' }}
+                  />
+                )}
+                <button
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`
+                    relative px-6 py-3 font-medium uppercase tracking-wider text-sm
+                    transition-all duration-200
+                    ${activeTab === tab.id ? 'text-cyan-400' : 'text-gray-500 hover:text-gray-300'}
+                  `}
+                  style={{
+                    fontFamily: "'Play', sans-serif",
+                  }}
+                >
+                  {tab.label}
+                  {/* Badge for my-offers */}
+                  {tab.id === "my-offers" && myOffers && myOffers.length > 0 && (
+                    <span
+                      className="ml-2 px-2 py-0.5 text-xs rounded-full"
+                      style={{
+                        background: 'rgba(34, 211, 238, 0.2)',
+                        color: '#22d3ee',
+                      }}
+                    >
+                      {myOffers.length}
+                    </span>
+                  )}
+                  {/* Badge for my-listings */}
+                  {tab.id === "my-listings" && myListings && myListings.length > 0 && (
+                    <span
+                      className="ml-2 px-2 py-0.5 text-xs rounded-full"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                      }}
+                    >
+                      {myListings.length}/5
+                    </span>
+                  )}
+                  {/* Active tab underline indicator */}
+                  <div
+                    className="absolute bottom-0 left-2 right-2 h-0.5 transition-all duration-200"
+                    style={{
+                      background: activeTab === tab.id
+                        ? 'linear-gradient(90deg, transparent, #22d3ee, transparent)'
+                        : 'transparent',
+                      boxShadow: activeTab === tab.id
+                        ? '0 0 10px rgba(34,211,238,0.5)'
+                        : 'none',
+                    }}
+                  />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Subtitle/Description Row */}
+          <div className="px-4 py-3">
+            <p
+              className="text-sm"
+              style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+            >
+              {activeTab === "browse" && "Sorted by how many of your Meks match the desired variations"}
+              {activeTab === "my-listings" && `${activeListingCount !== undefined ? `${activeListingCount}/5 listings used` : "Loading..."}`}
+              {activeTab === "my-offers" && "Offers you've made on other players' listings"}
+            </p>
+          </div>
+        </div>
+
         {/* Not logged in message */}
         {!stakeAddress && (
           <div
@@ -339,20 +373,6 @@ export default function TradeFloorPage() {
         {/* Browse Listings Tab */}
         {stakeAddress && activeTab === "browse" && (
           <div>
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h2
-                  className="text-xl font-semibold text-white"
-                  style={{ fontFamily: 'Saira, sans-serif' }}
-                >
-                  Available Listings
-                </h2>
-                <p className="text-sm" style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
-                  Sorted by how many of your Meks match the desired variations
-                </p>
-              </div>
-            </div>
-
             {browseListings === undefined ? (
               <div
                 className="text-center py-12"

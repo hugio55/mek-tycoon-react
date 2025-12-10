@@ -9,6 +9,7 @@ import MakeOfferModal from "@/components/MakeOfferModal";
 import GlobalBackground from "@/components/GlobalBackground";
 import ShopSystem from "@/lib/shopSystem";
 import { restoreWalletSession } from "@/lib/walletSessionManager";
+import { getMediaUrl } from "@/lib/media-url";
 
 const CATEGORIES = [
   { id: "mek-chips", name: "MEK CHIPS", hasDropdown: true, subcategories: [
@@ -32,7 +33,7 @@ const ESSENCE_IMAGES = [
 
 // Function to get essence image based on a stable index (no randomness)
 const getEssenceImage = (index: number) => {
-  return ESSENCE_IMAGES[index % ESSENCE_IMAGES.length];
+  return getMediaUrl(ESSENCE_IMAGES[index % ESSENCE_IMAGES.length]);
 };
 
 // Random Mek portraits for sellers
@@ -57,7 +58,7 @@ const MEK_PORTRAITS = [
 // Get a stable Mek portrait for a seller based on their ID
 const getMekPortrait = (sellerId: string) => {
   const hash = sellerId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return MEK_PORTRAITS[hash % MEK_PORTRAITS.length];
+  return getMediaUrl(MEK_PORTRAITS[hash % MEK_PORTRAITS.length]);
 };
 
 // Quick filter chips removed - moved to sort dropdown
