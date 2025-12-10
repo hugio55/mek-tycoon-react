@@ -194,11 +194,11 @@ export default function HolographicButton({
         transition-all duration-300
         ${!isActive ? 'grayscale opacity-60' : ''}
         ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
-        ${rounded ? 'rounded-2xl' : ''}
+        ${rounded ? 'rounded-[10px]' : ''}
         ${className}
       `}
     >
-      <div className={`relative ${rounded ? 'rounded-2xl' : ''}`}>
+      <div className={`relative ${rounded ? 'rounded-[10px]' : ''}`}>
         <div
           className={`
             relative bg-gradient-to-br
@@ -215,7 +215,7 @@ export default function HolographicButton({
             backdrop-blur-md
             border-2 transition-all duration-300
             px-8 py-3
-            ${rounded ? 'rounded-2xl' : ''}
+            ${rounded ? 'rounded-[10px]' : ''}
           `}
           style={{
             borderColor: isActive
