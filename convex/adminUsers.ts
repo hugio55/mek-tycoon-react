@@ -55,7 +55,7 @@ export const getAllUsersForAdmin = query({
         walletType: user.walletType || user.lastWalletType || "Unknown",
         companyName: user.corporationName || null,
         mekCount: mekCountByWallet.get(user.walletAddress) || 0,
-        totalGoldPerHour: user.goldPerHour || 0,
+        totalGoldPerHour: 0, // Phase II: Passive gold income removed - income comes from Job Slots
         currentGold: Math.floor((user.gold || 0) * 100) / 100,
         totalCumulativeGold: Math.floor((user.gold || 0) * 100) / 100, // In Phase II, gold IS the balance
         totalGoldSpentOnUpgrades: 0, // Not tracked in users table
@@ -511,7 +511,7 @@ export const resetUserProgress = mutation({
 
     if (args.resetGold) {
       updates.gold = 100;
-      updates.goldPerHour = 50;
+      // Phase II: goldPerHour removed - income comes from Job Slots
       updates.pendingGold = 0;
     }
 

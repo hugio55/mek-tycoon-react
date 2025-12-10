@@ -97,38 +97,19 @@ export default function NavigationBar() {
     imageKeyRef.current = currentImageKey || null;
   }, [activeNavConfig?.overlayImageKey]); // Only depend on the image key, not full objects
 
-  // Accumulate gold in real-time for display zones
+  // Phase II: Just sync gold display with actual balance (no passive accumulation)
+  // Passive gold income was REMOVED - income now comes from Job Slots (daily claims)
   useEffect(() => {
     if (!userData) {
       return;
     }
 
-    // Phase II: userData.gold is spendable balance, totalGoldPerHour is income rate
-    const targetGold = userData.gold || 0;
-    const goldPerHour = userData.totalGoldPerHour || 0;
-    const goldPerMs = goldPerHour / 3600000;
+    // Simply show the actual gold balance from the database
+    const actualGold = userData.gold || 0;
+    setCurrentGold(actualGold);
 
-    // Initialize current gold if needed
-    if (currentGold === 0 && targetGold > 0) {
-      setCurrentGold(targetGold);
-    }
-
-    const animate = () => {
-      setCurrentGold(prev => {
-        const newGold = prev + (goldPerMs * 16.67); // ~60fps
-        return Math.min(newGold, targetGold + 1000); // Cap at reasonable value
-      });
-      goldAnimationRef.current = requestAnimationFrame(animate);
-    };
-
-    goldAnimationRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (goldAnimationRef.current) {
-        cancelAnimationFrame(goldAnimationRef.current);
-      }
-    };
-  }, [userData]);
+    // No animation loop needed - gold only changes when user claims job income
+  }, [userData?.gold]);
 
   // ============================================================
   // EARLY RETURNS (after all hooks are called)
@@ -286,6 +267,8 @@ export default function NavigationBar() {
         rawValue = userData?.gold || 0;
         break;
       case "gold-per-hour":
+        // Phase II: Passive gold income removed - this will return 0
+        // Income now comes from Job Slots (daily claims)
         rawValue = userData?.totalGoldPerHour || 0;
         break;
       case "mek-count":
