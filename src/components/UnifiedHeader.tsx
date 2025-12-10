@@ -655,8 +655,15 @@ export default function UnifiedHeader() {
           className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
           onClick={() => setShowMessaging(false)}
         >
-          {/* Backdrop - Click capture only, no darkening or blur */}
-          <div className="fixed inset-0" />
+          {/* Backdrop - Darkened with slight blur */}
+          <div
+            className="fixed inset-0"
+            style={{
+              backgroundColor: 'rgba(0, 10, 20, 0.7)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)'
+            }}
+          />
 
           {/* Translucent Container - Liquid Glass Style */}
           {/* Dynamic height: fills viewport minus padding, with min/max constraints */}
