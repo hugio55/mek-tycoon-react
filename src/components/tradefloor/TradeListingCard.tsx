@@ -103,7 +103,10 @@ export default function TradeListingCard({
 
     // Source key format: "aa1-bb2-cc3" (head-body-trait, lowercase)
     const parts = cleanSourceKey.toUpperCase().split("-");
-    if (parts.length !== 3) return null;
+    if (parts.length !== 3) {
+      console.log("[🔍CARD] mekVariations: parts.length !== 3", { cleanSourceKey, parts });
+      return null;
+    }
 
     const [headCode, bodyCode, traitCode] = parts;
 
@@ -111,6 +114,13 @@ export default function TradeListingCard({
     const head = COMPLETE_VARIATION_RARITY.find(v => v.sourceKey === headCode && v.type === "head");
     const body = COMPLETE_VARIATION_RARITY.find(v => v.sourceKey === bodyCode && v.type === "body");
     const trait = COMPLETE_VARIATION_RARITY.find(v => v.sourceKey === traitCode && v.type === "trait");
+
+    console.log("[🔍CARD] mekVariations lookup:", {
+      cleanSourceKey,
+      headCode, headFound: !!head, headName: head?.name,
+      bodyCode, bodyFound: !!body, bodyName: body?.name,
+      traitCode, traitFound: !!trait, traitName: trait?.name,
+    });
 
     return { head, body, trait };
   }, [cleanSourceKey]);
@@ -561,12 +571,11 @@ export default function TradeListingCard({
             }}
           />
 
-          {/* Content Container */}
+          {/* Content Container - Does NOT stop propagation, so clicking empty space closes lightbox */}
           <div
             className="relative flex flex-col items-center gap-4"
-            onClick={(e) => e.stopPropagation()}
           >
-            {/* Large Image - Using 1000px resolution */}
+            {/* Large Image - Using 1000px resolution - DOES stop propagation */}
             <div
               className="relative rounded-2xl overflow-hidden"
               style={{
@@ -574,6 +583,7 @@ export default function TradeListingCard({
                 border: '1px solid rgba(34, 211, 238, 0.3)',
                 boxShadow: '0 0 60px rgba(34, 211, 238, 0.15), 0 25px 50px rgba(0, 0, 0, 0.5)',
               }}
+              onClick={(e) => e.stopPropagation()}
             >
               <img
                 src={cleanSourceKey ? getMediaUrl(`/mek-images/1000px/${cleanSourceKey}.webp`) : getMediaUrl("/mek-images/placeholder.webp")}
@@ -709,13 +719,15 @@ export default function TradeListingCard({
                 </button>
               )}
 
-              {/* Close Text Link */}
+              {/* Close Text Link - Stops propagation so it handles its own click */}
               <button
-                onClick={() => setShowImageLightbox(false)}
-                className="text-sm transition-all hover:opacity-80"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowImageLightbox(false);
+                }}
+                className="text-sm text-white/50 transition-all duration-200 hover:text-white hover:scale-105"
                 style={{
                   fontFamily: 'Play, sans-serif',
-                  color: 'rgba(255,255,255,0.5)',
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',

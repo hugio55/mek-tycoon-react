@@ -842,20 +842,44 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                     className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
                   >
                     <div className={`max-w-[70%] ${isMine ? 'order-2' : ''}`}>
+                      {/* Message Bubble - with special styling when it contains a verified Mek */}
                       <div
-                        className={`rounded-2xl px-4 py-2 ${
+                        className={`relative rounded-2xl px-4 py-2 overflow-hidden ${
                           msg.isDeleted
                             ? 'bg-gray-700/50 text-gray-500 italic'
-                            : isMine
-                              ? 'bg-white/15 text-white'
-                              : 'bg-cyan-500/10 text-white'
+                            : msg.mekAttachment
+                              ? 'text-white' // Mek attachment gets special styling below
+                              : isMine
+                                ? 'bg-white/15 text-white'
+                                : 'bg-cyan-500/10 text-white'
                         }`}
+                        style={msg.mekAttachment && !msg.isDeleted ? {
+                          background: isMine ? 'rgba(255,255,255,0.12)' : 'rgba(34, 211, 238, 0.08)',
+                          boxShadow: '0 0 25px rgba(34, 211, 238, 0.25), 0 0 50px rgba(34, 211, 238, 0.1)',
+                          border: '1px solid rgba(34, 211, 238, 0.2)',
+                        } : undefined}
                       >
-                        {msg.isDeleted ? '[Message deleted]' : msg.content}
+                        {/* Honeycomb pattern overlay - only for Mek attachments */}
+                        {msg.mekAttachment && !msg.isDeleted && (
+                          <div
+                            className="absolute inset-0 pointer-events-none z-[1]"
+                            style={{
+                              backgroundImage: `url('/random-images/honey-png-big.webp')`,
+                              backgroundSize: '200%',
+                              backgroundPosition: 'center',
+                              opacity: 0.12,
+                            }}
+                          />
+                        )}
+
+                        {/* Message content */}
+                        <div className="relative z-[2]">
+                          {msg.isDeleted ? '[Message deleted]' : msg.content}
+                        </div>
 
                         {/* Attachments */}
                         {msg.attachments && msg.attachments.length > 0 && !msg.isDeleted && (
-                          <div className="flex gap-2 mt-2 flex-wrap">
+                          <div className="flex gap-2 mt-2 flex-wrap relative z-[2]">
                             {msg.attachments.map((att: any, idx: number) => (
                               att.url ? (
                                 <button
@@ -887,47 +911,28 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                           </div>
                         )}
 
-                        {/* Verified Mek Attachment - Card with honeycomb pattern */}
+                        {/* Verified Mek Attachment - directly in the message bubble */}
                         {msg.mekAttachment && !msg.isDeleted && (
-                          <div className="mt-2">
+                          <div className="mt-2 relative z-[2]">
                             <button
                               onClick={() => setMekPreviewLightbox(msg.mekAttachment)}
-                              className="relative block rounded-xl overflow-hidden group transition-all duration-300 hover:scale-[1.02]"
-                              style={{
-                                background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
-                                border: '1px solid rgba(34, 211, 238, 0.3)',
-                              }}
+                              className="block rounded-lg overflow-hidden transition-transform duration-200 hover:scale-[1.02]"
                             >
-                              {/* Honeycomb pattern overlay */}
-                              <div
-                                className="absolute inset-0 opacity-[0.08] group-hover:opacity-[0.15] transition-opacity duration-300 pointer-events-none z-[1]"
-                                style={{
-                                  backgroundImage: `url('/random-images/honey-png-big.webp')`,
-                                  backgroundSize: 'cover',
-                                  backgroundPosition: 'center',
-                                }}
+                              <img
+                                src={getMediaUrl(`/mek-images/150px/${(msg.mekAttachment.sourceKeyBase || msg.mekAttachment.sourceKey).replace(/-[A-Z]$/, '').toLowerCase()}.webp`)}
+                                alt={`Mek #${msg.mekAttachment.assetId}`}
+                                className="w-[150px] h-[150px] object-cover rounded-lg"
                               />
-                              {/* Mek Image */}
-                              <div className="relative p-2">
-                                <img
-                                  src={getMediaUrl(`/mek-images/150px/${(msg.mekAttachment.sourceKeyBase || msg.mekAttachment.sourceKey).replace(/-[A-Z]$/, '').toLowerCase()}.webp`)}
-                                  alt={`Mek #${msg.mekAttachment.assetId}`}
-                                  className="w-[150px] h-[150px] object-cover rounded-lg relative z-[2]"
-                                />
-                              </div>
-                              {/* Verified badge inside card */}
-                              <div className="relative z-[2] px-3 pb-3">
-                                <div className="flex items-center gap-1.5 text-xs text-cyan-400">
-                                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                                  </svg>
-                                  <span>Verified Mekanism</span>
-                                </div>
-                                {msg.mekAttachment.customName && (
-                                  <div className="text-[10px] text-white/50 mt-0.5">{msg.mekAttachment.customName}</div>
-                                )}
-                              </div>
                             </button>
+                            <div className="flex items-center gap-1.5 mt-2 text-xs text-cyan-400">
+                              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                              </svg>
+                              <span>Verified Mekanism</span>
+                              {msg.mekAttachment.customName && (
+                                <span className="text-white/50">• {msg.mekAttachment.customName}</span>
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>
