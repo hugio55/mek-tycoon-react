@@ -29,7 +29,6 @@ export async function POST(request: NextRequest) {
       request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
       request.headers.get('x-real-ip') ||
       request.headers.get('cf-connecting-ip') || // Cloudflare
-      request.ip ||
       'unknown';
 
     console.log('[🎮BETA-API] Received signup from IP:', ipAddress);

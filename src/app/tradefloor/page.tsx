@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useMutation } from "convex/react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/convex/_generated/api";
@@ -16,6 +17,13 @@ import OfferCard from "@/components/tradefloor/OfferCard";
 
 type Tab = "browse" | "my-listings" | "my-offers";
 type SortOption = "newest" | "oldest" | "most-offers" | "least-offers";
+
+const SORT_OPTIONS: { id: SortOption; name: string }[] = [
+  { id: "newest", name: "Newest First" },
+  { id: "oldest", name: "Oldest First" },
+  { id: "most-offers", name: "Most Offers" },
+  { id: "least-offers", name: "Least Offers" },
+];
 
 interface ConfirmAction {
   type: "cancel-listing" | "withdraw-offer";
@@ -34,6 +42,26 @@ export default function TradeFloorPage() {
   const [selectedListingForEdit, setSelectedListingForEdit] = useState<any>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const [browseSortOption, setBrowseSortOption] = useState<SortOption>("newest");
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const [sortDropdownRect, setSortDropdownRect] = useState<DOMRect | null>(null);
+  const sortDropdownBtnRef = useRef<HTMLButtonElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // For portal mounting
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sortDropdownOpen && sortDropdownBtnRef.current && !sortDropdownBtnRef.current.contains(event.target as Node)) {
+        setSortDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [sortDropdownOpen]);
 
   // Read tab from URL query parameter (for notification deep links)
   useEffect(() => {
@@ -375,31 +403,99 @@ export default function TradeFloorPage() {
               {activeTab === "my-offers" && "Offers you've made on other players' listings"}
             </p>
 
-            {/* Sort Dropdown - Browse Tab Only */}
+            {/* Sort Dropdown - Browse Tab Only (Portal-based, matching Market style) */}
             {activeTab === "browse" && (
-              <div className="flex items-center gap-2">
-                <span
-                  className="text-xs uppercase tracking-wider"
-                  style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
-                >
-                  Sort by:
-                </span>
-                <select
-                  value={browseSortOption}
-                  onChange={(e) => setBrowseSortOption(e.target.value as SortOption)}
-                  className="px-3 py-1.5 rounded-lg text-sm cursor-pointer transition-all focus:outline-none"
+              <div className="relative">
+                {/* Dropdown Button */}
+                <button
+                  ref={sortDropdownBtnRef}
+                  onClick={() => {
+                    if (!sortDropdownOpen && sortDropdownBtnRef.current) {
+                      setSortDropdownRect(sortDropdownBtnRef.current.getBoundingClientRect());
+                    }
+                    setSortDropdownOpen(!sortDropdownOpen);
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 text-sm uppercase tracking-wider font-medium transition-all"
                   style={{
-                    fontFamily: 'Play, sans-serif',
-                    background: 'rgba(255,255,255,0.08)',
-                    border: '1px solid rgba(255,255,255,0.15)',
+                    background: 'linear-gradient(105deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0.06) 100%)',
+                    backdropFilter: 'blur(4px) brightness(1.25)',
+                    WebkitBackdropFilter: 'blur(4px) brightness(1.25)',
+                    border: sortDropdownOpen
+                      ? '1px solid rgba(34,211,238,0.4)'
+                      : '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: sortDropdownOpen ? '8px 8px 0 0' : '8px',
                     color: 'rgba(255,255,255,0.8)',
+                    fontFamily: "'Play', sans-serif",
                   }}
                 >
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
-                  <option value="most-offers">Most Offers</option>
-                  <option value="least-offers">Least Offers</option>
-                </select>
+                  <span>{SORT_OPTIONS.find(o => o.id === browseSortOption)?.name}</span>
+                  <svg
+                    className={`w-3.5 h-3.5 transition-transform duration-200 flex-shrink-0 ${sortDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Floating Dropdown Menu - Rendered via Portal */}
+                {mounted && sortDropdownOpen && sortDropdownRect && createPortal(
+                  <div
+                    className="fixed"
+                    style={{
+                      zIndex: 99999,
+                      top: sortDropdownRect.bottom,
+                      left: sortDropdownRect.left,
+                      width: sortDropdownRect.width,
+                      background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%)',
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(34,211,238,0.4)',
+                      borderTop: 'none',
+                      borderRadius: '0 0 8px 8px',
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                    }}
+                  >
+                    {SORT_OPTIONS.map((option, index) => (
+                      <button
+                        key={option.id}
+                        onClick={() => {
+                          setBrowseSortOption(option.id);
+                          setSortDropdownOpen(false);
+                        }}
+                        className="w-full px-3 py-2.5 text-left text-sm tracking-wide transition-all whitespace-nowrap"
+                        style={{
+                          background: browseSortOption === option.id
+                            ? 'rgba(34,211,238,0.25)'
+                            : 'transparent',
+                          color: browseSortOption === option.id
+                            ? '#22d3ee'
+                            : 'rgba(255,255,255,0.8)',
+                          fontFamily: "'Play', sans-serif",
+                          borderBottom: index < SORT_OPTIONS.length - 1
+                            ? '1px solid rgba(255,255,255,0.08)'
+                            : 'none',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (browseSortOption !== option.id) {
+                            e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                            e.currentTarget.style.paddingLeft = '16px';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (browseSortOption !== option.id) {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.paddingLeft = '12px';
+                          }
+                        }}
+                      >
+                        {option.name}
+                      </button>
+                    ))}
+                  </div>,
+                  document.body
+                )}
               </div>
             )}
           </div>
