@@ -233,10 +233,10 @@ export default function TradeListingCard({
                 Make Offer
               </button>
 
-              {/* Tooltip (desktop) */}
+              {/* Tooltip (desktop) - anchored to right to prevent clipping */}
               {showOwnListingTooltip && (
                 <div
-                  className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 rounded-lg whitespace-nowrap z-50"
+                  className="absolute bottom-full right-0 mb-2 px-3 py-2 rounded-lg whitespace-nowrap z-50"
                   style={{
                     background: 'rgba(0, 0, 0, 0.9)',
                     border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -249,7 +249,7 @@ export default function TradeListingCard({
                   This is your own listing
                   {/* Arrow */}
                   <div
-                    className="absolute top-full left-1/2 transform -translate-x-1/2"
+                    className="absolute top-full right-4"
                     style={{
                       width: 0,
                       height: 0,
@@ -348,15 +348,14 @@ export default function TradeListingCard({
         </div>
       </div>
 
-      {/* Own Listing Badge (shown in header corner) */}
+      {/* Own Listing Badge (shown in header corner) - Glowing cyan text */}
       {isOwnListing && (
         <div
-          className="absolute top-2 right-2 px-2 py-1 rounded text-xs uppercase tracking-wider"
+          className="absolute top-3 right-3 text-xs uppercase tracking-wider font-medium"
           style={{
-            background: 'rgba(168, 85, 247, 0.2)',
-            border: '1px solid rgba(168, 85, 247, 0.3)',
-            color: '#c084fc',
             fontFamily: 'Play, sans-serif',
+            color: '#22d3ee',
+            textShadow: '0 0 10px rgba(34, 211, 238, 0.6), 0 0 20px rgba(34, 211, 238, 0.3)',
           }}
         >
           Your Listing

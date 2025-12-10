@@ -500,17 +500,14 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
 
         try {
           console.log('[WalletConnect] Calling Convex Blockfrost action (no animation)...');
-          const initResult = await initializeWithBlockfrostAction({
-            walletAddress: stakeAddress,
-            stakeAddress,
-            walletType: wallet.name.toLowerCase(),
-            paymentAddresses: usedAddresses
+          const initResult = await fetchNFTsAction({
+            stakeAddress: stakeAddress,
           });
 
           if (initResult.success) {
-            console.log(`[WalletConnect] Successfully fetched ${initResult.mekCount} Meks from blockchain`);
+            console.log(`[WalletConnect] Successfully fetched ${initResult.meks.length} Meks from blockchain`);
             meks = initResult.meks || [];
-            setFinalMekCount(initResult.mekCount || 0);
+            setFinalMekCount(initResult.meks.length || 0);
           } else {
             console.error('[WalletConnect] Blockfrost initialization failed:', initResult.error);
           }

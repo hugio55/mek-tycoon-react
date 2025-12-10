@@ -219,7 +219,7 @@ export default function TradeFloorPage() {
                   }}
                 />
                 <span className="relative z-10 transition-all duration-300 group-hover:[text-shadow:0_0_10px_rgba(34,211,238,0.8)]">
-                  LIST ITEM
+                  LIST MEK
                 </span>
                 {stakeAddress && activeListingCount !== undefined && (
                   <span
@@ -260,6 +260,28 @@ export default function TradeFloorPage() {
               </button>
             </div>
           </div>
+
+          {/* Description */}
+          <p
+            className="relative mt-4 max-w-3xl"
+            style={{
+              fontFamily: 'Play, sans-serif',
+              fontSize: '14px',
+              color: 'rgba(255,255,255,0.5)',
+              lineHeight: '1.6',
+            }}
+          >
+            Seeking a specific variation? List your Mek and the variations you want—if another collector has a match, they can reach out. All trades are facilitated privately or through{' '}
+            <a
+              href="https://app.tradingtent.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-colors hover:text-cyan-300"
+              style={{ color: '#22d3ee' }}
+            >
+              Trading Tent
+            </a>.
+          </p>
         </div>
 
         {/* Tab Navigation + Filters Card (matching Market) */}
