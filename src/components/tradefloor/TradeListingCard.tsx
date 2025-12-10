@@ -101,26 +101,20 @@ export default function TradeListingCard({
   const mekVariations = useMemo(() => {
     if (!cleanSourceKey) return null;
 
-    // Source key format: "aa1-bb2-cc3" (head-body-trait, lowercase)
+    // Source key format: "aa1-bb2-cc3" (3 variation codes, order varies)
     const parts = cleanSourceKey.toUpperCase().split("-");
     if (parts.length !== 3) {
       console.log("[🔍CARD] mekVariations: parts.length !== 3", { cleanSourceKey, parts });
       return null;
     }
 
-    const [headCode, bodyCode, traitCode] = parts;
+    // Look up each code and determine type from the data (don't assume positions)
+    const variations = parts.map(code => COMPLETE_VARIATION_RARITY.find(v => v.sourceKey === code));
 
-    // Look up each variation by sourceKey
-    const head = COMPLETE_VARIATION_RARITY.find(v => v.sourceKey === headCode && v.type === "head");
-    const body = COMPLETE_VARIATION_RARITY.find(v => v.sourceKey === bodyCode && v.type === "body");
-    const trait = COMPLETE_VARIATION_RARITY.find(v => v.sourceKey === traitCode && v.type === "trait");
-
-    console.log("[🔍CARD] mekVariations lookup:", {
-      cleanSourceKey,
-      headCode, headFound: !!head, headName: head?.name,
-      bodyCode, bodyFound: !!body, bodyName: body?.name,
-      traitCode, traitFound: !!trait, traitName: trait?.name,
-    });
+    // Extract by actual type
+    const head = variations.find(v => v?.type === "head") || null;
+    const body = variations.find(v => v?.type === "body") || null;
+    const trait = variations.find(v => v?.type === "trait") || null;
 
     return { head, body, trait };
   }, [cleanSourceKey]);
