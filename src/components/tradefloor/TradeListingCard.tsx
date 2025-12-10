@@ -530,31 +530,144 @@ export default function TradeListingCard({
               />
             </div>
 
-            {/* Mek Name */}
-            <h3
-              className="text-xl font-semibold text-white text-center"
-              style={{
-                fontFamily: 'Saira, sans-serif',
-                textShadow: '0 0 20px rgba(34, 211, 238, 0.3)',
-              }}
-            >
-              {listing.listedMekAssetName || "Unknown Mek"}
-            </h3>
+            {/* Mek Info Section */}
+            <div className="flex flex-col items-center gap-2 text-center">
+              {/* Mek Name */}
+              <h3
+                className="text-xl font-semibold text-white"
+                style={{
+                  fontFamily: 'Saira, sans-serif',
+                  textShadow: '0 0 20px rgba(34, 211, 238, 0.3)',
+                }}
+              >
+                {listing.listedMekAssetName || "Unknown Mek"}
+              </h3>
 
-            {/* Close Button */}
-            <button
-              onClick={() => setShowImageLightbox(false)}
-              className="px-8 py-2.5 rounded-xl font-medium transition-all hover:scale-[1.05] active:scale-[0.95]"
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))',
-                border: '1px solid rgba(255,255,255,0.2)',
-                color: 'rgba(255,255,255,0.9)',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-              }}
-            >
-              Close
-            </button>
+              {/* Mek Number & Rank */}
+              <div
+                className="flex items-center gap-4 text-sm"
+                style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.6)' }}
+              >
+                {mekNumber && (
+                  <span>Mek <span style={{ color: '#22d3ee' }}>#{mekNumber}</span></span>
+                )}
+                {overallRank && (
+                  <span>Rank <span style={{ color: '#fbbf24' }}>#{overallRank}</span></span>
+                )}
+              </div>
+
+              {/* Variation Details */}
+              {mekVariations && (
+                <div
+                  className="flex flex-col gap-1.5 mt-2 text-sm"
+                  style={{ fontFamily: 'Play, sans-serif' }}
+                >
+                  {/* Head */}
+                  {mekVariations.head && (
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="px-2 py-0.5 rounded text-xs"
+                        style={{
+                          background: 'rgba(59, 130, 246, 0.2)',
+                          color: '#60a5fa',
+                          border: '1px solid rgba(59, 130, 246, 0.3)',
+                        }}
+                      >
+                        HEAD
+                      </span>
+                      <span style={{ color: 'rgba(255,255,255,0.9)' }}>
+                        {mekVariations.head.name}
+                      </span>
+                      <span style={{ color: 'rgba(255,255,255,0.4)' }}>
+                        ({mekVariations.head.count} {mekVariations.head.count === 1 ? 'copy' : 'copies'})
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Body */}
+                  {mekVariations.body && (
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="px-2 py-0.5 rounded text-xs"
+                        style={{
+                          background: 'rgba(34, 197, 94, 0.2)',
+                          color: '#4ade80',
+                          border: '1px solid rgba(34, 197, 94, 0.3)',
+                        }}
+                      >
+                        BODY
+                      </span>
+                      <span style={{ color: 'rgba(255,255,255,0.9)' }}>
+                        {mekVariations.body.name}
+                      </span>
+                      <span style={{ color: 'rgba(255,255,255,0.4)' }}>
+                        ({mekVariations.body.count} {mekVariations.body.count === 1 ? 'copy' : 'copies'})
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Trait */}
+                  {mekVariations.trait && (
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="px-2 py-0.5 rounded text-xs"
+                        style={{
+                          background: 'rgba(168, 85, 247, 0.2)',
+                          color: '#c084fc',
+                          border: '1px solid rgba(168, 85, 247, 0.3)',
+                        }}
+                      >
+                        TRAIT
+                      </span>
+                      <span style={{ color: 'rgba(255,255,255,0.9)' }}>
+                        {mekVariations.trait.name}
+                      </span>
+                      <span style={{ color: 'rgba(255,255,255,0.4)' }}>
+                        ({mekVariations.trait.count} {mekVariations.trait.count === 1 ? 'copy' : 'copies'})
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col items-center gap-3 mt-2">
+              {/* Make Trade Offer Button - Only show if not own listing and handler exists */}
+              {!isOwnListing && onMakeOffer && (
+                <button
+                  onClick={() => {
+                    setShowImageLightbox(false);
+                    onMakeOffer();
+                  }}
+                  className="px-10 py-3 rounded-xl font-semibold text-lg transition-all hover:scale-[1.05] active:scale-[0.95]"
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    background: 'linear-gradient(135deg, #22d3ee 0%, #06b6d4 50%, #0891b2 100%)',
+                    color: '#000',
+                    boxShadow: '0 0 30px rgba(34, 211, 238, 0.4), 0 4px 20px rgba(0,0,0,0.3)',
+                    textShadow: '0 1px 2px rgba(255,255,255,0.2)',
+                  }}
+                >
+                  Make Trade Offer
+                </button>
+              )}
+
+              {/* Close Text Link */}
+              <button
+                onClick={() => setShowImageLightbox(false)}
+                className="text-sm transition-all hover:opacity-80"
+                style={{
+                  fontFamily: 'Play, sans-serif',
+                  color: 'rgba(255,255,255,0.5)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>,
         document.body
