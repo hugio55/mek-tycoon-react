@@ -1087,6 +1087,12 @@ export const cascadeDeleteUser = mutation({
     }
     deletedCounts.betaSignups = betaSignups.length;
 
+    // userEssence (by stakeAddress) - Phase II sparse essence storage
+    if (user.stakeAddress) {
+      const userEssenceCount = await deleteAllUserEssence(ctx, user.stakeAddress);
+      deletedCounts.userEssence = userEssenceCount;
+    }
+
     // === MESSAGING TABLES ===
 
     // conversations (user is participant1 or participant2) - delete entire conversation
