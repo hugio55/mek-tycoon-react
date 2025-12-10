@@ -184,12 +184,9 @@ export default function SearchPage() {
         {currentMeks.map((mek) => {
           // Extract Mek number from assetId (e.g., "MEK0001" -> "0001")
           const mekNumber = mek.assetId?.replace('MEK', '') || mek.assetId || '????';
-          
-          // Calculate gold per hour (base rate * level * buffs)
-          const baseGoldRate = (mek.level || 1) * 3.5;
-          const buffMultiplier = 1.0; // TODO: Get actual buff multiplier from user
-          const goldPerHour = baseGoldRate * buffMultiplier;
-          
+
+          // Phase II: goldPerHour calculation removed - gold income comes from Job Slots
+
           // Check for equipped items (placeholder - need actual data)
           const hasItems = [false, false, false]; // [head item, body item, trait item]
           
@@ -233,9 +230,6 @@ export default function SearchPage() {
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-400">Rank #{mek.rarityRank || "?"}</span>
                   <span className="text-gray-400">Lvl {mek.level || 1}</span>
-                </div>
-                <div className="text-xs text-green-400 font-semibold">
-                  {goldPerHour.toFixed(1)} g/hr
                 </div>
               </div>
             </Link>

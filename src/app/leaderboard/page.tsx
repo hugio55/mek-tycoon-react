@@ -7,8 +7,9 @@ import MekImage from "@/components/MekImage";
 import Link from "next/link";
 
 type LeaderboardCategory = 'gold' | 'meks' | 'essence' | 'topMeks' | 'achievements';
-type TopMeksSortBy = 'goldTotal' | 'goldPerHour' | 'essenceTotal' | 'essencePerHour';
-type GoldViewType = 'total' | 'perHour';
+// Phase II: goldPerHour removed - gold income comes from Job Slots
+type TopMeksSortBy = 'goldTotal' | 'goldRank' | 'essenceTotal' | 'essencePerHour';
+type GoldViewType = 'total' | 'rank';
 type EssenceViewType = 'total' | 'perHour';
 
 interface LeaderboardEntry {
@@ -29,7 +30,7 @@ interface LeaderboardEntry {
       topMekAssetId?: string;
       topMekLevel?: number;
     };
-    goldPerHour?: number;
+    // Phase II: goldPerHour removed - income from Job Slots
     essencePerHour?: number;
     achievementScore?: number;
     topMek?: {
@@ -47,7 +48,7 @@ interface LeaderboardEntry {
 export default function LeaderboardPage() {
   const [currentWallet, setCurrentWallet] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<LeaderboardCategory>('achievements');
-  const [topMeksSortBy, setTopMeksSortBy] = useState<TopMeksSortBy>('goldPerHour');
+  const [topMeksSortBy, setTopMeksSortBy] = useState<TopMeksSortBy>('goldTotal');
   const [goldView, setGoldView] = useState<GoldViewType>('total');
   const [essenceView, setEssenceView] = useState<EssenceViewType>('total');
   const [showGoldSubmenu, setShowGoldSubmenu] = useState(false);
@@ -106,7 +107,7 @@ export default function LeaderboardPage() {
           entry.value = goldAmount;
           entry.metadata = {
             level: Math.max(1, 100 - i * 2),
-            goldPerHour: Math.floor(goldAmount * 0.05),
+            // Phase II: goldPerHour removed - income from Job Slots
             mekDetails: { total: Math.max(1, 50 - i) }
           };
           break;
@@ -266,7 +267,7 @@ export default function LeaderboardPage() {
             `${entry.metadata?.topMek?.essenceRate?.toFixed(1) || '0'}/hr`
           ],
           clickableColumns: [1, 2, 3, 4], // indices of clickable columns
-          sortValues: ['goldTotal', 'goldPerHour', 'essenceTotal', 'essencePerHour'],
+          sortValues: ['goldTotal', 'goldRank', 'essenceTotal', 'essencePerHour'],
           isMekList: true,
           showHighestMek: false
         };

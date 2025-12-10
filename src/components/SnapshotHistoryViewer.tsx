@@ -317,12 +317,7 @@ function SnapshotHistoryViewer() {
                                   <div className="text-sm text-gray-300">#{mek.rarityRank}</div>
                                 </div>
                               )}
-                              <div className="text-right">
-                                <div className="text-xs text-gray-500">Rate</div>
-                                <div className="text-sm font-semibold text-green-400">
-                                  {mek.goldPerHour.toFixed(2)} g/hr
-                                </div>
-                              </div>
+                              {/* Phase II: goldPerHour display removed - income from Job Slots */}
                             </div>
                           </div>
                         ))}
