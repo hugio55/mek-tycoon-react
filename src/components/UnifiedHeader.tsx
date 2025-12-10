@@ -44,10 +44,11 @@ function SessionTimer({
       const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
 
+      // Always show seconds so user can see the timer is active/ticking
       if (days > 0) {
-        setTimeRemaining(`${days}d ${hours}h ${minutes}m`);
+        setTimeRemaining(`${days}d ${hours}h ${minutes}m ${seconds}s`);
       } else if (hours > 0) {
-        setTimeRemaining(`${hours}h ${minutes}m`);
+        setTimeRemaining(`${hours}h ${minutes}m ${seconds}s`);
       } else if (minutes > 0) {
         setTimeRemaining(`${minutes}m ${seconds}s`);
       } else {

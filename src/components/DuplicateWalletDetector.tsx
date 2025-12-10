@@ -219,7 +219,7 @@ export default function DuplicateWalletDetector() {
                       <span className="font-mono text-gray-400">
                         {wallet.address.substring(0, 15)}...
                       </span>
-                      <span className="text-green-400">{wallet.goldPerHour.toFixed(2)} g/hr</span>
+                      <span className="text-yellow-400">{wallet.mekCount || 0} MEKs</span>
                     </div>
                   ))}
                 </div>
@@ -244,7 +244,7 @@ export default function DuplicateWalletDetector() {
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <div className="text-sm text-gray-300">
-                      {dup.mekCount} MEKs @ {dup.goldPerHour.toFixed(2)} g/hr
+                      {dup.mekCount} MEKs
                     </div>
                     <div className="text-xs text-gray-500">Fingerprint: {dup.fingerprint}</div>
                   </div>
@@ -299,7 +299,7 @@ export default function DuplicateWalletDetector() {
             {duplicates.recentlyActiveDuplicates.map((dup: any, idx: number) => (
               <div key={idx} className="bg-gray-950/50 p-3 rounded border border-orange-700">
                 <div className="text-sm text-gray-300 mb-2">
-                  {dup.mekCount} MEKs @ {dup.goldPerHour.toFixed(2)} g/hr - {dup.walletCount} wallets
+                  {dup.mekCount} MEKs - {dup.walletCount} wallets
                 </div>
                 <div className="space-y-1">
                   {dup.wallets.map((wallet: any, wIdx: number) => (
