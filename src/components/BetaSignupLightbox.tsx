@@ -593,7 +593,7 @@ export default function BetaSignupLightbox({
         <button
           onClick={() => setStep('veteran_welcome')}
           disabled={isReservingName}
-          className="w-full py-3 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 disabled:opacity-50 transition-colors touch-manipulation"
+          className="w-full pt-3 pb-0 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 disabled:opacity-50 transition-colors touch-manipulation"
         >
           ← Back
         </button>
