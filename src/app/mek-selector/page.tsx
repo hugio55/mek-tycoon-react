@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { getMediaUrl } from "@/lib/media-url";
 
 interface Mek {
   id: string;
@@ -267,8 +268,8 @@ export default function MekSelector() {
           </div>
         ) : (
           <>
-            <img 
-              src={`/mek-images/150px/${mek.image}.webp`}
+            <img
+              src={getMediaUrl(`/mek-images/150px/${mek.image}.webp`)}
               alt={`Mek ${mek.number}`}
               className="w-full h-full object-cover"
               onError={(e) => {
@@ -539,8 +540,8 @@ export default function MekSelector() {
                   <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 animate-fade-in">
                     <div className="bg-gradient-to-br from-gray-900 to-black border-2 border-yellow-400 rounded-lg p-8 shadow-2xl shadow-yellow-400/30">
                       <div className="flex flex-col items-center gap-6">
-                        <img 
-                          src={`/mek-images/150px/${meks[selectedIndex].image}.webp`}
+                        <img
+                          src={getMediaUrl(`/mek-images/150px/${meks[selectedIndex].image}.webp`)}
                           alt={`Mek ${meks[selectedIndex].number}`}
                           className="w-64 h-64 object-cover rounded-lg"
                           onError={(e) => {

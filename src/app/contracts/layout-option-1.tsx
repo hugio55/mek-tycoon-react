@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import Image from "next/image";
+import { getMediaUrl } from "@/lib/media-url";
 
 // Contract duration configurations
 const contractDurations = [
@@ -128,8 +129,8 @@ export default function ContractsLayoutOption1() {
           <div className="absolute -top-8 left-8">
             <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-gray-700 to-gray-900 p-0.5 shadow-xl">
               <div className="w-full h-full rounded-lg bg-black flex items-center justify-center">
-                <Image
-                  src="/random-images/space-station.png"
+                <img
+                  src={getMediaUrl("/random-images/space-station.png")}
                   alt="Mission"
                   width={56}
                   height={56}

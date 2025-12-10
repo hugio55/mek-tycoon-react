@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { getMediaUrl } from "@/lib/media-url";
 
 // Selected essence variations  
 const essenceTypes = [
@@ -98,8 +99,8 @@ export default function ContractsLayoutOption3() {
               <div className="relative w-full h-full">
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-600 to-gray-800 rounded-2xl shadow-xl"></div>
                 <div className="absolute inset-1 bg-black rounded-xl flex items-center justify-center">
-                  <Image
-                    src="/random-images/space-station.png"
+                  <img
+                    src={getMediaUrl("/random-images/space-station.png")}
                     alt="Mission"
                     width={72}
                     height={72}

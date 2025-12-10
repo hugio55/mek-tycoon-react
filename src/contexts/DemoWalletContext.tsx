@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode } from 'react';
+import { getMediaUrl } from "@/lib/media-url";
 
 // Mock wallet data for demo mode
 const DEMO_WALLET_ADDRESS = 'stake1demo_test_wallet_for_ui_testing_only';
@@ -11,7 +12,7 @@ const DEMO_MEKS = [
     assetId: 'demo_mek_1',
     policyId: 'ffa56051fda3d106a96f09c3d209d4bf24a117406fb813fb8b4548e3',
     assetName: 'Mekanism179',
-    imageUrl: '/mek-images/150px/ki1-jg2-cd2.webp',
+    imageUrl: getMediaUrl('/mek-images/150px/ki1-jg2-cd2.webp'),
     rarityRank: 1916,
     headVariation: 'Reels',
     bodyVariation: 'Tux',
@@ -21,7 +22,7 @@ const DEMO_MEKS = [
     assetId: 'demo_mek_2',
     policyId: 'ffa56051fda3d106a96f09c3d209d4bf24a117406fb813fb8b4548e3',
     assetName: 'Mekanism2922',
-    imageUrl: '/mek-images/150px/bc6-cb1-of2.webp',
+    imageUrl: getMediaUrl('/mek-images/150px/bc6-cb1-of2.webp'),
     rarityRank: 554,
     headVariation: 'Turret',
     bodyVariation: 'Robot',
@@ -31,7 +32,7 @@ const DEMO_MEKS = [
     assetId: 'demo_mek_3',
     policyId: 'ffa56051fda3d106a96f09c3d209d4bf24a117406fb813fb8b4548e3',
     assetName: 'Mekanism3972',
-    imageUrl: '/mek-images/150px/jx1-bf3-eh1.webp',
+    imageUrl: getMediaUrl('/mek-images/150px/jx1-bf3-eh1.webp'),
     rarityRank: 1215,
     headVariation: 'Rolleiflex',
     bodyVariation: 'Head',
@@ -41,7 +42,7 @@ const DEMO_MEKS = [
     assetId: 'demo_mek_4',
     policyId: 'ffa56051fda3d106a96f09c3d209d4bf24a117406fb813fb8b4548e3',
     assetName: 'Mekanism795',
-    imageUrl: '/mek-images/150px/jx2-jg2-nm1.webp',
+    imageUrl: getMediaUrl('/mek-images/150px/jx2-jg2-nm1.webp'),
     rarityRank: 1265,
     headVariation: 'Reels',
     bodyVariation: 'Head',
@@ -51,7 +52,7 @@ const DEMO_MEKS = [
     assetId: 'demo_mek_5',
     policyId: 'ffa56051fda3d106a96f09c3d209d4bf24a117406fb813fb8b4548e3',
     assetName: 'Mekanism2685',
-    imageUrl: '/mek-images/150px/bc5-ee1-ap1.webp',
+    imageUrl: getMediaUrl('/mek-images/150px/bc5-ee1-ap1.webp'),
     rarityRank: 1753,
     headVariation: 'Security',
     bodyVariation: 'Robot',
