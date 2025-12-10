@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
+import { checkMultipleEssenceRequirements, deductMultipleEssence } from "./lib/userEssenceHelpers";
 
 // Get all available recipes for a user
 export const getRecipes = query({
@@ -56,6 +57,10 @@ export const startCrafting = mutation({
     if (!user || !recipe) {
       throw new Error("User or recipe not found");
     }
+
+    if (!user.stakeAddress) {
+      throw new Error("User does not have a stake address");
+    }
     
     // Check if slot is available
     const existingSession = await ctx.db
@@ -78,34 +83,32 @@ export const startCrafting = mutation({
       throw new Error("Slot not unlocked");
     }
     
-    // Check essence costs
-    const essenceCost = recipe.essenceCost;
-    for (const [essenceType, cost] of Object.entries(essenceCost)) {
-      if (cost && cost > 0) {
-        const userEssence = user.totalEssence[essenceType as keyof typeof user.totalEssence];
-        if (userEssence < cost) {
-          throw new Error(`Not enough ${essenceType} essence`);
-        }
-      }
+    // Check essence costs using userEssence table (Phase II)
+    const essenceCost = recipe.essenceCost as Record<string, number>;
+    const essenceCheck = await checkMultipleEssenceRequirements(
+      ctx,
+      user.stakeAddress,
+      essenceCost
+    );
+    if (!essenceCheck.sufficient) {
+      const missingStr = Object.entries(essenceCheck.missing)
+        .map(([type, amt]) => `${type}: need ${amt} more`)
+        .join(", ");
+      throw new Error(`Not enough essence. Missing: ${missingStr}`);
     }
-    
+
     // Check gold cost
     if (recipe.goldCost && recipe.goldCost > 0) {
       if (user.gold < recipe.goldCost) {
         throw new Error("Not enough gold");
       }
     }
-    
-    // Deduct resources
-    const updatedEssence = { ...user.totalEssence };
-    for (const [essenceType, cost] of Object.entries(essenceCost)) {
-      if (cost && cost > 0) {
-        updatedEssence[essenceType as keyof typeof updatedEssence] -= cost;
-      }
-    }
-    
+
+    // Deduct essence from userEssence table (Phase II)
+    await deductMultipleEssence(ctx, user.stakeAddress, essenceCost, "crafting");
+
+    // Deduct gold
     await ctx.db.patch(args.userId, {
-      totalEssence: updatedEssence,
       gold: user.gold - (recipe.goldCost || 0),
     });
     
