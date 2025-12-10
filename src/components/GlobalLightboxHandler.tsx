@@ -15,6 +15,7 @@ import { EssenceProvider } from '@/contexts/EssenceContext';
 import { MekAsset } from '@/components/MekCard/types';
 import { getMekDataByNumber } from '@/lib/mekNumberToVariation';
 import { getMediaUrl } from '@/lib/media-url';
+import MekDetailsSpaceAge from '@/components/MekDetailsSpaceAge';
 
 /**
  * Global handler for navigation button lightbox events
@@ -143,9 +144,18 @@ export default function GlobalLightboxHandler() {
           onClose={() => setShowMekGrid(false)}
           onMekClick={(mek) => {
             setSelectedMek(mek);
-            // TODO: Open Space Age Mek Details Lightbox here
-            console.log('[GlobalLightboxHandler] Mek clicked:', mek);
+            setShowMekGrid(false); // Close grid when selecting a Mek
           }}
+        />
+      )}
+
+      {/* Mek Details Space Age Lightbox */}
+      {selectedMek && (
+        <MekDetailsSpaceAge
+          isOpen={true}
+          onClose={() => setSelectedMek(null)}
+          mek={selectedMek}
+          corporationName={userData?.corporationName || 'Unknown Corp'}
         />
       )}
 
