@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import EssenceDistributionLightbox from '@/components/EssenceDistributionLightbox';
-import MekLevelsViewer from '@/components/MekLevelsViewer';
 import ActivityLogViewer from '@/components/ActivityLogViewer';
 import EssenceBalancesViewer from '@/components/EssenceBalancesViewer';
 import BuffManagement from '@/components/BuffManagement';
@@ -13,6 +12,9 @@ import MeksTriangleLightbox from '@/components/MeksTriangleLightbox';
 import BetaSignupLightbox from '@/components/BetaSignupLightbox';
 import { restoreWalletSession } from '@/lib/walletSessionManager';
 import { EssenceProvider } from '@/contexts/EssenceContext';
+import { MekAsset } from '@/components/MekCard/types';
+import { getMekDataByNumber } from '@/lib/mekNumberToVariation';
+import { getMediaUrl } from '@/lib/media-url';
 
 /**
  * Global handler for navigation button lightbox events
@@ -20,7 +22,8 @@ import { EssenceProvider } from '@/contexts/EssenceContext';
  */
 export default function GlobalLightboxHandler() {
   const [showEssenceLightbox, setShowEssenceLightbox] = useState(false);
-  const [showMekLevels, setShowMekLevels] = useState(false);
+  const [showMekGrid, setShowMekGrid] = useState(false);
+  const [selectedMek, setSelectedMek] = useState<MekAsset | null>(null);
   const [showActivityLog, setShowActivityLog] = useState(false);
   const [showEssenceBalances, setShowEssenceBalances] = useState(false);
   const [showEssenceBuffs, setShowEssenceBuffs] = useState(false);
@@ -64,7 +67,16 @@ export default function GlobalLightboxHandler() {
           })();
           break;
         case 'mek-levels':
-          setShowMekLevels(true);
+          // Show Mek grid instead of old MekLevelsViewer
+          (async () => {
+            let currentWallet = eventWalletAddress;
+            if (!currentWallet) {
+              const session = await restoreWalletSession();
+              currentWallet = session?.stakeAddress || '';
+            }
+            setWalletAddress(currentWallet);
+            setShowMekGrid(true);
+          })();
           break;
         case 'activity-log':
           setShowActivityLog(true);
@@ -112,12 +124,46 @@ export default function GlobalLightboxHandler() {
         />
       )}
 
-      {/* Mek Levels Lightbox */}
-      {showMekLevels && (
-        <MekLevelsViewer
+      {/* Mek Grid Lightbox */}
+      {showMekGrid && userData && (
+        <MechanismGridLightbox
+          ownedMeks={(userData.ownedMeks || []) as unknown as MekAsset[]}
+          currentGold={userData.gold || 0}
           walletAddress={walletAddress}
-          onClose={() => setShowMekLevels(false)}
+          getMekImageUrl={(mekNumber: number, size?: '150px' | '500px' | '1000px') => {
+            const mekData = getMekDataByNumber(mekNumber);
+            if (mekData?.sourceKey) {
+              const cleanKey = mekData.sourceKey.replace(/-[A-Z]$/, '').toLowerCase();
+              return getMediaUrl(`/mek-images/${size || '150px'}/${cleanKey}.webp`);
+            }
+            return getMediaUrl(`/mek-images/${size || '150px'}/placeholder.webp`);
+          }}
+          animatedMekValues={{}}
+          upgradingMeks={new Set()}
+          onClose={() => setShowMekGrid(false)}
+          onMekClick={(mek) => {
+            setSelectedMek(mek);
+            // TODO: Open Space Age Mek Details Lightbox here
+            console.log('[GlobalLightboxHandler] Mek clicked:', mek);
+          }}
         />
+      )}
+
+      {/* Mek Grid - No Meks State */}
+      {showMekGrid && userData && userData.ownedMeks?.length === 0 && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/80" onClick={() => setShowMekGrid(false)} />
+          <div className="relative bg-black/95 border-2 border-yellow-500/50 rounded-lg p-8 max-w-md">
+            <h2 className="text-2xl font-bold text-yellow-400 mb-4">No Meks Found</h2>
+            <p className="text-gray-400 mb-6">Connect your wallet and verify ownership to see your Meks here.</p>
+            <button
+              onClick={() => setShowMekGrid(false)}
+              className="px-6 py-2 bg-yellow-500 text-black font-bold rounded hover:bg-yellow-400"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Activity Log Lightbox */}
