@@ -1424,6 +1424,16 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
             setMekPreviewLightbox(null);
           }}
           styleVariation="space-age"
+          mekData={{
+            mekNumber: mekPreviewLightbox.assetName?.match(/\d+/)?.[0] || mekPreviewLightbox.assetId,
+            rank: mekPreviewLightbox.gameRank || mekPreviewLightbox.rarityRank,
+            corporation: companyName,
+            customName: mekPreviewLightbox.customName,
+            sourceKey: mekPreviewLightbox.sourceKeyBase || mekPreviewLightbox.sourceKey,
+            headVariation: mekPreviewLightbox.headVariation,
+            bodyVariation: mekPreviewLightbox.bodyVariation,
+            itemVariation: mekPreviewLightbox.itemVariation,
+          }}
         />
       )}
     </div>

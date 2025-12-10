@@ -140,7 +140,8 @@ export default function MekProfileLightbox({
   statusCardStyle = 'compact-minimal',
   onStatusCardStyleChange,
   abilitiesTreeCategoryId,
-  abilitiesTreeTemplateId
+  abilitiesTreeTemplateId,
+  mekData: propMekData
 }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
@@ -727,11 +728,12 @@ export default function MekProfileLightbox({
 
   // Render Designation Card based on selected style
   const renderDesignationCard = () => {
+    // Use dynamic data if provided, otherwise fall back to demo data
     const mekData = {
-      mekNumber: '1234',
-      rank: '2985',
-      corporation: 'Apex Industries',
-      employeeId: 'Golden Striker'
+      mekNumber: propMekData?.mekNumber || '1234',
+      rank: propMekData?.rank?.toString() || '2985',
+      corporation: propMekData?.corporation || 'Apex Industries',
+      employeeId: propMekData?.customName || 'Golden Striker'
     };
 
     // Dynamic colors based on useYellowGlow
@@ -5625,9 +5627,9 @@ export default function MekProfileLightbox({
                       (z: any) => z.mode === 'zone' && z.type === 'display' && z.metadata?.displayType === 'mek-name'
                     );
 
-                    // Mock Mek data for testing
-                    const mockMekSourceKey = "aa2-bl2-hn1";
-                    const mockMekName = "SENTINEL ALPHA";
+                    // Use dynamic sourceKey if provided, otherwise fall back to demo
+                    const mockMekSourceKey = propMekData?.sourceKey?.replace(/-[A-Z]$/, '').toLowerCase() || "aa2-bl2-hn1";
+                    const mockMekName = propMekData?.customName || "SENTINEL ALPHA";
 
                     return (
                       <div className="overflow-hidden relative">
@@ -5802,8 +5804,8 @@ export default function MekProfileLightbox({
                         (z: any) => z.mode === 'zone' && z.type === 'display' && z.metadata?.displayType === 'mek-name'
                       );
 
-                      // Mock Mek data for testing
-                      const mockMekSourceKey = "aa2-bl2-hn1";
+                      // Use dynamic sourceKey if provided, otherwise fall back to demo
+                      const mockMekSourceKey = propMekData?.sourceKey?.replace(/-[A-Z]$/, '').toLowerCase() || "aa2-bl2-hn1";
                       const mockMekName = "SENTINEL ALPHA";
 
                       return (
