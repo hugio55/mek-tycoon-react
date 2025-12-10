@@ -1719,7 +1719,7 @@ export default defineSchema({
     lastSnapshotTime: v.optional(v.number()), // Last rate update timestamp
 
     // Mining data
-    totalGoldPerHour: v.optional(v.number()), // From goldMining table
+    totalGoldPerHour: v.optional(v.number()), // Sum of mek gold rates
     mekCount: v.number(), // Number of meks owned
     lastActiveTime: v.optional(v.number()), // When user was last active
 
@@ -2736,7 +2736,7 @@ export default defineSchema({
     userId: v.optional(v.id("users")), // Mek Tycoon user (if logged in)
     walletAddress: v.string(), // Buyer's stake address
     paymentAddress: v.string(), // Payment address used
-    companyName: v.optional(v.string()), // Company name from goldMining table
+    companyName: v.optional(v.string()), // Company name from users table
 
     // Transaction Details
     transactionHash: v.string(), // Cardano blockchain tx hash
