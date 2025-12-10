@@ -49,20 +49,9 @@ export const getUserData = query({
         .collect();
     }
 
-    // Calculate gold rate totals
-    let totalBaseGoldRate = 0;
-    let totalBoostGoldRate = 0;
-    let totalEffectiveGoldRate = 0;
-
-    for (const mek of ownedMeks) {
-      const baseRate = mek.baseGoldRate || mek.goldRate || 0;
-      const boostAmount = mek.levelBoostAmount || 0;
-      const effectiveRate = mek.effectiveGoldRate || baseRate;
-
-      totalBaseGoldRate += baseRate;
-      totalBoostGoldRate += boostAmount;
-      totalEffectiveGoldRate += effectiveRate;
-    }
+    // Phase II: Gold rate calculations REMOVED
+    // Gold income now comes from Job Slots, not individual Mek properties
+    // These fields return 0 for backwards compatibility with any old frontend code
 
     return {
       // User identity
@@ -82,11 +71,11 @@ export const getUserData = query({
       lastActiveTime: user.lastLogin,
       createdAt: user.createdAt,
 
-      // Gold rate totals (Phase II)
-      totalBaseGoldRate,
-      totalBoostGoldRate,
-      totalEffectiveGoldRate,
-      totalGoldPerHour: totalEffectiveGoldRate, // Alias for goldMining compatibility
+      // Phase II: Gold rates return 0 - income comes from Job Slots now
+      totalBaseGoldRate: 0,
+      totalBoostGoldRate: 0,
+      totalEffectiveGoldRate: 0,
+      totalGoldPerHour: 0, // Legacy field - passive gold income removed
 
       // Owned Meks (formatted for frontend compatibility with full Phase II data)
       ownedMeks: ownedMeks.map(mek => ({
@@ -111,19 +100,14 @@ export const getUserData = query({
         rarityRank: mek.rarityRank,
         rarityTier: mek.rarityTier,
 
-        // Gold rates (Phase II)
-        goldRate: mek.goldRate,
-        goldPerHour: mek.effectiveGoldRate || mek.goldRate || 0, // goldMining compatibility
-        baseGoldRate: mek.baseGoldRate || mek.goldRate || 0,
-        baseGoldPerHour: mek.baseGoldRate || mek.goldRate || 0, // goldMining compatibility
+        // Phase II: Gold rate fields REMOVED - income comes from Job Slots
+        // Legacy fields return 0 for backwards compatibility
+        goldPerHour: 0,
+        baseGoldPerHour: 0,
 
-        // Level system (Phase II)
+        // Level system (kept for talent tree skill points)
         mekLevel: mek.mekLevel || 1,
-        currentLevel: mek.mekLevel || 1, // goldMining compatibility
-        levelBoostPercent: mek.levelBoostPercent || 0,
-        levelBoostAmount: mek.levelBoostAmount || 0,
-        effectiveGoldRate: mek.effectiveGoldRate || mek.goldRate || 0,
-        effectiveGoldPerHour: mek.effectiveGoldRate || mek.goldRate || 0, // goldMining compatibility
+        currentLevel: mek.mekLevel || 1, // Alias for compatibility
 
         // Accumulated gold (Phase II)
         accumulatedGoldForCorp: mek.accumulatedGoldForCorp || 0,

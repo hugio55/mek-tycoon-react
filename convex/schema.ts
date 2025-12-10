@@ -47,8 +47,7 @@ export default defineSchema({
     isGenesis: v.optional(v.boolean()), // True for special genesis meks (101-010-101, etc)
     rarityTier: v.optional(v.string()), // Common, Uncommon, Rare, Epic, Legendary
 
-    // Gold mining
-    goldRate: v.optional(v.number()), // Gold per hour production rate
+    // Phase II: goldRate field REMOVED - gold now comes from Job Slots, not individual Meks
 
     // Tenure system (essence slot tracking)
     tenurePoints: v.optional(v.number()), // Accumulated tenure points (1 point/second when slotted)
@@ -92,14 +91,12 @@ export default defineSchema({
     accumulatedGoldAllTime: v.optional(v.number()), // Lifetime gold earned by this Mek
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // PHASE II: Mek Leveling System
+    // PHASE II: Mek Identity and Level
     // ═══════════════════════════════════════════════════════════════════════════
     policyId: v.optional(v.string()), // Policy ID for blockchain verification
-    baseGoldRate: v.optional(v.number()), // Original gold rate from rarity (immutable)
-    mekLevel: v.optional(v.number()), // Current level (1-10), default 1
-    levelBoostPercent: v.optional(v.number()), // Boost percentage from level (0-90%)
-    levelBoostAmount: v.optional(v.number()), // Actual boost amount in gold/hr
-    effectiveGoldRate: v.optional(v.number()), // baseGoldRate + levelBoostAmount
+    mekLevel: v.optional(v.number()), // Current level (1-10), used for talent tree skill points
+    // Phase II: Gold rate fields REMOVED (baseGoldRate, levelBoostPercent, levelBoostAmount, effectiveGoldRate)
+    // Gold income now comes from Job Slots, not individual Mek properties
   })
     .index("by_owner", ["owner"]) // LEGACY: for backwards compat
     .index("by_owner_stake", ["ownerStakeAddress"]) // Phase II: PRIMARY owner lookup
