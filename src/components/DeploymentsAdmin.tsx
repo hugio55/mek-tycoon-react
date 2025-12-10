@@ -488,9 +488,9 @@ export default function DeploymentsAdmin() {
       // Continue anyway
     }
 
-    // Step 3: Push current branch to GitHub (backup) - pushes custom-minting-system first
+    // Step 3: Push current branch to GitHub (backup) - pushes to origin/<branch> first
     setDeployStep(3);
-    console.log('[🚀DEPLOY] Step 3: Pushing custom-minting-system to GitHub...');
+    console.log(`[🚀DEPLOY] Step 3: Pushing ${currentBranch} to GitHub...`);
     addLog('Full Deploy', 'pending', `Step 3/5: Pushing to origin/${currentBranch} (branch backup)...`);
     try {
       const res = await fetch('/api/deployment/push', { method: 'POST' });
@@ -546,7 +546,7 @@ export default function DeploymentsAdmin() {
         body: JSON.stringify({ confirmationToken: 'DEPLOY_TO_PRODUCTION' })
       });
       const data = await res.json();
-      console.log('[🚀DEPLOY] Step 4 result:', data);
+      console.log('[🚀DEPLOY] Step 5 result:', data);
       if (data.success) {
         addLog('Full Deploy', 'success', 'Convex deployed to Sturgeon (production)');
       } else {
@@ -554,7 +554,7 @@ export default function DeploymentsAdmin() {
         // Not critical - Vercel deploy already triggered
       }
     } catch (error) {
-      console.error('[🚀DEPLOY] Step 4 error:', error);
+      console.error('[🚀DEPLOY] Step 5 error:', error);
       addLog('Full Deploy', 'error', 'Convex deploy warning - server may be down');
     }
 
@@ -670,7 +670,7 @@ export default function DeploymentsAdmin() {
             <div className="text-gray-300 text-sm mb-4">
               {deployStep === 1 && 'Committing changes...'}
               {deployStep === 2 && 'Syncing media to R2...'}
-              {deployStep === 3 && 'Pushing to origin/custom-minting-system...'}
+              {deployStep === 3 && `Pushing to origin/${gitStatus?.currentBranch || 'branch'}...`}
               {deployStep === 4 && 'Pushing to origin/master (Vercel production)...'}
               {deployStep === 5 && 'Deploying Convex to production...'}
             </div>

@@ -474,6 +474,8 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       } else {
         console.log('[🔐SECURITY] ✅ Trusted session found - skipping signature verification');
         console.log('[🔐SECURITY] Session stake address matches current wallet');
+        // Trusted sessions were verified when originally created
+        signatureVerified = true;
       }
 
       // PHASE 1: Quick count - get Mek count immediately
@@ -592,6 +594,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
         const corpResult = await connectCorporationMutation({
           stakeAddress: stakeAddress,
           walletType: wallet.name.toLowerCase(),
+          signatureVerified: signatureVerified, // Pass verification status to backend
         });
         console.log('[WalletConnect] Corporation linked:', corpResult.isNew ? 'NEW CORPORATION' : 'EXISTING CORPORATION');
         isNewCorporation = corpResult.isNew;
