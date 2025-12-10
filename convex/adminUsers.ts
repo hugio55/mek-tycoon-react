@@ -596,11 +596,6 @@ export const previewTestWallets = query({
       // Count records in tables with walletAddress
       const meks = await ctx.db.query("meks")
         .withIndex("by_owner", (q: any) => q.eq("owner", walletAddress)).collect();
-      // PHASE II: Check both legacy goldMining and new goldMiningState tables
-      const goldMining = await ctx.db.query("goldMining")
-        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
-      const goldMiningState = await ctx.db.query("goldMiningState")
-        .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress)).collect();
       const mekLevels = await ctx.db.query("mekLevels")
         .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
       const leaderboardCache = await ctx.db.query("leaderboardCache")
@@ -610,7 +605,7 @@ export const previewTestWallets = query({
         craftingSessions.length + inventory.length + transactions.length +
         achievements.length + activeBuffs.length + userStatsCache.length +
         contracts.length + chipInstances.length + marketListings.length +
-        mekTalentTrees.length + meks.length + goldMining.length + goldMiningState.length +
+        mekTalentTrees.length + meks.length +
         mekLevels.length + leaderboardCache.length + 1; // +1 for user record
 
       return {
@@ -630,8 +625,6 @@ export const previewTestWallets = query({
           marketListings: marketListings.length,
           mekTalentTrees: mekTalentTrees.length,
           meks: meks.length,
-          goldMining: goldMining.length,
-          goldMiningState: goldMiningState.length,
           mekLevels: mekLevels.length,
           leaderboardCache: leaderboardCache.length,
         },
@@ -769,22 +762,6 @@ export const cascadeDeleteUser = mutation({
       await ctx.db.delete(record._id);
     }
     deletedCounts.meks = meks.length;
-
-    // goldMining (legacy)
-    const goldMining = await ctx.db.query("goldMining")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
-    for (const record of goldMining) {
-      await ctx.db.delete(record._id);
-    }
-    deletedCounts.goldMining = goldMining.length;
-
-    // PHASE II: goldMiningState (new normalized table)
-    const goldMiningState = await ctx.db.query("goldMiningState")
-      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress)).collect();
-    for (const record of goldMiningState) {
-      await ctx.db.delete(record._id);
-    }
-    deletedCounts.goldMiningState = goldMiningState.length;
 
     // mekLevels
     const mekLevels = await ctx.db.query("mekLevels")
@@ -1345,15 +1322,6 @@ export const bulkDeleteTestWallets = mutation({
         .withIndex("by_owner", (q: any) => q.eq("owner", walletAddress)).collect();
       for (const r of meks) { await ctx.db.delete(r._id); recordsDeleted++; }
 
-      const goldMining = await ctx.db.query("goldMining")
-        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
-      for (const r of goldMining) { await ctx.db.delete(r._id); recordsDeleted++; }
-
-      // PHASE II: goldMiningState (new normalized table)
-      const goldMiningState = await ctx.db.query("goldMiningState")
-        .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress)).collect();
-      for (const r of goldMiningState) { await ctx.db.delete(r._id); recordsDeleted++; }
-
       const mekLevels = await ctx.db.query("mekLevels")
         .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
       for (const r of mekLevels) { await ctx.db.delete(r._id); recordsDeleted++; }
@@ -1443,16 +1411,6 @@ export const searchWalletTraces = query({
     const meks = await ctx.db.query("meks")
       .filter((q) => q.eq(q.field("owner"), walletAddress)).collect();
     if (meks.length > 0) traces.meks = meks.length;
-
-    // Search goldMining table (legacy)
-    const goldMining = await ctx.db.query("goldMining")
-      .filter((q) => q.eq(q.field("walletAddress"), walletAddress)).collect();
-    if (goldMining.length > 0) traces.goldMining = goldMining.length;
-
-    // PHASE II: Search goldMiningState table (new normalized table)
-    const goldMiningState = await ctx.db.query("goldMiningState")
-      .filter((q) => q.eq(q.field("stakeAddress"), walletAddress)).collect();
-    if (goldMiningState.length > 0) traces.goldMiningState = goldMiningState.length;
 
     // Search mekLevels table
     const mekLevels = await ctx.db.query("mekLevels")

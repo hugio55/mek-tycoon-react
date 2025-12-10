@@ -4355,7 +4355,7 @@ export default function AdminMasterDataPage() {
           <div id="section-sourcekey-migration" className="bg-black/50 backdrop-blur border-2 border-yellow-500/30 rounded-lg shadow-lg shadow-black/50">
             <div className="p-4">
                 <p className="text-gray-400 mb-4">
-                  Fix missing sourceKey fields in goldMining records. This enables Mek images to load correctly in the selector.
+                  Fix missing sourceKey fields in meks table. This enables Mek images to load correctly in the selector.
                 </p>
 
                 <SourceKeyMigrationAdmin />
@@ -6569,15 +6569,10 @@ export default function AdminMasterDataPage() {
                 <div className="text-xs text-gray-600 mt-2">Multi-wallet corps + Discord bot removed</div>
               </div>
 
-              {/* PENDING DELETE - Legacy Phase I tables */}
-              <div className="mt-4 border border-red-500/40 border-dashed rounded-lg p-4 bg-black/30">
-                <div className="text-red-400 font-bold text-sm mb-2">⏳ TO DELETE (Legacy Phase I)</div>
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <span className="text-red-400/70">goldMining</span>
-                  <span className="text-red-400/70">goldMiningState</span>
-                  <span className="text-red-400/70">corporations</span>
-                </div>
-                <div className="text-xs text-gray-600 mt-2">Still in use - migrate to users table first</div>
+              {/* Phase II: Legacy tables deleted */}
+              <div className="mt-4 border border-green-500/40 border-dashed rounded-lg p-4 bg-black/30">
+                <div className="text-green-400 font-bold text-sm mb-2">✅ Phase II Complete</div>
+                <div className="text-xs text-gray-400">Legacy goldMining and goldMiningState tables removed. Users table is now source of truth.</div>
               </div>
 
             </div>

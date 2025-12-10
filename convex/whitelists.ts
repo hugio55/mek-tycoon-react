@@ -300,44 +300,44 @@ export const generateWhitelist = mutation({
       throw new Error("Whitelist not found");
     }
 
-    // Get all users with their gold mining data
-    const allGoldMiners = await ctx.db.query("goldMining").collect();
-    const now = Date.now();
+    // Phase II: Get all users from users table
+    const allUsers = await ctx.db.query("users").collect();
 
     console.log(`[Whitelist Generation] Starting for "${whitelist.name}"`);
-    console.log(`[Whitelist Generation] Total miners found: ${allGoldMiners.length}`);
+    console.log(`[Whitelist Generation] Total users found: ${allUsers.length}`);
     console.log(`[Whitelist Generation] Rules:`, whitelist.rules);
 
     // IMPORTANT: eligibleUsers contains ONLY stake addresses
-    // goldMining.walletAddress already stores stake addresses from the game
     const eligibleUsers: Array<{
       stakeAddress: string;
       displayName?: string;
     }> = [];
 
-    let debugCount = 0;
-    for (const miner of allGoldMiners) {
-      // Calculate current gold including accumulated
-      // Check both new field (accumulatedGold) and legacy field (currentGold)
-      let currentGold = miner.accumulatedGold || miner.currentGold || 0;
-
-      if (miner.isBlockchainVerified === true) {
-        const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
-        const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-        const goldSinceLastUpdate = (miner.totalGoldPerHour || 0) * hoursSinceLastUpdate;
-        currentGold = (miner.accumulatedGold || miner.currentGold || 0) + goldSinceLastUpdate;
+    // Build mek count map for efficient lookup
+    const allMeks = await ctx.db.query("meks").collect();
+    const mekCountByOwner = new Map<string, number>();
+    for (const mek of allMeks) {
+      const owner = mek.ownerStakeAddress || mek.owner;
+      if (owner) {
+        mekCountByOwner.set(owner, (mekCountByOwner.get(owner) || 0) + 1);
       }
+    }
+
+    let debugCount = 0;
+    for (const user of allUsers) {
+      if (!user.stakeAddress) continue;
+
+      // Phase II: Gold is stored in users.gold
+      const currentGold = user.gold || 0;
 
       // Build user data object for rule checking
-      // TODO: mekCount and genesisMekCount should be computed from meks table
-      // TODO: totalPlayTime should come from users table or be tracked separately
       const userData: any = {
         goldBalance: currentGold,
-        totalGoldEarned: miner.totalCumulativeGold || currentGold,
-        mekCount: 0, // Placeholder - needs to query meks table
-        genesisMekCount: 0, // Placeholder - needs to query meks table for genesis meks
-        totalPlayTime: 0, // Placeholder - needs proper tracking
-        walletAddress: miner.walletAddress,
+        totalGoldEarned: currentGold, // Phase II: cumulative tracking TBD
+        mekCount: mekCountByOwner.get(user.stakeAddress) || 0,
+        genesisMekCount: 0, // Genesis meks tracking TBD
+        totalPlayTime: 0, // Playtime tracking TBD
+        walletAddress: user.stakeAddress,
       };
 
       let isEligible = whitelist.ruleLogic === "AND";
@@ -389,17 +389,16 @@ export const generateWhitelist = mutation({
 
       // Debug first 5 users
       if (debugCount < 5) {
-        console.log(`[Whitelist Debug ${debugCount + 1}] Wallet: ${miner.walletAddress?.substring(0, 20)}...`);
+        console.log(`[Whitelist Debug ${debugCount + 1}] Wallet: ${user.stakeAddress?.substring(0, 20)}...`);
         console.log(`  - Gold: ${currentGold}`);
         console.log(`  - isEligible: ${isEligible}`);
         debugCount++;
       }
 
-      if (isEligible && miner.walletAddress) {
-        // goldMining.walletAddress already contains stake addresses
+      if (isEligible) {
         eligibleUsers.push({
-          stakeAddress: miner.walletAddress,
-          displayName: miner.companyName || undefined,
+          stakeAddress: user.stakeAddress,
+          displayName: user.corporationName || undefined,
         });
       }
     }
@@ -436,18 +435,19 @@ export const searchCompanyNames = query({
       return [];
     }
 
-    const allMiners = await ctx.db.query("goldMining").collect();
+    // Phase II: Use users table instead of goldMining
+    const allUsers = await ctx.db.query("users").collect();
 
     const searchLower = args.searchTerm.toLowerCase();
-    const matches = allMiners
-      .filter(miner =>
-        miner.companyName &&
-        miner.companyName.toLowerCase().includes(searchLower) &&
-        miner.walletAddress
+    const matches = allUsers
+      .filter(user =>
+        user.corporationName &&
+        user.corporationName.toLowerCase().includes(searchLower) &&
+        user.stakeAddress
       )
-      .map(miner => ({
-        companyName: miner.companyName!,
-        walletAddress: miner.walletAddress!,
+      .map(user => ({
+        companyName: user.corporationName!,
+        walletAddress: user.stakeAddress!,
       }))
       .slice(0, 10); // Limit to 10 results
 
@@ -499,35 +499,35 @@ export const addUserToWhitelistByCompanyName = mutation({
       throw new Error("Whitelist not found");
     }
 
-    // Find user by company name
-    const miner = await ctx.db
-      .query("goldMining")
-      .filter((q) => q.eq(q.field("companyName"), args.companyName))
+    // Phase II: Find user by company name in users table
+    const user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("corporationName"), args.companyName))
       .first();
 
-    if (!miner) {
+    if (!user) {
       throw new Error(`No user found with company name "${args.companyName}"`);
     }
 
-    if (!miner.walletAddress) {
-      throw new Error(`User "${args.companyName}" has no wallet address`);
+    if (!user.stakeAddress) {
+      throw new Error(`User "${args.companyName}" has no stake address`);
     }
 
     // Check if already in whitelist
     const alreadyExists = whitelist.eligibleUsers.some(
-      (user) => user.stakeAddress === miner.walletAddress
+      (u) => u.stakeAddress === user.stakeAddress
     );
 
     if (alreadyExists) {
       throw new Error(`User "${args.companyName}" is already in this whitelist`);
     }
 
-    // Add user (miner.walletAddress is already a stake address)
+    // Add user
     const updatedUsers = [
       ...whitelist.eligibleUsers,
       {
-        stakeAddress: miner.walletAddress,
-        displayName: miner.companyName || undefined,
+        stakeAddress: user.stakeAddress,
+        displayName: user.corporationName || undefined,
       },
     ];
 
