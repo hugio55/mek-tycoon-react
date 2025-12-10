@@ -3522,6 +3522,28 @@ export default defineSchema({
     .index("by_stakeAddress", ["stakeAddress"]) // For duplicate prevention and lookups
     .index("by_ipAddress", ["ipAddress"]), // For IP duplicate prevention
 
+  // ===== PHASE I VETERANS =====
+  // Original 42 Phase I beta testers - eligible for name reservation and automatic Phase II entry
+  // Populated from "Final Gold" whitelist snapshot
+  phase1Veterans: defineTable({
+    stakeAddress: v.string(), // Primary lookup key (stake1...)
+    originalCorporationName: v.string(), // Their Phase I corporation name (never changes)
+    // Name reservation for Phase II
+    reservedCorporationName: v.optional(v.string()), // Name they've reserved for Phase II
+    nameReservedAt: v.optional(v.number()), // Timestamp when name was reserved
+    // Audit trail for name changes
+    nameChangeHistory: v.optional(v.array(v.object({
+      previousName: v.string(),
+      newName: v.string(),
+      changedAt: v.number(),
+    }))),
+    // Metadata
+    createdAt: v.number(), // When veteran record was created
+    lastVerifiedAt: v.optional(v.number()), // Last time they verified wallet ownership
+  })
+    .index("by_stakeAddress", ["stakeAddress"]) // Fast lookups by stake address
+    .index("by_reservedName", ["reservedCorporationName"]), // Check if name is already reserved
+
   // ===== CORPORATION MESSAGING SYSTEM =====
   // Conversations between corporations (users)
   conversations: defineTable({

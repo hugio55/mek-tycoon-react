@@ -925,7 +925,7 @@ export const createSupportConversation = mutation({
     }
 
     // Create new support conversation
-    const welcomeMessage = "Welcome to Overexposed Support! How can we help you today?";
+    const welcomeMessage = "Welcome to Mek Tycoon! If you ever have any questions, feel free to reach out to us here.";
 
     const convId = await ctx.db.insert("conversations", {
       participant1: SUPPORT_WALLET_ID,
@@ -1018,7 +1018,7 @@ export const reopenSupportConversation = mutation({
 
     if (!conversation) {
       // If no conversation exists, create one with welcome message
-      const welcomeMessage = "Welcome to Overexposed Support! How can we help you today?";
+      const welcomeMessage = "Welcome to Mek Tycoon! If you ever have any questions, feel free to reach out to us here.";
 
       const convId = await ctx.db.insert("conversations", {
         participant1: SUPPORT_WALLET_ID,
