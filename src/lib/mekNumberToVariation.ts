@@ -2,6 +2,7 @@
 // This data is from the official mekGoldRates.json which contains all 4000 Meks
 
 import mekGoldRatesData from '../../convex/mekGoldRates.json';
+import { getMediaUrl } from "@/lib/media-url";
 
 // Create the mapping structure
 // Phase II: goldPerHour kept for backwards compat with JSON file, but NOT USED
@@ -60,13 +61,13 @@ export function getMekImageUrl(mekNumber: number, size: '150px' | '500px' | '100
 
   if (!mekData) {
     // Return a placeholder or default image
-    return `/mek-images/${size}/000-000-000.webp`;
+    return getMediaUrl(`/mek-images/${size}/000-000-000.webp`);
   }
 
   // Extract the variation code from source_key (remove the -B suffix if present)
   const variationCode = mekData.sourceKey.toLowerCase().replace(/-b$/, '');
 
-  return `/mek-images/${size}/${variationCode}.webp`;
+  return getMediaUrl(`/mek-images/${size}/${variationCode}.webp`);
 }
 
 /**

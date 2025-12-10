@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { getMediaUrl } from "@/lib/media-url";
 
 interface MekDetails {
   id: Id<"meks">;
@@ -213,10 +214,10 @@ export default function MekDetailViewer() {
                         const cleanKey = selectedMek.sourceKey
                           .replace(/-[A-Z]$/, '') // Remove trailing -B, -C, etc.
                           .toLowerCase();
-                        return `/mek-images/150px/${cleanKey}.webp`;
+                        return getMediaUrl(`/mek-images/150px/${cleanKey}.webp`);
                       }
                       // Fallback to assetId
-                      return `/mek-images/150px/${selectedMek.assetId}.webp`;
+                      return getMediaUrl(`/mek-images/150px/${selectedMek.assetId}.webp`);
                     })()}
                     alt={selectedMek.assetName}
                     className="w-full h-full object-cover"

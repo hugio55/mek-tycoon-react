@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { getMediaUrl } from "@/lib/media-url";
 
 interface MekImageProps {
   src?: string | null;
@@ -36,7 +37,7 @@ export default function MekImage({
 
   // First priority: If src is a sourceKeyBase (like "aa1-aa1-cd1"), use it directly
   if (src && !src.startsWith('http') && src.includes('-')) {
-    imageSrc = `/mek-images/${imageFolder}/${src.toLowerCase()}.webp`;
+    imageSrc = getMediaUrl(`/mek-images/${imageFolder}/${src.toLowerCase()}.webp`);
   }
   // Second priority: Use the direct source URL if provided
   else if (src && src.startsWith('http')) {
@@ -47,7 +48,7 @@ export default function MekImage({
     // The variations are individual parts (e.g., "aa1", "aa1", "cd1")
     // We need a source key to find the actual image
     // Without a proper mapping, use default
-    imageSrc = `/mek-images/${imageFolder}/000-000-000.webp`;
+    imageSrc = getMediaUrl(`/mek-images/${imageFolder}/000-000-000.webp`);
   }
   // Fourth priority: Try to use assetId to construct image path
   else if (assetId) {
@@ -57,11 +58,11 @@ export default function MekImage({
 
     // Try to load from the numbered images (if they exist)
     // Otherwise fall back to a default
-    imageSrc = `/mek-images/${imageFolder}/000-000-000.webp`;
+    imageSrc = getMediaUrl(`/mek-images/${imageFolder}/000-000-000.webp`);
   }
   // Fallback: Use a default image
   else {
-    imageSrc = `/mek-images/${imageFolder}/000-000-000.webp`;
+    imageSrc = getMediaUrl(`/mek-images/${imageFolder}/000-000-000.webp`);
   }
 
   // Intersection Observer to detect when image is approaching viewport

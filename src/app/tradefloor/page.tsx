@@ -304,22 +304,12 @@ export default function TradeFloorPage() {
           <div
             className="text-center py-12 rounded-2xl relative overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              boxShadow: '0 0 40px rgba(34, 211, 238, 0.1)',
+              border: '1px solid rgba(255,255,255,0.1)',
             }}
           >
-            {/* Honeycomb pattern */}
-            <div
-              className="absolute inset-0 opacity-[0.03] pointer-events-none"
-              style={{
-                backgroundImage: "url('/random-images/honey-png-big.webp')",
-                backgroundSize: '50%',
-                backgroundPosition: 'center',
-              }}
-            />
             <div className="relative z-10">
               <div
                 className="text-6xl mb-4"
@@ -374,22 +364,71 @@ export default function TradeFloorPage() {
               <div
                 className="text-center py-12 rounded-2xl relative overflow-hidden"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
                   backdropFilter: 'blur(12px)',
                   WebkitBackdropFilter: 'blur(12px)',
                   border: '1px solid rgba(255,255,255,0.1)',
                 }}
               >
-                <div
-                  className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                  style={{
-                    backgroundImage: "url('/random-images/honey-png-big.webp')",
-                    backgroundSize: '50%',
-                    backgroundPosition: 'center',
-                  }}
-                />
                 <div className="relative z-10">
-                  <div className="text-6xl mb-4">📭</div>
+                  {/* Space Age Handshake Icon */}
+                  <div className="mb-4 flex justify-center">
+                    <svg
+                      width="80"
+                      height="80"
+                      viewBox="0 0 80 80"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      style={{
+                        filter: 'drop-shadow(0 0 20px rgba(34, 211, 238, 0.4))',
+                      }}
+                    >
+                      {/* Outer glow ring */}
+                      <circle cx="40" cy="40" r="38" stroke="url(#handshakeGradient)" strokeWidth="1.5" opacity="0.3"/>
+                      {/* Inner ring */}
+                      <circle cx="40" cy="40" r="32" stroke="url(#handshakeGradient)" strokeWidth="1" opacity="0.2"/>
+                      {/* Left hand coming from left */}
+                      <path
+                        d="M18 42c0-1 0.5-2 1.5-2.5l8-3c1-0.4 2-0.2 2.8 0.5l5 4.5c0.8 0.7 1.2 1.8 1 2.8l-0.5 2c-0.2 1-1 1.8-2 2l-3 0.5"
+                        stroke="url(#handshakeGradient)"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        fill="none"
+                      />
+                      {/* Right hand coming from right */}
+                      <path
+                        d="M62 42c0-1-0.5-2-1.5-2.5l-8-3c-1-0.4-2-0.2-2.8 0.5l-5 4.5c-0.8 0.7-1.2 1.8-1 2.8l0.5 2c0.2 1 1 1.8 2 2l3 0.5"
+                        stroke="url(#handshakeGradient)"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        fill="none"
+                      />
+                      {/* Handshake clasp in center */}
+                      <path
+                        d="M35 40l3 2.5c1 0.8 2.5 0.8 3.5 0l3-2.5"
+                        stroke="url(#handshakeGradient)"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        fill="none"
+                      />
+                      {/* Energy lines */}
+                      <path d="M40 25v-5" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+                      <path d="M50 28l3-4" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
+                      <path d="M30 28l-3-4" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
+                      <path d="M55 35l4-2" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+                      <path d="M25 35l-4-2" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+                      {/* Gradient definitions */}
+                      <defs>
+                        <linearGradient id="handshakeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#22d3ee"/>
+                          <stop offset="100%" stopColor="#06b6d4"/>
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
                   <h3
                     className="text-xl font-semibold text-white mb-2"
                     style={{ fontFamily: 'Orbitron, sans-serif' }}
@@ -445,22 +484,39 @@ export default function TradeFloorPage() {
               <div
                 className="text-center py-12 rounded-2xl relative overflow-hidden"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
                   backdropFilter: 'blur(12px)',
                   WebkitBackdropFilter: 'blur(12px)',
                   border: '1px solid rgba(255,255,255,0.1)',
                 }}
               >
-                <div
-                  className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                  style={{
-                    backgroundImage: "url('/random-images/honey-png-big.webp')",
-                    backgroundSize: '50%',
-                    backgroundPosition: 'center',
-                  }}
-                />
                 <div className="relative z-10">
-                  <div className="text-6xl mb-4">📦</div>
+                  {/* Space Age Box/Listing Icon */}
+                  <div className="mb-4 flex justify-center">
+                    <svg
+                      width="64"
+                      height="64"
+                      viewBox="0 0 64 64"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      style={{
+                        filter: 'drop-shadow(0 0 15px rgba(34, 211, 238, 0.4))',
+                      }}
+                    >
+                      <rect x="12" y="20" width="40" height="32" rx="3" stroke="url(#listingGradient)" strokeWidth="2" fill="none"/>
+                      <path d="M12 28h40" stroke="url(#listingGradient)" strokeWidth="2"/>
+                      <path d="M32 8v12" stroke="url(#listingGradient)" strokeWidth="2" strokeLinecap="round"/>
+                      <path d="M26 14l6-6 6 6" stroke="url(#listingGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <circle cx="32" cy="40" r="8" stroke="#22d3ee" strokeWidth="1.5" opacity="0.5"/>
+                      <path d="M32 36v8M28 40h8" stroke="#22d3ee" strokeWidth="2" strokeLinecap="round"/>
+                      <defs>
+                        <linearGradient id="listingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#22d3ee"/>
+                          <stop offset="100%" stopColor="#06b6d4"/>
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
                   <h3
                     className="text-xl font-semibold text-white mb-2"
                     style={{ fontFamily: 'Orbitron, sans-serif' }}
