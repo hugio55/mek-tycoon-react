@@ -6,6 +6,11 @@ import MessagingSystemAdminContent from './MessagingSystemAdminContent';
 
 type DatabaseOption = 'trout' | 'sturgeon';
 
+interface MessagingSystemAdminWrapperProps {
+  messageTarget?: { walletAddress: string; corporationName: string } | null;
+  onClearMessageTarget?: () => void;
+}
+
 const DATABASE_OPTIONS = {
   trout: {
     label: 'Development (Trout)',
@@ -23,7 +28,10 @@ const DATABASE_OPTIONS = {
   },
 };
 
-export default function MessagingSystemAdminWrapper() {
+export default function MessagingSystemAdminWrapper({
+  messageTarget,
+  onClearMessageTarget,
+}: MessagingSystemAdminWrapperProps) {
   const [selectedDb, setSelectedDb] = useState<DatabaseOption>('trout');
 
   // Create a ConvexReactClient for the selected database
@@ -96,7 +104,11 @@ export default function MessagingSystemAdminWrapper() {
 
       {/* Messaging System Content with the selected database */}
       <ConvexProvider client={client}>
-        <MessagingSystemAdminContent key={selectedDb} />
+        <MessagingSystemAdminContent
+          key={selectedDb}
+          messageTarget={messageTarget}
+          onClearMessageTarget={onClearMessageTarget}
+        />
       </ConvexProvider>
     </div>
   );

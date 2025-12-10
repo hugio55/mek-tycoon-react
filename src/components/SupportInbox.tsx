@@ -52,7 +52,15 @@ function formatRelativeTime(timestamp: number): string {
   return `${month} ${day}, ${year} at ${time}`;
 }
 
-export default function SupportInbox() {
+interface SupportInboxProps {
+  messageTarget?: { walletAddress: string; corporationName: string } | null;
+  onClearMessageTarget?: () => void;
+}
+
+export default function SupportInbox({
+  messageTarget,
+  onClearMessageTarget,
+}: SupportInboxProps) {
   // State
   const [selectedConversationId, setSelectedConversationId] = useState<Id<"conversations"> | null>(null);
   const [messageInput, setMessageInput] = useState('');

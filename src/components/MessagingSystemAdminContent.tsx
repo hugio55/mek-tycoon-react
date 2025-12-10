@@ -143,7 +143,15 @@ function formatRelativeTime(timestamp: number): string {
   return `${month} ${day}, ${year} at ${time}`;
 }
 
-export default function MessagingSystemAdminContent() {
+interface MessagingSystemAdminContentProps {
+  messageTarget?: { walletAddress: string; corporationName: string } | null;
+  onClearMessageTarget?: () => void;
+}
+
+export default function MessagingSystemAdminContent({
+  messageTarget,
+  onClearMessageTarget,
+}: MessagingSystemAdminContentProps) {
   // Subtab state
   const [activeSubtab, setActiveSubtab] = useState<MessagingSubtab>('support');
 
@@ -259,6 +267,14 @@ export default function MessagingSystemAdminContent() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Handle messageTarget from Player Management
+  useEffect(() => {
+    if (messageTarget) {
+      // Switch to Support tab to message the player
+      setActiveSubtab('support');
+    }
+  }, [messageTarget]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -1175,7 +1191,10 @@ export default function MessagingSystemAdminContent() {
         {/* SUPPORT SUBTAB */}
         {/* ============================================================ */}
         {activeSubtab === 'support' && (
-          <SupportInbox />
+          <SupportInbox
+            messageTarget={messageTarget}
+            onClearMessageTarget={onClearMessageTarget}
+          />
         )}
       </div>
 

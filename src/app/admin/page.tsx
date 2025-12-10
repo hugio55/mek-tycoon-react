@@ -1112,6 +1112,14 @@ export default function AdminMasterDataPage() {
   const [draggedTabId, setDraggedTabId] = useState<string | null>(null);
   const [systemCompletion, setSystemCompletion] = useState<Record<string, 'incomplete' | 'in-progress' | 'complete'>>({});
 
+  // Message player from Player Management → Messaging System
+  const [messageTarget, setMessageTarget] = useState<{ walletAddress: string; corporationName: string } | null>(null);
+
+  const handleMessagePlayer = (walletAddress: string, corporationName: string) => {
+    setMessageTarget({ walletAddress, corporationName });
+    setActiveTab('messaging-system');
+  };
+
   // Save system state
   const [isSaving, setIsSaving] = useState(false);
   const [isCommitting, setIsCommitting] = useState(false);
@@ -4315,7 +4323,7 @@ export default function AdminMasterDataPage() {
                 </p>
 
                 {/* Player Management Component with built-in tabs */}
-                <WalletManagementAdmin />
+                <WalletManagementAdmin onMessagePlayer={handleMessagePlayer} />
               </div>
           </div>
           )}
@@ -6463,7 +6471,10 @@ export default function AdminMasterDataPage() {
 
           {activeTab === 'messaging-system' && (
           <div id="section-messaging-system" className="mek-card-industrial mek-border-sharp-gold rounded-lg shadow-lg shadow-black/50 overflow-hidden">
-            <MessagingSystemAdmin />
+            <MessagingSystemAdmin
+              messageTarget={messageTarget}
+              onClearMessageTarget={() => setMessageTarget(null)}
+            />
           </div>
           )}
 
