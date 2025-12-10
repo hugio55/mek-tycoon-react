@@ -79,46 +79,46 @@ export default function MekProfilePage() {
   const [currentGoldForOwner, setCurrentGoldForOwner] = useState(12847.582);
   const [allTimeGold, setAllTimeGold] = useState(458392.891);
   const [showTooltip, setShowTooltip] = useState(false);
+  // Phase II: Equipment slots - stats are placeholder for future equipment system
+  // Gold income comes from Job Slots, not equipment or individual Mek properties
   const [equipmentSlots, setEquipmentSlots] = useState([
-    { 
-      id: "head", 
+    {
+      id: "head",
       name: null as string | null,
-      variation: null as string | null, 
+      variation: null as string | null,
       type: "heads" as const,
       filled: false,
-      stats: { goldRate: 0, bankInterest: 0, craftSpeed: 0 }
+      stats: { bankInterest: 0, craftSpeed: 0 }
     },
-    { 
-      id: "body", 
+    {
+      id: "body",
       name: "Chrome Body",
-      variation: "chrome", 
+      variation: "chrome",
       type: "bodies" as const,
       filled: true,
-      stats: { goldRate: 2.5, bankInterest: 0.1, craftSpeed: 5 }
+      stats: { bankInterest: 0.1, craftSpeed: 5 }
     },
-    { 
-      id: "trait", 
-      name: "Blasters", 
+    {
+      id: "trait",
+      name: "Blasters",
       variation: "blasters",
       type: "traits" as const,
       filled: true,
-      stats: { goldRate: 1.5, bankInterest: 0.05, craftSpeed: 10 }
+      stats: { bankInterest: 0.05, craftSpeed: 10 }
     }
   ]);
   const [showParticles, setShowParticles] = useState(false);
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null);
   const [unequipMessage, setUnequipMessage] = useState<string | null>(null);
-  const [baseGoldRate, setBaseGoldRate] = useState(20.0);
-  
-  // Calculate effective gold rate based on equipment
-  const effectiveGoldRate = baseGoldRate + equipmentSlots.reduce((sum, slot) => sum + (slot.filled ? slot.stats.goldRate : 0), 0);
+  // Phase II: baseGoldRate removed - gold income comes from Job Slots
   
   // Create placeholder mek data if not found in database (for UI preview only, no owner)
+  // Phase II: goldRate removed - gold income comes from Job Slots
   const placeholderMeks: Record<string, any> = {
-    "1234": { assetId: "1234", assetName: "Placeholder Mek #1234", level: 5, goldRate: 20.0, isEmployee: true, headVariation: "000-000-000", bodyVariation: "000-000-000", owner: "" },
-    "2468": { assetId: "2468", assetName: "Placeholder Mek #2468", level: 3, goldRate: 18.2, isEmployee: false, headVariation: "000-000-000", bodyVariation: "000-000-000", owner: "" },
-    "3691": { assetId: "3691", assetName: "Placeholder Mek #3691", level: 7, goldRate: 22.1, isEmployee: true, headVariation: "000-000-000", bodyVariation: "000-000-000", owner: "" },
-    "0013": { assetId: "0013", assetName: "Placeholder Mek #0013", level: 10, goldRate: 25.0, isEmployee: true, headVariation: "000-000-000", bodyVariation: "000-000-000", owner: "" },
+    "1234": { assetId: "1234", assetName: "Placeholder Mek #1234", level: 5, isEmployee: true, headVariation: "000-000-000", bodyVariation: "000-000-000", owner: "" },
+    "2468": { assetId: "2468", assetName: "Placeholder Mek #2468", level: 3, isEmployee: false, headVariation: "000-000-000", bodyVariation: "000-000-000", owner: "" },
+    "3691": { assetId: "3691", assetName: "Placeholder Mek #3691", level: 7, isEmployee: true, headVariation: "000-000-000", bodyVariation: "000-000-000", owner: "" },
+    "0013": { assetId: "0013", assetName: "Placeholder Mek #0013", level: 10, isEmployee: true, headVariation: "000-000-000", bodyVariation: "000-000-000", owner: "" },
   };
   
   // Use database mek or fall back to placeholder mek
@@ -133,30 +133,23 @@ export default function MekProfilePage() {
     }
   }, [equipType, equipItem]);
   
-  // Update base gold rate from mek data
+  // Update employment status from mek data
   useEffect(() => {
     if (mek) {
       setIsEmployed(mek.isEmployee || false);
-      setBaseGoldRate(mek.goldRate || 20.0);
+      // Phase II: baseGoldRate removed - gold income comes from Job Slots
     }
   }, [mek]);
-  
-  // Gold generation animation
-  const goldPerSecond = effectiveGoldRate / 3600;
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentGoldForOwner(prev => prev + goldPerSecond);
-      setAllTimeGold(prev => prev + goldPerSecond);
-    }, 100);
-    return () => clearInterval(interval);
-  }, [goldPerSecond]);
+
+  // Phase II: Gold generation animation REMOVED
+  // Gold income now comes from Job Slots (daily claims), not passive accumulation
   
   const handleEquipItem = (slotType: string) => {
     if (equipItem && equipType === slotType) {
       playClickSound();
       
       // Update the slot with the new item
+      // Phase II: goldRate removed from equipment stats
       setEquipmentSlots(prev => prev.map(slot => {
         if (slot.type === slotType) {
           return {
@@ -164,7 +157,7 @@ export default function MekProfilePage() {
             name: equipItem,
             variation: equipItem.toLowerCase().replace(/\s+/g, '_'),
             filled: true,
-            stats: { goldRate: 3.5, bankInterest: 0.1, craftSpeed: 8 }
+            stats: { bankInterest: 0.1, craftSpeed: 8 }
           };
         }
         return slot;
@@ -185,6 +178,7 @@ export default function MekProfilePage() {
     const slot = equipmentSlots.find(s => s.id === slotId);
     if (slot?.name) {
       // Update slot to empty
+      // Phase II: goldRate removed from equipment stats
       setEquipmentSlots(prev => prev.map(s => {
         if (s.id === slotId) {
           return {
@@ -192,7 +186,7 @@ export default function MekProfilePage() {
             name: null,
             variation: null,
             filled: false,
-            stats: { goldRate: 0, bankInterest: 0, craftSpeed: 0 }
+            stats: { bankInterest: 0, craftSpeed: 0 }
           };
         }
         return s;
@@ -204,11 +198,12 @@ export default function MekProfilePage() {
     }
   };
   
-  // Active buffs are now determined by the MEK 1 talent tree
+  // Active buffs are determined by the Mek talent tree
+  // Phase II: Gold rate buffs removed - income comes from Job Slots
   const activeBuffs = [
-    { id: 1, name: "Gold Rush", level: 1, unlocked: true, buff: "+2.5 gold/hr" },
-    { id: 2, name: "Efficient Worker", level: 2, unlocked: true, buff: "+5% gold rate" },
-    { id: 3, name: "Banker", level: 3, unlocked: true, buff: "+1% bank interest" },
+    { id: 1, name: "Efficient Worker", level: 1, unlocked: true, buff: "+5% job income" },
+    { id: 2, name: "Banker", level: 2, unlocked: true, buff: "+1% bank interest" },
+    { id: 3, name: "Quick Crafter", level: 3, unlocked: true, buff: "+10% craft speed" },
   ].filter(node => node.unlocked);
   
   if (!mek) {
@@ -438,11 +433,10 @@ export default function MekProfilePage() {
                           </div>
                         </div>
                         
-                        {/* Hover Stats */}
+                        {/* Hover Stats - Phase II: goldRate removed */}
                         {hoveredSlot === slot.id && slot.filled && (
                           <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 border border-gray-700 rounded p-2 text-xs whitespace-nowrap z-10">
                             <div className="font-bold text-yellow-400 mb-1">{slot.name}</div>
-                            <div className="text-green-400">+{slot.stats.goldRate} gold/hr</div>
                             <div className="text-blue-400">+{slot.stats.bankInterest}% bank interest</div>
                             <div className="text-purple-400">+{slot.stats.craftSpeed}% craft speed</div>
                           </div>
@@ -503,46 +497,40 @@ export default function MekProfilePage() {
               </div>
             </div>
             
+            {/* Phase II: Gold Generation panel replaced with Job Slot status */}
             <div className="relative border border-gray-800/50 bg-gray-950/30 backdrop-blur-[2px] p-4 overflow-hidden">
-              <div className="text-xs font-mono text-gray-500 mb-2">GOLD GENERATION</div>
+              <div className="text-xs font-mono text-gray-500 mb-2">JOB STATUS</div>
               <div className="space-y-2">
                 <div>
-                  <div className="text-xs text-gray-600">BASE</div>
+                  <div className="text-xs text-gray-600">ASSIGNED SLOT</div>
                   <div className="text-lg font-mono text-gray-400">
-                    <AnimatedNumber value={baseGoldRate} suffix="/hr" />
+                    {isEmployed ? "Factory Line A" : "None"}
                   </div>
                 </div>
                 <div className="h-px bg-gray-800"></div>
                 <div>
-                  <div className="text-xs text-green-400">EFFECTIVE</div>
+                  <div className="text-xs text-green-400">DAILY INCOME</div>
                   <div className="text-xl font-mono font-bold text-green-400">
-                    <AnimatedNumber value={effectiveGoldRate} suffix="/hr" />
+                    {isEmployed ? "100" : "0"} gold/day
                   </div>
                 </div>
               </div>
             </div>
             
+            {/* Phase II: Gold produced now from Job Slots, not passive accumulation */}
             <div className="relative border border-gray-800/50 bg-gray-950/30 backdrop-blur-[2px] p-4 overflow-hidden">
-              <div className="text-xs font-mono text-gray-500 mb-2">GOLD PRODUCED</div>
+              <div className="text-xs font-mono text-gray-500 mb-2">GOLD EARNED</div>
               <div className="space-y-2">
                 <div>
-                  <div className="text-xs text-gray-600">CURRENT OWNER</div>
+                  <div className="text-xs text-gray-600">FOR CURRENT OWNER</div>
                   <div className="text-lg font-mono text-yellow-400">
                     {Math.floor(currentGoldForOwner).toLocaleString('en-US')}
-                    <span className="text-sm text-yellow-400/70">.</span>
-                    <span className="text-sm text-yellow-400/70">
-                      {(currentGoldForOwner % 1).toFixed(3).substring(2)}
-                    </span>
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-600">ALL TIME</div>
+                  <div className="text-xs text-gray-600">ALL TIME (ALL OWNERS)</div>
                   <div className="text-lg font-mono text-yellow-500">
                     {Math.floor(allTimeGold).toLocaleString('en-US')}
-                    <span className="text-sm text-yellow-500/70">.</span>
-                    <span className="text-sm text-yellow-500/70">
-                      {(allTimeGold % 1).toFixed(3).substring(2)}
-                    </span>
                   </div>
                 </div>
               </div>
