@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { getMediaUrl } from "@/lib/media-url";
 import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
@@ -24,7 +26,9 @@ interface TradeListingCardProps {
     status: string;
     createdAt: number;
     isOwnListing?: boolean;
+    viewCount?: number; // Analytics: unique views
   };
+  viewerStakeAddress?: string; // For recording views
   viewerMatchCount?: number;
   isOwner?: boolean;
   pendingOfferCount?: number;
@@ -50,6 +54,7 @@ const variationTypeLabels = {
 
 export default function TradeListingCard({
   listing,
+  viewerStakeAddress,
   viewerMatchCount,
   isOwner,
   pendingOfferCount,
@@ -64,6 +69,9 @@ export default function TradeListingCard({
   const [showMobileLightbox, setShowMobileLightbox] = useState(false);
   const [showImageLightbox, setShowImageLightbox] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // Analytics: Record view mutation
+  const recordView = useMutation(api.tradeFloor.recordListingView);
 
   useEffect(() => {
     setMounted(true);
@@ -176,10 +184,21 @@ export default function TradeListingCard({
         )}
       </div>
 
-      {/* Mek Image - Clickable to open lightbox */}
+      {/* Mek Image - Clickable to open lightbox (also records view for analytics) */}
       <div className="relative p-4 flex justify-center">
         <button
-          onClick={() => setShowImageLightbox(true)}
+          onClick={() => {
+            setShowImageLightbox(true);
+            // Record view for analytics (only if viewer is logged in)
+            if (viewerStakeAddress) {
+              recordView({
+                listingId: listing._id,
+                viewerStakeAddress,
+              }).catch(() => {
+                // Silently fail - analytics shouldn't block UX
+              });
+            }
+          }}
           className="relative w-32 h-32 cursor-pointer transition-all duration-200 hover:scale-110 active:scale-105 rounded-lg overflow-hidden group/image"
           title="Click to view larger"
         >
@@ -258,7 +277,7 @@ export default function TradeListingCard({
         </div>
       </div>
 
-      {/* Footer with time and actions */}
+      {/* Footer with time, views, and actions */}
       <div
         className="relative px-4 py-3 flex justify-between items-center"
         style={{
@@ -266,12 +285,28 @@ export default function TradeListingCard({
           borderTop: '1px solid rgba(255,255,255,0.05)',
         }}
       >
-        <span
-          className="text-xs"
-          style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
-        >
-          {timeAgo}
-        </span>
+        <div className="flex items-center gap-3">
+          <span
+            className="text-xs"
+            style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
+          >
+            {timeAgo}
+          </span>
+          {/* View count */}
+          {listing.viewCount !== undefined && listing.viewCount > 0 && (
+            <span
+              className="text-xs flex items-center gap-1"
+              style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
+              title="Unique views"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              {listing.viewCount}
+            </span>
+          )}
+        </div>
 
         <div className="flex gap-2">
           {showMakeOffer && (isOwnListing ? (

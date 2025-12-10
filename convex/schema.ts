@@ -3973,6 +3973,10 @@ export default defineSchema({
     listedMekSourceKey: v.optional(v.string()), // For quick image lookup
     listedMekAssetName: v.optional(v.string()),
     ownerCorpName: v.optional(v.string()),
+
+    // Analytics - View tracking (only counts thumbnail clicks to open lightbox)
+    viewCount: v.optional(v.number()), // Total unique views
+    viewerAddresses: v.optional(v.array(v.string())), // Dedupe: stake addresses that viewed
   })
     .index("by_owner", ["ownerStakeAddress"])
     .index("by_status", ["status"])

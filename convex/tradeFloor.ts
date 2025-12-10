@@ -797,3 +797,38 @@ ${listedMek?.assetName || "Unknown Mek"} (from ${lister?.corporationName || "Unk
     return conversationId;
   },
 });
+
+// Record a view on a listing (only when thumbnail is clicked to open lightbox)
+// Deduplicates by stake address - each user can only count as 1 view per listing
+export const recordListingView = mutation({
+  args: {
+    listingId: v.id("tradeListings"),
+    viewerStakeAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const listing = await ctx.db.get(args.listingId);
+    if (!listing) return { recorded: false, reason: "listing_not_found" };
+
+    // Don't count views from the listing owner
+    if (listing.ownerStakeAddress === args.viewerStakeAddress) {
+      return { recorded: false, reason: "own_listing" };
+    }
+
+    // Check if this viewer already viewed this listing (dedupe)
+    const currentViewers = listing.viewerAddresses || [];
+    if (currentViewers.includes(args.viewerStakeAddress)) {
+      return { recorded: false, reason: "already_viewed" };
+    }
+
+    // Record the new view
+    const newViewCount = (listing.viewCount || 0) + 1;
+    const newViewerAddresses = [...currentViewers, args.viewerStakeAddress];
+
+    await ctx.db.patch(args.listingId, {
+      viewCount: newViewCount,
+      viewerAddresses: newViewerAddresses,
+    });
+
+    return { recorded: true, newViewCount };
+  },
+});
