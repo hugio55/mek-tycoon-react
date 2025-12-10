@@ -292,7 +292,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
       // 2. New user / no saved session for this stake address - prevents spam accounts
       console.log('[🔐SECURITY] Checking if signature verification is required...');
       const disconnectNonce = localStorage.getItem('mek_disconnect_nonce');
-      const savedSession = restoreWalletSession();
+      const savedSession = await restoreWalletSession();
       const hasMatchingSession = savedSession && savedSession.stakeAddress === stakeAddress;
 
       console.log('[🔐SECURITY] Disconnect nonce:', disconnectNonce ? `FOUND: ${disconnectNonce.slice(0, 8)}...` : '❌ NOT FOUND');
