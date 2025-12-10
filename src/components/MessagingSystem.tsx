@@ -884,6 +884,31 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                             ))}
                           </div>
                         )}
+
+                        {/* Verified Mek Attachment */}
+                        {msg.mekAttachment && !msg.isDeleted && (
+                          <div className="mt-2">
+                            <button
+                              onClick={() => setMekDetailLightbox(msg.mekAttachment)}
+                              className="block border-2 border-yellow-500/50 rounded-lg overflow-hidden hover:border-yellow-400 transition-colors group"
+                            >
+                              <img
+                                src={getMediaUrl(`/mek-images/150px/${(msg.mekAttachment.sourceKeyBase || msg.mekAttachment.sourceKey).replace(/-[A-Z]$/, '').toLowerCase()}.webp`)}
+                                alt={`Mek #${msg.mekAttachment.assetId}`}
+                                className="w-[150px] h-[150px] object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </button>
+                            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-yellow-400">
+                              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                              </svg>
+                              <span>Verified Mekanism</span>
+                              {msg.mekAttachment.customName && (
+                                <span className="text-gray-400">• {msg.mekAttachment.customName}</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className={`flex items-center gap-2 mt-1 text-xs text-gray-500 ${isMine ? 'justify-end' : ''}`}>
@@ -1368,6 +1393,24 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
           </div>
         </div>,
         document.body
+      )}
+
+      {/* Mek Selector Lightbox */}
+      <MekSelectorLightbox
+        walletAddress={walletAddress}
+        isOpen={showMekSelector}
+        onClose={() => setShowMekSelector(false)}
+        onSelect={handleMekSelect}
+      />
+
+      {/* Mek Detail Lightbox (for viewing shared Meks) */}
+      {mekDetailLightbox && (
+        <MekDetailsSpaceAge
+          isOpen={!!mekDetailLightbox}
+          onClose={() => setMekDetailLightbox(null)}
+          mek={mekDetailLightbox}
+          corporationName={companyName || 'Unknown'}
+        />
       )}
     </div>
   );

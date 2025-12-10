@@ -551,10 +551,10 @@ export default function CreateListingLightbox({
           )}
         </div>
 
-        {/* Variation Hover Tooltip with Image Preview */}
-        {hoveredVariation && (
+        {/* Variation Hover Tooltip with Image Preview - Rendered via portal to fix positioning */}
+        {mounted && hoveredVariation && createPortal(
           <div
-            className="fixed z-[10001] pointer-events-none"
+            className="fixed z-[99999] pointer-events-none"
             style={{
               left: hoveredVariation.x,
               top: hoveredVariation.y - 10,
@@ -607,7 +607,8 @@ export default function CreateListingLightbox({
                 borderTop: '8px solid rgba(30,30,40,0.95)',
               }}
             />
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* Mek Detail Lightbox (Nested - clicking outside only closes this, not parent) */}
