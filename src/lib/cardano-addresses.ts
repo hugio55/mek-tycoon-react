@@ -86,7 +86,7 @@ export async function getPaymentAddress(walletApi: any): Promise<string> {
     }
 
     // Convert from hex to Bech32
-    const paymentAddress = hexToBech32(addressHex);
+    const paymentAddress = await hexToBech32(addressHex);
 
     // Verify it's a payment address (not stake address)
     if (!paymentAddress.startsWith("addr1") && !paymentAddress.startsWith("addr_test1")) {

@@ -148,7 +148,6 @@ export default function DuplicateWalletDetector() {
                     <div key={recIdx} className="bg-gray-900 p-2 rounded">
                       <div className="text-gray-500">Record {recIdx + 1}</div>
                       <div className="text-yellow-400">{rec.mekCount} MEKs</div>
-                      <div className="text-green-400">{rec.goldPerHour.toFixed(2)} g/hr</div>
                       <div className={rec.isVerified ? 'text-green-400' : 'text-red-400'}>
                         {rec.isVerified ? 'Verified' : 'Unverified'}
                       </div>

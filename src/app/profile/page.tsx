@@ -137,7 +137,8 @@ export default function ProfilePage() {
     if (mekSortBy === 'level') {
       return b.level - a.level;
     } else {
-      return b.goldPerHour - a.goldPerHour;
+      // Sort by rarity (lower rank = rarer = first)
+      return a.rarityRank - b.rarityRank;
     }
   });
   
@@ -191,8 +192,8 @@ export default function ProfilePage() {
               <span className="text-white font-bold">{mek.level}</span>
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-gray-400">Gold/Hr</span>
-              <span className="text-green-400 font-bold">{mek.goldPerHour}</span>
+              <span className="text-gray-400">Rank</span>
+              <span className="text-yellow-400 font-bold">#{mek.rarityRank}</span>
             </div>
           </div>
         </div>
@@ -395,10 +396,9 @@ export default function ProfilePage() {
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm md:text-base text-gray-400">Gold/Hour</span>
+                    <span className="text-sm md:text-base text-gray-400">Total Meks</span>
                     <span className="text-lg md:text-xl font-bold text-yellow-400">
-                      {(userData.meks.reduce((sum, m) => sum + m.goldPerHour, 0) +
-                        userData.frames.reduce((sum, f) => sum + f.goldPerHour, 0)).toLocaleString()}
+                      {userData.meks.length}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -522,14 +522,14 @@ export default function ProfilePage() {
                             Sort by Level
                           </button>
                           <button
-                            onClick={() => setMekSortBy('goldPerHour')}
+                            onClick={() => setMekSortBy('rarity')}
                             className={`flex-1 md:flex-initial px-3 md:px-4 py-2 text-xs md:text-sm rounded transition-all whitespace-nowrap ${
-                              mekSortBy === 'goldPerHour'
+                              mekSortBy === 'rarity'
                                 ? 'bg-yellow-500 border-2 border-yellow-400 text-black font-bold shadow-lg'
                                 : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-gray-200 bg-opacity-50'
                             }`}
                           >
-                            Sort by Gold/Hr
+                            Sort by Rarity
                           </button>
                         </div>
                       </div>

@@ -63,12 +63,12 @@ const PLATE_BACKGROUNDS = {
 export default function MekCardStyles() {
   const [selectedBackground, setSelectedBackground] = useState<keyof typeof PLATE_BACKGROUNDS>('grid-dark');
 
-  // Sample MEK data
+  // Sample MEK data - Phase II: goldPerHour removed
   const sampleMeks = [
-    { id: 1, number: 2922, rank: 554, goldPerHour: 21.8, image: 'aa1-aa1-cd1' },
-    { id: 2, number: 1456, rank: 1203, goldPerHour: 15.3, image: 'bc2-dm1-ap1' },
-    { id: 3, number: 3812, rank: 234, goldPerHour: 42.7, image: 'dp2-bf4-il2' },
-    { id: 4, number: 95, rank: 12, goldPerHour: 98.5, image: 'hb1-gn1-hn1' },
+    { id: 1, number: 2922, rank: 554, image: 'aa1-aa1-cd1' },
+    { id: 2, number: 1456, rank: 1203, image: 'bc2-dm1-ap1' },
+    { id: 3, number: 3812, rank: 234, image: 'dp2-bf4-il2' },
+    { id: 4, number: 95, rank: 12, image: 'hb1-gn1-hn1' },
   ];
 
   const currentBgStyle = PLATE_BACKGROUNDS[selectedBackground].style;
@@ -137,8 +137,8 @@ export default function MekCardStyles() {
                   <div className="text-white font-bold">{mek.rank}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-gray-500 uppercase">Gold/HR</div>
-                  <div className="text-yellow-400 font-bold">{mek.goldPerHour}</div>
+                  <div className="text-gray-500 uppercase">Level</div>
+                  <div className="text-yellow-400 font-bold">1</div>
                 </div>
               </div>
             </div>

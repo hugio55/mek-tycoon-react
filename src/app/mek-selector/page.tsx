@@ -6,7 +6,7 @@ interface Mek {
   id: string;
   number: number;
   rank: string;
-  goldPerHour: number;
+  rarityRank: number; // 1-4000, lower = rarer
   image: string;
 }
 
@@ -45,11 +45,11 @@ const generateRandomMeks = (count: number): Mek[] => {
       id: `mek-${i}`,
       number: 1000 + Math.floor(Math.random() * 8999),
       rank: rank,
-      goldPerHour: rank === 'Mythic' ? 800 + Math.floor(Math.random() * 400) :
-                   rank === 'Legendary' ? 400 + Math.floor(Math.random() * 400) :
-                   rank === 'Epic' ? 200 + Math.floor(Math.random() * 200) :
-                   rank === 'Rare' ? 100 + Math.floor(Math.random() * 100) :
-                   50 + Math.floor(Math.random() * 50),
+      rarityRank: rank === 'Mythic' ? 1 + Math.floor(Math.random() * 50) :
+                  rank === 'Legendary' ? 50 + Math.floor(Math.random() * 200) :
+                  rank === 'Epic' ? 250 + Math.floor(Math.random() * 500) :
+                  rank === 'Rare' ? 750 + Math.floor(Math.random() * 1000) :
+                  1750 + Math.floor(Math.random() * 2250),
       image: shuffledImages[imageIndex]
     };
   });
@@ -555,8 +555,8 @@ export default function MekSelector() {
                           <div className={`inline-block px-6 py-2 rounded-full text-lg font-bold ${getRankColor(meks[selectedIndex].rank)}`}>
                             {meks[selectedIndex].rank}
                           </div>
-                          <div className="text-green-400 text-2xl font-semibold">
-                            {meks[selectedIndex].goldPerHour} Gold/Hour
+                          <div className="text-yellow-400 text-2xl font-semibold">
+                            Rank #{meks[selectedIndex].rarityRank}
                           </div>
                         </div>
                       </div>
