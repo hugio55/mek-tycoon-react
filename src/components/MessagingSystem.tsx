@@ -887,28 +887,47 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                           </div>
                         )}
 
-                        {/* Verified Mek Attachment */}
+                        {/* Verified Mek Attachment - Card with honeycomb pattern */}
                         {msg.mekAttachment && !msg.isDeleted && (
                           <div className="mt-2">
                             <button
                               onClick={() => setMekPreviewLightbox(msg.mekAttachment)}
-                              className="block border-2 border-yellow-500/50 rounded-lg overflow-hidden hover:border-yellow-400 transition-colors group"
+                              className="relative block rounded-xl overflow-hidden group transition-all duration-300 hover:scale-[1.02]"
+                              style={{
+                                background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
+                                border: '1px solid rgba(34, 211, 238, 0.3)',
+                              }}
                             >
-                              <img
-                                src={getMediaUrl(`/mek-images/150px/${(msg.mekAttachment.sourceKeyBase || msg.mekAttachment.sourceKey).replace(/-[A-Z]$/, '').toLowerCase()}.webp`)}
-                                alt={`Mek #${msg.mekAttachment.assetId}`}
-                                className="w-[150px] h-[150px] object-cover group-hover:scale-105 transition-transform duration-300"
+                              {/* Honeycomb pattern overlay */}
+                              <div
+                                className="absolute inset-0 opacity-[0.08] group-hover:opacity-[0.15] transition-opacity duration-300 pointer-events-none z-[1]"
+                                style={{
+                                  backgroundImage: `url('/random-images/honey-png-big.webp')`,
+                                  backgroundSize: 'cover',
+                                  backgroundPosition: 'center',
+                                }}
                               />
+                              {/* Mek Image */}
+                              <div className="relative p-2">
+                                <img
+                                  src={getMediaUrl(`/mek-images/150px/${(msg.mekAttachment.sourceKeyBase || msg.mekAttachment.sourceKey).replace(/-[A-Z]$/, '').toLowerCase()}.webp`)}
+                                  alt={`Mek #${msg.mekAttachment.assetId}`}
+                                  className="w-[150px] h-[150px] object-cover rounded-lg relative z-[2]"
+                                />
+                              </div>
+                              {/* Verified badge inside card */}
+                              <div className="relative z-[2] px-3 pb-3">
+                                <div className="flex items-center gap-1.5 text-xs text-cyan-400">
+                                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                                  </svg>
+                                  <span>Verified Mekanism</span>
+                                </div>
+                                {msg.mekAttachment.customName && (
+                                  <div className="text-[10px] text-white/50 mt-0.5">{msg.mekAttachment.customName}</div>
+                                )}
+                              </div>
                             </button>
-                            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-yellow-400">
-                              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                              </svg>
-                              <span>Verified Mekanism</span>
-                              {msg.mekAttachment.customName && (
-                                <span className="text-gray-400">• {msg.mekAttachment.customName}</span>
-                              )}
-                            </div>
                           </div>
                         )}
                       </div>
