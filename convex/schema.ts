@@ -100,7 +100,6 @@ export default defineSchema({
     // Phase II: Gold rate fields REMOVED (baseGoldRate, levelBoostPercent, levelBoostAmount, effectiveGoldRate)
     // Gold income now comes from Job Slots, not individual Mek properties
   })
-    .index("by_owner", ["owner"]) // LEGACY: for backwards compat
     .index("by_owner_stake", ["ownerStakeAddress"]) // Phase II: PRIMARY owner lookup
     .index("by_asset_id", ["assetId"])
     .index("by_asset_name", ["assetName"])
@@ -110,8 +109,7 @@ export default defineSchema({
     .index("by_body", ["bodyVariation"])
     .index("by_rarity", ["rarityTier"])
     .index("by_slotted", ["isSlotted"])
-    .index("by_owner_slotted", ["owner", "isSlotted"])
-    .index("by_owner_stake_slotted", ["ownerStakeAddress", "isSlotted"]), // Phase II
+    .index("by_owner_stake_slotted", ["ownerStakeAddress", "isSlotted"]),
 
   // Mek Tree Categories - Parent categories that get assigned to Meks
   // Each category can have multiple template saves, with one "active" template
