@@ -46,6 +46,7 @@ export default function TradeFloorPage() {
   const [sortDropdownRect, setSortDropdownRect] = useState<DOMRect | null>(null);
   const sortDropdownBtnRef = useRef<HTMLButtonElement>(null);
   const [mounted, setMounted] = useState(false);
+  const [showUnlockSlotsLightbox, setShowUnlockSlotsLightbox] = useState(false);
 
   // For portal mounting
   useEffect(() => {
@@ -402,6 +403,34 @@ export default function TradeFloorPage() {
               {activeTab === "my-listings" && "Meks you're looking to trade for specific variations"}
               {activeTab === "my-offers" && "Offers you've made on other players' listings"}
             </p>
+
+            {/* Listing Counter + Unlock Button - My Listings Tab Only */}
+            {activeTab === "my-listings" && stakeAddress && (
+              <div className="flex items-center gap-3">
+                {/* Listing Counter */}
+                <span
+                  className="text-sm"
+                  style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.6)' }}
+                >
+                  <span style={{ color: '#22d3ee' }}>{activeListingCount ?? 0}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.4)' }}>/5</span>
+                </span>
+
+                {/* Unlock More Slots Button */}
+                <button
+                  onClick={() => setShowUnlockSlotsLightbox(true)}
+                  className="px-3 py-1.5 text-xs rounded font-medium transition-all hover:brightness-125"
+                  style={{
+                    fontFamily: 'Play, sans-serif',
+                    background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.08))',
+                    border: '1px solid rgba(251, 191, 36, 0.3)',
+                    color: '#fbbf24',
+                  }}
+                >
+                  Unlock More Slots
+                </button>
+              </div>
+            )}
 
             {/* Sort Dropdown - Browse Tab Only (Portal-based, matching Market style) */}
             {activeTab === "browse" && (
