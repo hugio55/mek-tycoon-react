@@ -1453,125 +1453,12 @@ export default defineSchema({
     .index("by_category", ["category"])
     .index("by_buff", ["buffPercent"]),
 
-  // Gold Mining System for wallet-connected users (SIMPLIFIED)
-  goldMining: defineTable({
-    // Wallet identification
-    walletAddress: v.string(), // Stake address for NFT ownership
-    walletType: v.optional(v.string()), // nami, eternl, flint, etc.
-    paymentAddresses: v.optional(v.array(v.string())), // Payment addresses for Blockfrost fallback
-
-    // Company identity
-    companyName: v.optional(v.string()), // User-chosen company name (alphanumeric only)
-
-    // Blockchain verification status
-    isBlockchainVerified: v.optional(v.boolean()), // Has the user completed blockchain verification?
-    lastVerificationTime: v.optional(v.number()), // When was the last verification performed
-    consecutiveSnapshotFailures: v.optional(v.number()), // Track consecutive failed snapshots (default: 0)
-
-    // Mek ownership data
-    ownedMeks: v.array(v.object({
-      assetId: v.string(), // Unique asset ID from blockchain
-      policyId: v.string(), // Policy ID for verification
-      assetName: v.string(), // Name of the Mek
-      imageUrl: v.optional(v.string()), // Thumbnail URL
-      goldPerHour: v.number(), // Base gold generation rate (LEGACY - use baseGoldPerHour)
-      rarityRank: v.optional(v.number()), // Rarity ranking
-      headVariation: v.optional(v.string()),
-      bodyVariation: v.optional(v.string()),
-      itemVariation: v.optional(v.string()),
-      sourceKey: v.optional(v.string()), // Full source key from metadata (e.g., "AA1-DM1-AP1-B")
-      sourceKeyBase: v.optional(v.string()), // Source key without suffix for image lookup (e.g., "aa1-dm1-ap1")
-      // New fields for level boost tracking
-      baseGoldPerHour: v.optional(v.number()), // Original rate from rarity (immutable)
-      currentLevel: v.optional(v.number()), // Current level (1-10)
-      levelBoostPercent: v.optional(v.number()), // Boost percentage from level (0-90)
-      levelBoostAmount: v.optional(v.number()), // Actual boost amount in gold/hr
-      effectiveGoldPerHour: v.optional(v.number()), // baseGoldPerHour + levelBoostAmount
-      // Custom name field (optional, must be unique globally across all users)
-      customName: v.optional(v.string()),
-    })),
-
-    // Gold accumulation (SIMPLIFIED: Gold = (now - createdAt) × totalGoldPerHour, capped at 50,000)
-    totalGoldPerHour: v.number(), // Sum of all Mek rates (including boosts)
-    baseGoldPerHour: v.optional(v.number()), // Sum of all base Mek rates (without boosts)
-    boostGoldPerHour: v.optional(v.number()), // Sum of all level boosts
-    lastActiveTime: v.number(), // Last time user was active on page
-    accumulatedGold: v.optional(v.number()), // Gold accumulated up to lastSnapshotTime
-    lastSnapshotTime: v.optional(v.number()), // Time of last offline accumulation snapshot
-
-    // Gold spending tracking (for Mek leveling)
-    totalGoldSpentOnUpgrades: v.optional(v.number()), // Total gold spent on Mek upgrades
-    totalUpgradesPurchased: v.optional(v.number()), // Total number of upgrades bought
-    lastUpgradeSpend: v.optional(v.number()), // Timestamp of last upgrade purchase
-
-    // Cumulative gold tracking
-    totalCumulativeGold: v.optional(v.number()), // Total gold earned all-time (never decreases)
-
-    // Metadata
-    createdAt: v.number(),
-    updatedAt: v.number(),
-    version: v.optional(v.number()), // For optimistic concurrency control (prevents race conditions)
-
-    // LEGACY FIELDS (kept for backwards compatibility)
-    currentGold: v.optional(v.number()), // LEGACY: Use accumulatedGold instead
-    lastCheckTime: v.optional(v.number()), // LEGACY: No longer needed
-    sessionStartTime: v.optional(v.number()), // LEGACY: No longer needed
-    offlineEarnings: v.optional(v.number()), // LEGACY: No longer needed
-    snapshotMekCount: v.optional(v.number()), // Mek count from last snapshot
-  })
-    .index("by_wallet", ["walletAddress"])
-    .index("by_total_rate", ["totalGoldPerHour"]),
-
   // =============================================================================
-  // GOLD MINING STATE (Phase II - replaces goldMining)
+  // PHASE II NOTE: goldMining and goldMiningState tables have been DELETED
   // =============================================================================
-  // Complex gold mining mechanics in separate table.
-  // Does NOT contain ownedMeks array - that data lives on meks.ownerStakeAddress.
-  // 1:1 relationship with users table.
+  // Gold balance now lives on users.gold
+  // Mek ownership data lives on meks.ownerStakeAddress
   // =============================================================================
-  goldMiningState: defineTable({
-    // Primary identifier (FK to users.stakeAddress)
-    stakeAddress: v.string(), // 1:1 with users table
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // GOLD RATES
-    // ═══════════════════════════════════════════════════════════════════════════
-    totalGoldPerHour: v.number(), // Sum of all Mek rates (including boosts)
-    baseGoldPerHour: v.optional(v.number()), // Sum of base Mek rates (without boosts)
-    boostGoldPerHour: v.optional(v.number()), // Sum of level boosts
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // ACCUMULATION
-    // ═══════════════════════════════════════════════════════════════════════════
-    accumulatedGold: v.optional(v.number()), // Gold accumulated up to lastSnapshotTime
-    lastActiveTime: v.number(), // Last time user was active
-    lastSnapshotTime: v.optional(v.number()), // Time of last offline accumulation snapshot
-    totalCumulativeGold: v.optional(v.number()), // Total gold earned all-time (never decreases)
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // GOLD SPENDING
-    // ═══════════════════════════════════════════════════════════════════════════
-    totalGoldSpentOnUpgrades: v.optional(v.number()), // Total gold spent on Mek upgrades
-    totalUpgradesPurchased: v.optional(v.number()), // Total number of upgrades bought
-    lastUpgradeSpend: v.optional(v.number()), // Timestamp of last upgrade purchase
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // BLOCKCHAIN VERIFICATION
-    // ═══════════════════════════════════════════════════════════════════════════
-    isBlockchainVerified: v.optional(v.boolean()), // Has user completed blockchain verification?
-    lastVerificationTime: v.optional(v.number()), // When last verification was performed
-    consecutiveSnapshotFailures: v.optional(v.number()), // Track consecutive failed snapshots
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // TIMESTAMPS
-    // ═══════════════════════════════════════════════════════════════════════════
-    createdAt: v.number(),
-    updatedAt: v.number(),
-    version: v.optional(v.number()), // For optimistic concurrency control
-  })
-    .index("by_stake_address", ["stakeAddress"])
-    .index("by_total_rate", ["totalGoldPerHour"])
-    .index("by_cumulative_gold", ["totalCumulativeGold"]),
 
   // Duration Configuration for Story Climb nodes
   durationConfigs: defineTable({
