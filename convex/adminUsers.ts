@@ -244,7 +244,7 @@ export const getAllUsers = query({
         // Count meks
         const meks = await ctx.db
           .query("meks")
-          .withIndex("by_owner", (q: any) => q.eq("owner", user.walletAddress))
+          .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", user.walletAddress))
           .collect();
 
         // Get active contracts
@@ -333,7 +333,7 @@ export const getUserDetails = query({
     // Get all related data
     const meks = await ctx.db
       .query("meks")
-      .withIndex("by_owner", (q: any) => q.eq("owner", user.walletAddress))
+      .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", user.walletAddress))
       .collect();
 
     const contracts = await ctx.db
@@ -593,7 +593,7 @@ export const previewTestWallets = query({
 
       // Count records in tables with walletAddress
       const meks = await ctx.db.query("meks")
-        .withIndex("by_owner", (q: any) => q.eq("owner", walletAddress)).collect();
+        .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", walletAddress)).collect();
       const mekLevels = await ctx.db.query("mekLevels")
         .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress)).collect();
       const leaderboardCache = await ctx.db.query("leaderboardCache")
@@ -1311,7 +1311,7 @@ export const bulkDeleteTestWallets = mutation({
 
       // Tables with walletAddress
       const meks = await ctx.db.query("meks")
-        .withIndex("by_owner", (q: any) => q.eq("owner", walletAddress)).collect();
+        .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", walletAddress)).collect();
       for (const r of meks) { await ctx.db.delete(r._id); recordsDeleted++; }
 
       const mekLevels = await ctx.db.query("mekLevels")

@@ -263,3 +263,102 @@ export const toggleJobActive = mutation({
     });
   },
 });
+
+// Seed mining profession jobs
+export const seedMiningJobs = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+
+    // Check if Mining umbrella already exists
+    const umbrellas = await ctx.db.query("jobUmbrellas").collect();
+    let miningUmbrella = umbrellas.find(u => u.name === "Mining");
+
+    // Create Mining umbrella if it doesn't exist
+    if (!miningUmbrella) {
+      const maxSort = umbrellas.reduce((max, u) => Math.max(max, u.sortOrder ?? 0), 0);
+      const umbrellaId = await ctx.db.insert("jobUmbrellas", {
+        name: "Mining",
+        description: "Resource extraction professions",
+        icon: "⛏️",
+        color: "amber",
+        sortOrder: maxSort + 1,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      });
+      miningUmbrella = await ctx.db.get(umbrellaId);
+    }
+
+    if (!miningUmbrella) {
+      throw new Error("Failed to create/find Mining umbrella");
+    }
+
+    // Check which jobs already exist
+    const existingJobs = await ctx.db.query("jobTypes").collect();
+    const existingNames = new Set(existingJobs.map(j => j.name));
+
+    const minerJobs = [
+      {
+        name: "Slag Miner",
+        description: "Extracts low-value refuse and slag from mine tunnels",
+        tier: "tier1",
+        baseGoldPerHour: 10,
+        attaboyMin: 5,
+        attaboyMax: 25,
+        pitStopCount: 3,
+      },
+      {
+        name: "Ore Miner",
+        description: "Skilled at extracting valuable metal ores",
+        tier: "tier2",
+        baseGoldPerHour: 25,
+        attaboyMin: 15,
+        attaboyMax: 50,
+        pitStopCount: 5,
+      },
+      {
+        name: "Gem Miner",
+        description: "Master at locating and extracting precious stones",
+        tier: "tier3",
+        baseGoldPerHour: 50,
+        attaboyMin: 30,
+        attaboyMax: 100,
+        pitStopCount: 8,
+      },
+    ];
+
+    const created: string[] = [];
+    const skipped: string[] = [];
+
+    for (const job of minerJobs) {
+      if (existingNames.has(job.name)) {
+        skipped.push(job.name);
+        continue;
+      }
+
+      await ctx.db.insert("jobTypes", {
+        name: job.name,
+        description: job.description,
+        isOneOff: false,
+        umbrellaId: miningUmbrella._id,
+        baseGoldPerHour: job.baseGoldPerHour,
+        attaboyMin: job.attaboyMin,
+        attaboyMax: job.attaboyMax,
+        pitStopCount: job.pitStopCount,
+        tier: job.tier,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      });
+      created.push(job.name);
+    }
+
+    return {
+      message: `Mining jobs seeded`,
+      created,
+      skipped,
+      umbrellaCreated: !umbrellas.find(u => u.name === "Mining"),
+    };
+  },
+});

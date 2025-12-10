@@ -31,7 +31,7 @@ export const checkEligibility = query({
     // Phase II: Get Mek count from meks table
     const ownedMeks = await ctx.db
       .query("meks")
-      .withIndex("by_owner", (q: any) => q.eq("owner", args.walletAddress))
+      .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", args.walletAddress))
       .collect();
     const mekCount = ownedMeks.length;
 

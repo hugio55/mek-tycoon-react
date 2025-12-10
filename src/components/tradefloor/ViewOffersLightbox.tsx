@@ -78,32 +78,70 @@ export default function ViewOffersLightbox({
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/80" onClick={onClose} />
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+        }}
+        onClick={onClose}
+      />
 
       {/* Content */}
       <div
-        className="relative bg-gray-900 border border-yellow-500/30 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+        className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-2xl"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+          backdropFilter: 'blur(30px)',
+          WebkitBackdropFilter: 'blur(30px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center bg-black/30">
+        <div
+          className="px-6 py-4 flex justify-between items-center"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
           <div>
-            <h2 className="text-xl font-bold text-yellow-400">View Offers</h2>
-            <p className="text-sm text-gray-400">
+            <h2
+              className="text-xl font-bold text-white"
+              style={{ fontFamily: 'Orbitron, sans-serif' }}
+            >
+              View Offers
+            </h2>
+            <p
+              className="text-sm"
+              style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+            >
               Offers received for {listing.listedMekAssetName}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-2xl font-light"
+            className="text-white/50 hover:text-white/80 text-2xl font-light transition-colors"
+            style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             &times;
           </button>
         </div>
 
         {/* Your Listed Mek */}
-        <div className="px-6 py-4 bg-black/20 border-b border-gray-800">
-          <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">
+        <div
+          className="px-6 py-4"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <div
+            className="text-xs uppercase tracking-wider mb-2"
+            style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
+          >
             Your Listed Mek:
           </div>
           <div className="flex items-center gap-4">
@@ -112,19 +150,40 @@ export default function ViewOffersLightbox({
               alt={listing.listedMekAssetName}
               className="w-16 h-16 object-contain"
             />
-            <div className="text-white font-medium">{listing.listedMekAssetName}</div>
+            <div
+              className="text-white font-medium"
+              style={{ fontFamily: 'Saira, sans-serif' }}
+            >
+              {listing.listedMekAssetName}
+            </div>
           </div>
         </div>
 
         {/* Offers Grid */}
         <div className="flex-1 overflow-y-auto p-6">
           {offers === undefined ? (
-            <div className="text-center py-12 text-gray-400">Loading offers...</div>
+            <div
+              className="text-center py-12"
+              style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+            >
+              Loading offers...
+            </div>
           ) : offers.length === 0 ? (
-            <div className="text-center py-12">
+            <div
+              className="text-center py-12 rounded-xl"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+            >
               <div className="text-6xl mb-4">📭</div>
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">No Offers Yet</h3>
-              <p className="text-gray-500">
+              <h3
+                className="text-xl font-semibold text-white mb-2"
+                style={{ fontFamily: 'Orbitron, sans-serif' }}
+              >
+                No Offers Yet
+              </h3>
+              <p style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
                 When other players make offers on your listing, they'll appear here
               </p>
             </div>
@@ -133,27 +192,44 @@ export default function ViewOffersLightbox({
               {offers.map((offer: any) => (
                 <div
                   key={offer._id}
-                  className="bg-gray-800/50 border border-gray-700 rounded-lg p-4"
+                  className="rounded-xl p-4"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                  }}
                 >
                   {/* Offerer Info */}
                   <div className="flex justify-between items-center mb-3">
-                    <div className="text-white font-medium">
+                    <div
+                      className="text-white font-medium"
+                      style={{ fontFamily: 'Saira, sans-serif' }}
+                    >
                       {offer.offererCorpName || "Unknown Corp"}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div
+                      className="text-xs"
+                      style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
+                    >
                       {new Date(offer.createdAt).toLocaleDateString()}
                     </div>
                   </div>
 
                   {/* Offered Meks */}
-                  <div className="text-xs text-gray-500 mb-2">
+                  <div
+                    className="text-xs mb-2"
+                    style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
+                  >
                     Offered {offer.offeredMeks.length} Mek{offer.offeredMeks.length !== 1 ? "s" : ""}:
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     {offer.offeredMeks.map((mek: any, i: number) => (
                       <div
                         key={i}
-                        className="bg-black/30 border border-gray-700 rounded-lg p-3 group relative"
+                        className="rounded-lg p-3 group relative"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                        }}
                       >
                         <img
                           src={getMekImagePath(mek.sourceKey)}
@@ -163,9 +239,17 @@ export default function ViewOffersLightbox({
                             (e.target as HTMLImageElement).src = "/mek-images/placeholder.webp";
                           }}
                         />
-                        <div className="text-xs text-gray-400 truncate">{mek.assetName}</div>
+                        <div
+                          className="text-xs truncate"
+                          style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.6)' }}
+                        >
+                          {mek.assetName}
+                        </div>
                         {mek.matchedVariations.length > 0 && (
-                          <div className="text-xs text-green-400 mt-1">
+                          <div
+                            className="text-xs mt-1"
+                            style={{ fontFamily: 'Play, sans-serif', color: '#4ade80' }}
+                          >
                             Matches: {mek.matchedVariations.join(", ")}
                           </div>
                         )}
@@ -174,7 +258,13 @@ export default function ViewOffersLightbox({
                         <button
                           onClick={() => handleMessagePlayer(offer, mek.assetId)}
                           disabled={isStartingConversation}
-                          className="mt-2 w-full px-3 py-1.5 text-xs bg-blue-500 hover:bg-blue-400 text-white font-medium rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="mt-2 w-full px-3 py-1.5 text-xs font-medium rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{
+                            fontFamily: 'Inter, sans-serif',
+                            background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                            color: 'white',
+                            boxShadow: '0 0 15px rgba(59, 130, 246, 0.3)',
+                          }}
                         >
                           {isStartingConversation ? "..." : "Message Player"}
                         </button>
@@ -188,10 +278,17 @@ export default function ViewOffersLightbox({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-800 flex justify-end bg-black/30">
+        <div
+          className="px-6 py-4 flex justify-end"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-400 hover:text-white transition-all"
+            className="px-4 py-2 transition-colors"
+            style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(255,255,255,0.6)' }}
           >
             Close
           </button>

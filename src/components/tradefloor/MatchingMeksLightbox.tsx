@@ -23,6 +23,12 @@ interface MatchingMeksLightboxProps {
   onClose: () => void;
 }
 
+const variationTypeColors: Record<string, { bg: string; border: string; text: string }> = {
+  head: { bg: "rgba(59, 130, 246, 0.15)", border: "rgba(59, 130, 246, 0.3)", text: "#60a5fa" },
+  body: { bg: "rgba(34, 197, 94, 0.15)", border: "rgba(34, 197, 94, 0.3)", text: "#4ade80" },
+  trait: { bg: "rgba(168, 85, 247, 0.15)", border: "rgba(168, 85, 247, 0.3)", text: "#c084fc" },
+};
+
 export default function MatchingMeksLightbox({
   listing,
   viewerStakeAddress,
@@ -84,41 +90,73 @@ export default function MatchingMeksLightbox({
 
   const listedMekImage = getMekImagePath(listing.listedMekSourceKey);
 
-  const variationTypeColors: Record<string, string> = {
-    head: "text-blue-400 bg-blue-500/20 border-blue-500/30",
-    body: "text-green-400 bg-green-500/20 border-green-500/30",
-    trait: "text-purple-400 bg-purple-500/20 border-purple-500/30",
-  };
-
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/80" onClick={onClose} />
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+        }}
+        onClick={onClose}
+      />
 
       {/* Content */}
       <div
-        className="relative bg-gray-900 border border-yellow-500/30 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+        className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col rounded-2xl"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+          backdropFilter: 'blur(30px)',
+          WebkitBackdropFilter: 'blur(30px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center bg-black/30">
+        <div
+          className="px-6 py-4 flex justify-between items-center"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
           <div>
-            <h2 className="text-xl font-bold text-yellow-400">Make an Offer</h2>
-            <p className="text-sm text-gray-400">
+            <h2
+              className="text-xl font-bold text-white"
+              style={{ fontFamily: 'Orbitron, sans-serif' }}
+            >
+              Make an Offer
+            </h2>
+            <p
+              className="text-sm"
+              style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+            >
               Select up to 3 of your matching Meks to offer
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-2xl font-light"
+            className="text-white/50 hover:text-white/80 text-2xl font-light transition-colors"
+            style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             &times;
           </button>
         </div>
 
         {/* Listed Mek Preview */}
-        <div className="px-6 py-4 bg-black/20 border-b border-gray-800">
-          <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">
+        <div
+          className="px-6 py-4"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <div
+            className="text-xs uppercase tracking-wider mb-2"
+            style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
+          >
             Trading for:
           </div>
           <div className="flex items-center gap-4">
@@ -128,23 +166,45 @@ export default function MatchingMeksLightbox({
               className="w-16 h-16 object-contain"
             />
             <div>
-              <div className="text-white font-medium">{listing.listedMekAssetName}</div>
-              <div className="text-sm text-gray-400">
+              <div
+                className="text-white font-medium"
+                style={{ fontFamily: 'Saira, sans-serif' }}
+              >
+                {listing.listedMekAssetName}
+              </div>
+              <div
+                className="text-sm"
+                style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+              >
                 Listed by {listing.ownerCorpName || "Unknown Corp"}
               </div>
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-xs text-gray-500 mb-1">Wants:</div>
-            <div className="flex flex-wrap gap-1">
-              {listing.desiredVariations.map((v, i) => (
-                <span
-                  key={i}
-                  className={`px-2 py-0.5 text-xs rounded border ${variationTypeColors[v.variationType]}`}
-                >
-                  {v.variationName}
-                </span>
-              ))}
+            <div
+              className="text-xs mb-2"
+              style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
+            >
+              Wants:
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {listing.desiredVariations.map((v, i) => {
+                const colors = variationTypeColors[v.variationType];
+                return (
+                  <span
+                    key={i}
+                    className="px-2 py-1 text-xs rounded"
+                    style={{
+                      background: colors?.bg || 'rgba(255,255,255,0.1)',
+                      border: `1px solid ${colors?.border || 'rgba(255,255,255,0.2)'}`,
+                      color: colors?.text || 'white',
+                      fontFamily: 'Play, sans-serif',
+                    }}
+                  >
+                    {v.variationName}
+                  </span>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -152,18 +212,37 @@ export default function MatchingMeksLightbox({
         {/* Matching Meks Grid */}
         <div className="flex-1 overflow-y-auto p-6">
           {matchingMeks === undefined ? (
-            <div className="text-center py-12 text-gray-400">Finding your matching Meks...</div>
+            <div
+              className="text-center py-12"
+              style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+            >
+              Finding your matching Meks...
+            </div>
           ) : matchingMeks.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">😔</div>
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">No Matching Meks</h3>
-              <p className="text-gray-500">
+            <div
+              className="text-center py-12 rounded-xl"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+            >
+              <div className="text-6xl mb-4">🤖</div>
+              <h3
+                className="text-xl font-semibold text-white mb-2"
+                style={{ fontFamily: 'Orbitron, sans-serif' }}
+              >
+                No Matching Meks
+              </h3>
+              <p style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
                 You don't own any Meks with the variations this listing is looking for
               </p>
             </div>
           ) : (
             <>
-              <div className="text-sm text-gray-400 mb-4">
+              <div
+                className="text-sm mb-4"
+                style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+              >
                 {matchingMeks.length} Mek{matchingMeks.length !== 1 ? "s" : ""} match the desired
                 variations. Select up to 3 ({selectedMeks.length}/3 selected).
               </div>
@@ -175,13 +254,17 @@ export default function MatchingMeksLightbox({
                       key={mek.assetId}
                       onClick={() => toggleMek(mek.assetId)}
                       disabled={!isSelected && selectedMeks.length >= 3}
-                      className={`p-3 rounded-lg border transition-all text-left ${
-                        isSelected
-                          ? "border-yellow-500 bg-yellow-500/10"
-                          : selectedMeks.length >= 3
-                          ? "border-gray-700 bg-gray-800/50 opacity-50 cursor-not-allowed"
-                          : "border-gray-700 hover:border-gray-500 bg-gray-800/50"
-                      }`}
+                      className="relative p-3 rounded-lg transition-all text-left hover:scale-[1.02] active:scale-[0.98]"
+                      style={{
+                        background: isSelected
+                          ? 'linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(34, 211, 238, 0.1))'
+                          : 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+                        border: isSelected
+                          ? '1px solid rgba(34, 211, 238, 0.5)'
+                          : '1px solid rgba(255,255,255,0.1)',
+                        opacity: !isSelected && selectedMeks.length >= 3 ? 0.5 : 1,
+                        cursor: !isSelected && selectedMeks.length >= 3 ? 'not-allowed' : 'pointer',
+                      }}
                     >
                       <img
                         src={getMekImagePath(mek.sourceKey || mek.sourceKeyBase)}
@@ -191,12 +274,26 @@ export default function MatchingMeksLightbox({
                           (e.target as HTMLImageElement).src = "/mek-images/placeholder.webp";
                         }}
                       />
-                      <div className="text-xs text-gray-400 truncate">{mek.assetName}</div>
-                      <div className="text-xs text-green-400 mt-1">
+                      <div
+                        className="text-xs truncate"
+                        style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.6)' }}
+                      >
+                        {mek.assetName}
+                      </div>
+                      <div
+                        className="text-xs mt-1"
+                        style={{ fontFamily: 'Play, sans-serif', color: '#4ade80' }}
+                      >
                         Matches: {mek.matchedVariations.join(", ")}
                       </div>
                       {isSelected && (
-                        <div className="absolute top-2 right-2 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-black font-bold text-sm">
+                        <div
+                          className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-black font-bold text-sm"
+                          style={{
+                            background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
+                            boxShadow: '0 0 10px rgba(34, 211, 238, 0.5)',
+                          }}
+                        >
                           ✓
                         </div>
                       )}
@@ -209,21 +306,37 @@ export default function MatchingMeksLightbox({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-800 flex justify-end gap-3 bg-black/30">
+        <div
+          className="px-6 py-4 flex justify-end gap-3"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-400 hover:text-white transition-all"
+            className="px-4 py-2 transition-colors"
+            style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(255,255,255,0.6)' }}
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={selectedMeks.length === 0 || isSubmitting}
-            className={`px-6 py-2 rounded font-medium transition-all ${
-              selectedMeks.length === 0 || isSubmitting
-                ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                : "bg-yellow-500 hover:bg-yellow-400 text-black"
-            }`}
+            className="px-6 py-2 rounded-xl font-medium transition-all hover:scale-[1.02] active:scale-[0.98]"
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              background: selectedMeks.length === 0 || isSubmitting
+                ? 'rgba(255,255,255,0.1)'
+                : 'linear-gradient(135deg, #22d3ee, #06b6d4)',
+              color: selectedMeks.length === 0 || isSubmitting
+                ? 'rgba(255,255,255,0.3)'
+                : 'black',
+              cursor: selectedMeks.length === 0 || isSubmitting ? 'not-allowed' : 'pointer',
+              boxShadow: selectedMeks.length > 0 && !isSubmitting
+                ? '0 0 30px rgba(34, 211, 238, 0.3)'
+                : 'none',
+            }}
           >
             {isSubmitting
               ? "Submitting..."
