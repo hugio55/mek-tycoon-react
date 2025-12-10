@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Id } from "@/convex/_generated/dataModel";
 import { getMediaUrl } from "@/lib/media-url";
 
@@ -60,6 +61,12 @@ export default function TradeListingCard({
 }: TradeListingCardProps) {
   const [showOwnListingTooltip, setShowOwnListingTooltip] = useState(false);
   const [showMobileLightbox, setShowMobileLightbox] = useState(false);
+  const [showImageLightbox, setShowImageLightbox] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const isOwnListing = listing.isOwnListing;
 
@@ -76,7 +83,7 @@ export default function TradeListingCard({
 
   return (
     <div
-      className="relative rounded-xl overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] group"
+      className="relative rounded-xl overflow-hidden group"
       style={{
         background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
         backdropFilter: 'blur(12px)',
@@ -134,9 +141,13 @@ export default function TradeListingCard({
         )}
       </div>
 
-      {/* Mek Image */}
+      {/* Mek Image - Clickable to open lightbox */}
       <div className="relative p-4 flex justify-center">
-        <div className="relative w-32 h-32">
+        <button
+          onClick={() => setShowImageLightbox(true)}
+          className="relative w-32 h-32 cursor-pointer transition-all duration-200 hover:scale-110 active:scale-105 rounded-lg overflow-hidden group/image"
+          title="Click to view larger"
+        >
           <img
             src={imagePath}
             alt={listing.listedMekAssetName || "Listed Mek"}
@@ -145,7 +156,28 @@ export default function TradeListingCard({
               (e.target as HTMLImageElement).src = getMediaUrl("/mek-images/placeholder.webp");
             }}
           />
-        </div>
+          {/* Hover overlay with magnify icon */}
+          <div
+            className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/image:opacity-100 transition-opacity duration-200 rounded-lg"
+            style={{ background: 'rgba(34, 211, 238, 0.15)' }}
+          >
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#22d3ee"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ filter: 'drop-shadow(0 0 8px rgba(34, 211, 238, 0.5))' }}
+            >
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+              <path d="M11 8v6M8 11h6"/>
+            </svg>
+          </div>
+        </button>
       </div>
 
       {/* Mek Name */}

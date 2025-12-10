@@ -399,7 +399,7 @@ export default function TradeFloorPage() {
               style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
             >
               {activeTab === "browse" && "Browse trade listings from other players"}
-              {activeTab === "my-listings" && `${activeListingCount !== undefined ? `${activeListingCount}/5 listings used` : "Loading..."}`}
+              {activeTab === "my-listings" && "Meks you're looking to trade for specific variations"}
               {activeTab === "my-offers" && "Offers you've made on other players' listings"}
             </p>
 
