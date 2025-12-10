@@ -286,40 +286,6 @@ export default function BuffCategoriesAdmin() {
             </select>
           </div>
 
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Tier Start</label>
-            <input
-              type="number"
-              min="1"
-              max="10"
-              value={formData.tierStart || 1}
-              onChange={(e) => {
-                const val = Number(e.target.value);
-                if (val >= 1 && val <= 10) {
-                  setFormData({ ...formData, tierStart: val });
-                }
-              }}
-              className="w-full bg-black/50 border border-yellow-500/30 rounded px-2 py-1 text-white text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Tier End</label>
-            <input
-              type="number"
-              min={formData.tierStart || 1}
-              max="10"
-              value={formData.tierEnd || 1}
-              onChange={(e) => {
-                const val = Number(e.target.value);
-                if (val >= (formData.tierStart || 1) && val <= 10) {
-                  setFormData({ ...formData, tierEnd: val });
-                }
-              }}
-              className="w-full bg-black/50 border border-yellow-500/30 rounded px-2 py-1 text-white text-sm"
-            />
-          </div>
-
           <div className="col-span-2">
             <label className="block text-xs text-gray-400 mb-1">Description</label>
             <input
@@ -331,14 +297,6 @@ export default function BuffCategoriesAdmin() {
           </div>
 
           <div className="flex items-center gap-2 col-span-2">
-            <button
-              type="button"
-              onClick={() => setFormData({ ...formData, tierStart: 1, tierEnd: 10 })}
-              className="bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-600 transition-colors text-sm"
-            >
-              All Tiers
-            </button>
-
             <label className="flex items-center gap-1">
               <input
                 type="checkbox"
@@ -393,7 +351,6 @@ export default function BuffCategoriesAdmin() {
                   <th className="text-left py-2 px-3 text-gray-400 text-xs font-semibold">Category</th>
                   <th className="text-left py-2 px-3 text-gray-400 text-xs font-semibold">Unit Type</th>
                   <th className="text-left py-2 px-3 text-gray-400 text-xs font-semibold">Application</th>
-                  <th className="text-left py-2 px-3 text-gray-400 text-xs font-semibold">Tier Range</th>
                   <th className="text-left py-2 px-3 text-gray-400 text-xs font-semibold">Description</th>
                   <th className="text-center py-2 px-3 text-gray-400 text-xs font-semibold">Status</th>
                   <th className="text-left py-2 px-3 text-gray-400 text-xs font-semibold">Actions</th>
@@ -416,7 +373,7 @@ export default function BuffCategoriesAdmin() {
                       {groupedCategories.success.length > 0 && (
                         <>
                           <tr>
-                            <td colSpan={8} className="bg-green-500/10 px-3 py-1 border-y border-green-500/30">
+                            <td colSpan={7} className="bg-green-500/10 px-3 py-1 border-y border-green-500/30">
                               <div className="flex justify-between items-center">
                                 <span className="text-green-500 font-bold text-xs uppercase">Success Rate</span>
                                 <button
@@ -449,15 +406,6 @@ export default function BuffCategoriesAdmin() {
                                   {category.applicationType === "universal" ? "Universal" : "Attachable"}
                                 </span>
                               </td>
-                              <td className="py-2 px-3">
-                                {category.tierStart === 1 && category.tierEnd === 10 ? (
-                                  <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">All Tiers</span>
-                                ) : (
-                                  <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">
-                                    T{category.tierStart}-T{category.tierEnd}
-                                  </span>
-                                )}
-                              </td>
                               <td className="py-2 px-3 text-sm text-gray-400">{category.description || "-"}</td>
                               <td className="py-2 px-3 text-center">
                                 <span className={`px-2 py-1 rounded text-xs font-semibold ${
@@ -483,7 +431,7 @@ export default function BuffCategoriesAdmin() {
                       {groupedCategories.gold.length > 0 && (
                         <>
                           <tr>
-                            <td colSpan={8} className="bg-yellow-500/10 px-3 py-1 border-y border-yellow-500/30">
+                            <td colSpan={7} className="bg-yellow-500/10 px-3 py-1 border-y border-yellow-500/30">
                               <span className="text-yellow-500 font-bold text-xs uppercase">Gold & Market</span>
                             </td>
                           </tr>
@@ -514,15 +462,6 @@ export default function BuffCategoriesAdmin() {
                                   {category.applicationType === "universal" ? "Universal" : "Attachable"}
                                 </span>
                               </td>
-                              <td className="py-2 px-3">
-                                {category.tierStart === 1 && category.tierEnd === 10 ? (
-                                  <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">All Tiers</span>
-                                ) : (
-                                  <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">
-                                    T{category.tierStart}-T{category.tierEnd}
-                                  </span>
-                                )}
-                              </td>
                               <td className="py-2 px-3 text-sm text-gray-400">{category.description || "-"}</td>
                               <td className="py-2 px-3 text-center">
                                 <span className={`px-2 py-1 rounded text-xs font-semibold ${
@@ -548,7 +487,7 @@ export default function BuffCategoriesAdmin() {
                       {groupedCategories.essence.length > 0 && (
                         <>
                           <tr>
-                            <td colSpan={8} className="bg-purple-500/10 px-3 py-1 border-y border-purple-500/30">
+                            <td colSpan={7} className="bg-purple-500/10 px-3 py-1 border-y border-purple-500/30">
                               <span className="text-purple-500 font-bold text-xs uppercase">Essence</span>
                             </td>
                           </tr>
@@ -579,15 +518,6 @@ export default function BuffCategoriesAdmin() {
                                   {category.applicationType === "universal" ? "Universal" : "Attachable"}
                                 </span>
                               </td>
-                              <td className="py-2 px-3">
-                                {category.tierStart === 1 && category.tierEnd === 10 ? (
-                                  <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">All Tiers</span>
-                                ) : (
-                                  <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">
-                                    T{category.tierStart}-T{category.tierEnd}
-                                  </span>
-                                )}
-                              </td>
                               <td className="py-2 px-3 text-sm text-gray-400">{category.description || "-"}</td>
                               <td className="py-2 px-3 text-center">
                                 <span className={`px-2 py-1 rounded text-xs font-semibold ${
@@ -613,7 +543,7 @@ export default function BuffCategoriesAdmin() {
                       {groupedCategories.looter.length > 0 && (
                         <>
                           <tr>
-                            <td colSpan={8} className="bg-blue-500/10 px-3 py-1 border-y border-blue-500/30">
+                            <td colSpan={7} className="bg-blue-500/10 px-3 py-1 border-y border-blue-500/30">
                               <span className="text-blue-500 font-bold text-xs uppercase">Looter & Rewards</span>
                             </td>
                           </tr>
@@ -644,15 +574,6 @@ export default function BuffCategoriesAdmin() {
                                   {category.applicationType === "universal" ? "Universal" : "Attachable"}
                                 </span>
                               </td>
-                              <td className="py-2 px-3">
-                                {category.tierStart === 1 && category.tierEnd === 10 ? (
-                                  <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">All Tiers</span>
-                                ) : (
-                                  <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">
-                                    T{category.tierStart}-T{category.tierEnd}
-                                  </span>
-                                )}
-                              </td>
                               <td className="py-2 px-3 text-sm text-gray-400">{category.description || "-"}</td>
                               <td className="py-2 px-3 text-center">
                                 <span className={`px-2 py-1 rounded text-xs font-semibold ${
@@ -678,7 +599,7 @@ export default function BuffCategoriesAdmin() {
                       {groupedCategories.other.length > 0 && (
                         <>
                           <tr>
-                            <td colSpan={8} className="bg-gray-500/10 px-3 py-1 border-y border-gray-500/30">
+                            <td colSpan={7} className="bg-gray-500/10 px-3 py-1 border-y border-gray-500/30">
                               <span className="text-gray-400 font-bold text-xs uppercase">Other</span>
                             </td>
                           </tr>
@@ -708,15 +629,6 @@ export default function BuffCategoriesAdmin() {
                                 }`}>
                                   {category.applicationType === "universal" ? "Universal" : "Attachable"}
                                 </span>
-                              </td>
-                              <td className="py-2 px-3">
-                                {category.tierStart === 1 && category.tierEnd === 10 ? (
-                                  <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">All Tiers</span>
-                                ) : (
-                                  <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">
-                                    T{category.tierStart}-T{category.tierEnd}
-                                  </span>
-                                )}
                               </td>
                               <td className="py-2 px-3 text-sm text-gray-400">{category.description || "-"}</td>
                               <td className="py-2 px-3 text-center">
