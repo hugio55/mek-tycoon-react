@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
+import { useSearchParams } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { restoreWalletSession } from "@/lib/walletSessionManager";
@@ -9,16 +10,36 @@ import TradeListingCard from "@/components/tradefloor/TradeListingCard";
 import CreateListingLightbox from "@/components/tradefloor/CreateListingLightbox";
 import MatchingMeksLightbox from "@/components/tradefloor/MatchingMeksLightbox";
 import ViewOffersLightbox from "@/components/tradefloor/ViewOffersLightbox";
+import EditListingLightbox from "@/components/tradefloor/EditListingLightbox";
+import ConfirmationLightbox from "@/components/tradefloor/ConfirmationLightbox";
 import OfferCard from "@/components/tradefloor/OfferCard";
 
 type Tab = "browse" | "my-listings" | "my-offers";
 
+interface ConfirmAction {
+  type: "cancel-listing" | "withdraw-offer";
+  id: Id<"tradeListings"> | Id<"tradeOffers">;
+  title: string;
+  message: string;
+}
+
 export default function TradeFloorPage() {
+  const searchParams = useSearchParams();
   const [stakeAddress, setStakeAddress] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("browse");
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [selectedListingForOffer, setSelectedListingForOffer] = useState<any>(null);
   const [selectedListingForViewOffers, setSelectedListingForViewOffers] = useState<any>(null);
+  const [selectedListingForEdit, setSelectedListingForEdit] = useState<any>(null);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+
+  // Read tab from URL query parameter (for notification deep links)
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam && ["browse", "my-listings", "my-offers"].includes(tabParam)) {
+      setActiveTab(tabParam as Tab);
+    }
+  }, [searchParams]);
 
   // Restore wallet session on mount (same pattern as HomePage)
   useEffect(() => {
@@ -61,29 +82,46 @@ export default function TradeFloorPage() {
   const cancelListing = useMutation(api.tradeFloor.cancelListing);
   const withdrawOffer = useMutation(api.tradeFloor.withdrawOffer);
 
-  const handleCancelListing = async (listingId: Id<"tradeListings">) => {
+  const handleCancelListing = (listingId: Id<"tradeListings">) => {
     if (!stakeAddress) return;
-    if (!confirm("Are you sure you want to cancel this listing? All pending offers will be notified.")) {
-      return;
-    }
-    try {
-      await cancelListing({ listingId, ownerStakeAddress: stakeAddress });
-    } catch (error) {
-      console.error("Failed to cancel listing:", error);
-      alert("Failed to cancel listing. Please try again.");
-    }
+    setConfirmAction({
+      type: "cancel-listing",
+      id: listingId,
+      title: "Cancel Listing",
+      message: "Are you sure you want to cancel this listing? All pending offers will be notified.",
+    });
   };
 
-  const handleWithdrawOffer = async (offerId: Id<"tradeOffers">) => {
+  const handleWithdrawOffer = (offerId: Id<"tradeOffers">) => {
     if (!stakeAddress) return;
-    if (!confirm("Are you sure you want to withdraw this offer?")) {
-      return;
-    }
+    setConfirmAction({
+      type: "withdraw-offer",
+      id: offerId,
+      title: "Withdraw Offer",
+      message: "Are you sure you want to withdraw this offer?",
+    });
+  };
+
+  const executeConfirmAction = async () => {
+    if (!confirmAction || !stakeAddress) return;
+
     try {
-      await withdrawOffer({ offerId, offererStakeAddress: stakeAddress });
+      if (confirmAction.type === "cancel-listing") {
+        await cancelListing({
+          listingId: confirmAction.id as Id<"tradeListings">,
+          ownerStakeAddress: stakeAddress
+        });
+      } else if (confirmAction.type === "withdraw-offer") {
+        await withdrawOffer({
+          offerId: confirmAction.id as Id<"tradeOffers">,
+          offererStakeAddress: stakeAddress
+        });
+      }
     } catch (error) {
-      console.error("Failed to withdraw offer:", error);
-      alert("Failed to withdraw offer. Please try again.");
+      console.error("Action failed:", error);
+      alert("Action failed. Please try again.");
+    } finally {
+      setConfirmAction(null);
     }
   };
 
@@ -400,7 +438,9 @@ export default function TradeFloorPage() {
                     listing={listing}
                     isOwner={true}
                     pendingOfferCount={listing.pendingOfferCount}
+                    newOfferCount={listing.newOfferCount}
                     onViewOffers={() => setSelectedListingForViewOffers(listing)}
+                    onEditListing={() => setSelectedListingForEdit(listing)}
                     onCancel={() => handleCancelListing(listing._id)}
                   />
                 ))}
@@ -562,6 +602,26 @@ export default function TradeFloorPage() {
           listing={selectedListingForViewOffers}
           ownerStakeAddress={stakeAddress}
           onClose={() => setSelectedListingForViewOffers(null)}
+        />
+      )}
+
+      {/* Edit Listing Lightbox */}
+      {selectedListingForEdit && (
+        <EditListingLightbox
+          listing={selectedListingForEdit}
+          onClose={() => setSelectedListingForEdit(null)}
+        />
+      )}
+
+      {/* Confirmation Lightbox */}
+      {confirmAction && (
+        <ConfirmationLightbox
+          title={confirmAction.title}
+          message={confirmAction.message}
+          confirmText={confirmAction.type === "cancel-listing" ? "Cancel Listing" : "Withdraw"}
+          confirmStyle="danger"
+          onConfirm={executeConfirmAction}
+          onCancel={() => setConfirmAction(null)}
         />
       )}
     </div>
