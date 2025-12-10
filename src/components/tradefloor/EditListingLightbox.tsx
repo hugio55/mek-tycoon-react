@@ -250,6 +250,22 @@ export default function EditListingLightbox({
 
         {/* Variation Picker */}
         <div className="flex-1 overflow-hidden flex flex-col px-6 pb-4">
+          {/* Color Key */}
+          <div className="flex gap-4 mb-3" style={{ fontFamily: 'Play, sans-serif', fontSize: '12px' }}>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded" style={{ background: variationTypeColors.head.bg, border: `1px solid ${variationTypeColors.head.border}` }} />
+              <span style={{ color: variationTypeColors.head.text }}>Head</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded" style={{ background: variationTypeColors.body.bg, border: `1px solid ${variationTypeColors.body.border}` }} />
+              <span style={{ color: variationTypeColors.body.text }}>Body</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded" style={{ background: variationTypeColors.trait.bg, border: `1px solid ${variationTypeColors.trait.border}` }} />
+              <span style={{ color: variationTypeColors.trait.text }}>Trait</span>
+            </div>
+          </div>
+
           {/* Search and Filter */}
           <div className="flex gap-3 mb-3">
             <input
@@ -312,11 +328,10 @@ export default function EditListingLightbox({
                     <div className="flex justify-between items-center">
                       <span className="truncate">{v.name}</span>
                       <span
-                        className="text-xs px-1.5 py-0.5 rounded ml-2 flex-shrink-0 flex items-center gap-1"
+                        className="text-xs px-1.5 py-0.5 rounded ml-2 flex-shrink-0"
                         style={{ background: 'rgba(0,0,0,0.2)', opacity: 0.7 }}
                         title={`Rank ${v.rank} of 291`}
                       >
-                        <span style={{ opacity: 0.7 }}>{v.type[0].toUpperCase()}</span>
                         #{v.rank}
                       </span>
                     </div>
@@ -345,7 +360,7 @@ export default function EditListingLightbox({
         >
           <button
             onClick={onClose}
-            className="px-4 py-2 transition-colors"
+            className="px-4 py-2 transition-colors hover:brightness-150"
             style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(255,255,255,0.6)' }}
           >
             Cancel

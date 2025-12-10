@@ -7610,7 +7610,7 @@ function NFTAdminTabs({ client }: { client: any }) {
       </div>
 
       {/* Tab Content */}
-      {nftSubTab === 'whitelist-manager' && <WhitelistManagerAdmin client={client} mutationsEnabled={mutationsEnabled} />}
+      {nftSubTab === 'whitelist-manager' && <WhitelistManagerAdmin client={client} mutationsEnabled={mutationsEnabled} onToggleMutations={setMutationsEnabled} />}
       {nftSubTab === 'json-generator' && <NMKRJSONGenerator />}
       {nftSubTab === 'campaigns' && (
         <div className="space-y-4">

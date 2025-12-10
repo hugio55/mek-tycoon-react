@@ -63,12 +63,26 @@ const getMekVariations = (sourceKey: string) => {
   if (!sourceKey) return null;
   const cleanKey = sourceKey.replace(/-[A-Z]$/i, "").toUpperCase();
   const parts = cleanKey.split("-");
+
+  console.log("[🔍TRADE] getMekVariations debug:", {
+    originalSourceKey: sourceKey,
+    cleanKey,
+    parts,
+    partsLength: parts.length,
+  });
+
   if (parts.length !== 3) return null;
 
   const [headCode, bodyCode, traitCode] = parts;
   const head = getVariationBySourceKey(headCode, "head");
   const body = getVariationBySourceKey(bodyCode, "body");
   const trait = getVariationBySourceKey(traitCode, "trait");
+
+  console.log("[🔍TRADE] Variation lookups:", {
+    headCode, headFound: !!head, headName: head?.name,
+    bodyCode, bodyFound: !!body, bodyName: body?.name,
+    traitCode, traitFound: !!trait, traitName: trait?.name,
+  });
 
   return { head, body, trait };
 };
@@ -412,6 +426,22 @@ export default function CreateListingLightbox({
 
             {/* Variation Picker */}
             <div className="space-y-4">
+              {/* Color Key */}
+              <div className="flex gap-4" style={{ fontFamily: 'Play, sans-serif', fontSize: '12px' }}>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded" style={{ background: variationTypeColors.head.bg, border: `1px solid ${variationTypeColors.head.border}` }} />
+                  <span style={{ color: variationTypeColors.head.text }}>Head</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded" style={{ background: variationTypeColors.body.bg, border: `1px solid ${variationTypeColors.body.border}` }} />
+                  <span style={{ color: variationTypeColors.body.text }}>Body</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded" style={{ background: variationTypeColors.trait.bg, border: `1px solid ${variationTypeColors.trait.border}` }} />
+                  <span style={{ color: variationTypeColors.trait.text }}>Trait</span>
+                </div>
+              </div>
+
               <div className="flex gap-4">
                 {/* Type Filter */}
                 <div
@@ -482,14 +512,13 @@ export default function CreateListingLightbox({
                       <div className="flex justify-between items-center">
                         <span>{v.name}</span>
                         <span
-                          className="text-xs px-1.5 py-0.5 rounded flex items-center gap-1"
+                          className="text-xs px-1.5 py-0.5 rounded"
                           style={{
                             background: 'rgba(0,0,0,0.2)',
                             opacity: 0.7,
                           }}
                           title={`Rank ${v.rank} of 291`}
                         >
-                          <span style={{ opacity: 0.7 }}>{v.type[0].toUpperCase()}</span>
                           #{v.rank}
                         </span>
                       </div>
@@ -520,7 +549,7 @@ export default function CreateListingLightbox({
         >
           <button
             onClick={onClose}
-            className="px-4 py-2 transition-colors"
+            className="px-4 py-2 transition-colors hover:brightness-150"
             style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(255,255,255,0.6)' }}
           >
             Cancel
