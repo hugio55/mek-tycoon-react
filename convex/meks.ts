@@ -489,3 +489,101 @@ export const getMekLevelInfo = query({
     };
   },
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DIAGNOSTICS: Check owner field consistency
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Diagnostic query to check if we can safely migrate from by_owner to by_owner_stake index.
+ *
+ * This checks for MEKs that have `owner` set but `ownerStakeAddress` missing,
+ * which would cause them to disappear from queries if we switch indexes.
+ */
+export const checkOwnerFieldConsistency = query({
+  args: {},
+  handler: async (ctx) => {
+    const allMeks = await ctx.db.query("meks").collect();
+
+    let totalMeks = 0;
+    let unownedMeks = 0;
+    let hasOwnerOnly = 0;      // owner set, ownerStakeAddress missing (PROBLEM)
+    let hasStakeOnly = 0;      // ownerStakeAddress set, owner missing (unlikely)
+    let hasBoth = 0;           // both set (GOOD)
+    let bothMatch = 0;         // both set and equal (IDEAL)
+    let bothMismatch = 0;      // both set but different (PROBLEM)
+
+    const problemMeks: Array<{
+      assetId: string;
+      mekNumber: number;
+      owner: string | undefined;
+      ownerStakeAddress: string | undefined;
+      issue: string;
+    }> = [];
+
+    for (const mek of allMeks) {
+      totalMeks++;
+      const hasOwner = mek.owner !== undefined && mek.owner !== null && mek.owner !== "";
+      const hasStake = mek.ownerStakeAddress !== undefined && mek.ownerStakeAddress !== null && mek.ownerStakeAddress !== "";
+
+      if (!hasOwner && !hasStake) {
+        unownedMeks++;
+      } else if (hasOwner && !hasStake) {
+        hasOwnerOnly++;
+        problemMeks.push({
+          assetId: mek.assetId,
+          mekNumber: mek.mekNumber || 0,
+          owner: mek.owner,
+          ownerStakeAddress: mek.ownerStakeAddress,
+          issue: "owner set but ownerStakeAddress missing"
+        });
+      } else if (!hasOwner && hasStake) {
+        hasStakeOnly++;
+        problemMeks.push({
+          assetId: mek.assetId,
+          mekNumber: mek.mekNumber || 0,
+          owner: mek.owner,
+          ownerStakeAddress: mek.ownerStakeAddress,
+          issue: "ownerStakeAddress set but owner missing"
+        });
+      } else {
+        hasBoth++;
+        if (mek.owner === mek.ownerStakeAddress) {
+          bothMatch++;
+        } else {
+          bothMismatch++;
+          problemMeks.push({
+            assetId: mek.assetId,
+            mekNumber: mek.mekNumber || 0,
+            owner: mek.owner,
+            ownerStakeAddress: mek.ownerStakeAddress,
+            issue: "owner and ownerStakeAddress don't match"
+          });
+        }
+      }
+    }
+
+    const safeToMigrate = hasOwnerOnly === 0 && bothMismatch === 0;
+
+    return {
+      summary: {
+        totalMeks,
+        unownedMeks,
+        ownedMeks: totalMeks - unownedMeks,
+      },
+      consistency: {
+        hasOwnerOnly,      // These would disappear if we migrate!
+        hasStakeOnly,
+        hasBoth,
+        bothMatch,
+        bothMismatch,      // These would return wrong results!
+      },
+      safeToMigrate,
+      migrationRisk: safeToMigrate
+        ? "LOW - All owned MEKs have matching owner fields"
+        : `HIGH - ${hasOwnerOnly + bothMismatch} MEKs would be affected`,
+      problemMeks: problemMeks.slice(0, 20), // Limit to first 20 for readability
+      totalProblems: problemMeks.length,
+    };
+  },
+});

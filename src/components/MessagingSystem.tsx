@@ -191,11 +191,20 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   }, [selectedConversationId, walletAddress, markAsRead, messages?.length]);
 
   // Auto-scroll to latest messages (instant - directly set scrollTop to start at bottom)
+  // Use requestAnimationFrame to ensure layout is complete before scrolling
   useLayoutEffect(() => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    const container = messagesContainerRef.current;
+    if (container) {
+      // Double RAF ensures layout is fully calculated
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+          }
+        });
+      });
     }
-  }, [messages]);
+  }, [messages, selectedConversationId]);
 
   // Helper to check if conversation is support chat
   const isSupportConversation = (conv: any) => {
