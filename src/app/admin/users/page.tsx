@@ -352,14 +352,7 @@ export default function AdminUsersPage() {
                           )}
                         </div>
                       </div>
-                      <div className="flex justify-between py-0.5">
-                        <span className="text-gray-400">Gold/Hour:</span>
-                        <span className="text-green-500">{userDetails.user.goldPerHour || 0}/hr</span>
-                      </div>
-                      <div className="flex justify-between py-0.5">
-                        <span className="text-gray-400">Pending:</span>
-                        <span className="text-yellow-400">{userDetails.user.pendingGold || 0}</span>
-                      </div>
+                      {/* Phase II: goldPerHour/pendingGold removed - income from Job Slots */}
                     </div>
                   </div>
 
@@ -566,9 +559,7 @@ export default function AdminUsersPage() {
                               </span>
                               <span className="text-yellow-500">Lvl {mek.level || 1}</span>
                             </div>
-                            {mek.goldRate && (
-                              <div className="text-green-400 text-xs">+{mek.goldRate}/hr</div>
-                            )}
+                            {/* Phase II: goldRate display removed */}
                           </Link>
                         ))
                       ) : (

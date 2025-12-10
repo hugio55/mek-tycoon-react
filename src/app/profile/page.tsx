@@ -10,7 +10,8 @@ type Mek = {
   id: string;
   number: number;
   level: number;
-  goldPerHour: number;
+  // Phase II: goldPerHour removed - income from Job Slots
+  rarityRank: number;
   traits?: string[];
   sourceKey?: string;
   equipped: {
@@ -50,7 +51,7 @@ export default function ProfilePage() {
   const [offerModal, setOfferModal] = useState<OfferModal>({ type: null });
   const [activeTab, setActiveTab] = useState<'meks' | 'essence' | 'inventory' | 'frames'>('meks');
   const [inventorySubTab, setInventorySubTab] = useState<'universal_chips' | 'mek_chips' | 'various'>('universal_chips');
-  const [mekSortBy, setMekSortBy] = useState<'level' | 'goldPerHour'>('level');
+  const [mekSortBy, setMekSortBy] = useState<'level' | 'rarity'>('level');
   const [prestigeLevel, setPrestigeLevel] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -87,10 +88,10 @@ export default function ProfilePage() {
         id: `mek${i}`,
         number: mekNumber,
         level: ((i * 3) % 10) + 1,
-        goldPerHour: ((i * 17) % 400) + 100,
+        rarityRank: ((i * 17) % 4000) + 1, // 1-4000 rarity rank
         traits,
         sourceKey,
-        equipped: i === 1 ? { 
+        equipped: i === 1 ? {
           head: { id: 'h1', name: 'Battle Helm', equipped: true, rarity: 'rare', icon: '🎩', slot: 'head' as const },
           body: { id: 'b1', name: 'War Armor', equipped: true, rarity: 'epic', icon: '🎮', slot: 'body' as const }
         } : {}
@@ -109,9 +110,9 @@ export default function ProfilePage() {
     equipment: [],
     meks: generateMockMeks(),
     frames: [
-      { id: 'f1', number: 101, level: 5, goldPerHour: 150, name: 'Electro Frame', description: 'Reach 500 gold/hr' },
-      { id: 'f2', number: 202, level: 3, goldPerHour: 100, name: 'Speed Frame', description: 'Complete 10 battles' },
-      { id: 'f3', number: 303, level: 8, goldPerHour: 250, name: 'Champion Frame', description: 'Win tournament' },
+      { id: 'f1', number: 101, level: 5, name: 'Electro Frame', description: 'Reach Level 10' },
+      { id: 'f2', number: 202, level: 3, name: 'Speed Frame', description: 'Complete 10 battles' },
+      { id: 'f3', number: 303, level: 8, name: 'Champion Frame', description: 'Win tournament' },
     ]
   };
   

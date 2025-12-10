@@ -60,60 +60,66 @@ export const traitVariations = [
   "Gatherer", "Crafter", "Builder", "Destroyer", "Creator", "Innovator"
 ];
 
-export function getAllVariations() {
-  const variations = [];
-  
+interface Variation {
+  name: string;
+  type: 'head' | 'body' | 'trait';
+  xp: number;
+}
+
+export function getAllVariations(): Variation[] {
+  const variations: Variation[] = [];
+
   // Add heads with type and xp
-  headVariations.forEach((name: any, index: number) => {
+  headVariations.forEach((name: string, index: number) => {
     variations.push({
       name,
       type: 'head',
       xp: 100 + (index * 50)
     });
   });
-  
+
   // Add bodies with type and xp
-  bodyVariations.forEach((name: any, index: number) => {
+  bodyVariations.forEach((name: string, index: number) => {
     variations.push({
       name,
       type: 'body',
       xp: 150 + (index * 50)
     });
   });
-  
+
   // Add traits with type and xp
-  traitVariations.forEach((name: any, index: number) => {
+  traitVariations.forEach((name: string, index: number) => {
     variations.push({
       name,
       type: 'trait',
       xp: 200 + (index * 50)
     });
   });
-  
+
   return variations;
 }
 
-export function getVariationsByType(type: 'heads' | 'bodies' | 'traits') {
+export function getVariationsByType(type: 'head' | 'body' | 'trait'): Variation[] {
   const variations = getAllVariations();
-  return variations[type] || [];
+  return variations.filter(v => v.type === type);
 }
 
-export function getRandomVariation(type: 'heads' | 'bodies' | 'traits') {
+export function getRandomVariation(type: 'head' | 'body' | 'trait'): Variation | undefined {
   const variations = getVariationsByType(type);
   return variations[Math.floor(Math.random() * variations.length)];
 }
 
-export function searchVariations(query: string, type?: 'heads' | 'bodies' | 'traits') {
+export function searchVariations(query: string, type?: 'head' | 'body' | 'trait') {
   const allVariations = getAllVariations();
   const searchLower = query.toLowerCase();
-  
+
   if (type) {
-    return allVariations[type].filter((v: any) => v.toLowerCase().includes(searchLower));
+    return allVariations.filter(v => v.type === type && v.name.toLowerCase().includes(searchLower));
   }
-  
+
   return {
-    heads: allVariations.heads.filter((v: any) => v.toLowerCase().includes(searchLower)),
-    bodies: allVariations.bodies.filter((v: any) => v.toLowerCase().includes(searchLower)),
-    traits: allVariations.traits.filter((v: any) => v.toLowerCase().includes(searchLower))
+    heads: allVariations.filter(v => v.type === 'head' && v.name.toLowerCase().includes(searchLower)),
+    bodies: allVariations.filter(v => v.type === 'body' && v.name.toLowerCase().includes(searchLower)),
+    traits: allVariations.filter(v => v.type === 'trait' && v.name.toLowerCase().includes(searchLower))
   };
 }

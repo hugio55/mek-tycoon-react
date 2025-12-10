@@ -97,6 +97,12 @@ export async function middleware(request: NextRequest) {
   // Fetch site settings from database
   const settings = await getSiteSettings(request);
 
+  // Safety check - if settings is null, use safe defaults
+  if (!settings) {
+    console.log('[🗺️MIDDLEWARE] Settings unavailable, allowing request:', pathname);
+    return NextResponse.next();
+  }
+
   // 🚨 PRIORITY 1: MAINTENANCE MODE (NUCLEAR OPTION)
   if (settings.maintenanceMode) {
     // Allow only maintenance page and admin routes during maintenance

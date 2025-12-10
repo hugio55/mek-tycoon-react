@@ -138,7 +138,7 @@ export default function CorporationPage() {
             {corpData.companyName}
           </h2>
           <div className="text-gray-400 font-mono text-lg">
-            {corpData.mekCount} Meks • {corpData.goldPerHour.toFixed(1)} Gold/hr
+            {corpData.mekCount} Meks
           </div>
           {isSyncing && (
             <div className="mt-3 text-yellow-400 text-sm font-mono animate-pulse">
