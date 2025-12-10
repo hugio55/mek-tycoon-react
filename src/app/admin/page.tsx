@@ -20,7 +20,7 @@ import GoldBackupAdmin from '@/components/GoldBackupAdmin';
 import WalletManagementAdmin from '@/components/WalletManagementAdmin';
 import NftPurchasePlanner from '@/components/NftPurchasePlanner';
 import VariationsHub from '@/components/VariationsHub';
-import CommemorativeToken1Admin from '@/components/CommemorativeToken1Admin';
+// REMOVED: CommemorativeToken1Admin - Legacy global eligibility system replaced by campaign-based eligibility
 import SourceKeyMigrationAdmin from '@/components/SourceKeyMigrationAdmin';
 import WhitelistManagerAdmin from '@/components/WhitelistManagerAdmin';
 import RouteVisualization from '@/components/RouteVisualization';
