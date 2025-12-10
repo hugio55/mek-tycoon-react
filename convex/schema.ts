@@ -47,7 +47,9 @@ export default defineSchema({
     isGenesis: v.optional(v.boolean()), // True for special genesis meks (101-010-101, etc)
     rarityTier: v.optional(v.string()), // Common, Uncommon, Rare, Epic, Legendary
 
-    // Phase II: goldRate field REMOVED - gold now comes from Job Slots, not individual Meks
+    // Phase II: goldRate no longer drives passive income (Job Slots do that now)
+    // But this rarity-based value is useful for Job Slot modifiers, display, or future features
+    goldRate: v.optional(v.float64()),
 
     // Tenure system (essence slot tracking)
     tenurePoints: v.optional(v.number()), // Accumulated tenure points (1 point/second when slotted)
