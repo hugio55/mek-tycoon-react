@@ -1001,15 +1001,13 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                     </button>
 
                     {/* MEK Button - Share verified Mek ownership */}
-                    {!(currentConversation && isSupportConversation(currentConversation)) && (
-                      <button
-                        onClick={() => setShowMekSelector(true)}
-                        className="px-2 py-1 rounded-lg text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 hover:bg-yellow-500/30 hover:border-yellow-500/60 transition-all"
-                        title="Share a Mek you own"
-                      >
-                        MEK
-                      </button>
-                    )}
+                    <button
+                      onClick={() => setShowMekSelector(true)}
+                      className="px-2 py-1 rounded-lg text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 hover:bg-yellow-500/30 hover:border-yellow-500/60 transition-all"
+                      title="Share a Mek you own"
+                    >
+                      MEK
+                    </button>
 
                     <input
                       type="text"

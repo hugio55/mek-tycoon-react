@@ -233,6 +233,32 @@ function WhitelistManagerAdminContent({ client, mutationsEnabled }: WhitelistMan
 
   return (
     <div>
+      {/* Production Banner */}
+      <div
+        className={`rounded-lg p-4 mb-6 transition-all ${
+          mutationsEnabled
+            ? 'bg-red-900/30 border-2 border-red-500/50'
+            : 'bg-emerald-900/20 border border-emerald-500/30'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className={`w-3 h-3 rounded-full ${mutationsEnabled ? 'bg-red-500' : 'bg-emerald-500'}`} />
+            <div className={`absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-75 ${mutationsEnabled ? 'bg-red-500' : 'bg-emerald-500'}`} />
+          </div>
+          <div>
+            <div className={`font-bold ${mutationsEnabled ? 'text-red-400' : 'text-emerald-400'}`}>
+              Whitelist Manager - Production Data
+            </div>
+            <div className="text-sm text-gray-400">
+              {mutationsEnabled
+                ? '⚠️ EDITING ENABLED - Changes affect live users!'
+                : 'Read-only mode - Viewing live production data'}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
