@@ -24,8 +24,9 @@ type LightboxStep =
   | 'address_entry'        // Initial step - enter stake address
   | 'checking_veteran'     // Checking if address is Phase I veteran
   | 'veteran_welcome'      // Phase I veteran recognized - show welcome
-  | 'name_reservation'     // Veteran wants to reserve/change name
-  | 'wallet_verification'  // Verifying wallet ownership for name reservation
+  | 'wallet_selection'     // Select wallet to verify ownership (before name input)
+  | 'wallet_verification'  // Verifying wallet ownership
+  | 'name_input'           // Enter corporation name (after wallet verified)
   | 'name_confirmed'       // Name successfully reserved/changed
   | 'normal_signup'        // Non-veteran signup flow
   | 'success';             // Final success state
@@ -65,8 +66,9 @@ export default function BetaSignupLightbox({
     statusMessage: walletStatusMessage,
   } = useWalletVerification({
     onVerificationSuccess: async () => {
-      console.log('[🎮BETA-VETERAN] Wallet verified, proceeding with name reservation');
-      await reserveCorporationName();
+      console.log('[🎮BETA-VETERAN] Wallet verified, proceeding to name input');
+      // Go to name input step after wallet verification succeeds
+      setStep('name_input');
     },
     onVerificationError: (error) => {
       console.error('[🎮BETA-VETERAN] Wallet verification failed:', error);
@@ -254,7 +256,8 @@ export default function BetaSignupLightbox({
   };
 
   const handleStartNameReservation = () => {
-    setStep('name_reservation');
+    // Go to wallet selection first (verify ownership before name input)
+    setStep('wallet_selection');
   };
 
   const handleSkipNameReservation = () => {
@@ -268,9 +271,9 @@ export default function BetaSignupLightbox({
     await verifyWallet(wallet, stakeAddress);
   };
 
-  const handleBackToNameEntry = () => {
+  const handleBackToWalletSelection = () => {
     resetWalletVerification();
-    setStep('name_reservation');
+    setStep('wallet_selection');
   };
 
   const handleClose = () => {
@@ -302,10 +305,12 @@ export default function BetaSignupLightbox({
         return renderLoading('Checking your status...');
       case 'veteran_welcome':
         return renderVeteranWelcome();
-      case 'name_reservation':
-        return renderNameReservation();
+      case 'wallet_selection':
+        return renderWalletSelection();
       case 'wallet_verification':
         return renderWalletVerification();
+      case 'name_input':
+        return renderNameInput();
       case 'name_confirmed':
         return renderNameConfirmed();
       case 'normal_signup':
@@ -458,20 +463,81 @@ export default function BetaSignupLightbox({
     </>
   );
 
-  const renderNameReservation = () => (
+  const renderWalletSelection = () => (
+    <>
+      <div className="text-center mb-6">
+        <h2 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-2">
+          Verify Wallet Ownership
+        </h2>
+        <p className="text-sm sm:text-base text-white/60 font-light leading-relaxed">
+          To reserve your corporation name, please verify that you own this wallet by signing a message.
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        {/* Wallet Selection */}
+        {!isMobileBrowser && availableWallets.length > 0 && (
+          <div>
+            <p className="text-sm sm:text-base text-white/60 mb-3">Select your wallet:</p>
+            <div className="grid grid-cols-2 gap-3">
+              {availableWallets.map((wallet) => (
+                <button
+                  key={wallet.name}
+                  onClick={() => handleVerifyWallet(wallet)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-yellow-500/30 transition-all"
+                >
+                  <img src={wallet.icon} alt={wallet.name} className="w-8 h-8 rounded" />
+                  <span className="text-base text-white/80">{wallet.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Mobile browser notice */}
+        {isMobileBrowser && (
+          <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+            <p className="text-sm sm:text-base text-blue-300">
+              Mobile wallet connection requires opening this page in your wallet's built-in browser.
+              Copy your stake address and open this site from within your wallet app.
+            </p>
+          </div>
+        )}
+
+        {/* No wallets found */}
+        {!isMobileBrowser && walletsDetected && availableWallets.length === 0 && (
+          <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+            <p className="text-sm sm:text-base text-yellow-300">
+              No Cardano wallets detected. Please install a wallet extension (Nami, Eternl, Flint, etc.)
+              and refresh this page.
+            </p>
+          </div>
+        )}
+
+        <button
+          onClick={() => setStep('veteran_welcome')}
+          className="w-full py-3 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
+        >
+          ← Back
+        </button>
+      </div>
+    </>
+  );
+
+  const renderNameInput = () => (
     <>
       <div className="text-center mb-6">
         <h2 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-2">
           Reserve Your Corporation Name
         </h2>
-        <p className="text-sm text-white/60 font-light leading-relaxed">
-          Enter the name you want for Phase II. To verify ownership, you'll need to sign a message with your wallet.
+        <p className="text-sm sm:text-base text-white/60 font-light leading-relaxed">
+          Wallet verified! Enter the name you want for Phase II.
         </p>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label htmlFor="corp-name" className="block text-sm text-white/60 mb-2">
+          <label htmlFor="corp-name" className="block text-sm sm:text-base text-white/60 mb-2">
             Corporation Name
           </label>
           <input
@@ -484,7 +550,8 @@ export default function BetaSignupLightbox({
             }}
             placeholder="Enter corporation name"
             maxLength={30}
-            className={`w-full px-4 py-3 text-base bg-white/5 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:bg-white/10 transition-all ${
+            disabled={isReservingName}
+            className={`w-full px-4 py-3 text-base sm:text-lg bg-white/5 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:bg-white/10 transition-all ${
               nameError ? 'border-red-500/50' : 'border-white/10 focus:border-yellow-500/50'
             }`}
             style={{ minHeight: '48px' }}
@@ -499,49 +566,29 @@ export default function BetaSignupLightbox({
           </div>
         </div>
 
-        {/* Wallet Selection */}
-        {!isMobileBrowser && availableWallets.length > 0 && (
-          <div>
-            <p className="text-sm text-white/60 mb-3">Select wallet to verify ownership:</p>
-            <div className="grid grid-cols-2 gap-2">
-              {availableWallets.map((wallet) => (
-                <button
-                  key={wallet.name}
-                  onClick={() => handleVerifyWallet(wallet)}
-                  disabled={!newCorporationName.trim()}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-yellow-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  <img src={wallet.icon} alt={wallet.name} className="w-6 h-6 rounded" />
-                  <span className="text-sm text-white/80">{wallet.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Mobile browser notice */}
-        {isMobileBrowser && (
-          <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-            <p className="text-sm text-blue-300">
-              Mobile wallet connection requires opening this page in your wallet's built-in browser.
-              Copy your stake address and open this site from within your wallet app.
-            </p>
-          </div>
-        )}
-
-        {/* No wallets found */}
-        {!isMobileBrowser && walletsDetected && availableWallets.length === 0 && (
-          <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-            <p className="text-sm text-yellow-300">
-              No Cardano wallets detected. Please install a wallet extension (Nami, Eternl, Flint, etc.)
-              and refresh this page.
-            </p>
-          </div>
-        )}
+        <button
+          onClick={reserveCorporationName}
+          disabled={!newCorporationName.trim() || isReservingName}
+          className="w-full py-3 sm:py-4 text-base font-semibold tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl hover:from-yellow-300 hover:to-yellow-400 disabled:from-gray-600 disabled:to-gray-700 disabled:text-white/50 disabled:cursor-not-allowed transition-all duration-300 touch-manipulation shadow-lg shadow-yellow-500/20 active:scale-[0.98]"
+          style={{ minHeight: '48px', WebkitTapHighlightColor: 'transparent' }}
+        >
+          {isReservingName ? (
+            <span className="inline-flex items-center gap-2">
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Reserving...
+            </span>
+          ) : (
+            'Reserve Name'
+          )}
+        </button>
 
         <button
           onClick={() => setStep('veteran_welcome')}
-          className="w-full py-3 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
+          disabled={isReservingName}
+          className="w-full py-3 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 disabled:opacity-50 transition-colors touch-manipulation"
         >
           ← Back
         </button>
@@ -585,7 +632,7 @@ export default function BetaSignupLightbox({
 
         {/* Back button (always visible) */}
         <button
-          onClick={handleBackToNameEntry}
+          onClick={handleBackToWalletSelection}
           className="py-2 px-4 text-sm font-medium text-white/60 hover:text-white/80 transition-colors"
         >
           ← Try different wallet
