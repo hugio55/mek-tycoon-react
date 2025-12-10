@@ -847,7 +847,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
             </div>
 
             {/* Compose Area */}
-            <div className="px-4 pt-4 pb-5 border-t border-white/10">
+            <div className="px-4 pt-4 pb-8 border-t border-white/10">
               {isDisabled ? (
                 <div className="text-center py-3">
                   <div className="text-red-400/70 text-sm">

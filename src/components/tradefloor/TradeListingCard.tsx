@@ -475,7 +475,7 @@ export default function TradeListingCard({
             className="relative flex flex-col items-center gap-4"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Large Image */}
+            {/* Large Image - Using 1000px resolution */}
             <div
               className="relative rounded-2xl overflow-hidden"
               style={{
@@ -485,9 +485,9 @@ export default function TradeListingCard({
               }}
             >
               <img
-                src={cleanSourceKey ? getMediaUrl(`/mek-images/500px/${cleanSourceKey}.webp`) : getMediaUrl("/mek-images/placeholder.webp")}
+                src={cleanSourceKey ? getMediaUrl(`/mek-images/1000px/${cleanSourceKey}.webp`) : getMediaUrl("/mek-images/placeholder.webp")}
                 alt={listing.listedMekAssetName || "Listed Mek"}
-                className="w-[400px] h-[400px] max-w-[90vw] max-h-[70vh] object-contain"
+                className="w-[600px] h-[600px] max-w-[90vw] max-h-[80vh] object-contain"
                 style={{ background: 'rgba(0,0,0,0.3)' }}
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = getMediaUrl("/mek-images/placeholder.webp");

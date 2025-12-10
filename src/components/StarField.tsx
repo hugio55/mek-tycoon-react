@@ -38,7 +38,7 @@ const StarField = () => {
 
     const STAR_COUNT_LAYER1 = 120;
     const STAR_COUNT_LAYER2 = 20;
-    const SPEED_LAYER1 = 1.0;
+    const SPEED_LAYER1 = 0.6;
     const SPEED_LAYER2 = 30;
     const MAX_DEPTH = 1000;
     const MIN_DEPTH = 1;
