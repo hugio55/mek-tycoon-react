@@ -16,21 +16,30 @@ export default function BetaSignupsViewer() {
   const [signups, setSignups] = useState<BetaSignup[] | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Debug logging
+  console.log('[🎮BETA-VIEWER] Context:', { hasClient: !!client, selectedDatabase });
+
   // Fetch signups from the selected database
   useEffect(() => {
-    if (!client) return;
+    console.log('[🎮BETA-VIEWER] useEffect triggered:', { hasClient: !!client, selectedDatabase });
+    if (!client) {
+      console.log('[🎮BETA-VIEWER] No client available, skipping fetch');
+      return;
+    }
 
     let cancelled = false;
 
     const fetchSignups = async () => {
+      console.log('[🎮BETA-VIEWER] Fetching signups from:', selectedDatabase);
       try {
         const data = await client.query(api.betaSignups.getAllBetaSignups, {});
+        console.log('[🎮BETA-VIEWER] Received data:', { count: data?.length || 0, data });
         if (!cancelled) {
           setSignups(data || []);
           setLoading(false);
         }
       } catch (error) {
-        console.error('[BetaSignupsViewer] Error fetching signups:', error);
+        console.error('[🎮BETA-VIEWER] Error fetching signups:', error);
         if (!cancelled) {
           setSignups([]);
           setLoading(false);

@@ -117,16 +117,27 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
   }, [selectedDatabase, hasTrout, hasSturgeon]);
 
   const getClient = (): ConvexReactClient | null => {
-    if (!mounted) return null;
+    if (!mounted) {
+      console.log('[🎮DATABASE-CTX] Not mounted yet, returning null client');
+      return null;
+    }
 
     if (selectedDatabase === 'sturgeon') {
       // If main URL is Sturgeon, use window.convex
       // Otherwise use sturgeonClient (from secondary URL)
-      return mainIsSturgeon ? (window as any).convex : sturgeonClient;
+      const client = mainIsSturgeon ? (window as any).convex : sturgeonClient;
+      console.log('[🎮DATABASE-CTX] Returning Sturgeon client:', {
+        hasClient: !!client,
+        mainIsSturgeon,
+        hasSturgeonClient: !!sturgeonClient
+      });
+      return client;
     } else {
       // If main URL is Trout, use window.convex
       // Otherwise we'd need a troutClient (but this case shouldn't happen in practice)
-      return mainIsTrout ? (window as any).convex : null;
+      const client = mainIsTrout ? (window as any).convex : null;
+      console.log('[🎮DATABASE-CTX] Returning Trout client:', { hasClient: !!client, mainIsTrout });
+      return client;
     }
   };
 

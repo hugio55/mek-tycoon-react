@@ -295,22 +295,93 @@ export default function EditListingLightbox({
                 outline: 'none',
               }}
             />
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value as any)}
-              className="px-4 py-2 rounded-lg text-white cursor-pointer"
-              style={{
-                fontFamily: 'Play, sans-serif',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                outline: 'none',
-              }}
-            >
-              <option value="all">All Types</option>
-              <option value="head">Heads</option>
-              <option value="body">Bodies</option>
-              <option value="trait">Traits</option>
-            </select>
+            {/* Custom Type Dropdown (portal-based, matching sort dropdown style) */}
+            <div className="relative">
+              <button
+                ref={typeDropdownBtnRef}
+                onClick={() => {
+                  if (!typeDropdownOpen && typeDropdownBtnRef.current) {
+                    setTypeDropdownRect(typeDropdownBtnRef.current.getBoundingClientRect());
+                  }
+                  setTypeDropdownOpen(!typeDropdownOpen);
+                }}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all min-w-[120px]"
+                style={{
+                  background: 'linear-gradient(105deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0.06) 100%)',
+                  backdropFilter: 'blur(4px) brightness(1.25)',
+                  WebkitBackdropFilter: 'blur(4px) brightness(1.25)',
+                  border: typeDropdownOpen
+                    ? '1px solid rgba(34,211,238,0.4)'
+                    : '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: typeDropdownOpen ? '8px 8px 0 0' : '8px',
+                  color: 'rgba(255,255,255,0.8)',
+                  fontFamily: "'Play', sans-serif",
+                }}
+              >
+                <span>
+                  {typeFilter === 'all' ? 'All Types' : typeFilter === 'head' ? 'Heads' : typeFilter === 'body' ? 'Bodies' : 'Traits'}
+                </span>
+                <svg
+                  className={`w-3.5 h-3.5 transition-transform duration-200 flex-shrink-0 ${typeDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Floating Dropdown Menu - Rendered via Portal */}
+              {mounted && typeDropdownOpen && typeDropdownRect && createPortal(
+                <div
+                  className="fixed"
+                  style={{
+                    zIndex: 99999,
+                    top: typeDropdownRect.bottom,
+                    left: typeDropdownRect.left,
+                    width: typeDropdownRect.width,
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.08) 100%)',
+                    backdropFilter: 'blur(8px) brightness(1.1)',
+                    WebkitBackdropFilter: 'blur(8px) brightness(1.1)',
+                    border: '1px solid rgba(34,211,238,0.4)',
+                    borderTop: 'none',
+                    borderRadius: '0 0 8px 8px',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                  }}
+                >
+                  {[
+                    { id: 'all' as const, name: 'All Types' },
+                    { id: 'head' as const, name: 'Heads' },
+                    { id: 'body' as const, name: 'Bodies' },
+                    { id: 'trait' as const, name: 'Traits' },
+                  ].map((option, index) => (
+                    <button
+                      key={option.id}
+                      onClick={() => {
+                        setTypeFilter(option.id);
+                        setTypeDropdownOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm tracking-wide transition-all whitespace-nowrap hover:bg-white/10 hover:pl-4 hover:brightness-125"
+                      style={{
+                        background: typeFilter === option.id
+                          ? 'rgba(34,211,238,0.25)'
+                          : 'transparent',
+                        color: typeFilter === option.id
+                          ? '#22d3ee'
+                          : 'rgba(255,255,255,0.8)',
+                        fontFamily: "'Play', sans-serif",
+                        borderBottom: index < 3
+                          ? '1px solid rgba(255,255,255,0.1)'
+                          : 'none',
+                      }}
+                    >
+                      {option.name}
+                    </button>
+                  ))}
+                </div>,
+                document.body
+              )}
+            </div>
           </div>
 
           {/* Variation Grid - Fixed height to prevent lightbox resizing */}

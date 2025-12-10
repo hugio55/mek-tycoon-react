@@ -724,7 +724,6 @@ Check console for full timeline.
   }
 
   return (
-    <DatabaseProvider>
       <div className="space-y-4">
         <div className="flex items-center gap-3 mb-6 border-b border-gray-700 pb-2">
         <button
@@ -1739,7 +1738,6 @@ Check console for full timeline.
 
       {/* Phase II: Removed Boost Sync Diagnostic Modal - goldMining table was deleted */}
       </div>
-    </DatabaseProvider>
   );
 }
 
