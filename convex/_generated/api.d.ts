@@ -94,7 +94,6 @@ import type * as lib_tenureCalculations from "../lib/tenureCalculations.js";
 import type * as loaderSettings from "../loaderSettings.js";
 import type * as marketplace from "../marketplace.js";
 import type * as mechanismTiers from "../mechanismTiers.js";
-import type * as mekGoldRates from "../mekGoldRates.js";
 import type * as mekSuccessRates from "../mekSuccessRates.js";
 import type * as mekTreeBuffTables from "../mekTreeBuffTables.js";
 import type * as mekTreeCategories from "../mekTreeCategories.js";
@@ -250,7 +249,6 @@ declare const fullApi: ApiFromModules<{
   loaderSettings: typeof loaderSettings;
   marketplace: typeof marketplace;
   mechanismTiers: typeof mechanismTiers;
-  mekGoldRates: typeof mekGoldRates;
   mekSuccessRates: typeof mekSuccessRates;
   mekTreeBuffTables: typeof mekTreeBuffTables;
   mekTreeCategories: typeof mekTreeCategories;

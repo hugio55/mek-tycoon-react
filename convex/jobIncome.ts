@@ -46,77 +46,16 @@ export const calculateBaseIncomeRate = query({
     })),
   },
   handler: async (ctx, args) => {
-    // Get the current rate configuration
-    const rateConfig = await ctx.db
-      .query("mekGoldRateSaves")
-      .withIndex("by_current", (q: any) => q.eq("isCurrentConfig", true))
-      .first();
-
-    if (!rateConfig) {
-      // Default linear rates if no config exists
-      // Phase II: Using goldPerDay instead of goldPerHour
-      return args.meks.map((mek) => {
-        const rank = mek.rarityRank || 2000;
-        // Linear scale from 2400 gold/day (rank 1) to 240 gold/day (rank 4000)
-        // This is equivalent to 100 gold/hr to 10 gold/hr from Phase I
-        const goldPerDay = Math.max(240, 2400 - (rank - 1) * 0.54);
-        return {
-          assetId: mek.assetId,
-          goldPerDay: Math.round(goldPerDay * 100) / 100,
-        };
-      });
-    }
-
-    // Calculate rates based on configured curve
-    const { curveType, minGold, maxGold, steepness, midPoint, totalMeks } = rateConfig;
-
-    // Convert hourly config to daily (multiply by 24)
-    const minDaily = (minGold || 10) * 24;
-    const maxDaily = (maxGold || 100) * 24;
-
+    // Phase II: Simple linear rate calculation based on rarity rank
+    // The old mekGoldRateSaves curve config table has been removed
+    // Using fixed linear scale: 2400 gold/day (rank 1) to 240 gold/day (rank 4000)
     return args.meks.map((mek) => {
-      const rank = mek.rarityRank || totalMeks / 2;
-      const normalizedRank = (rank - 1) / (totalMeks - 1);
-
-      let goldPerDay: number;
-
-      switch (curveType) {
-        case 'exponential':
-          goldPerDay = maxDaily * Math.exp(-steepness * normalizedRank);
-          break;
-
-        case 'logarithmic':
-          goldPerDay = maxDaily - (maxDaily - minDaily) * Math.log(1 + steepness * normalizedRank) / Math.log(1 + steepness);
-          break;
-
-        case 'sigmoid':
-          const sigmoidX = (rank - midPoint) / (totalMeks / 10);
-          const sigmoidValue = 1 / (1 + Math.exp(steepness * sigmoidX));
-          goldPerDay = minDaily + (maxDaily - minDaily) * sigmoidValue;
-          break;
-
-        case 'linear':
-        default:
-          goldPerDay = maxDaily - (maxDaily - minDaily) * normalizedRank;
-          break;
-      }
-
-      // Apply rounding based on config
-      switch (rateConfig.rounding) {
-        case 'whole':
-          goldPerDay = Math.round(goldPerDay);
-          break;
-        case '1decimal':
-          goldPerDay = Math.round(goldPerDay * 10) / 10;
-          break;
-        case '2decimal':
-          goldPerDay = Math.round(goldPerDay * 100) / 100;
-          break;
-      }
-
+      const rank = mek.rarityRank || 2000;
+      // Linear scale: rarest Meks earn most, common Meks earn least
+      const goldPerDay = Math.max(240, 2400 - (rank - 1) * 0.54);
       return {
         assetId: mek.assetId,
-        goldPerDay: Math.max(minDaily, Math.min(maxDaily, goldPerDay)),
+        goldPerDay: Math.round(goldPerDay * 100) / 100,
       };
     });
   },

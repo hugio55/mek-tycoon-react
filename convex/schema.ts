@@ -1407,32 +1407,12 @@ export default defineSchema({
     .index("by_name", ["saveName"])
     .index("by_current", ["isCurrentConfig"]),
 
-  // Saved configurations for Mek Gold Rate curves
-  mekGoldRateSaves: defineTable({
-    saveName: v.string(), // User-defined name for this save
-    timestamp: v.number(), // Unix timestamp when saved
-    curveType: v.union(
-      v.literal('linear'),
-      v.literal('exponential'),
-      v.literal('logarithmic'),
-      v.literal('sigmoid')
-    ),
-    minGold: v.number(), // Minimum gold per hour (for rarest)
-    maxGold: v.number(), // Maximum gold per hour (for most common)
-    steepness: v.number(),
-    midPoint: v.number(),
-    totalMeks: v.number(),
-    rounding: v.optional(v.union(
-      v.literal('whole'),
-      v.literal('1decimal'),
-      v.literal('2decimal'),
-      v.literal('none')
-    )), // Rounding option for gold rates
-    isCurrentConfig: v.optional(v.boolean()), // Flag to mark the active configuration
-  })
-    .index("by_timestamp", ["timestamp"])
-    .index("by_name", ["saveName"])
-    .index("by_current", ["isCurrentConfig"]),
+  // =============================================================================
+  // PHASE II NOTE: mekGoldRateSaves table has been DELETED
+  // =============================================================================
+  // The old rank-based gold rate curve system is obsolete.
+  // Gold now comes from Job Slots, not individual Mek rarity.
+  // =============================================================================
 
   // Variation buff configuration
   variationBuffConfig: defineTable({

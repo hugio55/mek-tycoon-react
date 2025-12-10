@@ -13,7 +13,7 @@ import StoryClimbConfig from '@/components/StoryClimbConfig';
 import DifficultyAdminConfig from '@/components/DifficultyAdminConfig';
 import BuffCategoriesAdmin from '@/components/BuffCategoriesAdmin';
 import BuffCategoriesV2 from '@/components/admin/BuffCategoriesV2';
-import MekBaseConfig from '@/components/MekBaseConfig';
+// MekBaseConfig removed - Phase II: Gold now comes from Job Slots, not Mek rarity
 import MekTalentTreeConfig from '@/components/MekTalentTreeConfig';
 import MekDetailViewer from '@/components/MekDetailViewer';
 import GoldBackupAdmin from '@/components/GoldBackupAdmin';
@@ -2343,25 +2343,8 @@ export default function AdminMasterDataPage() {
               <div className="p-4">
                 <p className="text-gray-400 mb-4">Configure core Mek systems including talent trees and base success rates</p>
 
-                {/* Mek Base Configuration Subsection */}
-                <div className="mb-4 ml-6 bg-black/70 border border-yellow-500/20 rounded">
-                  <button
-                    onClick={() => toggleSection('mek-base-config')}
-                    className="w-full p-3 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">📊</span>
-                      <h4 className="text-sm font-semibold text-yellow-300">Mek Base Configuration</h4>
-                      <span className="px-2 py-0.5 bg-green-600/30 text-green-400 text-xs font-bold rounded">ACTIVE</span>
-                    </div>
-                    <span className="text-gray-400 text-sm">{expandedSections.has('mek-base-config') ? '▼' : '▶'}</span>
-                  </button>
-                  {expandedSections.has('mek-base-config') && (
-                    <div className="p-4 border-t border-yellow-500/20">
-                      <MekBaseConfig />
-                    </div>
-                  )}
-                </div>
+                {/* Mek Base Configuration - REMOVED in Phase II */}
+                {/* Gold now comes from Job Slots, not individual Mek rarity curves */}
 
                 {/* Talent Tree Nodes Subsection */}
                 <div className="mb-4 ml-6 bg-black/70 border border-yellow-500/20 rounded">
