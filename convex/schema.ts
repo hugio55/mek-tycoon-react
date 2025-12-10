@@ -334,8 +334,15 @@ export default defineSchema({
     // ═══════════════════════════════════════════════════════════════════════════
     gold: v.number(), // Current gold balance (always needed, stays here)
 
-    // LEGACY: Essence will be moved to userEssence table (291 types as rows)
-    // Keep this for backwards compatibility during migration
+    // ═══════════════════════════════════════════════════════════════════════════
+    // DEPRECATED: totalEssence - DO NOT USE FOR NEW CODE
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Real essence data is stored in userEssence table (291 types as sparse rows)
+    // This field is ONLY kept for schema compatibility - all values are 0
+    // All essence reads should use: getUserEssenceBalance(), getAllUserEssenceBalances()
+    // All essence writes should use: addUserEssence(), deductUserEssence(), setUserEssenceBalance()
+    // These helpers are in: convex/lib/userEssenceHelpers.ts
+    // ═══════════════════════════════════════════════════════════════════════════
     totalEssence: v.object({
       stone: v.number(),
       disco: v.number(),

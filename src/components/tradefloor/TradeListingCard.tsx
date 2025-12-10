@@ -233,17 +233,19 @@ export default function TradeListingCard({
                 Make Offer
               </button>
 
-              {/* Tooltip (desktop) - anchored to right to prevent clipping */}
+              {/* Tooltip (desktop) - glass morphism style matching page aesthetic */}
               {showOwnListingTooltip && (
                 <div
-                  className="absolute bottom-full right-0 mb-2 px-3 py-2 rounded-lg whitespace-nowrap z-50"
+                  className="absolute bottom-full right-0 mb-2 px-4 py-2.5 rounded-xl whitespace-nowrap z-50"
                   style={{
-                    background: 'rgba(0, 0, 0, 0.9)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(34, 211, 238, 0.3)',
                     fontFamily: 'Play, sans-serif',
-                    fontSize: '12px',
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                    fontSize: '13px',
+                    color: '#22d3ee',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(34, 211, 238, 0.1)',
                   }}
                 >
                   This is your own listing
@@ -253,9 +255,9 @@ export default function TradeListingCard({
                     style={{
                       width: 0,
                       height: 0,
-                      borderLeft: '6px solid transparent',
-                      borderRight: '6px solid transparent',
-                      borderTop: '6px solid rgba(0, 0, 0, 0.9)',
+                      borderLeft: '8px solid transparent',
+                      borderRight: '8px solid transparent',
+                      borderTop: '8px solid rgba(34, 211, 238, 0.3)',
                     }}
                   />
                 </div>

@@ -439,7 +439,7 @@ export default function TradeFloorPage() {
                   </svg>
                 </button>
 
-                {/* Floating Dropdown Menu - Rendered via Portal */}
+                {/* Floating Dropdown Menu - Rendered via Portal (identical to Market) */}
                 {mounted && sortDropdownOpen && sortDropdownRect && createPortal(
                   <div
                     className="fixed"
@@ -448,13 +448,13 @@ export default function TradeFloorPage() {
                       top: sortDropdownRect.bottom,
                       left: sortDropdownRect.left,
                       width: sortDropdownRect.width,
-                      background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%)',
-                      backdropFilter: 'blur(12px)',
-                      WebkitBackdropFilter: 'blur(12px)',
+                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.08) 100%)',
+                      backdropFilter: 'blur(8px) brightness(1.1)',
+                      WebkitBackdropFilter: 'blur(8px) brightness(1.1)',
                       border: '1px solid rgba(34,211,238,0.4)',
                       borderTop: 'none',
                       borderRadius: '0 0 8px 8px',
-                      boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
                     }}
                   >
                     {SORT_OPTIONS.map((option, index) => (
@@ -464,7 +464,7 @@ export default function TradeFloorPage() {
                           setBrowseSortOption(option.id);
                           setSortDropdownOpen(false);
                         }}
-                        className="w-full px-3 py-2.5 text-left text-sm tracking-wide transition-all whitespace-nowrap"
+                        className="w-full px-3 py-2 text-left text-sm tracking-wide transition-all whitespace-nowrap hover:bg-white/10 hover:pl-4 hover:brightness-125"
                         style={{
                           background: browseSortOption === option.id
                             ? 'rgba(34,211,238,0.25)'
@@ -474,20 +474,8 @@ export default function TradeFloorPage() {
                             : 'rgba(255,255,255,0.8)',
                           fontFamily: "'Play', sans-serif",
                           borderBottom: index < SORT_OPTIONS.length - 1
-                            ? '1px solid rgba(255,255,255,0.08)'
+                            ? '1px solid rgba(255,255,255,0.1)'
                             : 'none',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (browseSortOption !== option.id) {
-                            e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-                            e.currentTarget.style.paddingLeft = '16px';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (browseSortOption !== option.id) {
-                            e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.paddingLeft = '12px';
-                          }
                         }}
                       >
                         {option.name}
