@@ -316,7 +316,8 @@ const LEVEL_COSTS = [
 ];
 
 const MAX_MEK_LEVEL = 10;
-const BOOST_PER_LEVEL = 10; // 10% boost per level
+// Phase II: BOOST_PER_LEVEL removed - gold rate boosts are obsolete
+// Mek levels now used for talent tree skill points (mekLevel * 100 = skill points)
 
 /**
  * Get the cost to level up a Mek
@@ -340,7 +341,8 @@ export const getMekLevelCost = query({
       canLevelUp: true,
       cost,
       nextLevel: args.currentLevel + 1,
-      boostGain: BOOST_PER_LEVEL
+      // Phase II: boostGain removed - gold rate boosts obsolete
+      skillPointsGain: 100, // Each level grants 100 talent tree skill points
     };
   },
 });
@@ -422,19 +424,14 @@ export const levelUpMek = mutation({
 
     // Calculate new values
     const newLevel = currentLevel + 1;
-    const newBoostPercent = (newLevel - 1) * BOOST_PER_LEVEL; // Level 1 = 0%, Level 10 = 90%
-    const baseRate = mek.baseGoldRate || mek.goldRate || 0;
-    const newBoostAmount = Math.floor(baseRate * (newBoostPercent / 100));
-    const newEffectiveRate = baseRate + newBoostAmount;
+    // Phase II: Gold rate boost calculations REMOVED
+    // Leveling now grants talent tree skill points (100 per level)
 
     console.log('[⬆️LEVEL] Leveling up:', {
       currentLevel,
       newLevel,
       cost,
-      baseRate,
-      newBoostPercent,
-      newBoostAmount,
-      newEffectiveRate
+      skillPointsGained: 100,
     });
 
     // Deduct gold from user
@@ -442,14 +439,9 @@ export const levelUpMek = mutation({
       gold: userGold - cost,
     });
 
-    // Update the Mek
+    // Update the Mek - only mekLevel (gold rate fields removed)
     await ctx.db.patch(mek._id, {
       mekLevel: newLevel,
-      levelBoostPercent: newBoostPercent,
-      levelBoostAmount: newBoostAmount,
-      effectiveGoldRate: newEffectiveRate,
-      // Initialize baseGoldRate if not set
-      baseGoldRate: baseRate,
     });
 
     console.log('[⬆️LEVEL] ✅ Level up successful!');
@@ -458,8 +450,7 @@ export const levelUpMek = mutation({
     return {
       success: true,
       newLevel,
-      boostPercent: newBoostPercent,
-      effectiveGoldRate: newEffectiveRate,
+      skillPointsTotal: newLevel * 100, // Talent tree skill points
       goldSpent: cost,
       remainingGold: userGold - cost
     };
@@ -468,6 +459,7 @@ export const levelUpMek = mutation({
 
 /**
  * Get level info for a Mek (for UI display)
+ * Phase II: Gold rate fields removed - leveling now grants talent tree skill points
  */
 export const getMekLevelInfo = query({
   args: {
@@ -484,25 +476,16 @@ export const getMekLevelInfo = query({
     }
 
     const currentLevel = mek.mekLevel || 1;
-    const baseRate = mek.baseGoldRate || mek.goldRate || 0;
-    const boostPercent = mek.levelBoostPercent || 0;
-    const boostAmount = mek.levelBoostAmount || 0;
-    const effectiveRate = mek.effectiveGoldRate || baseRate;
-
     const isMaxLevel = currentLevel >= MAX_MEK_LEVEL;
     const nextLevelCost = isMaxLevel ? 0 : (LEVEL_COSTS[currentLevel] || 0);
-    const nextBoostGain = isMaxLevel ? 0 : BOOST_PER_LEVEL;
 
     return {
       currentLevel,
       maxLevel: MAX_MEK_LEVEL,
       isMaxLevel,
-      baseRate,
-      boostPercent,
-      boostAmount,
-      effectiveRate,
+      skillPoints: currentLevel * 100, // Talent tree skill points
       nextLevelCost,
-      nextBoostGain,
+      nextSkillPointsGain: isMaxLevel ? 0 : 100,
     };
   },
 });

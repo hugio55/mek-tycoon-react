@@ -42,6 +42,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
   const [isResumingFromMobile, setIsResumingFromMobile] = useState(false);
   const [resumeValidating, setResumeValidating] = useState(false);
   const [isVerifyingClosedWindowPayment, setIsVerifyingClosedWindowPayment] = useState(false);
+  const [isCreatingMobileReservation, setIsCreatingMobileReservation] = useState(false);
 
   // Backend verification state (cryptographic proof of wallet ownership)
   const [backendVerificationStatus, setBackendVerificationStatus] = useState<'idle' | 'generating_nonce' | 'awaiting_signature' | 'verifying' | 'success' | 'failed'>('idle');
@@ -328,6 +329,44 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
     createNewReservation();
   }, [mounted, state, effectiveWalletAddress, activeCampaignId, createReservation]);
+
+  // Auto-create reservation for mobile users in wallet_verification state
+  // On mobile, we need the reservation BEFORE showing Copy Link (for resume URL)
+  // On desktop, reservation is created AFTER wallet verification signature
+  useEffect(() => {
+    // Only run if: in wallet_verification, mobile detected, no reservation yet, not already creating
+    if (state !== 'wallet_verification' || !isMobileBrowser || reservationId || isCreatingMobileReservation) {
+      return;
+    }
+
+    // Need wallet address and campaign to create reservation
+    if (!effectiveWalletAddress || !activeCampaignId) {
+      return;
+    }
+
+    console.log('[📱MOBILE] Auto-creating reservation for mobile user before Copy Link');
+    setIsCreatingMobileReservation(true);
+
+    createReservation({
+      campaignId: activeCampaignId,
+      walletAddress: effectiveWalletAddress
+    }).then(result => {
+      if (result.success && result.reservation) {
+        console.log('[📱MOBILE] ✓ Reservation created:', result.reservation._id);
+        setReservationId(result.reservation._id as Id<"commemorativeNFTInventory">);
+      } else {
+        console.error('[📱MOBILE] Failed to create reservation:', result.error);
+        setErrorMessage(result.message || result.error || 'Failed to reserve NFT');
+        setState('error');
+      }
+      setIsCreatingMobileReservation(false);
+    }).catch(error => {
+      console.error('[📱MOBILE] Error creating reservation:', error);
+      setErrorMessage('Failed to create reservation');
+      setState('error');
+      setIsCreatingMobileReservation(false);
+    });
+  }, [state, isMobileBrowser, reservationId, isCreatingMobileReservation, effectiveWalletAddress, activeCampaignId, createReservation]);
 
   // Detect available wallets and check if mobile browser
   const detectWalletsAndMobile = () => {
@@ -1327,6 +1366,23 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
         // Mobile browser - no window.cardano available
         if (isMobileBrowser) {
+          // Show loading while creating reservation for mobile
+          if (isCreatingMobileReservation || !reservationId) {
+            return (
+              <div className="text-center py-6">
+                <div className="mb-6">
+                  <div className="w-16 h-16 mx-auto rounded-full bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center mb-4 animate-pulse">
+                    <svg className="w-8 h-8 text-cyan-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-bold text-white mb-2">Preparing Your Reservation...</h2>
+                  <p className="text-sm text-white/60">Reserving your NFT for mobile verification</p>
+                </div>
+              </div>
+            );
+          }
+
           return (
             <div className="text-center py-6">
               <div className="mb-6">

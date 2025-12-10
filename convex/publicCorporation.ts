@@ -67,8 +67,7 @@ export const getCorporationData = query({
         assetId: mek.assetId,
         assetName: mek.assetName,
         level: levelMap.get(mek.assetId) || 1,
-        goldPerHour: mek.effectiveGoldPerHour || mek.goldPerHour || 0,
-        baseGoldPerHour: mek.baseGoldPerHour || mek.goldPerHour || 0,
+        // Phase II: Gold rate fields REMOVED - income comes from Job Slots
         rarityRank: mek.rarityRank,
         imageUrl: sourceKeyCode ?
           `/mek-images/500px/${sourceKeyCode}.webp` :
@@ -81,10 +80,10 @@ export const getCorporationData = query({
       };
     });
 
-    // Sort by level, then by gold rate
+    // Sort by level, then by rarity rank (lower rank = rarer)
     meksWithLevels.sort((a: any, b: any) => {
       if (b.level !== a.level) return b.level - a.level;
-      return b.goldPerHour - a.goldPerHour;
+      return (a.rarityRank || 9999) - (b.rarityRank || 9999);
     });
 
     // Calculate average employee level
@@ -96,10 +95,7 @@ export const getCorporationData = query({
     const createdAt = userData._creationTime || now;
     const ageInDays = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
 
-    // Calculate total gold per hour from Meks
-    const totalGoldPerHour = meksWithLevels.reduce(
-      (sum: number, mek: any) => sum + (mek.goldPerHour || 0), 0
-    );
+    // Phase II: totalGoldPerHour calculation REMOVED - income comes from Job Slots
 
     // Calculate corporation rank using cached leaderboard
     const cachedLeaderboard = await ctx.db
@@ -119,7 +115,7 @@ export const getCorporationData = query({
       companyName,
       displayWallet: `${walletAddress.slice(0, 8)}...${walletAddress.slice(-6)}`,
       totalCumulativeGold: Math.floor(userData.gold || 0),
-      goldPerHour: totalGoldPerHour,
+      goldPerHour: 0, // Phase II: Passive gold income removed - income comes from Job Slots
       mekCount: meksWithLevels.length,
       rank,
       totalCorporations,
