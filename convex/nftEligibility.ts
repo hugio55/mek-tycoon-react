@@ -190,10 +190,10 @@ export const checkClaimEligibility = query({
     }
 
     // All checks passed - user is eligible and has no active reservation
-    // Phase II: Look up corporation name from users table
+    // Phase II: Look up corporation name from users table using stake address
     const user = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.walletAddress))
       .first();
 
     const corporationName = user?.corporationName || null;
@@ -339,10 +339,10 @@ export const checkCampaignEligibility = query({
     }
 
     // 7. All checks passed - user is eligible
-    // Phase II: Get corporation name from users table
+    // Phase II: Get corporation name from users table using stake address
     const user = await ctx.db
       .query("users")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.walletAddress))
       .first();
 
     console.log('[🛡️ELIGIBILITY] APPROVED - Wallet passed all checks:', {
