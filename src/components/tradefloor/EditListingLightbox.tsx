@@ -162,7 +162,7 @@ export default function EditListingLightbox({
               className="text-sm"
               style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
             >
-              Update the variations you're looking for
+              Choose up to six variations you are seeking
             </p>
           </div>
           <button
@@ -283,15 +283,15 @@ export default function EditListingLightbox({
             </select>
           </div>
 
-          {/* Variation Grid */}
+          {/* Variation Grid - Fixed height to prevent lightbox resizing */}
           <div
-            className="flex-1 overflow-y-auto rounded-lg p-3"
+            className="overflow-y-auto rounded-lg p-3 h-64 min-h-64"
             style={{
               background: 'rgba(255,255,255,0.03)',
               border: '1px solid rgba(255,255,255,0.1)',
             }}
           >
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 content-start">
               {filteredVariations.map((v) => {
                 const colors = variationTypeColors[v.type];
                 return (

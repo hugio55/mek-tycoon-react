@@ -35,6 +35,29 @@ const getVariationRank = (variationName: string): number => {
   return variation?.rank || 999;
 };
 
+// Helper to look up variation by sourceKey code
+const getVariationBySourceKey = (code: string, type: "head" | "body" | "trait") => {
+  return COMPLETE_VARIATION_RARITY.find(
+    (v) => v.sourceKey === code.toUpperCase() && v.type === type
+  );
+};
+
+// Helper to calculate overall Mek rank from sourceKey (average of 3 variation ranks)
+const getMekRank = (sourceKey: string): number | null => {
+  if (!sourceKey) return null;
+  const cleanKey = sourceKey.replace(/-[A-Z]$/i, "").toUpperCase();
+  const parts = cleanKey.split("-");
+  if (parts.length !== 3) return null;
+
+  const [headCode, bodyCode, traitCode] = parts;
+  const head = getVariationBySourceKey(headCode, "head");
+  const body = getVariationBySourceKey(bodyCode, "body");
+  const trait = getVariationBySourceKey(traitCode, "trait");
+
+  if (!head || !body || !trait) return null;
+  return Math.round((head.rank + body.rank + trait.rank) / 3);
+};
+
 const variationTypeColors: Record<string, { bg: string; border: string; text: string }> = {
   head: { bg: "rgba(59, 130, 246, 0.15)", border: "rgba(59, 130, 246, 0.3)", text: "#60a5fa" },
   body: { bg: "rgba(34, 197, 94, 0.15)", border: "rgba(34, 197, 94, 0.3)", text: "#4ade80" },
@@ -189,7 +212,7 @@ export default function CreateListingLightbox({
             >
               {step === "select-mek"
                 ? "Step 1: Select a Mek to list for trade"
-                : "Step 2: Choose up to 6 variations you want"}
+                : "Step 2: Choose up to six variations you are seeking"}
             </p>
           </div>
           <button
@@ -312,9 +335,9 @@ export default function CreateListingLightbox({
                   className="text-sm mt-0.5 flex gap-3"
                   style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
                 >
-                  <span>Mek #{getMekNumber(selectedMek.assetName)}</span>
-                  {selectedMek.rank && (
-                    <span>Rank: {selectedMek.rank}</span>
+                  <span>Mek <span style={{ color: '#22d3ee' }}>#{getMekNumber(selectedMek.assetName)}</span></span>
+                  {getMekRank(selectedMek.sourceKey || selectedMek.sourceKeyBase) && (
+                    <span>Rank <span style={{ color: '#fbbf24' }}>#{getMekRank(selectedMek.sourceKey || selectedMek.sourceKeyBase)}</span></span>
                   )}
                 </div>
                 <button
@@ -410,8 +433,8 @@ export default function CreateListingLightbox({
                 />
               </div>
 
-              {/* Variation Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-64 overflow-y-auto relative">
+              {/* Variation Grid - Fixed height to prevent lightbox resizing */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 h-64 min-h-64 max-h-64 overflow-y-auto relative content-start">
                 {filteredVariations.map((v) => {
                   const colors = variationTypeColors[v.type as "head" | "body" | "trait"];
                   return (
@@ -632,8 +655,10 @@ export default function CreateListingLightbox({
                   className="flex justify-center gap-4 text-sm"
                   style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.6)' }}
                 >
-                  <span>Mek #{getMekNumber(selectedMek.assetName)}</span>
-                  {selectedMek.rank && <span>Rank: {selectedMek.rank}</span>}
+                  <span>Mek <span style={{ color: '#22d3ee' }}>#{getMekNumber(selectedMek.assetName)}</span></span>
+                  {getMekRank(selectedMek.sourceKey || selectedMek.sourceKeyBase) && (
+                    <span>Rank <span style={{ color: '#fbbf24' }}>#{getMekRank(selectedMek.sourceKey || selectedMek.sourceKeyBase)}</span></span>
+                  )}
                 </div>
 
                 {/* Variations if available */}
