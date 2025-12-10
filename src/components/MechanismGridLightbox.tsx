@@ -148,9 +148,11 @@ export default function MechanismGridLightbox({
 
     console.log('[Search] Filtered results:', filtered.length, 'out of', ownedMeks.length);
 
+    // Phase II: Gold rate sort REMOVED - sort by rarity rank instead
     return filtered.sort((a, b) => {
         if (sortType === 'rate') {
-          return b.goldPerHour - a.goldPerHour;  // Highest rate first
+          // Sort by rarity rank (lower rank = rarer = better)
+          return (a.rarityRank || 9999) - (b.rarityRank || 9999);
         } else {
           // Sort by current upgrade level (highest level first)
           const aLevel = a.currentLevel || 1;
@@ -160,8 +162,8 @@ export default function MechanismGridLightbox({
             return bLevel - aLevel;  // Highest level first
           }
 
-          // Secondary sort: when levels are equal, sort by gold/hr (highest first)
-          return b.goldPerHour - a.goldPerHour;
+          // Secondary sort: when levels are equal, sort by rarity (rarer first)
+          return (a.rarityRank || 9999) - (b.rarityRank || 9999);
         }
       });
   }, [ownedMeks, searchTerm, sortType]);

@@ -125,9 +125,10 @@ export const calculateSlotPendingIncome = query({
     const lastCollection = slot.lastOutputTime || slot.assignedAt || now;
     const daysSinceCollection = (now - lastCollection) / (1000 * 60 * 60 * 24);
 
-    // Get base daily rate for this mek
-    // TODO: This should query slot type base rates + mek rarity modifier
-    const baseDailyRate = mek.goldRate || 100; // Default 100 gold/day
+    // Phase II: Get base daily rate for this mek
+    // goldRate removed from schema - using default base rate for now
+    // TODO: Calculate from slot type base rates + mek rarity modifier
+    const baseDailyRate = 100; // Default 100 gold/day
 
     // Apply slot level bonus (1% per level above 1)
     const slotLevel = slot.slotLevel || 1;
@@ -221,8 +222,8 @@ export const collectSlotIncome = mutation({
       };
     }
 
-    // Get base daily rate for this mek
-    const baseDailyRate = mek.goldRate || 100;
+    // Phase II: goldRate removed - using default base rate
+    const baseDailyRate = 100;
 
     // Apply slot level bonus
     const slotLevel = slot.slotLevel || 1;
@@ -311,8 +312,8 @@ export const collectAllSlotIncome = mutation({
 
       if (daysSinceCollection < 0.001) continue; // Skip if too recent
 
-      // Calculate income
-      const baseDailyRate = mek.goldRate || 100;
+      // Phase II: goldRate removed - using default base rate
+      const baseDailyRate = 100;
       const slotLevel = slot.slotLevel || 1;
       const slotBonus = 1 + (slotLevel - 1) * 0.01;
       const tenureDays = slot.tenureDays || 0;
@@ -543,7 +544,8 @@ export const getTotalDailyIncomeRate = query({
 
       if (!mek) continue;
 
-      const baseDailyRate = mek.goldRate || 100;
+      // Phase II: goldRate removed - using default base rate
+      const baseDailyRate = 100;
       const slotLevel = slot.slotLevel || 1;
       const slotBonus = 1 + (slotLevel - 1) * 0.01;
       const tenureDays = slot.tenureDays || 0;

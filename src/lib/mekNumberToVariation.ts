@@ -4,10 +4,13 @@
 import mekGoldRatesData from '../../convex/mekGoldRates.json';
 
 // Create the mapping structure
+// Phase II: goldPerHour kept for backwards compat with JSON file, but NOT USED
+// Gold income now comes from Job Slots, not individual Mek properties
 interface MekData {
   assetId: string;
   name: string;
   sourceKey: string;
+  /** @deprecated Phase II: goldPerHour no longer used - income comes from Job Slots */
   goldPerHour: number;
   finalRank: number;
   background: string;
