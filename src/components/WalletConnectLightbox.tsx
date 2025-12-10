@@ -251,19 +251,68 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
         )
       ]) as any;
 
-      // Check if user manually disconnected (security feature for shared computers)
-      console.log('[🔐RECONNECT] Checking for disconnect nonce in localStorage...');
-      const disconnectNonce = localStorage.getItem('mek_disconnect_nonce');
-      console.log('[🔐RECONNECT] Disconnect nonce check result:', disconnectNonce ? `FOUND: ${disconnectNonce.slice(0, 8)}...` : '❌ NOT FOUND');
+      // STEP 1: Get wallet addresses FIRST (needed to determine if signature is required)
+      setConnectionStatus('Retrieving wallet addresses...');
+      const stakeAddresses = await api.getRewardAddresses();
 
-      if (disconnectNonce) {
-        console.log('[🔐SIGNATURE] ✅ Disconnect nonce detected - requiring signature verification');
+      if (!stakeAddresses || stakeAddresses.length === 0) {
+        throw new Error('No stake addresses found in wallet');
+      }
+
+      const stakeAddressRaw = stakeAddresses[0];
+
+      // Validate stake address format
+      const isBech32 = stakeAddressRaw.startsWith('stake1');
+      const isHex = /^[0-9a-fA-F]{56,60}$/.test(stakeAddressRaw);
+
+      if (!isBech32 && !isHex) {
+        console.error('Invalid stake address format:', stakeAddressRaw);
+        throw new Error(`Invalid stake address format. Expected bech32 (stake1...) or hex (56-60 chars), got: ${stakeAddressRaw.substring(0, 20)}...`);
+      }
+
+      // Convert to bech32 format if it's in hex
+      const stakeAddress = ensureBech32StakeAddress(stakeAddressRaw);
+      console.log('[WalletConnect] Stake address:', {
+        wallet: wallet.name,
+        raw: stakeAddressRaw.substring(0, 20) + '...',
+        converted: stakeAddress.substring(0, 20) + '...',
+      });
+
+      // Get payment addresses
+      const usedAddresses = await api.getUsedAddresses();
+      const paymentAddress = usedAddresses?.[0];
+
+      if (!stakeAddress) {
+        throw new Error('Could not retrieve stake address from wallet');
+      }
+
+      // STEP 2: Check if signature is required
+      // Signature is required if:
+      // 1. User manually disconnected (disconnect nonce exists) - security for shared computers
+      // 2. New user / no saved session for this stake address - prevents spam accounts
+      console.log('[🔐SECURITY] Checking if signature verification is required...');
+      const disconnectNonce = localStorage.getItem('mek_disconnect_nonce');
+      const savedSession = restoreWalletSession();
+      const hasMatchingSession = savedSession && savedSession.stakeAddress === stakeAddress;
+
+      console.log('[🔐SECURITY] Disconnect nonce:', disconnectNonce ? `FOUND: ${disconnectNonce.slice(0, 8)}...` : '❌ NOT FOUND');
+      console.log('[🔐SECURITY] Saved session:', savedSession ? `FOUND for ${savedSession.stakeAddress.slice(0, 12)}...` : '❌ NOT FOUND');
+      console.log('[🔐SECURITY] Session matches current wallet:', hasMatchingSession ? '✅ YES' : '❌ NO');
+
+      // Require signature if: disconnect nonce exists OR no matching saved session
+      const requireSignature = !!disconnectNonce || !hasMatchingSession;
+      console.log('[🔐SECURITY] Signature required:', requireSignature ? '✅ YES' : '❌ NO (trusted session)');
+
+      if (requireSignature) {
+        const reason = disconnectNonce ? 'manual disconnect detected' : 'new user or different wallet';
+        console.log('[🔐SIGNATURE] ✅ Requiring signature verification -', reason);
         console.log('[🔐SIGNATURE] Wallet:', wallet.name);
         setConnectionStatus('Verifying wallet ownership...');
 
         // Generate challenge message
-        const challengeMessage = `Mek Tycoon Login Verification\n\nNonce: ${disconnectNonce}\nTimestamp: ${Date.now()}\n\nSign this message to verify you own this wallet.`;
-        console.log('[🔐SIGNATURE] Challenge message:', challengeMessage);
+        const nonce = disconnectNonce || crypto.randomUUID();
+        const challengeMessage = `Mek Tycoon Wallet Verification\n\nNonce: ${nonce}\nTimestamp: ${Date.now()}\n\nSign this message to verify you own this wallet.`;
+        console.log('[🔐SIGNATURE] Challenge message generated');
 
         try {
           // Check if wallet supports signData
@@ -274,7 +323,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
 
           // Get payment addresses for signing
           const usedAddressesHex = await api.getUsedAddresses();
-          console.log('[🔐SIGNATURE] Payment addresses (hex):', usedAddressesHex);
+          console.log('[🔐SIGNATURE] Payment addresses (hex):', usedAddressesHex?.length || 0, 'addresses');
 
           if (!usedAddressesHex || usedAddressesHex.length === 0) {
             throw new Error('No payment addresses found in wallet');
@@ -311,7 +360,7 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
           const messagePayload = Array.from(messageBytes)
             .map(b => b.toString(16).padStart(2, '0'))
             .join('');
-          console.log('[🔐SIGNATURE] Using hex-encoded message:', messagePayload.substring(0, 40) + '...');
+          console.log('[🔐SIGNATURE] Using hex-encoded message');
 
           // Set up signature waiting state with delayed help message
           setIsAwaitingSignature(true);
@@ -335,16 +384,16 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
           setIsAwaitingSignature(false);
           setShowSignatureHelp(false);
 
-          console.log('[🔐SIGNATURE] Signature result:', signResult);
-
-          console.log('[🔐SIGNATURE] Signature verification successful!');
-          setConnectionStatus('Signature verified!');
+          console.log('[🔐SIGNATURE] Signature received successfully!');
+          setConnectionStatus('Wallet verified!');
 
           // Signature succeeded - user proved they own the wallet
           // CRITICAL: Clear nonce IMMEDIATELY after successful signature
           // This prevents requiring re-signing if later steps (Blockfrost, session save) fail
-          localStorage.removeItem('mek_disconnect_nonce');
-          console.log('[🔐SIGNATURE] Cleared disconnect nonce after successful signature');
+          if (disconnectNonce) {
+            localStorage.removeItem('mek_disconnect_nonce');
+            console.log('[🔐SIGNATURE] Cleared disconnect nonce after successful signature');
+          }
         } catch (signError: any) {
           // Clear the help timeout on error
           if (signatureHelpTimeoutRef.current) {
@@ -368,46 +417,11 @@ export default function WalletConnectLightbox({ isOpen, onClose, onConnected }: 
           if (isUserDeclined) {
             throw new Error('Signature cancelled. Please click your wallet again and sign the message when prompted.');
           }
-          throw new Error(`Signature verification failed: ${signError?.message || 'Unknown error'}. You must sign the message to reconnect after disconnecting.`);
+          throw new Error(`Wallet verification failed: ${signError?.message || 'Unknown error'}. You must sign a message to verify wallet ownership.`);
         }
       } else {
-        console.log('[🔐RECONNECT] ⚠️ No disconnect nonce found - skipping signature verification');
-        console.log('[🔐RECONNECT] This connection does NOT require signature (auto-reconnect from saved session)');
-      }
-
-      // Get wallet addresses
-      setConnectionStatus('Retrieving wallet addresses...');
-      const stakeAddresses = await api.getRewardAddresses();
-
-      if (!stakeAddresses || stakeAddresses.length === 0) {
-        throw new Error('No stake addresses found in wallet');
-      }
-
-      const stakeAddressRaw = stakeAddresses[0];
-
-      // Validate stake address format
-      const isBech32 = stakeAddressRaw.startsWith('stake1');
-      const isHex = /^[0-9a-fA-F]{56,60}$/.test(stakeAddressRaw);
-
-      if (!isBech32 && !isHex) {
-        console.error('Invalid stake address format:', stakeAddressRaw);
-        throw new Error(`Invalid stake address format. Expected bech32 (stake1...) or hex (56-60 chars), got: ${stakeAddressRaw.substring(0, 20)}...`);
-      }
-
-      // Convert to bech32 format if it's in hex
-      const stakeAddress = ensureBech32StakeAddress(stakeAddressRaw);
-      console.log('[WalletConnect] Stake address:', {
-        wallet: wallet.name,
-        raw: stakeAddressRaw.substring(0, 20) + '...',
-        converted: stakeAddress.substring(0, 20) + '...',
-      });
-
-      // Get payment addresses
-      const usedAddresses = await api.getUsedAddresses();
-      const paymentAddress = usedAddresses?.[0];
-
-      if (!stakeAddress) {
-        throw new Error('Could not retrieve stake address from wallet');
+        console.log('[🔐SECURITY] ✅ Trusted session found - skipping signature verification');
+        console.log('[🔐SECURITY] Session stake address matches current wallet');
       }
 
       // PHASE 1: Quick count - get Mek count immediately

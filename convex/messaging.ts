@@ -152,7 +152,7 @@ export const getAllCorporations = query({
       .map((u) => ({
         walletAddress: u.stakeAddress!,
         companyName: u.corporationName || "Unknown Corp",
-        achievementPoints: u.achievementPoints || 0,
+        achievementPoints: (u as any).achievementPoints || 0,
       }));
   },
 });
