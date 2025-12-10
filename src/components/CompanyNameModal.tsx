@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useAction, useMutation, useQuery } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import HolographicButton from './ui/IndustrialButtons/HolographicButton';
 import GlowingBorderInput from './controls/GlowingBorderInput';
@@ -31,11 +31,9 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'verifying' | 'syncing'>('idle');
 
-  // Phase II: Use new action for initial creation (includes blockchain verification)
-  // Use mutation for edit mode (no re-verification needed)
-  const createCorporationAction = useAction(api.corporationAuth.createCorporationWithVerification);
+  // Phase II: Blockfrost verification is done during wallet connect
+  // This mutation just sets the company name - no re-verification needed
   const setCompanyNameMutation = useMutation(api.corporationAuth.setCompanyName);
 
   // Mount check for portal
@@ -156,46 +154,23 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
     setError('');
 
     try {
-      if (mode === 'initial') {
-        // PHASE II: Use new action with automatic blockchain verification
-        setVerificationStatus('verifying');
-        const result = await createCorporationAction({
-          stakeAddress: walletAddress,
-          companyName: trimmedName
-        });
+      // PHASE II FLOW OPTIMIZATION: Blockfrost verification is now done during wallet connect
+      // Both initial and edit modes just need to set the company name - no re-verification needed!
+      // This makes the "Create Corporation" button instant instead of waiting for Blockfrost
+      const result = await setCompanyNameMutation({
+        walletAddress,
+        companyName: trimmedName
+      });
 
-        setVerificationStatus('idle');
-
-        if (result.success) {
-          console.log(`[CompanyNameModal] Corporation created: ${result.companyName}, ${result.mekCount} meks synced`);
-          onSuccess?.(result.companyName!);
-          onClose();
-          setCompanyName('');
-        } else {
-          // Handle Blockfrost down specifically
-          if (result.blockfrostDown) {
-            setError(result.error || 'Blockchain verification unavailable. Please try again later.');
-          } else {
-            setError(result.error || 'Failed to create corporation');
-          }
-        }
+      if (result.success) {
+        console.log(`[CompanyNameModal] Corporation name ${mode === 'initial' ? 'set' : 'updated'}: ${result.companyName}`);
+        onSuccess?.(result.companyName!);
+        onClose();
+        setCompanyName('');
       } else {
-        // Edit mode: just update the name (no re-verification needed)
-        const result = await setCompanyNameMutation({
-          walletAddress,
-          companyName: trimmedName
-        });
-
-        if (result.success) {
-          onSuccess?.(result.companyName!);
-          onClose();
-          setCompanyName('');
-        } else {
-          setError(result.error || 'Failed to update corporation name');
-        }
+        setError(result.error || `Failed to ${mode === 'initial' ? 'create' : 'update'} corporation name`);
       }
     } catch (err) {
-      setVerificationStatus('idle');
       setError('Network error. Please try again.');
       console.error('[CompanyNameModal] Error:', err);
     } finally {
@@ -344,13 +319,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
               {mode === 'initial' && (
                 <div style={{ width: 360 }}>
                   <HolographicButton
-                    text={
-                      isSubmitting
-                        ? verificationStatus === 'verifying'
-                          ? 'VERIFYING WALLET...'
-                          : 'CREATING...'
-                        : 'CREATE CORPORATION'
-                    }
+                    text={isSubmitting ? 'CREATING...' : 'CREATE CORPORATION'}
                     onClick={() => {
                       const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
                       handleSubmit(syntheticEvent);
