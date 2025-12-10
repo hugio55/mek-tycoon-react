@@ -453,6 +453,77 @@ export default function TradeListingCard({
           </div>
         </div>
       )}
+
+      {/* Image Lightbox - Rendered via Portal */}
+      {mounted && showImageLightbox && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          onClick={() => setShowImageLightbox(false)}
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'rgba(0, 0, 0, 0.8)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+            }}
+          />
+
+          {/* Content Container */}
+          <div
+            className="relative flex flex-col items-center gap-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Large Image */}
+            <div
+              className="relative rounded-2xl overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
+                border: '1px solid rgba(34, 211, 238, 0.3)',
+                boxShadow: '0 0 60px rgba(34, 211, 238, 0.15), 0 25px 50px rgba(0, 0, 0, 0.5)',
+              }}
+            >
+              <img
+                src={cleanSourceKey ? getMediaUrl(`/mek-images/500px/${cleanSourceKey}.webp`) : getMediaUrl("/mek-images/placeholder.webp")}
+                alt={listing.listedMekAssetName || "Listed Mek"}
+                className="w-[400px] h-[400px] max-w-[90vw] max-h-[70vh] object-contain"
+                style={{ background: 'rgba(0,0,0,0.3)' }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = getMediaUrl("/mek-images/placeholder.webp");
+                }}
+              />
+            </div>
+
+            {/* Mek Name */}
+            <h3
+              className="text-xl font-semibold text-white text-center"
+              style={{
+                fontFamily: 'Saira, sans-serif',
+                textShadow: '0 0 20px rgba(34, 211, 238, 0.3)',
+              }}
+            >
+              {listing.listedMekAssetName || "Unknown Mek"}
+            </h3>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setShowImageLightbox(false)}
+              className="px-8 py-2.5 rounded-xl font-medium transition-all hover:scale-[1.05] active:scale-[0.95]"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: 'rgba(255,255,255,0.9)',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
