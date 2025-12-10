@@ -455,7 +455,7 @@ export default function BetaSignupLightbox({
           className="w-full py-3 sm:py-4 text-base font-semibold tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl hover:from-yellow-300 hover:to-yellow-400 transition-all duration-300 touch-manipulation shadow-lg shadow-yellow-500/20 active:scale-[0.98]"
           style={{ minHeight: '48px', WebkitTapHighlightColor: 'transparent' }}
         >
-          {veteranInfo?.hasReservedName ? 'Change Reserved Name' : 'Reserve Corporation Name'}
+          {veteranInfo?.hasReservedName ? 'Change Corporation Name' : 'Choose Corporation Name'}
         </button>
 
         <button
@@ -521,7 +521,7 @@ export default function BetaSignupLightbox({
 
         <button
           onClick={() => setStep('veteran_welcome')}
-          className="w-full py-3 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
+          className="w-full pt-3 pb-0 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
         >
           ← Back
         </button>
