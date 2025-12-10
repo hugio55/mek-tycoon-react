@@ -561,7 +561,7 @@ Check console for full timeline.
       if (result.success) {
         setStatusMessage({
           type: 'success',
-          message: result.message + ` (${result.totalGold} gold, ${result.goldPerHour} gold/hr)`
+          message: result.message + ` (${result.totalGold} gold)`
         });
       } else {
         setStatusMessage({
@@ -648,10 +648,7 @@ Check console for full timeline.
             aVal = aData.mekCount;
             bVal = bData.mekCount;
             break;
-          case 'goldPerHour':
-            aVal = aData.totalGoldPerHour;
-            bVal = bData.totalGoldPerHour;
-            break;
+          // Phase II: goldPerHour sort removed - income from Job Slots
           case 'currentGold':
             aVal = aData.currentGold;
             bVal = bData.currentGold;
@@ -1037,14 +1034,13 @@ Check console for full timeline.
                   }
                 };
 
-                // Generate CSV content
-                const headers = ['Company Name', 'Stake Address', 'Meks', 'Cumulative Gold', 'Gold Per Hour', 'First Connected'];
+                // Generate CSV content - Phase II: Gold Per Hour removed (income from Job Slots)
+                const headers = ['Company Name', 'Stake Address', 'Meks', 'Cumulative Gold', 'First Connected'];
                 const rows = wallets.map((w: any) => [
                   w.companyName || 'Unnamed',
                   w.walletAddress,
                   String(w.mekCount || 0),
                   (w.totalCumulativeGold || 0).toFixed(2),
-                  (w.totalGoldPerHour || 0).toFixed(2),
                   formatDate(w.createdAt)
                 ]);
 
@@ -1239,12 +1235,7 @@ Check console for full timeline.
               >
                 MEKs {sortColumn === 'meks' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th
-                onClick={() => handleSort('goldPerHour')}
-                className="px-2 py-2 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
-              >
-                Gold/hr {sortColumn === 'goldPerHour' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </th>
+              {/* Phase II: Gold/hr column removed - income from Job Slots */}
               <th
                 onClick={() => handleSort('currentGold')}
                 className="px-2 py-2 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
@@ -1527,9 +1518,7 @@ Check console for full timeline.
                       <td className="px-2 py-2 text-right">
                         <span className="text-sm font-semibold text-yellow-400">{wallet.mekCount}</span>
                       </td>
-                      <td className="px-2 py-2 text-right">
-                        <span className="text-sm text-gray-300">{wallet.totalGoldPerHour.toFixed(2)}</span>
-                      </td>
+                      {/* Phase II: Gold/hr cell removed - income from Job Slots */}
                       <td className="px-2 py-2 text-right">
                         {editingGold?.walletAddress === wallet.walletAddress ? (
                           <input

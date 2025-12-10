@@ -375,9 +375,7 @@ export default function DuplicateWalletDetector() {
                         </div>
                       )}
                     </div>
-                    <div className="text-xs text-gray-400 mt-2">
-                      Rate change: {event.rateChange >= 0 ? '+' : ''}{event.rateChange.toFixed(2)} g/hr
-                    </div>
+                    {/* Phase II: Rate change display removed - gold income from Job Slots */}
                   </div>
                 ))}
               </div>
@@ -445,7 +443,6 @@ export default function DuplicateWalletDetector() {
                 <div className="text-xs space-y-1">
                   <div className="text-yellow-400">{comparison.wallet1.companyName || 'No name'}</div>
                   <div className="text-gray-400">{comparison.wallet1.totalMeks} MEKs</div>
-                  <div className="text-green-400">{comparison.wallet1.goldPerHour.toFixed(2)} g/hr</div>
                   <div className={comparison.wallet1.isVerified ? 'text-green-400' : 'text-red-400'}>
                     {comparison.wallet1.isVerified ? 'Verified' : 'Unverified'}
                   </div>
@@ -456,7 +453,6 @@ export default function DuplicateWalletDetector() {
                 <div className="text-xs space-y-1">
                   <div className="text-yellow-400">{comparison.wallet2.companyName || 'No name'}</div>
                   <div className="text-gray-400">{comparison.wallet2.totalMeks} MEKs</div>
-                  <div className="text-green-400">{comparison.wallet2.goldPerHour.toFixed(2)} g/hr</div>
                   <div className={comparison.wallet2.isVerified ? 'text-green-400' : 'text-red-400'}>
                     {comparison.wallet2.isVerified ? 'Verified' : 'Unverified'}
                   </div>
@@ -473,7 +469,7 @@ export default function DuplicateWalletDetector() {
                 <div className="space-y-1 max-h-48 overflow-y-auto">
                   {comparison.sharedAssets.map((asset: any, idx: number) => (
                     <div key={idx} className="bg-gray-950/50 p-2 rounded text-xs text-gray-400">
-                      {asset.assetName} - {asset.goldPerHour.toFixed(2)} g/hr
+                      {asset.assetName}
                     </div>
                   ))}
                 </div>

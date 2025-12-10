@@ -140,11 +140,6 @@ export default function CorporationPage() {
           <div className="text-gray-400 font-mono text-lg">
             {corpData.mekCount} Meks
           </div>
-          {isSyncing && (
-            <div className="mt-3 text-yellow-400 text-sm font-mono animate-pulse">
-              🔄 Syncing MEK data from blockchain...
-            </div>
-          )}
         </div>
 
         {/* Custom Slot Section */}
