@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { restoreWalletSession } from "@/lib/walletSessionManager";
 import TradeListingCard from "@/components/tradefloor/TradeListingCard";
 import CreateListingLightbox from "@/components/tradefloor/CreateListingLightbox";
 import MatchingMeksLightbox from "@/components/tradefloor/MatchingMeksLightbox";
@@ -13,23 +14,26 @@ import OfferCard from "@/components/tradefloor/OfferCard";
 type Tab = "browse" | "my-listings" | "my-offers";
 
 export default function TradeFloorPage() {
-  const [userId, setUserId] = useState<Id<"users"> | null>(null);
   const [stakeAddress, setStakeAddress] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("browse");
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [selectedListingForOffer, setSelectedListingForOffer] = useState<any>(null);
   const [selectedListingForViewOffers, setSelectedListingForViewOffers] = useState<any>(null);
 
-  // Load user from localStorage
+  // Restore wallet session on mount (same pattern as HomePage)
   useEffect(() => {
-    const storedUserId = localStorage.getItem("mekTycoonUserId");
-    const storedStakeAddress = localStorage.getItem("mekTycoonStakeAddress");
-    if (storedUserId) {
-      setUserId(storedUserId as Id<"users">);
-    }
-    if (storedStakeAddress) {
-      setStakeAddress(storedStakeAddress);
-    }
+    const initWallet = async () => {
+      const session = await restoreWalletSession();
+      if (session) {
+        // Use stake address as primary identifier (same as database)
+        const address = session.stakeAddress || session.walletAddress;
+        setStakeAddress(address);
+        console.log('[TradeFloor] Wallet connected:', address);
+      } else {
+        console.log('[TradeFloor] No wallet session found');
+      }
+    };
+    initWallet();
   }, []);
 
   // Queries

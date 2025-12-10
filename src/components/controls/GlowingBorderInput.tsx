@@ -102,8 +102,8 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
   return (
     <div
       className="relative flex items-center justify-center"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => animated && setIsHovered(true)}
+      onMouseLeave={() => animated && setIsHovered(false)}
       style={{ width: containerWidth, height: 70 }}
     >
       {/* Glow layer - outermost, most blurred */}
@@ -215,8 +215,8 @@ const GlowingBorderInput: React.FC<GlowingBorderInputProps> = ({
         type="text"
         value={inputValue}
         onChange={handleChange}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
+        onFocus={() => animated && setIsFocused(true)}
+        onBlur={() => animated && setIsFocused(false)}
         placeholder={placeholder}
         maxLength={maxLength}
         disabled={disabled}
