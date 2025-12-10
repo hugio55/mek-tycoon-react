@@ -1004,3 +1004,110 @@ export const createCorporationWithVerification = action({
     };
   },
 });
+
+/**
+ * PHASE II: Re-verify wallet with blockchain verification
+ *
+ * This ACTION is called from admin panel to re-verify an existing user.
+ * It performs the REAL blockchain verification via Blockfrost:
+ * 1. Calls Blockfrost to verify current NFT ownership
+ * 2. Clears existing mek ownership for this wallet
+ * 3. Syncs verified meks to the meks table
+ * 4. Marks the wallet as verified
+ *
+ * Does NOT change the corporation name - just re-verifies ownership.
+ */
+export const reverifyWallet = action({
+  args: {
+    stakeAddress: v.string(),
+  },
+  handler: async (ctx, args): Promise<{
+    success: boolean;
+    error?: string;
+    mekCount?: number;
+    previousMekCount?: number;
+    walletVerified?: boolean;
+    blockfrostDown?: boolean;
+  }> => {
+    console.log("[reverifyWallet] Starting for:", args.stakeAddress.substring(0, 20) + "...");
+
+    // STEP 1: Verify user exists
+    const user: any = await ctx.runQuery(api.corporationAuth.getCompanyName, {
+      walletAddress: args.stakeAddress,
+    });
+
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    console.log("[reverifyWallet] User found:", user.companyName || "(no name)");
+
+    // STEP 2: Get current mek count before re-verification
+    const currentMeks: any = await ctx.runQuery(api.userData.getUserData, {
+      walletAddress: args.stakeAddress,
+    });
+    const previousMekCount = currentMeks?.mekCount || 0;
+
+    // STEP 3: Fetch meks from blockchain via Blockfrost
+    console.log("[reverifyWallet] Calling Blockfrost...");
+    let blockchainMeks: any[] = [];
+
+    try {
+      const blockfrostResult: any = await ctx.runAction(api.blockfrostService.getWalletAssets, {
+        stakeAddress: args.stakeAddress,
+      });
+
+      if (blockfrostResult.success && blockfrostResult.meks) {
+        blockchainMeks = blockfrostResult.meks;
+        console.log(`[reverifyWallet] Blockfrost found ${blockchainMeks.length} meks`);
+      } else {
+        console.error("[reverifyWallet] Blockfrost returned error:", blockfrostResult.error);
+        throw new Error(blockfrostResult.error || "Blockfrost verification failed");
+      }
+    } catch (blockfrostError: any) {
+      console.error("[reverifyWallet] Blockfrost exception:", blockfrostError.message);
+
+      return {
+        success: false,
+        error: "Blockchain verification is temporarily unavailable. Blockfrost (our verification service) is currently down.",
+        blockfrostDown: true,
+      };
+    }
+
+    // STEP 4: Clear any existing meks ownership for this wallet (handles transfers)
+    console.log("[reverifyWallet] Clearing existing ownership...");
+    await ctx.runMutation(api.corporationAuth.clearMeksOwnership, {
+      stakeAddress: args.stakeAddress,
+    });
+
+    // STEP 5: Sync verified meks to database
+    if (blockchainMeks.length > 0) {
+      console.log("[reverifyWallet] Syncing", blockchainMeks.length, "meks...");
+
+      const meksToSync = blockchainMeks.map((m: any) => ({
+        assetId: m.assetId,
+        assetName: m.assetName || `Mek #${m.mekNumber}`,
+        mekNumber: m.mekNumber,
+      }));
+
+      await ctx.runMutation(api.corporationAuth.syncMeksOwnership, {
+        stakeAddress: args.stakeAddress,
+        verifiedMeks: meksToSync,
+      });
+    }
+
+    // STEP 6: Mark wallet as verified
+    console.log("[reverifyWallet] Marking wallet as verified...");
+    await ctx.runMutation(api.blockchainVerification.markWalletAsVerified, {
+      walletAddress: args.stakeAddress,
+    });
+
+    console.log("[reverifyWallet] SUCCESS! Previous:", previousMekCount, "Now:", blockchainMeks.length);
+    return {
+      success: true,
+      mekCount: blockchainMeks.length,
+      previousMekCount,
+      walletVerified: true,
+    };
+  },
+});

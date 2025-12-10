@@ -222,11 +222,12 @@ function WalletManagementAdminContent({ onMessagePlayer }: WalletManagementAdmin
     return await client.mutation(api.adminVerificationReset.reconstructCumulativeGoldExact, args);
   };
 
-  const markWalletVerified = async (args: { walletAddress: string }) => {
+  // Real blockchain verification via Blockfrost (not just flipping a boolean)
+  const reverifyWallet = async (args: { stakeAddress: string }) => {
     if (!canMutate()) throw new Error('Mutations disabled in READ ONLY mode');
     const client = getClient();
     if (!client) throw new Error('Client not initialized');
-    return await client.mutation(api.blockchainVerification.markWalletAsVerified, args);
+    return await client.action(api.corporationAuth.reverifyWallet, args);
   };
 
   const cleanupDuplicates = async (args: any) => {
@@ -1542,21 +1543,30 @@ Check console for full timeline.
                                 setTimeout(() => setStatusMessage(null), 3000);
                                 return;
                               }
-                              if (confirm(`Mark ${wallet.corporationName || wallet.companyName || 'this wallet'} as verified?`)) {
+                              const corpName = wallet.corporationName || wallet.companyName || 'this wallet';
+                              if (confirm(`Re-verify "${corpName}" via Blockfrost?\n\nThis will:\n• Query blockchain for current MEK ownership\n• Sync MEKs to database\n• Mark wallet as verified`)) {
                                 try {
-                                  await markWalletVerified({ walletAddress: wallet.walletAddress });
-                                  setStatusMessage({ type: 'success', message: `Wallet verified successfully!` });
-                                  setTimeout(() => setStatusMessage(null), 3000);
+                                  setStatusMessage({ type: 'success', message: `Verifying ${corpName} via Blockfrost...` });
+                                  const result = await reverifyWallet({ stakeAddress: wallet.walletAddress });
+                                  if (result.success) {
+                                    const mekChange = result.mekCount !== result.previousMekCount
+                                      ? ` (${result.previousMekCount} → ${result.mekCount} MEKs)`
+                                      : ` (${result.mekCount} MEKs)`;
+                                    setStatusMessage({ type: 'success', message: `${corpName} verified!${mekChange}` });
+                                  } else {
+                                    setStatusMessage({ type: 'error', message: result.error || 'Verification failed' });
+                                  }
+                                  setTimeout(() => setStatusMessage(null), 5000);
                                   // Refresh wallet data
                                   setWalletsData(null);
                                 } catch (error: any) {
                                   setStatusMessage({ type: 'error', message: error.message || 'Failed to verify wallet' });
-                                  setTimeout(() => setStatusMessage(null), 3000);
+                                  setTimeout(() => setStatusMessage(null), 5000);
                                 }
                               }
                             }}
                             className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/30 text-red-400 border border-red-700 hover:bg-green-900/30 hover:text-green-400 hover:border-green-700 transition-colors cursor-pointer"
-                            title="Click to manually verify this wallet"
+                            title="Click to re-verify via Blockfrost (real blockchain verification)"
                           >
                             ✗ Not Verified
                           </button>
