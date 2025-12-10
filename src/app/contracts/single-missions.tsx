@@ -14,6 +14,7 @@ import { successMultipliers, missionAilments, missionWeaknesses, globalMissionTy
 import { formatGoldAmount, formatCountdown, getRewardColor, generateSampleMeks } from './utils/helpers';
 import { getMekCardStyle, getTraitCircleStyle } from './utils/styleHelpers';
 import ViewActiveContractsButton from '@/components/ViewActiveContractsButton';
+import { getMediaUrl } from '@/lib/media-url';
 
 // Sample rewards with drop rates (sorted by chance)
 const sampleRewardsWithRates = {
@@ -1066,7 +1067,7 @@ export default function ContractsLayoutOption11() {
                     <div key={i} className="flex items-center justify-between bg-gray-800/30 rounded-lg px-3 py-2 hover:bg-gray-800/50 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-gray-900/60 rounded-lg flex items-center justify-center">
-                          <Image src="/variation-images/angler.png" alt="" width={20} height={20} />
+                          <img src={getMediaUrl("/variation-images/angler.png")} alt="" width={20} height={20} />
                         </div>
                         <div>
                           <div className="text-sm text-gray-200">{reward.name}</div>

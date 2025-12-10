@@ -176,7 +176,7 @@ export default function InventoryPage() {
       .replace(/\|/g, '')
       .replace(/\s+/g, '-')
       .toLowerCase();
-    return `/essence-images/named-bottles-1k/${sanitized}.png`;
+    return getMediaUrl(`/essence-images/named-bottles-1k/${sanitized}.png`);
   };
 
   // Get rarity tier from variation
@@ -865,7 +865,7 @@ function EssenceTab({ balances, getEssenceImagePath, getVariationRarity }: Essen
                   alt={balance.variationName}
                   className="w-full h-full object-contain drop-shadow-lg"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/essence-images/default-bottle.png';
+                    (e.target as HTMLImageElement).src = getMediaUrl('/essence-images/default-bottle.png');
                   }}
                 />
 

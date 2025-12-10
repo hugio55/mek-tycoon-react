@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { getMediaUrl } from '@/lib/media-url';
 
 interface ChipTier {
   tier: number;
@@ -82,7 +83,7 @@ export default function UniChips2Page() {
     // Use deterministic image selection based on tier and recipe index
     const getEssenceImage = (tierNum: number, recipeIdx: number, essenceIdx: number) => {
       const imageNum = ((tierNum + recipeIdx + essenceIdx) % 3) + 1;
-      return `/essence-images/bumblebee ${imageNum}.png`;
+      return getMediaUrl(`/essence-images/bumblebee ${imageNum}.png`);
     };
     
     return [

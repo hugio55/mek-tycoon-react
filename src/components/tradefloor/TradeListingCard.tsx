@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Id } from "@/convex/_generated/dataModel";
 import { getMediaUrl } from "@/lib/media-url";
 
@@ -20,6 +21,7 @@ interface TradeListingCardProps {
     desiredVariations: DesiredVariation[];
     status: string;
     createdAt: number;
+    isOwnListing?: boolean;
   };
   viewerMatchCount?: number;
   isOwner?: boolean;
@@ -56,6 +58,11 @@ export default function TradeListingCard({
   onEditListing,
   onCancel,
 }: TradeListingCardProps) {
+  const [showOwnListingTooltip, setShowOwnListingTooltip] = useState(false);
+  const [showMobileLightbox, setShowMobileLightbox] = useState(false);
+
+  const isOwnListing = listing.isOwnListing;
+
   // Clean source key for image path
   const cleanSourceKey = listing.listedMekSourceKey
     ?.replace(/-[A-Z]$/i, "")
@@ -200,7 +207,61 @@ export default function TradeListingCard({
         </span>
 
         <div className="flex gap-2">
-          {showMakeOffer && onMakeOffer && (
+          {showMakeOffer && (isOwnListing ? (
+            /* Own Listing - Disabled button with tooltip */
+            <div
+              className="relative"
+              onMouseEnter={() => setShowOwnListingTooltip(true)}
+              onMouseLeave={() => setShowOwnListingTooltip(false)}
+            >
+              <button
+                onClick={() => {
+                  // On mobile/touch, show lightbox instead of tooltip
+                  if ('ontouchstart' in window) {
+                    setShowMobileLightbox(true);
+                  }
+                }}
+                className="px-4 py-1.5 text-sm rounded-lg font-medium cursor-not-allowed"
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  color: 'rgba(255, 255, 255, 0.4)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                }}
+                disabled
+              >
+                Make Offer
+              </button>
+
+              {/* Tooltip (desktop) */}
+              {showOwnListingTooltip && (
+                <div
+                  className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 rounded-lg whitespace-nowrap z-50"
+                  style={{
+                    background: 'rgba(0, 0, 0, 0.9)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    fontFamily: 'Play, sans-serif',
+                    fontSize: '12px',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                  }}
+                >
+                  This is your own listing
+                  {/* Arrow */}
+                  <div
+                    className="absolute top-full left-1/2 transform -translate-x-1/2"
+                    style={{
+                      width: 0,
+                      height: 0,
+                      borderLeft: '6px solid transparent',
+                      borderRight: '6px solid transparent',
+                      borderTop: '6px solid rgba(0, 0, 0, 0.9)',
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          ) : onMakeOffer && (
             <button
               onClick={onMakeOffer}
               className="px-4 py-1.5 text-sm rounded-lg font-medium transition-all hover:scale-[1.05] active:scale-[0.95]"
@@ -213,7 +274,7 @@ export default function TradeListingCard({
             >
               Make Offer
             </button>
-          )}
+          ))}
 
           {isOwner && onViewOffers && (
             <button

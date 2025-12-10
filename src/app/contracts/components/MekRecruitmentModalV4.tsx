@@ -25,6 +25,7 @@ import ModalPortal from './ModalPortal';
 import SuccessMeterV2 from '@/components/SuccessMeterV2';
 import { DifficultyConfig } from '@/lib/difficultyModifiers';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
+import { getMediaUrl } from '@/lib/media-url';
 
 interface MekRecruitmentModalV4Props {
   showMekModal: string | null;
@@ -748,16 +749,14 @@ export default function MekRecruitmentModalV4({
                                   <div className={`absolute inset-0 bg-yellow-400/20 blur-xl animate-pulse`} />
                                 )}
                                 
-                                <Image
-                                  src="/variation-images/acid.jpg"
+                                <img
+                                  src={getMediaUrl("/variation-images/acid.jpg")}
                                   alt={mult.id}
-                                  fill
-                                  className={`rounded-full object-cover transition-all duration-300 ${
-                                    isActive ? 'scale-110 brightness-110' : 
-                                    mekHasThisTrait ? 'scale-105 brightness-125' : 
+                                  className={`absolute inset-0 w-full h-full rounded-full object-cover transition-all duration-300 ${
+                                    isActive ? 'scale-110 brightness-110' :
+                                    mekHasThisTrait ? 'scale-105 brightness-125' :
                                     'brightness-50 opacity-60 group-hover:brightness-75 group-hover:opacity-80'
                                   }`}
-                                  sizes="89px"
                                 />
                                 
                                 {/* Industrial overlay with gleam */}
@@ -1312,8 +1311,8 @@ export default function MekRecruitmentModalV4({
                                         }
                                       `}>
                                         <div className="relative w-full h-full rounded-full bg-black overflow-hidden">
-                                          <Image
-                                            src="/variation-images/acid.jpg"
+                                          <img
+                                            src={getMediaUrl("/variation-images/acid.jpg")}
                                             alt={traitName}
                                             width={44}
                                             height={44}

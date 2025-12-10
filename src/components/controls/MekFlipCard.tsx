@@ -22,7 +22,7 @@ interface MekFlipCardProps {
  * Features: 3D flip on hover, mek image visible by default, flips to show text with blurred mek behind
  */
 export default function MekFlipCard({
-  imageSrc = '/mek-images/500px/bc2-dm1-ap1.webp',
+  imageSrc = getMediaUrl('/mek-images/500px/bc2-dm1-ap1.webp'),
   badge = 'LEGENDARY',
   title = 'Mek Unit',
   subtitle = '#0001',

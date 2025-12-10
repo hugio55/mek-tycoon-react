@@ -234,21 +234,33 @@ export const getBrowseListings = query({
         .collect();
 
       const listingsWithMatchCount = activeListings.map((listing) => {
+        // Check if this is the viewer's own listing
+        const isOwnListing = listing.ownerStakeAddress === args.viewerStakeAddress;
+
+        // Only compute matches for listings that aren't the viewer's own
         let bestMatchCount = 0;
-        for (const mek of viewerMeks) {
-          const matches = computeMatchedVariations(mek, listing.desiredVariations);
-          if (matches.length > bestMatchCount) {
-            bestMatchCount = matches.length;
+        if (!isOwnListing) {
+          for (const mek of viewerMeks) {
+            const matches = computeMatchedVariations(mek, listing.desiredVariations);
+            if (matches.length > bestMatchCount) {
+              bestMatchCount = matches.length;
+            }
           }
         }
         return {
           ...listing,
           viewerMatchCount: bestMatchCount,
+          isOwnListing,
         };
       });
 
       // Sort by match count descending, then by created date descending
+      // Own listings go to the end regardless of match count
       listingsWithMatchCount.sort((a, b) => {
+        // Own listings always at the bottom
+        if (a.isOwnListing !== b.isOwnListing) {
+          return a.isOwnListing ? 1 : -1;
+        }
         if (b.viewerMatchCount !== a.viewerMatchCount) {
           return b.viewerMatchCount - a.viewerMatchCount;
         }
@@ -259,7 +271,10 @@ export const getBrowseListings = query({
     }
 
     // For non-logged-in users, just return sorted by date
-    return activeListings.sort((a, b) => b.createdAt - a.createdAt);
+    return activeListings.sort((a, b) => b.createdAt - a.createdAt).map(l => ({
+      ...l,
+      isOwnListing: false,
+    }));
   },
 });
 

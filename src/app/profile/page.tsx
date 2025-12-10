@@ -5,6 +5,7 @@ import MekImage from "@/components/MekImage";
 import EssenceChart, { type EssenceData } from "@/components/EssenceChart";
 import Image from "next/image";
 import { getVariationInfoFromFullKey } from "@/lib/variationNameLookup";
+import { getMediaUrl } from "@/lib/media-url";
 
 type Mek = {
   id: string;
@@ -209,8 +210,8 @@ export default function ProfilePage() {
                 background: 'linear-gradient(to bottom right, #1a1a1a, #000)'
               }}
             >
-              <Image
-                src="/variation-images/acid.jpg"
+              <img
+                src={getMediaUrl("/variation-images/acid.jpg")}
                 alt={trait}
                 width={48}
                 height={48}

@@ -6,6 +6,7 @@ import { successMultipliers } from '../constants/missionData';
 import { generateSampleMeks } from '../utils/helpers';
 import { getMekCardStyle, getTraitCircleStyle } from '../utils/styleHelpers';
 import ModalPortal from './ModalPortal';
+import { getMediaUrl } from '@/lib/media-url';
 
 interface MekRecruitmentModalProps {
   showMekModal: string | null;
@@ -251,7 +252,7 @@ export default function MekRecruitmentModal({
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.src = `/mek-images/150px/mek${String(Math.floor(Math.random() * 1000) + 1).padStart(4, '0')}.png`;
+                            target.src = getMediaUrl(`/mek-images/150px/mek${String(Math.floor(Math.random() * 1000) + 1).padStart(4, '0')}.png`);
                           }}
                         />
                       </div>
