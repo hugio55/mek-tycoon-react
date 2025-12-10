@@ -1,9 +1,11 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { addUserEssence, getAllUserEssenceBalances } from "./lib/userEssenceHelpers";
 
-// Create or update user on wallet connection
+// [DEPRECATED] Create or update user on wallet connection
+// Use corporationAuth.ts for new user registration - it properly handles userEssence table
 export const createOrUpdate = mutation({
-  args: { 
+  args: {
     walletAddress: v.string(),
     walletName: v.optional(v.string()),
     lastConnected: v.optional(v.string()),
@@ -24,29 +26,19 @@ export const createOrUpdate = mutation({
       });
       return existingUser;
     }
-    
-    // Create new user with starting resources
+
+    // Create new user - LEGACY: totalEssence is empty, real essence should be in userEssence table
+    // This function is DEPRECATED - use corporationAuth.registerCorporation instead
     const newUserId = await ctx.db.insert("users", {
       walletAddress: args.walletAddress,
       walletName: args.walletName,
       username: undefined,
       avatar: undefined,
+      // LEGACY: Empty placeholder - real essence stored in userEssence table
       totalEssence: {
-        stone: 10,      // Starting essence
-        disco: 5,
-        paul: 0,
-        cartoon: 5,
-        candy: 5,
-        tiles: 5,
-        moss: 5,
-        bullish: 0,
-        journalist: 0,
-        laser: 0,
-        flashbulb: 0,
-        accordion: 0,
-        turret: 0,
-        drill: 0,
-        security: 0,
+        stone: 0, disco: 0, paul: 0, cartoon: 0, candy: 0, tiles: 0,
+        moss: 0, bullish: 0, journalist: 0, laser: 0, flashbulb: 0,
+        accordion: 0, turret: 0, drill: 0, security: 0,
       },
       gold: 100,        // Starting gold
       // Phase II: goldPerHour, lastGoldCollection, pendingGold REMOVED
@@ -69,8 +61,8 @@ export const createOrUpdate = mutation({
   },
 });
 
-// [DEPRECATED - Use walletAuth.connectWallet instead]
-// Get or create user by wallet address
+// [DEPRECATED] Get or create user by wallet address
+// Use corporationAuth.registerCorporation instead - it properly handles userEssence table
 export const getOrCreateUser = mutation({
   args: { walletAddress: v.string() },
   handler: async (ctx, args) => {
@@ -88,28 +80,18 @@ export const getOrCreateUser = mutation({
       });
       return existingUser;
     }
-    
-    // Create new user with starting resources
+
+    // Create new user - LEGACY: totalEssence is empty, real essence should be in userEssence table
+    // This function is DEPRECATED - use corporationAuth.registerCorporation instead
     const newUserId = await ctx.db.insert("users", {
       walletAddress: args.walletAddress,
       username: undefined,
       avatar: undefined,
+      // LEGACY: Empty placeholder - real essence stored in userEssence table
       totalEssence: {
-        stone: 10,      // Starting essence
-        disco: 5,
-        paul: 0,
-        cartoon: 5,
-        candy: 5,
-        tiles: 5,
-        moss: 5,
-        bullish: 0,
-        journalist: 0,
-        laser: 0,
-        flashbulb: 0,
-        accordion: 0,
-        turret: 0,
-        drill: 0,
-        security: 0,
+        stone: 0, disco: 0, paul: 0, cartoon: 0, candy: 0, tiles: 0,
+        moss: 0, bullish: 0, journalist: 0, laser: 0, flashbulb: 0,
+        accordion: 0, turret: 0, drill: 0, security: 0,
       },
       gold: 100,        // Starting gold
       // Phase II: goldPerHour, lastGoldCollection, pendingGold REMOVED
@@ -254,7 +236,7 @@ export const updateUserGold = mutation({
   },
 });
 
-// Add essence to user
+// Add essence to user (Phase II: uses userEssence table)
 export const addEssence = mutation({
   args: {
     userId: v.id("users"),
@@ -266,20 +248,13 @@ export const addEssence = mutation({
     if (!user) {
       throw new Error("User not found");
     }
-    
-    const updatedEssence = { ...user.totalEssence };
-    const essenceKey = args.essenceType as keyof typeof updatedEssence;
-    
-    if (!(essenceKey in updatedEssence)) {
-      throw new Error("Invalid essence type");
+    if (!user.stakeAddress) {
+      throw new Error("User does not have a stake address");
     }
-    
-    updatedEssence[essenceKey] += args.amount;
-    
-    await ctx.db.patch(args.userId, {
-      totalEssence: updatedEssence,
-    });
-    
+
+    // Add to userEssence table (Phase II)
+    const newBalance = await addUserEssence(ctx, user.stakeAddress, args.essenceType, args.amount, "reward");
+
     // Log transaction
     await ctx.db.insert("transactions", {
       type: "reward",
@@ -290,8 +265,9 @@ export const addEssence = mutation({
       details: `Received ${args.amount} ${args.essenceType} essence`,
       timestamp: Date.now(),
     });
-    
-    return updatedEssence;
+
+    // Return updated balances from userEssence table
+    return await getAllUserEssenceBalances(ctx, user.stakeAddress);
   },
 });
 
