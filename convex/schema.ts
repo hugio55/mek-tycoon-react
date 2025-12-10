@@ -3928,4 +3928,85 @@ export default defineSchema({
     .index("by_one_off", ["isOneOff"])
     .index("by_active", ["isActive"])
     .index("by_tier", ["tier"]),
+
+  // =============================================================================
+  // TRADE FLOOR SYSTEM
+  // =============================================================================
+  // Player-to-player Mek trading system. Users list Meks for trade, specify
+  // desired variations, and other players can submit offers.
+  // =============================================================================
+
+  // Trade listings - a user offers one Mek and specifies desired variations
+  tradeListings: defineTable({
+    // Owner
+    ownerStakeAddress: v.string(), // FK to users.stakeAddress
+
+    // Listed Mek
+    listedMekAssetId: v.string(), // FK to meks.assetId
+
+    // Desired Variations (up to 6, any combination of head/body/trait)
+    desiredVariations: v.array(v.object({
+      variationName: v.string(), // e.g., "Bumblebee", "Chrome", "Golden Guns"
+      variationType: v.union(v.literal("head"), v.literal("body"), v.literal("trait")),
+      variationId: v.optional(v.number()), // Reference to COMPLETE_VARIATION_RARITY.id
+    })),
+
+    // Status
+    status: v.union(
+      v.literal("active"),
+      v.literal("completed"), // Trade completed
+      v.literal("cancelled"), // Owner cancelled
+      v.literal("expired") // Expired due to inactivity
+    ),
+
+    // Timestamps
+    createdAt: v.number(),
+    updatedAt: v.number(),
+
+    // Cached data for display (denormalized for performance)
+    listedMekSourceKey: v.optional(v.string()), // For quick image lookup
+    listedMekAssetName: v.optional(v.string()),
+    ownerCorpName: v.optional(v.string()),
+  })
+    .index("by_owner", ["ownerStakeAddress"])
+    .index("by_status", ["status"])
+    .index("by_owner_status", ["ownerStakeAddress", "status"])
+    .index("by_mek", ["listedMekAssetId"])
+    .index("by_created", ["createdAt"]),
+
+  // Trade offers - users can offer 1-3 of their Meks on a listing
+  tradeOffers: defineTable({
+    // Listing reference
+    listingId: v.id("tradeListings"),
+
+    // Offerer
+    offererStakeAddress: v.string(), // FK to users.stakeAddress
+
+    // Offered Meks (1-3 Meks per offer)
+    offeredMeks: v.array(v.object({
+      assetId: v.string(), // FK to meks.assetId
+      sourceKey: v.optional(v.string()), // For quick image lookup
+      assetName: v.optional(v.string()),
+      // Which of the 6 desired variations this Mek matches
+      matchedVariations: v.array(v.string()), // e.g., ["Bumblebee", "Chrome"]
+    })),
+
+    // Status
+    status: v.union(
+      v.literal("pending"), // Awaiting response
+      v.literal("withdrawn"), // Offerer withdrew
+      v.literal("listing_closed") // Listing was cancelled/completed
+    ),
+
+    // Cached data
+    offererCorpName: v.optional(v.string()),
+
+    // Timestamps
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_listing", ["listingId"])
+    .index("by_offerer", ["offererStakeAddress"])
+    .index("by_listing_status", ["listingId", "status"])
+    .index("by_offerer_status", ["offererStakeAddress", "status"]),
 });

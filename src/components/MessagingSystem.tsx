@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -189,9 +189,9 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     }
   }, [selectedConversationId, walletAddress, markAsRead, messages?.length]);
 
-  // Auto-scroll to latest messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // Auto-scroll to latest messages (instant to avoid visible scroll animation on load)
+  useLayoutEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
   }, [messages]);
 
   // Helper to check if conversation is support chat

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -120,9 +120,9 @@ export default function SupportInbox({
     }
   }, [messageTarget, supportConversations, createSupportConversation, onClearMessageTarget]);
 
-  // Auto-scroll
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // Auto-scroll (instant to avoid visible scroll animation on load)
+  useLayoutEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
   }, [messages]);
 
   // Stable reference for messages length (prevents dependency array size changes)
