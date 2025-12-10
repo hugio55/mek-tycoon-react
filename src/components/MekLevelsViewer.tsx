@@ -166,15 +166,15 @@ export default function MekLevelsViewer({ walletAddress, client, selectedDatabas
     return createPortal(loadingContent, document.body);
   }
 
-  // Use data directly from meks table (already includes level and tenure data)
+  // Phase II: Use data directly from meks table (level and tenure data only)
+  // Gold rates are no longer per-Mek - they come from Job Slots
   const allMeks = meksData.map((mek: any) => ({
     assetId: mek.assetId,
     mekNumber: parseInt(mek.assetName.replace(/\D/g, '')) || 0,
-    baseGoldPerHour: mek.baseGoldPerHour || 0,
     currentLevel: mek.currentLevel || 1,
     currentBoostPercent: mek.currentBoostPercent || 0,
-    currentBoostAmount: mek.currentBoostAmount || 0,
     totalGoldSpent: mek.totalGoldSpent || 0,
+    rarityRank: mek.rarityRank || 0,
     _id: mek.assetId,
   }));
 
@@ -195,6 +195,7 @@ export default function MekLevelsViewer({ walletAddress, client, selectedDatabas
 
     let comparison = 0;
 
+    // Phase II: Removed baseGold and totalGold sorting (gold comes from Job Slots)
     switch (sortColumn) {
       case 'mekNumber':
         comparison = a.mekNumber - b.mekNumber;
@@ -202,14 +203,11 @@ export default function MekLevelsViewer({ walletAddress, client, selectedDatabas
       case 'level':
         comparison = a.currentLevel - b.currentLevel;
         break;
-      case 'baseGold':
-        comparison = a.baseGoldPerHour - b.baseGoldPerHour;
+      case 'rarity':
+        comparison = a.rarityRank - b.rarityRank;
         break;
       case 'boost':
         comparison = a.currentBoostPercent - b.currentBoostPercent;
-        break;
-      case 'totalGold':
-        comparison = (a.baseGoldPerHour + a.currentBoostAmount) - (b.baseGoldPerHour + b.currentBoostAmount);
         break;
       case 'tenure':
         comparison = (tenureA?.currentTenure || 0) - (tenureB?.currentTenure || 0);

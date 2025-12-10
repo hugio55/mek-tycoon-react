@@ -168,16 +168,9 @@ export const MekCard = React.memo(({
     }
 
     const newLevel = currentLevel + 1;
-    const baseRate = mek.baseGoldPerHour || mek.goldPerHour;
-
-    // Accelerating percentage system
-    const percentages = [0, 25, 60, 110, 180, 270, 400, 600, 900, 1400];
-    const newBonusPercent = percentages[newLevel - 1] || 0;
-
-    const newBonusRate = baseRate * (newBonusPercent / 100);
-    const newTotalRate = baseRate + newBonusRate;
-
-    onUpgrade(mek, upgradeCost, newLevel, newBonusRate, newTotalRate);
+    // Phase II: Mek levels no longer affect gold rates directly
+    // Gold income comes from Job Slots, not individual Mek properties
+    onUpgrade(mek, upgradeCost, newLevel, 0, 0);
   };
 
   const calculateNextLevelBonus = () => {
@@ -225,53 +218,17 @@ export const MekCard = React.memo(({
 
             <MekLevelBar mek={mek} animatedLevel={animatedValues?.level} levelColors={levelColors} />
 
+            {/* Phase II: Meks earn gold through Job Slots, not inherent rates */}
             <div className="relative group">
               <div className="relative bg-gradient-to-r from-black/60 via-yellow-950/30 to-black/60 border border-yellow-500/30 rounded-lg p-2 @sm:p-3">
-                <div className="text-[9px] @sm:text-[10px] text-yellow-400 uppercase tracking-wider mb-2">Income Rate</div>
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2 @sm:gap-3">
-                    <div className="flex items-baseline gap-1.5 @sm:gap-2">
-                      <span className="text-[10px] @sm:text-[11px] text-gray-500">BASE:</span>
-                      <span className="text-lg @sm:text-xl font-bold text-yellow-400">
-                        {(mek.baseGoldPerHour || mek.goldPerHour).toFixed(1)}
-                      </span>
-                      <span className="text-xs text-gray-400">gold/hr</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 @sm:gap-3">
-                    <div className="flex items-baseline gap-1.5 @sm:gap-2">
-                      <span className="text-[10px] @sm:text-[11px] text-gray-500">BONUS:</span>
-                      {(animatedValues?.bonusRate || mek.levelBoostAmount) && (animatedValues?.bonusRate || mek.levelBoostAmount) > 0 ? (
-                        <>
-                          <span className={`text-lg @sm:text-xl font-bold text-green-400 transition-all duration-700 ${upgradingMeks.has(mek.assetId) ? 'scale-110' : ''}`}>
-                            +<AnimatedNumber value={animatedValues?.bonusRate || mek.levelBoostAmount || 0} decimals={1} />
-                          </span>
-                          <span className="text-xs text-gray-400">gold/hr</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-lg @sm:text-xl font-bold text-gray-600">+0.0</span>
-                          <span className="text-xs text-gray-400">gold/hr</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent my-1" />
-
-                  <div className="flex items-baseline gap-1.5 @sm:gap-2">
-                    <span className="text-[10px] @sm:text-[11px] text-gray-500">TOTAL:</span>
-                    <span className="text-xl @sm:text-2xl font-black text-white" style={{
-                      textShadow: '0 0 15px rgba(250, 182, 23, 0.8)'
-                    }}>
-                      <AnimatedNumber
-                        value={animatedValues?.goldRate || ((mek.baseGoldPerHour || mek.goldPerHour) + (mek.levelBoostAmount || 0))}
-                        decimals={1}
-                      />
-                    </span>
-                    <span className="text-sm text-yellow-400 font-bold">gold/hr</span>
-                  </div>
+                <div className="text-[9px] @sm:text-[10px] text-yellow-400 uppercase tracking-wider mb-2">Rarity</div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl @sm:text-2xl font-black text-white" style={{
+                    textShadow: '0 0 15px rgba(250, 182, 23, 0.8)'
+                  }}>
+                    #{mek.rarityRank || '?'}
+                  </span>
+                  <span className="text-sm text-gray-400">/ 4000</span>
                 </div>
               </div>
             </div>
@@ -389,16 +346,14 @@ export const MekCard = React.memo(({
     </div>
   );
 }, (prevProps, nextProps) => {
+  // Phase II: Removed goldPerHour/levelBoostAmount comparisons
   return (
     prevProps.mek.assetId === nextProps.mek.assetId &&
     prevProps.mek.currentLevel === nextProps.mek.currentLevel &&
-    prevProps.mek.goldPerHour === nextProps.mek.goldPerHour &&
-    prevProps.mek.levelBoostAmount === nextProps.mek.levelBoostAmount &&
+    prevProps.mek.rarityRank === nextProps.mek.rarityRank &&
     prevProps.currentGold === nextProps.currentGold &&
     prevProps.walletAddress === nextProps.walletAddress &&
     prevProps.animatedValues?.level === nextProps.animatedValues?.level &&
-    prevProps.animatedValues?.goldRate === nextProps.animatedValues?.goldRate &&
-    prevProps.animatedValues?.bonusRate === nextProps.animatedValues?.bonusRate &&
     prevProps.upgradingMeks === nextProps.upgradingMeks
   );
 });

@@ -59,17 +59,13 @@ const DEMO_MEKS = [
   },
 ];
 
+// Phase II: Gold balance is on users table, income comes from Job Slots
 const DEMO_GOLD_DATA = {
   walletAddress: DEMO_WALLET_ADDRESS,
   companyName: 'Demo Industries',
   isBlockchainVerified: true,
   ownedMeks: DEMO_MEKS,
-  totalGoldPerHour: 70.56,
-  baseGoldPerHour: 59.34,
-  boostGoldPerHour: 11.22,
-  accumulatedGold: 1250.75,
-  totalCumulativeGold: 8943.22,
-  totalGoldSpentOnUpgrades: 500.0,
+  gold: 1250.75, // Current spendable balance (was accumulatedGold)
   createdAt: Date.now() - (7 * 24 * 60 * 60 * 1000), // 7 days ago
   lastActiveTime: Date.now() - (5 * 60 * 1000), // 5 minutes ago
 };
