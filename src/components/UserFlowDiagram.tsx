@@ -207,45 +207,49 @@ function PreviewModal({
       onClick={onClose}
       style={{ backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
     >
+      {/* Outer container - non-scrolling, positions the close button */}
       <div
-        className="relative max-w-2xl w-full max-h-[90vh] overflow-auto"
+        className="relative max-w-2xl w-full"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
-        <div className="absolute top-2 right-2 z-10">
+        {/* Close button - positioned outside scrollable area */}
+        <div className="absolute -top-2 -right-2 z-50">
           <CloseButton onClick={onClose} hideLabel={true} />
         </div>
 
-        {/* Step indicator */}
-        <div className="text-center mb-4">
-          <span className="text-xs uppercase tracking-wider text-gray-500 bg-gray-900 px-3 py-1 rounded-full">
-            {lightboxType === 'beta' ? `Beta Signup: ${betaStep}` : `NFT Claim: ${nmkrStep}`}
-          </span>
-        </div>
+        {/* Inner scrollable content */}
+        <div className="max-h-[90vh] overflow-auto">
+          {/* Step indicator */}
+          <div className="text-center mb-4">
+            <span className="text-xs uppercase tracking-wider text-gray-500 bg-gray-900 px-3 py-1 rounded-full">
+              {lightboxType === 'beta' ? `Beta Signup: ${betaStep}` : `NFT Claim: ${nmkrStep}`}
+            </span>
+          </div>
 
-        {/* Lightbox preview */}
-        {lightboxType === 'beta' && betaStep && (
-          <BetaSignupLightbox
-            isVisible={true}
-            onClose={() => {}}
-            previewMode={true}
-            previewStep={betaStep}
-            previewVeteranInfo={veteranInfo}
-          />
-        )}
-        {lightboxType === 'nmkr' && nmkrStep && (
-          <NMKRPayLightbox
-            walletAddress={null}
-            onClose={() => {}}
-            previewMode={true}
-            previewState={nmkrStep}
-            previewCorporationName="WrenCo Industries"
-          />
-        )}
+          {/* Lightbox preview */}
+          {lightboxType === 'beta' && betaStep && (
+            <BetaSignupLightbox
+              isVisible={true}
+              onClose={() => {}}
+              previewMode={true}
+              previewStep={betaStep}
+              previewVeteranInfo={veteranInfo}
+            />
+          )}
+          {lightboxType === 'nmkr' && nmkrStep && (
+            <NMKRPayLightbox
+              walletAddress={null}
+              onClose={() => {}}
+              previewMode={true}
+              previewState={nmkrStep}
+              previewCorporationName="WrenCo Industries"
+            />
+          )}
 
-        {/* Dismiss hint */}
-        <div className="text-center mt-4 text-xs text-gray-600">
-          Click outside or press ✕ to close
+          {/* Dismiss hint */}
+          <div className="text-center mt-4 text-xs text-gray-600">
+            Click outside or press ✕ to close
+          </div>
         </div>
       </div>
     </div>
