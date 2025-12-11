@@ -11,6 +11,7 @@ interface CreateListingLightboxProps {
   stakeAddress: string;
   onClose: () => void;
   onSuccess?: () => void;
+  onViewListing?: (mekAssetId: string) => void;
 }
 
 type Step = "select-mek" | "select-variations";
@@ -97,6 +98,7 @@ export default function CreateListingLightbox({
   stakeAddress,
   onClose,
   onSuccess,
+  onViewListing,
 }: CreateListingLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<Step>("select-mek");
@@ -492,30 +494,32 @@ export default function CreateListingLightbox({
                             </div>
                           )}
 
-                          {/* Tooltip for listed Mek */}
+                          {/* Hover overlay with View Listing button for listed Meks */}
                           {isListed && hoveredListedMek === mek.assetId && (
                             <div
-                              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg whitespace-nowrap z-50"
+                              className="absolute inset-0 flex items-center justify-center rounded-lg z-40"
                               style={{
-                                background: 'linear-gradient(135deg, rgba(30,30,40,0.95), rgba(20,20,30,0.95))',
-                                border: '1px solid rgba(251, 191, 36, 0.3)',
-                                fontFamily: 'Play, sans-serif',
-                                fontSize: '12px',
-                                color: '#fbbf24',
-                                boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+                                background: 'rgba(0,0,0,0.7)',
                               }}
                             >
-                              Already listed for trade
-                              <div
-                                className="absolute top-full left-1/2 -translate-x-1/2"
-                                style={{
-                                  width: 0,
-                                  height: 0,
-                                  borderLeft: '6px solid transparent',
-                                  borderRight: '6px solid transparent',
-                                  borderTop: '6px solid rgba(251, 191, 36, 0.3)',
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (onViewListing) {
+                                    onViewListing(mek.assetId);
+                                    onClose();
+                                  }
                                 }}
-                              />
+                                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-105 active:scale-95"
+                                style={{
+                                  fontFamily: 'Play, sans-serif',
+                                  background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.1))',
+                                  border: '1px solid rgba(251, 191, 36, 0.4)',
+                                  color: '#fbbf24',
+                                }}
+                              >
+                                View Listing
+                              </button>
                             </div>
                           )}
                         </div>
@@ -794,7 +798,7 @@ export default function CreateListingLightbox({
 
         {/* Footer */}
         <div
-          className="px-6 py-4 flex justify-end gap-3"
+          className="px-6 py-4 flex justify-center gap-3"
           style={{
             background: 'linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
             borderTop: '1px solid rgba(255,255,255,0.1)',
