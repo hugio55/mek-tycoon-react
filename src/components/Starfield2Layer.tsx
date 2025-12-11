@@ -69,7 +69,7 @@ export default function Starfield2Layer({
       x: Math.random() * width - width / 2,
       y: Math.random() * height - height / 2,
       z: Math.random() * maxZ,
-      size: 0.8 + Math.random() * 0.2, // Random size between 0.8 and 1.0
+      size: 0.3 + Math.random() * 0.4, // Random size between 0.3 and 0.7
     }));
 
     // Initialize Layer 2 stars (fast streaks)
@@ -125,7 +125,7 @@ export default function Starfield2Layer({
             star.x = Math.random() * width - width / 2;
             star.y = Math.random() * height - height / 2;
             star.z = maxZ;
-            star.size = 0.8 + Math.random() * 0.2; // New random size between 0.8 and 1.0
+            star.size = 0.3 + Math.random() * 0.4; // New random size between 0.3 and 0.7
           }
 
           const scale = 1000 / star.z;

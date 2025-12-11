@@ -1105,6 +1105,16 @@ export default function UserFlowDiagram() {
           </div>
         </div>
       )}
+
+      {/* Preview Modal - renders when clicking flowchart cards */}
+      <PreviewModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        lightboxType={modalLightboxType}
+        betaStep={modalBetaStep}
+        nmkrStep={modalNMKRStep}
+        veteranInfo={modalVeteranInfo}
+      />
     </div>
   );
 }

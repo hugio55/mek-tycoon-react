@@ -40,7 +40,7 @@ export const createOrUpdate = mutation({
         moss: 0, bullish: 0, journalist: 0, laser: 0, flashbulb: 0,
         accordion: 0, turret: 0, drill: 0, security: 0,
       },
-      gold: 100,        // Starting gold
+      gold: 0,          // No starting gold - users begin at zero
       // Phase II: goldPerHour, lastGoldCollection, pendingGold REMOVED
       // Gold income now comes from Job Slots, not passive accumulation
       craftingSlots: 1, // Start with 1 slot
@@ -55,7 +55,7 @@ export const createOrUpdate = mutation({
       isOnline: true,
       role: "user",
     });
-    
+
     const newUser = await ctx.db.get(newUserId);
     return newUser;
   },
@@ -93,7 +93,7 @@ export const getOrCreateUser = mutation({
         moss: 0, bullish: 0, journalist: 0, laser: 0, flashbulb: 0,
         accordion: 0, turret: 0, drill: 0, security: 0,
       },
-      gold: 100,        // Starting gold
+      gold: 0,          // No starting gold - users begin at zero
       // Phase II: goldPerHour, lastGoldCollection, pendingGold REMOVED
       // Gold income now comes from Job Slots, not passive accumulation
       craftingSlots: 1, // Start with 1 slot
