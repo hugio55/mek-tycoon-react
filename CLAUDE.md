@@ -604,8 +604,53 @@ The site uses an **Industrial/Military** aesthetic with the following key elemen
 - Progress bars with yellow gradient fills
 - Slots with dashed borders and hazard patterns
 
-### 🚀 SPACE AGE STYLE
-When user says "Space Age Style" → refer to **Admin → Space Age Style** tab for live demos and styling reference. This is the liquid glass aesthetic from the Landing Page (phases page).
+### 🚀 SPACE AGE STYLE (Lightboxes, Modals, Confirmation Dialogs)
+**Reference Implementation:** Admin → Space Age Style tab (`/src/components/NewStylingAdmin.tsx`)
+
+When styling lightboxes, modals, confirmation dialogs, or any overlay UI in the Space Age style:
+
+1. **Go to Admin → Space Age Style tab** for the official design system
+2. **Click "Live Demos"** to see working examples (Input Lightbox, Verified Lightbox)
+3. **Expand "Technical Implementation Details"** for exact CSS values to copy
+
+#### Key Space Age Values (for quick reference):
+```tsx
+// Backdrop
+className="bg-black/60"
+style={{ backdropFilter: 'blur(20px)' }}
+
+// Glass Card Container
+className="rounded-2xl border border-white/10"
+style={{
+  background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+  boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset',
+  backdropFilter: 'blur(30px)',
+}}
+
+// Typography
+Title: "text-2xl font-light text-white tracking-wide"
+Body: "text-white/60 font-light tracking-wide leading-relaxed"
+
+// Primary Button (Yellow)
+className="bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl text-black font-semibold"
+style={{ boxShadow: 'shadow-lg shadow-yellow-500/20' }}
+
+// Secondary Button (Glass)
+style={{
+  background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))',
+  border: '1px solid rgba(255, 255, 255, 0.15)',
+  color: 'rgba(255, 255, 255, 0.7)',
+}}
+```
+
+#### When to Use Each Style:
+- **Space Age Style**: Lightboxes, modals, confirmation dialogs, overlays, user-facing popups
+- **Industrial Style**: Game UI elements, cards on pages, navigation, progress bars
+
+**Canonical Reference Components:**
+- `BetaSignupLightbox.tsx` - Full Space Age lightbox implementation
+- `ConfirmationLightbox.tsx` - Simple confirmation dialog
+- `NewStylingAdmin.tsx` - Design system documentation with live demos
 
 ## Important Data Structure
 

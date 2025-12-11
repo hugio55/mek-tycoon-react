@@ -131,13 +131,18 @@ function WalletManagementAdminContent({ onMessagePlayer }: WalletManagementAdmin
     }
   }, [campaigns, selectedCampaignId]);
 
-  // Batch check claim status for all wallets (campaign-specific)
+  // ============================================================================
+  // CLAIM STATUS - ALWAYS FROM PRODUCTION (via campaignMints table)
+  // ============================================================================
+  // IMPORTANT FOR FUTURE CLAUDE SESSIONS:
+  // This ALWAYS queries Production database regardless of which database view
+  // is selected (Staging vs Production). Claims only happen on the live site.
+  // Uses the new campaignMints table as the single source of truth.
+  // ============================================================================
   const stakeAddresses = wallets?.map((w: any) => w.walletAddress) || [];
-  const claimStatusData = useQuery(
-    api.nftEligibility.batchCheckClaimStatusForCampaign,
-    walletsLoaded && stakeAddresses.length > 0 && selectedCampaignId
-      ? { stakeAddresses, campaignId: selectedCampaignId as any }
-      : "skip"
+  const { claimStatus: claimStatusData, loading: claimStatusLoading } = useProductionClaimStatus(
+    selectedCampaignId,
+    stakeAddresses
   );
 
   // CRITICAL FIX: Replace useMutation hooks with direct client calls
@@ -1625,9 +1630,10 @@ Check console for full timeline.
                       </td>
                       <td className="px-2 py-2 text-center">
                         {(() => {
+                          // CLAIM STATUS: Always from Production via campaignMints table
                           const claimStatus = claimStatusData?.[wallet.walletAddress];
-                          const hasClaimed = claimStatus?.claimed || false;
-                          return hasClaimed ? (
+                          const hasMinted = claimStatus?.hasMinted || false;
+                          return hasMinted ? (
                             <span className="inline-block bg-green-600/20 text-green-400 border border-green-500/30 px-2.5 py-0.5 rounded text-xs font-bold">
                               Yes
                             </span>
@@ -1640,12 +1646,13 @@ Check console for full timeline.
                       </td>
                       <td className="px-2 py-2">
                         {(() => {
+                          // MINT DATE: Always from Production via campaignMints table
                           const claimStatus = claimStatusData?.[wallet.walletAddress];
-                          const claimDate = claimStatus?.claimedAt;
-                          return claimDate ? (
+                          const mintDate = claimStatus?.mintedAt;
+                          return mintDate ? (
                             <div className="text-xs text-gray-300">
-                              <div>{new Date(claimDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-                              <div className="text-gray-500">{new Date(claimDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</div>
+                              <div>{new Date(mintDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                              <div className="text-gray-500">{new Date(mintDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</div>
                             </div>
                           ) : (
                             <span className="text-gray-600 italic text-xs">—</span>

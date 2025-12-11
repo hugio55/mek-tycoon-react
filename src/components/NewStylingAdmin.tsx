@@ -8,6 +8,7 @@ import { getMediaUrl } from '@/lib/media-url';
 const STYLE_CATEGORIES = [
   { id: 'lightboxes', name: 'Lightboxes', icon: '🪟' },
   { id: 'liquid-glass', name: 'Liquid Glass Cards', icon: '💎' },
+  { id: 'dropdowns', name: 'Dropdowns', icon: '📋' },
   { id: 'typography', name: 'Typography', icon: '🔤' },
   { id: 'colors', name: 'Colors & Glows', icon: '🎨' },
   { id: 'hover-effects', name: 'Hover Effects', icon: '✨' },

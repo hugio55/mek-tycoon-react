@@ -1,8 +1,60 @@
 'use client';
 
 import { useState } from 'react';
+import BetaSignupLightbox, { type BetaSignupStep, type VeteranInfo } from './BetaSignupLightbox';
+import NMKRPayLightbox, { type NMKRPayState } from './NMKRPayLightbox';
 
 type NodeType = 'start' | 'screen' | 'decision' | 'action' | 'end' | 'api' | 'error' | 'special';
+
+// Mock veteran info for previews
+const MOCK_VETERAN_INFO: VeteranInfo = {
+  isVeteran: true,
+  originalCorporationName: 'WrenCo Industries',
+  reservedCorporationName: null,
+  nameReservedAt: null,
+  hasReservedName: false,
+};
+
+const MOCK_VETERAN_WITH_RESERVED: VeteranInfo = {
+  isVeteran: true,
+  originalCorporationName: 'WrenCo Industries',
+  reservedCorporationName: 'WrenCo Phase II',
+  nameReservedAt: Date.now(),
+  hasReservedName: true,
+};
+
+// Beta Signup steps to preview
+const BETA_SIGNUP_STEPS: { step: BetaSignupStep; label: string; description: string; veteranInfo?: VeteranInfo }[] = [
+  { step: 'address_entry', label: 'Address Entry', description: 'Initial screen where user enters stake address' },
+  { step: 'checking_veteran', label: 'Checking Veteran', description: 'Loading spinner while checking veteran status' },
+  { step: 'veteran_welcome', label: 'Veteran Welcome', description: 'Phase I veteran recognized', veteranInfo: MOCK_VETERAN_INFO },
+  { step: 'wallet_selection', label: 'Wallet Selection', description: 'Choose wallet to verify ownership', veteranInfo: MOCK_VETERAN_INFO },
+  { step: 'wallet_verification', label: 'Wallet Verification', description: 'Verifying wallet signature', veteranInfo: MOCK_VETERAN_INFO },
+  { step: 'name_input', label: 'Name Input', description: 'Enter new corporation name', veteranInfo: MOCK_VETERAN_INFO },
+  { step: 'name_confirmed', label: 'Name Confirmed', description: 'Name reservation successful', veteranInfo: MOCK_VETERAN_WITH_RESERVED },
+  { step: 'normal_signup', label: 'Normal Signup', description: 'Non-veteran signup processing' },
+  { step: 'success', label: 'Success', description: 'Signup complete screen' },
+];
+
+// NMKR Pay steps to preview
+const NMKR_PAY_STEPS: { step: NMKRPayState; label: string; description: string }[] = [
+  { step: 'loading_campaign', label: 'Loading Campaign', description: 'Initial loading spinner' },
+  { step: 'no_campaign', label: 'No Campaign', description: 'No active campaigns available' },
+  { step: 'address_entry', label: 'Address Entry', description: 'Enter stake address' },
+  { step: 'checking_eligibility', label: 'Checking Eligibility', description: 'Verifying participation' },
+  { step: 'ineligible', label: 'Ineligible', description: 'Not eligible for campaign' },
+  { step: 'already_claimed', label: 'Already Claimed', description: 'User already claimed NFT' },
+  { step: 'corporation_verified', label: 'Corporation Verified', description: 'Eligible - corp name shown' },
+  { step: 'creating', label: 'Creating Reservation', description: 'Reserving NFT' },
+  { step: 'reserved', label: 'Reserved', description: 'NFT reserved, ready to pay' },
+  { step: 'wallet_verification', label: 'Wallet Verification', description: 'Desktop wallet selection' },
+  { step: 'payment', label: 'Payment', description: 'Complete payment in NMKR' },
+  { step: 'payment_window_closed', label: 'Payment Window Closed', description: 'Did you complete payment?' },
+  { step: 'processing', label: 'Processing', description: 'Waiting for blockchain confirmation' },
+  { step: 'success', label: 'Success', description: 'NFT claimed successfully' },
+  { step: 'timeout', label: 'Timeout', description: 'Reservation timed out' },
+  { step: 'error', label: 'Error', description: 'Something went wrong' },
+];
 
 interface FlowNodeProps {
   label: string;
@@ -100,7 +152,10 @@ function SplitPaths({ children, labels }: { children: React.ReactNode[]; labels?
 }
 
 export default function UserFlowDiagram() {
-  const [activeFlow, setActiveFlow] = useState<'join-beta' | 'claim-nft'>('join-beta');
+  const [activeFlow, setActiveFlow] = useState<'join-beta' | 'claim-nft' | 'lightbox-preview'>('join-beta');
+  const [selectedBetaStep, setSelectedBetaStep] = useState<BetaSignupStep>('address_entry');
+  const [selectedNMKRStep, setSelectedNMKRStep] = useState<NMKRPayState>('address_entry');
+  const [previewLightbox, setPreviewLightbox] = useState<'beta' | 'nmkr'>('beta');
 
   return (
     <div className="space-y-6">
@@ -125,6 +180,16 @@ export default function UserFlowDiagram() {
           }`}
         >
           Claim NFT Button
+        </button>
+        <button
+          onClick={() => setActiveFlow('lightbox-preview')}
+          className={`px-6 py-3 rounded-t-lg font-bold text-sm uppercase tracking-wider transition-all ${
+            activeFlow === 'lightbox-preview'
+              ? 'bg-yellow-900/50 border-2 border-yellow-500 border-b-0 text-yellow-300'
+              : 'bg-gray-800/30 border border-gray-600 text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          Lightbox Preview
         </button>
       </div>
 
@@ -779,6 +844,133 @@ export default function UserFlowDiagram() {
             <div className="mt-3 pt-3 border-t border-gray-700/50 text-xs text-gray-500">
               <strong>Note:</strong> Each screen shows buttons and links available to the user. "Click backdrop" means clicking outside the lightbox area.
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* LIGHTBOX PREVIEW */}
+      {activeFlow === 'lightbox-preview' && (
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-3xl">👁️</span>
+            <div>
+              <h3 className="text-xl font-bold text-yellow-400 uppercase tracking-wider">Lightbox Preview</h3>
+              <p className="text-gray-400 text-sm">View actual lightboxes with mock data - use for styling and copy review</p>
+            </div>
+          </div>
+
+          {/* Lightbox Type Selector */}
+          <div className="flex gap-4 mb-6">
+            <button
+              onClick={() => setPreviewLightbox('beta')}
+              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                previewLightbox === 'beta'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              }`}
+            >
+              Beta Signup Lightbox
+            </button>
+            <button
+              onClick={() => setPreviewLightbox('nmkr')}
+              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                previewLightbox === 'nmkr'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              }`}
+            >
+              NFT Claim Lightbox
+            </button>
+          </div>
+
+          {/* Step Selector and Preview */}
+          {previewLightbox === 'beta' && (
+            <div className="grid grid-cols-[300px_1fr] gap-6">
+              {/* Step buttons */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Select Step</h4>
+                {BETA_SIGNUP_STEPS.map((item) => (
+                  <button
+                    key={item.step}
+                    onClick={() => setSelectedBetaStep(item.step)}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
+                      selectedBetaStep === item.step
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
+                    }`}
+                  >
+                    <div className="font-semibold">{item.label}</div>
+                    <div className="text-xs opacity-70">{item.description}</div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Preview area */}
+              <div className="bg-gray-900/50 rounded-xl p-6 border border-gray-700">
+                <div className="text-xs text-gray-500 uppercase tracking-wider mb-4">
+                  Preview: {selectedBetaStep}
+                </div>
+                <div className="flex justify-center items-center min-h-[400px] bg-black/30 rounded-lg p-4">
+                  <BetaSignupLightbox
+                    isVisible={true}
+                    onClose={() => {}}
+                    previewMode={true}
+                    previewStep={selectedBetaStep}
+                    previewVeteranInfo={BETA_SIGNUP_STEPS.find(s => s.step === selectedBetaStep)?.veteranInfo}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {previewLightbox === 'nmkr' && (
+            <div className="grid grid-cols-[300px_1fr] gap-6">
+              {/* Step buttons */}
+              <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+                <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Select Step</h4>
+                {NMKR_PAY_STEPS.map((item) => (
+                  <button
+                    key={item.step}
+                    onClick={() => setSelectedNMKRStep(item.step)}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
+                      selectedNMKRStep === item.step
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
+                    }`}
+                  >
+                    <div className="font-semibold">{item.label}</div>
+                    <div className="text-xs opacity-70">{item.description}</div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Preview area */}
+              <div className="bg-gray-900/50 rounded-xl p-6 border border-gray-700">
+                <div className="text-xs text-gray-500 uppercase tracking-wider mb-4">
+                  Preview: {selectedNMKRStep}
+                </div>
+                <div className="flex justify-center items-center min-h-[400px] bg-black/30 rounded-lg p-4">
+                  <NMKRPayLightbox
+                    walletAddress={null}
+                    onClose={() => {}}
+                    previewMode={true}
+                    previewState={selectedNMKRStep}
+                    previewCorporationName="WrenCo Industries"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Info Box */}
+          <div className="mt-6 p-4 bg-yellow-900/20 rounded-lg border border-yellow-700/40">
+            <h5 className="text-sm font-bold text-yellow-400 mb-2">About Preview Mode</h5>
+            <ul className="text-xs text-gray-300 space-y-1">
+              <li>• All data shown is mock data (e.g., "WrenCo Industries" corporation name)</li>
+              <li>• Buttons are non-functional in preview mode</li>
+              <li>• Use this to review styling, copy text, and layout</li>
+              <li>• The lightbox renders inline (no backdrop) for easy comparison</li>
+            </ul>
           </div>
         </div>
       )}

@@ -323,16 +323,7 @@ export default function TradeFloorPage() {
               style={{ color: '#22d3ee' }}
             >
               Trading Tent
-            </a>. We highly discourage sending assets privately without the use of a trustless system (such as{' '}
-            <a
-              href="https://app.tradingtent.io"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="transition-colors hover:text-cyan-300"
-              style={{ color: '#22d3ee' }}
-            >
-              Trading Tent
-            </a>).
+            </a>. We highly discourage sending assets privately without the use of a trustless system (such as Trading Tent).
           </p>
         </div>
 
