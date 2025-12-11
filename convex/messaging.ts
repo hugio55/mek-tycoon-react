@@ -554,6 +554,16 @@ export const sendMessage = mutation({
       });
     }
 
+    // Clear typing indicator for sender (they just sent a message, no longer typing)
+    const typingIndicator = await ctx.db
+      .query("typingIndicators")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", convId))
+      .filter((q) => q.eq(q.field("walletAddress"), senderWallet))
+      .first();
+    if (typingIndicator) {
+      await ctx.db.delete(typingIndicator._id);
+    }
+
     return { success: true, conversationId: convId };
   },
 });
@@ -739,6 +749,16 @@ export const sendMessageWithMek = mutation({
         conversationId: convId,
         count: 1,
       });
+    }
+
+    // Clear typing indicator for sender
+    const typingIndicator = await ctx.db
+      .query("typingIndicators")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", convId))
+      .filter((q) => q.eq(q.field("walletAddress"), senderWallet))
+      .first();
+    if (typingIndicator) {
+      await ctx.db.delete(typingIndicator._id);
     }
 
     return { success: true, conversationId: convId };

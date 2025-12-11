@@ -732,28 +732,21 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
         {/* Inbox Header */}
         <div className="p-4 border-b border-gray-700 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white">Inbox</h2>
-          <button
-            onClick={() => setShowBlockedUsers(true)}
-            className="text-xs px-2 py-1 rounded-full border transition-colors bg-gray-700/50 text-gray-400 border-gray-600 hover:border-red-500/50 hover:text-red-400 hover:bg-red-500/10"
-          >
-            Blocked
-          </button>
-        </div>
-
-        {/* New Conversation Button */}
-        <button
-          onClick={() => setShowNewConversation(true)}
-          className="w-full p-4 text-left border-b border-gray-700/50 hover:bg-white/5 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="text-cyan-400">
-                <path d="M9 3v12M3 9h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </div>
-            <span className="text-cyan-400 font-medium">New Conversation</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowNewConversation(true)}
+              className="text-xs px-2 py-1 rounded-full border transition-colors bg-cyan-500/10 text-cyan-400 border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-500/20"
+            >
+              New
+            </button>
+            <button
+              onClick={() => setShowBlockedUsers(true)}
+              className="text-xs px-2 py-1 rounded-full border transition-colors bg-gray-700/50 text-gray-400 border-gray-600 hover:border-red-500/50 hover:text-red-400 hover:bg-red-500/10"
+            >
+              Blocked
+            </button>
           </div>
-        </button>
+        </div>
 
         {/* Inbox Search */}
         <div className="px-3 py-2 border-b border-gray-700/50">
