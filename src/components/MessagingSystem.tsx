@@ -909,11 +909,12 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                   {/* Avatar Context Menu */}
                   {avatarMenuOpen === conv.otherParticipant.walletAddress && (
                     <div
-                      className="absolute left-0 top-12 z-50 min-w-[140px] py-1 rounded-lg shadow-xl"
+                      data-avatar-menu
+                      className="absolute left-0 top-12 z-50 min-w-[160px] rounded-lg overflow-hidden"
                       style={{
-                        background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.98), rgba(20, 20, 20, 0.98))',
-                        border: '1px solid rgba(255, 255, 255, 0.15)',
-                        backdropFilter: 'blur(10px)',
+                        background: 'linear-gradient(135deg, rgba(30, 32, 38, 0.95) 0%, rgba(35, 38, 45, 0.97) 50%, rgba(30, 32, 38, 0.95) 100%)',
+                        border: '1px solid rgba(34, 211, 238, 0.4)',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
                       }}
                     >
                       <button
@@ -922,7 +923,11 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                           window.open(`/corporation/${conv.otherParticipant.walletAddress}`, '_blank');
                           setAvatarMenuOpen(null);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 transition-colors flex items-center gap-2"
+                        className="w-full px-3 py-2.5 text-left text-sm tracking-wide transition-all flex items-center gap-2 hover:bg-white/10 hover:pl-4 hover:brightness-125"
+                        style={{
+                          color: 'rgba(255,255,255,0.85)',
+                          borderBottom: '1px solid rgba(255,255,255,0.1)',
+                        }}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -936,7 +941,10 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                           handleBlockUser(conv.otherParticipant.walletAddress);
                           setAvatarMenuOpen(null);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-2"
+                        className="w-full px-3 py-2.5 text-left text-sm tracking-wide transition-all flex items-center gap-2 hover:bg-red-500/20 hover:pl-4"
+                        style={{
+                          color: '#f87171',
+                        }}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <circle cx="12" cy="12" r="10" />

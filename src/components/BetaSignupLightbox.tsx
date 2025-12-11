@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom';
 import { validateStakeAddress, isValidStakeAddressFormat } from '@/lib/cardanoValidation';
 import { useWalletVerification } from '@/hooks/useWalletVerification';
 import CubeSpinner from '@/components/loaders/CubeSpinner';
-import GlassButton from '@/components/controls/GlassButton';
 
 // Phase I veteran data from backend
 interface VeteranInfo {
