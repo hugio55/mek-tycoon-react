@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import BetaSignupLightbox, { type BetaSignupStep, type VeteranInfo } from './BetaSignupLightbox';
 import NMKRPayLightbox, { type NMKRPayState } from './NMKRPayLightbox';
+import CloseButton from './controls/CloseButton';
 
 type NodeType = 'start' | 'screen' | 'decision' | 'action' | 'end' | 'api' | 'error' | 'special';
 
@@ -211,12 +212,9 @@ function PreviewModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute -top-2 -right-2 z-10 w-8 h-8 bg-gray-800 border border-gray-600 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
-        >
-          ✕
-        </button>
+        <div className="absolute top-2 right-2 z-10">
+          <CloseButton onClick={onClose} hideLabel={true} />
+        </div>
 
         {/* Step indicator */}
         <div className="text-center mb-4">

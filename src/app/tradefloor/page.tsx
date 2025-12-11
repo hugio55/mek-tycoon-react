@@ -708,14 +708,14 @@ export default function TradeFloorPage() {
         {/* Browse Listings Tab */}
         {stakeAddress && activeTab === "browse" && (
           <div>
-            {sortedBrowseListings === undefined ? (
+            {paginatedBrowseListings === undefined ? (
               <div
                 className="text-center py-12"
                 style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
               >
                 Loading listings...
               </div>
-            ) : sortedBrowseListings.length === 0 ? (
+            ) : sortedBrowseListings && sortedBrowseListings.length === 0 ? (
               <div
                 className="text-center py-12 rounded-2xl relative overflow-hidden"
                 style={{
@@ -726,88 +726,225 @@ export default function TradeFloorPage() {
                 }}
               >
                 <div className="relative z-10">
-                  {/* Space Age Handshake Icon */}
-                  <div className="mb-4 flex justify-center">
-                    <svg
-                      width="80"
-                      height="80"
-                      viewBox="0 0 80 80"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      style={{
-                        filter: 'drop-shadow(0 0 20px rgba(34, 211, 238, 0.4))',
-                      }}
-                    >
-                      {/* Outer glow ring */}
-                      <circle cx="40" cy="40" r="38" stroke="url(#handshakeGradient)" strokeWidth="1.5" opacity="0.3"/>
-                      {/* Inner ring */}
-                      <circle cx="40" cy="40" r="32" stroke="url(#handshakeGradient)" strokeWidth="1" opacity="0.2"/>
-                      {/* Left hand coming from left */}
-                      <path
-                        d="M18 42c0-1 0.5-2 1.5-2.5l8-3c1-0.4 2-0.2 2.8 0.5l5 4.5c0.8 0.7 1.2 1.8 1 2.8l-0.5 2c-0.2 1-1 1.8-2 2l-3 0.5"
-                        stroke="url(#handshakeGradient)"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        fill="none"
-                      />
-                      {/* Right hand coming from right */}
-                      <path
-                        d="M62 42c0-1-0.5-2-1.5-2.5l-8-3c-1-0.4-2-0.2-2.8 0.5l-5 4.5c-0.8 0.7-1.2 1.8-1 2.8l0.5 2c0.2 1 1 1.8 2 2l3 0.5"
-                        stroke="url(#handshakeGradient)"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        fill="none"
-                      />
-                      {/* Handshake clasp in center */}
-                      <path
-                        d="M35 40l3 2.5c1 0.8 2.5 0.8 3.5 0l3-2.5"
-                        stroke="url(#handshakeGradient)"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        fill="none"
-                      />
-                      {/* Energy lines */}
-                      <path d="M40 25v-5" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
-                      <path d="M50 28l3-4" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
-                      <path d="M30 28l-3-4" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
-                      <path d="M55 35l4-2" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
-                      <path d="M25 35l-4-2" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
-                      {/* Gradient definitions */}
-                      <defs>
-                        <linearGradient id="handshakeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#22d3ee"/>
-                          <stop offset="100%" stopColor="#06b6d4"/>
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                  </div>
-                  <h3
-                    className="text-xl font-semibold text-white mb-2"
-                    style={{ fontFamily: 'Orbitron, sans-serif' }}
-                  >
-                    No Listings Yet
-                  </h3>
-                  <p style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
-                    Be the first to list a Mek for trade!
-                  </p>
+                  {searchQuery ? (
+                    /* No search results */
+                    <>
+                      <div className="mb-4 flex justify-center">
+                        <svg
+                          width="64"
+                          height="64"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.3)"
+                          strokeWidth="1.5"
+                          style={{ filter: 'drop-shadow(0 0 10px rgba(34, 211, 238, 0.2))' }}
+                        >
+                          <circle cx="11" cy="11" r="8"/>
+                          <path d="M21 21l-4.35-4.35"/>
+                          <path d="M8 8l6 6M14 8l-6 6" strokeWidth="2"/>
+                        </svg>
+                      </div>
+                      <h3
+                        className="text-xl font-semibold text-white mb-2"
+                        style={{ fontFamily: 'Orbitron, sans-serif' }}
+                      >
+                        No Results Found
+                      </h3>
+                      <p style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
+                        No listings match "{searchQuery}"
+                      </p>
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="mt-4 px-4 py-2 rounded-lg text-sm transition-all hover:brightness-125"
+                        style={{
+                          fontFamily: 'Play, sans-serif',
+                          background: 'rgba(34, 211, 238, 0.15)',
+                          border: '1px solid rgba(34, 211, 238, 0.3)',
+                          color: '#22d3ee',
+                        }}
+                      >
+                        Clear Search
+                      </button>
+                    </>
+                  ) : (
+                    /* No listings at all */
+                    <>
+                      <div className="mb-4 flex justify-center">
+                        <svg
+                          width="80"
+                          height="80"
+                          viewBox="0 0 80 80"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          style={{
+                            filter: 'drop-shadow(0 0 20px rgba(34, 211, 238, 0.4))',
+                          }}
+                        >
+                          <circle cx="40" cy="40" r="38" stroke="url(#handshakeGradient)" strokeWidth="1.5" opacity="0.3"/>
+                          <circle cx="40" cy="40" r="32" stroke="url(#handshakeGradient)" strokeWidth="1" opacity="0.2"/>
+                          <path
+                            d="M18 42c0-1 0.5-2 1.5-2.5l8-3c1-0.4 2-0.2 2.8 0.5l5 4.5c0.8 0.7 1.2 1.8 1 2.8l-0.5 2c-0.2 1-1 1.8-2 2l-3 0.5"
+                            stroke="url(#handshakeGradient)"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            fill="none"
+                          />
+                          <path
+                            d="M62 42c0-1-0.5-2-1.5-2.5l-8-3c-1-0.4-2-0.2-2.8 0.5l-5 4.5c-0.8 0.7-1.2 1.8-1 2.8l0.5 2c0.2 1 1 1.8 2 2l3 0.5"
+                            stroke="url(#handshakeGradient)"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            fill="none"
+                          />
+                          <path
+                            d="M35 40l3 2.5c1 0.8 2.5 0.8 3.5 0l3-2.5"
+                            stroke="url(#handshakeGradient)"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            fill="none"
+                          />
+                          <path d="M40 25v-5" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+                          <path d="M50 28l3-4" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
+                          <path d="M30 28l-3-4" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
+                          <path d="M55 35l4-2" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+                          <path d="M25 35l-4-2" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+                          <defs>
+                            <linearGradient id="handshakeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="#22d3ee"/>
+                              <stop offset="100%" stopColor="#06b6d4"/>
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                      </div>
+                      <h3
+                        className="text-xl font-semibold text-white mb-2"
+                        style={{ fontFamily: 'Orbitron, sans-serif' }}
+                      >
+                        No Listings Yet
+                      </h3>
+                      <p style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
+                        Be the first to list a Mek for trade!
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {sortedBrowseListings.map((listing: any) => (
-                  <TradeListingCard
-                    key={listing._id}
-                    listing={listing}
-                    viewerStakeAddress={stakeAddress || undefined}
-                    viewerMatchCount={listing.viewerMatchCount}
-                    onMakeOffer={() => setSelectedListingForOffer(listing)}
-                    showMakeOffer={true}
-                  />
-                ))}
-              </div>
+              <>
+                {/* Listings Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {paginatedBrowseListings.map((listing: any) => (
+                    <TradeListingCard
+                      key={listing._id}
+                      listing={listing}
+                      viewerStakeAddress={stakeAddress || undefined}
+                      viewerMatchCount={listing.viewerMatchCount}
+                      onMakeOffer={() => setSelectedListingForOffer(listing)}
+                      showMakeOffer={true}
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div
+                    className="mt-6 flex items-center justify-center gap-2"
+                    style={{ fontFamily: 'Play, sans-serif' }}
+                  >
+                    {/* Previous Button */}
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-2 rounded-lg text-sm transition-all hover:brightness-125 disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{
+                        background: 'rgba(255,255,255,0.08)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        color: 'rgba(255,255,255,0.8)',
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="M15 18l-6-6 6-6"/>
+                      </svg>
+                    </button>
+
+                    {/* Page Numbers */}
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                        // Show: first, last, current, and 1 page on each side of current
+                        const showPage = page === 1 ||
+                          page === totalPages ||
+                          Math.abs(page - currentPage) <= 1;
+
+                        // Show ellipsis
+                        const showEllipsisBefore = page === currentPage - 2 && currentPage > 3;
+                        const showEllipsisAfter = page === currentPage + 2 && currentPage < totalPages - 2;
+
+                        if (showEllipsisBefore || showEllipsisAfter) {
+                          return (
+                            <span
+                              key={page}
+                              className="px-2 text-sm"
+                              style={{ color: 'rgba(255,255,255,0.4)' }}
+                            >
+                              ...
+                            </span>
+                          );
+                        }
+
+                        if (!showPage) return null;
+
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className="min-w-[36px] h-9 rounded-lg text-sm transition-all hover:brightness-125"
+                            style={{
+                              background: currentPage === page
+                                ? 'linear-gradient(135deg, rgba(34,211,238,0.2), rgba(34,211,238,0.1))'
+                                : 'rgba(255,255,255,0.05)',
+                              border: currentPage === page
+                                ? '1px solid rgba(34,211,238,0.4)'
+                                : '1px solid rgba(255,255,255,0.1)',
+                              color: currentPage === page
+                                ? '#22d3ee'
+                                : 'rgba(255,255,255,0.6)',
+                            }}
+                          >
+                            {page}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Next Button */}
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-2 rounded-lg text-sm transition-all hover:brightness-125 disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{
+                        background: 'rgba(255,255,255,0.08)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        color: 'rgba(255,255,255,0.8)',
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="M9 18l6-6-6-6"/>
+                      </svg>
+                    </button>
+
+                    {/* Page Info */}
+                    <span
+                      className="ml-4 text-sm"
+                      style={{ color: 'rgba(255,255,255,0.5)' }}
+                    >
+                      {sortedBrowseListings?.length} listing{sortedBrowseListings?.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

@@ -79,6 +79,33 @@ function formatRelativeTime(timestamp: number): string {
   return `${month} ${day}, ${year} at ${time}`;
 }
 
+// Format date for dividers
+function formatDateDivider(timestamp: number): string {
+  const date = new Date(timestamp);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return 'Today';
+  }
+  if (date.toDateString() === yesterday.toDateString()) {
+    return 'Yesterday';
+  }
+
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
+  });
+}
+
+// Helper to get date string for grouping
+function getDateString(timestamp: number): string {
+  return new Date(timestamp).toDateString();
+}
+
 interface MessagingSystemProps {
   walletAddress: string;
   companyName?: string;
@@ -313,8 +340,12 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   // Get support conversation from the list (if exists and not dismissed)
   const supportConversation = conversations?.find(isSupportConversation);
 
-  // Regular conversations (excluding support)
-  const regularConversations = conversations?.filter((conv: any) => !isSupportConversation(conv)) || [];
+  // Regular conversations (excluding support, filtered by search)
+  const regularConversations = (conversations?.filter((conv: any) => !isSupportConversation(conv)) || [])
+    .filter((conv: any) =>
+      !inboxSearchQuery ||
+      conv.otherParticipant?.companyName?.toLowerCase().includes(inboxSearchQuery.toLowerCase())
+    );
 
   // Filter corporations for search (include support reopen option)
   const corporationsToSearch = allCorporations || [];
@@ -725,6 +756,40 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
           </div>
         </button>
 
+        {/* Inbox Search */}
+        <div className="px-3 py-2 border-b border-gray-700/50">
+          <div className="relative">
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <input
+              type="text"
+              value={inboxSearchQuery}
+              onChange={(e) => setInboxSearchQuery(e.target.value)}
+              placeholder="Search conversations..."
+              className="w-full bg-white/5 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+            />
+            {inboxSearchQuery && (
+              <button
+                onClick={() => setInboxSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Conversation List */}
         <div className="flex-1 overflow-y-auto">
@@ -962,17 +1027,61 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                 </div>
               )}
 
-              {messages?.map((msg: any) => {
+              {messages?.map((msg: any, index: number) => {
                 const isMine = msg.senderId === walletAddress;
                 if (msg.deletedForSender && isMine) return null;
                 if (msg.deletedForRecipient && !isMine) return null;
 
+                // Check if we need a date divider
+                const prevMsg = index > 0 ? messages[index - 1] : null;
+                const showDateDivider = !prevMsg || getDateString(msg.createdAt) !== getDateString(prevMsg.createdAt);
+
+                // Check if this is a support conversation for read receipt hiding
+                const isInSupportConversation = currentConversation && isSupportConversation(currentConversation);
+                const isSupportMessage = msg.senderId === SUPPORT_WALLET_ID;
+
                 return (
-                  <div
-                    key={msg._id}
-                    className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div className={`max-w-[70%] ${isMine ? 'order-2' : ''}`}>
+                  <div key={msg._id}>
+                    {/* Date Divider */}
+                    {showDateDivider && (
+                      <div className="flex items-center gap-3 my-4">
+                        <div className="flex-1 h-px bg-white/10" />
+                        <span className="text-xs text-gray-500 px-2">{formatDateDivider(msg.createdAt)}</span>
+                        <div className="flex-1 h-px bg-white/10" />
+                      </div>
+                    )}
+
+                    <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} group`}>
+                      {/* Edit/Reply buttons - shown on hover for non-deleted messages */}
+                      {!msg.isDeleted && (
+                        <div className={`flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${isMine ? 'order-1 mr-2' : 'order-3 ml-2'}`}>
+                          {/* Reply button - always available */}
+                          <button
+                            onClick={() => startReplying(msg)}
+                            className="p-1.5 rounded-full hover:bg-white/10 text-gray-500 hover:text-cyan-400 transition-colors"
+                            title="Reply"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M9 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4l-5 5v-5z" />
+                            </svg>
+                          </button>
+                          {/* Edit button - only for own messages without Mek attachments */}
+                          {isMine && !msg.mekAttachment && (
+                            <button
+                              onClick={() => startEditing(msg)}
+                              className="p-1.5 rounded-full hover:bg-white/10 text-gray-500 hover:text-yellow-400 transition-colors"
+                              title="Edit"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      <div className={`max-w-[70%] ${isMine ? 'order-2' : ''}`}>
                       {/* Message Bubble - with special styling when it contains a verified Mek */}
                       <div
                         className={`relative rounded-2xl px-4 py-2 overflow-hidden ${
@@ -1003,9 +1112,61 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                           />
                         )}
 
-                        {/* Message content */}
+                        {/* Quoted message (reply context) */}
+                        {msg.replyTo && !msg.isDeleted && (
+                          <div className="mb-2 p-2 bg-black/20 rounded-lg border-l-2 border-cyan-500/50 text-xs relative z-[2]">
+                            <div className="text-cyan-400/80 font-medium mb-0.5">{msg.replyTo.senderName}</div>
+                            <div className="text-gray-400 truncate">
+                              {msg.replyTo.hasMekAttachment ? '[Mek Attachment]' : msg.replyTo.content}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Message content - with editing mode */}
                         <div className="relative z-[2]">
-                          {msg.isDeleted ? '[Message deleted]' : msg.content}
+                          {msg.isDeleted ? (
+                            '[Message deleted]'
+                          ) : editingMessageId === msg._id ? (
+                            <div className="space-y-2">
+                              <textarea
+                                value={editContent}
+                                onChange={(e) => setEditContent(e.target.value)}
+                                className="w-full bg-black/30 border border-cyan-500/30 rounded-lg px-3 py-2 text-white text-sm resize-none focus:outline-none focus:border-cyan-500"
+                                rows={3}
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleEditMessage();
+                                  }
+                                  if (e.key === 'Escape') {
+                                    cancelEditing();
+                                  }
+                                }}
+                              />
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  onClick={cancelEditing}
+                                  className="px-3 py-1 text-xs text-gray-400 hover:text-white transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={handleEditMessage}
+                                  className="px-3 py-1 text-xs bg-cyan-500/20 text-cyan-400 rounded hover:bg-cyan-500/30 transition-colors"
+                                >
+                                  Save
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              {msg.content}
+                              {msg.editedAt && (
+                                <span className="ml-2 text-xs text-gray-500">(edited)</span>
+                              )}
+                            </>
+                          )}
                         </div>
 
                         {/* Attachments */}
@@ -1127,6 +1288,33 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                 </div>
               ) : (
                 <>
+                  {/* Reply Preview */}
+                  {replyingToMessage && (
+                    <div className="mb-3 p-2 bg-white/5 rounded-lg border-l-2 border-cyan-400 flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs text-cyan-400 font-medium mb-1">
+                          Replying to {replyingToMessage.senderId === walletAddress ? 'yourself' : (
+                            replyingToMessage.senderId === 'SUPPORT_OVEREXPOSED' ? 'Over Exposed Support' :
+                            conversations?.find((c: any) =>
+                              c.otherParticipant?.walletAddress === replyingToMessage.senderId
+                            )?.otherParticipant?.companyName || 'Unknown'
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-400 truncate">
+                          {replyingToMessage.mekAttachment ? '[Mek Attachment]' : replyingToMessage.content}
+                        </div>
+                      </div>
+                      <button
+                        onClick={cancelReply}
+                        className="ml-2 text-gray-500 hover:text-white transition-colors flex-shrink-0"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
                   {/* Pending Attachments */}
                   {pendingAttachments.length > 0 && (
                     <div className="flex gap-2 mb-3 flex-wrap">
