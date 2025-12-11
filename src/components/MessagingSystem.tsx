@@ -1523,6 +1523,12 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-500">
             <div className="text-center">
+              <img
+                src={getMediaUrl('/random-images/OE logo.png')}
+                alt="OE"
+                className="w-20 h-auto mx-auto mb-4 opacity-40"
+                style={{ filter: 'grayscale(100%) brightness(0.5)' }}
+              />
               <div className="text-lg text-gray-400">Select a channel</div>
               <div className="text-sm mt-2 text-gray-600">or initiate a new transmission</div>
             </div>

@@ -604,7 +604,7 @@ export default function BetaSignupLightbox({
 
           <button
             onClick={() => setStep('veteran_welcome')}
-            className="w-full pt-0 pb-0 -mb-4 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
+            className="w-full pt-0 pb-0 -mb-6 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
           >
             ← Back
           </button>
