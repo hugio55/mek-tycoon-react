@@ -112,11 +112,84 @@ export default function CreateListingLightbox({
     y: number;
   } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [mekSearchTerm, setMekSearchTerm] = useState("");
+  const [mekPage, setMekPage] = useState(0);
+  const [hoveredListedMek, setHoveredListedMek] = useState<string | null>(null);
+  const MEKS_PER_PAGE = 24;
 
   // Get user's Meks
   const userMeks = useQuery(api.meks.getMeksByOwner, { stakeAddress });
 
+  // Get user's active listings to know which Meks are already listed
+  const myListings = useQuery(api.tradeFloor.getMyListings, { stakeAddress });
+
   const createListing = useMutation(api.tradeFloor.createListing);
+
+  // Set of already-listed Mek asset IDs
+  const listedMekIds = useMemo(() => {
+    if (!myListings) return new Set<string>();
+    return new Set(myListings.map((l: any) => l.listedMekAssetId));
+  }, [myListings]);
+
+  // Helper to get variation names from sourceKey for search
+  const getMekVariationNames = (sourceKey: string): string[] => {
+    if (!sourceKey) return [];
+    const cleanKey = sourceKey.replace(/-[A-Z]$/i, "").toUpperCase();
+    const parts = cleanKey.split("-");
+    if (parts.length !== 3) return [];
+
+    const names: string[] = [];
+    parts.forEach(code => {
+      const variation = COMPLETE_VARIATION_RARITY.find(v => v.sourceKey === code);
+      if (variation) names.push(variation.name.toLowerCase());
+    });
+    return names;
+  };
+
+  // Process, sort, filter, and paginate Meks
+  const { displayedMeks, totalPages, totalMeks } = useMemo(() => {
+    if (!userMeks) return { displayedMeks: [], totalPages: 0, totalMeks: 0 };
+
+    let meks = [...userMeks];
+
+    // Filter by search term (Mek number or variation name)
+    if (mekSearchTerm.trim()) {
+      const term = mekSearchTerm.toLowerCase().trim();
+      meks = meks.filter((mek: any) => {
+        // Check Mek number
+        const mekNumber = getMekNumber(mek.assetName).toLowerCase();
+        if (mekNumber.includes(term)) return true;
+
+        // Check variation names
+        const variationNames = getMekVariationNames(mek.sourceKey || mek.sourceKeyBase || "");
+        return variationNames.some(name => name.includes(term));
+      });
+    }
+
+    // Sort: already-listed Meks first, then by Mek number
+    meks.sort((a: any, b: any) => {
+      const aListed = listedMekIds.has(a.assetId);
+      const bListed = listedMekIds.has(b.assetId);
+      if (aListed && !bListed) return -1;
+      if (!aListed && bListed) return 1;
+      // Secondary sort by Mek number
+      const aNum = parseInt(getMekNumber(a.assetName)) || 0;
+      const bNum = parseInt(getMekNumber(b.assetName)) || 0;
+      return aNum - bNum;
+    });
+
+    const totalMeks = meks.length;
+    const totalPages = Math.ceil(totalMeks / MEKS_PER_PAGE);
+    const start = mekPage * MEKS_PER_PAGE;
+    const displayedMeks = meks.slice(start, start + MEKS_PER_PAGE);
+
+    return { displayedMeks, totalPages, totalMeks };
+  }, [userMeks, mekSearchTerm, listedMekIds, mekPage]);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setMekPage(0);
+  }, [mekSearchTerm]);
 
   useEffect(() => {
     setMounted(true);
@@ -256,7 +329,53 @@ export default function CreateListingLightbox({
 
         {/* Step 1: Select Mek */}
         {step === "select-mek" && (
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-hidden flex flex-col p-6">
+            {/* Search Bar */}
+            <div className="mb-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={mekSearchTerm}
+                  onChange={(e) => setMekSearchTerm(e.target.value)}
+                  placeholder="Search by Mek # or variation name..."
+                  className="w-full px-4 py-2.5 pl-10 rounded-lg text-white placeholder-white/40 focus:outline-none"
+                  style={{
+                    fontFamily: 'Play, sans-serif',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                  }}
+                />
+                <svg
+                  className="absolute left-3 top-1/2 -translate-y-1/2"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.4)"
+                  strokeWidth="2"
+                >
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="M21 21l-4.35-4.35"/>
+                </svg>
+                {mekSearchTerm && (
+                  <button
+                    onClick={() => setMekSearchTerm("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70"
+                  >
+                    &times;
+                  </button>
+                )}
+              </div>
+              {mekSearchTerm && (
+                <div
+                  className="mt-2 text-xs"
+                  style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
+                >
+                  Found {totalMeks} Mek{totalMeks !== 1 ? 's' : ''} matching "{mekSearchTerm}"
+                </div>
+              )}
+            </div>
+
             {userMeks === undefined ? (
               <div className="text-center py-12" style={{ color: 'rgba(255,255,255,0.5)' }}>
                 Loading your Meks...
@@ -280,42 +399,170 @@ export default function CreateListingLightbox({
                   You need to own Meks to create a listing
                 </p>
               </div>
-            ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                {userMeks.map((mek: any) => (
-                  <button
-                    key={mek.assetId}
-                    onClick={() => {
-                      setSelectedMek(mek);
-                      setStep("select-variations");
-                    }}
-                    className="p-2 rounded-lg transition-all hover:scale-[1.05] active:scale-[0.95] group"
-                    style={{
-                      background: selectedMek?.assetId === mek.assetId
-                        ? 'linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(34, 211, 238, 0.1))'
-                        : 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-                      border: selectedMek?.assetId === mek.assetId
-                        ? '1px solid rgba(34, 211, 238, 0.5)'
-                        : '1px solid rgba(255,255,255,0.1)',
-                    }}
-                  >
-                    <img
-                      src={getMekImagePath(mek)}
-                      alt={mek.assetName}
-                      className="w-full aspect-square object-contain"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = getMediaUrl("/mek-images/placeholder.webp");
-                      }}
-                    />
-                    <div
-                      className="text-xs truncate mt-1 text-center"
-                      style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.6)' }}
-                    >
-                      {mek.assetName}
-                    </div>
-                  </button>
-                ))}
+            ) : displayedMeks.length === 0 ? (
+              <div
+                className="text-center py-12 rounded-xl"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
+                <div className="text-4xl mb-3">🔍</div>
+                <p style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
+                  No Meks match your search
+                </p>
               </div>
+            ) : (
+              <>
+                {/* Mek Grid */}
+                <div className="flex-1 overflow-y-auto">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                    {displayedMeks.map((mek: any) => {
+                      const isListed = listedMekIds.has(mek.assetId);
+                      return (
+                        <div
+                          key={mek.assetId}
+                          className="relative"
+                          onMouseEnter={() => isListed && setHoveredListedMek(mek.assetId)}
+                          onMouseLeave={() => setHoveredListedMek(null)}
+                        >
+                          <button
+                            onClick={() => {
+                              if (!isListed) {
+                                setSelectedMek(mek);
+                                setStep("select-variations");
+                              }
+                            }}
+                            disabled={isListed}
+                            className={`w-full p-2 rounded-lg transition-all ${
+                              isListed
+                                ? 'cursor-not-allowed'
+                                : 'hover:scale-[1.05] active:scale-[0.95]'
+                            } group`}
+                            style={{
+                              background: isListed
+                                ? 'linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))'
+                                : selectedMek?.assetId === mek.assetId
+                                  ? 'linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(34, 211, 238, 0.1))'
+                                  : 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+                              border: isListed
+                                ? '1px solid rgba(255,255,255,0.05)'
+                                : selectedMek?.assetId === mek.assetId
+                                  ? '1px solid rgba(34, 211, 238, 0.5)'
+                                  : '1px solid rgba(255,255,255,0.1)',
+                              opacity: isListed ? 0.5 : 1,
+                            }}
+                          >
+                            <img
+                              src={getMekImagePath(mek)}
+                              alt={mek.assetName}
+                              className="w-full aspect-square object-contain"
+                              style={{ filter: isListed ? 'grayscale(80%)' : 'none' }}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = getMediaUrl("/mek-images/placeholder.webp");
+                              }}
+                            />
+                            <div
+                              className="text-xs truncate mt-1 text-center"
+                              style={{
+                                fontFamily: 'Play, sans-serif',
+                                color: isListed ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.6)',
+                              }}
+                            >
+                              {mek.assetName}
+                            </div>
+                          </button>
+
+                          {/* Already Listed Badge */}
+                          {isListed && (
+                            <div
+                              className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider"
+                              style={{
+                                fontFamily: 'Play, sans-serif',
+                                background: 'rgba(251, 191, 36, 0.2)',
+                                border: '1px solid rgba(251, 191, 36, 0.3)',
+                                color: '#fbbf24',
+                              }}
+                            >
+                              Listed
+                            </div>
+                          )}
+
+                          {/* Tooltip for listed Mek */}
+                          {isListed && hoveredListedMek === mek.assetId && (
+                            <div
+                              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg whitespace-nowrap z-50"
+                              style={{
+                                background: 'linear-gradient(135deg, rgba(30,30,40,0.95), rgba(20,20,30,0.95))',
+                                border: '1px solid rgba(251, 191, 36, 0.3)',
+                                fontFamily: 'Play, sans-serif',
+                                fontSize: '12px',
+                                color: '#fbbf24',
+                                boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+                              }}
+                            >
+                              Already listed for trade
+                              <div
+                                className="absolute top-full left-1/2 -translate-x-1/2"
+                                style={{
+                                  width: 0,
+                                  height: 0,
+                                  borderLeft: '6px solid transparent',
+                                  borderRight: '6px solid transparent',
+                                  borderTop: '6px solid rgba(251, 191, 36, 0.3)',
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div
+                    className="flex items-center justify-center gap-4 pt-4 mt-4"
+                    style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}
+                  >
+                    <button
+                      onClick={() => setMekPage(Math.max(0, mekPage - 1))}
+                      disabled={mekPage === 0}
+                      className="px-3 py-1.5 rounded-lg transition-all"
+                      style={{
+                        fontFamily: 'Play, sans-serif',
+                        background: mekPage === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: mekPage === 0 ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.6)',
+                        cursor: mekPage === 0 ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      ← Prev
+                    </button>
+                    <span
+                      className="text-sm"
+                      style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+                    >
+                      Page <span style={{ color: '#22d3ee' }}>{mekPage + 1}</span> of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setMekPage(Math.min(totalPages - 1, mekPage + 1))}
+                      disabled={mekPage >= totalPages - 1}
+                      className="px-3 py-1.5 rounded-lg transition-all"
+                      style={{
+                        fontFamily: 'Play, sans-serif',
+                        background: mekPage >= totalPages - 1 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: mekPage >= totalPages - 1 ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.6)',
+                        cursor: mekPage >= totalPages - 1 ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      Next →
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
