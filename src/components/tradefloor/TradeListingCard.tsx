@@ -382,14 +382,12 @@ export default function TradeListingCard({
                 <div
                   className="absolute bottom-full right-0 mb-2 px-4 py-2.5 rounded-xl whitespace-nowrap z-50"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                    backdropFilter: 'blur(12px)',
-                    WebkitBackdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(34, 211, 238, 0.3)',
+                    background: '#1a1a1a',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
                     fontFamily: 'Play, sans-serif',
                     fontSize: '13px',
                     color: '#22d3ee',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(34, 211, 238, 0.1)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
                   }}
                 >
                   This is your own listing
@@ -401,7 +399,7 @@ export default function TradeListingCard({
                       height: 0,
                       borderLeft: '8px solid transparent',
                       borderRight: '8px solid transparent',
-                      borderTop: '8px solid rgba(34, 211, 238, 0.3)',
+                      borderTop: '8px solid #1a1a1a',
                     }}
                   />
                 </div>
