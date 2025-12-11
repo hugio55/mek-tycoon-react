@@ -1,10 +1,9 @@
 /**
  * Quick script to query claim-related tables on Production (Sturgeon)
- * Run with: npx ts-node query-claim-tables.ts
+ * Run with: node query-claim-tables.mjs
  */
 
 import { ConvexHttpClient } from "convex/browser";
-import { api } from "./convex/_generated/api";
 
 // Production database URL
 const STURGEON_URL = "https://fabulous-sturgeon-691.convex.cloud";
@@ -14,10 +13,10 @@ async function queryClaimTables() {
 
   console.log("\n=== QUERYING PRODUCTION (STURGEON) DATABASE ===\n");
 
-  // 1. Query commemorativeNFTClaims
+  // 1. Query commemorativeNFTClaims stats
   console.log("--- COMMEMORATIVE NFT CLAIMS TABLE ---");
   try {
-    const claimStats = await client.query(api.commemorativeNFTClaims.getClaimStats, {});
+    const claimStats = await client.query("commemorativeNFTClaims:getClaimStats", {});
     console.log("Total Claims:", claimStats.totalClaims);
     console.log("Unique Wallets:", claimStats.uniqueWallets);
     console.log("Claims by NFT:", JSON.stringify(claimStats.claimsByNFT, null, 2));
@@ -29,18 +28,19 @@ async function queryClaimTables() {
         txHash: claimStats.mostRecentClaim.transactionHash?.substring(0, 20) + "...",
       });
     }
-  } catch (e: any) {
+  } catch (e) {
     console.log("Error querying claims:", e.message || e);
   }
 
-  // 2. Query commemorativeNFTInventory via campaigns
-  console.log("\n--- COMMEMORATIVE NFT INVENTORY (via Campaigns) ---");
+  // 2. Query campaigns
+  console.log("\n--- COMMEMORATIVE CAMPAIGNS ---");
   try {
-    const campaigns = await client.query(api.commemorativeCampaigns.listAllCampaigns, {});
+    const campaigns = await client.query("commemorativeCampaigns:listAllCampaigns", {});
     console.log("Total Campaigns:", campaigns.length);
 
     for (const campaign of campaigns) {
       console.log(`\n  Campaign: "${campaign.name}"`);
+      console.log(`    ID: ${campaign._id}`);
       console.log(`    Status: ${campaign.status}`);
       console.log(`    Total NFTs: ${campaign.totalNFTs || 'unknown'}`);
       console.log(`    Available: ${campaign.availableNFTs || 0}`);
@@ -49,42 +49,44 @@ async function queryClaimTables() {
 
       // Get inventory for this campaign
       try {
-        const inventory = await client.query(api.commemorativeCampaigns.getCampaignInventory, {
+        const inventory = await client.query("commemorativeCampaigns:getCampaignInventory", {
           campaignId: campaign._id,
         });
 
-        const soldItems = inventory.filter((item: any) => item.status === "sold");
+        const soldItems = inventory.filter((item) => item.status === "sold");
         if (soldItems.length > 0) {
-          console.log(`    Sold Items (${soldItems.length}):`);
+          console.log(`    === SOLD ITEMS (${soldItems.length}) ===`);
           for (const item of soldItems) {
             console.log(`      - ${item.name}`);
-            console.log(`        soldTo: ${item.soldTo?.substring(0, 30)}...`);
+            console.log(`        soldTo: ${item.soldTo || 'unknown'}`);
             console.log(`        soldAt: ${item.soldAt ? new Date(item.soldAt).toLocaleString() : 'unknown'}`);
-            console.log(`        txHash: ${item.transactionHash?.substring(0, 20) || 'none'}...`);
+            console.log(`        txHash: ${item.transactionHash || 'none'}`);
+            console.log(`        companyNameAtSale: ${item.companyNameAtSale || 'not recorded'}`);
           }
         } else {
           console.log(`    No sold items in this campaign`);
         }
-      } catch (invErr: any) {
+      } catch (invErr) {
         console.log(`    Error getting inventory: ${invErr.message || invErr}`);
       }
     }
-  } catch (e: any) {
+  } catch (e) {
     console.log("Error querying campaigns:", e.message || e);
   }
 
   // 3. Get recent claims for more detail
   console.log("\n--- RECENT CLAIMS (Last 10) ---");
   try {
-    const recentClaims = await client.query(api.commemorativeNFTClaims.getRecentClaims, { limit: 10 });
+    const recentClaims = await client.query("commemorativeNFTClaims:getRecentClaims", { limit: 10 });
     console.log(`Found ${recentClaims.length} recent claims:`);
     for (const claim of recentClaims) {
       console.log(`  - ${claim.nftName}`);
-      console.log(`    wallet: ${claim.walletAddress?.substring(0, 30)}...`);
+      console.log(`    wallet: ${claim.walletAddress}`);
       console.log(`    claimed: ${new Date(claim.claimedAt).toLocaleString()}`);
-      console.log(`    txHash: ${claim.transactionHash?.substring(0, 30)}...`);
+      console.log(`    txHash: ${claim.transactionHash}`);
+      console.log(`    campaignId: ${claim.campaignId || 'not set'}`);
     }
-  } catch (e: any) {
+  } catch (e) {
     console.log("Error querying recent claims:", e.message || e);
   }
 
