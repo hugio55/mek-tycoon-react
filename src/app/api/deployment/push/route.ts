@@ -5,6 +5,9 @@ import { checkDeploymentAuth } from '@/lib/deployment/auth';
 
 const execAsync = promisify(exec);
 
+// The expected working branch - push will be blocked if on any other branch
+const EXPECTED_BRANCH = 'custom-minting-system';
+
 export async function POST(request: NextRequest) {
   const authError = checkDeploymentAuth(request);
   if (authError) return authError;
@@ -13,6 +16,18 @@ export async function POST(request: NextRequest) {
     // Get current branch
     const { stdout: branchOutput } = await execAsync('git branch --show-current');
     const currentBranch = branchOutput.trim();
+
+    // Safety check: Only allow pushing from the expected working branch
+    if (currentBranch !== EXPECTED_BRANCH) {
+      console.warn(`[🚨PUSH] Blocked push attempt from wrong branch: ${currentBranch}`);
+      return NextResponse.json({
+        success: false,
+        error: `Wrong branch! You're on "${currentBranch}" but should be on "${EXPECTED_BRANCH}". Push blocked for safety.`,
+        currentBranch,
+        expectedBranch: EXPECTED_BRANCH,
+        wrongBranch: true,
+      }, { status: 400 });
+    }
 
     // Push to origin
     const { stdout: pushOutput, stderr: pushStderr } = await execAsync(

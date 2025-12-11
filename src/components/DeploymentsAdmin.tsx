@@ -332,6 +332,10 @@ export default function DeploymentsAdmin() {
       if (data.success) {
         addLog('Push', 'success', data.message);
         await fetchStatus();
+      } else if (data.wrongBranch) {
+        // Special handling for wrong branch - make it very visible
+        addLog('Push', 'error', `WRONG BRANCH! You're on "${data.currentBranch}" but should be on "${data.expectedBranch}"`);
+        addLog('Push', 'error', 'Push blocked for safety. Switch to the correct branch first.');
       } else {
         addLog('Push', 'error', data.error);
       }
