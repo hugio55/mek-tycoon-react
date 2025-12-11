@@ -735,15 +735,43 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowNewConversation(true)}
-              className="text-xs px-2 py-1 rounded-full border transition-colors bg-cyan-500/10 text-cyan-400 border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-500/20"
+              className="text-xs px-3 py-1.5 rounded-lg transition-all duration-300 hover:scale-[1.02] relative overflow-hidden group"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04))',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: '#e0e0e0',
+              }}
             >
-              New
+              <span className="relative z-10 group-hover:text-cyan-300 transition-colors">New</span>
+              <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                style={{
+                  backgroundImage: `url('/random-images/honey-png1.webp')`,
+                  backgroundSize: '200%',
+                  backgroundPosition: 'center',
+                  filter: 'brightness(0.6)',
+                }}
+              />
             </button>
             <button
               onClick={() => setShowBlockedUsers(true)}
-              className="text-xs px-2 py-1 rounded-full border transition-colors bg-gray-700/50 text-gray-400 border-gray-600 hover:border-red-500/50 hover:text-red-400 hover:bg-red-500/10"
+              className="text-xs px-3 py-1.5 rounded-lg transition-all duration-300 hover:scale-[1.02] relative overflow-hidden group"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04))',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: '#e0e0e0',
+              }}
             >
-              Blocked
+              <span className="relative z-10 group-hover:text-red-300 transition-colors">Blocked</span>
+              <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                style={{
+                  backgroundImage: `url('/random-images/honey-png1.webp')`,
+                  backgroundSize: '200%',
+                  backgroundPosition: 'center',
+                  filter: 'brightness(0.6)',
+                }}
+              />
             </button>
           </div>
         </div>
