@@ -679,7 +679,7 @@ export default function UnifiedHeader() {
           {/* Translucent Container - Liquid Glass Style */}
           {/* Dynamic height: fills viewport minus padding, with min/max constraints */}
           <div
-            className="relative w-full max-w-5xl h-[calc(100vh-2rem)] max-h-[900px] min-h-[400px] backdrop-blur-[25px] rounded-xl border border-gray-600/50 shadow-2xl overflow-hidden"
+            className="relative w-full max-w-5xl h-[calc(100vh-2rem)] max-h-[900px] min-h-[400px] backdrop-blur-[20px] bg-black/40 rounded-xl border border-gray-600/50 shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}

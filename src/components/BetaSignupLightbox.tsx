@@ -614,7 +614,7 @@ export default function BetaSignupLightbox({
   };
 
   const renderNameInput = () => (
-    <div className="-mb-5">
+    <div className="-mb-3">
       <div className="text-center mb-6">
         <h2 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-2">
           Reserve Your Corporation Name
@@ -736,7 +736,7 @@ export default function BetaSignupLightbox({
     <div className="text-center py-4">
       <div className="mb-4">
         <svg
-          className="w-16 h-16 mx-auto text-green-400"
+          className="w-16 h-16 mx-auto text-cyan-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -770,7 +770,7 @@ export default function BetaSignupLightbox({
     <div className="text-center py-4">
       <div className="mb-4">
         <svg
-          className="w-16 h-16 mx-auto text-yellow-400"
+          className="w-16 h-16 mx-auto text-cyan-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
