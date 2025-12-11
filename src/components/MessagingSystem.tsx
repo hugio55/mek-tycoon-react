@@ -740,19 +740,18 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
           </button>
         </div>
 
-        {/* New Conversation Button - Matches Admin Style */}
+        {/* New Conversation Button */}
         <button
           onClick={() => setShowNewConversation(true)}
           className="w-full p-4 text-left border-b border-gray-700/50 hover:bg-white/5 transition-colors"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
-              <span className="text-cyan-400 text-lg">+</span>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="text-cyan-400">
+                <path d="M9 3v12M3 9h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
             </div>
-            <div>
-              <div className="text-cyan-400 font-medium">New Conversation</div>
-              <div className="text-gray-500 text-sm">Search for a corporation</div>
-            </div>
+            <span className="text-cyan-400 font-medium">New Conversation</span>
           </div>
         </button>
 
@@ -1007,7 +1006,8 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
             </div>
 
             {/* Messages Area */}
-            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4">
+              <div className="flex flex-col justify-end min-h-full space-y-4">
               {isNewConversation && !existingConversation && (
                 <div className="text-center text-gray-500 py-8">
                   {/* New Channel Icon - Signal waves */}
@@ -1248,6 +1248,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                 );
               })}
               <div ref={messagesEndRef} />
+              </div>
             </div>
 
             {/* Jump to Newest Button - Discord style */}
