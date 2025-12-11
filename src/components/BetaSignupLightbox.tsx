@@ -740,7 +740,10 @@ export default function BetaSignupLightbox({
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
-          style={{ animation: 'slideUp 500ms cubic-bezier(0.25, 0, 0.3, 1)' }}
+          style={{
+            animation: 'slideUp 500ms cubic-bezier(0.25, 0, 0.3, 1)',
+            filter: 'drop-shadow(0 0 8px rgba(34, 211, 238, 0.6)) drop-shadow(0 0 16px rgba(34, 211, 238, 0.4))'
+          }}
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
@@ -750,7 +753,7 @@ export default function BetaSignupLightbox({
       </h3>
       <p className="text-base text-white/70 mb-4">
         Your corporation name for Phase II:{' '}
-        <span className="text-yellow-400 font-semibold">{newCorporationName}</span>
+        <span className="text-cyan-400 font-bold">{newCorporationName}</span>
       </p>
       <p className="text-sm text-white/50">
         You can come back and change this anytime by verifying your wallet again.
@@ -774,7 +777,10 @@ export default function BetaSignupLightbox({
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
-          style={{ animation: 'slideUp 500ms cubic-bezier(0.25, 0, 0.3, 1)' }}
+          style={{
+            animation: 'slideUp 500ms cubic-bezier(0.25, 0, 0.3, 1)',
+            filter: 'drop-shadow(0 0 8px rgba(34, 211, 238, 0.6)) drop-shadow(0 0 16px rgba(34, 211, 238, 0.4))'
+          }}
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>

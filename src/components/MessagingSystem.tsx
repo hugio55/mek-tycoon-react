@@ -1526,7 +1526,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
               <img
                 src={getMediaUrl('/random-images/OE logo.png')}
                 alt="OE"
-                className="w-20 h-auto mx-auto mb-3 opacity-40"
+                className="w-20 h-auto mx-auto mb-1.5 opacity-40"
                 style={{ filter: 'grayscale(100%) brightness(0.5)' }}
               />
               <div className="text-lg text-gray-400">Select a channel</div>
