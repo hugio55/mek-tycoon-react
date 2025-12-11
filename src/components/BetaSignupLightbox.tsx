@@ -614,7 +614,7 @@ export default function BetaSignupLightbox({
   };
 
   const renderNameInput = () => (
-    <>
+    <div className="-mb-4">
       <div className="text-center mb-6">
         <h2 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-2">
           Reserve Your Corporation Name
@@ -682,7 +682,7 @@ export default function BetaSignupLightbox({
           ← Back
         </button>
       </div>
-    </>
+    </div>
   );
 
   const renderWalletVerification = () => (

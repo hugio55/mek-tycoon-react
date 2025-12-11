@@ -4093,4 +4093,32 @@ export default defineSchema({
     .index("by_offerer", ["offererStakeAddress"])
     .index("by_listing_status", ["listingId", "status"])
     .index("by_offerer_status", ["offererStakeAddress", "status"]),
+
+  // =============================================================================
+  // DEPLOYMENT ACTIVITY LOGS
+  // =============================================================================
+  // Persistent log of all deployment operations (backups, deploys, pushes, etc.)
+  // Used for auditing and debugging deployment issues
+  // =============================================================================
+  deploymentLogs: defineTable({
+    // Action identification
+    action: v.string(), // "Quick Backup", "Full Backup", "Push", "Deploy Prod", etc.
+    status: v.union(v.literal("success"), v.literal("error"), v.literal("pending")),
+    message: v.string(), // Human-readable result message
+
+    // Git context at time of action
+    gitBranch: v.optional(v.string()), // Current branch
+    gitCommitHash: v.optional(v.string()), // Current commit hash
+
+    // Additional metadata
+    details: v.optional(v.any()), // Flexible field for action-specific data
+
+    // Timestamps
+    timestamp: v.number(), // When the action occurred
+    createdAt: v.number(), // When the record was created
+  })
+    .index("by_timestamp", ["timestamp"])
+    .index("by_action", ["action"])
+    .index("by_status", ["status"])
+    .index("by_action_and_timestamp", ["action", "timestamp"]),
 });
