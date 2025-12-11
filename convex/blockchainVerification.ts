@@ -407,14 +407,19 @@ export const syncMekOwnership = mutation({
       .withIndex("by_owner_stake", (q: any) => q.eq("ownerStakeAddress", args.stakeAddress))
       .collect();
 
-    const verifiedAssetIds = new Set(args.verifiedMeks.map(m => m.assetId));
+    // IMPORTANT: Use mekNumber (converted to string) to match database assetId format
+    // Database stores assetId as just the number (e.g., "1917"), NOT the full Blockfrost unit
+    const verifiedAssetIds = new Set(args.verifiedMeks.map(m => m.mekNumber.toString()));
     const currentAssetIds = new Set(currentlyOwnedMeks.map(m => m.assetId));
 
     // 1. Update ownership for verified meks
+    // IMPORTANT: Database stores assetId as just the mekNumber (e.g., "1917")
+    // Blockfrost returns full unit string as assetId - we must use mekNumber for lookup!
     for (const verifiedMek of args.verifiedMeks) {
+      const mekNumberStr = verifiedMek.mekNumber.toString();
       const existingMek = await ctx.db
         .query("meks")
-        .withIndex("by_asset_id", (q: any) => q.eq("assetId", verifiedMek.assetId))
+        .withIndex("by_asset_id", (q: any) => q.eq("assetId", mekNumberStr))
         .first();
 
       if (existingMek) {
@@ -428,11 +433,12 @@ export const syncMekOwnership = mutation({
             lastUpdated: now,
           });
           updated++;
+          console.log(`[🔄SYNC] Updated Mek #${verifiedMek.mekNumber} ownership`);
         }
       } else {
         // Mek doesn't exist in table - this shouldn't happen for the 4000 fixed NFTs
         // But if it does, log it for investigation
-        console.warn('[🔄SYNC] WARNING: Mek not found in database:', verifiedMek.assetId);
+        console.warn(`[🔄SYNC] WARNING: Mek #${verifiedMek.mekNumber} (assetId: ${mekNumberStr}) not found in database`);
         created++;
       }
     }
