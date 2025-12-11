@@ -387,7 +387,7 @@ export default function BetaSignupLightbox({
 
   const renderLoading = (message: string) => (
     <div className="text-center py-8">
-      <div className="mb-6 flex justify-center">
+      <div className="mb-10 flex justify-center">
         <CubeSpinner color="cyan" size={44} />
       </div>
       <p className="text-white/60">{message}</p>
