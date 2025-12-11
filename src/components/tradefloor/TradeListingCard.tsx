@@ -132,7 +132,7 @@ export default function TradeListingCard({
 
   return (
     <div
-      className="relative rounded-xl overflow-hidden group"
+      className="relative rounded-xl overflow-hidden group flex flex-col h-full"
       style={{
         background: 'linear-gradient(135deg, rgba(15,20,30,0.55), rgba(10,15,25,0.50))',
         backdropFilter: 'blur(12px)',
@@ -261,8 +261,8 @@ export default function TradeListingCard({
         </h3>
       </div>
 
-      {/* Desired Variations */}
-      <div className="relative px-4 pb-3">
+      {/* Desired Variations - flex-grow for dynamic row height matching */}
+      <div className="relative px-4 pb-3 flex-grow flex flex-col">
         <div
           className="text-xs uppercase tracking-wider mb-2"
           style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}

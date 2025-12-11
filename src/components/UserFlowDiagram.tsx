@@ -62,9 +62,10 @@ interface FlowNodeProps {
   type: NodeType;
   buttons?: string[];
   className?: string;
+  onClick?: () => void;
 }
 
-function FlowNode({ label, sublabel, type, buttons, className = '' }: FlowNodeProps) {
+function FlowNode({ label, sublabel, type, buttons, className = '', onClick }: FlowNodeProps) {
   const baseClasses = "px-3 py-2 text-center text-sm rounded-lg border-2 transition-all min-w-[180px]";
 
   const styles: Record<NodeType, string> = {
@@ -78,8 +79,14 @@ function FlowNode({ label, sublabel, type, buttons, className = '' }: FlowNodePr
     special: "bg-cyan-900/70 border-cyan-400 text-cyan-200 shadow-lg shadow-cyan-500/20",
   };
 
+  const clickableStyles = onClick ? "cursor-pointer hover:scale-105 hover:brightness-110 active:scale-100" : "";
+
   return (
-    <div className={`${baseClasses} ${styles[type]} ${className}`}>
+    <div
+      className={`${baseClasses} ${styles[type]} ${clickableStyles} ${className}`}
+      onClick={onClick}
+      title={onClick ? "Click to preview this screen" : undefined}
+    >
       <div className="font-medium">{label}</div>
       {sublabel && <div className="text-xs opacity-70 mt-0.5">{sublabel}</div>}
       {buttons && buttons.length > 0 && (
@@ -88,6 +95,9 @@ function FlowNode({ label, sublabel, type, buttons, className = '' }: FlowNodePr
             <div key={i} className="px-2 py-0.5 bg-black/20 rounded text-[10px]">{btn}</div>
           ))}
         </div>
+      )}
+      {onClick && (
+        <div className="mt-2 text-[9px] opacity-50 uppercase tracking-wider">Click to preview</div>
       )}
     </div>
   );
@@ -151,11 +161,104 @@ function SplitPaths({ children, labels }: { children: React.ReactNode[]; labels?
   );
 }
 
+// Modal for previewing lightboxes from flowchart
+function PreviewModal({
+  isOpen,
+  onClose,
+  lightboxType,
+  betaStep,
+  nmkrStep,
+  veteranInfo,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  lightboxType: 'beta' | 'nmkr';
+  betaStep?: BetaSignupStep;
+  nmkrStep?: NMKRPayState;
+  veteranInfo?: VeteranInfo;
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      onClick={onClose}
+      style={{ backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
+    >
+      <div
+        className="relative max-w-2xl w-full max-h-[90vh] overflow-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute -top-2 -right-2 z-10 w-8 h-8 bg-gray-800 border border-gray-600 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+        >
+          ✕
+        </button>
+
+        {/* Step indicator */}
+        <div className="text-center mb-4">
+          <span className="text-xs uppercase tracking-wider text-gray-500 bg-gray-900 px-3 py-1 rounded-full">
+            {lightboxType === 'beta' ? `Beta Signup: ${betaStep}` : `NFT Claim: ${nmkrStep}`}
+          </span>
+        </div>
+
+        {/* Lightbox preview */}
+        {lightboxType === 'beta' && betaStep && (
+          <BetaSignupLightbox
+            isVisible={true}
+            onClose={() => {}}
+            previewMode={true}
+            previewStep={betaStep}
+            previewVeteranInfo={veteranInfo}
+          />
+        )}
+        {lightboxType === 'nmkr' && nmkrStep && (
+          <NMKRPayLightbox
+            walletAddress={null}
+            onClose={() => {}}
+            previewMode={true}
+            previewState={nmkrStep}
+            previewCorporationName="WrenCo Industries"
+          />
+        )}
+
+        {/* Dismiss hint */}
+        <div className="text-center mt-4 text-xs text-gray-600">
+          Click outside or press ✕ to close
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function UserFlowDiagram() {
   const [activeFlow, setActiveFlow] = useState<'join-beta' | 'claim-nft' | 'lightbox-preview'>('join-beta');
   const [selectedBetaStep, setSelectedBetaStep] = useState<BetaSignupStep>('address_entry');
   const [selectedNMKRStep, setSelectedNMKRStep] = useState<NMKRPayState>('address_entry');
   const [previewLightbox, setPreviewLightbox] = useState<'beta' | 'nmkr'>('beta');
+
+  // Modal state for flowchart card previews
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalLightboxType, setModalLightboxType] = useState<'beta' | 'nmkr'>('beta');
+  const [modalBetaStep, setModalBetaStep] = useState<BetaSignupStep>('address_entry');
+  const [modalNMKRStep, setModalNMKRStep] = useState<NMKRPayState>('address_entry');
+  const [modalVeteranInfo, setModalVeteranInfo] = useState<VeteranInfo | undefined>(undefined);
+
+  // Helper to open modal with specific lightbox step
+  const openBetaPreview = (step: BetaSignupStep, veteranInfo?: VeteranInfo) => {
+    setModalLightboxType('beta');
+    setModalBetaStep(step);
+    setModalVeteranInfo(veteranInfo);
+    setModalOpen(true);
+  };
+
+  const openNMKRPreview = (step: NMKRPayState) => {
+    setModalLightboxType('nmkr');
+    setModalNMKRStep(step);
+    setModalOpen(true);
+  };
 
   return (
     <div className="space-y-6">

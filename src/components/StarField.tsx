@@ -37,7 +37,7 @@ const StarField = () => {
     setCanvasSize();
 
     const STAR_COUNT_LAYER1 = 120;
-    const STAR_COUNT_LAYER2 = 20;
+    const STAR_COUNT_LAYER2 = 5;
     const SPEED_LAYER1 = 0.6;
     const SPEED_LAYER2 = 45;
     const MAX_DEPTH = 1000;
