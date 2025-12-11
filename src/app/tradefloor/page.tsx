@@ -47,6 +47,7 @@ export default function TradeFloorPage() {
   const sortDropdownBtnRef = useRef<HTMLButtonElement>(null);
   const [mounted, setMounted] = useState(false);
   const [showUnlockSlotsLightbox, setShowUnlockSlotsLightbox] = useState(false);
+  const [highlightedListingMekId, setHighlightedListingMekId] = useState<string | null>(null);
 
   // For portal mounting
   useEffect(() => {
@@ -128,6 +129,19 @@ export default function TradeFloorPage() {
         return listings;
     }
   }, [browseListings, browseSortOption]);
+
+  // Sort my listings - put highlighted one first if set
+  const sortedMyListings = useMemo(() => {
+    if (!myListings) return undefined;
+    if (!highlightedListingMekId) return myListings;
+
+    // Find the highlighted listing and put it first
+    const highlighted = myListings.find((l: any) => l.listedMekAssetId === highlightedListingMekId);
+    if (!highlighted) return myListings;
+
+    const others = myListings.filter((l: any) => l.listedMekAssetId !== highlightedListingMekId);
+    return [highlighted, ...others];
+  }, [myListings, highlightedListingMekId]);
 
   // Mutations
   const cancelListing = useMutation(api.tradeFloor.cancelListing);
@@ -350,7 +364,13 @@ export default function TradeFloorPage() {
                   />
                 )}
                 <button
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    // Clear highlighted listing when manually switching tabs
+                    if (tab.id !== "my-listings") {
+                      setHighlightedListingMekId(null);
+                    }
+                  }}
                   className={`
                     relative px-6 py-3 font-medium uppercase tracking-wider text-sm
                     transition-all duration-200
@@ -743,7 +763,7 @@ export default function TradeFloorPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {myListings.map((listing: any) => (
+                {sortedMyListings?.map((listing: any) => (
                   <TradeListingCard
                     key={listing._id}
                     listing={listing}
@@ -867,6 +887,10 @@ export default function TradeFloorPage() {
           stakeAddress={stakeAddress}
           onClose={() => setShowCreateListing(false)}
           onSuccess={() => setActiveTab("my-listings")}
+          onViewListing={(mekAssetId) => {
+            setHighlightedListingMekId(mekAssetId);
+            setActiveTab("my-listings");
+          }}
         />
       )}
 

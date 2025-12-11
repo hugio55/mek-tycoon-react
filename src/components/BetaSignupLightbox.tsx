@@ -5,12 +5,6 @@ import { createPortal } from 'react-dom';
 import { validateStakeAddress, isValidStakeAddressFormat } from '@/lib/cardanoValidation';
 import { useWalletVerification } from '@/hooks/useWalletVerification';
 
-interface BetaSignupLightboxProps {
-  isVisible: boolean;
-  onClose: () => void;
-  onSubmit?: (stakeAddress: string) => void;
-}
-
 // Phase I veteran data from backend
 interface VeteranInfo {
   isVeteran: boolean;
@@ -31,22 +25,72 @@ type LightboxStep =
   | 'normal_signup'        // Non-veteran signup flow
   | 'success';             // Final success state
 
+// Export types for preview mode
+export type { LightboxStep as BetaSignupStep, VeteranInfo };
+
+interface BetaSignupLightboxProps {
+  isVisible: boolean;
+  onClose: () => void;
+  onSubmit?: (stakeAddress: string) => void;
+  // Preview mode props - for admin lightbox preview
+  previewMode?: boolean;
+  previewStep?: LightboxStep;
+  previewVeteranInfo?: VeteranInfo;
+  previewIsVeteran?: boolean;
+  previewError?: string;
+}
+
+// Mock data for preview mode
+const MOCK_VETERAN_INFO: VeteranInfo = {
+  isVeteran: true,
+  originalCorporationName: 'WrenCo Industries',
+  reservedCorporationName: null,
+  nameReservedAt: null,
+  hasReservedName: false,
+};
+
+const MOCK_VETERAN_WITH_RESERVED: VeteranInfo = {
+  isVeteran: true,
+  originalCorporationName: 'WrenCo Industries',
+  reservedCorporationName: 'WrenCo Phase II',
+  nameReservedAt: Date.now(),
+  hasReservedName: true,
+};
+
+const MOCK_WALLETS = [
+  { name: 'Eternl', icon: '/wallet-icons/eternl.png', api: {} },
+  { name: 'Nami', icon: '/wallet-icons/nami.png', api: {} },
+  { name: 'Flint', icon: '/wallet-icons/flint.png', api: {} },
+  { name: 'Vespr', icon: '/wallet-icons/vespr.png', api: {} },
+];
+
 export default function BetaSignupLightbox({
   isVisible,
   onClose,
-  onSubmit
+  onSubmit,
+  previewMode = false,
+  previewStep,
+  previewVeteranInfo,
+  previewIsVeteran = true,
+  previewError,
 }: BetaSignupLightboxProps) {
   const [mounted, setMounted] = useState(false);
-  const [stakeAddress, setStakeAddress] = useState('');
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [stakeAddress, setStakeAddress] = useState(previewMode ? 'stake1u8z4d32ythwc...' : '');
+  const [validationError, setValidationError] = useState<string | null>(previewError || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [savedScrollY, setSavedScrollY] = useState(0);
   const [shouldShake, setShouldShake] = useState(false);
 
-  // Phase I veteran state
-  const [step, setStep] = useState<LightboxStep>('address_entry');
-  const [veteranInfo, setVeteranInfo] = useState<VeteranInfo | null>(null);
-  const [newCorporationName, setNewCorporationName] = useState('');
+  // Phase I veteran state - use preview values if in preview mode
+  const [step, setStep] = useState<LightboxStep>(previewStep || 'address_entry');
+  const [veteranInfo, setVeteranInfo] = useState<VeteranInfo | null>(
+    previewMode ? (previewVeteranInfo || MOCK_VETERAN_INFO) : null
+  );
+  const [newCorporationName, setNewCorporationName] = useState(
+    previewMode && previewVeteranInfo ?
+      (previewVeteranInfo.reservedCorporationName || previewVeteranInfo.originalCorporationName) :
+      ''
+  );
   const [nameError, setNameError] = useState<string | null>(null);
   const [isReservingName, setIsReservingName] = useState(false);
 
@@ -80,7 +124,25 @@ export default function BetaSignupLightbox({
     return () => setMounted(false);
   }, []);
 
+  // Sync step when previewStep changes in preview mode
   useEffect(() => {
+    if (previewMode && previewStep) {
+      setStep(previewStep);
+    }
+  }, [previewMode, previewStep]);
+
+  // Sync veteranInfo when previewVeteranInfo changes in preview mode
+  useEffect(() => {
+    if (previewMode && previewVeteranInfo) {
+      setVeteranInfo(previewVeteranInfo);
+      setNewCorporationName(previewVeteranInfo.reservedCorporationName || previewVeteranInfo.originalCorporationName);
+    }
+  }, [previewMode, previewVeteranInfo]);
+
+  useEffect(() => {
+    // Skip scroll locking in preview mode
+    if (previewMode) return;
+
     if (isVisible && mounted) {
       const scrollY = window.scrollY;
       setSavedScrollY(scrollY);
@@ -105,7 +167,7 @@ export default function BetaSignupLightbox({
       document.body.style.width = '';
       document.body.style.touchAction = '';
     };
-  }, [isVisible, mounted, savedScrollY]);
+  }, [isVisible, mounted, savedScrollY, previewMode]);
 
   const handleStakeAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -296,6 +358,41 @@ export default function BetaSignupLightbox({
 
   if (!mounted || !isVisible) return null;
 
+  // In preview mode, render inline (no portal) with a container wrapper
+  if (previewMode) {
+    return (
+      <div className="relative w-full max-w-md mx-auto">
+        {/* Glass Card - no backdrop in preview mode */}
+        <div
+          className="relative overflow-hidden rounded-2xl border border-white/10"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset',
+            backdropFilter: 'blur(30px)',
+            WebkitBackdropFilter: 'blur(30px)',
+          }}
+        >
+          <div className="p-6 sm:p-8">
+            {(() => {
+              switch (step) {
+                case 'address_entry': return renderAddressEntry();
+                case 'checking_veteran': return renderLoading('Checking your status...');
+                case 'veteran_welcome': return renderVeteranWelcome();
+                case 'wallet_selection': return renderWalletSelection();
+                case 'wallet_verification': return renderWalletVerification();
+                case 'name_input': return renderNameInput();
+                case 'name_confirmed': return renderNameConfirmed();
+                case 'normal_signup': return renderLoading('Submitting signup...');
+                case 'success': return renderSuccess();
+                default: return renderAddressEntry();
+              }
+            })()}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Render content based on current step
   const renderContent = () => {
     switch (step) {
@@ -469,65 +566,72 @@ export default function BetaSignupLightbox({
     </>
   );
 
-  const renderWalletSelection = () => (
-    <>
-      <div className="text-center mb-6">
-        <h2 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-2">
-          Verify Wallet Ownership
-        </h2>
-        <p className="text-sm sm:text-base text-white/60 font-light leading-relaxed">
-          To reserve your corporation name, please verify that you own this wallet by signing a message.
-        </p>
-      </div>
+  const renderWalletSelection = () => {
+    // Use mock wallets in preview mode
+    const walletsToShow = previewMode ? MOCK_WALLETS : availableWallets;
+    const showMobileBrowser = previewMode ? false : isMobileBrowser;
+    const showNoWallets = previewMode ? false : (!isMobileBrowser && walletsDetected && availableWallets.length === 0);
 
-      <div className="space-y-4">
-        {/* Wallet Selection */}
-        {!isMobileBrowser && availableWallets.length > 0 && (
-          <div>
-            <p className="text-sm sm:text-base text-white/60 mb-3">Select your wallet:</p>
-            <div className="grid grid-cols-2 gap-3">
-              {availableWallets.map((wallet) => (
-                <button
-                  key={wallet.name}
-                  onClick={() => handleVerifyWallet(wallet)}
-                  className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-yellow-500/30 transition-all text-center"
-                >
-                  <span className="text-base text-white/80">{wallet.name}</span>
-                </button>
-              ))}
+    return (
+      <>
+        <div className="text-center mb-6">
+          <h2 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-2">
+            Verify Wallet Ownership
+          </h2>
+          <p className="text-sm sm:text-base text-white/60 font-light leading-relaxed">
+            To reserve your corporation name, please verify that you own this wallet by signing a message.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          {/* Wallet Selection */}
+          {!showMobileBrowser && walletsToShow.length > 0 && (
+            <div>
+              <p className="text-sm sm:text-base text-white/60 mb-3">Select your wallet:</p>
+              <div className="grid grid-cols-2 gap-3">
+                {walletsToShow.map((wallet) => (
+                  <button
+                    key={wallet.name}
+                    onClick={() => !previewMode && handleVerifyWallet(wallet)}
+                    className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-yellow-500/30 transition-all text-center"
+                  >
+                    <span className="text-base text-white/80">{wallet.name}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Mobile browser notice */}
-        {isMobileBrowser && (
-          <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-            <p className="text-sm sm:text-base text-blue-300">
-              Mobile wallet connection requires opening this page in your wallet's built-in browser.
-              Copy your stake address and open this site from within your wallet app.
-            </p>
-          </div>
-        )}
+          {/* Mobile browser notice */}
+          {showMobileBrowser && (
+            <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+              <p className="text-sm sm:text-base text-blue-300">
+                Mobile wallet connection requires opening this page in your wallet's built-in browser.
+                Copy your stake address and open this site from within your wallet app.
+              </p>
+            </div>
+          )}
 
-        {/* No wallets found */}
-        {!isMobileBrowser && walletsDetected && availableWallets.length === 0 && (
-          <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-            <p className="text-sm sm:text-base text-yellow-300">
-              No Cardano wallets detected. Please install a wallet extension (Nami, Eternl, Flint, etc.)
-              and refresh this page.
-            </p>
-          </div>
-        )}
+          {/* No wallets found */}
+          {showNoWallets && (
+            <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+              <p className="text-sm sm:text-base text-yellow-300">
+                No Cardano wallets detected. Please install a wallet extension (Nami, Eternl, Flint, etc.)
+                and refresh this page.
+              </p>
+            </div>
+          )}
 
-        <button
-          onClick={() => setStep('veteran_welcome')}
-          className="w-full pt-3 pb-0 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
-        >
-          ← Back
-        </button>
-      </div>
-    </>
-  );
+          <button
+            onClick={() => setStep('veteran_welcome')}
+            className="w-full pt-3 pb-0 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
+          >
+            ← Back
+          </button>
+        </div>
+      </>
+    );
+  };
 
   const renderNameInput = () => (
     <>
