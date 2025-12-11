@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
 interface GitStatus {
   currentBranch: string;
@@ -82,12 +84,63 @@ export default function DeploymentsAdmin() {
   const [logCounter, setLogCounter] = useState(0); // Counter for unique log IDs
   const [deployError, setDeployError] = useState<string | null>(null); // Error message if deploy fails
   const [isSyncingR2, setIsSyncingR2] = useState(false); // R2 sync state
+  const [showHistoricalLogs, setShowHistoricalLogs] = useState(false); // Historical log viewer
+
+  // Convex mutation for persisting logs to database
+  const logToDatabase = useMutation(api.deploymentLogs.logDeploymentAction);
+
+  // Query for historical logs
+  const historicalLogs = useQuery(api.deploymentLogs.getRecentLogs, { limit: 100 });
+  const logStats = useQuery(api.deploymentLogs.getLogStats);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const addLog = (action: string, status: 'success' | 'error' | 'pending', message: string) => {
+  // Persist log to both database and file
+  const persistLog = useCallback(async (
+    action: string,
+    status: 'success' | 'error' | 'pending',
+    message: string,
+    details?: Record<string, unknown>
+  ) => {
+    const timestamp = Date.now();
+
+    // Persist to Convex database
+    try {
+      await logToDatabase({
+        action,
+        status,
+        message,
+        gitBranch: gitStatus?.currentBranch,
+        gitCommitHash: gitStatus?.lastCommit?.hash,
+        details,
+        timestamp,
+      });
+    } catch (err) {
+      console.error('[DEPLOY-LOG] Failed to persist to database:', err);
+    }
+
+    // Persist to local file
+    try {
+      await fetch('/api/deployment/log-activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          status,
+          message,
+          gitBranch: gitStatus?.currentBranch,
+          gitCommitHash: gitStatus?.lastCommit?.hash,
+          details,
+        }),
+      });
+    } catch (err) {
+      console.error('[DEPLOY-LOG] Failed to persist to file:', err);
+    }
+  }, [logToDatabase, gitStatus]);
+
+  const addLog = useCallback((action: string, status: 'success' | 'error' | 'pending', message: string, details?: Record<string, unknown>) => {
     setLogCounter(prev => prev + 1);
     setActionLogs(prev => [{
       id: `${Date.now()}-${logCounter}-${Math.random().toString(36).substr(2, 9)}`,
@@ -95,8 +148,11 @@ export default function DeploymentsAdmin() {
       status,
       message,
       timestamp: new Date()
-    }, ...prev].slice(0, 20)); // Keep last 20 logs
-  };
+    }, ...prev].slice(0, 20)); // Keep last 20 logs in UI
+
+    // Persist to both database and file (fire and forget)
+    persistLog(action, status, message, details);
+  }, [logCounter, persistLog]);
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -1207,7 +1263,15 @@ export default function DeploymentsAdmin() {
       {/* Activity Log */}
       <div className="border-t border-gray-700 pt-6">
         <div className="flex justify-between items-center mb-4">
-          <div className="text-gray-400 text-sm uppercase tracking-wider">Activity Log</div>
+          <div className="flex items-center gap-3">
+            <div className="text-gray-400 text-sm uppercase tracking-wider">Activity Log</div>
+            <button
+              onClick={() => setShowHistoricalLogs(true)}
+              className="text-xs bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 px-2 py-1 rounded transition-colors"
+            >
+              View History ({logStats?.total ?? '...'})
+            </button>
+          </div>
           {actionLogs.length > 0 && (
             <button
               onClick={() => setActionLogs([])}
@@ -1290,6 +1354,114 @@ export default function DeploymentsAdmin() {
           </div>
         </div>
       </div>
+
+      {/* Historical Logs Modal */}
+      {mounted && showHistoricalLogs && createPortal(
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999]"
+          onClick={() => setShowHistoricalLogs(false)}
+        >
+          <div
+            className="bg-gray-900 border border-gray-700 rounded-xl w-[900px] max-h-[80vh] overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-700">
+              <div className="flex items-center gap-4">
+                <h2 className="text-xl font-bold text-white">Deployment History</h2>
+                {logStats && (
+                  <div className="flex gap-3 text-xs">
+                    <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded">
+                      {logStats.success} success
+                    </span>
+                    <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded">
+                      {logStats.error} errors
+                    </span>
+                    <span className="bg-gray-500/20 text-gray-400 px-2 py-1 rounded">
+                      {logStats.total} total
+                    </span>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setShowHistoricalLogs(false)}
+                className="text-gray-400 hover:text-white p-2 hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Logs Table */}
+            <div className="overflow-y-auto max-h-[calc(80vh-80px)]">
+              {!historicalLogs ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                </div>
+              ) : historicalLogs.length === 0 ? (
+                <div className="text-center text-gray-500 py-12">No deployment logs yet</div>
+              ) : (
+                <table className="w-full">
+                  <thead className="bg-gray-800/50 sticky top-0">
+                    <tr>
+                      <th className="text-left text-gray-400 text-xs uppercase tracking-wider px-4 py-3">Status</th>
+                      <th className="text-left text-gray-400 text-xs uppercase tracking-wider px-4 py-3">Action</th>
+                      <th className="text-left text-gray-400 text-xs uppercase tracking-wider px-4 py-3">Message</th>
+                      <th className="text-left text-gray-400 text-xs uppercase tracking-wider px-4 py-3">Branch</th>
+                      <th className="text-left text-gray-400 text-xs uppercase tracking-wider px-4 py-3">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800">
+                    {historicalLogs.map((log) => (
+                      <tr key={log._id} className="hover:bg-gray-800/30 transition-colors">
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
+                            log.status === 'success' ? 'bg-green-500/20 text-green-400' :
+                            log.status === 'error' ? 'bg-red-500/20 text-red-400' :
+                            'bg-yellow-500/20 text-yellow-400'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${
+                              log.status === 'success' ? 'bg-green-400' :
+                              log.status === 'error' ? 'bg-red-400' :
+                              'bg-yellow-400 animate-pulse'
+                            }`} />
+                            {log.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-300 text-sm font-medium">{log.action}</td>
+                        <td className="px-4 py-3 text-gray-400 text-sm max-w-xs truncate">{log.message}</td>
+                        <td className="px-4 py-3">
+                          {log.gitBranch && (
+                            <span className="text-purple-400 text-xs font-mono">{log.gitBranch}</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
+                          {new Date(log.timestamp).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Footer with file log info */}
+            <div className="border-t border-gray-700 px-6 py-3 bg-gray-800/30">
+              <div className="text-xs text-gray-500">
+                Logs are also saved to <code className="text-purple-400 bg-gray-800 px-1.5 py-0.5 rounded">logs/deployment-activity.log</code> for permanent backup
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

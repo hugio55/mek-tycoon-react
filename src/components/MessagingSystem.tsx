@@ -744,7 +744,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   return (
     <div className="flex h-full min-h-[500px] overflow-hidden">
       {/* Left Sidebar - Inbox */}
-      <div className="w-80 border-r border-gray-700/50 flex flex-col bg-black/[0.085]">
+      <div className="w-80 border-r border-gray-700/50 flex flex-col bg-black/20">
         {/* Inbox Header */}
         <div className="p-4 border-b border-gray-700 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white">Inbox</h2>
@@ -1026,7 +1026,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
       </div>
 
       {/* Right Panel - Conversation */}
-      <div className="flex-1 flex flex-col bg-black/[0.085]">
+      <div className="flex-1 flex flex-col bg-black/20">
         {selectedConversationId || isNewConversation ? (
           <>
             {/* Conversation Header */}

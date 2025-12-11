@@ -670,7 +670,7 @@ export default function UnifiedHeader() {
           <div
             className="fixed inset-0"
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              backgroundColor: 'rgba(0, 0, 0, 0.35)',
               backdropFilter: 'blur(8px)',
               WebkitBackdropFilter: 'blur(8px)'
             }}

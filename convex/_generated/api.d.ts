@@ -58,6 +58,7 @@ import type * as crafting from "../crafting.js";
 import type * as crons from "../crons.js";
 import type * as deduplicateMeks from "../deduplicateMeks.js";
 import type * as deployedNodeData from "../deployedNodeData.js";
+import type * as deploymentLogs from "../deploymentLogs.js";
 import type * as devToolbar from "../devToolbar.js";
 import type * as diagnosticAllEssenceWallets from "../diagnosticAllEssenceWallets.js";
 import type * as diagnosticCampaigns from "../diagnosticCampaigns.js";
@@ -217,6 +218,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   deduplicateMeks: typeof deduplicateMeks;
   deployedNodeData: typeof deployedNodeData;
+  deploymentLogs: typeof deploymentLogs;
   devToolbar: typeof devToolbar;
   diagnosticAllEssenceWallets: typeof diagnosticAllEssenceWallets;
   diagnosticCampaigns: typeof diagnosticCampaigns;
