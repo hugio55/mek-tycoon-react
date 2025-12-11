@@ -906,15 +906,16 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                       className="w-full h-full object-cover"
                     />
                   </button>
-                  {/* Avatar Context Menu */}
+                  {/* Avatar Context Menu - Space Age Style */}
                   {avatarMenuOpen === conv.otherParticipant.walletAddress && (
                     <div
                       data-avatar-menu
-                      className="absolute left-0 top-12 z-50 min-w-[160px] rounded-lg overflow-hidden"
+                      className="absolute left-0 top-12 z-50 min-w-[160px] rounded-xl overflow-hidden py-1"
                       style={{
-                        background: 'linear-gradient(135deg, rgba(30, 32, 38, 0.95) 0%, rgba(35, 38, 45, 0.97) 50%, rgba(30, 32, 38, 0.95) 100%)',
-                        border: '1px solid rgba(34, 211, 238, 0.4)',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.4), 0 0 1px rgba(255,255,255,0.1) inset',
+                        backdropFilter: 'blur(20px)',
                       }}
                     >
                       <button
@@ -923,16 +924,19 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                           window.open(`/corporation/${conv.otherParticipant.walletAddress}`, '_blank');
                           setAvatarMenuOpen(null);
                         }}
-                        className="w-full px-3 py-2.5 text-left text-sm tracking-wide transition-all flex items-center gap-2 hover:bg-white/10 hover:pl-4 hover:brightness-125"
+                        className="w-full px-4 py-2.5 text-left text-sm font-light tracking-wide transition-all"
                         style={{
-                          color: 'rgba(255,255,255,0.85)',
-                          borderBottom: '1px solid rgba(255,255,255,0.1)',
+                          color: 'rgba(255,255,255,0.7)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(34, 211, 238, 0.15)';
+                          e.currentTarget.style.color = '#22d3ee';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
                         }}
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                          <circle cx="12" cy="7" r="4" />
-                        </svg>
                         View Corporation
                       </button>
                       <button
@@ -941,15 +945,19 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                           handleBlockUser(conv.otherParticipant.walletAddress);
                           setAvatarMenuOpen(null);
                         }}
-                        className="w-full px-3 py-2.5 text-left text-sm tracking-wide transition-all flex items-center gap-2 hover:bg-red-500/20 hover:pl-4"
+                        className="w-full px-4 py-2.5 text-left text-sm font-light tracking-wide transition-all"
                         style={{
-                          color: '#f87171',
+                          color: 'rgba(255,255,255,0.7)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(248, 113, 113, 0.15)';
+                          e.currentTarget.style.color = '#f87171';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
                         }}
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="12" cy="12" r="10" />
-                          <path d="M4.93 4.93l14.14 14.14" />
-                        </svg>
                         Block
                       </button>
                     </div>
@@ -1515,23 +1523,6 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-500">
             <div className="text-center">
-              {/* Comms Terminal Icon - Hexagonal display */}
-              <div className="flex justify-center mb-5">
-                <svg width="72" height="72" viewBox="0 0 72 72" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-600">
-                  {/* Outer hexagon */}
-                  <path d="M36 6L60 18V42L36 54L12 42V18L36 6Z" strokeOpacity="0.3" />
-                  {/* Inner hexagon */}
-                  <path d="M36 16L50 24V40L36 48L22 40V24L36 16Z" strokeOpacity="0.5" />
-                  {/* Center signal icon */}
-                  <circle cx="36" cy="32" r="4" fill="currentColor" fillOpacity="0.4" />
-                  <path d="M28 26C31.3 22.7 38.7 22.7 42 26" strokeLinecap="round" strokeOpacity="0.6" />
-                  <path d="M42 38C38.7 41.3 31.3 41.3 28 38" strokeLinecap="round" strokeOpacity="0.6" />
-                  {/* Corner accents */}
-                  <circle cx="36" cy="6" r="2" fill="currentColor" fillOpacity="0.3" />
-                  <circle cx="60" cy="18" r="2" fill="currentColor" fillOpacity="0.3" />
-                  <circle cx="12" cy="18" r="2" fill="currentColor" fillOpacity="0.3" />
-                </svg>
-              </div>
               <div className="text-lg text-gray-400">Select a channel</div>
               <div className="text-sm mt-2 text-gray-600">or initiate a new transmission</div>
             </div>
