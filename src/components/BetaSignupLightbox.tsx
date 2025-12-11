@@ -358,41 +358,6 @@ export default function BetaSignupLightbox({
 
   if (!mounted || !isVisible) return null;
 
-  // In preview mode, render inline (no portal) with a container wrapper
-  if (previewMode) {
-    return (
-      <div className="relative w-full max-w-md mx-auto">
-        {/* Glass Card - no backdrop in preview mode */}
-        <div
-          className="relative overflow-hidden rounded-2xl border border-white/10"
-          style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset',
-            backdropFilter: 'blur(30px)',
-            WebkitBackdropFilter: 'blur(30px)',
-          }}
-        >
-          <div className="p-6 sm:p-8">
-            {(() => {
-              switch (step) {
-                case 'address_entry': return renderAddressEntry();
-                case 'checking_veteran': return renderLoading('Checking your status...');
-                case 'veteran_welcome': return renderVeteranWelcome();
-                case 'wallet_selection': return renderWalletSelection();
-                case 'wallet_verification': return renderWalletVerification();
-                case 'name_input': return renderNameInput();
-                case 'name_confirmed': return renderNameConfirmed();
-                case 'normal_signup': return renderLoading('Submitting signup...');
-                case 'success': return renderSuccess();
-                default: return renderAddressEntry();
-              }
-            })()}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Render content based on current step
   const renderContent = () => {
     switch (step) {
@@ -816,6 +781,28 @@ export default function BetaSignupLightbox({
       </p>
     </div>
   );
+
+  // In preview mode, render inline (no portal) with a container wrapper
+  if (previewMode) {
+    return (
+      <div className="relative w-full max-w-md mx-auto">
+        {/* Glass Card - no backdrop in preview mode */}
+        <div
+          className="relative overflow-hidden rounded-2xl border border-white/10"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset',
+            backdropFilter: 'blur(30px)',
+            WebkitBackdropFilter: 'blur(30px)',
+          }}
+        >
+          <div className="p-6 sm:p-8">
+            {renderContent()}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const lightboxContent = (
     <div

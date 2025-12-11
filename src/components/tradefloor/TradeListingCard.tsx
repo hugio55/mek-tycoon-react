@@ -269,7 +269,7 @@ export default function TradeListingCard({
         >
           Looking for:
         </div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5" style={{ minHeight: '58px' }}>
           {listing.desiredVariations.map((v, i) => {
             const colors = variationTypeColors[v.variationType];
             // Look up full variation data for tooltip
