@@ -744,7 +744,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   return (
     <div className="flex h-full min-h-[500px] overflow-hidden">
       {/* Left Sidebar - Inbox */}
-      <div className="w-80 border-r border-gray-700/50 flex flex-col bg-black/20">
+      <div className="w-80 border-r border-gray-700/50 flex flex-col bg-black/[0.085]">
         {/* Inbox Header */}
         <div className="p-4 border-b border-gray-700 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white">Inbox</h2>
@@ -1026,7 +1026,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
       </div>
 
       {/* Right Panel - Conversation */}
-      <div className="flex-1 flex flex-col bg-black/20">
+      <div className="flex-1 flex flex-col bg-black/[0.085]">
         {selectedConversationId || isNewConversation ? (
           <>
             {/* Conversation Header */}
@@ -1526,7 +1526,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
               <img
                 src={getMediaUrl('/random-images/OE logo.png')}
                 alt="OE"
-                className="w-20 h-auto mx-auto mb-4 opacity-40"
+                className="w-20 h-auto mx-auto mb-3 opacity-40"
                 style={{ filter: 'grayscale(100%) brightness(0.5)' }}
               />
               <div className="text-lg text-gray-400">Select a channel</div>

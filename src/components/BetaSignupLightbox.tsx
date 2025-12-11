@@ -537,7 +537,7 @@ export default function BetaSignupLightbox({
     const showNoWallets = previewMode ? false : (!isMobileBrowser && walletsDetected && availableWallets.length === 0);
 
     return (
-      <>
+      <div className="-mb-4">
         <div className="text-center mb-6">
           <h2 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-2">
             Verify Wallet Ownership
@@ -604,12 +604,12 @@ export default function BetaSignupLightbox({
 
           <button
             onClick={() => setStep('veteran_welcome')}
-            className="w-full pt-0 pb-0 -mb-6 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
+            className="w-full pt-0 pb-0 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
           >
             ← Back
           </button>
         </div>
-      </>
+      </div>
     );
   };
 
