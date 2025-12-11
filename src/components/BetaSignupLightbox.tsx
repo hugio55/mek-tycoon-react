@@ -554,11 +554,29 @@ export default function BetaSignupLightbox({
               <p className="text-sm sm:text-base text-white/60 mb-3">Select your wallet:</p>
               <div className="grid grid-cols-2 gap-3">
                 {walletsToShow.map((wallet) => (
-                  <GlassButton
+                  <button
                     key={wallet.name}
-                    text={wallet.name}
                     onClick={() => !previewMode && handleVerifyWallet(wallet)}
-                  />
+                    className="px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:shadow-2xl hover:scale-[1.01] hover:border-white/50 hover:brightness-125 group relative overflow-hidden"
+                    style={{
+                      fontFamily: "'Play', sans-serif",
+                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04))',
+                      color: '#e0e0e0',
+                      border: '1px solid rgba(255, 255, 255, 0.25)',
+                    }}
+                  >
+                    <div
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-lg"
+                      style={{
+                        backgroundImage: `url('/random-images/honey-png1.webp')`,
+                        backgroundSize: '125%',
+                        backgroundPosition: 'center'
+                      }}
+                    />
+                    <span className="relative z-10 transition-all duration-300 group-hover:[text-shadow:0_0_6px_rgba(255,255,255,0.9),0_0_12px_rgba(255,255,255,0.6)]">
+                      {wallet.name}
+                    </span>
+                  </button>
                 ))}
               </div>
             </div>
@@ -586,7 +604,7 @@ export default function BetaSignupLightbox({
 
           <button
             onClick={() => setStep('veteran_welcome')}
-            className="w-full pt-1 pb-0 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
+            className="w-full pt-0 pb-0 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
           >
             ← Back
           </button>
