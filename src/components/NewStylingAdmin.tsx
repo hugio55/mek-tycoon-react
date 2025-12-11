@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import FillTextButton from '@/components/controls/FillTextButton';
 import { getMediaUrl } from '@/lib/media-url';
@@ -29,6 +29,8 @@ export default function NewStylingAdmin() {
         return <LightboxStyles onShowDemo={() => setShowDemoLightbox(true)} onShowVerified={() => setShowVerifiedLightbox(true)} />;
       case 'liquid-glass':
         return <LiquidGlassStyles />;
+      case 'dropdowns':
+        return <DropdownStyles />;
       case 'typography':
         return <TypographyStyles />;
       case 'colors':
@@ -318,6 +320,200 @@ function LiquidGlassStyles() {
               { name: 'Hover Scale', value: '1.02', css: 'transform: scale(1.02)' },
               { name: 'Active Scale', value: '0.98', css: 'transform: scale(0.98)' },
             ]} />
+          </StyleSection>
+        </div>
+      </TechnicalDetails>
+    </div>
+  );
+}
+
+// ============================================================================
+// DROPDOWN STYLES
+// ============================================================================
+function DropdownStyles() {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [selectedOption, setSelectedOption] = useState('newest');
+  const [dropdownRect, setDropdownRect] = useState<DOMRect | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const dropdownBtnRef = useRef<HTMLButtonElement>(null);
+
+  const SORT_OPTIONS = [
+    { id: 'newest', name: 'Newest First' },
+    { id: 'oldest', name: 'Oldest First' },
+    { id: 'most-offers', name: 'Most Offers' },
+    { id: 'least-offers', name: 'Least Offers' },
+  ];
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownOpen && dropdownBtnRef.current && !dropdownBtnRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dropdownOpen]);
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-white">Dropdown Menus</h2>
+
+      {/* LIVE DEMO */}
+      <div className="p-6 bg-black/30 rounded-xl border border-gray-600">
+        <h3 className="text-lg font-semibold text-yellow-400 mb-4">Live Demo (click to open)</h3>
+
+        <div className="flex items-center gap-4">
+          {/* Dropdown Button */}
+          <div className="relative">
+            <button
+              ref={dropdownBtnRef}
+              onClick={() => {
+                if (!dropdownOpen && dropdownBtnRef.current) {
+                  setDropdownRect(dropdownBtnRef.current.getBoundingClientRect());
+                }
+                setDropdownOpen(!dropdownOpen);
+              }}
+              className="flex items-center gap-2 px-3 py-2 text-sm uppercase tracking-wider font-medium transition-all"
+              style={{
+                background: 'linear-gradient(105deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0.06) 100%)',
+                backdropFilter: 'blur(4px) brightness(1.25)',
+                WebkitBackdropFilter: 'blur(4px) brightness(1.25)',
+                border: dropdownOpen
+                  ? '1px solid rgba(34,211,238,0.4)'
+                  : '1px solid rgba(255,255,255,0.12)',
+                borderRadius: dropdownOpen ? '8px 8px 0 0' : '8px',
+                color: 'rgba(255,255,255,0.8)',
+                fontFamily: "'Play', sans-serif",
+              }}
+            >
+              <span>{SORT_OPTIONS.find(o => o.id === selectedOption)?.name}</span>
+              <svg
+                className={`w-3.5 h-3.5 transition-transform duration-200 flex-shrink-0 ${dropdownOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Floating Dropdown Menu - Rendered via Portal */}
+            {mounted && dropdownOpen && dropdownRect && createPortal(
+              <div
+                className="fixed"
+                style={{
+                  zIndex: 99999,
+                  top: dropdownRect.bottom,
+                  left: dropdownRect.left,
+                  width: dropdownRect.width,
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.08) 100%)',
+                  backdropFilter: 'blur(8px) brightness(1.1)',
+                  WebkitBackdropFilter: 'blur(8px) brightness(1.1)',
+                  border: '1px solid rgba(34,211,238,0.4)',
+                  borderTop: 'none',
+                  borderRadius: '0 0 8px 8px',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                }}
+              >
+                {SORT_OPTIONS.map((option, index) => (
+                  <button
+                    key={option.id}
+                    onClick={() => {
+                      setSelectedOption(option.id);
+                      setDropdownOpen(false);
+                    }}
+                    className="w-full px-3 py-2 text-left text-sm tracking-wide transition-all whitespace-nowrap hover:bg-white/10 hover:pl-4 hover:brightness-125"
+                    style={{
+                      background: selectedOption === option.id
+                        ? 'rgba(34,211,238,0.25)'
+                        : 'transparent',
+                      color: selectedOption === option.id
+                        ? '#22d3ee'
+                        : 'rgba(255,255,255,0.8)',
+                      fontFamily: "'Play', sans-serif",
+                      borderBottom: index < SORT_OPTIONS.length - 1
+                        ? '1px solid rgba(255,255,255,0.1)'
+                        : 'none',
+                    }}
+                  >
+                    {option.name}
+                  </button>
+                ))}
+              </div>,
+              document.body
+            )}
+          </div>
+
+          <span className="text-sm text-gray-500">
+            Selected: <span className="text-cyan-400">{SORT_OPTIONS.find(o => o.id === selectedOption)?.name}</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Technical Details - Collapsed */}
+      <TechnicalDetails title="Technical Implementation Details">
+        <div className="space-y-6">
+          <StyleSection title="Dropdown Button (Closed State)">
+            <PropertyTable properties={[
+              { name: 'Background', value: 'Asymmetric gradient', css: 'linear-gradient(105deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.10) 40%, rgba(255,255,255,0.06) 100%)' },
+              { name: 'Backdrop Filter', value: 'blur + brightness', css: 'blur(4px) brightness(1.25)' },
+              { name: 'Border', value: 'Subtle white', css: '1px solid rgba(255,255,255,0.12)' },
+              { name: 'Border Radius', value: 'All corners', css: 'border-radius: 8px' },
+              { name: 'Text Color', value: '80% white', css: 'rgba(255,255,255,0.8)' },
+              { name: 'Font', value: 'Play uppercase', css: "font-family: 'Play'; text-transform: uppercase" },
+            ]} />
+          </StyleSection>
+
+          <StyleSection title="Dropdown Button (Open State)">
+            <PropertyTable properties={[
+              { name: 'Border', value: 'Cyan highlight', css: '1px solid rgba(34,211,238,0.4)' },
+              { name: 'Border Radius', value: 'Top corners only', css: 'border-radius: 8px 8px 0 0' },
+              { name: 'Chevron', value: 'Rotated 180deg', css: 'transform: rotate(180deg)' },
+            ]} />
+          </StyleSection>
+
+          <StyleSection title="Dropdown Menu Panel">
+            <PropertyTable properties={[
+              { name: 'Background', value: 'Symmetric gradient', css: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.08) 100%)' },
+              { name: 'Backdrop Filter', value: 'blur + brightness', css: 'blur(8px) brightness(1.1)' },
+              { name: 'Border', value: 'Cyan (no top)', css: '1px solid rgba(34,211,238,0.4); border-top: none' },
+              { name: 'Border Radius', value: 'Bottom corners only', css: 'border-radius: 0 0 8px 8px' },
+              { name: 'Box Shadow', value: 'Deep shadow', css: '0 8px 32px rgba(0,0,0,0.3)' },
+              { name: 'Z-Index', value: 'Portal to body', css: 'z-index: 99999' },
+            ]} />
+          </StyleSection>
+
+          <StyleSection title="Menu Options">
+            <PropertyTable properties={[
+              { name: 'Selected BG', value: 'Cyan tint', css: 'rgba(34,211,238,0.25)' },
+              { name: 'Selected Color', value: 'Cyan', css: '#22d3ee' },
+              { name: 'Unselected Color', value: '80% white', css: 'rgba(255,255,255,0.8)' },
+              { name: 'Hover Effect', value: 'BG + indent + bright', css: 'bg-white/10, padding-left +4px, brightness 1.25' },
+              { name: 'Divider', value: 'Between items', css: '1px solid rgba(255,255,255,0.1)' },
+            ]} />
+          </StyleSection>
+
+          <StyleSection title="Portal Rendering">
+            <CodeBlock
+              description="Uses React Portal for proper z-index stacking"
+              code={`{mounted && dropdownOpen && dropdownRect && createPortal(
+  <div style={{
+    position: 'fixed',
+    top: dropdownRect.bottom,
+    left: dropdownRect.left,
+    width: dropdownRect.width,
+    zIndex: 99999
+  }}>
+    {/* Menu content */}
+  </div>,
+  document.body
+)}`}
+            />
           </StyleSection>
         </div>
       </TechnicalDetails>

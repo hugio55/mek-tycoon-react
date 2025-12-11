@@ -134,7 +134,7 @@ export default function TradeListingCard({
     <div
       className="relative rounded-xl overflow-hidden group"
       style={{
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
+        background: 'linear-gradient(135deg, rgba(15,20,30,0.85), rgba(10,15,25,0.80))',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         border: '1px solid rgba(255,255,255,0.1)',
