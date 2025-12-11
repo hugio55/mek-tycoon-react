@@ -326,6 +326,7 @@ export default function UserFlowDiagram() {
                   "[Continue] button",
                   "Click backdrop → closes"
                 ]}
+                onClick={() => openBetaPreview('address_entry')}
               />
               <Arrow label="clicks Continue" condition="action" />
               <FlowNode label="Validate stake address" type="action" sublabel="validateStakeAddress()" />
@@ -346,6 +347,7 @@ export default function UserFlowDiagram() {
                     sublabel="checking_veteran step"
                     type="screen"
                     buttons={["Spinner animation"]}
+                    onClick={() => openBetaPreview('checking_veteran')}
                   />
                   <Arrow label="API call" condition="auto" />
                   <FlowNode label="/api/phase1-veteran" type="api" sublabel="GET ?stakeAddress=..." />
@@ -369,6 +371,7 @@ export default function UserFlowDiagram() {
                   sublabel="normal_signup step"
                   type="screen"
                   buttons={["Spinner animation"]}
+                  onClick={() => openBetaPreview('normal_signup')}
                 />
                 <Arrow label="API call" condition="auto" />
                 <FlowNode label="/api/beta-signup" type="api" sublabel="POST { stakeAddress }" />
@@ -392,6 +395,7 @@ export default function UserFlowDiagram() {
                         "Discord link",
                         "Auto-closes after 2 seconds"
                       ]}
+                      onClick={() => openBetaPreview('success')}
                     />
                   </div>
                 </div>
@@ -417,6 +421,7 @@ export default function UserFlowDiagram() {
                     "'Skip for now' link",
                     "Click backdrop → closes"
                   ]}
+                  onClick={() => openBetaPreview('veteran_welcome', MOCK_VETERAN_INFO)}
                 />
 
                 <div className="flex gap-8 mt-4">
@@ -434,6 +439,7 @@ export default function UserFlowDiagram() {
                         "Click backdrop → closes",
                         "NO auto-close"
                       ]}
+                      onClick={() => openBetaPreview('success')}
                     />
                   </div>
 
@@ -453,6 +459,7 @@ export default function UserFlowDiagram() {
                         "'← Back' link → veteran_welcome",
                         "Click backdrop → closes"
                       ]}
+                      onClick={() => openBetaPreview('wallet_selection', MOCK_VETERAN_INFO)}
                     />
                     <Arrow label="clicks wallet" condition="action" />
                     <FlowNode

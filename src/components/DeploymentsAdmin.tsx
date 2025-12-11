@@ -323,13 +323,17 @@ export default function DeploymentsAdmin() {
 
   const handlePush = async () => {
     setIsPushing(true);
-    addLog('Push', 'pending', 'Pushing to GitHub...');
+    addLog('Push', 'pending', 'Syncing to GitHub (will auto-commit if needed)...');
 
     try {
       const res = await fetch('/api/deployment/push', { method: 'POST' });
       const data = await res.json();
 
       if (data.success) {
+        // Show commit info if auto-commit happened
+        if (data.didCommit) {
+          addLog('Push', 'success', `Auto-committed ${data.committedFiles} file(s)`);
+        }
         addLog('Push', 'success', data.message);
         await fetchStatus();
       } else if (data.wrongBranch) {
@@ -1031,10 +1035,11 @@ export default function DeploymentsAdmin() {
 
           <button
             onClick={handlePush}
-            disabled={anyActionRunning || (gitStatus?.commitsAhead || 0) === 0}
+            disabled={anyActionRunning || ((gitStatus?.commitsAhead || 0) === 0 && !gitStatus?.hasUncommittedChanges)}
             className="px-4 py-3 bg-blue-700 hover:bg-blue-600 disabled:bg-gray-800 disabled:text-gray-600 rounded-lg transition-colors"
+            title="Auto-commits if needed, then pushes to GitHub"
           >
-            {isPushing ? 'Pushing...' : 'Push to GitHub'}
+            {isPushing ? 'Syncing...' : 'Sync to GitHub'}
           </button>
 
           <button
