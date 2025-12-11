@@ -399,23 +399,27 @@ export default function CreateListingLightbox({
                   You need to own Meks to create a listing
                 </p>
               </div>
-            ) : displayedMeks.length === 0 ? (
-              <div
-                className="text-center py-12 rounded-xl"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                }}
-              >
-                <div className="text-4xl mb-3">🔍</div>
-                <p style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
-                  No Meks match your search
-                </p>
-              </div>
             ) : (
               <>
-                {/* Mek Grid */}
-                <div className="flex-1 overflow-y-auto">
+                {/* Mek Grid - Fixed height container */}
+                <div className="flex-1 overflow-y-auto" style={{ minHeight: '400px' }}>
+                  {displayedMeks.length === 0 ? (
+                    <div
+                      className="flex items-center justify-center h-full rounded-xl"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        minHeight: '400px',
+                      }}
+                    >
+                      <div className="text-center">
+                        <div className="text-4xl mb-3">🔍</div>
+                        <p style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}>
+                          No Meks match your search
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
                     {displayedMeks.map((mek: any) => {
                       const isListed = listedMekIds.has(mek.assetId);
@@ -518,6 +522,7 @@ export default function CreateListingLightbox({
                       );
                     })}
                   </div>
+                  )}
                 </div>
 
                 {/* Pagination */}
