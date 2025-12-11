@@ -614,7 +614,7 @@ export default function BetaSignupLightbox({
   };
 
   const renderNameInput = () => (
-    <div className="-mb-6">
+    <div className="-mb-5">
       <div className="text-center mb-6">
         <h2 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-2">
           Reserve Your Corporation Name
