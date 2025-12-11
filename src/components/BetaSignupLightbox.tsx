@@ -476,7 +476,7 @@ export default function BetaSignupLightbox({
       <div className="text-center mb-6 sm:mb-8">
         <h2 className="text-2xl sm:text-3xl font-light text-white tracking-wide mb-4">
           Welcome Back,<br />
-          <span className="text-yellow-400">{veteranInfo?.originalCorporationName}</span>!
+          <span className="text-cyan-400 font-bold">{veteranInfo?.originalCorporationName}</span>!
         </h2>
         <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed">
           We recognize you from the original Phase I Beta. Since you are already in our system,{' '}
@@ -501,7 +501,7 @@ export default function BetaSignupLightbox({
           ) : (
             <>
               Your Phase I corporation name:<br />
-              <span className="text-white font-semibold">{veteranInfo?.originalCorporationName}</span>
+              <span className="text-cyan-400 font-bold">{veteranInfo?.originalCorporationName}</span>
             </>
           )}
         </div>
@@ -521,7 +521,7 @@ export default function BetaSignupLightbox({
 
         <button
           onClick={handleSkipNameReservation}
-          className="w-full pt-3 pb-0 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
+          className="w-full pt-5 pb-0 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           Skip for now

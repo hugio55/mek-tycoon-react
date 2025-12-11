@@ -144,6 +144,9 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   // Reply/quote feature
   const [replyingToMessage, setReplyingToMessage] = useState<any | null>(null);
 
+  // Avatar context menu
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState<string | null>(null); // wallet address of open menu
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -735,43 +738,26 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowNewConversation(true)}
-              className="text-xs px-3 py-1.5 rounded-lg transition-all duration-300 hover:scale-[1.02] relative overflow-hidden group"
+              className="text-xs px-3 py-1.5 rounded-lg transition-all duration-200 hover:brightness-125"
               style={{
-                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04))',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                color: '#e0e0e0',
+                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(56, 189, 248, 0.08))',
+                border: '1px solid rgba(56, 189, 248, 0.4)',
+                color: '#7dd3fc',
+                boxShadow: '0 0 12px rgba(56, 189, 248, 0.2)',
               }}
             >
-              <span className="relative z-10 group-hover:text-cyan-300 transition-colors">New</span>
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                style={{
-                  backgroundImage: `url('/random-images/honey-png1.webp')`,
-                  backgroundSize: '200%',
-                  backgroundPosition: 'center',
-                  filter: 'brightness(0.6)',
-                }}
-              />
+              New
             </button>
             <button
               onClick={() => setShowBlockedUsers(true)}
-              className="text-xs px-3 py-1.5 rounded-lg transition-all duration-300 hover:scale-[1.02] relative overflow-hidden group"
+              className="text-xs px-3 py-1.5 rounded-lg transition-all duration-200 hover:brightness-125"
               style={{
                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04))',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 color: '#e0e0e0',
               }}
             >
-              <span className="relative z-10 group-hover:text-red-300 transition-colors">Blocked</span>
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                style={{
-                  backgroundImage: `url('/random-images/honey-png1.webp')`,
-                  backgroundSize: '200%',
-                  backgroundPosition: 'center',
-                  filter: 'brightness(0.6)',
-                }}
-              />
+              Blocked
             </button>
           </div>
         </div>
