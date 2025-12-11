@@ -6493,10 +6493,28 @@ export default function AdminMasterDataPage() {
 
           {/* User Flow - Database Table Relationships */}
           {activeTab === 'user-flow' && (
-            <div className="bg-black/50 backdrop-blur border-2 border-blue-500/30 rounded-lg p-6">
-              <p className="text-gray-400 mb-6">
-                <span className="text-blue-400 font-bold">Phase II:</span> 1 user = 1 corporation. Jobs pay gold.
-              </p>
+            <div className="space-y-8">
+              {/* Button Interaction Flows */}
+              <div className="bg-black/50 backdrop-blur border-2 border-yellow-500/30 rounded-lg p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="text-2xl">🔗</span>
+                  <h2 className="text-2xl font-bold text-yellow-400 uppercase tracking-wider">Button Interaction Flows</h2>
+                </div>
+                <p className="text-gray-400 mb-6">
+                  Visual flowcharts showing all possible paths through the Join Beta and Claim NFT buttons for new users and Phase I veterans.
+                </p>
+                <UserFlowDiagram />
+              </div>
+
+              {/* Database Structure (existing content) */}
+              <div className="bg-black/50 backdrop-blur border-2 border-blue-500/30 rounded-lg p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-2xl">🗄️</span>
+                  <h2 className="text-xl font-bold text-blue-400 uppercase tracking-wider">Database Structure</h2>
+                </div>
+                <p className="text-gray-400 mb-6">
+                  <span className="text-blue-400 font-bold">Phase II:</span> 1 user = 1 corporation. Jobs pay gold.
+                </p>
 
               {/* Simple Grid Layout */}
               <div className="flex flex-col items-center gap-4">
@@ -6570,6 +6588,7 @@ export default function AdminMasterDataPage() {
                 <div className="text-xs text-gray-400">Legacy goldMining and goldMiningState tables removed. Users table is now source of truth.</div>
               </div>
 
+              </div>
             </div>
           )}
 
