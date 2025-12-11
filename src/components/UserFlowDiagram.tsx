@@ -471,6 +471,7 @@ export default function UserFlowDiagram() {
                         "Status message",
                         "'← Try different wallet' link"
                       ]}
+                      onClick={() => openBetaPreview('wallet_verification', MOCK_VETERAN_INFO)}
                     />
 
                     <div className="flex gap-6 mt-4">
@@ -493,6 +494,7 @@ export default function UserFlowDiagram() {
                             "[Reserve Name] button",
                             "'← Back' link → veteran_welcome"
                           ]}
+                          onClick={() => openBetaPreview('name_input', MOCK_VETERAN_INFO)}
                         />
                         <Arrow label="clicks Reserve" condition="action" />
                         <FlowNode label="/api/phase1-veteran/reserve-name" type="api" sublabel="POST { stakeAddress, newCorporationName }" />
@@ -506,6 +508,7 @@ export default function UserFlowDiagram() {
                             "Shows reserved name",
                             "[Done] button → closes"
                           ]}
+                          onClick={() => openBetaPreview('name_confirmed', MOCK_VETERAN_WITH_RESERVED)}
                         />
                       </div>
                     </div>
@@ -572,6 +575,7 @@ export default function UserFlowDiagram() {
                 sublabel="loading_campaign step"
                 type="screen"
                 buttons={["Spinner animation"]}
+                onClick={() => openNMKRPreview('loading_campaign')}
               />
               <Arrow label="fetches active campaigns" condition="auto" />
 
@@ -587,6 +591,7 @@ export default function UserFlowDiagram() {
                       "'Check back later'",
                       "Click backdrop → closes"
                     ]}
+                    onClick={() => openNMKRPreview('no_campaign')}
                   />
                 </div>
                 <div className="flex flex-col items-center">
@@ -600,6 +605,7 @@ export default function UserFlowDiagram() {
                       "'All NFTs have been claimed'",
                       "[Close] button"
                     ]}
+                    onClick={() => openNMKRPreview('error')}
                   />
                 </div>
                 <div className="flex flex-col items-center">
@@ -616,6 +622,7 @@ export default function UserFlowDiagram() {
                       "[X] close button",
                       "Click backdrop → shows cancel confirm"
                     ]}
+                    onClick={() => openNMKRPreview('address_entry')}
                   />
                 </div>
               </div>
@@ -633,6 +640,7 @@ export default function UserFlowDiagram() {
                 sublabel="checking_eligibility step"
                 type="screen"
                 buttons={["Spinner", "'Verifying your participation'"]}
+                onClick={() => openNMKRPreview('checking_eligibility')}
               />
               <Arrow label="API checks" condition="auto" />
 
@@ -653,6 +661,7 @@ export default function UserFlowDiagram() {
                       "'Thank you for being part...'",
                       "[Close] button"
                     ]}
+                    onClick={() => openNMKRPreview('already_claimed')}
                   />
                 </div>
 
@@ -670,6 +679,7 @@ export default function UserFlowDiagram() {
                       "'Please complete payment in NMKR'",
                       "[Close] button"
                     ]}
+                    onClick={() => openNMKRPreview('ineligible')}
                   />
                 </div>
 
@@ -687,6 +697,7 @@ export default function UserFlowDiagram() {
                       "Discord ticket link",
                       "[Join Beta] button → opens BetaSignupLightbox"
                     ]}
+                    onClick={() => openNMKRPreview('ineligible')}
                   />
                 </div>
 
@@ -704,6 +715,7 @@ export default function UserFlowDiagram() {
                       "[Continue to Claim] button",
                       "'Cancel' link"
                     ]}
+                    onClick={() => openNMKRPreview('corporation_verified')}
                   />
                 </div>
               </div>
@@ -727,6 +739,7 @@ export default function UserFlowDiagram() {
                   "OR 'No Cardano wallets detected'",
                   "'Go Back' link → corporation_verified"
                 ]}
+                onClick={() => openNMKRPreview('wallet_verification')}
               />
 
               <div className="flex gap-8 mt-4">
@@ -743,6 +756,7 @@ export default function UserFlowDiagram() {
                       "[Copy Link] button",
                       "'Go Back' link"
                     ]}
+                    onClick={() => openNMKRPreview('wallet_verification')}
                   />
                   <div className="text-xs text-gray-500 mt-2">User opens in wallet app</div>
                 </div>
@@ -790,6 +804,7 @@ export default function UserFlowDiagram() {
                         sublabel="creating step"
                         type="action"
                         buttons={["Spinner", "'Finding next available NFT'"]}
+                        onClick={() => openNMKRPreview('creating')}
                       />
                     </div>
                   </div>
@@ -816,6 +831,7 @@ export default function UserFlowDiagram() {
                   "[Open Payment Window] button",
                   "'Cancel' link → shows cancel confirm"
                 ]}
+                onClick={() => openNMKRPreview('reserved')}
               />
               <Arrow label="clicks Open Payment" condition="action" />
               <FlowNode label="Opens NMKR payment window" type="action" sublabel="External popup" />
@@ -829,6 +845,7 @@ export default function UserFlowDiagram() {
                   "'Close NMKR when done'",
                   "[Cancel Transaction] button"
                 ]}
+                onClick={() => openNMKRPreview('payment')}
               />
 
               <div className="flex gap-8 mt-4">
@@ -846,6 +863,7 @@ export default function UserFlowDiagram() {
                       "'Re-open Payment Window' link",
                       "'Cancel Reservation' link"
                     ]}
+                    onClick={() => openNMKRPreview('payment_window_closed')}
                   />
                 </div>
 
@@ -863,6 +881,7 @@ export default function UserFlowDiagram() {
                       "'1-2 minutes' message",
                       "[Cancel Transaction] button"
                     ]}
+                    onClick={() => openNMKRPreview('processing')}
                   />
                   <Arrow label="confirmed" condition="yes" />
                   <FlowNode
@@ -874,6 +893,7 @@ export default function UserFlowDiagram() {
                       "'Successfully minted'",
                       "[Close] button"
                     ]}
+                    onClick={() => openNMKRPreview('success')}
                   />
                 </div>
               </div>
@@ -896,6 +916,7 @@ export default function UserFlowDiagram() {
                     "'Reservation has timed out'",
                     "[Close] button"
                   ]}
+                  onClick={() => openNMKRPreview('timeout')}
                 />
                 <div className="text-xs text-gray-500 mt-2">Occurs after 20 minutes</div>
               </div>
