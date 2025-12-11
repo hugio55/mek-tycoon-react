@@ -31,20 +31,6 @@
   transition: all .3s ease-in;
 }
 
-.close-container label {
-  color: white;
-  font-family: Helvetica, Arial, sans-serif;
-  font-size: .6em;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  transition: all .3s ease-in;
-  opacity: 0;
-}
-
-.close {
-  margin: 60px 0 0 5px;
-  position: absolute;
-}
 
 .close-container:hover .leftright {
   transform: rotate(-45deg);
@@ -58,9 +44,6 @@
   box-shadow: 0 0 10px #22d3ee;
 }
 
-.close-container:hover label {
-  opacity: 1;
-}
 
 /* Focus styles for accessibility */
 .close-container:focus {

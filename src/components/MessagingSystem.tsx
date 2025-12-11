@@ -1231,14 +1231,20 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
 
                       <div className={`flex items-center gap-2 mt-1 text-xs text-gray-500 ${isMine ? 'justify-end' : ''}`}>
                         <span>{formatRelativeTime(msg.createdAt)}</span>
-                        {isMine && msg.status && !(currentConversation && isSupportConversation(currentConversation)) && (
-                          <span className={msg.status === 'read' ? 'text-green-400' : ''}>
-                            {msg.status === 'read' ? '✓✓' : '✓'}
-                          </span>
+                        {/* Read receipts - with support exception:
+                            In support chats: Admin sees when players read, but players don't see when admin reads */}
+                        {isMine && msg.status && (
+                          // Hide read receipt if: in support chat AND sender is NOT admin (player sent to admin)
+                          !(isInSupportConversation && !isSupportMessage) && (
+                            <span className={msg.status === 'read' ? 'text-green-400' : ''}>
+                              {msg.status === 'read' ? '✓✓' : '✓'}
+                            </span>
+                          )
                         )}
                       </div>
                     </div>
                   </div>
+                </div>
                 );
               })}
               <div ref={messagesEndRef} />

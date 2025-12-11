@@ -6,7 +6,6 @@ import './CloseButton.css';
 interface CloseButtonProps {
   onClick?: () => void;
   className?: string;
-  hideLabel?: boolean;
   variant?: 'default' | 'space-age';
 }
 
@@ -25,7 +24,7 @@ const variantStyles = {
   },
 };
 
-export default function CloseButton({ onClick, className = '', hideLabel = false, variant = 'default' }: CloseButtonProps) {
+export default function CloseButton({ onClick, className = '', variant = 'default' }: CloseButtonProps) {
   const [isHovered, setIsHovered] = useState(false);
   const styles = variantStyles[variant];
 
@@ -47,7 +46,6 @@ export default function CloseButton({ onClick, className = '', hideLabel = false
       >
         <div className="leftright"></div>
         <div className="rightleft"></div>
-        {!hideLabel && <label className="close">close</label>}
       </div>
     );
   }
