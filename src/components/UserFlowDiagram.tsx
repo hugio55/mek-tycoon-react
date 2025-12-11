@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import BetaSignupLightbox, { type BetaSignupStep, type VeteranInfo } from './BetaSignupLightbox';
 import NMKRPayLightbox, { type NMKRPayState } from './NMKRPayLightbox';
-import CloseButton from './controls/CloseButton';
 
 type NodeType = 'start' | 'screen' | 'decision' | 'action' | 'end' | 'api' | 'error' | 'special';
 
@@ -207,16 +206,11 @@ function PreviewModal({
       onClick={onClose}
       style={{ backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
     >
-      {/* Outer container - non-scrolling, positions the close button */}
+      {/* Outer container */}
       <div
         className="relative max-w-2xl w-full"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button - positioned outside scrollable area */}
-        <div className="absolute -top-2 -right-2 z-50">
-          <CloseButton onClick={onClose} hideLabel={true} />
-        </div>
-
         {/* Inner scrollable content */}
         <div className="max-h-[90vh] overflow-auto">
           {/* Step indicator */}

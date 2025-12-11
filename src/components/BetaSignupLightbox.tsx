@@ -752,10 +752,10 @@ export default function BetaSignupLightbox({
   );
 
   const renderSuccess = () => (
-    <div className="text-center py-8 sm:py-12">
-      <div className="mb-4 sm:mb-6">
+    <div className="text-center py-4">
+      <div className="mb-4">
         <svg
-          className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-yellow-400"
+          className="w-16 h-16 mx-auto text-yellow-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -764,10 +764,10 @@ export default function BetaSignupLightbox({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      <h3 className="text-xl sm:text-2xl md:text-3xl font-light text-white tracking-wide mb-3">
+      <h3 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-2">
         {veteranInfo ? "You're All Set!" : "Welcome Aboard!"}
       </h3>
-      <p className="text-sm sm:text-base text-white/60 font-light">
+      <p className="text-sm sm:text-base text-white/60 font-light mb-4">
         Keep an eye on the Announcements channel in our{' '}
         <a
           href="https://discord.gg/KnqMF6Ayyc"
@@ -779,6 +779,14 @@ export default function BetaSignupLightbox({
         </a>
         .
       </p>
+
+      <button
+        onClick={handleClose}
+        className="mt-2 w-full py-3 text-base font-semibold tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl hover:from-yellow-300 hover:to-yellow-400 transition-all duration-300 touch-manipulation shadow-lg shadow-yellow-500/20"
+        style={{ minHeight: '48px' }}
+      >
+        Done
+      </button>
     </div>
   );
 
