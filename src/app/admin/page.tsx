@@ -24,6 +24,7 @@ import VariationsHub from '@/components/VariationsHub';
 import SourceKeyMigrationAdmin from '@/components/SourceKeyMigrationAdmin';
 import WhitelistManagerAdmin from '@/components/WhitelistManagerAdmin';
 import RouteVisualization from '@/components/RouteVisualization';
+import UserFlowDiagram from '@/components/UserFlowDiagram';
 import NewStylingAdmin from '@/components/NewStylingAdmin';
 import MessagingSystemAdmin from '@/components/MessagingSystemAdminWrapper';
 import CoachMarksAdmin from '@/components/CoachMarksAdmin';
