@@ -475,7 +475,8 @@ export default function BetaSignupLightbox({
     <>
       <div className="text-center mb-6 sm:mb-8">
         <h2 className="text-2xl sm:text-3xl font-light text-white tracking-wide mb-4">
-          Welcome Back, {veteranInfo?.originalCorporationName}!
+          Welcome Back,<br />
+          <span className="text-yellow-400">{veteranInfo?.originalCorporationName}</span>!
         </h2>
         <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed">
           We recognize you from the original Phase I Beta. Since you are already in our system,{' '}
@@ -491,19 +492,19 @@ export default function BetaSignupLightbox({
           boxShadow: '0 0 20px rgba(59, 130, 246, 0.15), 0 0 40px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255,255,255,0.05)',
         }}
       >
-        <p className="text-sm sm:text-base text-white/70 mb-3">
+        <div className="text-sm sm:text-base text-white/70 mb-3">
           {veteranInfo?.hasReservedName ? (
             <>
-              Your reserved corporation name for Phase II:{' '}
+              Your reserved corporation name for Phase II:<br />
               <span className="text-yellow-400 font-semibold">{veteranInfo.reservedCorporationName}</span>
             </>
           ) : (
             <>
-              Your Phase I corporation name:{' '}
+              Your Phase I corporation name:<br />
               <span className="text-white font-semibold">{veteranInfo?.originalCorporationName}</span>
             </>
           )}
-        </p>
+        </div>
         <p className="text-sm sm:text-base text-white/60">
           As a Phase I veteran, you can reserve or change your corporation name before anyone else.
         </p>
