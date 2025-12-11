@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { validateStakeAddress, isValidStakeAddressFormat } from '@/lib/cardanoValidation';
 import { useWalletVerification } from '@/hooks/useWalletVerification';
 import CubeSpinner from '@/components/loaders/CubeSpinner';
+import GlassButton from '@/components/controls/GlassButton';
 
 // Phase I veteran data from backend
 interface VeteranInfo {
@@ -554,13 +555,11 @@ export default function BetaSignupLightbox({
               <p className="text-sm sm:text-base text-white/60 mb-3">Select your wallet:</p>
               <div className="grid grid-cols-2 gap-3">
                 {walletsToShow.map((wallet) => (
-                  <button
+                  <GlassButton
                     key={wallet.name}
+                    text={wallet.name}
                     onClick={() => !previewMode && handleVerifyWallet(wallet)}
-                    className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-yellow-500/30 transition-all text-center"
-                  >
-                    <span className="text-base text-white/80">{wallet.name}</span>
-                  </button>
+                  />
                 ))}
               </div>
             </div>
@@ -588,7 +587,7 @@ export default function BetaSignupLightbox({
 
           <button
             onClick={() => setStep('veteran_welcome')}
-            className="w-full pt-3 pb-0 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
+            className="w-full pt-1 pb-0 text-sm font-medium tracking-wide text-white/60 hover:text-white/80 transition-colors touch-manipulation"
           >
             ← Back
           </button>

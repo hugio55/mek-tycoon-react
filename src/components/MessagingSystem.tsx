@@ -241,6 +241,19 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     };
   }, [lightboxImage, showNewConversation, errorLightbox, showBlockedUsers, showSupportDismissLightbox]);
 
+  // Close avatar menu when clicking outside
+  useEffect(() => {
+    if (!avatarMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Don't close if clicking inside a menu
+      if (target.closest('[data-avatar-menu]')) return;
+      setAvatarMenuOpen(null);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [avatarMenuOpen]);
+
   // Auto-create support conversation if it doesn't exist
   useEffect(() => {
     if (supportConversationStatus && !supportConversationStatus.exists && walletAddress) {
@@ -878,12 +891,61 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden">
-                  <img
-                    src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(conv.otherParticipant.walletAddress)}`)}
-                    alt={conv.otherParticipant.companyName}
-                    className="w-full h-full object-cover"
-                  />
+                {/* Avatar with context menu */}
+                <div className="relative flex-shrink-0">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAvatarMenuOpen(avatarMenuOpen === conv.otherParticipant.walletAddress ? null : conv.otherParticipant.walletAddress);
+                    }}
+                    className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden hover:ring-2 hover:ring-cyan-500/50 transition-all"
+                  >
+                    <img
+                      src={getMediaUrl(`/mek-images/150px/${getMekImageForWallet(conv.otherParticipant.walletAddress)}`)}
+                      alt={conv.otherParticipant.companyName}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                  {/* Avatar Context Menu */}
+                  {avatarMenuOpen === conv.otherParticipant.walletAddress && (
+                    <div
+                      className="absolute left-0 top-12 z-50 min-w-[140px] py-1 rounded-lg shadow-xl"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.98), rgba(20, 20, 20, 0.98))',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        backdropFilter: 'blur(10px)',
+                      }}
+                    >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(`/corporation/${conv.otherParticipant.walletAddress}`, '_blank');
+                          setAvatarMenuOpen(null);
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 transition-colors flex items-center gap-2"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        View Corporation
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBlockUser(conv.otherParticipant.walletAddress);
+                          setAvatarMenuOpen(null);
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-2"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M4.93 4.93l14.14 14.14" />
+                        </svg>
+                        Block
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
