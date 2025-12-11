@@ -93,24 +93,60 @@ export const getMessages = query({
       })
       .sort((a, b) => a.createdAt - b.createdAt);
 
-    // Resolve attachment URLs
-    const messagesWithUrls = await Promise.all(
+    // Resolve attachment URLs and reply context
+    const messagesWithDetails = await Promise.all(
       filteredMessages.map(async (msg) => {
+        let enrichedMsg: any = { ...msg };
+
+        // Resolve attachment URLs
         if (msg.attachments && msg.attachments.length > 0) {
           const attachmentsWithUrls = await Promise.all(
             msg.attachments.map(async (att: any) => {
               const url = await ctx.storage.getUrl(att.storageId);
-              console.log('[📎ATTACH] storageId:', att.storageId, 'url:', url);
               return { ...att, url };
             })
           );
-          return { ...msg, attachments: attachmentsWithUrls };
+          enrichedMsg.attachments = attachmentsWithUrls;
         }
-        return msg;
+
+        // Resolve reply context (parent message info)
+        if (msg.replyToMessageId) {
+          const parentMessage = await ctx.db.get(msg.replyToMessageId);
+          if (parentMessage && !parentMessage.isDeleted) {
+            // Get sender name for parent message
+            let parentSenderName = "Unknown";
+            if (parentMessage.senderId === "SUPPORT_OVEREXPOSED") {
+              parentSenderName = "Over Exposed Support";
+            } else {
+              const parentSender = await ctx.db
+                .query("users")
+                .withIndex("by_stake_address", (q) => q.eq("stakeAddress", parentMessage.senderId))
+                .first();
+              parentSenderName = parentSender?.corporationName || "Unknown";
+            }
+
+            enrichedMsg.replyTo = {
+              messageId: parentMessage._id,
+              senderName: parentSenderName,
+              content: parentMessage.content.substring(0, 100) + (parentMessage.content.length > 100 ? "..." : ""),
+              hasMekAttachment: !!parentMessage.mekAttachment,
+            };
+          } else {
+            // Parent message was deleted
+            enrichedMsg.replyTo = {
+              messageId: msg.replyToMessageId,
+              senderName: "Deleted",
+              content: "[Message deleted]",
+              hasMekAttachment: false,
+            };
+          }
+        }
+
+        return enrichedMsg;
       })
     );
 
-    return messagesWithUrls;
+    return messagesWithDetails;
   },
 });
 
@@ -730,7 +766,7 @@ export const markConversationAsRead = mutation({
       await ctx.db.patch(unreadRecord._id, { count: 0 });
     }
 
-    // Mark messages as read
+    // Mark messages as read (and set deliveredAt if not already set)
     const messages = await ctx.db
       .query("messages")
       .withIndex("by_conversation", (q) => q.eq("conversationId", conversationId))
@@ -740,7 +776,12 @@ export const markConversationAsRead = mutation({
     const now = Date.now();
     for (const msg of messages) {
       if (msg.status !== "read") {
-        await ctx.db.patch(msg._id, { status: "read", readAt: now });
+        const updates: any = { status: "read", readAt: now };
+        // Set deliveredAt if not already set (first time recipient views)
+        if (!msg.deliveredAt) {
+          updates.deliveredAt = now;
+        }
+        await ctx.db.patch(msg._id, updates);
       }
     }
 

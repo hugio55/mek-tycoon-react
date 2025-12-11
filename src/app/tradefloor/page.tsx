@@ -9,6 +9,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { restoreWalletSession } from "@/lib/walletSessionManager";
 import TradeListingCard from "@/components/tradefloor/TradeListingCard";
 import CreateListingLightbox from "@/components/tradefloor/CreateListingLightbox";
+import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
 import MatchingMeksLightbox from "@/components/tradefloor/MatchingMeksLightbox";
 import ViewOffersLightbox from "@/components/tradefloor/ViewOffersLightbox";
 import EditListingLightbox from "@/components/tradefloor/EditListingLightbox";
@@ -24,6 +25,8 @@ const SORT_OPTIONS: { id: SortOption; name: string }[] = [
   { id: "most-offers", name: "Most Offers" },
   { id: "least-offers", name: "Least Offers" },
 ];
+
+const LISTINGS_PER_PAGE = 12; // 4 rows x 3 columns
 
 interface ConfirmAction {
   type: "cancel-listing" | "withdraw-offer";
@@ -48,6 +51,8 @@ export default function TradeFloorPage() {
   const [mounted, setMounted] = useState(false);
   const [showUnlockSlotsLightbox, setShowUnlockSlotsLightbox] = useState(false);
   const [highlightedListingMekId, setHighlightedListingMekId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // For portal mounting
   useEffect(() => {
@@ -110,11 +115,63 @@ export default function TradeFloorPage() {
     stakeAddress ? { stakeAddress } : "skip"
   );
 
-  // Sort browse listings based on selected option
-  const sortedBrowseListings = useMemo(() => {
-    if (!browseListings) return undefined;
+  // Helper: Look up variation names from source key
+  const getVariationNamesFromSourceKey = (sourceKey: string | undefined): string[] => {
+    if (!sourceKey) return [];
+    const cleanKey = sourceKey.replace(/-[A-Z]$/i, "").toUpperCase();
+    const parts = cleanKey.split("-");
+    const names: string[] = [];
+    for (const code of parts) {
+      const variation = COMPLETE_VARIATION_RARITY.find(v => v.sourceKey === code);
+      if (variation) names.push(variation.name.toLowerCase());
+    }
+    return names;
+  };
 
-    const listings = [...browseListings];
+  // Filter browse listings by search query
+  const filteredBrowseListings = useMemo(() => {
+    if (!browseListings) return undefined;
+    if (!searchQuery.trim()) return browseListings;
+
+    const query = searchQuery.toLowerCase().trim();
+
+    return browseListings.filter((listing: any) => {
+      // Search by MEC number (e.g., "1234", "#1234", "MEC #1234", "Mekanism #1234")
+      if (listing.listedMekAssetName) {
+        const assetName = listing.listedMekAssetName.toLowerCase();
+        // Direct match on asset name
+        if (assetName.includes(query)) return true;
+        // Extract number and match against numeric query
+        const mekNumberMatch = assetName.match(/#(\d+)/);
+        if (mekNumberMatch) {
+          const mekNumber = mekNumberMatch[1];
+          // Match if query is the number or contains it
+          if (mekNumber.includes(query.replace(/[#\s]/g, "")) ||
+              query.replace(/[#\s]/g, "").includes(mekNumber)) return true;
+        }
+      }
+
+      // Search by variation name (head, body, trait from the listed Mek's source key)
+      const listedMekVariations = getVariationNamesFromSourceKey(listing.listedMekSourceKey);
+      if (listedMekVariations.some(name => name.includes(query))) return true;
+
+      // Search in desired variations
+      if (listing.desiredVariations?.some((v: any) =>
+        v.variationName?.toLowerCase().includes(query)
+      )) return true;
+
+      // Search by corporation name
+      if (listing.ownerCorpName?.toLowerCase().includes(query)) return true;
+
+      return false;
+    });
+  }, [browseListings, searchQuery]);
+
+  // Sort filtered browse listings based on selected option
+  const sortedBrowseListings = useMemo(() => {
+    if (!filteredBrowseListings) return undefined;
+
+    const listings = [...filteredBrowseListings];
 
     switch (browseSortOption) {
       case "newest":
@@ -128,7 +185,20 @@ export default function TradeFloorPage() {
       default:
         return listings;
     }
-  }, [browseListings, browseSortOption]);
+  }, [filteredBrowseListings, browseSortOption]);
+
+  // Paginate sorted listings
+  const totalPages = sortedBrowseListings ? Math.ceil(sortedBrowseListings.length / LISTINGS_PER_PAGE) : 0;
+  const paginatedBrowseListings = useMemo(() => {
+    if (!sortedBrowseListings) return undefined;
+    const startIndex = (currentPage - 1) * LISTINGS_PER_PAGE;
+    return sortedBrowseListings.slice(startIndex, startIndex + LISTINGS_PER_PAGE);
+  }, [sortedBrowseListings, currentPage]);
+
+  // Reset to page 1 when search query or sort changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, browseSortOption]);
 
   // Sort my listings - put highlighted one first if set
   const sortedMyListings = useMemo(() => {
@@ -536,6 +606,66 @@ export default function TradeFloorPage() {
               </div>
             )}
           </div>
+
+          {/* Search Bar Row - Browse Tab Only */}
+          {activeTab === "browse" && (
+            <div
+              className="px-4 py-3"
+              style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+            >
+              <div className="relative">
+                {/* Search Icon */}
+                <svg
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.4)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by MEC #, variation name, or corporation..."
+                  className="w-full pl-10 pr-10 py-2.5 rounded-lg text-sm transition-all focus:outline-none"
+                  style={{
+                    fontFamily: 'Play, sans-serif',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: searchQuery
+                      ? '1px solid rgba(34,211,238,0.4)'
+                      : '1px solid rgba(255,255,255,0.1)',
+                    color: 'rgba(255,255,255,0.9)',
+                  }}
+                />
+                {/* Clear Button */}
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center transition-all hover:bg-white/10"
+                    style={{ color: 'rgba(255,255,255,0.5)' }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+              {/* Search Results Count */}
+              {searchQuery && sortedBrowseListings !== undefined && (
+                <div
+                  className="mt-2 text-xs"
+                  style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+                >
+                  Found <span style={{ color: '#22d3ee' }}>{sortedBrowseListings.length}</span> listing{sortedBrowseListings.length !== 1 ? 's' : ''} matching "{searchQuery}"
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Not logged in message */}

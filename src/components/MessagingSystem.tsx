@@ -102,6 +102,21 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   const [mekPreviewLightbox, setMekPreviewLightbox] = useState<any | null>(null);
   const [showFullMekProfile, setShowFullMekProfile] = useState(false);
 
+  // Scroll position tracking (for "Jump to newest" button)
+  const [isScrolledUp, setIsScrolledUp] = useState(false);
+  const [newMessageCount, setNewMessageCount] = useState(0);
+  const prevMessagesLengthRef = useRef(0);
+
+  // Inbox search
+  const [inboxSearchQuery, setInboxSearchQuery] = useState('');
+
+  // Message editing
+  const [editingMessageId, setEditingMessageId] = useState<Id<"messages"> | null>(null);
+  const [editContent, setEditContent] = useState('');
+
+  // Reply/quote feature
+  const [replyingToMessage, setReplyingToMessage] = useState<any | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -147,6 +162,14 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     walletAddress: walletAddress,
   });
 
+  // Typing indicators for current conversation
+  const typingIndicators = useQuery(
+    api.messaging.getTypingIndicators,
+    selectedConversationId
+      ? { conversationId: selectedConversationId, excludeWallet: walletAddress }
+      : 'skip'
+  );
+
   // Mutations
   const sendMessage = useMutation(api.messaging.sendMessage);
   const markAsRead = useMutation(api.messaging.markConversationAsRead);
@@ -166,6 +189,9 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
 
   // Mek attachment mutation
   const sendMessageWithMek = useMutation(api.messaging.sendMessageWithMek);
+
+  // Edit message mutation
+  const editMessageMutation = useMutation(api.messaging.editMessage);
 
   // Mount check for portals
   useEffect(() => {
@@ -199,12 +225,36 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     }
   }, [selectedConversationId, walletAddress, markAsRead, messages?.length]);
 
-  // Auto-scroll to latest messages (instant - directly set scrollTop to start at bottom)
-  // Use requestAnimationFrame to ensure layout is complete before scrolling
-  useLayoutEffect(() => {
+  // Scroll event handler to track position
+  const handleScroll = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+    setIsScrolledUp(!isAtBottom);
+    if (isAtBottom) {
+      setNewMessageCount(0); // Clear new message indicator when at bottom
+    }
+  };
+
+  // Attach scroll listener
+  useEffect(() => {
     const container = messagesContainerRef.current;
     if (container) {
-      // Double RAF ensures layout is fully calculated
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, [selectedConversationId]);
+
+  // Auto-scroll logic with scroll position awareness
+  useLayoutEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container || !messages) return;
+
+    const currentLength = messages.length;
+    const prevLength = prevMessagesLengthRef.current;
+
+    // If conversation changed, always scroll to bottom
+    if (prevLength === 0 && currentLength > 0) {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           if (messagesContainerRef.current) {
@@ -212,8 +262,46 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
           }
         });
       });
+      setIsScrolledUp(false);
+      setNewMessageCount(0);
     }
-  }, [messages, selectedConversationId]);
+    // If new messages arrived
+    else if (currentLength > prevLength) {
+      const newCount = currentLength - prevLength;
+      if (isScrolledUp) {
+        // User is scrolled up - increment counter, don't auto-scroll
+        setNewMessageCount(prev => prev + newCount);
+      } else {
+        // User is at bottom - auto-scroll to new messages
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (messagesContainerRef.current) {
+              messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+            }
+          });
+        });
+      }
+    }
+
+    prevMessagesLengthRef.current = currentLength;
+  }, [messages, selectedConversationId, isScrolledUp]);
+
+  // Reset scroll state when conversation changes
+  useEffect(() => {
+    setIsScrolledUp(false);
+    setNewMessageCount(0);
+    prevMessagesLengthRef.current = 0;
+  }, [selectedConversationId]);
+
+  // Jump to newest function
+  const scrollToBottom = () => {
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+      setNewMessageCount(0);
+      setIsScrolledUp(false);
+    }
+  };
 
   // Helper to check if conversation is support chat
   const isSupportConversation = (conv: any) => {
@@ -386,6 +474,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
         recipientWallet: recipientWallet,
         content: messageInput.trim(),
         attachments: attachments.length > 0 ? attachments : undefined,
+        replyToMessageId: replyingToMessage?._id,
       });
 
       setMessageInput('');
@@ -396,6 +485,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
       setSelectedConversationId(result.conversationId);
       setIsNewConversation(false);
       setSelectedRecipient(null);
+      setReplyingToMessage(null); // Clear reply state
 
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
@@ -470,6 +560,47 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
       const errorMessage = error instanceof Error ? error.message : 'Failed to send Mek';
       setErrorLightbox({ title: 'Failed to Send Mek', message: errorMessage });
     }
+  };
+
+  // Handle edit message
+  const handleEditMessage = async () => {
+    if (!editingMessageId || !editContent.trim()) return;
+
+    try {
+      await editMessageMutation({
+        messageId: editingMessageId,
+        walletAddress: walletAddress,
+        newContent: editContent.trim(),
+      });
+      setEditingMessageId(null);
+      setEditContent('');
+    } catch (error) {
+      console.error('Failed to edit message:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to edit message';
+      setErrorLightbox({ title: 'Edit Failed', message: errorMessage });
+    }
+  };
+
+  // Start editing a message
+  const startEditing = (msg: any) => {
+    setEditingMessageId(msg._id);
+    setEditContent(msg.content);
+  };
+
+  // Cancel editing
+  const cancelEditing = () => {
+    setEditingMessageId(null);
+    setEditContent('');
+  };
+
+  // Start replying to a message
+  const startReplying = (msg: any) => {
+    setReplyingToMessage(msg);
+  };
+
+  // Cancel reply
+  const cancelReply = () => {
+    setReplyingToMessage(null);
   };
 
   // Handle key press
@@ -951,6 +1082,35 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
               })}
               <div ref={messagesEndRef} />
             </div>
+
+            {/* Jump to Newest Button - Discord style */}
+            {isScrolledUp && newMessageCount > 0 && (
+              <div className="relative">
+                <button
+                  onClick={scrollToBottom}
+                  className="absolute bottom-2 left-1/2 -translate-x-1/2 px-4 py-2 bg-cyan-500/90 hover:bg-cyan-400 text-white text-sm font-medium rounded-full shadow-lg transition-all flex items-center gap-2 z-10"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 5v14M5 12l7 7 7-7" />
+                  </svg>
+                  {newMessageCount} new message{newMessageCount > 1 ? 's' : ''}
+                </button>
+              </div>
+            )}
+
+            {/* Typing Indicator */}
+            {typingIndicators && typingIndicators.length > 0 && (
+              <div className="px-4 py-2 text-sm text-cyan-400/80 flex items-center gap-2">
+                <span className="flex gap-1">
+                  <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </span>
+                <span>
+                  {typingIndicators.map((t: any) => t.corporationName).join(', ')} {typingIndicators.length === 1 ? 'is' : 'are'} typing...
+                </span>
+              </div>
+            )}
 
             {/* Compose Area */}
             <div className="px-4 pt-4 pb-8 border-t border-white/10">
