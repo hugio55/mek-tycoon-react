@@ -124,11 +124,21 @@ export default function ConfirmationLightbox({
             <div className="flex gap-3">
               <button
                 onClick={onCancel}
-                className="flex-1 py-3 sm:py-4 text-base font-medium tracking-wide rounded-xl transition-all duration-300 touch-manipulation active:scale-[0.98]"
+                className="flex-1 py-3 sm:py-4 text-base font-medium tracking-wide rounded-xl transition-all duration-300 touch-manipulation active:scale-[0.98] hover:bg-white/15 hover:border-white/25"
                 style={{
                   background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))',
                   border: '1px solid rgba(255, 255, 255, 0.15)',
                   color: 'rgba(255, 255, 255, 0.7)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08))';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
                 }}
               >
                 {cancelText}
