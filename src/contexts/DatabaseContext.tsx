@@ -304,10 +304,17 @@ export function useProductionClaimStatus(
 
     const fetchClaimStatus = async () => {
       try {
-        const result = await sturgeonHttpClient.query(
-          "campaignMints:batchCheckMintStatus" as any,
-          { campaignId, stakeAddresses }
-        );
+        // Wrap in Promise.resolve to ensure async errors are caught
+        const result = await Promise.resolve(
+          sturgeonHttpClient.query(
+            "campaignMints:batchCheckMintStatus" as any,
+            { campaignId, stakeAddresses }
+          )
+        ).catch((queryErr) => {
+          // Silently handle query errors (function may not exist in production yet)
+          console.warn("[useProductionClaimStatus] Query failed (function may not be deployed to production):", queryErr?.message || queryErr);
+          return {};
+        });
 
         if (!cancelled) {
           setClaimStatus(result || {});
@@ -315,8 +322,10 @@ export function useProductionClaimStatus(
         }
       } catch (err: any) {
         if (!cancelled) {
-          console.error("[useProductionClaimStatus] Error:", err);
-          setError(err.message || "Failed to fetch claim status");
+          // Non-fatal - just log and continue with empty status
+          console.warn("[useProductionClaimStatus] Error (non-fatal):", err?.message || err);
+          setClaimStatus({});
+          setError(null); // Don't show error to user - this is optional functionality
           setLoading(false);
         }
       }
