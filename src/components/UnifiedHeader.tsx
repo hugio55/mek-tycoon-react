@@ -671,8 +671,8 @@ export default function UnifiedHeader() {
             className="fixed inset-0"
             style={{
               backgroundColor: 'rgba(0, 0, 0, 0.35)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)'
+              backdropFilter: 'blur(2px)',
+              WebkitBackdropFilter: 'blur(2px)'
             }}
           />
 
