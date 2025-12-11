@@ -6,6 +6,7 @@ interface Star {
   x: number;
   y: number;
   z: number;
+  size: number; // Random size multiplier per star
   prevX?: number;
   prevY?: number;
 }
@@ -63,11 +64,12 @@ export default function Starfield2Layer({
 
     console.log('[⭐2LAYER] Initializing stars - Layer 1:', layer1Density, 'Layer 2:', layer2Density);
 
-    // Initialize Layer 1 stars (regular dots)
+    // Initialize Layer 1 stars (regular dots) with random sizes between 0.8 and 1.0
     starsLayer1Ref.current = Array.from({ length: Math.floor(layer1Density) }, () => ({
       x: Math.random() * width - width / 2,
       y: Math.random() * height - height / 2,
       z: Math.random() * maxZ,
+      size: 0.8 + Math.random() * 0.2, // Random size between 0.8 and 1.0
     }));
 
     // Initialize Layer 2 stars (fast streaks)
@@ -75,6 +77,7 @@ export default function Starfield2Layer({
       x: Math.random() * width - width / 2,
       y: Math.random() * height - height / 2,
       z: Math.random() * maxZ,
+      size: 1.0, // Layer 2 uses uniform size
     }));
   }, [layer1Density, layer2Density]);
 
@@ -122,12 +125,13 @@ export default function Starfield2Layer({
             star.x = Math.random() * width - width / 2;
             star.y = Math.random() * height - height / 2;
             star.z = maxZ;
+            star.size = 0.8 + Math.random() * 0.2; // New random size between 0.8 and 1.0
           }
 
           const scale = 1000 / star.z;
           const x = star.x * scale + centerX;
           const y = star.y * scale + centerY;
-          const size = (1 - star.z / maxZ) * 2 * layer1Size;
+          const size = (1 - star.z / maxZ) * 2 * layer1Size * star.size;
 
           if (x >= 0 && x <= width && y >= 0 && y <= height) {
             const opacity = Math.min(1, (maxZ - star.z) / maxZ);
