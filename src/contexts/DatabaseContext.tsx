@@ -264,3 +264,74 @@ export function useDatabaseAction(action: any) {
     return await client.action(action, args);
   };
 }
+
+// ============================================================================
+// PRODUCTION-ONLY CLAIM CHECKING
+// ============================================================================
+//
+// IMPORTANT FOR FUTURE CLAUDE SESSIONS:
+// This hook ALWAYS queries Production (Sturgeon) for claim status, regardless
+// of which database the admin is currently viewing. This is intentional because:
+// - Claims only happen on the live site (Production)
+// - We need a single source of truth for "has this wallet ever claimed"
+// - Even when viewing Staging players, claim status should reflect Production
+// ============================================================================
+
+/**
+ * Hook to check claim status from Production database
+ *
+ * ALWAYS queries Production (Sturgeon) regardless of admin database selection.
+ * Use this for the "Claimed Token" column in Player Management.
+ */
+export function useProductionClaimStatus(
+  campaignId: string | null,
+  stakeAddresses: string[]
+) {
+  const { sturgeonHttpClient } = useDatabaseContext();
+  const [claimStatus, setClaimStatus] = useState<Record<string, { hasMinted: boolean; mintedAt?: number; nftNumber?: number }>>({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!sturgeonHttpClient || !campaignId || stakeAddresses.length === 0) {
+      setClaimStatus({});
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    const fetchClaimStatus = async () => {
+      try {
+        const result = await sturgeonHttpClient.query(
+          "campaignMints:batchCheckMintStatus" as any,
+          { campaignId, stakeAddresses }
+        );
+
+        if (!cancelled) {
+          setClaimStatus(result || {});
+          setLoading(false);
+        }
+      } catch (err: any) {
+        if (!cancelled) {
+          console.error("[useProductionClaimStatus] Error:", err);
+          setError(err.message || "Failed to fetch claim status");
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchClaimStatus();
+
+    // Refresh every 30 seconds (claims don't change often)
+    const interval = setInterval(fetchClaimStatus, 30000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [sturgeonHttpClient, campaignId, JSON.stringify(stakeAddresses)]);
+
+  return { claimStatus, loading, error };
+}

@@ -3196,8 +3196,46 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_created_at", ["createdAt"]),
 
-  // Commemorative NFT Claims - Tracks actual NFT ownership
-  // This table records when users successfully receive their NFTs via NMKR
+  // ============================================================================
+  // CAMPAIGN MINTS - SINGLE SOURCE OF TRUTH FOR CLAIM TRACKING
+  // ============================================================================
+  //
+  // IMPORTANT FOR FUTURE CLAUDE SESSIONS:
+  // This table is THE authoritative record for "has this corporation ever minted
+  // from this campaign". When checking if someone has already claimed:
+  //
+  //   1. ALWAYS query this table (campaignMints)
+  //   2. ALWAYS query PRODUCTION database, regardless of which admin view is active
+  //   3. DO NOT use commemorativeNFTClaims, Inventory.soldTo, or Reservations.status
+  //
+  // Why this matters:
+  // - Prevents exploit: user claims NFT, transfers it out, claims again
+  // - Single source = consistent answers across all code paths
+  // - Production-only = claims only happen on live site, so that's where records live
+  //
+  // The other tables serve different purposes:
+  // - commemorativeNFTInventory: tracks what's for sale (stock management)
+  // - commemorativeNFTReservations: manages checkout flow (temporary holds)
+  // - commemorativeNFTClaims: DEPRECATED - was never properly populated, kept for reference
+  // ============================================================================
+  campaignMints: defineTable({
+    campaignId: v.id("commemorativeCampaigns"), // Which campaign this mint belongs to
+    stakeAddress: v.string(), // Corporation that minted (stake address = permanent identifier)
+    mintedAt: v.number(), // Timestamp when mint was completed
+    transactionHash: v.optional(v.string()), // Blockchain proof (optional for legacy/manual records)
+    nftUid: v.string(), // NMKR NFT UID that was minted
+    nftNumber: v.number(), // Edition number in campaign (e.g., #3 of Lab Rat Collection)
+    corporationNameAtMint: v.optional(v.string()), // Historical record of corp name at time of mint
+    createdAt: v.number(), // When this database record was created
+  })
+    .index("by_campaign_and_wallet", ["campaignId", "stakeAddress"]) // Primary: has wallet X claimed from campaign Y?
+    .index("by_campaign", ["campaignId"]) // All mints for a campaign
+    .index("by_wallet", ["stakeAddress"]) // All mints by a wallet
+    .index("by_nft_uid", ["nftUid"]), // Lookup by specific NFT
+
+  // Commemorative NFT Claims - DEPRECATED (December 2025)
+  // This table was never properly populated by webhooks. Kept for backward compatibility
+  // but should NOT be used for claim checking. Use campaignMints instead.
   commemorativeNFTClaims: defineTable({
     campaignId: v.optional(v.id("commemorativeCampaigns")), // Link to campaign (optional for backward compatibility)
     walletAddress: v.string(), // Owner's wallet address

@@ -22,7 +22,7 @@ import BuffManagement from '@/components/BuffManagement';
 import BetaSignupsViewer from '@/components/BetaSignupsViewer';
 import VariationSpreadViewer from '@/components/VariationSpreadViewer';
 import { EssenceProvider } from '@/contexts/EssenceContext';
-import { DatabaseProvider, useDatabaseContext } from '@/contexts/DatabaseContext';
+import { DatabaseProvider, useDatabaseContext, useProductionClaimStatus } from '@/contexts/DatabaseContext';
 
 // Lazy load heavy components
 const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryViewer'));

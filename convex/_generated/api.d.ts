@@ -34,6 +34,7 @@ import type * as blockfrostService from "../blockfrostService.js";
 import type * as buffCategories from "../buffCategories.js";
 import type * as buffManager from "../buffManager.js";
 import type * as buffs from "../buffs.js";
+import type * as campaignMints from "../campaignMints.js";
 import type * as campaigns from "../campaigns.js";
 import type * as chipConfigurations from "../chipConfigurations.js";
 import type * as chips from "../chips.js";
@@ -192,6 +193,7 @@ declare const fullApi: ApiFromModules<{
   buffCategories: typeof buffCategories;
   buffManager: typeof buffManager;
   buffs: typeof buffs;
+  campaignMints: typeof campaignMints;
   campaigns: typeof campaigns;
   chipConfigurations: typeof chipConfigurations;
   chips: typeof chips;

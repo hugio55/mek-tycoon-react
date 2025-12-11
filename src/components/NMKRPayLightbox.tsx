@@ -14,26 +14,93 @@ interface NMKRPayLightboxProps {
   onClose: () => void;
   // Optional: If not provided, auto-selects first active campaign with available NFTs
   campaignId?: Id<"commemorativeCampaigns">;
+  // Preview mode props - for admin lightbox preview
+  previewMode?: boolean;
+  previewState?: LightboxState;
+  previewCorporationName?: string;
+  previewErrorMessage?: string;
 }
 
 type LightboxState = 'loading_campaign' | 'no_campaign' | 'address_entry' | 'checking_eligibility' | 'ineligible' | 'already_claimed' | 'corporation_verified' | 'creating' | 'reserved' | 'wallet_verification' | 'payment' | 'payment_window_closed' | 'processing' | 'success' | 'error' | 'timeout';
 
-export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: propCampaignId }: NMKRPayLightboxProps) {
+// Export types for preview mode
+export type { LightboxState as NMKRPayState };
+
+// Mock data for preview mode
+const MOCK_WALLETS_NMKR = [
+  { name: 'Eternl', icon: '/wallet-icons/eternl.png', api: {} },
+  { name: 'Nami', icon: '/wallet-icons/nami.png', api: {} },
+  { name: 'Flint', icon: '/wallet-icons/flint.png', api: {} },
+  { name: 'Vespr', icon: '/wallet-icons/vespr.png', api: {} },
+];
+
+const MOCK_NFT_DETAILS = {
+  name: 'Lab Rat #42',
+  editionNumber: 42,
+  imageUrl: '/random-images/Lab%20Rat.jpg',
+  soldAt: Date.now() - 86400000, // 1 day ago
+};
+
+const MOCK_ELIGIBILITY_INELIGIBLE = {
+  hasActiveReservation: false,
+  alreadyClaimed: false,
+  eligible: false,
+  reason: 'You need to have created a corporation during Phase I to be eligible for this campaign.',
+};
+
+const MOCK_ELIGIBILITY_ALREADY_CLAIMED = {
+  hasActiveReservation: false,
+  alreadyClaimed: true,
+  eligible: false,
+  claimedNFTDetails: MOCK_NFT_DETAILS,
+};
+
+const MOCK_RESERVATION = {
+  _id: 'mock-reservation-id' as Id<"commemorativeNFTInventory">,
+  nft: {
+    name: 'Lab Rat #7',
+    editionNumber: 7,
+    paymentUrl: 'https://nmkr.io/pay/mock',
+    imageUrl: '/random-images/Lab%20Rat.jpg',
+  },
+  expiresAt: Date.now() + 600000, // 10 minutes from now
+};
+
+export default function NMKRPayLightbox({
+  walletAddress,
+  onClose,
+  campaignId: propCampaignId,
+  previewMode = false,
+  previewState,
+  previewCorporationName = 'WrenCo Industries',
+  previewErrorMessage = 'Something went wrong. Please try again.',
+}: NMKRPayLightboxProps) {
   const [mounted, setMounted] = useState(false);
   // ALWAYS check eligibility when wallet is provided - never skip to 'creating'
-  const [state, setState] = useState<LightboxState>(propCampaignId ? (walletAddress ? 'checking_eligibility' : 'address_entry') : 'loading_campaign');
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  // In preview mode, use previewState directly
+  const [state, setState] = useState<LightboxState>(
+    previewMode && previewState ? previewState :
+    (propCampaignId ? (walletAddress ? 'checking_eligibility' : 'address_entry') : 'loading_campaign')
+  );
+  const [errorMessage, setErrorMessage] = useState<string>(previewMode ? previewErrorMessage : '');
   const [paymentWindow, setPaymentWindow] = useState<Window | null>(null);
-  const [reservationId, setReservationId] = useState<Id<"commemorativeNFTInventory"> | null>(null);
+  const [reservationId, setReservationId] = useState<Id<"commemorativeNFTInventory"> | null>(
+    previewMode ? MOCK_RESERVATION._id : null
+  );
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
-  const [manualAddress, setManualAddress] = useState<string>('');
+  const [manualAddress, setManualAddress] = useState<string>(previewMode ? 'stake1u8z4d32ythwc...' : '');
   const [addressError, setAddressError] = useState<string>('');
-  const [storedEligibility, setStoredEligibility] = useState<{ hasActiveReservation?: boolean; alreadyClaimed?: boolean; eligible?: boolean; reason?: string; corporationName?: string; claimedNFTDetails?: { name: string; editionNumber: number; imageUrl?: string; soldAt?: number } } | null>(null);
+  const [storedEligibility, setStoredEligibility] = useState<{ hasActiveReservation?: boolean; alreadyClaimed?: boolean; eligible?: boolean; reason?: string; corporationName?: string; claimedNFTDetails?: { name: string; editionNumber: number; imageUrl?: string; soldAt?: number } } | null>(
+    previewMode ? (previewState === 'ineligible' ? MOCK_ELIGIBILITY_INELIGIBLE :
+      previewState === 'already_claimed' ? MOCK_ELIGIBILITY_ALREADY_CLAIMED : null) : null
+  );
   const [activeCampaignId, setActiveCampaignId] = useState<Id<"commemorativeCampaigns"> | null>(propCampaignId || null);
-  const [corporationName, setCorporationName] = useState<string | null>(null);
+  const [corporationName, setCorporationName] = useState<string | null>(previewMode ? previewCorporationName : null);
 
-  // Wallet verification state
-  const [availableWallets, setAvailableWallets] = useState<Array<{ name: string; icon: string; api: any }>>([]);
+  // Wallet verification state - use mock wallets in preview mode
+  const [availableWallets, setAvailableWallets] = useState<Array<{ name: string; icon: string; api: any }>>(
+    previewMode ? MOCK_WALLETS_NMKR : []
+  );
   const [isConnectingWallet, setIsConnectingWallet] = useState(false);
   const [walletVerificationError, setWalletVerificationError] = useState<string | null>(null);
   const [isMobileBrowser, setIsMobileBrowser] = useState(false);
@@ -295,17 +362,35 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
   useEffect(() => {
     setMounted(true);
-    document.body.style.overflow = 'hidden';
+    // Skip scroll locking in preview mode
+    if (!previewMode) {
+      document.body.style.overflow = 'hidden';
+    }
     return () => {
-      document.body.style.overflow = 'unset';
+      if (!previewMode) {
+        document.body.style.overflow = 'unset';
+      }
     };
-  }, []);
+  }, [previewMode]);
+
+  // Sync state when previewState changes in preview mode
+  useEffect(() => {
+    if (previewMode && previewState) {
+      setState(previewState);
+      // Update storedEligibility based on state
+      if (previewState === 'ineligible') {
+        setStoredEligibility(MOCK_ELIGIBILITY_INELIGIBLE);
+      } else if (previewState === 'already_claimed') {
+        setStoredEligibility(MOCK_ELIGIBILITY_ALREADY_CLAIMED);
+      }
+    }
+  }, [previewMode, previewState]);
 
   // Detect and handle mobile resume from URL parameters
   // This allows mobile users to continue their session in wallet browser
   // Compatible with: iOS Safari 11+, Chrome Mobile, Firefox Mobile, Samsung Internet
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || previewMode) return;
 
     // URLSearchParams is supported in all modern browsers (iOS 11+, Android 5+)
     const params = new URLSearchParams(window.location.search);
@@ -1058,7 +1143,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
     setShowCancelConfirmation(false);
   };
 
-  if (!mounted) return null;
+  // Skip mounted check in preview mode - always render immediately
+  if (!mounted && !previewMode) return null;
 
   const renderContent = () => {
     switch (state) {
@@ -1382,7 +1468,10 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
         );
 
       case 'reserved':
-        if (!activeReservation) {
+        // In preview mode, use mock reservation data
+        const reservationData = previewMode ? MOCK_RESERVATION : activeReservation;
+
+        if (!reservationData) {
           console.log('[🔨RESERVE] Rendering "reserved" state but activeReservation is undefined - showing loading spinner');
           return (
             <div className="text-center py-8">
@@ -1401,7 +1490,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
           );
         }
 
-        console.log('[🔨RESERVE] Rendering "reserved" state with activeReservation:', activeReservation.nftNumber);
+        if (!previewMode) {
+          console.log('[🔨RESERVE] Rendering "reserved" state with activeReservation:', activeReservation?.nftNumber);
+        }
 
         return (
           <div className="text-center">
@@ -1412,8 +1503,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
               <div className="relative w-full max-w-[300px] mx-auto mb-4 rounded-2xl overflow-hidden bg-black/50 backdrop-blur-md border border-cyan-400/30 shadow-2xl shadow-cyan-500/20">
                 <img
-                  src={activeReservation.nft?.imageUrl?.startsWith('/') ? getMediaUrl(activeReservation.nft.imageUrl) : (activeReservation.nft?.imageUrl || getMediaUrl("/random-images/Lab%20Rat.jpg"))}
-                  alt={activeReservation.nft?.name || "NFT"}
+                  src={reservationData.nft?.imageUrl?.startsWith('/') ? getMediaUrl(reservationData.nft.imageUrl) : (reservationData.nft?.imageUrl || getMediaUrl("/random-images/Lab%20Rat.jpg"))}
+                  alt={reservationData.nft?.name || "NFT"}
                   className="w-full h-auto"
                   onError={(e) => { e.currentTarget.src = getMediaUrl('/logo-big.png'); }}
                 />
@@ -1421,10 +1512,10 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
 
               <div className="mb-4 p-4 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-400/20 rounded-2xl backdrop-blur-md">
                 <h3 className="text-3xl font-bold mb-2" style={{ fontFamily: 'Inter, sans-serif', color: '#e0f2fe', letterSpacing: '-0.02em' }}>
-                  {activeReservation.nft?.name || "NFT"}
+                  {reservationData.nft?.name || "NFT"}
                 </h3>
                 <p style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', fontSize: '0.875rem', lineHeight: '1.5', fontWeight: 400 }}>
-                  You have reserved <span style={{ color: '#22d3ee', fontWeight: 600, textShadow: '0 0 10px rgba(34, 211, 238, 0.6), 0 0 20px rgba(34, 211, 238, 0.4)' }}>edition number {activeReservation.nftNumber}</span>. Click below to open the payment window and complete your purchase.
+                  You have reserved <span style={{ color: '#22d3ee', fontWeight: 600, textShadow: '0 0 10px rgba(34, 211, 238, 0.6), 0 0 20px rgba(34, 211, 238, 0.4)' }}>edition number {previewMode ? MOCK_RESERVATION.nft.editionNumber : (activeReservation as any)?.nftNumber}</span>. Click below to open the payment window and complete your purchase.
                 </p>
                 <p style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', fontSize: '0.875rem', lineHeight: '1.5', fontWeight: 400, marginTop: '0.75rem' }}>
                   You have 20 minutes to complete this transaction. The fee for this commemorative token is <span style={{ color: '#22d3ee', fontWeight: 600 }}>10 ADA</span>.
@@ -1433,7 +1524,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
             </div>
 
             <button
-              onClick={handleOpenPayment}
+              onClick={() => !previewMode && handleOpenPayment()}
               className="w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 hover:brightness-110"
               style={{ fontFamily: 'Inter, sans-serif', background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)', color: '#ffffff', boxShadow: '0 6px 24px rgba(6, 182, 212, 0.4)', border: 'none', letterSpacing: '0.02em' }}
             >
@@ -1441,7 +1532,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
             </button>
 
             <button
-              onClick={attemptCancel}
+              onClick={() => !previewMode && attemptCancel()}
               className="w-full mt-3 py-2 px-4 text-sm font-medium transition-all duration-200 hover:text-red-400"
               style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', background: 'transparent', border: 'none', letterSpacing: '0.01em', cursor: 'pointer' }}
             >
@@ -2017,6 +2108,28 @@ export default function NMKRPayLightbox({ walletAddress, onClose, campaignId: pr
       )}
     </>
   );
+
+  // In preview mode, render inline (no portal) with a container wrapper
+  if (previewMode) {
+    return (
+      <div className={`relative w-full ${state === 'reserved' ? 'max-w-2xl' : 'max-w-md'} mx-auto`}>
+        {/* Glass Card - no backdrop in preview mode */}
+        <div
+          className="relative overflow-hidden rounded-2xl border border-white/10"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset',
+            backdropFilter: 'blur(30px)',
+            WebkitBackdropFilter: 'blur(30px)',
+          }}
+        >
+          <div className="px-6 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-5 md:px-10 md:pt-10 md:pb-6">
+            {renderContent()}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return createPortal(modalContent, document.body);
 }
