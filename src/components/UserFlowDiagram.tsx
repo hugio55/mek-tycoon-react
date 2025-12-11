@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import BetaSignupLightbox, { type BetaSignupStep, type VeteranInfo } from './BetaSignupLightbox';
 import NMKRPayLightbox, { type NMKRPayState } from './NMKRPayLightbox';
 
@@ -162,6 +163,7 @@ function SplitPaths({ children, labels }: { children: React.ReactNode[]; labels?
 }
 
 // Modal for previewing lightboxes from flowchart
+// Uses createPortal to render at document.body for proper viewport centering
 function PreviewModal({
   isOpen,
   onClose,
@@ -177,9 +179,28 @@ function PreviewModal({
   nmkrStep?: NMKRPayState;
   veteranInfo?: VeteranInfo;
 }) {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  // Handle client-side mounting for portal
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  if (!isOpen || !mounted) return null;
+
+  const modalContent = (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       onClick={onClose}
@@ -231,6 +252,9 @@ function PreviewModal({
       </div>
     </div>
   );
+
+  // Render at document.body to escape any parent stacking contexts
+  return createPortal(modalContent, document.body);
 }
 
 export default function UserFlowDiagram() {

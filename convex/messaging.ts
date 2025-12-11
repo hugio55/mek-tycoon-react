@@ -183,6 +183,45 @@ export const getTotalUnreadCount = query({
   },
 });
 
+// Get typing indicators for a conversation (who else is typing)
+export const getTypingIndicators = query({
+  args: {
+    conversationId: v.id("conversations"),
+    excludeWallet: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { conversationId, excludeWallet } = args;
+    const now = Date.now();
+
+    // Get all typing indicators for this conversation
+    const indicators = await ctx.db
+      .query("typingIndicators")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", conversationId))
+      .collect();
+
+    // Filter out expired indicators and the current user
+    const activeIndicators = indicators.filter(
+      (ind) => ind.walletAddress !== excludeWallet && ind.expiresAt > now
+    );
+
+    // Enrich with corporation names
+    const enrichedIndicators = await Promise.all(
+      activeIndicators.map(async (ind) => {
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_stake_address", (q) => q.eq("stakeAddress", ind.walletAddress))
+          .first();
+        return {
+          walletAddress: ind.walletAddress,
+          corporationName: user?.corporationName || "Unknown Corp",
+        };
+      })
+    );
+
+    return enrichedIndicators;
+  },
+});
+
 // Admin: Get all conversations (excluding support conversations - those go to Support tab)
 export const getAllConversationsAdmin = query({
   args: {
@@ -388,9 +427,10 @@ export const sendMessage = mutation({
       mimeType: v.string(),
       size: v.number(),
     }))),
+    replyToMessageId: v.optional(v.id("messages")),
   },
   handler: async (ctx, args) => {
-    const { senderWallet, recipientWallet, content, conversationId, attachments } = args;
+    const { senderWallet, recipientWallet, content, conversationId, attachments, replyToMessageId } = args;
 
     // Check if blocked
     const block = await ctx.db
@@ -448,6 +488,7 @@ export const sendMessage = mutation({
       createdAt: now,
       isDeleted: false,
       attachments: attachments,
+      replyToMessageId: replyToMessageId,
     });
 
     // Update conversation
@@ -478,6 +519,63 @@ export const sendMessage = mutation({
     }
 
     return { success: true, conversationId: convId };
+  },
+});
+
+// Edit an existing message
+export const editMessage = mutation({
+  args: {
+    messageId: v.id("messages"),
+    walletAddress: v.string(),
+    newContent: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { messageId, walletAddress, newContent } = args;
+
+    const message = await ctx.db.get(messageId);
+    if (!message) {
+      throw new Error("Message not found");
+    }
+
+    // Only sender can edit their own messages
+    if (message.senderId !== walletAddress) {
+      throw new Error("You can only edit your own messages");
+    }
+
+    // Can't edit deleted messages
+    if (message.isDeleted) {
+      throw new Error("Cannot edit a deleted message");
+    }
+
+    // Can't edit messages with Mek attachments (those are verified at send time)
+    if (message.mekAttachment) {
+      throw new Error("Cannot edit messages with Mek attachments");
+    }
+
+    // Update the message
+    await ctx.db.patch(messageId, {
+      content: newContent,
+      editedAt: Date.now(),
+    });
+
+    // Update conversation preview if this was the last message
+    const conversation = await ctx.db.get(message.conversationId);
+    if (conversation && conversation.lastMessageSender === walletAddress) {
+      // Check if this was the most recent message
+      const recentMessages = await ctx.db
+        .query("messages")
+        .withIndex("by_conversation", (q) => q.eq("conversationId", message.conversationId))
+        .order("desc")
+        .first();
+
+      if (recentMessages && recentMessages._id === messageId) {
+        await ctx.db.patch(message.conversationId, {
+          lastMessagePreview: newContent.substring(0, 80),
+        });
+      }
+    }
+
+    return { success: true };
   },
 });
 

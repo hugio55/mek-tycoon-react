@@ -3650,6 +3650,8 @@ export default defineSchema({
       verifiedOwner: v.string(), // Wallet address of verified owner
       verifiedAt: v.number(), // Timestamp of verification
     })),
+    // Reply/quote feature - reference to parent message
+    replyToMessageId: v.optional(v.id("messages")),
   })
     .index("by_conversation", ["conversationId", "createdAt"])
     .index("by_sender", ["senderId", "createdAt"])
