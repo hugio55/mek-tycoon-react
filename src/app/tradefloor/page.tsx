@@ -300,7 +300,7 @@ export default function TradeFloorPage() {
               lineHeight: '1.6',
             }}
           >
-            Seeking a specific variation? List your Mek and the variations you want—if another collector has a match, they can reach out. All trades are facilitated privately or through{' '}
+            Looking to do some trading? List Mekanisms you're looking to trade and the variations you are seeking. If another collector has the variation you seek, or simply likes the Mek, they can place an offer. This website does not facilitate the trading transaction! For that, we recommend{' '}
             <a
               href="https://app.tradingtent.io"
               target="_blank"
@@ -309,7 +309,16 @@ export default function TradeFloorPage() {
               style={{ color: '#22d3ee' }}
             >
               Trading Tent
-            </a>.
+            </a>. We highly discourage sending assets privately without the use of a trustless system (such as{' '}
+            <a
+              href="https://app.tradingtent.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-colors hover:text-cyan-300"
+              style={{ color: '#22d3ee' }}
+            >
+              Trading Tent
+            </a>).
           </p>
         </div>
 
