@@ -1168,13 +1168,31 @@ function WhitelistTableModal({
       let errorCount = 0;
       const errors: string[] = [];
 
+      // Helper to add with retry (handles Convex concurrency errors)
+      const addWithRetry = async (address: string, retries = 3): Promise<boolean> => {
+        for (let attempt = 0; attempt < retries; attempt++) {
+          try {
+            await addUserToWhitelistByAddress({
+              whitelistId: whitelist._id,
+              stakeAddress: address,
+              displayName: undefined,
+            });
+            return true;
+          } catch (error: any) {
+            // If it's a concurrency error and we have retries left, wait and retry
+            if (error.message?.includes('OptimisticConcurrencyControl') && attempt < retries - 1) {
+              await new Promise(r => setTimeout(r, 100 * (attempt + 1))); // Backoff: 100ms, 200ms, 300ms
+              continue;
+            }
+            throw error;
+          }
+        }
+        return false;
+      };
+
       for (const address of addresses) {
         try {
-          await addUserToWhitelistByAddress({
-            whitelistId: whitelist._id,
-            stakeAddress: address,
-            displayName: undefined,
-          });
+          await addWithRetry(address);
           successCount++;
         } catch (error: any) {
           errorCount++;
