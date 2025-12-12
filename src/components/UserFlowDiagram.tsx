@@ -414,7 +414,7 @@ export default function UserFlowDiagram() {
                       buttons={[
                         "Yellow checkmark",
                         "Discord link",
-                        "Auto-closes after 2 seconds"
+                        "Click backdrop → closes"
                       ]}
                       onClick={() => openBetaPreview('success')}
                     />
