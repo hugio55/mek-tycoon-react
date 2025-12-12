@@ -890,6 +890,70 @@ export const restoreMissingMeks = mutation({
 });
 
 /**
+ * Populate mekNumber field on all meks that are missing it
+ * Parses the number from assetName (e.g., "Mekanism #1234" -> 1234)
+ *
+ * PROTECTED: Requires unlock code
+ */
+export const populateMekNumbers = mutation({
+  args: {
+    unlockCode: v.optional(v.string()),
+    dryRun: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const dryRun = args.dryRun || false;
+
+    if (!dryRun && args.unlockCode !== EMERGENCY_UNLOCK_CODE) {
+      return {
+        success: false,
+        error: "BLOCKED: Provide unlock code to proceed, or use dryRun: true",
+        updated: 0,
+      };
+    }
+
+    const allMeks = await ctx.db.query("meks").collect();
+
+    let updated = 0;
+    let alreadyHas = 0;
+    let noParse = 0;
+
+    for (const mek of allMeks) {
+      // Skip if already has mekNumber
+      if (mek.mekNumber !== undefined && mek.mekNumber !== null) {
+        alreadyHas++;
+        continue;
+      }
+
+      // Parse from assetName
+      const match = mek.assetName?.match(/\d+/);
+      if (!match) {
+        noParse++;
+        continue;
+      }
+
+      const mekNum = parseInt(match[0]);
+
+      if (!dryRun) {
+        await ctx.db.patch(mek._id, { mekNumber: mekNum });
+      }
+      updated++;
+    }
+
+    return {
+      success: true,
+      dryRun,
+      total: allMeks.length,
+      alreadyHas,
+      updated,
+      noParse,
+      message: dryRun
+        ? `DRY RUN: Would update ${updated} meks with mekNumber field.`
+        : `Updated ${updated} meks with mekNumber field.`,
+    };
+  },
+});
+
+/**
  * Get ownership statistics for all meks
  * Used for auditing before major changes
  */
