@@ -868,6 +868,7 @@ export default function TradeFloorPage() {
                       viewerStakeAddress={stakeAddress || undefined}
                       viewerMatchCount={listing.viewerMatchCount}
                       onMakeOffer={() => setSelectedListingForOffer(listing)}
+                      onEditListing={listing.isOwnListing ? () => setSelectedListingForEdit(listing) : undefined}
                       showMakeOffer={true}
                     />
                   ))}

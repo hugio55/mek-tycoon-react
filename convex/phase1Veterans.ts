@@ -332,6 +332,7 @@ export const getAllVeterans = query({
       reservedCorporationName: v.reservedCorporationName || null,
       nameReservedAt: v.nameReservedAt || null,
       hasReservedName: !!v.reservedCorporationName,
+      nameChangeHistory: v.nameChangeHistory || [],
     }));
   },
 });

@@ -1,34 +1,68 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import mekRarityMaster from "./mekRarityMaster.json";
+
+// Build sourceKey to variation lookup from master data (source of truth)
+const sourceKeyToVariations = new Map<string, { head: string; body: string; trait: string }>();
+(mekRarityMaster as any[]).forEach((mek) => {
+  if (mek.sourceKey && mek.head && mek.body && mek.trait) {
+    // Normalize key: uppercase, remove suffix
+    const normalizedKey = mek.sourceKey.toUpperCase().replace(/-[A-Z]$/i, "");
+    sourceKeyToVariations.set(normalizedKey, {
+      head: mek.head,
+      body: mek.body,
+      trait: mek.trait,
+    });
+  }
+});
+
+// Helper: Get variation names from sourceKey (source of truth)
+function getVariationsFromSourceKey(sourceKey?: string): { head?: string; body?: string; trait?: string } {
+  if (!sourceKey) return {};
+  const normalizedKey = sourceKey.toUpperCase().replace(/-[A-Z]$/i, "");
+  const data = sourceKeyToVariations.get(normalizedKey);
+  return data || {};
+}
 
 // Helper: Compute which desired variations a Mek matches
-// Checks all three variation fields regardless of claimed type (more robust against bad data)
+// Uses sourceKey lookup as the source of truth (database variation fields may be stale)
 function computeMatchedVariations(
-  mek: { headVariation?: string; bodyVariation?: string; itemVariation?: string; assetName?: string },
+  mek: { sourceKey?: string; headVariation?: string; bodyVariation?: string; itemVariation?: string; assetName?: string },
   desiredVariations: { variationName: string; variationType: string }[],
   debug = false
 ): string[] {
   const matches: string[] = [];
+
+  // Get variation names from sourceKey (source of truth)
+  const fromSourceKey = getVariationsFromSourceKey(mek.sourceKey);
+
+  // Use sourceKey data if available, fallback to database fields
+  const headName = fromSourceKey.head || mek.headVariation;
+  const bodyName = fromSourceKey.body || mek.bodyVariation;
+  const traitName = fromSourceKey.trait || mek.itemVariation;
+
   for (const desired of desiredVariations) {
     const desiredNameLower = desired.variationName.toLowerCase().trim();
 
-    // Check all three variation fields - matches if any field contains the variation name
-    const headLower = mek.headVariation?.toLowerCase().trim();
-    const bodyLower = mek.bodyVariation?.toLowerCase().trim();
-    const itemLower = mek.itemVariation?.toLowerCase().trim();
+    // Check all three variation fields
+    const headLower = headName?.toLowerCase().trim();
+    const bodyLower = bodyName?.toLowerCase().trim();
+    const traitLower = traitName?.toLowerCase().trim();
 
     const hasHead = headLower === desiredNameLower;
     const hasBody = bodyLower === desiredNameLower;
-    const hasTrait = itemLower === desiredNameLower;
+    const hasTrait = traitLower === desiredNameLower;
 
     if (debug) {
       console.log("[TRADE-MATCH-DETAIL]", {
         mek: mek.assetName,
+        sourceKey: mek.sourceKey,
         looking_for: desiredNameLower,
-        mek_head: headLower,
-        mek_body: bodyLower,
-        mek_item: itemLower,
+        fromSourceKey: { head: fromSourceKey.head, body: fromSourceKey.body, trait: fromSourceKey.trait },
+        actual_head: headLower,
+        actual_body: bodyLower,
+        actual_trait: traitLower,
         hasHead,
         hasBody,
         hasTrait,
@@ -189,13 +223,16 @@ export const getMatchingMeksForListing = query({
     console.log("[TRADE-MATCH] viewerMeks count:", viewerMeks.length);
     console.log("[TRADE-MATCH] desiredVariations:", listing.desiredVariations);
 
-    // Log first 3 Meks for debugging
+    // Log first 3 Meks for debugging - now showing sourceKey variations
     viewerMeks.slice(0, 3).forEach((mek, i) => {
+      const fromSourceKey = getVariationsFromSourceKey(mek.sourceKey);
       console.log(`[TRADE-MATCH] Mek ${i}:`, {
         assetName: mek.assetName,
-        head: mek.headVariation,
-        body: mek.bodyVariation,
-        item: mek.itemVariation,
+        sourceKey: mek.sourceKey,
+        fromSourceKey: fromSourceKey,
+        dbHead: mek.headVariation,
+        dbBody: mek.bodyVariation,
+        dbItem: mek.itemVariation,
       });
     });
 
