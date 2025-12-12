@@ -939,3 +939,69 @@ export const debugGetCorpStakeAddress = query({
     }));
   },
 });
+
+// DEBUG: Get all meks owned by a stake address
+export const debugGetMeksByStakeAddress = query({
+  args: {
+    stakeAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const meks = await ctx.db
+      .query("meks")
+      .withIndex("by_owner_stake", (q) => q.eq("ownerStakeAddress", args.stakeAddress))
+      .collect();
+
+    console.log(`[DEBUG-MEKS] Found ${meks.length} meks for stake ${args.stakeAddress.substring(0, 25)}...`);
+
+    // Check if any have Seafoam
+    const seafoamMeks = meks.filter((m) =>
+      m.headVariation?.toLowerCase() === "seafoam" ||
+      m.bodyVariation?.toLowerCase() === "seafoam" ||
+      m.itemVariation?.toLowerCase() === "seafoam"
+    );
+    console.log(`[DEBUG-MEKS] Of these, ${seafoamMeks.length} have Seafoam variation`);
+
+    return {
+      totalCount: meks.length,
+      seafoamCount: seafoamMeks.length,
+      allVariations: meks.map((m) => ({
+        assetName: m.assetName,
+        head: m.headVariation,
+        body: m.bodyVariation,
+        trait: m.itemVariation,
+      })),
+    };
+  },
+});
+
+// DEBUG: Find mek by exact variations
+export const debugFindMekByVariations = query({
+  args: {
+    head: v.optional(v.string()),
+    body: v.optional(v.string()),
+    trait: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Get all meks and filter
+    const allMeks = await ctx.db.query("meks").collect();
+
+    const matches = allMeks.filter((m) => {
+      if (args.head && m.headVariation?.toLowerCase() !== args.head.toLowerCase()) return false;
+      if (args.body && m.bodyVariation?.toLowerCase() !== args.body.toLowerCase()) return false;
+      if (args.trait && m.itemVariation?.toLowerCase() !== args.trait.toLowerCase()) return false;
+      return true;
+    });
+
+    console.log(`[DEBUG-FIND] Found ${matches.length} meks matching head=${args.head}, body=${args.body}, trait=${args.trait}`);
+
+    return matches.map((m) => ({
+      assetName: m.assetName,
+      mekNumber: m.mekNumber,
+      head: m.headVariation,
+      body: m.bodyVariation,
+      trait: m.itemVariation,
+      ownerStakeAddress: m.ownerStakeAddress || "NOT SET",
+      sourceKey: m.sourceKey,
+    }));
+  },
+});

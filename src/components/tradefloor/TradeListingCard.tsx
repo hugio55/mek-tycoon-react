@@ -137,7 +137,10 @@ export default function TradeListingCard({
         background: 'linear-gradient(135deg, rgba(15,20,30,0.55), rgba(10,15,25,0.50))',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255,255,255,0.1)',
+        border: isOwnListing
+          ? '1px solid rgba(34, 211, 238, 0.4)'
+          : '1px solid rgba(255,255,255,0.1)',
+        boxShadow: isOwnListing ? '0 0 15px rgba(34, 211, 238, 0.15)' : undefined,
       }}
     >
       {/* Honeycomb hover overlay */}
@@ -160,7 +163,10 @@ export default function TradeListingCard({
       >
         <span
           className="text-sm"
-          style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.6)' }}
+          style={{
+            fontFamily: 'Play, sans-serif',
+            color: isOwnListing ? '#22d3ee' : 'rgba(255,255,255,0.6)',
+          }}
         >
           {listing.ownerCorpName || "Unknown Corp"}
         </span>
@@ -339,59 +345,21 @@ export default function TradeListingCard({
 
         <div className="flex gap-2">
           {showMakeOffer && (isOwnListing ? (
-            /* Own Listing - Disabled button with tooltip */
-            <div
-              className="relative"
-              onMouseEnter={() => setShowOwnListingTooltip(true)}
-              onMouseLeave={() => setShowOwnListingTooltip(false)}
-            >
+            /* Own Listing - Show Edit button instead of disabled Make Offer */
+            onEditListing && (
               <button
-                onClick={() => {
-                  // On mobile/touch, show lightbox instead of tooltip
-                  if ('ontouchstart' in window) {
-                    setShowMobileLightbox(true);
-                  }
-                }}
-                className="px-4 py-1.5 text-sm rounded-lg font-medium cursor-not-allowed"
+                onClick={onEditListing}
+                className="px-4 py-1.5 text-sm rounded-lg font-medium transition-all hover:scale-[1.05] active:scale-[0.95]"
                 style={{
                   fontFamily: 'Inter, sans-serif',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  color: 'rgba(255, 255, 255, 0.4)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.15), rgba(34, 211, 238, 0.08))',
+                  color: '#22d3ee',
+                  border: '1px solid rgba(34, 211, 238, 0.3)',
                 }}
-                disabled
               >
-                Make Offer
+                Edit
               </button>
-
-              {/* Tooltip (desktop) - glass morphism style matching page aesthetic */}
-              {showOwnListingTooltip && (
-                <div
-                  className="absolute bottom-full right-0 mb-2 px-4 py-2.5 rounded-xl whitespace-nowrap z-50"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(30, 35, 45, 0.95) 0%, rgba(40, 45, 55, 0.95) 50%, rgba(30, 35, 45, 0.95) 100%)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    fontFamily: "'Play', sans-serif",
-                    fontSize: '13px',
-                    color: 'rgba(255, 255, 255, 0.9)',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-                  }}
-                >
-                  This is your own listing
-                  {/* Arrow */}
-                  <div
-                    className="absolute top-full right-4"
-                    style={{
-                      width: 0,
-                      height: 0,
-                      borderLeft: '8px solid transparent',
-                      borderRight: '8px solid transparent',
-                      borderTop: '8px solid rgba(35, 40, 50, 0.95)',
-                    }}
-                  />
-                </div>
-              )}
-            </div>
+            )
           ) : onMakeOffer && (
             <button
               onClick={onMakeOffer}
