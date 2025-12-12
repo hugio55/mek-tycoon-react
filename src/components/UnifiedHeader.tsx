@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { restoreWalletSession, clearWalletSession, extendSessionOnActivity, rememberDevice, isDeviceRemembered } from "@/lib/walletSessionManager";
 import { CompanyNameModal } from "@/components/CompanyNameModal";
 import WalletConnectLightbox from "@/components/WalletConnectLightbox";
@@ -113,6 +114,20 @@ export default function UnifiedHeader() {
   const [showNameRequiredWarning, setShowNameRequiredWarning] = useState(false);
   const [showMessaging, setShowMessaging] = useState(false);
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+  const [initialConversationId, setInitialConversationId] = useState<Id<"conversations"> | null>(null);
+
+  // Listen for custom event to open messaging with a specific conversation
+  useEffect(() => {
+    const handleOpenConversation = (event: CustomEvent<{ conversationId: string }>) => {
+      setInitialConversationId(event.detail.conversationId as Id<"conversations">);
+      setShowMessaging(true);
+    };
+
+    window.addEventListener('open-messaging-conversation', handleOpenConversation as EventListener);
+    return () => {
+      window.removeEventListener('open-messaging-conversation', handleOpenConversation as EventListener);
+    };
+  }, []);
 
   // Handle "Remember this device" button click
   const handleRememberDevice = async () => {
@@ -664,7 +679,7 @@ export default function UnifiedHeader() {
       {showMessaging && createPortal(
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-          onClick={() => setShowMessaging(false)}
+          onClick={() => { setShowMessaging(false); setInitialConversationId(null); }}
         >
           {/* Backdrop - Darkened with slight blur */}
           <div
@@ -698,7 +713,7 @@ export default function UnifiedHeader() {
               </div>
               {/* Animated X Close Button */}
               <button
-                onClick={() => setShowMessaging(false)}
+                onClick={() => { setShowMessaging(false); setInitialConversationId(null); }}
                 className="group relative flex items-center gap-2 p-2 transition-all duration-300"
               >
                 {/* X icon container */}
@@ -721,6 +736,7 @@ export default function UnifiedHeader() {
                 <MessagingSystem
                   walletAddress={walletAddress}
                   companyName={companyNameData?.companyName}
+                  initialConversationId={initialConversationId ?? undefined}
                 />
               )}
             </div>

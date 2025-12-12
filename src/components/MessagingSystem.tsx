@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { useMutation, useQuery } from 'convex/react';
+import { useMutation, useQuery, useConvex } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import { getMediaUrl } from '@/lib/media-url';
 import MekSelectorLightbox, { SelectedMek } from './MekSelectorLightbox';
 import MekPreviewLightbox from './MekPreviewLightbox';
 import MekProfileLightbox from './MekProfileLightbox';
+import BlockedUserLightbox from './BlockedUserLightbox';
 
 // Types for attachments
 interface PendingAttachment {
@@ -109,9 +110,16 @@ function getDateString(timestamp: number): string {
 interface MessagingSystemProps {
   walletAddress: string;
   companyName?: string;
+  initialConversationId?: Id<"conversations"> | null;
 }
 
-export default function MessagingSystem({ walletAddress, companyName }: MessagingSystemProps) {
+// Reaction emojis (must match backend)
+const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥', '🎉', '💯', '🤝', '✅'];
+
+export default function MessagingSystem({ walletAddress, companyName, initialConversationId }: MessagingSystemProps) {
+  // Convex client for direct queries (needed for pagination)
+  const convex = useConvex();
+
   // State
   const [selectedConversationId, setSelectedConversationId] = useState<Id<"conversations"> | null>(null);
   const [isNewConversation, setIsNewConversation] = useState(false);
@@ -124,6 +132,8 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   const [selectedRecipient, setSelectedRecipient] = useState<{ walletAddress: string; companyName: string } | null>(null);
   const [showBlockedUsers, setShowBlockedUsers] = useState(false);
   const [errorLightbox, setErrorLightbox] = useState<{ title: string; message: string } | null>(null);
+  const [showBlockedUserLightbox, setShowBlockedUserLightbox] = useState(false);
+  const [contactingSupportFromBlock, setContactingSupportFromBlock] = useState(false);
   const [showSupportDismissLightbox, setShowSupportDismissLightbox] = useState(false);
   const [showMekSelector, setShowMekSelector] = useState(false);
   const [mekPreviewLightbox, setMekPreviewLightbox] = useState<any | null>(null);
@@ -133,6 +143,29 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   const [isScrolledUp, setIsScrolledUp] = useState(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const prevMessagesLengthRef = useRef(0);
+
+  // Pagination state (infinite scroll)
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [olderMessages, setOlderMessages] = useState<any[]>([]);
+  const [paginationCursor, setPaginationCursor] = useState<number | null>(null);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+
+  // Reaction picker state
+  const [reactionPickerMessageId, setReactionPickerMessageId] = useState<string | null>(null);
+
+  // Highlighted message state (for scroll-to-reply flash effect)
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+
+  // Scroll to a message and flash it
+  const scrollToMessage = (messageId: string) => {
+    const element = document.getElementById(`message-${messageId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setHighlightedMessageId(messageId);
+      // Remove highlight after animation
+      setTimeout(() => setHighlightedMessageId(null), 1500);
+    }
+  };
 
   // Inbox search
   const [inboxSearchQuery, setInboxSearchQuery] = useState('');
@@ -157,18 +190,36 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     walletAddress: walletAddress,
   });
 
-  const messages = useQuery(
+  const messagesResult = useQuery(
     api.messaging.getMessages,
-    selectedConversationId ? { conversationId: selectedConversationId, walletAddress } : 'skip'
+    selectedConversationId ? { conversationId: selectedConversationId, walletAddress, limit: 30 } : 'skip'
   );
 
-  // Debug: Log messages with attachments
-  if (messages?.some((m: any) => m.attachments?.length > 0)) {
-    console.log('[🔍DEBUG] Messages with attachments:', messages.filter((m: any) => m.attachments?.length > 0).map((m: any) => ({
-      content: m.content,
-      attachments: m.attachments
-    })));
-  }
+  // Combine older messages with current page (older first, then current)
+  const messages = useMemo(() => {
+    if (!messagesResult?.messages) return null;
+    // Older messages are prepended, current messages come after
+    return [...olderMessages, ...messagesResult.messages];
+  }, [olderMessages, messagesResult?.messages]);
+
+  // Update pagination state when query result changes
+  useEffect(() => {
+    if (messagesResult) {
+      setHasMoreMessages(messagesResult.hasMore);
+      if (!paginationCursor) {
+        // Initial load - set the cursor from the first batch
+        setPaginationCursor(messagesResult.nextCursor);
+      }
+    }
+  }, [messagesResult, paginationCursor]);
+
+  // Reset pagination when conversation changes
+  useEffect(() => {
+    setOlderMessages([]);
+    setPaginationCursor(null);
+    setHasMoreMessages(false);
+    setLoadingMore(false);
+  }, [selectedConversationId]);
 
   const existingConversation = useQuery(
     api.messaging.getConversationBetween,
@@ -216,6 +267,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   const createSupportConversation = useMutation(api.messaging.createSupportConversation);
   const dismissSupportConversation = useMutation(api.messaging.dismissSupportConversation);
   const reopenSupportConversation = useMutation(api.messaging.reopenSupportConversation);
+  const openSupportWithAutoMessage = useMutation(api.messaging.openSupportWithAutoMessage);
 
   // Mek attachment mutation
   const sendMessageWithMek = useMutation(api.messaging.sendMessageWithMek);
@@ -223,11 +275,21 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   // Edit message mutation
   const editMessageMutation = useMutation(api.messaging.editMessage);
 
+  // Reaction mutation
+  const toggleReaction = useMutation(api.messaging.toggleReaction);
+
   // Mount check for portals
   useEffect(() => {
     setMounted(true);
     return () => setMounted(false);
   }, []);
+
+  // Handle initial conversation selection (e.g., from trade floor)
+  useEffect(() => {
+    if (initialConversationId) {
+      setSelectedConversationId(initialConversationId);
+    }
+  }, [initialConversationId]);
 
   // Lock body scroll when lightbox is open
   useEffect(() => {
@@ -254,6 +316,19 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [avatarMenuOpen]);
 
+  // Close reaction picker when clicking outside
+  useEffect(() => {
+    if (!reactionPickerMessageId) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Don't close if clicking inside the picker
+      if (target.closest('[data-reaction-picker]')) return;
+      setReactionPickerMessageId(null);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [reactionPickerMessageId]);
+
   // Auto-create support conversation if it doesn't exist
   useEffect(() => {
     if (supportConversationStatus && !supportConversationStatus.exists && walletAddress) {
@@ -268,14 +343,77 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     }
   }, [selectedConversationId, walletAddress, markAsRead, messages?.length]);
 
-  // Scroll event handler to track position
+  // Scroll event handler to track position AND trigger infinite scroll
   const handleScroll = () => {
     const container = messagesContainerRef.current;
     if (!container) return;
+
+    // Check if at bottom (for new message indicator)
     const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
     setIsScrolledUp(!isAtBottom);
     if (isAtBottom) {
       setNewMessageCount(0); // Clear new message indicator when at bottom
+    }
+
+    // Check if near top (for infinite scroll - load older messages)
+    const isNearTop = container.scrollTop < 100;
+    if (isNearTop && hasMoreMessages && !loadingMore && paginationCursor) {
+      loadOlderMessages();
+    }
+  };
+
+  // Load older messages (infinite scroll)
+  const loadOlderMessages = async () => {
+    if (!selectedConversationId || !paginationCursor || loadingMore) return;
+
+    setLoadingMore(true);
+    const container = messagesContainerRef.current;
+    const prevScrollHeight = container?.scrollHeight || 0;
+
+    try {
+      // Fetch older messages using Convex client with cursor
+      const result = await convex.query(api.messaging.getMessages, {
+        conversationId: selectedConversationId,
+        walletAddress,
+        limit: 30,
+        cursor: paginationCursor,
+      });
+
+      if (result && result.messages.length > 0) {
+        // Prepend older messages to existing ones
+        setOlderMessages(prev => [...result.messages, ...prev]);
+        // Update cursor for next load
+        setPaginationCursor(result.nextCursor);
+        // Update hasMore flag
+        setHasMoreMessages(result.hasMore);
+      } else {
+        setHasMoreMessages(false);
+      }
+    } catch (error) {
+      console.error('Failed to load older messages:', error);
+    } finally {
+      setLoadingMore(false);
+      // Restore scroll position after messages are inserted
+      requestAnimationFrame(() => {
+        if (container) {
+          const newScrollHeight = container.scrollHeight;
+          container.scrollTop = newScrollHeight - prevScrollHeight;
+        }
+      });
+    }
+  };
+
+  // Handle reaction toggle
+  const handleReaction = async (messageId: string, emoji: string) => {
+    try {
+      await toggleReaction({
+        messageId: messageId as Id<"messages">,
+        walletAddress,
+        emoji,
+      });
+      setReactionPickerMessageId(null); // Close picker after reaction
+    } catch (error) {
+      console.error('Failed to toggle reaction:', error);
     }
   };
 
@@ -553,8 +691,10 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
       const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
       if (errorMessage.includes('Terms of Service') || errorMessage.includes('disabled')) {
         setErrorLightbox({ title: 'Conversation Disabled', message: errorMessage });
-      } else if (errorMessage.includes('blocked')) {
-        setErrorLightbox({ title: 'Cannot Send Message', message: errorMessage });
+      } else if (errorMessage.includes('cannot message this user')) {
+        // Show the Space Age styled blocked user lightbox
+        setShowBlockedUserLightbox(true);
+        return;
       } else {
         setErrorLightbox({ title: 'Message Failed', message: errorMessage });
       }
@@ -605,22 +745,28 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     } catch (error) {
       console.error('Failed to send Mek:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to send Mek';
+      // Check for blocked error - show Space Age lightbox instead of generic error
+      if (errorMessage.includes('cannot message this user')) {
+        setShowBlockedUserLightbox(true);
+        return;
+      }
       setErrorLightbox({ title: 'Failed to Send Mek', message: errorMessage });
     }
   };
 
-  // Handle edit message
+  // Handle edit message (Discord-style: uses messageInput from bottom input)
   const handleEditMessage = async () => {
-    if (!editingMessageId || !editContent.trim()) return;
+    if (!editingMessageId || !messageInput.trim()) return;
 
     try {
       await editMessageMutation({
         messageId: editingMessageId,
         walletAddress: walletAddress,
-        newContent: editContent.trim(),
+        newContent: messageInput.trim(),
       });
       setEditingMessageId(null);
       setEditContent('');
+      setMessageInput(''); // Clear the input after saving
     } catch (error) {
       console.error('Failed to edit message:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to edit message';
@@ -628,16 +774,19 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
     }
   };
 
-  // Start editing a message
+  // Start editing a message (Discord-style: uses bottom input)
   const startEditing = (msg: any) => {
     setEditingMessageId(msg._id);
     setEditContent(msg.content);
+    setMessageInput(msg.content); // Load content into the main input
+    setReplyingToMessage(null); // Clear any reply state
   };
 
   // Cancel editing
   const cancelEditing = () => {
     setEditingMessageId(null);
     setEditContent('');
+    setMessageInput(''); // Clear the input
   };
 
   // Start replying to a message
@@ -654,7 +803,16 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      // If editing, save the edit; otherwise send new message
+      if (editingMessageId) {
+        handleEditMessage();
+      } else {
+        handleSendMessage();
+      }
+    }
+    // Escape cancels editing
+    if (e.key === 'Escape' && editingMessageId) {
+      cancelEditing();
     }
   };
 
@@ -733,6 +891,29 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
       }
     } catch (error) {
       console.error('Failed to open support conversation:', error);
+    }
+  };
+
+  // Open support with auto-message (triggered from blocked user lightbox)
+  const handleContactSupportFromBlock = async () => {
+    // Prevent double-clicks / spam
+    if (contactingSupportFromBlock) return;
+
+    try {
+      setContactingSupportFromBlock(true);
+      setShowBlockedUserLightbox(false);
+      setShowNewConversation(false);
+      setCorpSearchQuery('');
+
+      // Open support and send auto-message
+      const result = await openSupportWithAutoMessage({ walletAddress });
+      if (result.conversationId) {
+        setSelectedConversationId(result.conversationId);
+      }
+    } catch (error) {
+      console.error('Failed to open support conversation:', error);
+    } finally {
+      setContactingSupportFromBlock(false);
     }
   };
 
@@ -1093,6 +1274,24 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
             {/* Messages Area */}
             <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4">
               <div className="flex flex-col justify-end min-h-full space-y-4">
+              {/* Loading indicator for older messages */}
+              {loadingMore && (
+                <div className="flex justify-center py-4">
+                  <div className="flex items-center gap-2 text-cyan-400/70 text-sm">
+                    <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
+                      <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                    Loading older messages...
+                  </div>
+                </div>
+              )}
+              {/* "Beginning of conversation" indicator */}
+              {!hasMoreMessages && messages && messages.length > 0 && !loadingMore && (
+                <div className="flex justify-center py-4">
+                  <div className="text-gray-500 text-xs">Beginning of conversation</div>
+                </div>
+              )}
               {isNewConversation && !existingConversation && (
                 <div className="text-center text-gray-500 py-8">
                   {/* New Channel Icon - Signal waves */}
@@ -1126,7 +1325,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                 const isSupportMessage = msg.senderId === SUPPORT_WALLET_ID;
 
                 return (
-                  <div key={msg._id}>
+                  <div key={msg._id} id={`message-${msg._id}`}>
                     {/* Date Divider */}
                     {showDateDivider && (
                       <div className="flex items-center gap-3 my-4">
@@ -1136,18 +1335,19 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                       </div>
                     )}
 
-                    <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} group`}>
+                    <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} group rounded-lg -mx-2 px-2 py-1 ${highlightedMessageId === msg._id ? 'message-highlight-flash' : ''}`}>
                       {/* Edit/Reply buttons - shown on hover for non-deleted messages */}
                       {!msg.isDeleted && (
                         <div className={`flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${isMine ? 'order-1 mr-2' : 'order-3 ml-2'}`}>
-                          {/* Reply button - always available */}
+                          {/* Reply button - Discord-style curved arrow */}
                           <button
                             onClick={() => startReplying(msg)}
                             className="p-1.5 rounded-full hover:bg-white/10 text-gray-500 hover:text-cyan-400 transition-colors"
                             title="Reply"
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M9 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4l-5 5v-5z" />
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="9 14 4 9 9 4" />
+                              <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
                             </svg>
                           </button>
                           {/* Edit button - only for own messages without Mek attachments */}
@@ -1157,19 +1357,62 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                               className="p-1.5 rounded-full hover:bg-white/10 text-gray-500 hover:text-yellow-400 transition-colors"
                               title="Edit"
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                               </svg>
                             </button>
                           )}
+                          {/* Reaction button - opens emoji picker */}
+                          <div className="relative">
+                            <button
+                              onClick={() => setReactionPickerMessageId(reactionPickerMessageId === msg._id ? null : msg._id)}
+                              className="p-1.5 rounded-full hover:bg-white/10 text-gray-500 hover:text-pink-400 transition-colors"
+                              title="Add reaction"
+                            >
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                                <line x1="9" y1="9" x2="9.01" y2="9" />
+                                <line x1="15" y1="9" x2="15.01" y2="9" />
+                              </svg>
+                            </button>
+                            {/* Emoji Picker Popup */}
+                            {reactionPickerMessageId === msg._id && (
+                              <div
+                                data-reaction-picker
+                                className={`absolute z-50 bottom-full mb-2 bg-gray-900/95 backdrop-blur-sm border border-white/10 rounded-xl p-2 shadow-xl ${isMine ? 'right-0' : 'left-0'}`}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="flex gap-1">
+                                  {REACTION_EMOJIS.map((emoji) => {
+                                    const hasReacted = msg.reactions?.[emoji]?.includes(walletAddress);
+                                    return (
+                                      <button
+                                        key={emoji}
+                                        onClick={() => handleReaction(msg._id, emoji)}
+                                        className={`w-8 h-8 flex items-center justify-center text-lg rounded-lg transition-all hover:scale-110 ${
+                                          hasReacted
+                                            ? 'bg-cyan-500/30 ring-1 ring-cyan-400/50'
+                                            : 'hover:bg-white/10'
+                                        }`}
+                                        title={hasReacted ? 'Remove reaction' : 'Add reaction'}
+                                      >
+                                        {emoji}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
 
                       <div className={`max-w-[70%] ${isMine ? 'order-2' : ''}`}>
-                      {/* Message Bubble - with special styling when it contains a verified Mek */}
+                      {/* Message Bubble - w-fit prevents reactions from expanding bubble width */}
                       <div
-                        className={`relative rounded-2xl px-4 py-2 overflow-hidden ${
+                        className={`relative rounded-2xl px-4 py-2 overflow-hidden w-fit ${
                           msg.isDeleted
                             ? 'bg-gray-700/50 text-gray-500 italic'
                             : msg.mekAttachment
@@ -1177,7 +1420,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                               : isMine
                                 ? 'bg-white/15 text-white'
                                 : 'bg-cyan-500/10 text-white'
-                        }`}
+                        } ${isMine ? 'ml-auto' : ''}`}
                         style={msg.mekAttachment && !msg.isDeleted ? {
                           background: isMine ? 'rgba(255,255,255,0.12)' : 'rgba(34, 211, 238, 0.08)',
                           boxShadow: '0 0 25px rgba(34, 211, 238, 0.25), 0 0 50px rgba(34, 211, 238, 0.1)',
@@ -1197,53 +1440,23 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                           />
                         )}
 
-                        {/* Quoted message (reply context) */}
+                        {/* Quoted message (reply context) - clickable to scroll to original */}
                         {msg.replyTo && !msg.isDeleted && (
-                          <div className="mb-2 p-2 bg-black/20 rounded-lg border-l-2 border-cyan-500/50 text-xs relative z-[2]">
+                          <button
+                            onClick={() => scrollToMessage(msg.replyTo!.messageId)}
+                            className="mb-2 p-2 bg-black/20 rounded-lg border-l-2 border-cyan-500/50 text-xs relative z-[2] w-full text-left hover:bg-black/30 transition-colors cursor-pointer"
+                          >
                             <div className="text-cyan-400/80 font-medium mb-0.5">{msg.replyTo.senderName}</div>
                             <div className="text-gray-400 truncate">
                               {msg.replyTo.hasMekAttachment ? '[Mek Attachment]' : msg.replyTo.content}
                             </div>
-                          </div>
+                          </button>
                         )}
 
-                        {/* Message content - with editing mode */}
+                        {/* Message content */}
                         <div className="relative z-[2]">
                           {msg.isDeleted ? (
                             '[Message deleted]'
-                          ) : editingMessageId === msg._id ? (
-                            <div className="space-y-2">
-                              <textarea
-                                value={editContent}
-                                onChange={(e) => setEditContent(e.target.value)}
-                                className="w-full bg-black/30 border border-cyan-500/30 rounded-lg px-3 py-2 text-white text-sm resize-none focus:outline-none focus:border-cyan-500"
-                                rows={3}
-                                autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleEditMessage();
-                                  }
-                                  if (e.key === 'Escape') {
-                                    cancelEditing();
-                                  }
-                                }}
-                              />
-                              <div className="flex justify-end gap-2">
-                                <button
-                                  onClick={cancelEditing}
-                                  className="px-3 py-1 text-xs text-gray-400 hover:text-white transition-colors"
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  onClick={handleEditMessage}
-                                  className="px-3 py-1 text-xs bg-cyan-500/20 text-cyan-400 rounded hover:bg-cyan-500/30 transition-colors"
-                                >
-                                  Save
-                                </button>
-                              </div>
-                            </div>
                           ) : (
                             <>
                               {msg.content}
@@ -1297,7 +1510,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                             >
                               <img
                                 src={getMediaUrl(`/mek-images/150px/${(msg.mekAttachment.sourceKeyBase || msg.mekAttachment.sourceKey).replace(/-[A-Z]$/, '').toLowerCase()}.webp`)}
-                                alt={`Mek #${msg.mekAttachment.assetId}`}
+                                alt={`Mek #${String(msg.mekAttachment.assetName?.match(/\d+/)?.[0] || msg.mekAttachment.assetId).padStart(4, '0')}`}
                                 className="w-[150px] h-[150px] object-cover rounded-lg"
                               />
                             </button>
@@ -1314,6 +1527,31 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                         )}
                       </div>
 
+                      {/* Reactions Display - directly under message bubble */}
+                      {msg.reactions && Array.isArray(msg.reactions) && msg.reactions.length > 0 && (
+                        <div className={`flex flex-wrap gap-1 mt-1 ${isMine ? 'justify-end' : 'justify-start'}`}>
+                          {msg.reactions.map((reaction: { emoji: string; wallets: string[] }) => {
+                            const hasReacted = reaction.wallets.includes(walletAddress);
+                            return (
+                              <button
+                                key={reaction.emoji}
+                                onClick={() => handleReaction(msg._id, reaction.emoji)}
+                                className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-sm transition-all ${
+                                  hasReacted
+                                    ? 'bg-cyan-500/20 border border-cyan-400/40 text-cyan-300'
+                                    : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10'
+                                }`}
+                                title={`${reaction.wallets.length} reaction${reaction.wallets.length > 1 ? 's' : ''}`}
+                              >
+                                <span>{reaction.emoji}</span>
+                                <span className="text-xs">{reaction.wallets.length}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Timestamp - below reactions */}
                       <div className={`flex items-center gap-2 mt-1 text-xs text-gray-500 ${isMine ? 'justify-end' : ''}`}>
                         <span>{formatRelativeTime(msg.createdAt)}</span>
                         {/* Read receipts - with support exception:
@@ -1380,8 +1618,31 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                 </div>
               ) : (
                 <>
+                  {/* Edit Mode Banner */}
+                  {editingMessageId && (
+                    <div className="mb-3 p-2 bg-yellow-500/10 rounded-lg border-l-2 border-yellow-400 flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs text-yellow-400 font-medium mb-1">
+                          Editing message
+                        </div>
+                        <div className="text-sm text-gray-400 truncate">
+                          {editContent}
+                        </div>
+                      </div>
+                      <button
+                        onClick={cancelEditing}
+                        className="ml-2 text-gray-500 hover:text-white transition-colors flex-shrink-0"
+                        title="Cancel editing (Esc)"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
                   {/* Reply Preview */}
-                  {replyingToMessage && (
+                  {replyingToMessage && !editingMessageId && (
                     <div className="mb-3 p-2 bg-white/5 rounded-lg border-l-2 border-cyan-400 flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="text-xs text-cyan-400 font-medium mb-1">
@@ -1466,13 +1727,27 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                       </svg>
                     </button>
 
-                    {/* MEK Button - Share verified Mek ownership */}
+                    {/* MEK Button - Share verified Mek ownership (robot icon) */}
                     <button
                       onClick={() => setShowMekSelector(true)}
-                      className="px-2 py-1 rounded-lg text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 hover:bg-yellow-500/30 hover:border-yellow-500/60 transition-all"
+                      className="-ml-1 w-9 h-9 rounded-full flex items-center justify-center text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10 transition-colors"
                       title="Share a Mek you own"
                     >
-                      MEK
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        {/* Head */}
+                        <rect x="7" y="2" width="10" height="8" rx="1" />
+                        {/* Eyes */}
+                        <circle cx="10" cy="5.5" r="1" fill="currentColor" />
+                        <circle cx="14" cy="5.5" r="1" fill="currentColor" />
+                        {/* Body */}
+                        <rect x="6" y="10" width="12" height="8" rx="1" />
+                        {/* Arms */}
+                        <line x1="6" y1="12" x2="3" y2="14" />
+                        <line x1="18" y1="12" x2="21" y2="14" />
+                        {/* Legs */}
+                        <line x1="9" y1="18" x2="9" y2="22" />
+                        <line x1="15" y1="18" x2="15" y2="22" />
+                      </svg>
                     </button>
 
                     <input
@@ -1489,23 +1764,30 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
                     />
 
                     <button
-                      onClick={handleSendMessage}
+                      onClick={editingMessageId ? handleEditMessage : handleSendMessage}
                       disabled={
-                        (!messageInput.trim() && !pendingAttachments.some(a => a.storageId && !a.error)) ||
+                        !messageInput.trim() ||
                         messageInput.length > MAX_MESSAGE_LENGTH ||
-                        pendingAttachments.some(a => a.uploading)
+                        (!editingMessageId && pendingAttachments.some(a => a.uploading))
                       }
                       className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                        (messageInput.trim() || pendingAttachments.some(a => a.storageId && !a.error)) &&
-                        messageInput.length <= MAX_MESSAGE_LENGTH &&
-                        !pendingAttachments.some(a => a.uploading)
-                          ? 'text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10'
+                        messageInput.trim() && messageInput.length <= MAX_MESSAGE_LENGTH
+                          ? editingMessageId
+                            ? 'text-green-400 hover:text-green-300 hover:bg-green-400/10'
+                            : 'text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10'
                           : 'text-gray-600 cursor-not-allowed'
                       }`}
+                      title={editingMessageId ? 'Save edit (Enter)' : 'Send message (Enter)'}
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                      </svg>
+                      {editingMessageId ? (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      ) : (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                        </svg>
+                      )}
                     </button>
                   </div>
 
@@ -1699,6 +1981,13 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
         document.body
       )}
 
+      {/* Blocked User Error Lightbox (Space Age styled) */}
+      <BlockedUserLightbox
+        isOpen={showBlockedUserLightbox}
+        onClose={() => setShowBlockedUserLightbox(false)}
+        onContactSupport={handleContactSupportFromBlock}
+      />
+
       {/* Blocked Users Lightbox */}
       {mounted && showBlockedUsers && createPortal(
         <div
@@ -1878,7 +2167,7 @@ export default function MessagingSystem({ walletAddress, companyName }: Messagin
           }}
           styleVariation="space-age"
           mekData={{
-            mekNumber: mekPreviewLightbox.assetName?.match(/\d+/)?.[0] || mekPreviewLightbox.assetId,
+            mekNumber: String(mekPreviewLightbox.assetName?.match(/\d+/)?.[0] || mekPreviewLightbox.assetId).padStart(4, '0'),
             rank: mekPreviewLightbox.gameRank || mekPreviewLightbox.rarityRank,
             corporation: companyName,
             customName: mekPreviewLightbox.customName,

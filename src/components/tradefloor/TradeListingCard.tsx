@@ -87,7 +87,7 @@ export default function TradeListingCard({
     .toLowerCase();
 
   const imagePath = cleanSourceKey
-    ? getMediaUrl(`/mek-images/150px/${cleanSourceKey}.webp`)
+    ? getMediaUrl(`/mek-images/500px/${cleanSourceKey}.webp`)
     : getMediaUrl("/mek-images/placeholder.webp");
 
   // Extract Mek number from asset name (e.g., "Mekanism #1234" -> "1234")
@@ -190,66 +190,53 @@ export default function TradeListingCard({
         )}
       </div>
 
-      {/* Mek Image - Clickable to open lightbox (also records view for analytics) */}
-      <div className="relative p-4 flex justify-center">
-        <button
-          onClick={() => {
-            // Debug logging - fires when lightbox opens
-            console.log("[🔍LIGHTBOX] Opening lightbox for:", listing.listedMekAssetName);
-            console.log("[🔍LIGHTBOX] Raw sourceKey from listing:", listing.listedMekSourceKey);
-            console.log("[🔍LIGHTBOX] cleanSourceKey:", cleanSourceKey);
-            console.log("[🔍LIGHTBOX] mekVariations result:", mekVariations);
-            if (mekVariations) {
-              console.log("[🔍LIGHTBOX] HEAD found:", mekVariations.head?.name ?? "NOT FOUND");
-              console.log("[🔍LIGHTBOX] BODY found:", mekVariations.body?.name ?? "NOT FOUND");
-              console.log("[🔍LIGHTBOX] TRAIT found:", mekVariations.trait?.name ?? "NOT FOUND");
-            }
-
-            setShowImageLightbox(true);
-            // Record view for analytics (only if viewer is logged in)
-            if (viewerStakeAddress) {
-              recordView({
-                listingId: listing._id,
-                viewerStakeAddress,
-              }).catch(() => {
-                // Silently fail - analytics shouldn't block UX
-              });
-            }
+      {/* Mek Image - Full width, clickable to open lightbox (also records view for analytics) */}
+      <button
+        onClick={() => {
+          setShowImageLightbox(true);
+          // Record view for analytics (only if viewer is logged in)
+          if (viewerStakeAddress) {
+            recordView({
+              listingId: listing._id,
+              viewerStakeAddress,
+            }).catch(() => {
+              // Silently fail - analytics shouldn't block UX
+            });
+          }
+        }}
+        className="relative w-full aspect-square cursor-pointer transition-all duration-200 hover:brightness-110 active:scale-[0.98] overflow-hidden group/image"
+        title="Click to view larger"
+      >
+        <img
+          src={imagePath}
+          alt={listing.listedMekAssetName || "Listed Mek"}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = getMediaUrl("/mek-images/placeholder.webp");
           }}
-          className="relative w-32 h-32 cursor-pointer transition-all duration-200 hover:scale-110 active:scale-105 rounded-lg overflow-hidden group/image"
-          title="Click to view larger"
+        />
+        {/* Hover overlay with magnify icon */}
+        <div
+          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/image:opacity-100 transition-opacity duration-200"
+          style={{ background: 'rgba(34, 211, 238, 0.1)' }}
         >
-          <img
-            src={imagePath}
-            alt={listing.listedMekAssetName || "Listed Mek"}
-            className="w-full h-full object-contain"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = getMediaUrl("/mek-images/placeholder.webp");
-            }}
-          />
-          {/* Hover overlay with magnify icon */}
-          <div
-            className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/image:opacity-100 transition-opacity duration-200 rounded-lg"
-            style={{ background: 'rgba(34, 211, 238, 0.15)' }}
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#22d3ee"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ filter: 'drop-shadow(0 0 8px rgba(34, 211, 238, 0.5))' }}
           >
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#22d3ee"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ filter: 'drop-shadow(0 0 8px rgba(34, 211, 238, 0.5))' }}
-            >
-              <circle cx="11" cy="11" r="8"/>
-              <path d="M21 21l-4.35-4.35"/>
-              <path d="M11 8v6M8 11h6"/>
-            </svg>
-          </div>
-        </button>
-      </div>
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+            <path d="M11 8v6M8 11h6"/>
+          </svg>
+        </div>
+      </button>
 
       {/* Mek Name */}
       <div className="relative px-4 pb-2">

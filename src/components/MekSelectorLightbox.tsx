@@ -153,10 +153,15 @@ export default function MekSelectorLightbox({
     onClose();
   };
 
-  // Get Mek number from assetName
+  // Get Mek number from assetName (zero-padded to 4 digits like metadata)
   const getMekNumber = (mek: any) => {
     const match = mek.assetName?.match(/\d+/);
-    return match ? match[0] : mek.assetId;
+    if (match) {
+      return match[0].padStart(4, '0');
+    }
+    // If assetId is a number, pad it too
+    const numericId = String(mek.assetId).match(/\d+/);
+    return numericId ? numericId[0].padStart(4, '0') : mek.assetId;
   };
 
   if (!isOpen || !mounted) return null;
@@ -172,9 +177,9 @@ export default function MekSelectorLightbox({
         style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
       />
 
-      {/* Modal Container - Space Age Style */}
+      {/* Modal Container - Space Age Style (fixed height relative to viewport) */}
       <div
-        className="relative w-full max-w-4xl max-h-[85vh] overflow-hidden rounded-2xl border border-white/10"
+        className="relative w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden rounded-2xl border border-white/10"
         style={{
           background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
           boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1) inset',
@@ -195,13 +200,16 @@ export default function MekSelectorLightbox({
           </svg>
         </button>
 
-        {/* Header */}
-        <div className="px-6 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-5">
+        {/* Header - fixed, doesn't shrink */}
+        <div className="flex-shrink-0 px-6 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-5">
           <div className="text-center">
-            <h2 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-2">
-              Select a Mekanism
+            <h2 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-1">
+              Welcome to LegitaMek!
             </h2>
-            <p className="text-sm text-white/50">
+            <p className="text-sm text-white/60 mb-3 max-w-md mx-auto">
+              Flex your Meks with confidence! Recipients get verified proof that you actually own what you're sharing.
+            </p>
+            <p className="text-xs text-white/40">
               {showAllMeks
                 ? `${ownedMeks?.length || 0} total Meks (Admin Mode)`
                 : `${ownedMeks?.length || 0} Meks in your collection`
@@ -210,8 +218,8 @@ export default function MekSelectorLightbox({
           </div>
         </div>
 
-        {/* Search Bar - Space Age Style */}
-        <div className="px-6 sm:px-8 pb-4">
+        {/* Search Bar - Space Age Style (fixed, doesn't shrink) */}
+        <div className="flex-shrink-0 px-6 sm:px-8 pb-4">
           <div className="relative">
             <svg
               className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30"
@@ -228,7 +236,7 @@ export default function MekSelectorLightbox({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by number, name, or variation..."
-              className="w-full pl-12 pr-12 py-3 sm:py-4 text-base bg-white/5 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:bg-white/10 transition-all border-white/10 focus:border-yellow-500/50"
+              className="w-full pl-12 pr-12 py-3 sm:py-4 text-base bg-white/5 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:bg-white/10 transition-all border-white/10 focus:border-cyan-500/50"
               style={{ minHeight: '48px' }}
               autoFocus
             />
@@ -252,8 +260,8 @@ export default function MekSelectorLightbox({
           )}
         </div>
 
-        {/* Meks Grid */}
-        <div className="px-6 sm:px-8 pb-6 overflow-y-auto max-h-[calc(85vh-200px)]">
+        {/* Meks Grid - fills remaining space and scrolls */}
+        <div className="flex-1 px-6 sm:px-8 pb-6 overflow-y-auto min-h-0">
           {!ownedMeks ? (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="w-10 h-10 rounded-full border-2 border-white/20 border-t-yellow-500/50 animate-spin" />
@@ -272,19 +280,19 @@ export default function MekSelectorLightbox({
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 pt-2">
               {filteredMeks.map((mek: any) => (
                 <button
                   key={mek._id}
                   onClick={() => handleSelect(mek)}
-                  className="group relative rounded-xl overflow-hidden transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] bg-black/30 border border-white/10 hover:border-white/20"
+                  className="group relative rounded-xl overflow-hidden transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] bg-black/30 border border-white/10 hover:border-cyan-500/40"
                 >
                   {/* Mek Image */}
                   <div className="aspect-square overflow-hidden">
                     <img
                       src={getMekImageUrl(mek)}
                       alt={mek.customName || `Mek #${getMekNumber(mek)}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-[1.03] group-hover:blur-[3px] transition-all duration-300"
                       loading="lazy"
                     />
                   </div>
@@ -301,9 +309,9 @@ export default function MekSelectorLightbox({
                     )}
                   </div>
 
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center bg-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <span className="px-3 py-1.5 bg-yellow-500/90 text-black text-xs font-semibold rounded-full">
+                  {/* Hover Overlay - subtle cyan tint */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <span className="px-3 py-1.5 bg-cyan-500/90 text-white text-xs font-semibold rounded-full">
                       Select
                     </span>
                   </div>

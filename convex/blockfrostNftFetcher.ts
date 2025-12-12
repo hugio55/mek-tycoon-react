@@ -109,11 +109,15 @@ interface BlockfrostAsset {
 }
 
 // Interface for parsed Mek NFT
+// ⚠️ WARNING: assetId here is the FULL Blockfrost unit (policyId + hex asset name)
+// This is NOT compatible with the database meks.assetId (which is just the mek number)
+// For database queries, use: mekNumber.toString() NOT assetId
+// See: convex/lib/mekIdentifiers.ts for helper types
 interface ParsedMek {
-  assetId: string;
+  assetId: string;    // BLOCKFROST FORMAT: Full unit (130+ chars) - NOT for DB queries!
   policyId: string;
   assetName: string;
-  mekNumber: number;
+  mekNumber: number;  // USE THIS for database lookups: mekNumber.toString()
   quantity: number;
   fingerprint?: string;
   metadata?: any;

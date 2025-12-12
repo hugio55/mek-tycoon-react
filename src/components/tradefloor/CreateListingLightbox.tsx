@@ -116,6 +116,7 @@ export default function CreateListingLightbox({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [mekSearchTerm, setMekSearchTerm] = useState("");
   const [mekPage, setMekPage] = useState(0);
+  const [limitTooltip, setLimitTooltip] = useState<{ x: number; y: number } | null>(null);
   const [hoveredListedMek, setHoveredListedMek] = useState<string | null>(null);
   const MEKS_PER_PAGE = 24;
 
@@ -742,44 +743,56 @@ export default function CreateListingLightbox({
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 h-64 min-h-64 max-h-64 overflow-y-auto relative content-start">
                 {filteredVariations.map((v) => {
                   const colors = variationTypeColors[v.type as "head" | "body" | "trait"];
+                  const isAtLimit = selectedVariations.length >= 6;
                   return (
-                    <button
+                    <div
                       key={v.id}
-                      onClick={() => handleSelectVariation(v)}
-                      disabled={selectedVariations.length >= 6}
                       onMouseEnter={(e) => {
                         const rect = e.currentTarget.getBoundingClientRect();
-                        setHoveredVariation({
-                          variation: v,
-                          x: rect.left + rect.width / 2,
-                          y: rect.top,
-                        });
+                        if (isAtLimit) {
+                          setLimitTooltip({ x: rect.left + rect.width / 2, y: rect.top });
+                          setHoveredVariation(null);
+                        } else {
+                          setHoveredVariation({
+                            variation: v,
+                            x: rect.left + rect.width / 2,
+                            y: rect.top,
+                          });
+                        }
                       }}
-                      onMouseLeave={() => setHoveredVariation(null)}
-                      className="px-3 py-2 text-sm rounded text-left transition-all hover:brightness-125"
-                      style={{
-                        background: colors.bg,
-                        border: `1px solid ${colors.border}`,
-                        color: colors.text,
-                        fontFamily: 'Play, sans-serif',
-                        opacity: selectedVariations.length >= 6 ? 0.5 : 1,
-                        cursor: selectedVariations.length >= 6 ? 'not-allowed' : 'pointer',
+                      onMouseLeave={() => {
+                        setHoveredVariation(null);
+                        setLimitTooltip(null);
                       }}
                     >
-                      <div className="flex justify-between items-center">
-                        <span>{v.name}</span>
-                        <span
-                          className="text-xs px-1.5 py-0.5 rounded"
-                          style={{
-                            background: 'rgba(0,0,0,0.2)',
-                            opacity: 0.7,
-                          }}
-                          title={`Rank ${v.rank} of 291`}
-                        >
-                          #{v.rank}
-                        </span>
-                      </div>
-                    </button>
+                      <button
+                        onClick={() => handleSelectVariation(v)}
+                        disabled={isAtLimit}
+                        className="w-full px-3 py-2 text-sm rounded text-left transition-all hover:brightness-125"
+                        style={{
+                          background: colors.bg,
+                          border: `1px solid ${colors.border}`,
+                          color: colors.text,
+                          fontFamily: 'Play, sans-serif',
+                          opacity: isAtLimit ? 0.5 : 1,
+                          cursor: isAtLimit ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        <div className="flex justify-between items-center">
+                          <span>{v.name}</span>
+                          <span
+                            className="text-xs px-1.5 py-0.5 rounded"
+                            style={{
+                              background: 'rgba(0,0,0,0.2)',
+                              opacity: 0.7,
+                            }}
+                            title={`Rank ${v.rank} of 291`}
+                          >
+                            #{v.rank}
+                          </span>
+                        </div>
+                      </button>
+                    </div>
                   );
                 })}
               </div>
@@ -1127,6 +1140,47 @@ export default function CreateListingLightbox({
               </div>
             </div>
           </div>
+        )}
+
+        {/* Limit Tooltip - Shows when 6 variations selected and hovering over another */}
+        {limitTooltip && createPortal(
+          <div
+            className="fixed z-[99999] pointer-events-none"
+            style={{
+              left: limitTooltip.x,
+              top: limitTooltip.y - 10,
+              transform: 'translate(-50%, -100%)',
+            }}
+          >
+            <div
+              className="px-4 py-2.5 rounded-xl text-sm whitespace-nowrap"
+              style={{
+                background: 'linear-gradient(135deg, rgba(30, 35, 45, 0.98) 0%, rgba(40, 45, 55, 0.98) 50%, rgba(30, 35, 45, 0.98) 100%)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                fontFamily: "'Play', sans-serif",
+                color: 'rgba(255, 255, 255, 0.9)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+              }}
+            >
+              You have already applied six variations.
+              <br />
+              Please remove one to add another.
+            </div>
+            {/* Arrow */}
+            <div
+              className="mx-auto"
+              style={{
+                width: 0,
+                height: 0,
+                borderLeft: '8px solid transparent',
+                borderRight: '8px solid transparent',
+                borderTop: '8px solid rgba(35, 40, 50, 0.98)',
+              }}
+            />
+          </div>,
+          document.body
         )}
       </div>
     </div>,

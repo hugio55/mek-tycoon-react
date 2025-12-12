@@ -62,40 +62,68 @@ export const getConversations = query({
   },
 });
 
-// Get messages for a conversation
+// Get messages for a conversation (with pagination and reactions)
 export const getMessages = query({
   args: {
     conversationId: v.id("conversations"),
     walletAddress: v.string(),
+    limit: v.optional(v.number()), // Number of messages to fetch (default 30)
+    cursor: v.optional(v.number()), // Timestamp cursor for pagination (fetch messages BEFORE this time)
   },
   handler: async (ctx, args) => {
-    const { conversationId, walletAddress } = args;
+    const { conversationId, walletAddress, limit = 30, cursor } = args;
 
     // Verify user is participant
     const conversation = await ctx.db.get(conversationId);
-    if (!conversation) return [];
+    if (!conversation) return { messages: [], hasMore: false, nextCursor: null };
     if (conversation.participant1 !== walletAddress && conversation.participant2 !== walletAddress) {
-      return [];
+      return { messages: [], hasMore: false, nextCursor: null };
     }
 
-    const messages = await ctx.db
+    // Fetch all messages for this conversation (we'll filter and paginate in memory)
+    const allMessages = await ctx.db
       .query("messages")
       .withIndex("by_conversation", (q) => q.eq("conversationId", conversationId))
       .collect();
 
     // Filter deleted messages based on who's viewing
-    const filteredMessages = messages
+    let filteredMessages = allMessages
       .filter((msg) => {
         if (msg.isDeleted) return false;
         if (msg.senderId === walletAddress && msg.deletedForSender) return false;
         if (msg.recipientId === walletAddress && msg.deletedForRecipient) return false;
         return true;
       })
-      .sort((a, b) => a.createdAt - b.createdAt);
+      .sort((a, b) => a.createdAt - b.createdAt); // Oldest first
 
-    // Resolve attachment URLs and reply context
+    // Apply cursor-based pagination (get messages BEFORE cursor timestamp)
+    if (cursor) {
+      filteredMessages = filteredMessages.filter((msg) => msg.createdAt < cursor);
+    }
+
+    // Determine if there are more messages
+    const totalFiltered = filteredMessages.length;
+    const hasMore = totalFiltered > limit;
+
+    // Get the most recent N messages (we want the latest ones when initially loading)
+    // But when paginating (cursor provided), we want the N oldest from what's left
+    let paginatedMessages: typeof filteredMessages;
+    if (cursor) {
+      // Loading older messages - take the most recent N from the filtered set
+      paginatedMessages = filteredMessages.slice(-limit);
+    } else {
+      // Initial load - take the most recent N messages
+      paginatedMessages = filteredMessages.slice(-limit);
+    }
+
+    // Calculate next cursor (the timestamp of the oldest message we're returning)
+    const nextCursor = hasMore && paginatedMessages.length > 0
+      ? paginatedMessages[0].createdAt
+      : null;
+
+    // Resolve attachment URLs, reply context, and reactions
     const messagesWithDetails = await Promise.all(
-      filteredMessages.map(async (msg) => {
+      paginatedMessages.map(async (msg) => {
         let enrichedMsg: any = { ...msg };
 
         // Resolve attachment URLs
@@ -142,11 +170,35 @@ export const getMessages = query({
           }
         }
 
+        // Get reactions for this message
+        const reactions = await ctx.db
+          .query("messageReactions")
+          .withIndex("by_message", (q) => q.eq("messageId", msg._id))
+          .collect();
+
+        // Group reactions by emoji with wallet addresses (as array to avoid emoji keys)
+        const reactionMap = new Map<string, string[]>();
+        for (const reaction of reactions) {
+          if (!reactionMap.has(reaction.emoji)) {
+            reactionMap.set(reaction.emoji, []);
+          }
+          reactionMap.get(reaction.emoji)!.push(reaction.walletAddress);
+        }
+        // Convert to array format: [{ emoji: "👍", wallets: ["addr1", "addr2"] }]
+        enrichedMsg.reactions = Array.from(reactionMap.entries()).map(([emoji, wallets]) => ({
+          emoji,
+          wallets,
+        }));
+
         return enrichedMsg;
       })
     );
 
-    return messagesWithDetails;
+    return {
+      messages: messagesWithDetails,
+      hasMore,
+      nextCursor,
+    };
   },
 });
 
@@ -665,6 +717,18 @@ export const sendMessageWithMek = mutation({
     const now = Date.now();
     let convId = conversationId;
 
+    // Generate clean preview text for inbox BEFORE creating conversation
+    // Format Mek number with zero-padding (e.g., "Mek #0179" instead of "Mek #179")
+    let cleanPreview = '[Verified Mek]';
+    if (mek.assetName && mek.assetName.startsWith('Mek')) {
+      const numMatch = mek.assetName.match(/\d+/);
+      if (numMatch) {
+        cleanPreview = `[Mek #${numMatch[0].padStart(4, '0')}]`;
+      } else {
+        cleanPreview = `[${mek.assetName}]`;
+      }
+    }
+
     // Create or get conversation
     if (!convId) {
       // Check for existing conversation
@@ -689,7 +753,7 @@ export const sendMessageWithMek = mutation({
           participant1: senderWallet,
           participant2: recipientWallet,
           lastMessageAt: now,
-          lastMessagePreview: `[Mekanism #${mek.assetId}]`,
+          lastMessagePreview: cleanPreview,
           lastMessageSender: senderWallet,
           createdAt: now,
         });
@@ -727,7 +791,7 @@ export const sendMessageWithMek = mutation({
     // Update conversation
     await ctx.db.patch(convId, {
       lastMessageAt: now,
-      lastMessagePreview: `[Mekanism #${mek.assetId}]`,
+      lastMessagePreview: cleanPreview,
       lastMessageSender: senderWallet,
       hiddenForParticipant1: false,
       hiddenForParticipant2: false,
@@ -1023,6 +1087,98 @@ export const deleteMessageAdmin = mutation({
 });
 
 // ============================================
+// MESSAGE REACTIONS
+// ============================================
+
+// Available reaction emojis
+export const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥', '🎉', '💯', '🤝', '✅'];
+
+// Toggle reaction on a message (add if not exists, remove if exists)
+export const toggleReaction = mutation({
+  args: {
+    messageId: v.id("messages"),
+    walletAddress: v.string(),
+    emoji: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { messageId, walletAddress, emoji } = args;
+
+    // Validate emoji is in allowed set
+    if (!REACTION_EMOJIS.includes(emoji)) {
+      throw new Error("Invalid reaction emoji");
+    }
+
+    // Verify message exists
+    const message = await ctx.db.get(messageId);
+    if (!message || message.isDeleted) {
+      throw new Error("Message not found");
+    }
+
+    // Verify user is participant in the conversation
+    const conversation = await ctx.db.get(message.conversationId);
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+    if (conversation.participant1 !== walletAddress && conversation.participant2 !== walletAddress) {
+      throw new Error("Not authorized to react to this message");
+    }
+
+    // Check if reaction already exists
+    const existingReaction = await ctx.db
+      .query("messageReactions")
+      .withIndex("by_message", (q) => q.eq("messageId", messageId))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("walletAddress"), walletAddress),
+          q.eq(q.field("emoji"), emoji)
+        )
+      )
+      .first();
+
+    if (existingReaction) {
+      // Remove existing reaction (toggle off)
+      await ctx.db.delete(existingReaction._id);
+      return { success: true, action: "removed" };
+    } else {
+      // Add new reaction (toggle on)
+      await ctx.db.insert("messageReactions", {
+        messageId,
+        emoji,
+        walletAddress,
+        createdAt: Date.now(),
+      });
+      return { success: true, action: "added" };
+    }
+  },
+});
+
+// Get reactions for a specific message (grouped by emoji)
+export const getMessageReactions = query({
+  args: { messageId: v.id("messages") },
+  handler: async (ctx, args) => {
+    const reactions = await ctx.db
+      .query("messageReactions")
+      .withIndex("by_message", (q) => q.eq("messageId", args.messageId))
+      .collect();
+
+    // Group by emoji and include wallet addresses (as array to avoid emoji keys)
+    const reactionMap = new Map<string, string[]>();
+    for (const reaction of reactions) {
+      if (!reactionMap.has(reaction.emoji)) {
+        reactionMap.set(reaction.emoji, []);
+      }
+      reactionMap.get(reaction.emoji)!.push(reaction.walletAddress);
+    }
+
+    // Return as array format: [{ emoji: "👍", wallets: ["addr1", "addr2"] }]
+    return Array.from(reactionMap.entries()).map(([emoji, wallets]) => ({
+      emoji,
+      wallets,
+    }));
+  },
+});
+
+// ============================================
 // SUPPORT CHAT FUNCTIONS
 // ============================================
 
@@ -1215,6 +1371,109 @@ export const reopenSupportConversation = mutation({
     }
 
     return { success: true, conversationId: conversation._id, created: false };
+  },
+});
+
+// Open support conversation with auto-message (for prompted support scenarios like blocked user)
+// This sends a specific help message when the user is redirected to support
+export const openSupportWithAutoMessage = mutation({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    const { walletAddress } = args;
+    const now = Date.now();
+    const autoMessage = "Hey, how can we help you today?";
+
+    // Find existing support conversation
+    const conv1 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", SUPPORT_WALLET_ID))
+      .filter((q) => q.eq(q.field("participant2"), walletAddress))
+      .first();
+
+    const conv2 = await ctx.db
+      .query("conversations")
+      .withIndex("by_participant1", (q) => q.eq("participant1", walletAddress))
+      .filter((q) => q.eq(q.field("participant2"), SUPPORT_WALLET_ID))
+      .first();
+
+    const existing = conv1 || conv2;
+
+    if (existing) {
+      // Unhide for the player if hidden
+      if (existing.participant1 === walletAddress && existing.hiddenForParticipant1) {
+        await ctx.db.patch(existing._id, { hiddenForParticipant1: false });
+      } else if (existing.participant2 === walletAddress && existing.hiddenForParticipant2) {
+        await ctx.db.patch(existing._id, { hiddenForParticipant2: false });
+      }
+
+      // Send the auto-message from support
+      await ctx.db.insert("messages", {
+        conversationId: existing._id,
+        senderId: SUPPORT_WALLET_ID,
+        recipientId: walletAddress,
+        content: autoMessage,
+        status: "sent",
+        createdAt: now,
+        isDeleted: false,
+      });
+
+      // Update conversation with latest message
+      await ctx.db.patch(existing._id, {
+        lastMessageAt: now,
+        lastMessagePreview: autoMessage,
+        lastMessageSender: SUPPORT_WALLET_ID,
+      });
+
+      // Update or create unread count for player
+      const unreadRecord = await ctx.db
+        .query("messageUnreadCounts")
+        .withIndex("by_wallet_conversation", (q) =>
+          q.eq("walletAddress", walletAddress).eq("conversationId", existing._id)
+        )
+        .first();
+
+      if (unreadRecord) {
+        await ctx.db.patch(unreadRecord._id, { count: unreadRecord.count + 1 });
+      } else {
+        await ctx.db.insert("messageUnreadCounts", {
+          walletAddress: walletAddress,
+          conversationId: existing._id,
+          count: 1,
+        });
+      }
+
+      return { success: true, conversationId: existing._id };
+    }
+
+    // Create new support conversation with the auto-message
+    const convId = await ctx.db.insert("conversations", {
+      participant1: SUPPORT_WALLET_ID,
+      participant2: walletAddress,
+      lastMessageAt: now,
+      lastMessagePreview: autoMessage,
+      lastMessageSender: SUPPORT_WALLET_ID,
+      createdAt: now,
+    });
+
+    // Insert the auto-message
+    await ctx.db.insert("messages", {
+      conversationId: convId,
+      senderId: SUPPORT_WALLET_ID,
+      recipientId: walletAddress,
+      content: autoMessage,
+      status: "sent",
+      createdAt: now,
+      isDeleted: false,
+    });
+
+    // Create unread count for player
+    await ctx.db.insert("messageUnreadCounts", {
+      walletAddress: walletAddress,
+      conversationId: convId,
+      count: 1,
+    });
+
+    return { success: true, conversationId: convId };
   },
 });
 

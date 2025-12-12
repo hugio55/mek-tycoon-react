@@ -94,6 +94,7 @@ export default function BetaSignupLightbox({
   );
   const [nameError, setNameError] = useState<string | null>(null);
   const [isReservingName, setIsReservingName] = useState(false);
+  const [showCloseConfirmation, setShowCloseConfirmation] = useState(false);
 
   // Wallet verification hook
   const {
@@ -351,10 +352,27 @@ export default function BetaSignupLightbox({
     onClose();
   };
 
+  // Steps that represent progress worth protecting
+  const hasProgress = ['veteran_welcome', 'wallet_selection', 'wallet_verification', 'name_input'].includes(step);
+
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
-      handleClose();
+      if (hasProgress) {
+        // Show confirmation instead of closing directly
+        setShowCloseConfirmation(true);
+      } else {
+        handleClose();
+      }
     }
+  };
+
+  const handleConfirmClose = () => {
+    setShowCloseConfirmation(false);
+    handleClose();
+  };
+
+  const handleCancelClose = () => {
+    setShowCloseConfirmation(false);
   };
 
   if (!mounted || !isVisible) return null;
@@ -406,7 +424,7 @@ export default function BetaSignupLightbox({
             href="https://discord.gg/KnqMF6Ayyc"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-yellow-400 hover:text-yellow-300 transition-colors underline"
+            className="text-cyan-400 hover:text-cyan-300 transition-colors underline"
           >
             Discord
           </a>{' '}
@@ -685,38 +703,41 @@ export default function BetaSignupLightbox({
     </div>
   );
 
-  const renderWalletVerification = () => (
-    <>
-      <div className="text-center mb-6">
-        <h2 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-2">
-          {walletError ? 'Verification Failed' : 'Verifying Wallet'}
-        </h2>
-        {!walletError && (
-          <p className="text-sm sm:text-base text-white/60 font-light leading-relaxed">
-            {walletStatusMessage}
-          </p>
-        )}
-      </div>
+  const renderWalletVerification = () => {
+    // Show spinner in preview mode OR when actively verifying
+    const showSpinner = previewMode || ((isConnecting || isVerifying || isRequestingSignature) && !walletError);
 
-      <div className="flex flex-col items-center gap-4">
-        {/* Spinner */}
-        {(isConnecting || isVerifying || isRequestingSignature) && !walletError && (
-          <svg className="animate-spin h-12 w-12 text-yellow-400" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
+    return (
+      <div className="flex flex-col items-center">
+        {/* Cyan CubeSpinner at top */}
+        {showSpinner && (
+          <div className="mb-6">
+            <CubeSpinner color="cyan" size={44} />
+          </div>
         )}
+
+        {/* Title and status below spinner */}
+        <div className="text-center mb-4">
+          <h2 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-2">
+            {walletError ? 'Verification Failed' : 'Verifying Wallet'}
+          </h2>
+          {!walletError && !previewMode && walletStatusMessage && (
+            <p className="text-sm sm:text-base text-white/60 font-light leading-relaxed">
+              {walletStatusMessage}
+            </p>
+          )}
+        </div>
 
         {/* Signature request hint */}
         {isRequestingSignature && !walletError && (
-          <p className="text-sm text-yellow-400 animate-pulse">
+          <p className="text-sm text-cyan-400 animate-pulse mb-4">
             Check your wallet for signature request...
           </p>
         )}
 
         {/* Error state */}
         {walletError && (
-          <div className="w-full p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+          <div className="w-full p-4 rounded-xl bg-red-500/10 border border-red-500/20 mb-4">
             <p className="text-sm sm:text-base text-red-400 text-center">{walletError}</p>
           </div>
         )}
@@ -729,8 +750,8 @@ export default function BetaSignupLightbox({
           ← Try different wallet
         </button>
       </div>
-    </>
-  );
+    );
+  };
 
   const renderNameConfirmed = () => (
     <div className="text-center py-4">
@@ -794,7 +815,7 @@ export default function BetaSignupLightbox({
           href="https://discord.gg/KnqMF6Ayyc"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-yellow-400 hover:text-yellow-300 transition-colors underline"
+          className="text-cyan-400 hover:text-cyan-300 transition-colors underline"
         >
           Discord
         </a>
@@ -911,6 +932,46 @@ export default function BetaSignupLightbox({
           </div>
         </div>
       </div>
+
+      {/* Close Confirmation Dialog */}
+      {showCloseConfirmation && (
+        <div
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
+          onClick={(e) => { e.stopPropagation(); handleCancelClose(); }}
+        >
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-md" />
+          <div
+            className="relative w-full max-w-md bg-black/60 backdrop-blur-lg border-2 border-cyan-500/40 rounded-2xl overflow-hidden shadow-2xl p-6"
+            style={{ boxShadow: '0 0 40px rgba(6, 182, 212, 0.3), 0 0 80px rgba(6, 182, 212, 0.15)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-2xl font-bold text-center mb-3" style={{ fontFamily: 'Inter, sans-serif', color: '#e0f2fe' }}>
+              Close Registration?
+            </h3>
+
+            <p className="text-center mb-6" style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', fontSize: '0.95rem', lineHeight: '1.6' }}>
+              Are you sure you want to close? You will lose your progress and have to start over.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleCancelClose}
+                className="flex-1 py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200"
+                style={{ fontFamily: 'Inter, sans-serif', background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)', color: '#ffffff', boxShadow: '0 4px 14px rgba(6, 182, 212, 0.4)', border: 'none' }}
+              >
+                Go Back
+              </button>
+              <button
+                onClick={handleConfirmClose}
+                className="flex-1 py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200 border border-white/20 hover:bg-white/5"
+                style={{ fontFamily: 'Inter, sans-serif', background: 'rgba(255, 255, 255, 0.05)', color: '#94a3b8' }}
+              >
+                Close Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 

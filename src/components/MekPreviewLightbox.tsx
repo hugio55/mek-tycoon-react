@@ -119,13 +119,15 @@ export default function MekPreviewLightbox({
     return getMediaUrl('/mek-images/500px/placeholder.webp');
   };
 
-  // Get Mek number from assetName
+  // Get Mek number from assetName (zero-padded to 4 digits like metadata)
   const getMekNumber = () => {
     if (mek.assetName) {
       const match = mek.assetName.match(/\d+/);
-      if (match) return match[0];
+      if (match) return match[0].padStart(4, '0');
     }
-    return mek.assetId;
+    // If assetId is numeric, pad it too
+    const numericId = String(mek.assetId).match(/\d+/);
+    return numericId ? numericId[0].padStart(4, '0') : mek.assetId;
   };
 
   if (!isOpen || !mounted) return null;

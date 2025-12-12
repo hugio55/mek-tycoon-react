@@ -189,6 +189,9 @@ export const getWalletAssets = action({
 
                   // Check if this is a MEK NFT
                   if (unit && unit.startsWith(MEK_POLICY_ID)) {
+                    // ⚠️ NOTE: assetId here is FULL Blockfrost unit (policyId + hex)
+                    // This is NOT the same format as database meks.assetId (which is just mekNumber)
+                    // For DB queries, use: mekNumber.toString() NOT this assetId
                     const assetId = unit;
 
                     // Skip if we've already seen this asset

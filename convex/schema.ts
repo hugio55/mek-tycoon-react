@@ -8,8 +8,15 @@ export default defineSchema({
   // Legacy: owner field (payment address) kept for backwards compatibility
   // =============================================================================
   meks: defineTable({
+    // ═══════════════════════════════════════════════════════════════════════════
     // NFT Identity
-    assetId: v.string(), // Unique asset ID - PRIMARY KEY
+    // ═══════════════════════════════════════════════════════════════════════════
+    // mekNumber: The canonical identifier (1-4000) - USE THIS for lookups
+    // assetId: Legacy field - may contain short number OR full Blockfrost unit
+    // assetName: Display name like "Mek #2191"
+    // ═══════════════════════════════════════════════════════════════════════════
+    mekNumber: v.optional(v.number()), // PRIMARY IDENTIFIER: 1-4000 (optional during migration)
+    assetId: v.string(), // Legacy - DO NOT USE for lookups, use mekNumber instead
     assetName: v.string(),
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -101,7 +108,8 @@ export default defineSchema({
     // Gold income now comes from Job Slots, not individual Mek properties
   })
     .index("by_owner_stake", ["ownerStakeAddress"]) // Phase II: PRIMARY owner lookup
-    .index("by_asset_id", ["assetId"])
+    .index("by_mek_number", ["mekNumber"]) // PRIMARY lookup index for mek identification
+    .index("by_asset_id", ["assetId"]) // Legacy - prefer by_mek_number
     .index("by_asset_name", ["assetName"])
     .index("by_source_key", ["sourceKey"])
     .index("by_source_key_base", ["sourceKeyBase"])
@@ -1996,10 +2004,6 @@ export default defineSchema({
     goldAfter: v.optional(v.number()),
     goldSpent: v.optional(v.number()),
 
-    // Gold per hour tracking
-    goldPerHourBefore: v.optional(v.number()),
-    goldPerHourAfter: v.optional(v.number()),
-
     // Mek-specific data
     mekAssetId: v.optional(v.string()),
     mekAssetName: v.optional(v.string()),
@@ -3696,6 +3700,17 @@ export default defineSchema({
     lastUploadAt: v.number(), // Timestamp of last upload (for burst limiting)
   })
     .index("by_wallet_date", ["walletAddress", "date"]),
+
+  // Message reactions - emoji reactions to messages
+  messageReactions: defineTable({
+    messageId: v.id("messages"), // The message being reacted to
+    emoji: v.string(), // The emoji used (👍, ❤️, 😂, etc.)
+    walletAddress: v.string(), // Who reacted
+    createdAt: v.number(), // When the reaction was added
+  })
+    .index("by_message", ["messageId"])
+    .index("by_message_emoji", ["messageId", "emoji"])
+    .index("by_wallet", ["walletAddress"]),
 
   // =============================================================================
   // PHASE II: CORPORATIONS (Stake-Address-Only Architecture)

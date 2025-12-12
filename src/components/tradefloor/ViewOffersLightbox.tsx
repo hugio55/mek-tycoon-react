@@ -5,7 +5,6 @@ import { createPortal } from "react-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { useRouter } from "next/navigation";
 import { getMediaUrl } from "@/lib/media-url";
 
 interface ViewOffersLightboxProps {
@@ -29,7 +28,6 @@ export default function ViewOffersLightbox({
   const [mounted, setMounted] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
   const [isStartingConversation, setIsStartingConversation] = useState(false);
-  const router = useRouter();
 
   // Get offers for this listing
   const offers = useQuery(api.tradeFloor.getListingOffers, {
@@ -58,14 +56,20 @@ export default function ViewOffersLightbox({
   const handleMessagePlayer = async (offer: any, offeredMekAssetId: string) => {
     setIsStartingConversation(true);
     try {
-      await startTradeConversation({
+      const conversationId = await startTradeConversation({
         listerStakeAddress: ownerStakeAddress,
         offererStakeAddress: offer.offererStakeAddress,
         listedMekAssetId: listing.listedMekAssetId,
         offeredMekAssetId,
       });
-      // Navigate to comms page
-      router.push("/comms");
+      // Close this lightbox
+      onClose();
+      // Emit custom event to open messaging lightbox with the conversation
+      if (conversationId) {
+        window.dispatchEvent(new CustomEvent('open-messaging-conversation', {
+          detail: { conversationId }
+        }));
+      }
     } catch (error) {
       console.error("Failed to start conversation:", error);
       alert("Failed to start conversation. Please try again.");
@@ -79,7 +83,7 @@ export default function ViewOffersLightbox({
   // Clean source key for image
   const getMekImagePath = (sourceKey?: string) => {
     const cleanKey = (sourceKey || "").replace(/-[A-Z]$/i, "").toLowerCase();
-    return cleanKey ? getMediaUrl(`/mek-images/150px/${cleanKey}.webp`) : getMediaUrl("/mek-images/placeholder.webp");
+    return cleanKey ? getMediaUrl(`/mek-images/500px/${cleanKey}.webp`) : getMediaUrl("/mek-images/placeholder.webp");
   };
 
   const listedMekImage = getMekImagePath(listing.listedMekSourceKey);

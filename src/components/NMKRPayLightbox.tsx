@@ -8,6 +8,7 @@ import type { Id } from '@/convex/_generated/dataModel';
 import { ensureBech32StakeAddress } from '@/lib/cardanoAddressConverter';
 import { getMediaUrl } from '@/lib/media-url';
 import { sturgeonClient } from '@/lib/sturgeonClient';
+import CubeSpinner from '@/components/loaders/CubeSpinner';
 
 interface NMKRPayLightboxProps {
   walletAddress: string | null;
@@ -21,7 +22,7 @@ interface NMKRPayLightboxProps {
   previewErrorMessage?: string;
 }
 
-type LightboxState = 'loading_campaign' | 'no_campaign' | 'address_entry' | 'checking_eligibility' | 'ineligible' | 'already_claimed' | 'corporation_verified' | 'creating' | 'reserved' | 'wallet_verification' | 'payment' | 'payment_window_closed' | 'processing' | 'success' | 'error' | 'timeout';
+type LightboxState = 'loading_campaign' | 'no_campaign' | 'address_entry' | 'checking_eligibility' | 'ineligible' | 'already_claimed' | 'corporation_verified' | 'creating' | 'reserved' | 'wallet_verification' | 'payment' | 'payment_window_closed' | 'processing' | 'success' | 'error' | 'timeout' | 'cancel_confirmation';
 
 // Export types for preview mode
 export type { LightboxState as NMKRPayState };
@@ -119,7 +120,20 @@ export default function NMKRPayLightbox({
 
   const hasInitiatedTimeoutRelease = useRef(false);
 
+  // Countdown timer for reservation
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+
   const effectiveWalletAddress = walletAddress || manualAddress;
+
+  // Sync state when previewState changes in preview mode
+  useEffect(() => {
+    if (previewMode && previewState) {
+      setState(previewState);
+    }
+  }, [previewMode, previewState]);
+
+  // Countdown timer - previewExpiresAt initialized to 20 minutes for preview mode
+  const [previewExpiresAt] = useState(() => Date.now() + 1200000);
 
   // ==========================================
   // DUAL-DATABASE FIX: Read NFT availability from PRODUCTION
@@ -204,6 +218,9 @@ export default function NMKRPayLightbox({
   const [hasInitializedCampaign, setHasInitializedCampaign] = useState(false);
 
   useEffect(() => {
+    // Skip campaign selection in preview mode - use previewState directly
+    if (previewMode) return;
+
     if (propCampaignId) {
       setActiveCampaignId(propCampaignId);
       return;
@@ -245,7 +262,7 @@ export default function NMKRPayLightbox({
       setState('error');
       setHasInitializedCampaign(true);
     }
-  }, [activeCampaigns, propCampaignId, walletAddress, hasInitializedCampaign, isResumingFromMobile]);
+  }, [activeCampaigns, propCampaignId, walletAddress, hasInitializedCampaign, isResumingFromMobile, previewMode]);
 
   // Campaign-aware mutations
   const createReservation = useMutation(api.commemorativeNFTReservationsCampaign.createCampaignReservation);
@@ -253,10 +270,10 @@ export default function NMKRPayLightbox({
   const markPaymentWindowOpened = useMutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowOpened);
   const markPaymentWindowClosed = useMutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowClosed);
 
-  // Query active reservation (campaign-aware)
+  // Query active reservation (campaign-aware) - skip in preview mode
   const activeReservation = useQuery(
     api.commemorativeNFTReservationsCampaign.getActiveCampaignReservation,
-    reservationId && effectiveWalletAddress && activeCampaignId
+    !previewMode && reservationId && effectiveWalletAddress && activeCampaignId
       ? { campaignId: activeCampaignId, walletAddress: effectiveWalletAddress }
       : "skip"
   );
@@ -274,13 +291,53 @@ export default function NMKRPayLightbox({
     }
   }, [state, activeReservation, reservationId, effectiveWalletAddress, activeCampaignId]);
 
+  // Countdown timer for reservation expiration
+  useEffect(() => {
+    // Only run timer when in reserved state
+    if (state !== 'reserved') {
+      setTimeRemaining(null);
+      return;
+    }
+
+    // In preview mode, use a dynamically calculated expiration time
+    // In real mode, use the reservation's actual expiresAt
+    const expiresAt = previewMode ? previewExpiresAt : activeReservation?.expiresAt;
+
+    if (!expiresAt) {
+      setTimeRemaining(null);
+      return;
+    }
+
+    // Calculate initial time remaining
+    const calculateRemaining = () => {
+      const now = Date.now();
+      const remaining = Math.max(0, expiresAt - now);
+      return remaining;
+    };
+
+    setTimeRemaining(calculateRemaining());
+
+    // Update every second
+    const interval = setInterval(() => {
+      const remaining = calculateRemaining();
+      setTimeRemaining(remaining);
+
+      // If time expired, clear interval
+      if (remaining <= 0) {
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [state, activeReservation, previewMode, previewExpiresAt]);
+
   // Query for payment completion - checks if THIS SPECIFIC reservation was paid
   // Uses reservation ID (not wallet) to prevent false positives from previous claims
   // Also runs during 'payment' state for active polling while NMKR window is open
   // ENHANCED: Now passes walletAddress for additional detection paths (claims table, webhooks table)
   const reservationPaymentStatus = useQuery(
     api.commemorativeNFTClaims.checkReservationPaid,
-    (state === 'payment' || state === 'processing' || state === 'payment_window_closed') && reservationId
+    !previewMode && (state === 'payment' || state === 'processing' || state === 'payment_window_closed') && reservationId
       ? { reservationId, walletAddress: effectiveWalletAddress || undefined }
       : "skip"
   );
@@ -473,6 +530,15 @@ export default function NMKRPayLightbox({
 
     return () => clearTimeout(timeout);
   }, [isResumingFromMobile, resumeValidating, activeReservation, mounted]);
+
+  // Format milliseconds to MM:SS string (or "Expired" if 0)
+  const formatTimeRemaining = (ms: number): string => {
+    if (ms <= 0) return 'Expired';
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
 
   const validateCardanoAddress = (address: string): boolean => {
     if (!address) return false;
@@ -1139,6 +1205,16 @@ export default function NMKRPayLightbox({
     onClose();
   };
 
+  // Monitor reservation expiration while cancel confirmation dialog is open
+  // If time runs out, auto-close the dialog and transition to timeout state
+  useEffect(() => {
+    if (showCancelConfirmation && timeRemaining !== null && timeRemaining <= 0) {
+      console.log('[🔨CANCEL] Reservation expired while cancel dialog was open - transitioning to timeout');
+      setShowCancelConfirmation(false);
+      setState('timeout');
+    }
+  }, [showCancelConfirmation, timeRemaining]);
+
   const handleCancelCancel = () => {
     setShowCancelConfirmation(false);
   };
@@ -1150,16 +1226,11 @@ export default function NMKRPayLightbox({
     switch (state) {
       case 'loading_campaign':
         return (
-          <div className="text-center py-8 sm:py-12">
-            <div className="mb-4 sm:mb-6">
-              <svg className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-yellow-400 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
+          <div className="text-center py-8">
+            <div className="mb-10 flex justify-center">
+              <CubeSpinner color="cyan" size={44} />
             </div>
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-light text-white tracking-wide mb-3">
-              Loading Campaign...
-            </h3>
+            <p className="text-white/60">Loading Campaign...</p>
           </div>
         );
 
@@ -1191,7 +1262,7 @@ export default function NMKRPayLightbox({
                 Commemorative NFT
               </h2>
               <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed">
-                Please enter the stake address of the wallet you used to create your corporation.
+                Please enter the stake address of the wallet you used to create your Phase I corporation.
               </p>
             </div>
 
@@ -1234,19 +1305,11 @@ export default function NMKRPayLightbox({
 
       case 'checking_eligibility':
         return (
-          <div className="text-center py-8 sm:py-12">
-            <div className="mb-4 sm:mb-6">
-              <svg className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-yellow-400 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
+          <div className="text-center py-8">
+            <div className="mb-10 flex justify-center">
+              <CubeSpinner color="cyan" size={44} />
             </div>
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-light text-white tracking-wide mb-3">
-              Checking Eligibility...
-            </h3>
-            <p className="text-sm sm:text-base text-white/60 font-light">
-              Verifying your participation
-            </p>
+            <p className="text-white/60">Checking Eligibility...</p>
           </div>
         );
 
@@ -1255,11 +1318,9 @@ export default function NMKRPayLightbox({
           <div className="text-center pt-2 sm:pt-4 pb-2">
             {/* Checkmark icon */}
             <div className="mb-4 sm:mb-6">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center">
-                <svg className="w-8 h-8 sm:w-10 sm:h-10 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
+              <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
 
             <h3 className="text-lg sm:text-xl text-white/60 font-light tracking-wide mb-4">
@@ -1336,36 +1397,15 @@ export default function NMKRPayLightbox({
         return (
           <>
             <div className="text-center mb-6 sm:mb-8">
-              <div className="mb-3">
-                <svg className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-light text-white tracking-wide mb-3">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-light text-white tracking-wide mb-4">
                 Not Eligible
               </h2>
               <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed">
-                {storedEligibility?.reason || 'You are not eligible to claim from this campaign.'}
+                This commemorative NFT is reserved for Phase I beta participants.
               </p>
-              <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mt-3">
-                No worries - there will be more opportunities in the future!
+              <p className="text-sm sm:text-base text-cyan-400 font-semibold tracking-wide leading-relaxed mt-3">
+                Great news — Phase II beta is launching soon. Join now and be part of the next chapter.
               </p>
-
-              {/* Discord support link */}
-              <div className="mt-6 p-4 bg-white/5 border border-white/10 rounded-xl">
-                <p className="text-sm text-white/80 font-medium tracking-wide leading-relaxed text-center">
-                    Think this is an error? Create a{' '}
-                    <a
-                      href="https://discord.com/channels/938648161810006119/938658145276919838"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#5865F2] hover:text-[#7289DA] underline underline-offset-2 transition-colors"
-                    >
-                      ticket
-                    </a>
-                    {' '}on Discord.
-                </p>
-              </div>
             </div>
 
             <div className="space-y-4 sm:space-y-6">
@@ -1374,7 +1414,7 @@ export default function NMKRPayLightbox({
                   onClose();
                   window.dispatchEvent(new CustomEvent('openLightbox', { detail: { lightboxId: 'beta-signup' } }));
                 }}
-                className="w-full py-3 sm:py-4 text-base sm:text-lg font-semibold tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl hover:from-yellow-300 hover:to-yellow-400 transition-all duration-300 touch-manipulation shadow-lg shadow-yellow-500/20 active:scale-[0.98]"
+                className="w-full py-3 sm:py-4 text-base sm:text-lg font-semibold tracking-wider text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 touch-manipulation shadow-lg shadow-cyan-500/20 active:scale-[0.98]"
                 style={{ minHeight: '48px', WebkitTapHighlightColor: 'transparent', fontFamily: "'Inter', 'Arial', sans-serif" }}
               >
                 Join Beta
@@ -1400,7 +1440,7 @@ export default function NMKRPayLightbox({
         return (
           <div className="text-center py-4 sm:py-6">
             <div className="mb-4 sm:mb-6">
-              <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -1410,8 +1450,8 @@ export default function NMKRPayLightbox({
 
             {claimedNFT && (
               <div className="mb-6">
-                {/* NFT Image - animated if it's a video/gif */}
-                <div className="relative w-full max-w-[280px] mx-auto mb-4 rounded-2xl overflow-hidden bg-black/50 backdrop-blur-md border border-yellow-400/30 shadow-2xl shadow-yellow-500/20">
+                {/* NFT Image */}
+                <div className="relative w-full max-w-[280px] mx-auto mb-4 rounded-2xl overflow-hidden bg-black/50 backdrop-blur-md border border-white/10 shadow-2xl">
                   <img
                     src={claimedNFT.imageUrl?.startsWith('/') ? getMediaUrl(claimedNFT.imageUrl) : (claimedNFT.imageUrl || getMediaUrl("/random-images/Lab%20Rat.jpg"))}
                     alt={claimedNFT.name || "Your NFT"}
@@ -1420,17 +1460,17 @@ export default function NMKRPayLightbox({
                   />
                 </div>
 
-                {/* NFT Details Card */}
-                <div className="p-4 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-400/20 rounded-2xl backdrop-blur-md">
-                  <h4 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Inter, sans-serif', color: '#fef3c7', letterSpacing: '-0.02em' }}>
+                {/* NFT Details Card - Space Age Style */}
+                <div className="p-4 bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border border-cyan-400/20 rounded-2xl backdrop-blur-md">
+                  <h4 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Inter, sans-serif', color: '#a5f3fc', letterSpacing: '-0.02em' }}>
                     {claimedNFT.name}
                   </h4>
                   {mintDate && (
                     <div className="text-sm text-white/60" style={{ fontFamily: 'Inter, sans-serif' }}>
                       <span>Minted on </span>
-                      <span className="text-yellow-300/80">{formattedDate}</span>
+                      <span className="text-cyan-300/80">{formattedDate}</span>
                       <span> at </span>
-                      <span className="text-yellow-300/80">{formattedTime}</span>
+                      <span className="text-cyan-300/80">{formattedTime}</span>
                     </div>
                   )}
                 </div>
@@ -1457,13 +1497,15 @@ export default function NMKRPayLightbox({
       case 'creating':
         return (
           <div className="text-center">
-            <div className="mb-6">
-              <div className="w-12 h-12 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <h2 className="text-2xl font-bold text-yellow-400 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                Reserving NFT...
-              </h2>
-              <p className="text-gray-400 mt-2">Finding next available NFT</p>
+            <div className="mb-6 flex justify-center">
+              <CubeSpinner color="cyan" size={44} />
             </div>
+            <h2 className="text-2xl sm:text-3xl font-light text-white tracking-wide mb-2">
+              Reserving NFT
+            </h2>
+            <p className="text-sm sm:text-base text-white/60 font-light tracking-wide">
+              Finding next available NFT
+            </p>
           </div>
         );
 
@@ -1518,7 +1560,7 @@ export default function NMKRPayLightbox({
                   You have reserved <span style={{ color: '#22d3ee', fontWeight: 600, textShadow: '0 0 10px rgba(34, 211, 238, 0.6), 0 0 20px rgba(34, 211, 238, 0.4)' }}>edition number {previewMode ? MOCK_RESERVATION.nft.editionNumber : (activeReservation as any)?.nftNumber}</span>. Click below to open the payment window and complete your purchase.
                 </p>
                 <p style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', fontSize: '0.875rem', lineHeight: '1.5', fontWeight: 400, marginTop: '0.75rem' }}>
-                  You have 20 minutes to complete this transaction. The fee for this commemorative token is <span style={{ color: '#22d3ee', fontWeight: 600 }}>10 ADA</span>.
+                  Time remaining: <span style={{ color: timeRemaining !== null && timeRemaining < 300000 ? '#f87171' : '#22d3ee', fontWeight: 600, fontFamily: 'monospace', fontSize: '1rem' }}>{timeRemaining !== null ? formatTimeRemaining(timeRemaining) : '--:--'}</span>. The fee for this commemorative token is <span style={{ color: '#22d3ee', fontWeight: 600 }}>10 ADA</span>.
                 </p>
               </div>
             </div>
@@ -1740,23 +1782,28 @@ export default function NMKRPayLightbox({
               </div>
             )}
 
-            {/* Wallet buttons */}
+            {/* Wallet buttons - Glass style with honeycomb hover */}
             {availableWallets.length > 0 ? (
               <div className={availableWallets.length === 1 ? "flex justify-center mb-2" : "grid grid-cols-2 gap-3 mb-2"}>
                 {availableWallets.map(wallet => (
                   <button
                     key={wallet.name}
                     onClick={() => connectAndVerifyWallet(wallet)}
-                    className={`group relative bg-black/30 border border-cyan-500/30 text-white px-4 py-3 rounded-xl transition-all hover:bg-cyan-500/10 hover:border-cyan-500/50 flex items-center justify-center overflow-hidden ${availableWallets.length === 1 ? 'min-w-[180px]' : ''}`}
+                    className={`group relative px-4 py-3 rounded-lg font-medium transition-all duration-300 hover:shadow-2xl hover:scale-[1.01] hover:border-white/50 hover:brightness-125 flex items-center justify-center overflow-hidden ${availableWallets.length === 1 ? 'min-w-[180px]' : ''}`}
+                    style={{
+                      fontFamily: "'Play', sans-serif",
+                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04))',
+                      color: '#e0e0e0',
+                      border: '1px solid rgba(255, 255, 255, 0.25)',
+                    }}
                   >
                     {/* Honeycomb hover effect */}
                     <div
-                      className="absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none group-hover:opacity-[0.15] z-[1]"
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-lg"
                       style={{
-                        backgroundImage: `url('${getMediaUrl('/random-images/honey-png-big.webp')}')`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        borderRadius: '12px'
+                        backgroundImage: `url('${getMediaUrl('/random-images/honey-png1.webp')}')`,
+                        backgroundSize: '125%',
+                        backgroundPosition: 'center'
                       }}
                     />
                     {/* Icon positioned absolutely so it doesn't affect text centering */}
@@ -1766,7 +1813,7 @@ export default function NMKRPayLightbox({
                       className="absolute left-3 w-5 h-5 rounded z-[2]"
                       onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
-                    <span className="font-medium relative z-[2]">{wallet.name}</span>
+                    <span className="relative z-10 transition-all duration-300 group-hover:[text-shadow:0_0_6px_rgba(255,255,255,0.9),0_0_12px_rgba(255,255,255,0.6)]">{wallet.name}</span>
                   </button>
                 ))}
               </div>
@@ -1790,17 +1837,19 @@ export default function NMKRPayLightbox({
       case 'payment':
         return (
           <div className="text-center">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-yellow-400 mb-4 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                Complete Your Purchase
-              </h2>
-              <p className="text-gray-400 mb-2">Complete the payment in the NMKR window</p>
-              <p className="text-white font-semibold text-sm">Close the NMKR window when your payment is complete.</p>
-            </div>
+            <h2 className="text-2xl sm:text-3xl font-light text-white tracking-wide mb-4">
+              Complete Your Purchase
+            </h2>
+            <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-2">
+              Complete the payment in the NMKR window
+            </p>
+            <p className="text-sm sm:text-base text-cyan-400 font-semibold tracking-wide mb-6">
+              Close the NMKR window when your payment is complete.
+            </p>
             <button
               onClick={attemptCancel}
-              className="w-full py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200 border border-gray-600 hover:border-red-500/50 hover:bg-red-500/10"
-              style={{ fontFamily: 'Inter, sans-serif', background: 'rgba(0, 0, 0, 0.3)', color: '#d1d5db' }}
+              className="w-full py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200 border border-white/20 hover:border-red-500/50 hover:bg-red-500/10 text-white/70 hover:text-red-400"
+              style={{ background: 'rgba(255, 255, 255, 0.05)' }}
             >
               Cancel Transaction
             </button>
@@ -1845,22 +1894,51 @@ export default function NMKRPayLightbox({
           );
         }
 
-        // Show options when payment window is closed - friendly tone assuming they may have paid
+        // Show options when payment window is closed
         return (
-          <div className="text-center py-6">
-            <div className="mb-6">
-              <div className="w-16 h-16 mx-auto rounded-full bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+          <div className="text-center">
+            <h2 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-4">
+              We noticed you closed the NMKR window.
+            </h2>
+            <div className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-6 space-y-4">
+              <p>
+                If you are canceling your reservation, feel free to close this lightbox.
+              </p>
+
+              <div
+                className="p-4 rounded-xl"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(6, 182, 212, 0.05))',
+                  border: '1px solid rgba(6, 182, 212, 0.3)',
+                }}
+              >
+                <p className="text-cyan-400 font-semibold">
+                  If you made payment, please click the Refresh button below.
+                </p>
               </div>
-              <h2 className="text-xl font-bold text-white mb-3">Did you complete your payment?</h2>
-              <p className="text-white/60 text-sm leading-relaxed">
-                Click refresh below to check if your payment was received.
+
+              <p>
+                If you believe there was an error, please reach out to us on{' '}
+                <a
+                  href="https://discord.gg/KnqMF6Ayyc"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-cyan-400 hover:text-cyan-300 underline transition-colors"
+                >
+                  Discord
+                </a>.
               </p>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
+              {/* Secondary action: Go back to reservation screen to re-open payment */}
+              <button
+                onClick={() => setState('reserved')}
+                className="w-full py-2 px-4 text-sm font-medium text-cyan-300 hover:text-cyan-200 transition-colors"
+              >
+                Re-open Payment Window
+              </button>
+
               {/* Primary action: Check if payment was made */}
               <button
                 onClick={() => {
@@ -1873,18 +1951,10 @@ export default function NMKRPayLightbox({
                 Refresh
               </button>
 
-              {/* Secondary action: Go back to reservation screen to re-open payment */}
-              <button
-                onClick={() => setState('reserved')}
-                className="w-full py-2 px-4 text-sm font-medium text-cyan-300 hover:text-cyan-200 transition-colors"
-              >
-                Re-open Payment Window
-              </button>
-
               {/* Tertiary action: Cancel the reservation entirely */}
               <button
                 onClick={attemptCancel}
-                className="w-full py-2 px-4 text-sm font-medium text-white/40 hover:text-white/60 transition-colors"
+                className="w-full py-1 px-4 text-sm font-medium text-white/40 hover:text-white/60 transition-colors"
               >
                 Cancel Reservation
               </button>
@@ -1895,22 +1965,18 @@ export default function NMKRPayLightbox({
       case 'processing':
         return (
           <div className="text-center">
+            {/* Cyan CubeSpinner at top */}
+            <div className="mb-6 flex justify-center">
+              <CubeSpinner color="cyan" size={44} />
+            </div>
+
             {/* Space Age style header */}
             <h2 className="text-2xl sm:text-3xl font-light text-white tracking-wide mb-3">
-              Checking Payment...
+              Checking Payment
             </h2>
             <p className="text-white/50 text-sm sm:text-base font-light tracking-wide mb-6">
               Waiting for blockchain confirmation
             </p>
-
-            {/* Subtle pulsing indicator */}
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <div className="relative">
-                <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-                <div className="absolute inset-0 w-2 h-2 bg-cyan-400 rounded-full animate-ping opacity-75"></div>
-              </div>
-              <span className="text-white/70 font-light tracking-wide">Actively checking for payment</span>
-            </div>
 
             {/* Glass-style info box */}
             <div
@@ -1921,7 +1987,7 @@ export default function NMKRPayLightbox({
               }}
             >
               <p className="text-white/60 text-xs sm:text-sm font-light tracking-wide">
-                This may take 1-2 minutes. Please don't close this window.
+                This may take 1-2 minutes. <span className="text-cyan-400 font-semibold">Please don't close this window.</span>
               </p>
             </div>
 
@@ -1942,20 +2008,39 @@ export default function NMKRPayLightbox({
 
       case 'success':
         return (
-          <div className="text-center">
+          <div className="text-center py-4">
             <div className="mb-6">
-              <div className="h-16 w-16 bg-green-500/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-3xl">&#10003;</span>
-              </div>
-              <h2 className="text-2xl font-bold text-green-400 mb-2 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                NFT Claimed!
-              </h2>
-              <p className="text-gray-400">Your NFT has been successfully minted</p>
+              <svg
+                className="w-16 h-16 mx-auto text-cyan-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                style={{
+                  filter: 'drop-shadow(0 0 8px rgba(34, 211, 238, 0.6)) drop-shadow(0 0 16px rgba(34, 211, 238, 0.4))'
+                }}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
+            <h2 className="text-2xl sm:text-3xl font-light text-white tracking-wide mb-3">
+              NFT Claimed!
+            </h2>
+            <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-2">
+              Your NFT has been successfully minted
+            </p>
+            <p className="text-sm text-cyan-400 font-medium tracking-wide leading-relaxed mb-6">
+              If you plan on playing this game for the long haul, we encourage you to keep it. 😊
+            </p>
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-green-500/20 border-2 border-green-500 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors font-bold uppercase tracking-wider"
-              style={{ fontFamily: 'Orbitron, sans-serif' }}
+              className="w-full py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
+                color: '#ffffff',
+                boxShadow: '0 6px 24px rgba(6, 182, 212, 0.4)',
+                border: 'none'
+              }}
             >
               Close
             </button>
@@ -1964,24 +2049,26 @@ export default function NMKRPayLightbox({
 
       case 'timeout':
         return (
-          <div className="text-center">
-            <div className="mb-6">
-              <div className="h-16 w-16 bg-yellow-500/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <svg className="w-10 h-10 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-yellow-400 mb-2 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                Reservation Timed Out
-              </h2>
-              <p className="text-gray-300 mb-4 max-w-md mx-auto">
-                We are sorry, the reservation has timed out. Please try again when you are ready.
-              </p>
-            </div>
+          <div className="text-center py-4">
+            <h2 className="text-2xl sm:text-3xl font-light text-white tracking-wide mb-4">
+              Reservation Timed Out
+            </h2>
+            <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-2">
+              We're sorry, the reservation has timed out.
+            </p>
+            <p className="text-sm sm:text-base text-cyan-400 font-medium tracking-wide leading-relaxed mb-6">
+              Please try again when you are ready.
+            </p>
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-yellow-500/20 border-2 border-yellow-500 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-colors font-bold uppercase tracking-wider"
-              style={{ fontFamily: 'Orbitron, sans-serif' }}
+              className="w-full py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
+                color: '#ffffff',
+                boxShadow: '0 6px 24px rgba(6, 182, 212, 0.4)',
+                border: 'none'
+              }}
             >
               Close
             </button>
@@ -2007,6 +2094,41 @@ export default function NMKRPayLightbox({
             >
               Close
             </button>
+          </div>
+        );
+
+      case 'cancel_confirmation':
+        // Preview-only state to show the cancel confirmation dialog
+        return (
+          <div className="text-center py-4">
+            <h3 className="text-2xl sm:text-3xl font-light text-white tracking-wide mb-3">
+              Cancel Reservation?
+            </h3>
+
+            <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed mb-6">
+              Are you sure you want to cancel? Doing so will not guarantee <span className="text-cyan-400 font-semibold">edition number {MOCK_RESERVATION.nft.editionNumber}</span>.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                className="flex-1 py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200"
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
+                  color: '#ffffff',
+                  boxShadow: '0 4px 14px rgba(6, 182, 212, 0.4)',
+                  border: 'none'
+                }}
+              >
+                Go Back
+              </button>
+              <button
+                className="flex-1 py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200 border border-white/20 hover:bg-white/5"
+                style={{ fontFamily: 'Inter, sans-serif', background: 'rgba(255, 255, 255, 0.05)', color: '#94a3b8' }}
+              >
+                Confirm Cancel
+              </button>
+            </div>
           </div>
         );
     }
@@ -2067,21 +2189,13 @@ export default function NMKRPayLightbox({
             style={{ boxShadow: '0 0 40px rgba(6, 182, 212, 0.3), 0 0 80px rgba(6, 182, 212, 0.15)' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center">
-                <svg className="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-
             <h3 className="text-2xl font-bold text-center mb-3" style={{ fontFamily: 'Inter, sans-serif', color: '#e0f2fe' }}>
               {reservationId ? 'Cancel Reservation?' : 'Cancel Claim?'}
             </h3>
 
             <p className="text-center mb-6" style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', fontSize: '0.95rem', lineHeight: '1.6' }}>
               {reservationId ? (
-                <>Are you sure you want to cancel? Doing so will not guarantee the <span style={{ color: '#22d3ee', fontWeight: 600, textShadow: '0 0 12px rgba(34, 211, 238, 0.8), 0 0 24px rgba(34, 211, 238, 0.5)' }}>same edition number</span>.</>
+                <>Are you sure you want to cancel? Doing so will not guarantee <span style={{ color: '#22d3ee', fontWeight: 600, textShadow: '0 0 12px rgba(34, 211, 238, 0.8), 0 0 24px rgba(34, 211, 238, 0.5)' }}>edition number {(activeReservation as any)?.nftNumber ?? 'this edition'}</span>.</>
               ) : (
                 <>Are you sure you want to cancel? You will lose your progress and have to start over.</>
               )}

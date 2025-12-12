@@ -188,7 +188,12 @@ export function useWalletVerification(options: UseWalletVerificationOptions = {}
       // Step 2: Get stake addresses from connected wallet
       setStatus('checking_address');
       console.log('[🔐VERIFY-HOOK] Getting stake addresses...');
-      const stakeAddresses = await api.getRewardAddresses();
+      const stakeAddresses = await Promise.race([
+        api.getRewardAddresses(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Wallet did not respond. Please try again or refresh the page.')), 15000)
+        )
+      ]) as string[];
 
       if (!stakeAddresses || stakeAddresses.length === 0) {
         throw new Error('No stake addresses found in wallet');
@@ -266,8 +271,13 @@ export function useWalletVerification(options: UseWalletVerificationOptions = {}
         .map(b => b.toString(16).padStart(2, '0'))
         .join('');
 
-      // Get address for signing
-      const usedAddresses = await api.getUsedAddresses();
+      // Get address for signing (with timeout)
+      const usedAddresses = await Promise.race([
+        api.getUsedAddresses(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Wallet did not respond when getting addresses. Please try again.')), 15000)
+        )
+      ]) as string[];
       const signingAddress = usedAddresses[0];
 
       if (!signingAddress) {
@@ -275,7 +285,13 @@ export function useWalletVerification(options: UseWalletVerificationOptions = {}
       }
 
       console.log('[🔐VERIFY-HOOK] Requesting user signature...');
-      const signatureResult = await api.signData(signingAddress, messageHex);
+      // Note: signData timeout is longer (60s) because user needs time to approve in wallet
+      const signatureResult = await Promise.race([
+        api.signData(signingAddress, messageHex),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Signature request timed out. Please try again and approve the signature in your wallet.')), 60000)
+        )
+      ]);
       console.log('[🔐VERIFY-HOOK] ✅ Signature received');
       setIsRequestingSignature(false);
 

@@ -46,6 +46,7 @@ export default function EditListingLightbox({
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const [typeDropdownRect, setTypeDropdownRect] = useState<DOMRect | null>(null);
   const typeDropdownBtnRef = useRef<HTMLButtonElement>(null);
+  const [limitTooltip, setLimitTooltip] = useState<{ x: number; y: number } | null>(null);
 
   const updateListing = useMutation(api.tradeFloor.updateListingVariations);
 
@@ -395,32 +396,43 @@ export default function EditListingLightbox({
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 content-start">
               {filteredVariations.map((v) => {
                 const colors = variationTypeColors[v.type];
+                const isAtLimit = selectedVariations.length >= 6;
                 return (
-                  <button
+                  <div
                     key={v.id}
-                    onClick={() => handleSelectVariation(v)}
-                    disabled={selectedVariations.length >= 6}
-                    className="px-3 py-2 text-sm rounded text-left transition-all hover:brightness-125 whitespace-nowrap overflow-hidden"
-                    style={{
-                      fontFamily: 'Play, sans-serif',
-                      background: colors.bg,
-                      border: `1px solid ${colors.border}`,
-                      color: colors.text,
-                      opacity: selectedVariations.length >= 6 ? 0.5 : 1,
-                      cursor: selectedVariations.length >= 6 ? 'not-allowed' : 'pointer',
+                    onMouseEnter={(e) => {
+                      if (isAtLimit) {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setLimitTooltip({ x: rect.left + rect.width / 2, y: rect.top });
+                      }
                     }}
+                    onMouseLeave={() => setLimitTooltip(null)}
                   >
-                    <div className="flex justify-between items-center">
-                      <span className="truncate">{v.name}</span>
-                      <span
-                        className="text-xs px-1.5 py-0.5 rounded ml-2 flex-shrink-0"
-                        style={{ background: 'rgba(0,0,0,0.2)', opacity: 0.7 }}
-                        title={`Rank ${v.rank} of 291`}
-                      >
-                        #{v.rank}
-                      </span>
-                    </div>
-                  </button>
+                    <button
+                      onClick={() => handleSelectVariation(v)}
+                      disabled={isAtLimit}
+                      className="w-full px-3 py-2 text-sm rounded text-left transition-all hover:brightness-125 whitespace-nowrap overflow-hidden"
+                      style={{
+                        fontFamily: 'Play, sans-serif',
+                        background: colors.bg,
+                        border: `1px solid ${colors.border}`,
+                        color: colors.text,
+                        opacity: isAtLimit ? 0.5 : 1,
+                        cursor: isAtLimit ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="truncate">{v.name}</span>
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded ml-2 flex-shrink-0"
+                          style={{ background: 'rgba(0,0,0,0.2)', opacity: 0.7 }}
+                          title={`Rank ${v.rank} of 291`}
+                        >
+                          #{v.rank}
+                        </span>
+                      </div>
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -472,6 +484,47 @@ export default function EditListingLightbox({
           </button>
         </div>
       </div>
+
+      {/* Limit Tooltip - Shows when 6 variations selected and hovering over another */}
+      {limitTooltip && createPortal(
+        <div
+          className="fixed z-[99999] pointer-events-none"
+          style={{
+            left: limitTooltip.x,
+            top: limitTooltip.y - 10,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
+          <div
+            className="px-4 py-2.5 rounded-xl text-sm whitespace-nowrap"
+            style={{
+              background: 'linear-gradient(135deg, rgba(30, 35, 45, 0.98) 0%, rgba(40, 45, 55, 0.98) 50%, rgba(30, 35, 45, 0.98) 100%)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              fontFamily: "'Play', sans-serif",
+              color: 'rgba(255, 255, 255, 0.9)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+            }}
+          >
+            You have already applied six variations.
+            <br />
+            Please remove one to add another.
+          </div>
+          {/* Arrow */}
+          <div
+            className="mx-auto"
+            style={{
+              width: 0,
+              height: 0,
+              borderLeft: '8px solid transparent',
+              borderRight: '8px solid transparent',
+              borderTop: '8px solid rgba(35, 40, 50, 0.98)',
+            }}
+          />
+        </div>,
+        document.body
+      )}
     </div>,
     document.body
   );

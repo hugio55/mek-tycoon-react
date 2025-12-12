@@ -42,15 +42,16 @@ export const useAvailableWallets = () => {
       console.log('[WALLET DETECTION] Mobile device detected, showing all wallet options');
     } else if (typeof window !== 'undefined' && window.cardano) {
       // Desktop: Check for browser extensions
+      const cardanoApi = window.cardano;
       const walletNames = ['lace', 'nami', 'eternl', 'flint', 'yoroi', 'typhon', 'gerowallet', 'nufi', 'vespr'];
 
       walletNames.forEach(name => {
-        if (window.cardano[name]) {
+        if (cardanoApi[name]) {
           wallets.push({
             name: name.charAt(0).toUpperCase() + name.slice(1),
             icon: `/wallet-icons/${name}.png`,
-            version: window.cardano[name].apiVersion || '0.1.0',
-            api: window.cardano[name]
+            version: cardanoApi[name].apiVersion || '0.1.0',
+            api: cardanoApi[name]
           });
         }
       });

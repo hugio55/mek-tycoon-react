@@ -48,6 +48,7 @@ export default function TradeFloorPage() {
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [sortDropdownRect, setSortDropdownRect] = useState<DOMRect | null>(null);
   const sortDropdownBtnRef = useRef<HTMLButtonElement>(null);
+  const sortDropdownMenuRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [showUnlockSlotsLightbox, setShowUnlockSlotsLightbox] = useState(false);
   const [highlightedListingMekId, setHighlightedListingMekId] = useState<string | null>(null);
@@ -62,8 +63,12 @@ export default function TradeFloorPage() {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (sortDropdownOpen && sortDropdownBtnRef.current && !sortDropdownBtnRef.current.contains(event.target as Node)) {
-        setSortDropdownOpen(false);
+      if (sortDropdownOpen) {
+        const isInsideButton = sortDropdownBtnRef.current?.contains(event.target as Node);
+        const isInsideMenu = sortDropdownMenuRef.current?.contains(event.target as Node);
+        if (!isInsideButton && !isInsideMenu) {
+          setSortDropdownOpen(false);
+        }
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -78,20 +83,39 @@ export default function TradeFloorPage() {
     }
   }, [searchParams]);
 
-  // Restore wallet session on mount (same pattern as HomePage)
+  // Restore wallet session on mount with polling (same pattern as UnifiedHeader)
   useEffect(() => {
-    const initWallet = async () => {
-      const session = await restoreWalletSession();
-      if (session) {
-        // Use stake address as primary identifier (same as database)
-        const address = session.stakeAddress || session.walletAddress;
-        setStakeAddress(address);
-        console.log('[TradeFloor] Wallet connected:', address);
-      } else {
-        console.log('[TradeFloor] No wallet session found');
+    const checkWalletSession = async () => {
+      try {
+        const session = await restoreWalletSession();
+        if (session) {
+          // Use stake address as primary identifier (same as database)
+          const address = session.stakeAddress || session.walletAddress;
+          setStakeAddress(prevAddress => {
+            if (prevAddress !== address) {
+              console.log('[TradeFloor] Wallet connected:', address);
+              return address;
+            }
+            return prevAddress;
+          });
+        } else {
+          setStakeAddress(prev => prev !== null ? null : prev);
+        }
+      } catch (error) {
+        console.error('[TradeFloor] Error restoring session:', error);
       }
     };
-    initWallet();
+
+    // Initial check and polling (matches UnifiedHeader pattern)
+    checkWalletSession();
+    const handleStorageChange = () => checkWalletSession();
+    window.addEventListener('storage', handleStorageChange);
+    const interval = setInterval(checkWalletSession, 3000); // Check every 3 seconds
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
   }, []);
 
   // Queries
@@ -561,6 +585,7 @@ export default function TradeFloorPage() {
                 {/* Floating Dropdown Menu - Rendered via Portal (identical to Market) */}
                 {mounted && sortDropdownOpen && sortDropdownRect && createPortal(
                   <div
+                    ref={sortDropdownMenuRef}
                     className="fixed"
                     style={{
                       zIndex: 99999,

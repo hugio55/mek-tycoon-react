@@ -10,7 +10,7 @@ type NodeType = 'start' | 'screen' | 'decision' | 'action' | 'end' | 'api' | 'er
 // Mock veteran info for previews
 const MOCK_VETERAN_INFO: VeteranInfo = {
   isVeteran: true,
-  originalCorporationName: 'WrenCo Industries',
+  originalCorporationName: 'Stellar Depletion Syndicate',
   reservedCorporationName: null,
   nameReservedAt: null,
   hasReservedName: false,
@@ -18,8 +18,8 @@ const MOCK_VETERAN_INFO: VeteranInfo = {
 
 const MOCK_VETERAN_WITH_RESERVED: VeteranInfo = {
   isVeteran: true,
-  originalCorporationName: 'WrenCo Industries',
-  reservedCorporationName: 'WrenCo Phase II',
+  originalCorporationName: 'Stellar Depletion Syndicate',
+  reservedCorporationName: 'Stellar Depletion Phase II',
   nameReservedAt: Date.now(),
   hasReservedName: true,
 };
@@ -55,6 +55,7 @@ const NMKR_PAY_STEPS: { step: NMKRPayState; label: string; description: string }
   { step: 'success', label: 'Success', description: 'NFT claimed successfully' },
   { step: 'timeout', label: 'Timeout', description: 'Reservation timed out' },
   { step: 'error', label: 'Error', description: 'Something went wrong' },
+  { step: 'cancel_confirmation', label: 'Cancel Confirmation', description: 'Confirm cancel dialog' },
 ];
 
 interface FlowNodeProps {
@@ -236,7 +237,7 @@ function PreviewModal({
               onClose={() => {}}
               previewMode={true}
               previewState={nmkrStep}
-              previewCorporationName="WrenCo Industries"
+              previewCorporationName="Stellar Depletion Syndicate"
             />
           )}
 
@@ -957,6 +958,7 @@ export default function UserFlowDiagram() {
                     "[Go Back] button → returns to flow",
                     "[Confirm Cancel] button → closes lightbox"
                   ]}
+                  onClick={() => openNMKRPreview('cancel_confirmation')}
                 />
                 <div className="text-xs text-gray-500 mt-2">Appears on cancel/backdrop click</div>
               </div>
@@ -1106,7 +1108,7 @@ export default function UserFlowDiagram() {
                     onClose={() => {}}
                     previewMode={true}
                     previewState={selectedNMKRStep}
-                    previewCorporationName="WrenCo Industries"
+                    previewCorporationName="Stellar Depletion Syndicate"
                   />
                 </div>
               </div>
@@ -1117,7 +1119,7 @@ export default function UserFlowDiagram() {
           <div className="mt-6 p-4 bg-yellow-900/20 rounded-lg border border-yellow-700/40">
             <h5 className="text-sm font-bold text-yellow-400 mb-2">About Preview Mode</h5>
             <ul className="text-xs text-gray-300 space-y-1">
-              <li>• All data shown is mock data (e.g., "WrenCo Industries" corporation name)</li>
+              <li>• All data shown is mock data (e.g., "Stellar Depletion Syndicate" corporation name)</li>
               <li>• Buttons are non-functional in preview mode</li>
               <li>• Use this to review styling, copy text, and layout</li>
               <li>• The lightbox renders inline (no backdrop) for easy comparison</li>

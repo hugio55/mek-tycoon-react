@@ -6,6 +6,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Message highlight flash animation for scroll-to-reply */
+@keyframes message-highlight-flash {
+  0% { background-color: rgba(34, 211, 238, 0); }
+  20% { background-color: rgba(34, 211, 238, 0.3); }
+  40% { background-color: rgba(34, 211, 238, 0.15); }
+  60% { background-color: rgba(34, 211, 238, 0.25); }
+  80% { background-color: rgba(34, 211, 238, 0.1); }
+  100% { background-color: rgba(34, 211, 238, 0); }
+}
+
+.message-highlight-flash {
+  animation: message-highlight-flash 1.5s ease-out;
+}
+
 /* Global deployment slot enhancements */
 @layer utilities {
   /* Hide scrollbar for all browsers */

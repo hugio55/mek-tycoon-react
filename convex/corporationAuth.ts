@@ -845,13 +845,20 @@ export const syncMeksOwnership = mutation({
     let notFound = 0;
 
     for (const mek of args.verifiedMeks) {
-      // Find the mek in database by mekNumber (database stores assetId as just the number)
-      // Blockfrost returns full unit string as assetId, but mekNumber is the parsed integer
-      const mekNumberStr = mek.mekNumber.toString();
-      const existingMek = await ctx.db
+      // Primary lookup: Use mekNumber index (the correct way)
+      let existingMek = await ctx.db
         .query("meks")
-        .withIndex("by_asset_id", (q: any) => q.eq("assetId", mekNumberStr))
+        .withIndex("by_mek_number", (q: any) => q.eq("mekNumber", mek.mekNumber))
         .first();
+
+      // Fallback: If mekNumber not populated yet, try legacy assetId lookup
+      if (!existingMek) {
+        const mekNumberStr = mek.mekNumber.toString();
+        existingMek = await ctx.db
+          .query("meks")
+          .withIndex("by_asset_id", (q: any) => q.eq("assetId", mekNumberStr))
+          .first();
+      }
 
       if (existingMek) {
         // Update ownership
@@ -864,7 +871,7 @@ export const syncMeksOwnership = mutation({
         console.log(`[syncMeksOwnership] Synced Mek #${mek.mekNumber} to ${args.stakeAddress.substring(0, 15)}...`);
       } else {
         // Mek not in database - log but don't fail
-        console.warn(`[syncMeksOwnership] Mek #${mek.mekNumber} (assetId: ${mekNumberStr}) not found in database`);
+        console.warn(`[syncMeksOwnership] Mek #${mek.mekNumber} not found in database`);
         notFound++;
       }
     }

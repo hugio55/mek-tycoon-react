@@ -3,21 +3,21 @@ import { query, mutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
 // Helper: Compute which desired variations a Mek matches
+// Checks all three variation fields regardless of claimed type (more robust against bad data)
 function computeMatchedVariations(
   mek: { headVariation?: string; bodyVariation?: string; itemVariation?: string },
   desiredVariations: { variationName: string; variationType: string }[]
 ): string[] {
   const matches: string[] = [];
   for (const desired of desiredVariations) {
-    let mekVariation: string | undefined;
-    if (desired.variationType === "head") {
-      mekVariation = mek.headVariation;
-    } else if (desired.variationType === "body") {
-      mekVariation = mek.bodyVariation;
-    } else if (desired.variationType === "trait") {
-      mekVariation = mek.itemVariation;
-    }
-    if (mekVariation && mekVariation.toLowerCase() === desired.variationName.toLowerCase()) {
+    const desiredNameLower = desired.variationName.toLowerCase();
+
+    // Check all three variation fields - matches if any field contains the variation name
+    const hasHead = mek.headVariation?.toLowerCase() === desiredNameLower;
+    const hasBody = mek.bodyVariation?.toLowerCase() === desiredNameLower;
+    const hasTrait = mek.itemVariation?.toLowerCase() === desiredNameLower;
+
+    if (hasHead || hasBody || hasTrait) {
       matches.push(desired.variationName);
     }
   }
@@ -166,6 +166,18 @@ export const getMatchingMeksForListing = query({
       )
       .collect();
 
+    // Debug logging
+    console.log("[TRADE-MATCH] viewerStakeAddress:", args.viewerStakeAddress);
+    console.log("[TRADE-MATCH] viewerMeks count:", viewerMeks.length);
+    console.log("[TRADE-MATCH] desiredVariations:", listing.desiredVariations);
+    if (viewerMeks.length > 0) {
+      console.log("[TRADE-MATCH] First mek variations:", {
+        head: viewerMeks[0].headVariation,
+        body: viewerMeks[0].bodyVariation,
+        item: viewerMeks[0].itemVariation,
+      });
+    }
+
     // Filter to those that match at least one desired variation
     const matchingMeks = viewerMeks
       .map((mek) => {
@@ -179,6 +191,7 @@ export const getMatchingMeksForListing = query({
       .filter((mek) => mek.matchCount > 0)
       .sort((a, b) => b.matchCount - a.matchCount);
 
+    console.log("[TRADE-MATCH] matchingMeks count:", matchingMeks.length);
     return matchingMeks;
   },
 });
