@@ -419,16 +419,7 @@ export default function BetaSignupLightbox({
           Join the Beta
         </h2>
         <p className="text-sm sm:text-base text-white/60 font-light tracking-wide leading-relaxed">
-          In order to join Phase II beta, all you need to do is keep your eyes on our{' '}
-          <a
-            href="https://discord.gg/KnqMF6Ayyc"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-cyan-400 hover:text-cyan-300 transition-colors underline"
-          >
-            Discord
-          </a>{' '}
-          channel. If you would like a small perk when Phase II beta launches and a guaranteed position, please provide your stake address.
+          Submit your stake address to reserve a position for Phase II beta.
         </p>
       </div>
 
