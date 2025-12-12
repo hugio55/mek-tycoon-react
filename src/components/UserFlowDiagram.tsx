@@ -34,6 +34,7 @@ const BETA_SIGNUP_STEPS: { step: BetaSignupStep; label: string; description: str
   { step: 'name_input', label: 'Name Input', description: 'Enter new corporation name', veteranInfo: MOCK_VETERAN_INFO },
   { step: 'name_confirmed', label: 'Name Confirmed', description: 'Name reservation successful', veteranInfo: MOCK_VETERAN_WITH_RESERVED },
   { step: 'normal_signup', label: 'Normal Signup', description: 'Non-veteran signup processing' },
+  { step: 'already_signed_up', label: 'Already Signed Up', description: 'Stake address already registered' },
   { step: 'success', label: 'Success', description: 'Signup complete screen' },
 ];
 
@@ -397,12 +398,27 @@ export default function UserFlowDiagram() {
                 <Arrow label="API call" condition="auto" />
                 <FlowNode label="/api/beta-signup" type="api" sublabel="POST { stakeAddress }" />
 
-                <div className="flex gap-6 mt-4">
+                <div className="flex gap-4 mt-4">
                   <div className="flex flex-col items-center">
                     <div className="text-xs mb-2 px-2 py-0.5 rounded bg-red-900/50 text-red-400">ERROR</div>
                     <Arrow />
                     <FlowNode label="Show error" type="error" sublabel="Back to address_entry" />
                     <div className="text-xs text-gray-500 mt-2">User can retry</div>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="text-xs mb-2 px-2 py-0.5 rounded bg-yellow-900/50 text-yellow-400">DUPLICATE</div>
+                    <Arrow />
+                    <FlowNode
+                      label="Already Signed Up"
+                      sublabel="already_signed_up step"
+                      type="end"
+                      buttons={[
+                        "Checkmark icon",
+                        "Discord link",
+                        "Click backdrop → closes"
+                      ]}
+                      onClick={() => openBetaPreview('already_signed_up')}
+                    />
                   </div>
                   <div className="flex flex-col items-center">
                     <div className="text-xs mb-2 px-2 py-0.5 rounded bg-green-900/50 text-green-400">SUCCESS</div>

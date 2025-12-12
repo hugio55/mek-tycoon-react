@@ -24,6 +24,7 @@ type LightboxStep =
   | 'name_input'           // Enter corporation name (after wallet verified)
   | 'name_confirmed'       // Name successfully reserved/changed
   | 'normal_signup'        // Non-veteran signup flow
+  | 'already_signed_up'    // Stake address already registered for beta
   | 'success';             // Final success state
 
 // Export types for preview mode
@@ -318,6 +319,16 @@ export default function BetaSignupLightbox({
       let errorMessage = error instanceof Error ? error.message : 'Failed to submit signup';
       errorMessage = errorMessage.replace(/^Uncaught Error:\s*/i, '');
       errorMessage = errorMessage.split(' at ')[0].trim();
+
+      // Check if this is a "already signed up" error
+      if (errorMessage.toLowerCase().includes('already been added') ||
+          errorMessage.toLowerCase().includes('already registered')) {
+        console.log('[🎮BETA] Stake address already signed up');
+        setStep('already_signed_up');
+        setIsSubmitting(false);
+        return;
+      }
+
       setValidationError(errorMessage);
       setStep('address_entry');
       setIsSubmitting(false);
@@ -401,6 +412,8 @@ export default function BetaSignupLightbox({
         return renderNameConfirmed();
       case 'normal_signup':
         return renderLoading('Submitting signup...');
+      case 'already_signed_up':
+        return renderAlreadySignedUp();
       case 'success':
         return renderSuccess();
       default:
@@ -782,6 +795,47 @@ export default function BetaSignupLightbox({
         style={{ minHeight: '48px' }}
       >
         Done
+      </button>
+    </div>
+  );
+
+  const renderAlreadySignedUp = () => (
+    <div className="text-center py-4">
+      <div className="mb-4">
+        <svg
+          className="w-16 h-16 mx-auto text-cyan-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          style={{
+            filter: 'drop-shadow(0 0 8px rgba(34, 211, 238, 0.6)) drop-shadow(0 0 16px rgba(34, 211, 238, 0.4))'
+          }}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h3 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-2">
+        Already Signed Up
+      </h3>
+      <p className="text-sm sm:text-base text-white/60 font-light mb-4">
+        This stake address has already been registered for the Phase II beta. To be notified when Phase II beta begins, head to our{' '}
+        <a
+          href="https://discord.gg/KnqMF6Ayyc"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-cyan-400 hover:text-cyan-300 transition-colors underline"
+        >
+          Discord
+        </a>{' '}
+        and turn on notifications for the #announcement channel.
+      </p>
+
+      <button
+        onClick={handleClose}
+        className="mt-2 w-full py-3 text-base font-semibold tracking-wider text-black bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl hover:from-yellow-300 hover:to-yellow-400 transition-all duration-300 touch-manipulation shadow-lg shadow-yellow-500/20"
+        style={{ minHeight: '48px' }}
+      >
+        Got It
       </button>
     </div>
   );
