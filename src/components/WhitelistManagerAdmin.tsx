@@ -722,6 +722,100 @@ function WhitelistManagerAdminContent({ client, mutationsEnabled, onToggleMutati
           createManualWhitelist={createManualWhitelist}
         />
       )}
+
+      {/* View Snapshot Modal */}
+      {mounted && viewingSnapshot && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-gray-900 border border-purple-500/50 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="flex justify-between items-center p-6 border-b border-purple-500/30">
+              <div>
+                <h2 className="text-2xl font-bold text-purple-400">{viewingSnapshot.snapshotName}</h2>
+                {viewingSnapshot.description && (
+                  <p className="text-gray-400 text-sm mt-1">{viewingSnapshot.description}</p>
+                )}
+                <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                  <span>{viewingSnapshot.userCount || viewingSnapshot.eligibleUsers?.length || 0} wallets</span>
+                  <span>•</span>
+                  <span>Taken: {new Date(viewingSnapshot.takenAt).toLocaleString()}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewingSnapshot(null)}
+                className="text-gray-400 hover:text-white text-3xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Copy All Button */}
+            <div className="p-4 border-b border-purple-500/30 bg-black/30">
+              <button
+                onClick={() => {
+                  const addresses = (viewingSnapshot.eligibleUsers || [])
+                    .map((u: any) => u.stakeAddress || u.walletAddress)
+                    .filter(Boolean)
+                    .join('\n');
+                  navigator.clipboard.writeText(addresses);
+                  alert(`Copied ${viewingSnapshot.eligibleUsers?.length || 0} stake addresses to clipboard!`);
+                }}
+                className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg transition-colors"
+              >
+                📋 Copy All Stake Addresses
+              </button>
+            </div>
+
+            {/* Table */}
+            <div className="flex-1 overflow-auto p-6">
+              {!viewingSnapshot.eligibleUsers || viewingSnapshot.eligibleUsers.length === 0 ? (
+                <div className="text-center py-20 text-gray-400">
+                  <div className="text-6xl mb-4">📋</div>
+                  <div className="text-xl">No addresses in this snapshot</div>
+                </div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-gray-900">
+                    <tr className="border-b-2 border-purple-500/30">
+                      <th className="text-left py-3 px-4 text-purple-300 font-bold uppercase tracking-wider">#</th>
+                      <th className="text-left py-3 px-4 text-purple-300 font-bold uppercase tracking-wider">Stake Address</th>
+                      <th className="text-left py-3 px-4 text-purple-300 font-bold uppercase tracking-wider">Display Name</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {viewingSnapshot.eligibleUsers.map((user: any, index: number) => (
+                      <tr
+                        key={index}
+                        className="border-b border-gray-700/30 hover:bg-purple-900/10 transition-colors"
+                      >
+                        <td className="py-3 px-4 text-gray-400">{index + 1}</td>
+                        <td className="py-3 px-4 text-white font-mono text-xs">
+                          {user.stakeAddress || user.walletAddress}
+                        </td>
+                        <td className="py-3 px-4 text-gray-300">
+                          {user.displayName || <span className="text-gray-600 italic">No name</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-purple-500/30 flex justify-between items-center">
+              <div className="text-sm text-gray-400">
+                Total: <span className="text-purple-400 font-bold">{viewingSnapshot.eligibleUsers?.length || 0}</span> wallets
+              </div>
+              <button
+                onClick={() => setViewingSnapshot(null)}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1056,24 +1150,47 @@ function WhitelistTableModal({
   };
 
   const handleAddUser = async () => {
-    // Check if using manual stake address or company name lookup
+    // Check if using manual stake address(es) or company name lookup
     if (manualWalletInput.trim()) {
-      // Adding by manual stake address
-      setIsAdding(true);
-      try {
-        await addUserToWhitelistByAddress({
-          whitelistId: whitelist._id,
-          stakeAddress: manualWalletInput.trim(),
-          displayName: manualDisplayNameInput.trim() || undefined,
-        });
-        alert(`User added successfully!`);
-        setManualWalletInput('');
-        setManualDisplayNameInput('');
-      } catch (error: any) {
-        alert(`Error adding user: ${error.message}`);
-      } finally {
-        setIsAdding(false);
+      // Adding by manual stake address(es) - support multiple lines
+      const addresses = manualWalletInput
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0 && (line.startsWith('stake1') || line.startsWith('stake_test1')));
+
+      if (addresses.length === 0) {
+        alert('No valid stake addresses found. Addresses must start with stake1... or stake_test1...');
+        return;
       }
+
+      setIsAdding(true);
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      for (const address of addresses) {
+        try {
+          await addUserToWhitelistByAddress({
+            whitelistId: whitelist._id,
+            stakeAddress: address,
+            displayName: undefined,
+          });
+          successCount++;
+        } catch (error: any) {
+          errorCount++;
+          errors.push(`${address.slice(0, 20)}...: ${error.message}`);
+        }
+      }
+
+      if (errorCount === 0) {
+        alert(`Successfully added ${successCount} address${successCount !== 1 ? 'es' : ''}!`);
+      } else {
+        alert(`Added ${successCount} address${successCount !== 1 ? 'es' : ''}, ${errorCount} failed:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? `\n...and ${errors.length - 5} more` : ''}`);
+      }
+
+      setManualWalletInput('');
+      setManualDisplayNameInput('');
+      setIsAdding(false);
     } else if (companyNameInput.trim()) {
       // Adding by company name lookup
       setIsAdding(true);
@@ -1190,37 +1307,21 @@ function WhitelistTableModal({
             <div className="flex-1 border-t border-gray-700"></div>
           </div>
 
-          {/* Option 2: Manual Stake Address */}
+          {/* Option 2: Manual Stake Address(es) */}
           <div className="mb-4">
-            <label className="block text-xs text-gray-400 mb-2">Option 2: Enter Stake Address Directly</label>
-            <div className="flex gap-3 mb-2">
-              <div className="flex-1">
-                <input
-                  type="text"
-                  value={manualWalletInput}
-                  onChange={(e) => setManualWalletInput(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') handleAddUser();
-                  }}
-                  placeholder="stake1... or stake_test1..."
-                  className="w-full bg-black/50 border border-cyan-500/30 rounded px-3 py-2 text-white font-mono text-sm placeholder-gray-600"
-                  disabled={isAdding || !!companyNameInput.trim()}
-                />
+            <label className="block text-xs text-gray-400 mb-2">Option 2: Enter Stake Address(es) Directly - One per line</label>
+            <textarea
+              value={manualWalletInput}
+              onChange={(e) => setManualWalletInput(e.target.value)}
+              placeholder="Paste stake addresses here (one per line)&#10;stake1abc123...&#10;stake1def456...&#10;stake1ghi789..."
+              className="w-full bg-black/50 border border-cyan-500/30 rounded px-3 py-2 text-white font-mono text-sm placeholder-gray-600 h-24 resize-none"
+              disabled={isAdding || !!companyNameInput.trim()}
+            />
+            {manualWalletInput.trim() && (
+              <div className="text-xs text-cyan-400 mt-1">
+                {manualWalletInput.split('\n').filter(line => line.trim() && (line.trim().startsWith('stake1') || line.trim().startsWith('stake_test1'))).length} valid address(es) detected
               </div>
-              <div className="flex-1">
-                <input
-                  type="text"
-                  value={manualDisplayNameInput}
-                  onChange={(e) => setManualDisplayNameInput(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') handleAddUser();
-                  }}
-                  placeholder="Display name (optional)"
-                  className="w-full bg-black/50 border border-cyan-500/30 rounded px-3 py-2 text-white placeholder-gray-600"
-                  disabled={isAdding || !!companyNameInput.trim()}
-                />
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Add Button */}

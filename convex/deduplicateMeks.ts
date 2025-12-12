@@ -679,3 +679,45 @@ export const checkMekOwnership = query({
     };
   },
 });
+
+/**
+ * Get ownership statistics for all meks
+ * Used for auditing before major changes
+ */
+export const getOwnershipStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const allMeks = await ctx.db.query("meks").collect();
+
+    const ownerCounts: Record<string, number> = {};
+    let unownedCount = 0;
+
+    for (const mek of allMeks) {
+      const owner = mek.owner || mek.ownerStakeAddress;
+      if (owner) {
+        ownerCounts[owner] = (ownerCounts[owner] || 0) + 1;
+      } else {
+        unownedCount++;
+      }
+    }
+
+    // Sort by count descending
+    const sortedOwners = Object.entries(ownerCounts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([address, count]) => ({
+        address: address.substring(0, 20) + "..." + address.substring(address.length - 10),
+        fullAddress: address,
+        count,
+      }));
+
+    return {
+      totalMeks: allMeks.length,
+      uniqueOwners: Object.keys(ownerCounts).length,
+      ownedMeks: allMeks.length - unownedCount,
+      unownedMeks: unownedCount,
+      topOwners: sortedOwners.slice(0, 15),
+      hasMekNumberField: allMeks.filter(m => m.mekNumber).length,
+      hasSourceKey: allMeks.filter(m => m.sourceKey).length,
+    };
+  },
+});
