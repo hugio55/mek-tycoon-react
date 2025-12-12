@@ -312,10 +312,7 @@ export default function BetaSignupLightbox({
       if (onSubmit) {
         onSubmit(stakeAddress);
       }
-
-      setTimeout(() => {
-        handleClose();
-      }, 2000);
+      // Don't auto-close - let user read and dismiss manually
     } catch (error) {
       console.error('[🎮BETA] Signup error:', error);
       let errorMessage = error instanceof Error ? error.message : 'Failed to submit signup';
