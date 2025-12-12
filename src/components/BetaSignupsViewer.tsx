@@ -163,7 +163,9 @@ export default function BetaSignupsViewer() {
                   'Stake Address,P1 Veteran,P1 Corp Name,Reserved Name,Submitted At',
                   ...signups.map((s) => {
                     const vet = veteranMap.get(s.stakeAddress.toLowerCase());
-                    return `${s.stakeAddress},${vet ? 'Yes' : 'No'},${vet?.originalCorporationName || ''},${vet?.reservedCorporationName || ''},${formatDateForCSV(s.submittedAt)}`;
+                    const d = new Date(s.submittedAt);
+                    const dateStr = `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear().toString().slice(-2)} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+                    return `${s.stakeAddress},${vet ? 'Yes' : 'No'},${vet?.originalCorporationName || ''},${vet?.reservedCorporationName || ''},"${dateStr}"`;
                   })
                 ].join('\n');
                 const blob = new Blob([csv], { type: 'text/csv' });

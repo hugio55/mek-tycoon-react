@@ -1,5 +1,28 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import mekRarityMaster from "./mekRarityMaster.json";
+
+// Build sourceKey to variation lookup from master data (source of truth)
+const sourceKeyToVariations = new Map<string, { head: string; body: string; trait: string }>();
+(mekRarityMaster as any[]).forEach((mek) => {
+  if (mek.sourceKey && mek.head && mek.body && mek.trait) {
+    // Normalize key: uppercase, remove suffix
+    const normalizedKey = mek.sourceKey.toUpperCase().replace(/-[A-Z]$/i, "");
+    sourceKeyToVariations.set(normalizedKey, {
+      head: mek.head,
+      body: mek.body,
+      trait: mek.trait,
+    });
+  }
+});
+
+// Helper: Get variation names from sourceKey (source of truth)
+function getVariationsFromSourceKey(sourceKey?: string): { head?: string; body?: string; trait?: string } | null {
+  if (!sourceKey) return null;
+  const normalizedKey = sourceKey.toUpperCase().replace(/-[A-Z]$/i, "");
+  const data = sourceKeyToVariations.get(normalizedKey);
+  return data || null;
+}
 
 /**
  * MEKS TABLE PROTECTION
@@ -342,6 +365,211 @@ export const syncOwnerStakeAddress = mutation({
       skipped,
       total: allMeks.length,
       message: `Synced ownerStakeAddress for ${synced} meks`,
+    };
+  },
+});
+
+// =============================================================================
+// VARIATION DATA REPAIR
+// =============================================================================
+
+/**
+ * Preview meks with incorrect variation data
+ *
+ * Compares database variation fields against sourceKey lookup (source of truth).
+ * Returns list of meks that need repair.
+ */
+export const previewVariationRepair = query({
+  args: {},
+  handler: async (ctx) => {
+    const allMeks = await ctx.db.query("meks").collect();
+
+    const needsRepair: {
+      assetName: string;
+      mekNumber?: number;
+      sourceKey: string;
+      currentVariations: { head?: string; body?: string; trait?: string };
+      correctVariations: { head: string; body: string; trait: string };
+      ownerStakeAddress?: string;
+    }[] = [];
+
+    let checked = 0;
+    let correct = 0;
+    let noSourceKey = 0;
+    let sourceKeyNotFound = 0;
+
+    for (const mek of allMeks) {
+      checked++;
+
+      if (!mek.sourceKey) {
+        noSourceKey++;
+        continue;
+      }
+
+      const correctVars = getVariationsFromSourceKey(mek.sourceKey);
+      if (!correctVars) {
+        sourceKeyNotFound++;
+        continue;
+      }
+
+      // Compare (case-insensitive)
+      const headMatch = correctVars.head?.toLowerCase() === mek.headVariation?.toLowerCase();
+      const bodyMatch = correctVars.body?.toLowerCase() === mek.bodyVariation?.toLowerCase();
+      const traitMatch = correctVars.trait?.toLowerCase() === mek.itemVariation?.toLowerCase();
+
+      if (headMatch && bodyMatch && traitMatch) {
+        correct++;
+      } else {
+        needsRepair.push({
+          assetName: mek.assetName,
+          mekNumber: mek.mekNumber,
+          sourceKey: mek.sourceKey,
+          currentVariations: {
+            head: mek.headVariation,
+            body: mek.bodyVariation,
+            trait: mek.itemVariation,
+          },
+          correctVariations: correctVars,
+          ownerStakeAddress: mek.ownerStakeAddress,
+        });
+      }
+    }
+
+    // Group by owner for analysis
+    const byOwner: Record<string, number> = {};
+    for (const mek of needsRepair) {
+      const owner = mek.ownerStakeAddress || "unowned";
+      byOwner[owner] = (byOwner[owner] || 0) + 1;
+    }
+
+    return {
+      summary: {
+        totalChecked: checked,
+        correct,
+        needsRepair: needsRepair.length,
+        noSourceKey,
+        sourceKeyNotFound,
+      },
+      byOwner,
+      // First 20 for preview
+      sampleMeks: needsRepair.slice(0, 20),
+      message: needsRepair.length === 0
+        ? "All meks have correct variation data!"
+        : `Found ${needsRepair.length} meks with incorrect variation data that need repair.`,
+    };
+  },
+});
+
+/**
+ * Repair meks with incorrect variation data
+ *
+ * Updates headVariation, bodyVariation, and itemVariation fields
+ * using sourceKey lookup from mekRarityMaster.json (source of truth).
+ *
+ * PROTECTED: Requires unlock code to prevent accidental changes.
+ */
+export const repairVariationData = mutation({
+  args: {
+    unlockCode: v.optional(v.string()),
+    dryRun: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const dryRun = args.dryRun || false;
+
+    // PROTECTION: Block by default
+    if (!dryRun && args.unlockCode !== EMERGENCY_UNLOCK_CODE) {
+      console.error("[MEKS-PROTECTION] BLOCKED: repairVariationData called without unlock code");
+      return {
+        success: false,
+        error: "BLOCKED: This function modifies mek variation data. " +
+               "Provide unlockCode: 'I_UNDERSTAND_THIS_WILL_MODIFY_4000_NFTS' to proceed, " +
+               "or use dryRun: true to preview changes.",
+        repaired: 0,
+        details: [],
+      };
+    }
+
+    if (!dryRun) {
+      console.warn("[MEKS-PROTECTION] Emergency unlock accepted - proceeding with variation repair");
+    } else {
+      console.log("[Repair] Running in dry-run mode - no changes will be made");
+    }
+
+    const allMeks = await ctx.db.query("meks").collect();
+
+    let repaired = 0;
+    let skipped = 0;
+    const details: {
+      assetName: string;
+      mekNumber?: number;
+      before: { head?: string; body?: string; trait?: string };
+      after: { head: string; body: string; trait: string };
+    }[] = [];
+
+    for (const mek of allMeks) {
+      if (!mek.sourceKey) {
+        skipped++;
+        continue;
+      }
+
+      const correctVars = getVariationsFromSourceKey(mek.sourceKey);
+      if (!correctVars) {
+        skipped++;
+        continue;
+      }
+
+      // Check if repair needed (case-insensitive comparison)
+      const headMatch = correctVars.head?.toLowerCase() === mek.headVariation?.toLowerCase();
+      const bodyMatch = correctVars.body?.toLowerCase() === mek.bodyVariation?.toLowerCase();
+      const traitMatch = correctVars.trait?.toLowerCase() === mek.itemVariation?.toLowerCase();
+
+      if (headMatch && bodyMatch && traitMatch) {
+        // Already correct
+        continue;
+      }
+
+      // Record the change
+      if (details.length < 50) {
+        details.push({
+          assetName: mek.assetName,
+          mekNumber: mek.mekNumber,
+          before: {
+            head: mek.headVariation,
+            body: mek.bodyVariation,
+            trait: mek.itemVariation,
+          },
+          after: correctVars,
+        });
+      }
+
+      // Apply the fix (unless dry run)
+      if (!dryRun) {
+        await ctx.db.patch(mek._id, {
+          headVariation: correctVars.head,
+          bodyVariation: correctVars.body,
+          itemVariation: correctVars.trait,
+          lastUpdated: Date.now(),
+        });
+        console.log(`[Repair] Fixed ${mek.assetName}: ${mek.headVariation}/${mek.bodyVariation}/${mek.itemVariation} -> ${correctVars.head}/${correctVars.body}/${correctVars.trait}`);
+      }
+
+      repaired++;
+    }
+
+    const message = dryRun
+      ? `DRY RUN: Would repair ${repaired} meks. Run with unlockCode to apply changes.`
+      : `Repaired ${repaired} meks with correct variation data from sourceKey.`;
+
+    console.log(`[Repair] ${message}`);
+
+    return {
+      success: true,
+      dryRun,
+      repaired,
+      skipped,
+      total: allMeks.length,
+      details,
+      message,
     };
   },
 });
