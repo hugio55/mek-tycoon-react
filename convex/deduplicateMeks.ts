@@ -622,3 +622,60 @@ export const findMissingMekNumbers = query({
     };
   },
 });
+
+/**
+ * Check ownership status of specific mek numbers
+ * Used to see if missing meks on production are owned by anyone
+ */
+export const checkMekOwnership = query({
+  args: {
+    mekNumbers: v.array(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const allMeks = await ctx.db.query("meks").collect();
+
+    const results: {
+      mekNumber: number;
+      found: boolean;
+      owner?: string;
+      assetName?: string;
+    }[] = [];
+
+    for (const num of args.mekNumbers) {
+      const mek = allMeks.find(m => {
+        if (m.mekNumber === num) return true;
+        const match = m.assetName?.match(/\d+/);
+        return match && parseInt(match[0]) === num;
+      });
+
+      if (mek) {
+        results.push({
+          mekNumber: num,
+          found: true,
+          owner: mek.owner || mek.ownerStakeAddress || "unowned",
+          assetName: mek.assetName,
+        });
+      } else {
+        results.push({
+          mekNumber: num,
+          found: false,
+        });
+      }
+    }
+
+    const owned = results.filter(r => r.found && r.owner && r.owner !== "unowned");
+    const unowned = results.filter(r => r.found && (!r.owner || r.owner === "unowned"));
+    const notFound = results.filter(r => !r.found);
+
+    return {
+      summary: {
+        total: args.mekNumbers.length,
+        owned: owned.length,
+        unowned: unowned.length,
+        notFound: notFound.length,
+      },
+      owned: owned.slice(0, 20),
+      unowned: unowned.slice(0, 20),
+    };
+  },
+});
