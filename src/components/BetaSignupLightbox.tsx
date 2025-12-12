@@ -801,7 +801,7 @@ export default function BetaSignupLightbox({
         {veteranInfo ? "You're All Set!" : "Welcome Aboard!"}
       </h3>
       <p className="text-sm sm:text-base text-white/60 font-light mb-4">
-        Keep an eye on the Announcements channel in our{' '}
+        To be notified when Phase II beta begins, head to our{' '}
         <a
           href="https://discord.gg/KnqMF6Ayyc"
           target="_blank"
@@ -809,8 +809,8 @@ export default function BetaSignupLightbox({
           className="text-cyan-400 hover:text-cyan-300 transition-colors underline"
         >
           Discord
-        </a>
-        .
+        </a>{' '}
+        and turn on notifications for the #announcement channel.
       </p>
 
       <button
