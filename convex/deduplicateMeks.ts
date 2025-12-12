@@ -724,6 +724,172 @@ export const exportMeksForBackup = query({
 });
 
 /**
+ * Export specific meks by mek number
+ * Used to extract meks for cross-database restore
+ */
+export const exportMeksByNumber = query({
+  args: {
+    mekNumbers: v.array(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const allMeks = await ctx.db.query("meks").collect();
+
+    const result: any[] = [];
+
+    for (const num of args.mekNumbers) {
+      const mek = allMeks.find(m => {
+        if (m.mekNumber === num) return true;
+        const match = m.assetName?.match(/\d+/);
+        return match && parseInt(match[0]) === num;
+      });
+
+      if (mek) {
+        result.push({
+          assetId: mek.assetId,
+          assetName: mek.assetName,
+          mekNumber: mek.mekNumber,
+          sourceKey: mek.sourceKey,
+          headVariation: mek.headVariation,
+          bodyVariation: mek.bodyVariation,
+          itemVariation: mek.itemVariation,
+          owner: mek.owner,
+          ownerStakeAddress: mek.ownerStakeAddress,
+          isSlotted: mek.isSlotted,
+          slotNumber: mek.slotNumber,
+          accumulatedGoldAllTime: mek.accumulatedGoldAllTime || 0,
+          accumulatedGoldForCorp: mek.accumulatedGoldForCorp || 0,
+        });
+      }
+    }
+
+    return {
+      requested: args.mekNumbers.length,
+      found: result.length,
+      meks: result,
+    };
+  },
+});
+
+/**
+ * Restore missing meks to the database
+ * Used to add meks that are missing from production
+ *
+ * PROTECTED: Requires unlock code to prevent accidental data creation.
+ */
+export const restoreMissingMeks = mutation({
+  args: {
+    meks: v.array(v.object({
+      assetId: v.string(),
+      assetName: v.string(),
+      mekNumber: v.optional(v.number()),
+      sourceKey: v.optional(v.string()),
+      headVariation: v.string(),
+      bodyVariation: v.string(),
+      itemVariation: v.string(),
+      owner: v.optional(v.string()),
+      ownerStakeAddress: v.optional(v.string()),
+      isSlotted: v.optional(v.boolean()),
+      slotNumber: v.optional(v.number()),
+      accumulatedGoldAllTime: v.optional(v.number()),
+      accumulatedGoldForCorp: v.optional(v.number()),
+    })),
+    unlockCode: v.optional(v.string()),
+    dryRun: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const dryRun = args.dryRun || false;
+
+    // PROTECTION: Block by default
+    if (!dryRun && args.unlockCode !== EMERGENCY_UNLOCK_CODE) {
+      console.error("[MEKS-PROTECTION] BLOCKED: restoreMissingMeks called without unlock code");
+      return {
+        success: false,
+        error: "BLOCKED: This function creates new mek records. " +
+               "Provide unlockCode: 'I_UNDERSTAND_THIS_WILL_MODIFY_4000_NFTS' to proceed, " +
+               "or use dryRun: true to preview.",
+        inserted: 0,
+        skipped: 0,
+        details: [],
+      };
+    }
+
+    // Check for existing meks to avoid duplicates
+    const existingMeks = await ctx.db.query("meks").collect();
+    const existingAssetIds = new Set(existingMeks.map(m => m.assetId));
+    const existingMekNumbers = new Set<number>();
+
+    for (const m of existingMeks) {
+      if (m.mekNumber) {
+        existingMekNumbers.add(m.mekNumber);
+      } else {
+        const match = m.assetName?.match(/\d+/);
+        if (match) existingMekNumbers.add(parseInt(match[0]));
+      }
+    }
+
+    let inserted = 0;
+    let skipped = 0;
+    const details: { assetName: string; action: string; reason?: string }[] = [];
+
+    for (const mek of args.meks) {
+      // Check if already exists by assetId
+      if (existingAssetIds.has(mek.assetId)) {
+        skipped++;
+        details.push({ assetName: mek.assetName, action: "skipped", reason: "assetId exists" });
+        continue;
+      }
+
+      // Check if already exists by mek number
+      const mekNum = mek.mekNumber || parseInt(mek.assetName.match(/\d+/)?.[0] || "0");
+      if (existingMekNumbers.has(mekNum)) {
+        skipped++;
+        details.push({ assetName: mek.assetName, action: "skipped", reason: "mekNumber exists" });
+        continue;
+      }
+
+      if (!dryRun) {
+        await ctx.db.insert("meks", {
+          assetId: mek.assetId,
+          assetName: mek.assetName,
+          mekNumber: mekNum,
+          sourceKey: mek.sourceKey,
+          headVariation: mek.headVariation,
+          bodyVariation: mek.bodyVariation,
+          itemVariation: mek.itemVariation,
+          owner: mek.owner,
+          ownerStakeAddress: mek.ownerStakeAddress,
+          isSlotted: mek.isSlotted || false,
+          slotNumber: mek.slotNumber,
+          accumulatedGoldAllTime: mek.accumulatedGoldAllTime || 0,
+          accumulatedGoldForCorp: mek.accumulatedGoldForCorp || 0,
+          verified: true, // Restored from backup, verified data
+          lastUpdated: Date.now(),
+        });
+        console.log(`[Restore] Inserted ${mek.assetName}`);
+      }
+
+      inserted++;
+      details.push({ assetName: mek.assetName, action: dryRun ? "would insert" : "inserted" });
+    }
+
+    const finalCount = existingMeks.length + (dryRun ? 0 : inserted);
+
+    return {
+      success: true,
+      dryRun,
+      inserted,
+      skipped,
+      previousCount: existingMeks.length,
+      newCount: finalCount,
+      details,
+      message: dryRun
+        ? `DRY RUN: Would insert ${inserted} meks, skip ${skipped}.`
+        : `Inserted ${inserted} meks, skipped ${skipped}. Total now: ${finalCount}`,
+    };
+  },
+});
+
+/**
  * Get ownership statistics for all meks
  * Used for auditing before major changes
  */
