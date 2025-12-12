@@ -444,10 +444,10 @@ export default function BetaSignupLightbox({
             onChange={handleStakeAddressChange}
             placeholder="stake1..."
             disabled={isSubmitting}
-            className={`w-full px-4 py-3 sm:py-4 text-base sm:text-lg bg-white/5 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:bg-white/10 transition-all touch-manipulation ${
+            className={`w-full px-4 py-3 sm:py-4 text-base sm:text-lg bg-black/40 border rounded-xl text-white placeholder-white/30 focus:outline-none transition-all touch-manipulation ${
               validationError
                 ? 'border-red-500/50 focus:border-red-500/70'
-                : 'border-white/10 focus:border-yellow-500/50'
+                : 'border-white/20 focus:border-cyan-400'
             }`}
             style={{
               minHeight: '48px',
@@ -658,8 +658,8 @@ export default function BetaSignupLightbox({
             placeholder="Enter corporation name"
             maxLength={30}
             disabled={isReservingName}
-            className={`w-full px-4 py-3 text-base sm:text-lg bg-white/5 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:bg-white/10 transition-all ${
-              nameError ? 'border-red-500/50' : 'border-white/10 focus:border-yellow-500/50'
+            className={`w-full px-4 py-3 text-base sm:text-lg bg-black/40 border rounded-xl text-white placeholder-white/30 focus:outline-none transition-all ${
+              nameError ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/20 focus:border-cyan-400'
             }`}
             style={{ minHeight: '48px' }}
           />
