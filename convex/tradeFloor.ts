@@ -978,6 +978,95 @@ export const debugGetMeksByStakeAddress = query({
   },
 });
 
+// DEBUG: Investigate meks table data consistency
+export const debugMeksDataConsistency = query({
+  args: {
+    sampleSize: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.sampleSize || 100;
+    const meks = await ctx.db.query("meks").take(limit);
+
+    let matches = 0;
+    let mismatches = 0;
+    let noSourceKey = 0;
+    let sourceKeyNotFound = 0;
+    const mismatchDetails: any[] = [];
+    const ownerCounts: Record<string, number> = {};
+
+    for (const mek of meks) {
+      if (!mek.sourceKey) {
+        noSourceKey++;
+        continue;
+      }
+
+      const fromSourceKey = getVariationsFromSourceKey(mek.sourceKey);
+      if (!fromSourceKey.head && !fromSourceKey.body && !fromSourceKey.trait) {
+        sourceKeyNotFound++;
+        continue;
+      }
+
+      const headMatch = fromSourceKey.head?.toLowerCase() === mek.headVariation?.toLowerCase();
+      const bodyMatch = fromSourceKey.body?.toLowerCase() === mek.bodyVariation?.toLowerCase();
+      const traitMatch = fromSourceKey.trait?.toLowerCase() === mek.itemVariation?.toLowerCase();
+
+      if (headMatch && bodyMatch && traitMatch) {
+        matches++;
+      } else {
+        mismatches++;
+        // Track which owners have mismatched meks
+        const owner = mek.ownerStakeAddress || "unowned";
+        ownerCounts[owner] = (ownerCounts[owner] || 0) + 1;
+
+        if (mismatchDetails.length < 20) {
+          mismatchDetails.push({
+            assetName: mek.assetName,
+            mekNumber: mek.mekNumber,
+            sourceKey: mek.sourceKey,
+            ownerStakeAddress: mek.ownerStakeAddress,
+            database: {
+              head: mek.headVariation,
+              body: mek.bodyVariation,
+              trait: mek.itemVariation,
+            },
+            shouldBe: {
+              head: fromSourceKey.head,
+              body: fromSourceKey.body,
+              trait: fromSourceKey.trait,
+            },
+            headMatch,
+            bodyMatch,
+            traitMatch,
+          });
+        }
+      }
+    }
+
+    // Get creation times for mismatched meks
+    const mismatchCreationTimes = mismatchDetails.map(m => {
+      const mekDoc = meks.find(mk => mk.mekNumber === m.mekNumber);
+      return {
+        mekNumber: m.mekNumber,
+        _creationTime: mekDoc?._creationTime,
+        createdDate: mekDoc?._creationTime ? new Date(mekDoc._creationTime).toISOString() : "unknown",
+        lastUpdated: (mekDoc as any)?.lastUpdated ? new Date((mekDoc as any).lastUpdated).toISOString() : "unknown",
+      };
+    });
+
+    return {
+      analyzed: meks.length,
+      matches,
+      mismatches,
+      noSourceKey,
+      sourceKeyNotFound,
+      mismatchPercentage: ((mismatches / (matches + mismatches)) * 100).toFixed(1) + "%",
+      mismatchesByOwner: ownerCounts,
+      mismatchTimestamps: mismatchCreationTimes,
+      sampleMismatches: mismatchDetails,
+    };
+  },
+});
+
 // DEBUG: Find mek by exact variations
 export const debugFindMekByVariations = query({
   args: {
