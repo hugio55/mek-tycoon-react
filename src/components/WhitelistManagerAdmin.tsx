@@ -1095,7 +1095,8 @@ function WhitelistTableModal({
 }) {
   const [companyNameInput, setCompanyNameInput] = useState('');
   const [manualWalletInput, setManualWalletInput] = useState('');
-  const [manualDisplayNameInput, setManualDisplayNameInput] = useState('');
+  const [singleAddressInput, setSingleAddressInput] = useState('');
+  const [singleDisplayNameInput, setSingleDisplayNameInput] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -1209,8 +1210,32 @@ function WhitelistTableModal({
       setManualWalletInput('');
       setManualDisplayNameInput('');
       setIsAdding(false);
+    } else if (singleAddressInput.trim()) {
+      // Option 3: Adding single address with optional display name
+      const address = singleAddressInput.trim();
+      if (!address.startsWith('stake1') && !address.startsWith('stake_test1')) {
+        alert('Invalid stake address. Must start with stake1... or stake_test1...');
+        return;
+      }
+
+      setIsAdding(true);
+      try {
+        await addUserToWhitelistByAddress({
+          whitelistId: whitelist._id,
+          stakeAddress: address,
+          displayName: singleDisplayNameInput.trim() || undefined,
+        });
+        const nameInfo = singleDisplayNameInput.trim() ? ` as "${singleDisplayNameInput.trim()}"` : '';
+        alert(`Successfully added ${address.slice(0, 20)}...${nameInfo}!`);
+        setSingleAddressInput('');
+        setSingleDisplayNameInput('');
+      } catch (error: any) {
+        alert(`Error adding user: ${error.message}`);
+      } finally {
+        setIsAdding(false);
+      }
     } else if (companyNameInput.trim()) {
-      // Adding by company name lookup
+      // Option 1: Adding by company name lookup
       setIsAdding(true);
       try {
         await addUserToWhitelistByCompanyName({
@@ -1226,7 +1251,7 @@ function WhitelistTableModal({
         setIsAdding(false);
       }
     } else {
-      alert('Please enter either a corporation name or stake address');
+      alert('Please enter a corporation name, stake address, or bulk addresses');
     }
   };
 
@@ -1325,21 +1350,57 @@ function WhitelistTableModal({
             <div className="flex-1 border-t border-gray-700"></div>
           </div>
 
-          {/* Option 2: Manual Stake Address(es) */}
+          {/* Option 2: Bulk Stake Addresses */}
           <div className="mb-4">
-            <label className="block text-xs text-gray-400 mb-2">Option 2: Enter Stake Address(es) Directly - One per line</label>
+            <label className="block text-xs text-gray-400 mb-2">Option 2: Bulk Import - Paste Multiple Addresses (one per line)</label>
             <textarea
               value={manualWalletInput}
               onChange={(e) => setManualWalletInput(e.target.value)}
               placeholder="Paste stake addresses here (one per line)&#10;stake1abc123...&#10;stake1def456...&#10;stake1ghi789..."
               className="w-full bg-black/50 border border-cyan-500/30 rounded px-3 py-2 text-white font-mono text-sm placeholder-gray-600 h-24 resize-none"
-              disabled={isAdding || !!companyNameInput.trim()}
+              disabled={isAdding || !!companyNameInput.trim() || !!singleAddressInput.trim()}
             />
             {manualWalletInput.trim() && (
               <div className="text-xs text-cyan-400 mt-1">
                 {manualWalletInput.split('\n').filter(line => line.trim() && (line.trim().startsWith('stake1') || line.trim().startsWith('stake_test1'))).length} valid address(es) detected
               </div>
             )}
+          </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-1 border-t border-gray-700"></div>
+            <span className="text-xs text-gray-500 uppercase">OR</span>
+            <div className="flex-1 border-t border-gray-700"></div>
+          </div>
+
+          {/* Option 3: Single Address with Display Name */}
+          <div className="mb-4">
+            <label className="block text-xs text-gray-400 mb-2">Option 3: Add Single Address with Custom Display Name</label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <input
+                  type="text"
+                  value={singleAddressInput}
+                  onChange={(e) => setSingleAddressInput(e.target.value)}
+                  placeholder="stake1... or stake_test1..."
+                  className="w-full bg-black/50 border border-cyan-500/30 rounded px-3 py-2 text-white font-mono text-sm placeholder-gray-600"
+                  disabled={isAdding || !!companyNameInput.trim() || !!manualWalletInput.trim()}
+                />
+                <div className="text-xs text-gray-500 mt-1">Stake Address</div>
+              </div>
+              <div>
+                <input
+                  type="text"
+                  value={singleDisplayNameInput}
+                  onChange={(e) => setSingleDisplayNameInput(e.target.value)}
+                  placeholder="Corporation name..."
+                  className="w-full bg-black/50 border border-yellow-500/30 rounded px-3 py-2 text-white placeholder-gray-600"
+                  disabled={isAdding || !!companyNameInput.trim() || !!manualWalletInput.trim()}
+                />
+                <div className="text-xs text-gray-500 mt-1">Display Name (optional)</div>
+              </div>
+            </div>
           </div>
 
           {/* Add Button */}
