@@ -389,7 +389,7 @@ export const previewVariationRepair = query({
       mekNumber?: number;
       sourceKey: string;
       currentVariations: { head?: string; body?: string; trait?: string };
-      correctVariations: { head: string; body: string; trait: string };
+      correctVariations: { head?: string; body?: string; trait?: string };
       ownerStakeAddress?: string;
     }[] = [];
 
@@ -503,7 +503,7 @@ export const repairVariationData = mutation({
       assetName: string;
       mekNumber?: number;
       before: { head?: string; body?: string; trait?: string };
-      after: { head: string; body: string; trait: string };
+      after: { head?: string; body?: string; trait?: string };
     }[] = [];
 
     for (const mek of allMeks) {
@@ -570,6 +570,55 @@ export const repairVariationData = mutation({
       total: allMeks.length,
       details,
       message,
+    };
+  },
+});
+
+/**
+ * Find missing mek numbers
+ *
+ * Checks which mek numbers (1-4000) are NOT in the database.
+ * Helps identify if records were never imported or accidentally deleted.
+ */
+export const findMissingMekNumbers = query({
+  args: {},
+  handler: async (ctx) => {
+    const allMeks = await ctx.db.query("meks").collect();
+
+    // Extract mek numbers from assetName (e.g., "Mekanism #1234" -> 1234)
+    const presentNumbers = new Set<number>();
+
+    for (const mek of allMeks) {
+      // Try mekNumber field first
+      if (mek.mekNumber && typeof mek.mekNumber === "number") {
+        presentNumbers.add(mek.mekNumber);
+        continue;
+      }
+
+      // Fall back to parsing assetName
+      const match = mek.assetName?.match(/\d+/);
+      if (match) {
+        presentNumbers.add(parseInt(match[0]));
+      }
+    }
+
+    // Find missing numbers (1-4000)
+    const missingNumbers: number[] = [];
+    for (let i = 1; i <= 4000; i++) {
+      if (!presentNumbers.has(i)) {
+        missingNumbers.push(i);
+      }
+    }
+
+    return {
+      totalInDb: allMeks.length,
+      expectedTotal: 4000,
+      missingCount: missingNumbers.length,
+      missingNumbers: missingNumbers,
+      hasMekNumberField: allMeks.filter(m => m.mekNumber).length,
+      message: missingNumbers.length === 0
+        ? "All 4000 meks are present in the database!"
+        : `Missing ${missingNumbers.length} meks from database.`,
     };
   },
 });
