@@ -514,7 +514,7 @@ export default function BetaSignupLightbox({
           {veteranInfo?.hasReservedName ? (
             <>
               Your reserved corporation name for Phase II:<br />
-              <span className="text-yellow-400 font-semibold">{veteranInfo.reservedCorporationName}</span>
+              <span className="text-cyan-400 font-semibold">{veteranInfo.reservedCorporationName}</span>
             </>
           ) : (
             <>
