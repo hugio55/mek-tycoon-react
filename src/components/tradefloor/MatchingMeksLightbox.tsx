@@ -227,7 +227,6 @@ export default function MatchingMeksLightbox({
                 border: '1px solid rgba(255,255,255,0.1)',
               }}
             >
-              <div className="text-6xl mb-4">🤖</div>
               <h3
                 className="text-xl font-semibold text-white mb-2"
                 style={{ fontFamily: 'Orbitron, sans-serif' }}

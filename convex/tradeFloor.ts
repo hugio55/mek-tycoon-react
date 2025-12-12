@@ -5,17 +5,35 @@ import { Id } from "./_generated/dataModel";
 // Helper: Compute which desired variations a Mek matches
 // Checks all three variation fields regardless of claimed type (more robust against bad data)
 function computeMatchedVariations(
-  mek: { headVariation?: string; bodyVariation?: string; itemVariation?: string },
-  desiredVariations: { variationName: string; variationType: string }[]
+  mek: { headVariation?: string; bodyVariation?: string; itemVariation?: string; assetName?: string },
+  desiredVariations: { variationName: string; variationType: string }[],
+  debug = false
 ): string[] {
   const matches: string[] = [];
   for (const desired of desiredVariations) {
-    const desiredNameLower = desired.variationName.toLowerCase();
+    const desiredNameLower = desired.variationName.toLowerCase().trim();
 
     // Check all three variation fields - matches if any field contains the variation name
-    const hasHead = mek.headVariation?.toLowerCase() === desiredNameLower;
-    const hasBody = mek.bodyVariation?.toLowerCase() === desiredNameLower;
-    const hasTrait = mek.itemVariation?.toLowerCase() === desiredNameLower;
+    const headLower = mek.headVariation?.toLowerCase().trim();
+    const bodyLower = mek.bodyVariation?.toLowerCase().trim();
+    const itemLower = mek.itemVariation?.toLowerCase().trim();
+
+    const hasHead = headLower === desiredNameLower;
+    const hasBody = bodyLower === desiredNameLower;
+    const hasTrait = itemLower === desiredNameLower;
+
+    if (debug) {
+      console.log("[TRADE-MATCH-DETAIL]", {
+        mek: mek.assetName,
+        looking_for: desiredNameLower,
+        mek_head: headLower,
+        mek_body: bodyLower,
+        mek_item: itemLower,
+        hasHead,
+        hasBody,
+        hasTrait,
+      });
+    }
 
     if (hasHead || hasBody || hasTrait) {
       matches.push(desired.variationName);
@@ -170,18 +188,22 @@ export const getMatchingMeksForListing = query({
     console.log("[TRADE-MATCH] viewerStakeAddress:", args.viewerStakeAddress);
     console.log("[TRADE-MATCH] viewerMeks count:", viewerMeks.length);
     console.log("[TRADE-MATCH] desiredVariations:", listing.desiredVariations);
-    if (viewerMeks.length > 0) {
-      console.log("[TRADE-MATCH] First mek variations:", {
-        head: viewerMeks[0].headVariation,
-        body: viewerMeks[0].bodyVariation,
-        item: viewerMeks[0].itemVariation,
+
+    // Log first 3 Meks for debugging
+    viewerMeks.slice(0, 3).forEach((mek, i) => {
+      console.log(`[TRADE-MATCH] Mek ${i}:`, {
+        assetName: mek.assetName,
+        head: mek.headVariation,
+        body: mek.bodyVariation,
+        item: mek.itemVariation,
       });
-    }
+    });
 
     // Filter to those that match at least one desired variation
     const matchingMeks = viewerMeks
-      .map((mek) => {
-        const matchedVariations = computeMatchedVariations(mek, listing.desiredVariations);
+      .map((mek, index) => {
+        // Debug first 3 Meks in detail
+        const matchedVariations = computeMatchedVariations(mek, listing.desiredVariations, index < 3);
         return {
           ...mek,
           matchedVariations,

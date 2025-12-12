@@ -422,7 +422,7 @@ export default function EditListingLightbox({
                       }}
                     >
                       <div className="flex justify-between items-center">
-                        <span className="truncate">{v.name}</span>
+                        <span className="truncate">{v.name.replace(/Ultimate/gi, 'Ult')}</span>
                         <span
                           className="text-xs px-1.5 py-0.5 rounded ml-2 flex-shrink-0"
                           style={{ background: 'rgba(0,0,0,0.2)', opacity: 0.7 }}

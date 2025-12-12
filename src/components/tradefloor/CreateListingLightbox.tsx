@@ -779,7 +779,7 @@ export default function CreateListingLightbox({
                         }}
                       >
                         <div className="flex justify-between items-center">
-                          <span>{v.name}</span>
+                          <span>{v.name.replace(/Ultimate/gi, 'Ult')}</span>
                           <span
                             className="text-xs px-1.5 py-0.5 rounded"
                             style={{

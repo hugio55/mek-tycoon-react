@@ -956,14 +956,14 @@ export default function BetaSignupLightbox({
             <div className="flex gap-3">
               <button
                 onClick={handleCancelClose}
-                className="flex-1 py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200"
+                className="flex-1 py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200 hover:brightness-110 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
                 style={{ fontFamily: 'Inter, sans-serif', background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)', color: '#ffffff', boxShadow: '0 4px 14px rgba(6, 182, 212, 0.4)', border: 'none' }}
               >
                 Go Back
               </button>
               <button
                 onClick={handleConfirmClose}
-                className="flex-1 py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200 border border-white/20 hover:bg-white/5"
+                className="flex-1 py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200 border border-white/20 hover:bg-white/10 hover:border-white/40 hover:text-white active:scale-[0.98]"
                 style={{ fontFamily: 'Inter, sans-serif', background: 'rgba(255, 255, 255, 0.05)', color: '#94a3b8' }}
               >
                 Close Anyway
