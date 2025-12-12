@@ -30,6 +30,7 @@ function WhitelistManagerAdminContent({ client, mutationsEnabled, onToggleMutati
   const [showSnapshotModal, setShowSnapshotModal] = useState(false);
   const [snapshotName, setSnapshotName] = useState('');
   const [snapshotDescription, setSnapshotDescription] = useState('');
+  const [viewingSnapshot, setViewingSnapshot] = useState<any | null>(null);
 
   const [mounted, setMounted] = useState(false);
 
@@ -349,7 +350,8 @@ function WhitelistManagerAdminContent({ client, mutationsEnabled, onToggleMutati
             {allSnapshots.map((snapshot: any) => (
               <div
                 key={snapshot._id}
-                className="bg-purple-900/30 border border-purple-500/30 rounded-lg p-4"
+                className="bg-purple-900/30 border border-purple-500/30 rounded-lg p-4 cursor-pointer hover:border-purple-400/50 hover:bg-purple-900/40 transition-all"
+                onClick={() => setViewingSnapshot(snapshot)}
               >
                 <div className="mb-2">
                   <div className="font-bold text-white text-sm mb-1">
@@ -372,7 +374,10 @@ function WhitelistManagerAdminContent({ client, mutationsEnabled, onToggleMutati
                 </div>
 
                 <button
-                  onClick={() => handleDeleteSnapshot(snapshot._id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteSnapshot(snapshot._id);
+                  }}
                   className="w-full px-3 py-2 bg-red-600/30 hover:bg-red-600/50 text-red-400 text-sm font-bold rounded transition-all"
                 >
                   🗑️ Delete
