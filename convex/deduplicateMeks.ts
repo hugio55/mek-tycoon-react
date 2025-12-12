@@ -734,7 +734,21 @@ export const exportMeksByNumber = query({
   handler: async (ctx, args) => {
     const allMeks = await ctx.db.query("meks").collect();
 
-    const result: any[] = [];
+    const result: {
+      assetId: string;
+      assetName: string;
+      mekNumber?: number;
+      sourceKey?: string;
+      headVariation?: string;
+      bodyVariation?: string;
+      itemVariation?: string;
+      owner?: string;
+      ownerStakeAddress?: string;
+      isSlotted?: boolean;
+      slotNumber?: number;
+      accumulatedGoldAllTime: number;
+      accumulatedGoldForCorp: number;
+    }[] = [];
 
     for (const num of args.mekNumbers) {
       const mek = allMeks.find(m => {
