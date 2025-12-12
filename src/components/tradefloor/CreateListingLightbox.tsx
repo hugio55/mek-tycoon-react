@@ -776,32 +776,20 @@ export default function CreateListingLightbox({
                       <button
                         onClick={() => handleSelectVariation(v)}
                         disabled={isAtLimit}
-                        className="relative w-full aspect-square rounded-lg overflow-hidden transition-all hover:scale-110 hover:brightness-125 hover:z-10"
+                        className="relative w-full aspect-square transition-all hover:scale-110 hover:brightness-125 hover:z-10"
                         style={{
                           opacity: isAtLimit ? 0.5 : 1,
                           cursor: isAtLimit ? 'not-allowed' : 'pointer',
                         }}
                       >
-                        {/* Variation Image */}
                         <img
                           src={imageSrc}
                           alt={v.name}
-                          className="w-full h-full object-cover rounded-lg"
+                          className="w-full h-full object-contain"
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display = 'none';
                           }}
                         />
-                        {/* Rank badge in corner */}
-                        <span
-                          className="absolute top-1 right-1 text-[10px] px-1.5 py-0.5 rounded font-medium"
-                          style={{
-                            background: 'rgba(0,0,0,0.7)',
-                            color: colors.text,
-                            backdropFilter: 'blur(4px)',
-                          }}
-                        >
-                          #{v.rank}
-                        </span>
                       </button>
                     </div>
                   );
