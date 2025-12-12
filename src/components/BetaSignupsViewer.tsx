@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/convex/_generated/api';
 import { useDatabaseContext } from '@/contexts/DatabaseContext';
+import { sturgeonClient } from '@/lib/sturgeonClient';
 
 interface BetaSignup {
   _id: string;
@@ -42,7 +43,8 @@ export default function BetaSignupsViewer() {
   // Debug logging
   console.log('[🎮BETA-VIEWER] Context:', { hasClient: !!client, selectedDatabase });
 
-  // Fetch signups and veterans from the selected database
+  // Fetch signups from selected database, but ALWAYS fetch veterans from Sturgeon
+  // (Name reservations are stored on Sturgeon regardless of which database is selected)
   useEffect(() => {
     console.log('[🎮BETA-VIEWER] useEffect triggered:', { hasClient: !!client, selectedDatabase });
     if (!client) {
@@ -53,11 +55,14 @@ export default function BetaSignupsViewer() {
     let cancelled = false;
 
     const fetchData = async () => {
-      console.log('[🎮BETA-VIEWER] Fetching data from:', selectedDatabase);
+      console.log('[🎮BETA-VIEWER] Fetching signups from:', selectedDatabase);
+      console.log('[🎮BETA-VIEWER] Fetching veterans from: Sturgeon (always)');
       try {
+        // Signups come from selected database
+        // Veterans ALWAYS come from Sturgeon (that's where name reservations are stored)
         const [signupsData, veteransData] = await Promise.all([
           client.query(api.betaSignups.getAllBetaSignups, {}),
-          client.query(api.phase1Veterans.getAllVeterans, {})
+          sturgeonClient.query(api.phase1Veterans.getAllVeterans, {})
         ]);
         console.log('[🎮BETA-VIEWER] Received data:', {
           signups: signupsData?.length || 0,
