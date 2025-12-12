@@ -562,6 +562,7 @@ export const addUserToWhitelistByAddress = mutation({
 
     // Validate stake address format
     const trimmedAddress = args.stakeAddress.trim();
+    const normalizedAddress = trimmedAddress.toLowerCase();
     if (!trimmedAddress.startsWith('stake1') && !trimmedAddress.startsWith('stake_test1')) {
       // Reject payment addresses with helpful error
       if (trimmedAddress.startsWith('addr1') || trimmedAddress.startsWith('addr_test1')) {
@@ -572,11 +573,49 @@ export const addUserToWhitelistByAddress = mutation({
 
     // Check if already in whitelist
     const alreadyExists = whitelist.eligibleUsers.some(
-      (user) => user.stakeAddress === trimmedAddress
+      (user) => user.stakeAddress === trimmedAddress || user.stakeAddress?.toLowerCase() === normalizedAddress
     );
 
     if (alreadyExists) {
       throw new Error(`Stake address ${trimmedAddress.substring(0, 15)}... is already in this whitelist`);
+    }
+
+    // Auto-lookup display name if not provided
+    let resolvedDisplayName = args.displayName?.trim();
+
+    if (!resolvedDisplayName) {
+      // Try to find display name from various sources
+
+      // 1. Check phase1Veterans table (has stakeAddress)
+      const veteran = await ctx.db
+        .query("phase1Veterans")
+        .withIndex("by_stakeAddress", (q) => q.eq("stakeAddress", normalizedAddress))
+        .first();
+      if (veteran) {
+        resolvedDisplayName = veteran.reservedCorporationName || veteran.originalCorporationName;
+      }
+
+      // 2. Check goldMining table (has walletAddress which could be stake address)
+      if (!resolvedDisplayName) {
+        const miner = await ctx.db
+          .query("goldMining")
+          .filter((q) => q.eq(q.field("walletAddress"), normalizedAddress))
+          .first();
+        if (miner?.companyName) {
+          resolvedDisplayName = miner.companyName;
+        }
+      }
+
+      // 3. Check users table (has stakeAddress)
+      if (!resolvedDisplayName) {
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_stakeAddress", (q) => q.eq("stakeAddress", normalizedAddress))
+          .first();
+        if (user?.corporationName) {
+          resolvedDisplayName = user.corporationName;
+        }
+      }
     }
 
     // Add user
@@ -584,7 +623,7 @@ export const addUserToWhitelistByAddress = mutation({
       ...whitelist.eligibleUsers,
       {
         stakeAddress: trimmedAddress,
-        displayName: args.displayName?.trim() || undefined,
+        displayName: resolvedDisplayName || undefined,
       },
     ];
 
@@ -599,7 +638,7 @@ export const addUserToWhitelistByAddress = mutation({
       newCount: updatedUsers.length,
       addedUser: {
         stakeAddress: trimmedAddress,
-        displayName: args.displayName?.trim(),
+        displayName: resolvedDisplayName,
       },
     };
   },

@@ -47,6 +47,11 @@ export default function EditListingLightbox({
   const [typeDropdownRect, setTypeDropdownRect] = useState<DOMRect | null>(null);
   const typeDropdownBtnRef = useRef<HTMLButtonElement>(null);
   const [limitTooltip, setLimitTooltip] = useState<{ x: number; y: number } | null>(null);
+  const [hoveredVariation, setHoveredVariation] = useState<{
+    variation: typeof COMPLETE_VARIATION_RARITY[0];
+    x: number;
+    y: number;
+  } | null>(null);
 
   const updateListing = useMutation(api.tradeFloor.updateListingVariations);
 
@@ -385,52 +390,83 @@ export default function EditListingLightbox({
             </div>
           </div>
 
-          {/* Variation Grid - Fixed height to prevent lightbox resizing */}
+          {/* Variation Grid - Image-based cards with hover tooltips */}
           <div
-            className="overflow-y-auto rounded-lg p-3 h-64 min-h-64"
+            className="overflow-y-auto rounded-lg p-3 h-72 min-h-72"
             style={{
               background: 'rgba(255,255,255,0.03)',
               border: '1px solid rgba(255,255,255,0.1)',
             }}
           >
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 content-start">
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 content-start">
               {filteredVariations.map((v) => {
                 const colors = variationTypeColors[v.type];
                 const isAtLimit = selectedVariations.length >= 6;
+                // Randomly assign one of 3 sample images based on variation id
+                const sampleImages = [
+                  '/variation-images-art-400px/webp/ae1-gn3-ev1_webp 80%.webp',
+                  '/variation-images-art-400px/webp/ar1-at1-nm1_webp 80%.webp',
+                  '/variation-images-art-400px/webp/ak3-aa5-mo1_webp 80%.webp',
+                ];
+                const imageIndex = v.id % 3;
+                const imageSrc = sampleImages[imageIndex];
                 return (
                   <div
                     key={v.id}
                     onMouseEnter={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
                       if (isAtLimit) {
-                        const rect = e.currentTarget.getBoundingClientRect();
                         setLimitTooltip({ x: rect.left + rect.width / 2, y: rect.top });
+                        setHoveredVariation(null);
+                      } else {
+                        setHoveredVariation({
+                          variation: v,
+                          x: rect.left + rect.width / 2,
+                          y: rect.top,
+                        });
                       }
                     }}
-                    onMouseLeave={() => setLimitTooltip(null)}
+                    onMouseLeave={() => {
+                      setHoveredVariation(null);
+                      setLimitTooltip(null);
+                    }}
                   >
                     <button
                       onClick={() => handleSelectVariation(v)}
                       disabled={isAtLimit}
-                      className="w-full px-3 py-2 text-sm rounded text-left transition-all hover:brightness-125 whitespace-nowrap overflow-hidden"
+                      className="relative w-full aspect-square rounded-lg overflow-hidden transition-all hover:scale-105 hover:brightness-110 group"
                       style={{
-                        fontFamily: 'Play, sans-serif',
-                        background: colors.bg,
-                        border: `1px solid ${colors.border}`,
-                        color: colors.text,
+                        border: `2px solid ${colors.border}`,
                         opacity: isAtLimit ? 0.5 : 1,
                         cursor: isAtLimit ? 'not-allowed' : 'pointer',
+                        boxShadow: `0 0 8px ${colors.border}`,
                       }}
                     >
-                      <div className="flex justify-between items-center">
-                        <span className="truncate">{v.name.replace(/Ultimate/gi, 'Ult')}</span>
-                        <span
-                          className="text-xs px-1.5 py-0.5 rounded ml-2 flex-shrink-0"
-                          style={{ background: 'rgba(0,0,0,0.2)', opacity: 0.7 }}
-                          title={`Rank ${v.rank} of 291`}
-                        >
-                          #{v.rank}
-                        </span>
-                      </div>
+                      {/* Variation Image */}
+                      <img
+                        src={imageSrc}
+                        alt={v.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                      {/* Rank badge in corner */}
+                      <span
+                        className="absolute top-1 right-1 text-[10px] px-1.5 py-0.5 rounded font-medium"
+                        style={{
+                          background: 'rgba(0,0,0,0.7)',
+                          color: colors.text,
+                          backdropFilter: 'blur(4px)',
+                        }}
+                      >
+                        #{v.rank}
+                      </span>
+                      {/* Type indicator bar at bottom */}
+                      <div
+                        className="absolute bottom-0 left-0 right-0 h-1"
+                        style={{ background: colors.text }}
+                      />
                     </button>
                   </div>
                 );
@@ -520,6 +556,56 @@ export default function EditListingLightbox({
               borderLeft: '8px solid transparent',
               borderRight: '8px solid transparent',
               borderTop: '8px solid rgba(35, 40, 50, 0.98)',
+            }}
+          />
+        </div>,
+        document.body
+      )}
+
+      {/* Variation Hover Tooltip - Shows name and details on hover */}
+      {hoveredVariation && createPortal(
+        <div
+          className="fixed z-[99999] pointer-events-none"
+          style={{
+            left: hoveredVariation.x,
+            top: hoveredVariation.y - 10,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
+          <div
+            className="px-4 py-2.5 rounded-xl text-sm"
+            style={{
+              background: 'linear-gradient(135deg, rgba(30, 35, 45, 0.98) 0%, rgba(40, 45, 55, 0.98) 50%, rgba(30, 35, 45, 0.98) 100%)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: `1px solid ${variationTypeColors[hoveredVariation.variation.type].border}`,
+              fontFamily: "'Play', sans-serif",
+              boxShadow: `0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px ${variationTypeColors[hoveredVariation.variation.type].border}`,
+            }}
+          >
+            <div
+              className="font-bold text-base mb-1"
+              style={{ color: variationTypeColors[hoveredVariation.variation.type].text }}
+            >
+              {hoveredVariation.variation.name}
+            </div>
+            <div className="flex items-center gap-3 text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              <span className="capitalize">{hoveredVariation.variation.type}</span>
+              <span>•</span>
+              <span>Rank #{hoveredVariation.variation.rank}</span>
+              <span>•</span>
+              <span className="capitalize">{hoveredVariation.variation.tier}</span>
+            </div>
+          </div>
+          {/* Arrow */}
+          <div
+            className="mx-auto"
+            style={{
+              width: 0,
+              height: 0,
+              borderLeft: '8px solid transparent',
+              borderRight: '8px solid transparent',
+              borderTop: `8px solid ${variationTypeColors[hoveredVariation.variation.type].border}`,
             }}
           />
         </div>,

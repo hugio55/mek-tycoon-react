@@ -739,11 +739,19 @@ export default function CreateListingLightbox({
                 />
               </div>
 
-              {/* Variation Grid - Fixed height to prevent lightbox resizing */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 h-64 min-h-64 max-h-64 overflow-y-auto relative content-start">
+              {/* Variation Grid - Image-based cards with hover tooltips */}
+              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 h-72 min-h-72 max-h-72 overflow-y-auto relative content-start">
                 {filteredVariations.map((v) => {
                   const colors = variationTypeColors[v.type as "head" | "body" | "trait"];
                   const isAtLimit = selectedVariations.length >= 6;
+                  // Randomly assign one of 3 sample images based on variation id
+                  const sampleImages = [
+                    '/variation-images-art-400px/webp/ae1-gn3-ev1_webp 80%.webp',
+                    '/variation-images-art-400px/webp/ar1-at1-nm1_webp 80%.webp',
+                    '/variation-images-art-400px/webp/ak3-aa5-mo1_webp 80%.webp',
+                  ];
+                  const imageIndex = v.id % 3;
+                  const imageSrc = sampleImages[imageIndex];
                   return (
                     <div
                       key={v.id}
@@ -768,29 +776,39 @@ export default function CreateListingLightbox({
                       <button
                         onClick={() => handleSelectVariation(v)}
                         disabled={isAtLimit}
-                        className="w-full px-3 py-2 text-sm rounded text-left transition-all hover:brightness-125"
+                        className="relative w-full aspect-square rounded-lg overflow-hidden transition-all hover:scale-105 hover:brightness-110 group"
                         style={{
-                          background: colors.bg,
-                          border: `1px solid ${colors.border}`,
-                          color: colors.text,
-                          fontFamily: 'Play, sans-serif',
+                          border: `2px solid ${colors.border}`,
                           opacity: isAtLimit ? 0.5 : 1,
                           cursor: isAtLimit ? 'not-allowed' : 'pointer',
+                          boxShadow: `0 0 8px ${colors.border}`,
                         }}
                       >
-                        <div className="flex justify-between items-center">
-                          <span>{v.name.replace(/Ultimate/gi, 'Ult')}</span>
-                          <span
-                            className="text-xs px-1.5 py-0.5 rounded"
-                            style={{
-                              background: 'rgba(0,0,0,0.2)',
-                              opacity: 0.7,
-                            }}
-                            title={`Rank ${v.rank} of 291`}
-                          >
-                            #{v.rank}
-                          </span>
-                        </div>
+                        {/* Variation Image */}
+                        <img
+                          src={imageSrc}
+                          alt={v.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                        {/* Rank badge in corner */}
+                        <span
+                          className="absolute top-1 right-1 text-[10px] px-1.5 py-0.5 rounded font-medium"
+                          style={{
+                            background: 'rgba(0,0,0,0.7)',
+                            color: colors.text,
+                            backdropFilter: 'blur(4px)',
+                          }}
+                        >
+                          #{v.rank}
+                        </span>
+                        {/* Type indicator bar at bottom */}
+                        <div
+                          className="absolute bottom-0 left-0 right-0 h-1"
+                          style={{ background: colors.text }}
+                        />
                       </button>
                     </div>
                   );
