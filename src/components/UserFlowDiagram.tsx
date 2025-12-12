@@ -460,7 +460,7 @@ export default function UserFlowDiagram() {
                         "Click backdrop → closes",
                         "NO auto-close"
                       ]}
-                      onClick={() => openBetaPreview('success')}
+                      onClick={() => openBetaPreview('success', MOCK_VETERAN_INFO)}
                     />
                   </div>
 

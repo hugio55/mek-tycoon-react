@@ -83,9 +83,11 @@ export default function BetaSignupLightbox({
   const [shouldShake, setShouldShake] = useState(false);
 
   // Phase I veteran state - use preview values if in preview mode
+  // Note: Don't auto-fallback to MOCK_VETERAN_INFO - let preview explicitly pass veteranInfo
+  // This ensures non-veteran flows (like "Welcome Aboard" success) show correctly
   const [step, setStep] = useState<LightboxStep>(previewStep || 'address_entry');
   const [veteranInfo, setVeteranInfo] = useState<VeteranInfo | null>(
-    previewMode ? (previewVeteranInfo || MOCK_VETERAN_INFO) : null
+    previewMode ? (previewVeteranInfo ?? null) : null
   );
   const [newCorporationName, setNewCorporationName] = useState(
     previewMode && previewVeteranInfo ?
@@ -134,10 +136,16 @@ export default function BetaSignupLightbox({
   }, [previewMode, previewStep]);
 
   // Sync veteranInfo when previewVeteranInfo changes in preview mode
+  // Must also handle when previewVeteranInfo is undefined (non-veteran flows)
   useEffect(() => {
-    if (previewMode && previewVeteranInfo) {
-      setVeteranInfo(previewVeteranInfo);
-      setNewCorporationName(previewVeteranInfo.reservedCorporationName || previewVeteranInfo.originalCorporationName);
+    if (previewMode) {
+      if (previewVeteranInfo) {
+        setVeteranInfo(previewVeteranInfo);
+        setNewCorporationName(previewVeteranInfo.reservedCorporationName || previewVeteranInfo.originalCorporationName);
+      } else {
+        setVeteranInfo(null);
+        setNewCorporationName('');
+      }
     }
   }, [previewMode, previewVeteranInfo]);
 
