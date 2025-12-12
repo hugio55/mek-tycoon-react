@@ -109,6 +109,12 @@ export default function BetaSignupsViewer() {
     return new Date(timestamp).toLocaleString();
   };
 
+  // CSV-safe date format (no commas)
+  const formatDateForCSV = (timestamp: number) => {
+    const d = new Date(timestamp);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+  };
+
   const openHistoryLightbox = (veteran: VeteranInfo) => {
     setHistoryLightbox({
       isOpen: true,
@@ -157,7 +163,7 @@ export default function BetaSignupsViewer() {
                   'Stake Address,P1 Veteran,P1 Corp Name,Reserved Name,Submitted At',
                   ...signups.map((s) => {
                     const vet = veteranMap.get(s.stakeAddress.toLowerCase());
-                    return `${s.stakeAddress},${vet ? 'Yes' : 'No'},${vet?.originalCorporationName || ''},${vet?.reservedCorporationName || ''},${formatDate(s.submittedAt)}`;
+                    return `${s.stakeAddress},${vet ? 'Yes' : 'No'},${vet?.originalCorporationName || ''},${vet?.reservedCorporationName || ''},${formatDateForCSV(s.submittedAt)}`;
                   })
                 ].join('\n');
                 const blob = new Blob([csv], { type: 'text/csv' });
