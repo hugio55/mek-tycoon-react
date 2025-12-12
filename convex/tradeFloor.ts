@@ -1042,16 +1042,34 @@ export const debugMeksDataConsistency = query({
       }
     }
 
-    // Get creation times for mismatched meks
-    const mismatchCreationTimes = mismatchDetails.map(m => {
-      const mekDoc = meks.find(mk => mk.mekNumber === m.mekNumber);
-      return {
-        mekNumber: m.mekNumber,
-        _creationTime: mekDoc?._creationTime,
-        createdDate: mekDoc?._creationTime ? new Date(mekDoc._creationTime).toISOString() : "unknown",
-        lastUpdated: (mekDoc as any)?.lastUpdated ? new Date((mekDoc as any).lastUpdated).toISOString() : "unknown",
-      };
-    });
+    // Analyze naming pattern correlation
+    const namingAnalysis = {
+      mismatchesWithMekPrefix: 0,
+      mismatchesWithMekanismPrefix: 0,
+      correctWithMekPrefix: 0,
+      correctWithMekanismPrefix: 0,
+    };
+
+    for (const mek of meks) {
+      if (!mek.sourceKey) continue;
+      const fromSourceKey = getVariationsFromSourceKey(mek.sourceKey);
+      if (!fromSourceKey.head) continue;
+
+      const isMatch = fromSourceKey.head?.toLowerCase() === mek.headVariation?.toLowerCase() &&
+                      fromSourceKey.body?.toLowerCase() === mek.bodyVariation?.toLowerCase() &&
+                      fromSourceKey.trait?.toLowerCase() === mek.itemVariation?.toLowerCase();
+
+      const hasMekPrefix = mek.assetName?.startsWith("Mek #");
+      const hasMekanismPrefix = mek.assetName?.startsWith("Mekanism #");
+
+      if (isMatch) {
+        if (hasMekPrefix) namingAnalysis.correctWithMekPrefix++;
+        if (hasMekanismPrefix) namingAnalysis.correctWithMekanismPrefix++;
+      } else {
+        if (hasMekPrefix) namingAnalysis.mismatchesWithMekPrefix++;
+        if (hasMekanismPrefix) namingAnalysis.mismatchesWithMekanismPrefix++;
+      }
+    }
 
     return {
       analyzed: meks.length,
@@ -1061,8 +1079,8 @@ export const debugMeksDataConsistency = query({
       sourceKeyNotFound,
       mismatchPercentage: ((mismatches / (matches + mismatches)) * 100).toFixed(1) + "%",
       mismatchesByOwner: ownerCounts,
-      mismatchTimestamps: mismatchCreationTimes,
-      sampleMismatches: mismatchDetails,
+      namingAnalysis,
+      sampleMismatches: mismatchDetails.slice(0, 5),
     };
   },
 });
