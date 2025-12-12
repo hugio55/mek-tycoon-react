@@ -28,9 +28,8 @@ function getVariationsFromSourceKey(sourceKey?: string): { head?: string; body?:
 // Helper: Compute which desired variations a Mek matches
 // Uses sourceKey lookup as the source of truth (database variation fields may be stale)
 function computeMatchedVariations(
-  mek: { sourceKey?: string; headVariation?: string; bodyVariation?: string; itemVariation?: string; assetName?: string },
-  desiredVariations: { variationName: string; variationType: string }[],
-  debug = false
+  mek: { sourceKey?: string; headVariation?: string; bodyVariation?: string; itemVariation?: string },
+  desiredVariations: { variationName: string; variationType: string }[]
 ): string[] {
   const matches: string[] = [];
 
@@ -50,26 +49,7 @@ function computeMatchedVariations(
     const bodyLower = bodyName?.toLowerCase().trim();
     const traitLower = traitName?.toLowerCase().trim();
 
-    const hasHead = headLower === desiredNameLower;
-    const hasBody = bodyLower === desiredNameLower;
-    const hasTrait = traitLower === desiredNameLower;
-
-    if (debug) {
-      console.log("[TRADE-MATCH-DETAIL]", {
-        mek: mek.assetName,
-        sourceKey: mek.sourceKey,
-        looking_for: desiredNameLower,
-        fromSourceKey: { head: fromSourceKey.head, body: fromSourceKey.body, trait: fromSourceKey.trait },
-        actual_head: headLower,
-        actual_body: bodyLower,
-        actual_trait: traitLower,
-        hasHead,
-        hasBody,
-        hasTrait,
-      });
-    }
-
-    if (hasHead || hasBody || hasTrait) {
+    if (headLower === desiredNameLower || bodyLower === desiredNameLower || traitLower === desiredNameLower) {
       matches.push(desired.variationName);
     }
   }
@@ -218,29 +198,10 @@ export const getMatchingMeksForListing = query({
       )
       .collect();
 
-    // Debug logging
-    console.log("[TRADE-MATCH] viewerStakeAddress:", args.viewerStakeAddress);
-    console.log("[TRADE-MATCH] viewerMeks count:", viewerMeks.length);
-    console.log("[TRADE-MATCH] desiredVariations:", listing.desiredVariations);
-
-    // Log first 3 Meks for debugging - now showing sourceKey variations
-    viewerMeks.slice(0, 3).forEach((mek, i) => {
-      const fromSourceKey = getVariationsFromSourceKey(mek.sourceKey);
-      console.log(`[TRADE-MATCH] Mek ${i}:`, {
-        assetName: mek.assetName,
-        sourceKey: mek.sourceKey,
-        fromSourceKey: fromSourceKey,
-        dbHead: mek.headVariation,
-        dbBody: mek.bodyVariation,
-        dbItem: mek.itemVariation,
-      });
-    });
-
     // Filter to those that match at least one desired variation
     const matchingMeks = viewerMeks
-      .map((mek, index) => {
-        // Debug first 3 Meks in detail
-        const matchedVariations = computeMatchedVariations(mek, listing.desiredVariations, index < 3);
+      .map((mek) => {
+        const matchedVariations = computeMatchedVariations(mek, listing.desiredVariations);
         return {
           ...mek,
           matchedVariations,
@@ -977,7 +938,7 @@ export const debugGetCorpStakeAddress = query({
   },
 });
 
-// DEBUG: Get all meks owned by a stake address
+// DEBUG: Get all meks owned by a stake address (uses sourceKey lookup)
 export const debugGetMeksByStakeAddress = query({
   args: {
     stakeAddress: v.string(),
@@ -990,23 +951,29 @@ export const debugGetMeksByStakeAddress = query({
 
     console.log(`[DEBUG-MEKS] Found ${meks.length} meks for stake ${args.stakeAddress.substring(0, 25)}...`);
 
-    // Check if any have Seafoam
-    const seafoamMeks = meks.filter((m) =>
-      m.headVariation?.toLowerCase() === "seafoam" ||
-      m.bodyVariation?.toLowerCase() === "seafoam" ||
-      m.itemVariation?.toLowerCase() === "seafoam"
-    );
-    console.log(`[DEBUG-MEKS] Of these, ${seafoamMeks.length} have Seafoam variation`);
+    // Check if any have Seafoam - using sourceKey lookup!
+    const seafoamMeks = meks.filter((m) => {
+      const fromSourceKey = getVariationsFromSourceKey(m.sourceKey);
+      const head = (fromSourceKey.head || m.headVariation)?.toLowerCase();
+      const body = (fromSourceKey.body || m.bodyVariation)?.toLowerCase();
+      const trait = (fromSourceKey.trait || m.itemVariation)?.toLowerCase();
+      return head === "seafoam" || body === "seafoam" || trait === "seafoam";
+    });
+    console.log(`[DEBUG-MEKS] Of these, ${seafoamMeks.length} have Seafoam variation (using sourceKey lookup)`);
 
     return {
       totalCount: meks.length,
       seafoamCount: seafoamMeks.length,
-      allVariations: meks.map((m) => ({
-        assetName: m.assetName,
-        head: m.headVariation,
-        body: m.bodyVariation,
-        trait: m.itemVariation,
-      })),
+      allVariations: meks.map((m) => {
+        const fromSourceKey = getVariationsFromSourceKey(m.sourceKey);
+        return {
+          assetName: m.assetName,
+          sourceKey: m.sourceKey,
+          head: fromSourceKey.head || m.headVariation,
+          body: fromSourceKey.body || m.bodyVariation,
+          trait: fromSourceKey.trait || m.itemVariation,
+        };
+      }),
     };
   },
 });
