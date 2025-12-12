@@ -66,7 +66,12 @@ export const restoreFromTroutBackup = mutation({
       }
     }
 
-    // For each mek number, keep only ONE entry (prefer long assetId format)
+    // For each mek number, keep only ONE entry
+    // FIXED: Prefer "Mekanism" naming over "Mek #" naming
+    // The original logic (preferring long assetId) was flawed because:
+    // - "Mek #" records from Blockfrost had long assetIds but wrong variation data
+    // - "Mekanism #" records from NFT metadata had correct variation data
+    // Now we prefer records with "Mekanism" in the name (correct on-chain naming)
     const dedupedMeks: any[] = [];
     let skippedDuplicates = 0;
 
@@ -74,12 +79,12 @@ export const restoreFromTroutBackup = mutation({
       if (meks.length === 1) {
         dedupedMeks.push(meks[0]);
       } else {
-        // Multiple entries for same mek - prefer long format
-        const longFormat = meks.find(m => m.assetId.length > 50);
-        const chosen = longFormat || meks[0]; // Fall back to first if no long format
+        // Multiple entries for same mek - prefer Mekanism format (correct data)
+        const mekanismFormat = meks.find(m => m.assetName?.toLowerCase().includes('mekanism'));
+        const chosen = mekanismFormat || meks[0]; // Fall back to first if no Mekanism format
         dedupedMeks.push(chosen);
         skippedDuplicates += meks.length - 1;
-        console.log(`[Restore] Mek #${mekNum}: ${meks.length} entries found, keeping ${longFormat ? 'long' : 'short'} format`);
+        console.log(`[Restore] Mek #${mekNum}: ${meks.length} entries found, keeping ${mekanismFormat ? 'Mekanism' : 'fallback'} format: ${chosen.assetName}`);
       }
     }
 

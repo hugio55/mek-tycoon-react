@@ -142,28 +142,37 @@ export const removeDuplicates = mutation({
     for (const [mekNumber, meks] of byMekNumber.entries()) {
       if (meks.length <= 1) continue;
 
-      // Separate long and short format entries
-      const longFormat = meks.filter(m => m.assetId.length > 50);
-      const shortFormat = meks.filter(m => m.assetId.length <= 50);
+      // FIXED: Prefer "Mekanism" naming over "Mek #" naming
+      // The original logic (preferring long assetId) was flawed because:
+      // - "Mek #" records from Blockfrost had long assetIds
+      // - "Mekanism #" records from NFT metadata had correct variation data
+      // - Keeping long assetId kept wrong data
+      //
+      // Now we prefer records with "Mekanism" in the name (correct on-chain naming)
+      const mekanismFormat = meks.filter(m => m.assetName?.toLowerCase().includes('mekanism'));
 
-      if (longFormat.length === 0 || shortFormat.length === 0) {
+      if (meks.length === 0) {
         console.log(`[Dedup] Mek #${mekNumber}: unexpected format distribution, skipping`);
         continue;
       }
 
-      // Keep the long format entry, delete short format entries
-      const keepEntry = longFormat[0];
+      // Keep the Mekanism format entry (correct data), or fall back to first entry
+      const keepEntry = mekanismFormat[0] || meks[0];
+      const deleteEntries = meks.filter(m => m._id !== keepEntry._id);
 
-      for (const deleteEntry of shortFormat) {
-        // Check if short entry has important data to transfer
+      // Log which record we're keeping
+      console.log(`[Dedup] Mek #${mekNumber}: keeping ${keepEntry.assetName} (${mekanismFormat.length > 0 ? 'Mekanism format' : 'fallback'})`);
+
+      for (const deleteEntry of deleteEntries) {
+        // Check if entry to be deleted has important data to transfer
         const hasImportantData =
           (deleteEntry.tenurePoints && deleteEntry.tenurePoints > 0) ||
           deleteEntry.isSlotted ||
           deleteEntry.talentTree;
 
         if (hasImportantData) {
-          // Merge important data into the long format entry
-          console.log(`[Dedup] Mek #${mekNumber}: merging data from short to long format`);
+          // Merge important data into the kept entry
+          console.log(`[Dedup] Mek #${mekNumber}: merging data from ${deleteEntry.assetName} to ${keepEntry.assetName}`);
           await ctx.db.patch(keepEntry._id, {
             tenurePoints: Math.max(keepEntry.tenurePoints || 0, deleteEntry.tenurePoints || 0),
             lastTenureUpdate: deleteEntry.lastTenureUpdate || keepEntry.lastTenureUpdate,
@@ -174,7 +183,7 @@ export const removeDuplicates = mutation({
           mergedData++;
         }
 
-        // Delete the short format entry
+        // Delete the duplicate entry
         await ctx.db.delete(deleteEntry._id);
         deletedCount++;
         deletedIds.push(deleteEntry.assetId);

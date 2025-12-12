@@ -827,7 +827,7 @@ export default function BetaSignupLightbox({
         >
           Discord
         </a>{' '}
-        and turn on notifications for the #announcement channel.
+        and turn on notifications for the #announcements channel.
       </p>
 
       <button
@@ -869,7 +869,7 @@ export default function BetaSignupLightbox({
         >
           Discord
         </a>{' '}
-        and turn on notifications for the #announcement channel.
+        and turn on notifications for the #announcements channel.
       </p>
 
       <button
