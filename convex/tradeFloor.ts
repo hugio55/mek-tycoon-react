@@ -878,3 +878,64 @@ export const recordListingView = mutation({
     return { recorded: true, newViewCount };
   },
 });
+
+// DEBUG: Find all Meks with a specific body variation and check their ownership
+export const debugFindMeksByBodyVariation = query({
+  args: {
+    bodyVariation: v.string(),
+    compareStakeAddress: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const meks = await ctx.db
+      .query("meks")
+      .withIndex("by_body", (q) => q.eq("bodyVariation", args.bodyVariation))
+      .collect();
+
+    console.log(`[DEBUG-SEAFOAM] Found ${meks.length} meks with body=${args.bodyVariation}`);
+    if (args.compareStakeAddress) {
+      console.log(`[DEBUG-SEAFOAM] Comparing against stake address: ${args.compareStakeAddress}`);
+    }
+
+    return meks.map((mek) => {
+      const matches = args.compareStakeAddress
+        ? mek.ownerStakeAddress === args.compareStakeAddress
+        : null;
+      return {
+        assetName: mek.assetName,
+        mekNumber: mek.mekNumber,
+        ownerStakeAddress: mek.ownerStakeAddress || "NOT SET",
+        owner: mek.owner || "NOT SET",
+        headVariation: mek.headVariation,
+        bodyVariation: mek.bodyVariation,
+        itemVariation: mek.itemVariation,
+        sourceKey: mek.sourceKey,
+        MATCHES_YOUR_STAKE: matches,
+      };
+    });
+  },
+});
+
+// DEBUG: Check what stake address a corporation is using
+export const debugGetCorpStakeAddress = query({
+  args: {
+    corpName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Try partial match
+    const users = await ctx.db
+      .query("users")
+      .collect();
+
+    const matching = users.filter((u) =>
+      u.corporationName?.toLowerCase().includes(args.corpName.toLowerCase())
+    );
+
+    console.log(`[DEBUG-CORP] Found ${matching.length} users matching "${args.corpName}"`);
+
+    return matching.map((u) => ({
+      corporationName: u.corporationName,
+      stakeAddress: u.stakeAddress,
+      stakeAddressShort: u.stakeAddress ? `${u.stakeAddress.substring(0, 20)}...${u.stakeAddress.substring(u.stakeAddress.length - 10)}` : "NOT SET",
+    }));
+  },
+});
