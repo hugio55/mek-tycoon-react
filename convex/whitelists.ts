@@ -584,9 +584,9 @@ export const addUserToWhitelistByAddress = mutation({
     let resolvedDisplayName = args.displayName?.trim();
 
     if (!resolvedDisplayName) {
-      // Try to find display name from various sources
+      // Try to find display name from active tables
 
-      // 1. Check phase1Veterans table (has stakeAddress)
+      // 1. Check phase1Veterans table (42 original P1 beta testers)
       const veteran = await ctx.db
         .query("phase1Veterans")
         .withIndex("by_stakeAddress", (q) => q.eq("stakeAddress", normalizedAddress))
@@ -595,18 +595,7 @@ export const addUserToWhitelistByAddress = mutation({
         resolvedDisplayName = veteran.reservedCorporationName || veteran.originalCorporationName;
       }
 
-      // 2. Check goldMining table (has walletAddress which could be stake address)
-      if (!resolvedDisplayName) {
-        const miner = await ctx.db
-          .query("goldMining")
-          .filter((q) => q.eq(q.field("walletAddress"), normalizedAddress))
-          .first();
-        if (miner?.companyName) {
-          resolvedDisplayName = miner.companyName;
-        }
-      }
-
-      // 3. Check users table (has stakeAddress)
+      // 2. Check users table (Phase 2 users)
       if (!resolvedDisplayName) {
         const user = await ctx.db
           .query("users")
