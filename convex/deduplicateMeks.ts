@@ -681,6 +681,49 @@ export const checkMekOwnership = query({
 });
 
 /**
+ * Export all meks data for backup
+ * Returns full mek records for preservation before changes
+ */
+export const exportMeksForBackup = query({
+  args: {
+    offset: v.optional(v.number()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const allMeks = await ctx.db.query("meks").collect();
+
+    const offset = args.offset || 0;
+    const limit = args.limit || 1000;
+
+    const slice = allMeks.slice(offset, offset + limit);
+
+    return {
+      total: allMeks.length,
+      offset,
+      limit,
+      returned: slice.length,
+      hasMore: offset + limit < allMeks.length,
+      meks: slice.map(m => ({
+        _id: m._id,
+        assetId: m.assetId,
+        assetName: m.assetName,
+        mekNumber: m.mekNumber,
+        sourceKey: m.sourceKey,
+        headVariation: m.headVariation,
+        bodyVariation: m.bodyVariation,
+        itemVariation: m.itemVariation,
+        owner: m.owner,
+        ownerStakeAddress: m.ownerStakeAddress,
+        isSlotted: m.isSlotted,
+        slotNumber: m.slotNumber,
+        accumulatedGoldAllTime: m.accumulatedGoldAllTime,
+        accumulatedGoldForCorp: m.accumulatedGoldForCorp,
+      })),
+    };
+  },
+});
+
+/**
  * Get ownership statistics for all meks
  * Used for auditing before major changes
  */
