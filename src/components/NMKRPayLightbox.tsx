@@ -2294,7 +2294,7 @@ export default function NMKRPayLightbox({
             </p>
             <button
               onClick={onClose}
-              className="w-full py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200"
+              className="w-full py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200 hover:scale-[1.02] hover:brightness-110 active:scale-[0.98]"
               style={{
                 fontFamily: 'Inter, sans-serif',
                 background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
