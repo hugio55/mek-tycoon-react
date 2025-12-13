@@ -199,8 +199,9 @@ const StarField = () => {
         const screenX = star.x * scale + HALF_WIDTH;
         const screenY = star.y * scale + HALF_HEIGHT;
 
-        // Calculate trail position (one speed unit behind interpolated position)
-        const trailZ = renderZ + SPEED_LAYER2;
+        // Calculate trail position (multiple speed units behind for longer streak)
+        const LINE_LENGTH_MULTIPLIER = 3;
+        const trailZ = renderZ + SPEED_LAYER2 * LINE_LENGTH_MULTIPLIER;
         const trailScale = MAX_DEPTH / trailZ;
         const trailX = star.x * trailScale + HALF_WIDTH;
         const trailY = star.y * trailScale + HALF_HEIGHT;
@@ -215,7 +216,7 @@ const StarField = () => {
         const opacity = fadeInProgress * 1.0;
 
         ctx.strokeStyle = getRGBA(opacity);
-        ctx.lineWidth = 9;
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(trailX, trailY);
         ctx.lineTo(screenX, screenY);

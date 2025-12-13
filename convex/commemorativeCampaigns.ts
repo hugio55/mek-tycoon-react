@@ -1012,13 +1012,47 @@ export const manuallySetSoldTo = mutation({
       return { success: false, error: "NFT not found" };
     }
 
-    // Phase II: Look up company name from users table
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.walletAddress))
-      .first();
+    // Look up company name - try users table first, then phase1Veterans
+    const walletAddress = args.walletAddress;
+    const normalizedWallet = walletAddress.toLowerCase().trim();
+    let companyNameAtSale: string | undefined;
 
-    const companyNameAtSale = user?.corporationName || undefined;
+    if (walletAddress.startsWith('stake1') || walletAddress.startsWith('stake_test1')) {
+      // Try users table first (with case normalization)
+      let user = await ctx.db
+        .query("users")
+        .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", normalizedWallet))
+        .first();
+
+      if (!user) {
+        user = await ctx.db
+          .query("users")
+          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
+          .first();
+      }
+
+      if (user?.corporationName) {
+        companyNameAtSale = user.corporationName;
+      } else {
+        // Fallback to phase1Veterans table for reserved name
+        const veteran = await ctx.db
+          .query("phase1Veterans")
+          .withIndex("by_stakeAddress", (q: any) => q.eq("stakeAddress", normalizedWallet))
+          .first();
+
+        if (veteran?.originalCorporationName) {
+          // Use reserved name if set, otherwise original
+          companyNameAtSale = veteran.reservedCorporationName || veteran.originalCorporationName;
+        }
+      }
+    } else {
+      // Legacy payment address
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
+        .first();
+      companyNameAtSale = user?.corporationName || undefined;
+    }
 
     await ctx.db.patch(args.nftId, {
       soldTo: args.walletAddress,
