@@ -710,17 +710,22 @@ export default function CreateListingLightbox({
                   return (
                     <div
                       key={v.id}
-                      onMouseEnter={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
+                      onMouseEnter={() => {
                         if (isAtLimit) {
-                          setLimitTooltip({ x: rect.left + rect.width / 2, y: rect.top });
+                          setHoveredVariation(null);
+                        }
+                      }}
+                      onMouseMove={(e) => {
+                        if (isAtLimit) {
+                          setLimitTooltip({ x: e.clientX, y: e.clientY - 10 });
                           setHoveredVariation(null);
                         } else {
                           setHoveredVariation({
                             variation: v,
-                            x: rect.left + rect.width / 2,
-                            y: rect.top,
+                            x: e.clientX,
+                            y: e.clientY - 10,
                           });
+                          setLimitTooltip(null);
                         }
                       }}
                       onMouseLeave={() => {
