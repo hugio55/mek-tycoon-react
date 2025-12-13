@@ -8,6 +8,7 @@ import type { Id } from '@/convex/_generated/dataModel';
 import { ensureBech32StakeAddress } from '@/lib/cardanoAddressConverter';
 import { getMediaUrl } from '@/lib/media-url';
 import { sturgeonClient, sturgeonHttpClient } from '@/lib/sturgeonClient';
+import { ConvexHttpClient } from 'convex/browser';
 import CubeSpinner from '@/components/loaders/CubeSpinner';
 
 interface NMKRPayLightboxProps {
@@ -310,11 +311,30 @@ export default function NMKRPayLightbox({
     return await fallbackMarkPaymentWindowClosed(args);
   };
 
+  // Create HTTP client for actions (works on both localhost and Vercel)
+  // On localhost: sturgeonHttpClient points to Sturgeon (NEXT_PUBLIC_STURGEON_URL)
+  // On Vercel: no sturgeonHttpClient, so use main CONVEX_URL which IS Sturgeon
+  const [nmkrActionClient] = useState<ConvexHttpClient | null>(() => {
+    // Prefer sturgeonHttpClient if available (localhost dual-database mode)
+    if (sturgeonHttpClient) return sturgeonHttpClient;
+    // On Vercel, main CONVEX_URL points to Sturgeon, so create HTTP client from it
+    const mainUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+    if (mainUrl) {
+      return new ConvexHttpClient(mainUrl);
+    }
+    return null;
+  });
+
   // Direct NMKR API check - bypasses webhook, queries NMKR directly to detect payment
   // This is the NUCLEAR OPTION when webhook fails
   const checkNMKRDirectPayment = async (silent: boolean = false) => {
     if (!reservationId) {
       console.log('[🔨NMKR-DIRECT] No reservation ID, cannot check');
+      return false;
+    }
+
+    if (!nmkrActionClient) {
+      console.log('[🔨NMKR-DIRECT] No action client available');
       return false;
     }
 
@@ -325,13 +345,7 @@ export default function NMKRPayLightbox({
     console.log('[🔨NMKR-DIRECT] Starting direct NMKR payment check for:', reservationId, silent ? '(auto-poll)' : '(manual)');
 
     try {
-      // Use sturgeonHttpClient if available (localhost), otherwise fall back to sturgeonClient
-      const client = sturgeonHttpClient;
-      if (!client) {
-        throw new Error('Production client not available');
-      }
-
-      const result = await client.action(api.nmkr.checkNFTPaymentDirect, {
+      const result = await nmkrActionClient.action(api.nmkr.checkNFTPaymentDirect, {
         inventoryId: reservationId,
       });
 
@@ -368,7 +382,7 @@ export default function NMKRPayLightbox({
     const shouldPollNMKR = !previewMode &&
       (state === 'payment' || state === 'payment_window_closed') &&
       reservationId &&
-      sturgeonHttpClient; // Only works when we have production client
+      nmkrActionClient; // Works on both localhost and Vercel
 
     if (!shouldPollNMKR) {
       return;
@@ -401,7 +415,7 @@ export default function NMKRPayLightbox({
       clearTimeout(initialDelay);
       if (pollInterval) clearInterval(pollInterval);
     };
-  }, [state, reservationId, previewMode]);
+  }, [state, reservationId, previewMode, nmkrActionClient]);
 
   // Query active reservation (campaign-aware) - skip in preview mode
   // CRITICAL FIX: On localhost, use sturgeonHttpClient to query production since reservations are created there
