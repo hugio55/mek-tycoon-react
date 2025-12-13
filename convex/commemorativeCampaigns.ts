@@ -1096,6 +1096,109 @@ export const investigateNFTOwnership = query({
 });
 
 /**
+ * Fix incorrect soldTo data for an NFT
+ * Use this when blockchain evidence shows a different buyer than what's in the database
+ */
+export const fixNFTOwnership = mutation({
+  args: {
+    nftName: v.optional(v.string()),
+    nftUid: v.optional(v.string()),
+    correctSoldTo: v.string(), // The correct wallet address from blockchain
+    correctSoldAt: v.optional(v.number()), // Unix timestamp in milliseconds
+    transactionHash: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    console.log('[FIX-OWNERSHIP] Fixing NFT ownership data:', args);
+
+    // Find the NFT
+    let nft;
+    if (args.nftName) {
+      nft = await ctx.db
+        .query("commemorativeNFTInventory")
+        .filter((q) => q.eq(q.field("name"), args.nftName))
+        .first();
+    } else if (args.nftUid) {
+      nft = await ctx.db
+        .query("commemorativeNFTInventory")
+        .withIndex("by_uid", (q: any) => q.eq("nftUid", args.nftUid))
+        .first();
+    }
+
+    if (!nft) {
+      return { success: false, error: "NFT not found", args };
+    }
+
+    const previousData = {
+      soldTo: nft.soldTo,
+      companyNameAtSale: nft.companyNameAtSale,
+      soldAt: nft.soldAt,
+    };
+
+    // Look up corporation name for the correct address
+    const normalizedWallet = args.correctSoldTo.toLowerCase().trim();
+    let companyNameAtSale: string | undefined;
+
+    // Check users table
+    let user = await ctx.db
+      .query("users")
+      .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", normalizedWallet))
+      .first();
+    if (!user) {
+      user = await ctx.db
+        .query("users")
+        .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.correctSoldTo))
+        .first();
+    }
+    if (user?.corporationName) {
+      companyNameAtSale = user.corporationName;
+    } else {
+      // Check phase1Veterans
+      const veteran = await ctx.db
+        .query("phase1Veterans")
+        .withIndex("by_stakeAddress", (q: any) => q.eq("stakeAddress", normalizedWallet))
+        .first();
+      if (veteran?.originalCorporationName) {
+        companyNameAtSale = veteran.reservedCorporationName || veteran.originalCorporationName;
+      }
+    }
+
+    // Update the NFT with correct data
+    const updateData: any = {
+      soldTo: args.correctSoldTo,
+    };
+    if (args.correctSoldAt) {
+      updateData.soldAt = args.correctSoldAt;
+    }
+    if (args.transactionHash) {
+      updateData.transactionHash = args.transactionHash;
+    }
+    // Only set companyNameAtSale if we found one, otherwise keep it undefined
+    if (companyNameAtSale) {
+      updateData.companyNameAtSale = companyNameAtSale;
+    } else {
+      // Clear the old incorrect company name since the actual buyer isn't in our system
+      updateData.companyNameAtSale = undefined;
+    }
+
+    await ctx.db.patch(nft._id, updateData);
+
+    console.log('[FIX-OWNERSHIP] Fixed NFT:', nft.name, 'previous:', previousData, 'new:', updateData);
+
+    return {
+      success: true,
+      nftName: nft.name,
+      previousData,
+      newData: {
+        soldTo: args.correctSoldTo,
+        companyNameAtSale: companyNameAtSale || "(Unknown - not registered)",
+        soldAt: args.correctSoldAt || nft.soldAt,
+        transactionHash: args.transactionHash || nft.transactionHash,
+      },
+    };
+  },
+});
+
+/**
  * Backfill corporation names for sold NFTs that have soldTo but missing companyNameAtSale
  *
  * Lookup priority:
