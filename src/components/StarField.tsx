@@ -39,7 +39,7 @@ const StarField = () => {
     const STAR_COUNT_LAYER1 = 120;
     const STAR_COUNT_LAYER2 = 5;
     const SPEED_LAYER1 = 0.6;
-    const SPEED_LAYER2 = 45;
+    const SPEED_LAYER2 = 30;
     const MAX_DEPTH = 1000;
     const MIN_DEPTH = 1;
     const PI2 = Math.PI * 2;
@@ -212,10 +212,10 @@ const StarField = () => {
 
         const fadeInDuration = 3000;
         const fadeInProgress = Math.min(star.age / fadeInDuration, 1);
-        const opacity = fadeInProgress * 0.8;
+        const opacity = fadeInProgress * 1.0;
 
         ctx.strokeStyle = getRGBA(opacity);
-        ctx.lineWidth = 7;
+        ctx.lineWidth = 9;
         ctx.beginPath();
         ctx.moveTo(trailX, trailY);
         ctx.lineTo(screenX, screenY);

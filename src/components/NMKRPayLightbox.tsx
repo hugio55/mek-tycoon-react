@@ -312,15 +312,17 @@ export default function NMKRPayLightbox({
 
   // Direct NMKR API check - bypasses webhook, queries NMKR directly to detect payment
   // This is the NUCLEAR OPTION when webhook fails
-  const checkNMKRDirectPayment = async () => {
+  const checkNMKRDirectPayment = async (silent: boolean = false) => {
     if (!reservationId) {
       console.log('[🔨NMKR-DIRECT] No reservation ID, cannot check');
-      return;
+      return false;
     }
 
-    setIsCheckingNMKRDirect(true);
-    setNmkrDirectError(null);
-    console.log('[🔨NMKR-DIRECT] Starting direct NMKR payment check for:', reservationId);
+    if (!silent) {
+      setIsCheckingNMKRDirect(true);
+      setNmkrDirectError(null);
+    }
+    console.log('[🔨NMKR-DIRECT] Starting direct NMKR payment check for:', reservationId, silent ? '(auto-poll)' : '(manual)');
 
     try {
       // Use sturgeonHttpClient if available (localhost), otherwise fall back to sturgeonClient
@@ -339,20 +341,67 @@ export default function NMKRPayLightbox({
         console.log('[🔨NMKR-DIRECT] ✅ PAYMENT CONFIRMED BY NMKR! Transitioning to success...');
         // Transition to success state
         setState('success');
+        return true;
       } else if (result.error) {
         console.error('[🔨NMKR-DIRECT] Error:', result.error);
-        setNmkrDirectError(result.error);
+        if (!silent) setNmkrDirectError(result.error);
       } else {
         console.log('[🔨NMKR-DIRECT] Payment not detected. NMKR status:', result.nmkrStatus);
-        setNmkrDirectError(`NMKR shows status: ${result.nmkrStatus || 'unknown'}. Payment not detected yet.`);
+        if (!silent) setNmkrDirectError(`NMKR shows status: ${result.nmkrStatus || 'unknown'}. Payment not detected yet.`);
       }
     } catch (error) {
       console.error('[🔨NMKR-DIRECT] Failed to check NMKR:', error);
-      setNmkrDirectError(error instanceof Error ? error.message : 'Failed to check NMKR');
+      if (!silent) setNmkrDirectError(error instanceof Error ? error.message : 'Failed to check NMKR');
     } finally {
-      setIsCheckingNMKRDirect(false);
+      if (!silent) setIsCheckingNMKRDirect(false);
     }
+    return false;
   };
+
+  // ==========================================
+  // AUTOMATIC NMKR POLLING - Fallback when webhook fails
+  // ==========================================
+  // Polls NMKR API directly every 5 seconds when user is waiting for payment
+  // This ensures payment is detected even if webhook fails or is delayed
+  useEffect(() => {
+    // Only poll when in payment-waiting states
+    const shouldPollNMKR = !previewMode &&
+      (state === 'payment' || state === 'payment_window_closed') &&
+      reservationId &&
+      sturgeonHttpClient; // Only works when we have production client
+
+    if (!shouldPollNMKR) {
+      return;
+    }
+
+    let isActive = true;
+    let pollInterval: NodeJS.Timeout | null = null;
+
+    const pollNMKRDirect = async () => {
+      if (!isActive) return;
+      console.log('[🔨NMKR-AUTOPOLL] Checking NMKR directly for payment...');
+      const isPaid = await checkNMKRDirectPayment(true); // Silent mode
+      if (isPaid) {
+        // Payment detected, stop polling
+        if (pollInterval) clearInterval(pollInterval);
+      }
+    };
+
+    // Start polling after 5 seconds (give webhook time first)
+    const initialDelay = setTimeout(() => {
+      if (!isActive) return;
+      // Do first poll
+      pollNMKRDirect();
+      // Then poll every 5 seconds
+      pollInterval = setInterval(pollNMKRDirect, 5000);
+    }, 5000);
+
+    return () => {
+      isActive = false;
+      clearTimeout(initialDelay);
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [state, reservationId, previewMode]);
 
   // Query active reservation (campaign-aware) - skip in preview mode
   // CRITICAL FIX: On localhost, use sturgeonHttpClient to query production since reservations are created there
