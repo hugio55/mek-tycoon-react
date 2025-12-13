@@ -47,11 +47,29 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('[🎮BETA-API] Error:', error);
+    console.log('[🎮BETA-API] Error type:', typeof error);
+    console.log('[🎮BETA-API] Error message:', error?.message);
+    console.log('[🎮BETA-API] Error data:', error?.data);
 
-    // Pass through error messages from Convex
-    const errorMessage = error instanceof Error ? error.message : 'Failed to submit signup';
+    // Extract error message from Convex error format
+    // Convex errors can come in format: "[Request ID: xxx] Error message"
+    let errorMessage = error instanceof Error ? error.message : 'Failed to submit signup';
+
+    // Try to extract the actual message if it's in Convex format
+    // Format: "[Request ID: xxx] Actual error message"
+    const convexMatch = errorMessage.match(/\[Request ID: [^\]]+\]\s*(.+)/);
+    if (convexMatch) {
+      errorMessage = convexMatch[1];
+    }
+
+    // Also check error.data.message for Convex errors
+    if (error?.data?.message) {
+      errorMessage = error.data.message;
+    }
+
+    console.log('[🎮BETA-API] Final error message:', errorMessage);
 
     return NextResponse.json(
       { error: errorMessage },

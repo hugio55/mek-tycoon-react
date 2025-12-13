@@ -303,9 +303,13 @@ export default function BetaSignupLightbox({
       });
 
       const data = await response.json();
+      console.log('[🎮BETA] API response:', { ok: response.ok, status: response.status, data });
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit signup');
+        // Extract error message from various possible formats
+        const errorMsg = data.error || data.message || data.errorMessage || JSON.stringify(data);
+        console.log('[🎮BETA] API error message:', errorMsg);
+        throw new Error(errorMsg);
       }
 
       console.log('[🎮BETA] Signup successful');
@@ -316,14 +320,24 @@ export default function BetaSignupLightbox({
       // Don't auto-close - let user read and dismiss manually
     } catch (error) {
       console.error('[🎮BETA] Signup error:', error);
+      console.log('[🎮BETA] Error type:', typeof error);
+      console.log('[🎮BETA] Error message raw:', error instanceof Error ? error.message : String(error));
+
       let errorMessage = error instanceof Error ? error.message : 'Failed to submit signup';
       errorMessage = errorMessage.replace(/^Uncaught Error:\s*/i, '');
       errorMessage = errorMessage.split(' at ')[0].trim();
 
+      console.log('[🎮BETA] Error message processed:', errorMessage);
+
       // Check if this is a "already signed up" error
-      if (errorMessage.toLowerCase().includes('already been added') ||
-          errorMessage.toLowerCase().includes('already registered')) {
-        console.log('[🎮BETA] Stake address already signed up');
+      // Check multiple patterns since error format can vary
+      const lowerError = errorMessage.toLowerCase();
+      if (lowerError.includes('already been added') ||
+          lowerError.includes('already registered') ||
+          lowerError.includes('already') && lowerError.includes('beta') ||
+          lowerError.includes('already') && lowerError.includes('signup') ||
+          lowerError.includes('already') && lowerError.includes('address')) {
+        console.log('[🎮BETA] Stake address already signed up - showing already_signed_up step');
         setStep('already_signed_up');
         setIsSubmitting(false);
         return;
