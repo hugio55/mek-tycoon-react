@@ -6722,12 +6722,14 @@ function CampaignManagerWithDatabase({
   onSyncCounters,
   onVerifyWithNMKR,
   onBackfillSoldNFTData,
+  onResyncCorpNames,
   onBackfillImages,
   onFetchFromNMKR,
   cleaningCampaignId,
   syncingCampaignId,
   verifyingCampaignId,
   backfillRunning,
+  resyncCorpNamesRunning,
   backfillImagesRunning,
   fetchingFromNMKRCampaignId,
   client,
@@ -6739,12 +6741,14 @@ function CampaignManagerWithDatabase({
   onSyncCounters: (campaignId: string) => Promise<void>;
   onVerifyWithNMKR: (campaignId: string, campaignName: string, nmkrProjectId?: string) => Promise<void>;
   onBackfillSoldNFTData: () => Promise<void>;
+  onResyncCorpNames: () => Promise<void>;
   onBackfillImages: (campaignId: string, nmkrProjectId: string) => Promise<void>;
   onFetchFromNMKR: (campaignId: string, nmkrProjectId: string) => Promise<void>;
   cleaningCampaignId: string | null;
   syncingCampaignId: string | null;
   verifyingCampaignId: string | null;
   backfillRunning: boolean;
+  resyncCorpNamesRunning: boolean;
   backfillImagesRunning: string | null;
   fetchingFromNMKRCampaignId: string | null;
   client: any;
@@ -7093,6 +7097,7 @@ function NFTAdminTabs({ client }: { client: any }) {
   const [nmkrSyncing, setNmkrSyncing] = useState(false);
   const [nmkrVerifying, setNmkrVerifying] = useState<string | null>(null);
   const [backfillRunning, setBackfillRunning] = useState(false);
+  const [resyncCorpNamesRunning, setResyncCorpNamesRunning] = useState(false);
   const [backfillImagesRunning, setBackfillImagesRunning] = useState<string | null>(null);
   const [fetchingFromNMKRCampaignId, setFetchingFromNMKRCampaignId] = useState<string | null>(null);
 
@@ -7465,6 +7470,42 @@ function NFTAdminTabs({ client }: { client: any }) {
     }
   };
 
+  // Resync corporation names handler - updates ALL sold NFTs with latest reserved names
+  const handleResyncCorpNames = async () => {
+    setResyncCorpNamesRunning(true);
+    try {
+      const result = await client.mutation(api.commemorativeCampaigns.resyncCorporationNames, {});
+      console.log('[🔄RESYNC-CORP] Result:', result);
+
+      const messages: string[] = [];
+
+      if (result.updated > 0) {
+        messages.push(`✅ Updated ${result.updated} corporation names to latest reserved names.`);
+      }
+
+      if (result.unchanged > 0) {
+        messages.push(`✓ ${result.unchanged} names already up to date.`);
+      }
+
+      if (result.notFound > 0) {
+        messages.push(`⚠️ ${result.notFound} NFTs have no matching corporation.`);
+      }
+
+      if (messages.length === 0 || (result.updated === 0 && result.unchanged === 0)) {
+        alert('✅ No corporation names to update.');
+      } else {
+        alert(messages.join('\n\n'));
+      }
+
+      setCampaignUpdateTrigger(prev => prev + 1);
+    } catch (error: any) {
+      console.error('[🔄RESYNC-CORP] Error:', error);
+      alert(`Error resyncing corporation names: ${error.message}`);
+    } finally {
+      setResyncCorpNamesRunning(false);
+    }
+  };
+
   // Backfill images from NMKR handler
   const handleBackfillImages = async (campaignId: string, nmkrProjectId: string) => {
     setBackfillImagesRunning(campaignId);
@@ -7707,12 +7748,14 @@ function NFTAdminTabs({ client }: { client: any }) {
             onSyncCounters={handleSyncCounters}
             onVerifyWithNMKR={handleVerifyWithNMKR}
             onBackfillSoldNFTData={handleBackfillSoldNFTData}
+            onResyncCorpNames={handleResyncCorpNames}
             onBackfillImages={handleBackfillImages}
             onFetchFromNMKR={handleFetchFromNMKR}
             cleaningCampaignId={cleaningCampaignId}
             syncingCampaignId={syncingCampaignId}
             verifyingCampaignId={nmkrVerifying}
             backfillRunning={backfillRunning}
+            resyncCorpNamesRunning={resyncCorpNamesRunning}
             backfillImagesRunning={backfillImagesRunning}
             fetchingFromNMKRCampaignId={fetchingFromNMKRCampaignId}
             client={client}

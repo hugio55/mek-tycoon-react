@@ -163,27 +163,34 @@ export default function EditListingLightbox({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        {/* Compact Header with Mek */}
         <div
-          className="px-6 py-4 flex justify-between items-center"
+          className="px-6 py-3 flex justify-between items-center"
           style={{
             background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
             borderBottom: '1px solid rgba(255,255,255,0.1)',
           }}
         >
-          <div>
-            <h2
-              className="text-xl font-bold text-white"
-              style={{ fontFamily: 'Orbitron, sans-serif' }}
-            >
-              Edit Listing
-            </h2>
-            <p
-              className="text-sm"
-              style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
-            >
-              Choose up to six variations you are seeking
-            </p>
+          <div className="flex items-center gap-4">
+            <img
+              src={getMekImagePath(listing.listedMekSourceKey)}
+              alt={listing.listedMekAssetName}
+              className="w-12 h-12 object-contain"
+            />
+            <div>
+              <h2
+                className="text-lg font-bold text-white"
+                style={{ fontFamily: 'Orbitron, sans-serif' }}
+              >
+                {listing.listedMekAssetName}
+              </h2>
+              <p
+                className="text-sm"
+                style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+              >
+                Select variations you want in exchange
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -194,99 +201,42 @@ export default function EditListingLightbox({
           </button>
         </div>
 
-        {/* Listed Mek Preview */}
-        <div
-          className="px-6 py-4"
-          style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
-            borderBottom: '1px solid rgba(255,255,255,0.1)',
-          }}
-        >
-          <div
-            className="text-xs uppercase tracking-wider mb-2"
-            style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
-          >
-            Your Listed Mek:
-          </div>
-          <div className="flex items-center gap-4">
-            <img
-              src={getMekImagePath(listing.listedMekSourceKey)}
-              alt={listing.listedMekAssetName}
-              className="w-16 h-16 object-contain"
-            />
-            <div
-              className="text-white font-medium"
-              style={{ fontFamily: 'Saira, sans-serif' }}
-            >
-              {listing.listedMekAssetName}
-            </div>
-          </div>
-        </div>
-
-        {/* Selected Variations */}
-        <div className="px-6 py-4">
-          <div className="flex justify-between items-center mb-3">
-            <span
-              className="text-sm"
-              style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.6)' }}
-            >
-              Desired Variations ({selectedVariations.length}/6)
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-2 min-h-[40px]">
-            {selectedVariations.map((v, i) => {
-              const colors = variationTypeColors[v.variationType];
-              return (
-                <span
-                  key={i}
-                  className="px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm"
-                  style={{
-                    background: colors.bg,
-                    border: `1px solid ${colors.border}`,
-                    color: colors.text,
-                    fontFamily: 'Play, sans-serif',
-                  }}
-                >
-                  {v.variationName}
-                  <button
-                    onClick={() => handleRemoveVariation(i)}
-                    className="hover:text-white transition-colors"
-                  >
-                    &times;
-                  </button>
-                </span>
-              );
-            })}
-            {selectedVariations.length === 0 && (
+        {/* Main Content */}
+        <div className="flex-1 overflow-hidden flex flex-col p-4">
+          {/* Compact Controls Row */}
+          <div className="flex items-center gap-3 mb-3">
+            {/* Selected Variations Pills */}
+            <div className="flex items-center gap-2 flex-1 min-w-0 overflow-x-auto">
               <span
-                className="text-sm"
+                className="text-xs whitespace-nowrap"
                 style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
               >
-                No variations selected
+                ({selectedVariations.length}/6)
               </span>
-            )}
+              {selectedVariations.map((v, i) => {
+                const colors = variationTypeColors[v.variationType];
+                return (
+                  <span
+                    key={i}
+                    className="px-2 py-1 text-xs rounded flex items-center gap-1.5 whitespace-nowrap"
+                    style={{
+                      background: colors.bg,
+                      border: `1px solid ${colors.border}`,
+                      color: colors.text,
+                      fontFamily: 'Play, sans-serif',
+                    }}
+                  >
+                    {v.variationName}
+                    <button onClick={() => handleRemoveVariation(i)} className="hover:opacity-70">
+                      &times;
+                    </button>
+                  </span>
+                );
+              })}
+            </div>
           </div>
-        </div>
 
-        {/* Variation Picker */}
-        <div className="flex-1 overflow-hidden flex flex-col px-6 pb-4">
-          {/* Color Key */}
-          <div className="flex gap-4 mb-3" style={{ fontFamily: 'Play, sans-serif', fontSize: '12px' }}>
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded" style={{ background: variationTypeColors.head.bg, border: `1px solid ${variationTypeColors.head.border}` }} />
-              <span style={{ color: variationTypeColors.head.text }}>Head</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded" style={{ background: variationTypeColors.body.bg, border: `1px solid ${variationTypeColors.body.border}` }} />
-              <span style={{ color: variationTypeColors.body.text }}>Body</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded" style={{ background: variationTypeColors.trait.bg, border: `1px solid ${variationTypeColors.trait.border}` }} />
-              <span style={{ color: variationTypeColors.trait.text }}>Trait</span>
-            </div>
-          </div>
-
-          {/* Search and Filter */}
+          {/* Search and Filter Row */}
           <div className="flex gap-3 mb-3">
             <input
               type="text"
@@ -390,15 +340,9 @@ export default function EditListingLightbox({
             </div>
           </div>
 
-          {/* Variation Grid - Image-based cards with hover tooltips */}
-          <div
-            className="overflow-y-auto rounded-lg p-3 h-72 min-h-72"
-            style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 content-start">
+          {/* Variation Grid - Takes remaining space */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2 content-start">
               {filteredVariations.map((v) => {
                 const colors = variationTypeColors[v.type];
                 const isAtLimit = selectedVariations.length >= 6;

@@ -859,6 +859,117 @@ export const backfillSoldNFTData = mutation({
 });
 
 /**
+ * Re-sync corporation names for ALL sold NFTs
+ *
+ * This function updates corporation names even if they already have a value,
+ * using the latest data from users table and phase1Veterans (reserved names).
+ *
+ * Use case: When a user reserved a new corporation name but NFTs they already
+ * purchased still show their old name.
+ */
+export const resyncCorporationNames = mutation({
+  args: {},
+  handler: async (ctx) => {
+    console.log('[RESYNC-CORP] Starting re-sync of ALL corporation names...');
+
+    // Find ALL sold NFTs that have soldTo
+    const soldNFTs = await ctx.db
+      .query("commemorativeNFTInventory")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("status"), "sold"),
+          q.neq(q.field("soldTo"), undefined)
+        )
+      )
+      .collect();
+
+    console.log('[RESYNC-CORP] Found', soldNFTs.length, 'sold NFTs with soldTo');
+
+    let updated = 0;
+    let unchanged = 0;
+    let notFound = 0;
+
+    // Helper function to look up corporation name with case normalization and phase1Veterans fallback
+    const lookupCorporationName = async (walletAddress: string): Promise<string | undefined> => {
+      const normalizedWallet = walletAddress.toLowerCase().trim();
+
+      if (walletAddress.startsWith('stake1') || walletAddress.startsWith('stake_test1')) {
+        // Try users table with normalized address first
+        let user = await ctx.db
+          .query("users")
+          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", normalizedWallet))
+          .first();
+
+        // Fallback to original case
+        if (!user) {
+          user = await ctx.db
+            .query("users")
+            .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
+            .first();
+        }
+
+        if (user?.corporationName) {
+          return user.corporationName;
+        }
+
+        // Fallback to phase1Veterans (snapshot data with reserved names)
+        const veteran = await ctx.db
+          .query("phase1Veterans")
+          .withIndex("by_stakeAddress", (q: any) => q.eq("stakeAddress", normalizedWallet))
+          .first();
+
+        if (veteran?.originalCorporationName) {
+          // Use reserved name if set, otherwise original
+          return veteran.reservedCorporationName || veteran.originalCorporationName;
+        }
+      } else {
+        // Legacy payment address
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
+          .first();
+        if (user?.corporationName) {
+          return user.corporationName;
+        }
+      }
+
+      return undefined;
+    };
+
+    for (const nft of soldNFTs) {
+      const walletAddress = nft.soldTo;
+      if (!walletAddress) continue;
+
+      const newCorpName = await lookupCorporationName(walletAddress);
+      const oldCorpName = nft.companyNameAtSale;
+
+      if (newCorpName) {
+        if (newCorpName !== oldCorpName) {
+          await ctx.db.patch(nft._id, { companyNameAtSale: newCorpName });
+          console.log('[RESYNC-CORP] Updated', nft.name, ':', oldCorpName || '(none)', '→', newCorpName);
+          updated++;
+        } else {
+          unchanged++;
+        }
+      } else {
+        console.log('[RESYNC-CORP] No corporation found for', nft.name, '- wallet:', walletAddress.substring(0, 20) + '...');
+        notFound++;
+      }
+    }
+
+    console.log('[RESYNC-CORP] Complete:', updated, 'updated,', unchanged, 'unchanged,', notFound, 'not found');
+
+    return {
+      success: true,
+      updated,
+      unchanged,
+      notFound,
+      total: soldNFTs.length,
+    };
+  },
+});
+
+/**
  * Backfill corporation names for sold NFTs that have soldTo but missing companyNameAtSale
  *
  * Lookup priority:

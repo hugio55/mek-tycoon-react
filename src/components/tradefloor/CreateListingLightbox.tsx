@@ -299,27 +299,67 @@ export default function CreateListingLightbox({
       >
         {/* Header */}
         <div
-          className="px-6 py-4 flex justify-between items-center"
+          className="px-6 py-3 flex justify-between items-center"
           style={{
             background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
             borderBottom: '1px solid rgba(255,255,255,0.1)',
           }}
         >
-          <div>
-            <h2
-              className="text-xl font-bold text-white"
-              style={{ fontFamily: 'Orbitron, sans-serif' }}
-            >
-              Create Trade Listing
-            </h2>
-            <p
-              className="text-sm"
-              style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
-            >
-              {step === "select-mek"
-                ? "Step 1: Select a Mek to list for trade"
-                : "Step 2: Choose up to six variations you are seeking"}
-            </p>
+          <div className="flex items-center gap-4">
+            {step === "select-variations" && selectedMek && (
+              <>
+                <button
+                  onClick={() => setShowMekDetail(true)}
+                  className="relative group cursor-pointer transition-transform hover:scale-105"
+                  title="Click to view details"
+                >
+                  <img
+                    src={getMekImagePath(selectedMek)}
+                    alt={selectedMek.assetName}
+                    className="w-12 h-12 object-contain"
+                  />
+                </button>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2
+                      className="text-lg font-bold text-white"
+                      style={{ fontFamily: 'Orbitron, sans-serif' }}
+                    >
+                      {selectedMek.assetName}
+                    </h2>
+                    <button
+                      onClick={() => setStep("select-mek")}
+                      className="text-xs px-2 py-0.5 rounded transition-colors"
+                      style={{ fontFamily: 'Play, sans-serif', color: '#22d3ee', background: 'rgba(34, 211, 238, 0.1)' }}
+                    >
+                      Change
+                    </button>
+                  </div>
+                  <p
+                    className="text-sm"
+                    style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+                  >
+                    Select variations you want in exchange
+                  </p>
+                </div>
+              </>
+            )}
+            {step === "select-mek" && (
+              <div>
+                <h2
+                  className="text-xl font-bold text-white"
+                  style={{ fontFamily: 'Orbitron, sans-serif' }}
+                >
+                  Create Trade Listing
+                </h2>
+                <p
+                  className="text-sm"
+                  style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+                >
+                  Select a Mek to list for trade
+                </p>
+              </div>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -579,168 +619,83 @@ export default function CreateListingLightbox({
 
         {/* Step 2: Select Variations */}
         {step === "select-variations" && selectedMek && (
-          <div className="flex-1 overflow-y-auto p-6">
-            {/* Selected Mek Preview */}
-            <div
-              className="flex items-center gap-4 mb-6 p-4 rounded-xl"
-              style={{
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-                border: '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              {/* Clickable Mek Thumbnail */}
-              <button
-                onClick={() => setShowMekDetail(true)}
-                className="relative group cursor-pointer transition-transform hover:scale-105"
-                title="Click to view details"
-              >
-                <img
-                  src={getMekImagePath(selectedMek)}
-                  alt={selectedMek.assetName}
-                  className="w-20 h-20 object-contain"
-                />
-                {/* Hover overlay */}
-                <div
-                  className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"
-                  style={{ background: 'rgba(34, 211, 238, 0.2)' }}
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="M21 21l-4.35-4.35"/>
-                    <path d="M11 8v6M8 11h6"/>
-                  </svg>
-                </div>
-              </button>
-              <div className="flex-1">
-                <div
-                  className="text-white font-medium"
-                  style={{ fontFamily: 'Saira, sans-serif' }}
-                >
-                  {selectedMek.assetName}
-                </div>
-                <div
-                  className="text-sm mt-0.5 flex gap-3"
-                  style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
-                >
-                  <span>Mek <span style={{ color: '#22d3ee' }}>#{getMekNumber(selectedMek.assetName)}</span></span>
-                  {(() => {
-                    const rank = getMekRank(selectedMek.sourceKey || selectedMek.sourceKeyBase || "");
-                    return rank ? (
-                      <span>Rank <span style={{ color: '#fbbf24' }}>#{rank}</span></span>
-                    ) : null;
-                  })()}
-                </div>
-                <button
-                  onClick={() => setStep("select-mek")}
-                  className="text-sm mt-1 transition-colors hover:underline"
-                  style={{ fontFamily: 'Play, sans-serif', color: '#22d3ee' }}
-                >
-                  Change Mek
-                </button>
-              </div>
-            </div>
-
-            {/* Selected Variations */}
-            <div className="mb-6">
-              <div
-                className="text-sm mb-2"
-                style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
-              >
-                Selected Variations ({selectedVariations.length}/6):
-              </div>
-              {selectedVariations.length === 0 ? (
-                <div
-                  className="text-sm"
+          <div className="flex-1 overflow-hidden flex flex-col p-4">
+            {/* Compact Controls Row */}
+            <div className="flex items-center gap-3 mb-3">
+              {/* Selected Variations Pills */}
+              <div className="flex items-center gap-2 flex-1 min-w-0 overflow-x-auto">
+                <span
+                  className="text-xs whitespace-nowrap"
                   style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
                 >
-                  Select at least one variation you want in exchange
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {selectedVariations.map((v, i) => {
-                    const colors = variationTypeColors[v.variationType];
-                    return (
-                      <span
-                        key={i}
-                        className="px-3 py-1.5 text-sm rounded flex items-center gap-2"
-                        style={{
-                          background: colors.bg,
-                          border: `1px solid ${colors.border}`,
-                          color: colors.text,
-                          fontFamily: 'Play, sans-serif',
-                        }}
-                      >
-                        <span style={{ opacity: 0.6 }}>{v.variationType[0].toUpperCase()}</span>
-                        {v.variationName}
-                        <button onClick={() => handleRemoveVariation(i)} className="hover:opacity-70">
-                          &times;
-                        </button>
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Variation Picker */}
-            <div className="space-y-4">
-              {/* Color Key */}
-              <div className="flex gap-4" style={{ fontFamily: 'Play, sans-serif', fontSize: '12px' }}>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded" style={{ background: variationTypeColors.head.bg, border: `1px solid ${variationTypeColors.head.border}` }} />
-                  <span style={{ color: variationTypeColors.head.text }}>Head</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded" style={{ background: variationTypeColors.body.bg, border: `1px solid ${variationTypeColors.body.border}` }} />
-                  <span style={{ color: variationTypeColors.body.text }}>Body</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded" style={{ background: variationTypeColors.trait.bg, border: `1px solid ${variationTypeColors.trait.border}` }} />
-                  <span style={{ color: variationTypeColors.trait.text }}>Trait</span>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                {/* Type Filter */}
-                <div
-                  className="flex gap-1 p-1 rounded-lg"
-                  style={{ background: 'rgba(255,255,255,0.05)' }}
-                >
-                  {(["all", "head", "body", "trait"] as const).map((type) => (
-                    <button
-                      key={type}
-                      onClick={() => setTypeFilter(type)}
-                      className="px-3 py-1.5 text-sm rounded transition-all"
+                  ({selectedVariations.length}/6)
+                </span>
+                {selectedVariations.map((v, i) => {
+                  const colors = variationTypeColors[v.variationType];
+                  return (
+                    <span
+                      key={i}
+                      className="px-2 py-1 text-xs rounded flex items-center gap-1.5 whitespace-nowrap"
                       style={{
+                        background: colors.bg,
+                        border: `1px solid ${colors.border}`,
+                        color: colors.text,
                         fontFamily: 'Play, sans-serif',
-                        background: typeFilter === type
-                          ? 'linear-gradient(135deg, #22d3ee, #06b6d4)'
-                          : 'transparent',
-                        color: typeFilter === type ? 'black' : 'rgba(255,255,255,0.6)',
                       }}
                     >
-                      {type === "all" ? "All" : type.charAt(0).toUpperCase() + type.slice(1)}
-                    </button>
-                  ))}
-                </div>
+                      {v.variationName}
+                      <button onClick={() => handleRemoveVariation(i)} className="hover:opacity-70">
+                        &times;
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
 
-                {/* Search */}
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search variations..."
-                  className="flex-1 px-4 py-2 rounded-lg text-white placeholder-white/40 focus:outline-none"
-                  style={{
-                    fontFamily: 'Play, sans-serif',
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                  }}
-                />
+            {/* Search and Filter Row */}
+            <div className="flex gap-3 mb-3">
+              {/* Type Filter */}
+              <div
+                className="flex gap-1 p-1 rounded-lg"
+                style={{ background: 'rgba(255,255,255,0.05)' }}
+              >
+                {(["all", "head", "body", "trait"] as const).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setTypeFilter(type)}
+                    className="px-2 py-1 text-xs rounded transition-all"
+                    style={{
+                      fontFamily: 'Play, sans-serif',
+                      background: typeFilter === type
+                        ? 'linear-gradient(135deg, #22d3ee, #06b6d4)'
+                        : 'transparent',
+                      color: typeFilter === type ? 'black' : 'rgba(255,255,255,0.6)',
+                    }}
+                  >
+                    {type === "all" ? "All" : type.charAt(0).toUpperCase() + type.slice(1)}
+                  </button>
+                ))}
               </div>
 
-              {/* Variation Grid - Image-based cards with hover tooltips */}
-              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 h-72 min-h-72 max-h-72 overflow-y-auto relative content-start">
+              {/* Search */}
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search variations..."
+                className="flex-1 px-3 py-1.5 rounded-lg text-sm text-white placeholder-white/40 focus:outline-none"
+                style={{
+                  fontFamily: 'Play, sans-serif',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}
+              />
+            </div>
+
+            {/* Variation Grid - Takes remaining space */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2 content-start">
                 {filteredVariations.map((v) => {
                   const colors = variationTypeColors[v.type as "head" | "body" | "trait"];
                   const isAtLimit = selectedVariations.length >= 6;
