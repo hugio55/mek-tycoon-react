@@ -519,16 +519,16 @@ export default function EditListingLightbox({
               {hoveredVariation.variation.name}
             </div>
             <div
-              className="text-xs text-center mt-1"
+              className="text-xs text-center"
               style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
             >
-              {hoveredVariation.variation.type.charAt(0).toUpperCase() + hoveredVariation.variation.type.slice(1)} | Rank #{hoveredVariation.variation.rank}
+              {hoveredVariation.variation.type.charAt(0).toUpperCase() + hoveredVariation.variation.type.slice(1)}
             </div>
             <div
-              className="text-xs text-center"
+              className="text-xs text-center mt-1"
               style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
             >
-              {hoveredVariation.variation.count} exist ({hoveredVariation.variation.percentage}%)
+              Rank #{hoveredVariation.variation.rank} · {hoveredVariation.variation.count} exist
             </div>
           </div>
           {/* Arrow */}
