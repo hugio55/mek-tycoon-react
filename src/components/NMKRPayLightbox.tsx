@@ -144,22 +144,22 @@ export default function NMKRPayLightbox({
   // actually sold in production (like Lab Rat #3 issue).
   //
   // Logic:
-  // - If sturgeonClient is available (dual-database mode on localhost), use it for reads
+  // - If sturgeonHttpClient is available (dual-database mode on localhost), use it for reads
   // - If not (production site), use regular useQuery (which already points to production)
   // ==========================================
 
   // Determine if we should use production client for campaign queries
   // Skip production fetch if campaignId is already provided via props
-  const shouldFetchProductionCampaigns = !!sturgeonClient && !propCampaignId;
+  const shouldFetchProductionCampaigns = !!sturgeonHttpClient && !propCampaignId;
 
-  // State for production campaigns (fetched via sturgeonClient when available)
+  // State for production campaigns (fetched via sturgeonHttpClient when available)
   const [productionCampaigns, setProductionCampaigns] = useState<any[] | null>(null);
   const [productionCampaignsLoading, setProductionCampaignsLoading] = useState(shouldFetchProductionCampaigns);
   const [productionCampaignsFailed, setProductionCampaignsFailed] = useState(false);
 
   // Fetch campaigns from production database when in dual-database mode
   useEffect(() => {
-    // Skip if campaignId prop provided or no sturgeonClient
+    // Skip if campaignId prop provided or no sturgeonHttpClient
     if (!shouldFetchProductionCampaigns) {
       setProductionCampaignsLoading(false);
       return;
@@ -169,14 +169,14 @@ export default function NMKRPayLightbox({
     let isActive = true;
 
     // Additional null check for TypeScript (already guaranteed by shouldFetchProductionCampaigns)
-    if (!sturgeonClient) return;
+    if (!sturgeonHttpClient) return;
 
     console.log('[🎯NFT-PROD] Fetching campaigns from PRODUCTION database (Sturgeon)');
     setProductionCampaignsLoading(true);
     setProductionCampaignsFailed(false);
 
-    // Use sturgeonClient.query() directly for production reads
-    sturgeonClient.query(api.campaigns.getActiveCampaigns, {})
+    // Use sturgeonHttpClient.query() directly for production reads
+    sturgeonHttpClient.query(api.campaigns.getActiveCampaigns, {})
       .then((campaigns) => {
         if (!isActive) return; // Don't update state if unmounted
         console.log('[🎯NFT-PROD] Production campaigns fetched:', campaigns?.length || 0, 'campaigns');
@@ -197,7 +197,7 @@ export default function NMKRPayLightbox({
   // Used when: (1) not in dual-database mode, OR (2) production fetch failed as fallback
   const devCampaigns = useQuery(
     api.campaigns.getActiveCampaigns,
-    !propCampaignId && (!sturgeonClient || productionCampaignsFailed) ? {} : "skip"
+    !propCampaignId && (!sturgeonHttpClient || productionCampaignsFailed) ? {} : "skip"
   );
 
   // Use production campaigns if available, otherwise fall back to dev
@@ -265,7 +265,7 @@ export default function NMKRPayLightbox({
   }, [activeCampaigns, propCampaignId, walletAddress, hasInitializedCampaign, isResumingFromMobile, previewMode]);
 
   // Campaign-aware mutations
-  // CRITICAL FIX: Use sturgeonClient.mutation() on localhost to ensure NFT reservations
+  // CRITICAL FIX: Use sturgeonHttpClient.mutation() on localhost to ensure NFT reservations
   // go to PRODUCTION database. Without this, localhost would use Trout (dev) which
   // has stale inventory data and would assign already-sold NFTs.
   const fallbackCreateReservation = useMutation(api.commemorativeNFTReservationsCampaign.createCampaignReservation);
@@ -286,7 +286,7 @@ export default function NMKRPayLightbox({
     return await fallbackCreateReservation(args);
   };
 
-  const releaseReservation = async (args: { inventoryId: Id<"commemorativeNFTInventory">; reason?: "cancelled" | "expired" }) => {
+  const releaseReservation = async (args: { reservationId: Id<"commemorativeNFTInventory"> | Id<"commemorativeNFTReservations">; reason?: "cancelled" | "expired" }) => {
     if (sturgeonHttpClient) {
       console.log('[🎯NFT-PROD] Using sturgeonHttpClient for releaseReservation (localhost → production)');
       return await sturgeonHttpClient.mutation(api.commemorativeNFTReservationsCampaign.releaseCampaignReservation, args);
@@ -294,14 +294,14 @@ export default function NMKRPayLightbox({
     return await fallbackReleaseReservation(args);
   };
 
-  const markPaymentWindowOpened = async (args: { inventoryId: Id<"commemorativeNFTInventory"> }) => {
+  const markPaymentWindowOpened = async (args: { reservationId: Id<"commemorativeNFTInventory"> | Id<"commemorativeNFTReservations"> }) => {
     if (sturgeonHttpClient) {
       return await sturgeonHttpClient.mutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowOpened, args);
     }
     return await fallbackMarkPaymentWindowOpened(args);
   };
 
-  const markPaymentWindowClosed = async (args: { inventoryId: Id<"commemorativeNFTInventory"> }) => {
+  const markPaymentWindowClosed = async (args: { reservationId: Id<"commemorativeNFTInventory"> | Id<"commemorativeNFTReservations"> }) => {
     if (sturgeonHttpClient) {
       return await sturgeonHttpClient.mutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowClosed, args);
     }
@@ -309,10 +309,10 @@ export default function NMKRPayLightbox({
   };
 
   // Query active reservation (campaign-aware) - skip in preview mode
-  // CRITICAL FIX: On localhost, use sturgeonClient to query production since reservations are created there
+  // CRITICAL FIX: On localhost, use sturgeonHttpClient to query production since reservations are created there
   const fallbackActiveReservation = useQuery(
     api.commemorativeNFTReservationsCampaign.getActiveCampaignReservation,
-    !sturgeonClient && !previewMode && reservationId && effectiveWalletAddress && activeCampaignId
+    !sturgeonHttpClient && !previewMode && reservationId && effectiveWalletAddress && activeCampaignId
       ? { campaignId: activeCampaignId, walletAddress: effectiveWalletAddress }
       : "skip"
   );
@@ -416,10 +416,10 @@ export default function NMKRPayLightbox({
   // Uses reservation ID (not wallet) to prevent false positives from previous claims
   // Also runs during 'payment' state for active polling while NMKR window is open
   // ENHANCED: Now passes walletAddress for additional detection paths (claims table, webhooks table)
-  // CRITICAL FIX: On localhost, use sturgeonClient since webhooks update production
+  // CRITICAL FIX: On localhost, use sturgeonHttpClient since webhooks update production
   const fallbackPaymentStatus = useQuery(
     api.commemorativeNFTClaims.checkReservationPaid,
-    !sturgeonClient && !previewMode && (state === 'payment' || state === 'processing' || state === 'payment_window_closed') && reservationId
+    !sturgeonHttpClient && !previewMode && (state === 'payment' || state === 'processing' || state === 'payment_window_closed') && reservationId
       ? { reservationId, walletAddress: effectiveWalletAddress || undefined }
       : "skip"
   );
@@ -477,9 +477,9 @@ export default function NMKRPayLightbox({
   // ==========================================
 
   // Determine if we should use production client for eligibility
-  const shouldFetchProductionEligibility = !!sturgeonClient && state === 'checking_eligibility' && !!effectiveWalletAddress && !!activeCampaignId;
+  const shouldFetchProductionEligibility = !!sturgeonHttpClient && state === 'checking_eligibility' && !!effectiveWalletAddress && !!activeCampaignId;
 
-  // State for production eligibility (fetched via sturgeonClient when available)
+  // State for production eligibility (fetched via sturgeonHttpClient when available)
   const [productionEligibility, setProductionEligibility] = useState<any>(null);
   const [productionEligibilityLoading, setProductionEligibilityLoading] = useState(false);
   const [productionEligibilityFailed, setProductionEligibilityFailed] = useState(false);
@@ -495,14 +495,14 @@ export default function NMKRPayLightbox({
     let isActive = true;
 
     // Additional null check for TypeScript (already guaranteed by shouldFetchProductionEligibility)
-    if (!sturgeonClient) return;
+    if (!sturgeonHttpClient) return;
 
     console.log('[🎯NFT-PROD] Checking eligibility against PRODUCTION database');
     setProductionEligibilityLoading(true);
     setProductionEligibility(null);
     setProductionEligibilityFailed(false);
 
-    sturgeonClient.query(api.nftEligibility.checkCampaignEligibility, {
+    sturgeonHttpClient.query(api.nftEligibility.checkCampaignEligibility, {
       walletAddress: effectiveWalletAddress,
       campaignId: activeCampaignId
     })
@@ -526,7 +526,7 @@ export default function NMKRPayLightbox({
   // Used when: (1) not in dual-database mode, OR (2) production fetch failed as fallback
   const devEligibility = useQuery(
     api.nftEligibility.checkCampaignEligibility,
-    state === 'checking_eligibility' && effectiveWalletAddress && activeCampaignId && (!sturgeonClient || productionEligibilityFailed)
+    state === 'checking_eligibility' && effectiveWalletAddress && activeCampaignId && (!sturgeonHttpClient || productionEligibilityFailed)
       ? { walletAddress: effectiveWalletAddress, campaignId: activeCampaignId }
       : "skip"
   );
@@ -535,7 +535,7 @@ export default function NMKRPayLightbox({
   // Priority: production success > dev fallback > undefined (loading)
   const eligibility = (() => {
     // If not using production client for eligibility, use dev directly
-    if (!sturgeonClient) return devEligibility;
+    if (!sturgeonHttpClient) return devEligibility;
     // If production is still loading, return undefined
     if (productionEligibilityLoading) return undefined;
     // If production failed, use dev fallback
