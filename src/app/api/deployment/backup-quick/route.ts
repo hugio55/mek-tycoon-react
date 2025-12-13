@@ -15,28 +15,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const notes = body.notes || '';
 
-    // Ensure we're on master to get production commit
+    // Get current branch and HEAD commit (records actual working code, not stale local master)
     const { stdout: branchOutput } = await execAsync('git branch --show-current');
     const currentBranch = branchOutput.trim();
 
-    let masterCommitHash: string;
-    let commitMessage: string;
+    const { stdout: hashOutput } = await execAsync('git rev-parse HEAD');
+    const commitHash = hashOutput.trim();
 
-    if (currentBranch === 'master') {
-      // Already on master, get current commit
-      const { stdout: hashOutput } = await execAsync('git rev-parse HEAD');
-      masterCommitHash = hashOutput.trim();
-
-      const { stdout: msgOutput } = await execAsync('git log -1 --format=%s');
-      commitMessage = msgOutput.trim();
-    } else {
-      // Get master's commit without switching
-      const { stdout: hashOutput } = await execAsync('git rev-parse master');
-      masterCommitHash = hashOutput.trim();
-
-      const { stdout: msgOutput } = await execAsync('git log -1 --format=%s master');
-      commitMessage = msgOutput.trim();
-    }
+    const { stdout: msgOutput } = await execAsync('git log -1 --format=%s');
+    const commitMessage = msgOutput.trim();
 
     const timestamp = Date.now();
     const backupId = `quick-${timestamp}`;
@@ -45,9 +32,9 @@ export async function POST(request: NextRequest) {
       id: backupId,
       type: 'quick' as const,
       timestamp: new Date(timestamp).toISOString(),
-      commitHash: masterCommitHash,
+      commitHash: commitHash,
       commitMessage: commitMessage,
-      branch: 'master',
+      branch: currentBranch,
       notes: notes,
     };
 
@@ -62,10 +49,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       backupId: backupId,
-      commitHash: masterCommitHash,
+      commitHash: commitHash,
       commitMessage: commitMessage,
+      branch: currentBranch,
       timestamp: backupData.timestamp,
-      message: `Quick backup created: ${masterCommitHash.substring(0, 7)}`,
+      message: `Quick backup created: ${commitHash.substring(0, 7)} (${currentBranch})`,
     });
   } catch (error) {
     console.error('Quick backup error:', error);

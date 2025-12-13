@@ -314,3 +314,97 @@ export const testBlockfrostConnection = action({
     }
   }
 });
+
+/**
+ * BLOCKCHAIN VERIFICATION: Get buyer stake address from transaction hash
+ *
+ * This is the ULTIMATE fallback for data integrity. Even if webhooks fail,
+ * reservations are wrong, or our database is corrupted - the blockchain
+ * is the source of truth.
+ *
+ * Given a transaction hash, this function:
+ * 1. Fetches transaction UTXOs from Blockfrost
+ * 2. Finds the output that received the NFT
+ * 3. Looks up the stake address for that address
+ * 4. Returns the verified buyer information
+ */
+export const verifyTransactionBuyer = action({
+  args: {
+    transactionHash: v.string(),
+  },
+  handler: async (ctx, args) => {
+    console.log('[🔍BLOCKCHAIN-VERIFY] Verifying transaction:', args.transactionHash);
+
+    try {
+      // Fetch transaction UTXOs
+      await rateLimiter.waitForSlot();
+      const txUtxos = await blockfrostRequest(`/txs/${args.transactionHash}/utxos`);
+
+      if (!txUtxos || !txUtxos.outputs) {
+        return {
+          success: false,
+          error: "Transaction not found or invalid",
+        };
+      }
+
+      console.log('[🔍BLOCKCHAIN-VERIFY] Transaction has', txUtxos.outputs.length, 'outputs');
+
+      // Find outputs that contain NFTs (have multi-asset amounts)
+      const nftOutputs = txUtxos.outputs.filter((output: any) =>
+        output.amount.some((amt: any) => amt.unit !== 'lovelace')
+      );
+
+      if (nftOutputs.length === 0) {
+        return {
+          success: false,
+          error: "No NFT found in transaction outputs",
+        };
+      }
+
+      // Get the first NFT output (usually the buyer)
+      const buyerOutput = nftOutputs[0];
+      const buyerPaymentAddress = buyerOutput.address;
+
+      console.log('[🔍BLOCKCHAIN-VERIFY] Buyer payment address:', buyerPaymentAddress);
+
+      // Look up the stake address for this payment address
+      await rateLimiter.waitForSlot();
+      const addressInfo = await blockfrostRequest(`/addresses/${buyerPaymentAddress}`);
+
+      const buyerStakeAddress = addressInfo.stake_address;
+
+      if (!buyerStakeAddress) {
+        return {
+          success: false,
+          error: "Could not determine stake address from payment address",
+          paymentAddress: buyerPaymentAddress,
+        };
+      }
+
+      console.log('[🔍BLOCKCHAIN-VERIFY] ✅ Verified buyer stake address:', buyerStakeAddress);
+
+      // Extract NFT info from the output
+      const nfts = buyerOutput.amount
+        .filter((amt: any) => amt.unit !== 'lovelace')
+        .map((amt: any) => ({
+          unit: amt.unit,
+          quantity: amt.quantity,
+        }));
+
+      return {
+        success: true,
+        transactionHash: args.transactionHash,
+        buyerStakeAddress,
+        buyerPaymentAddress,
+        nfts,
+        verifiedAt: new Date().toISOString(),
+      };
+    } catch (error: any) {
+      console.error('[🔍BLOCKCHAIN-VERIFY] Error:', error.message);
+      return {
+        success: false,
+        error: error.message || 'Unknown error',
+      };
+    }
+  }
+});
