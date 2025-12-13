@@ -7436,12 +7436,24 @@ function NFTAdminTabs({ client }: { client: any }) {
       const result = await client.mutation(api.commemorativeCampaigns.backfillSoldNFTData, {});
       console.log('[🔧BACKFILL] Result:', result);
 
+      const messages: string[] = [];
+
       if (result.backfilled > 0) {
-        alert(`✅ Backfilled ${result.backfilled} NFTs with missing data.\n\n${result.notFound > 0 ? `⚠️ ${result.notFound} NFTs could not be matched to reservations.` : 'All sold NFTs now have owner data.'}`);
-      } else if (result.notFound > 0) {
-        alert(`⚠️ Found ${result.notFound} sold NFTs with missing data, but no matching reservations were found.\n\nYou may need to use "Manual Set" for these NFTs.`);
+        messages.push(`✅ Backfilled ${result.backfilled} NFTs with missing wallet data.`);
+      }
+
+      if (result.corpNamesAdded > 0) {
+        messages.push(`✅ Added corporation names to ${result.corpNamesAdded} NFTs.`);
+      }
+
+      if (result.notFound > 0) {
+        messages.push(`⚠️ ${result.notFound} NFTs could not be matched to reservations.`);
+      }
+
+      if (messages.length === 0) {
+        alert('✅ All sold NFTs already have complete data. No backfill needed.');
       } else {
-        alert('✅ All sold NFTs already have owner data. No backfill needed.');
+        alert(messages.join('\n\n'));
       }
 
       setCampaignUpdateTrigger(prev => prev + 1);

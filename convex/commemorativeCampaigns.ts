@@ -681,20 +681,23 @@ export const backfillSoldNFTData = mutation({
   handler: async (ctx) => {
     console.log('[BACKFILL] Starting backfill of sold NFT data...');
 
-    // Find all sold NFTs that are missing soldTo
-    const soldNFTs = await ctx.db
+    // Find ALL sold NFTs - we'll filter for specific issues
+    const allSoldNFTs = await ctx.db
       .query("commemorativeNFTInventory")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("status"), "sold"),
-          q.eq(q.field("soldTo"), undefined)
-        )
-      )
+      .filter((q) => q.eq(q.field("status"), "sold"))
       .collect();
 
-    console.log('[BACKFILL] Found', soldNFTs.length, 'sold NFTs missing soldTo');
+    // Split into two categories:
+    // 1. Missing soldTo entirely (need to find wallet from reservations/webhooks/claims)
+    // 2. Have soldTo but missing companyNameAtSale (just need corp name lookup)
+    const nftsMissingSoldTo = allSoldNFTs.filter((nft: any) => !nft.soldTo);
+    const nftsMissingCorpName = allSoldNFTs.filter((nft: any) => nft.soldTo && !nft.companyNameAtSale);
+
+    console.log('[BACKFILL] Found', nftsMissingSoldTo.length, 'sold NFTs missing soldTo');
+    console.log('[BACKFILL] Found', nftsMissingCorpName.length, 'sold NFTs with soldTo but missing companyNameAtSale');
 
     let backfilled = 0;
+    let corpNamesAdded = 0;
     let notFound = 0;
     const sources: Record<string, number> = {
       reservation: 0,
@@ -702,7 +705,54 @@ export const backfillSoldNFTData = mutation({
       claims: 0,
     };
 
-    for (const nft of soldNFTs) {
+    // Helper function to look up corporation name with case normalization and phase1Veterans fallback
+    const lookupCorporationName = async (walletAddress: string): Promise<string | undefined> => {
+      const normalizedWallet = walletAddress.toLowerCase().trim();
+
+      if (walletAddress.startsWith('stake1') || walletAddress.startsWith('stake_test1')) {
+        // Try users table with normalized address first
+        let user = await ctx.db
+          .query("users")
+          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", normalizedWallet))
+          .first();
+
+        // Fallback to original case
+        if (!user) {
+          user = await ctx.db
+            .query("users")
+            .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
+            .first();
+        }
+
+        if (user?.corporationName) {
+          return user.corporationName;
+        }
+
+        // Fallback to phase1Veterans (snapshot data)
+        const veteran = await ctx.db
+          .query("phase1Veterans")
+          .withIndex("by_stakeAddress", (q: any) => q.eq("stakeAddress", normalizedWallet))
+          .first();
+
+        if (veteran?.originalCorporationName) {
+          return veteran.reservedCorporationName || veteran.originalCorporationName;
+        }
+      } else {
+        // Legacy payment address
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
+          .first();
+        if (user?.corporationName) {
+          return user.corporationName;
+        }
+      }
+
+      return undefined;
+    };
+
+    // PART 1: Process NFTs missing soldTo (need to find wallet from reservations/webhooks/claims)
+    for (const nft of nftsMissingSoldTo) {
       let walletAddress: string | undefined = undefined;
       let source = '';
       let soldAt = Date.now();
@@ -760,24 +810,7 @@ export const backfillSoldNFTData = mutation({
       }
 
       if (walletAddress) {
-        // Look up company name from users table
-        // Use appropriate index based on address format
-        let user;
-        if (walletAddress.startsWith('stake1')) {
-          // Stake address - use by_stake_address index
-          user = await ctx.db
-            .query("users")
-            .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
-            .first();
-        } else {
-          // Legacy payment address - use by_wallet index
-          user = await ctx.db
-            .query("users")
-            .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
-            .first();
-        }
-
-        const companyNameAtSale = user?.corporationName || undefined;
+        const companyNameAtSale = await lookupCorporationName(walletAddress);
 
         // Update the NFT with the backfilled data
         await ctx.db.patch(nft._id, {
@@ -795,14 +828,31 @@ export const backfillSoldNFTData = mutation({
       }
     }
 
-    console.log('[BACKFILL] Complete:', backfilled, 'backfilled,', notFound, 'not found');
+    // PART 2: Process NFTs that have soldTo but missing companyNameAtSale
+    for (const nft of nftsMissingCorpName) {
+      const walletAddress = nft.soldTo;
+      if (!walletAddress) continue;
+
+      const companyNameAtSale = await lookupCorporationName(walletAddress);
+
+      if (companyNameAtSale) {
+        await ctx.db.patch(nft._id, { companyNameAtSale });
+        console.log('[BACKFILL] Added corp name to', nft.name, '- corp:', companyNameAtSale);
+        corpNamesAdded++;
+      } else {
+        console.log('[BACKFILL] No corporation found for', nft.name, '- wallet:', walletAddress.substring(0, 20) + '...');
+      }
+    }
+
+    console.log('[BACKFILL] Complete:', backfilled, 'backfilled (missing soldTo),', corpNamesAdded, 'corp names added,', notFound, 'not found');
     console.log('[BACKFILL] Sources:', sources);
 
     return {
       success: true,
       backfilled,
+      corpNamesAdded,
       notFound,
-      total: soldNFTs.length,
+      total: nftsMissingSoldTo.length + nftsMissingCorpName.length,
       sources,
     };
   },
