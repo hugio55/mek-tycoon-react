@@ -7028,6 +7028,17 @@ function CampaignManagerWithDatabase({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    onResyncCorpNames();
+                  }}
+                  disabled={resyncCorpNamesRunning}
+                  className="text-xs text-purple-400 hover:text-purple-300 transition-colors underline disabled:opacity-50"
+                  title="Update ALL corporation names to their latest reserved names (fixes stale names)"
+                >
+                  {resyncCorpNamesRunning ? '⏳ Resyncing...' : '🔄 Resync Corp Names'}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
                     if (campaign.nmkrProjectId) {
                       onBackfillImages(campaign._id, campaign.nmkrProjectId);
                     } else {
