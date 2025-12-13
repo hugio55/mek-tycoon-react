@@ -640,55 +640,53 @@ export default function CreateListingLightbox({
         {/* Step 2: Select Variations */}
         {step === "select-variations" && selectedMek && (
           <div className="flex-1 overflow-hidden flex flex-col p-4">
-            {/* Compact Controls Row - Selected Variations as Images */}
+            {/* Selected Variations - 6 Slots */}
             <div className="flex items-center gap-2 mb-3">
-              <span
-                className="text-xs whitespace-nowrap"
-                style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
-              >
-                ({selectedVariations.length}/6)
-              </span>
-              {selectedVariations.map((v, i) => {
-                const sampleImages = [
-                  '/variation-images-art-400px/webp-uniform/checkers-1.webp',
-                  '/variation-images-art-400px/webp-uniform/shark-1.webp',
-                  '/variation-images-art-400px/webp-uniform/flash-1.webp',
-                ];
-                const imageIndex = (v.variationId || i) % 3;
-                const imageSrc = sampleImages[imageIndex];
+              {Array.from({ length: 6 }).map((_, slotIndex) => {
+                const variation = selectedVariations[slotIndex];
+                if (variation) {
+                  const sampleImages = [
+                    '/variation-images-art-400px/webp-uniform/checkers-1.webp',
+                    '/variation-images-art-400px/webp-uniform/shark-1.webp',
+                    '/variation-images-art-400px/webp-uniform/flash-1.webp',
+                  ];
+                  const imageIndex = (variation.variationId || slotIndex) % 3;
+                  const imageSrc = sampleImages[imageIndex];
+                  return (
+                    <button
+                      key={`filled-${slotIndex}-${variation.variationName}`}
+                      onClick={() => handleRemoveVariation(slotIndex)}
+                      className="relative group w-12 h-12 rounded-lg overflow-hidden transition-all hover:scale-105"
+                      style={{
+                        background: 'rgba(34, 211, 238, 0.1)',
+                        border: '1px solid rgba(34, 211, 238, 0.4)',
+                        boxShadow: '0 0 12px rgba(34, 211, 238, 0.25)',
+                        animation: 'cyanFlash 1.5s ease-out',
+                      }}
+                      title={`Remove ${variation.variationName}`}
+                    >
+                      <img
+                        src={imageSrc}
+                        alt={variation.variationName}
+                        className="w-full h-full object-contain transition-all group-hover:opacity-30 group-hover:scale-90"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round">
+                          <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                      </div>
+                    </button>
+                  );
+                }
                 return (
-                  <button
-                    key={`${v.variationName}-${i}`}
-                    onClick={() => handleRemoveVariation(i)}
-                    className="relative group w-12 h-12 rounded-lg overflow-hidden transition-all hover:scale-105"
+                  <div
+                    key={`empty-${slotIndex}`}
+                    className="w-12 h-12 rounded-lg"
                     style={{
-                      background: 'rgba(34, 211, 238, 0.1)',
-                      border: '1px solid rgba(34, 211, 238, 0.3)',
-                      boxShadow: '0 0 10px rgba(34, 211, 238, 0.2)',
-                      animation: 'cyanFlash 1.5s ease-out',
+                      border: '2px dashed rgba(255, 255, 255, 0.15)',
+                      background: 'rgba(255, 255, 255, 0.02)',
                     }}
-                    title={`Remove ${v.variationName}`}
-                  >
-                    <img
-                      src={imageSrc}
-                      alt={v.variationName}
-                      className="w-full h-full object-contain transition-all group-hover:opacity-30 group-hover:scale-90"
-                    />
-                    {/* Hover overlay with X */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#ef4444"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                      >
-                        <path d="M18 6L6 18M6 6l12 12" />
-                      </svg>
-                    </div>
-                  </button>
+                  />
                 );
               })}
             </div>
