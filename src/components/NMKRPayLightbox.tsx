@@ -7,7 +7,7 @@ import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { ensureBech32StakeAddress } from '@/lib/cardanoAddressConverter';
 import { getMediaUrl } from '@/lib/media-url';
-import { sturgeonClient } from '@/lib/sturgeonClient';
+import { sturgeonClient, sturgeonHttpClient } from '@/lib/sturgeonClient';
 import CubeSpinner from '@/components/loaders/CubeSpinner';
 
 interface NMKRPayLightboxProps {
@@ -273,33 +273,37 @@ export default function NMKRPayLightbox({
   const fallbackMarkPaymentWindowOpened = useMutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowOpened);
   const fallbackMarkPaymentWindowClosed = useMutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowClosed);
 
-  // Wrapper functions that use sturgeonClient when available (localhost), otherwise fallback (production)
+  // Wrapper functions that use sturgeonHttpClient when available (localhost), otherwise fallback (production)
+  // IMPORTANT: Use sturgeonHttpClient (not sturgeonClient) for mutations because:
+  // - sturgeonClient is ConvexReactClient which requires WebSocket connection
+  // - sturgeonHttpClient is ConvexHttpClient which works with simple HTTP requests
+  // - Using ConvexReactClient.mutation() outside provider context can hang indefinitely
   const createReservation = async (args: { campaignId: Id<"commemorativeCampaigns">; walletAddress: string }) => {
-    if (sturgeonClient) {
-      console.log('[🎯NFT-PROD] Using sturgeonClient for createReservation (localhost → production)');
-      return await sturgeonClient.mutation(api.commemorativeNFTReservationsCampaign.createCampaignReservation, args);
+    if (sturgeonHttpClient) {
+      console.log('[🎯NFT-PROD] Using sturgeonHttpClient for createReservation (localhost → production)');
+      return await sturgeonHttpClient.mutation(api.commemorativeNFTReservationsCampaign.createCampaignReservation, args);
     }
     return await fallbackCreateReservation(args);
   };
 
   const releaseReservation = async (args: { inventoryId: Id<"commemorativeNFTInventory">; reason?: "cancelled" | "expired" }) => {
-    if (sturgeonClient) {
-      console.log('[🎯NFT-PROD] Using sturgeonClient for releaseReservation (localhost → production)');
-      return await sturgeonClient.mutation(api.commemorativeNFTReservationsCampaign.releaseCampaignReservation, args);
+    if (sturgeonHttpClient) {
+      console.log('[🎯NFT-PROD] Using sturgeonHttpClient for releaseReservation (localhost → production)');
+      return await sturgeonHttpClient.mutation(api.commemorativeNFTReservationsCampaign.releaseCampaignReservation, args);
     }
     return await fallbackReleaseReservation(args);
   };
 
   const markPaymentWindowOpened = async (args: { inventoryId: Id<"commemorativeNFTInventory"> }) => {
-    if (sturgeonClient) {
-      return await sturgeonClient.mutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowOpened, args);
+    if (sturgeonHttpClient) {
+      return await sturgeonHttpClient.mutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowOpened, args);
     }
     return await fallbackMarkPaymentWindowOpened(args);
   };
 
   const markPaymentWindowClosed = async (args: { inventoryId: Id<"commemorativeNFTInventory"> }) => {
-    if (sturgeonClient) {
-      return await sturgeonClient.mutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowClosed, args);
+    if (sturgeonHttpClient) {
+      return await sturgeonHttpClient.mutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowClosed, args);
     }
     return await fallbackMarkPaymentWindowClosed(args);
   };
@@ -313,12 +317,12 @@ export default function NMKRPayLightbox({
       : "skip"
   );
 
-  // State for production active reservation (when using sturgeonClient)
+  // State for production active reservation (when using sturgeonHttpClient)
   const [productionActiveReservation, setProductionActiveReservation] = useState<any>(null);
 
-  // Fetch active reservation from production when sturgeonClient is available
+  // Fetch active reservation from production when sturgeonHttpClient is available
   useEffect(() => {
-    if (!sturgeonClient || previewMode || !reservationId || !effectiveWalletAddress || !activeCampaignId) {
+    if (!sturgeonHttpClient || previewMode || !reservationId || !effectiveWalletAddress || !activeCampaignId) {
       return;
     }
 
@@ -327,7 +331,7 @@ export default function NMKRPayLightbox({
 
     const fetchReservation = async () => {
       try {
-        const result = await sturgeonClient.query(
+        const result = await sturgeonHttpClient.query(
           api.commemorativeNFTReservationsCampaign.getActiveCampaignReservation,
           { campaignId: activeCampaignId, walletAddress: effectiveWalletAddress }
         );
@@ -352,7 +356,7 @@ export default function NMKRPayLightbox({
   }, [reservationId, effectiveWalletAddress, activeCampaignId, previewMode]);
 
   // Use production reservation if available, otherwise fallback
-  const activeReservation = sturgeonClient ? productionActiveReservation : fallbackActiveReservation;
+  const activeReservation = sturgeonHttpClient ? productionActiveReservation : fallbackActiveReservation;
 
   // Debug logging for activeReservation query
   useEffect(() => {
@@ -361,7 +365,7 @@ export default function NMKRPayLightbox({
         reservationId,
         effectiveWalletAddress,
         activeCampaignId,
-        usingSturgeonClient: !!sturgeonClient,
+        usingSturgeonHttpClient: !!sturgeonHttpClient,
         querySkipped: !(reservationId && effectiveWalletAddress && activeCampaignId),
         activeReservation: activeReservation ? 'POPULATED ✓' : 'undefined (still loading...)',
       });
@@ -420,12 +424,12 @@ export default function NMKRPayLightbox({
       : "skip"
   );
 
-  // State for production payment status (when using sturgeonClient)
+  // State for production payment status (when using sturgeonHttpClient)
   const [productionPaymentStatus, setProductionPaymentStatus] = useState<any>(null);
 
-  // Fetch payment status from production when sturgeonClient is available
+  // Fetch payment status from production when sturgeonHttpClient is available
   useEffect(() => {
-    const shouldPoll = sturgeonClient && !previewMode &&
+    const shouldPoll = sturgeonHttpClient && !previewMode &&
       (state === 'payment' || state === 'processing' || state === 'payment_window_closed') &&
       reservationId;
 
@@ -438,7 +442,7 @@ export default function NMKRPayLightbox({
 
     const fetchPaymentStatus = async () => {
       try {
-        const result = await sturgeonClient.query(
+        const result = await sturgeonHttpClient.query(
           api.commemorativeNFTClaims.checkReservationPaid,
           { reservationId, walletAddress: effectiveWalletAddress || undefined }
         );
@@ -463,7 +467,7 @@ export default function NMKRPayLightbox({
   }, [state, reservationId, effectiveWalletAddress, previewMode]);
 
   // Use production payment status if available, otherwise fallback
-  const reservationPaymentStatus = sturgeonClient ? productionPaymentStatus : fallbackPaymentStatus;
+  const reservationPaymentStatus = sturgeonHttpClient ? productionPaymentStatus : fallbackPaymentStatus;
 
   // ==========================================
   // DUAL-DATABASE FIX: Check eligibility against PRODUCTION
