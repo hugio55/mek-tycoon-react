@@ -265,18 +265,94 @@ export default function NMKRPayLightbox({
   }, [activeCampaigns, propCampaignId, walletAddress, hasInitializedCampaign, isResumingFromMobile, previewMode]);
 
   // Campaign-aware mutations
-  const createReservation = useMutation(api.commemorativeNFTReservationsCampaign.createCampaignReservation);
-  const releaseReservation = useMutation(api.commemorativeNFTReservationsCampaign.releaseCampaignReservation);
-  const markPaymentWindowOpened = useMutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowOpened);
-  const markPaymentWindowClosed = useMutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowClosed);
+  // CRITICAL FIX: Use sturgeonClient.mutation() on localhost to ensure NFT reservations
+  // go to PRODUCTION database. Without this, localhost would use Trout (dev) which
+  // has stale inventory data and would assign already-sold NFTs.
+  const fallbackCreateReservation = useMutation(api.commemorativeNFTReservationsCampaign.createCampaignReservation);
+  const fallbackReleaseReservation = useMutation(api.commemorativeNFTReservationsCampaign.releaseCampaignReservation);
+  const fallbackMarkPaymentWindowOpened = useMutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowOpened);
+  const fallbackMarkPaymentWindowClosed = useMutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowClosed);
+
+  // Wrapper functions that use sturgeonClient when available (localhost), otherwise fallback (production)
+  const createReservation = async (args: { campaignId: Id<"commemorativeCampaigns">; walletAddress: string }) => {
+    if (sturgeonClient) {
+      console.log('[🎯NFT-PROD] Using sturgeonClient for createReservation (localhost → production)');
+      return await sturgeonClient.mutation(api.commemorativeNFTReservationsCampaign.createCampaignReservation, args);
+    }
+    return await fallbackCreateReservation(args);
+  };
+
+  const releaseReservation = async (args: { inventoryId: Id<"commemorativeNFTInventory">; reason?: "cancelled" | "expired" }) => {
+    if (sturgeonClient) {
+      console.log('[🎯NFT-PROD] Using sturgeonClient for releaseReservation (localhost → production)');
+      return await sturgeonClient.mutation(api.commemorativeNFTReservationsCampaign.releaseCampaignReservation, args);
+    }
+    return await fallbackReleaseReservation(args);
+  };
+
+  const markPaymentWindowOpened = async (args: { inventoryId: Id<"commemorativeNFTInventory"> }) => {
+    if (sturgeonClient) {
+      return await sturgeonClient.mutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowOpened, args);
+    }
+    return await fallbackMarkPaymentWindowOpened(args);
+  };
+
+  const markPaymentWindowClosed = async (args: { inventoryId: Id<"commemorativeNFTInventory"> }) => {
+    if (sturgeonClient) {
+      return await sturgeonClient.mutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowClosed, args);
+    }
+    return await fallbackMarkPaymentWindowClosed(args);
+  };
 
   // Query active reservation (campaign-aware) - skip in preview mode
-  const activeReservation = useQuery(
+  // CRITICAL FIX: On localhost, use sturgeonClient to query production since reservations are created there
+  const fallbackActiveReservation = useQuery(
     api.commemorativeNFTReservationsCampaign.getActiveCampaignReservation,
-    !previewMode && reservationId && effectiveWalletAddress && activeCampaignId
+    !sturgeonClient && !previewMode && reservationId && effectiveWalletAddress && activeCampaignId
       ? { campaignId: activeCampaignId, walletAddress: effectiveWalletAddress }
       : "skip"
   );
+
+  // State for production active reservation (when using sturgeonClient)
+  const [productionActiveReservation, setProductionActiveReservation] = useState<any>(null);
+
+  // Fetch active reservation from production when sturgeonClient is available
+  useEffect(() => {
+    if (!sturgeonClient || previewMode || !reservationId || !effectiveWalletAddress || !activeCampaignId) {
+      return;
+    }
+
+    let isActive = true;
+    let pollInterval: NodeJS.Timeout | null = null;
+
+    const fetchReservation = async () => {
+      try {
+        const result = await sturgeonClient.query(
+          api.commemorativeNFTReservationsCampaign.getActiveCampaignReservation,
+          { campaignId: activeCampaignId, walletAddress: effectiveWalletAddress }
+        );
+        if (isActive) {
+          setProductionActiveReservation(result);
+        }
+      } catch (error) {
+        console.error('[🎯NFT-PROD] Error fetching active reservation:', error);
+      }
+    };
+
+    // Fetch immediately
+    fetchReservation();
+
+    // Poll every 2 seconds to keep data fresh (like useQuery would)
+    pollInterval = setInterval(fetchReservation, 2000);
+
+    return () => {
+      isActive = false;
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [reservationId, effectiveWalletAddress, activeCampaignId, previewMode]);
+
+  // Use production reservation if available, otherwise fallback
+  const activeReservation = sturgeonClient ? productionActiveReservation : fallbackActiveReservation;
 
   // Debug logging for activeReservation query
   useEffect(() => {
@@ -285,6 +361,7 @@ export default function NMKRPayLightbox({
         reservationId,
         effectiveWalletAddress,
         activeCampaignId,
+        usingSturgeonClient: !!sturgeonClient,
         querySkipped: !(reservationId && effectiveWalletAddress && activeCampaignId),
         activeReservation: activeReservation ? 'POPULATED ✓' : 'undefined (still loading...)',
       });
@@ -335,12 +412,58 @@ export default function NMKRPayLightbox({
   // Uses reservation ID (not wallet) to prevent false positives from previous claims
   // Also runs during 'payment' state for active polling while NMKR window is open
   // ENHANCED: Now passes walletAddress for additional detection paths (claims table, webhooks table)
-  const reservationPaymentStatus = useQuery(
+  // CRITICAL FIX: On localhost, use sturgeonClient since webhooks update production
+  const fallbackPaymentStatus = useQuery(
     api.commemorativeNFTClaims.checkReservationPaid,
-    !previewMode && (state === 'payment' || state === 'processing' || state === 'payment_window_closed') && reservationId
+    !sturgeonClient && !previewMode && (state === 'payment' || state === 'processing' || state === 'payment_window_closed') && reservationId
       ? { reservationId, walletAddress: effectiveWalletAddress || undefined }
       : "skip"
   );
+
+  // State for production payment status (when using sturgeonClient)
+  const [productionPaymentStatus, setProductionPaymentStatus] = useState<any>(null);
+
+  // Fetch payment status from production when sturgeonClient is available
+  useEffect(() => {
+    const shouldPoll = sturgeonClient && !previewMode &&
+      (state === 'payment' || state === 'processing' || state === 'payment_window_closed') &&
+      reservationId;
+
+    if (!shouldPoll) {
+      return;
+    }
+
+    let isActive = true;
+    let pollInterval: NodeJS.Timeout | null = null;
+
+    const fetchPaymentStatus = async () => {
+      try {
+        const result = await sturgeonClient.query(
+          api.commemorativeNFTClaims.checkReservationPaid,
+          { reservationId, walletAddress: effectiveWalletAddress || undefined }
+        );
+        if (isActive) {
+          setProductionPaymentStatus(result);
+        }
+      } catch (error) {
+        console.error('[🎯NFT-PROD] Error fetching payment status:', error);
+      }
+    };
+
+    // Fetch immediately
+    fetchPaymentStatus();
+
+    // Poll every 2 seconds to detect payment quickly
+    pollInterval = setInterval(fetchPaymentStatus, 2000);
+
+    return () => {
+      isActive = false;
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [state, reservationId, effectiveWalletAddress, previewMode]);
+
+  // Use production payment status if available, otherwise fallback
+  const reservationPaymentStatus = sturgeonClient ? productionPaymentStatus : fallbackPaymentStatus;
 
   // ==========================================
   // DUAL-DATABASE FIX: Check eligibility against PRODUCTION
