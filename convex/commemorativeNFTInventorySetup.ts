@@ -177,21 +177,48 @@ export const markInventoryAsSoldByUid = mutation({
     }
 
     // Look up company name for historical tracking
+    // Priority: 1. users table, 2. phase1Veterans (for reserved name)
     let companyNameAtSale: string | undefined;
     if (args.soldTo) {
-      let user;
-      if (args.soldTo.startsWith('stake1')) {
-        user = await ctx.db
+      const walletAddress = args.soldTo;
+      const normalizedWallet = walletAddress.toLowerCase().trim();
+
+      if (walletAddress.startsWith('stake1') || walletAddress.startsWith('stake_test1')) {
+        // Try users table first (with case normalization)
+        let user = await ctx.db
           .query("users")
-          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", args.soldTo))
+          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", normalizedWallet))
           .first();
+
+        if (!user) {
+          user = await ctx.db
+            .query("users")
+            .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
+            .first();
+        }
+
+        if (user?.corporationName) {
+          companyNameAtSale = user.corporationName;
+        } else {
+          // Fallback to phase1Veterans table for reserved name
+          const veteran = await ctx.db
+            .query("phase1Veterans")
+            .withIndex("by_stakeAddress", (q: any) => q.eq("stakeAddress", normalizedWallet))
+            .first();
+
+          if (veteran?.originalCorporationName) {
+            // Use reserved name if set, otherwise original
+            companyNameAtSale = veteran.reservedCorporationName || veteran.originalCorporationName;
+          }
+        }
       } else {
-        user = await ctx.db
+        // Legacy payment address
+        const user = await ctx.db
           .query("users")
-          .withIndex("by_wallet", (q: any) => q.eq("walletAddress", args.soldTo))
+          .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
           .first();
+        companyNameAtSale = user?.corporationName || undefined;
       }
-      companyNameAtSale = user?.corporationName || undefined;
     }
 
     // Update the NFT to sold status

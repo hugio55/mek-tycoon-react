@@ -285,16 +285,40 @@ export const completeCampaignReservation = mutation({
 
     if (inventoryRow && inventoryRow.status === "reserved") {
       // Look up corporation name for historical tracking
-      // users table IS the corporation (1 user = 1 corporation)
+      // Priority: 1. users table, 2. phase1Veterans (for reserved name)
       const walletAddress = inventoryRow.reservedBy;
       let companyNameAtSale: string | undefined;
 
       if (walletAddress) {
-        const user = await ctx.db
+        const normalizedWallet = walletAddress.toLowerCase().trim();
+
+        // Try users table first (with case normalization)
+        let user = await ctx.db
           .query("users")
-          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
+          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", normalizedWallet))
           .first();
-        companyNameAtSale = user?.corporationName || undefined;
+
+        if (!user) {
+          user = await ctx.db
+            .query("users")
+            .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
+            .first();
+        }
+
+        if (user?.corporationName) {
+          companyNameAtSale = user.corporationName;
+        } else {
+          // Fallback to phase1Veterans table for reserved name
+          const veteran = await ctx.db
+            .query("phase1Veterans")
+            .withIndex("by_stakeAddress", (q: any) => q.eq("stakeAddress", normalizedWallet))
+            .first();
+
+          if (veteran?.originalCorporationName) {
+            // Use reserved name if set, otherwise original
+            companyNameAtSale = veteran.reservedCorporationName || veteran.originalCorporationName;
+          }
+        }
       }
 
       // New system: Inventory row IS the reservation
