@@ -275,12 +275,6 @@ export const initializeDefaultPhaseCards = mutation({
         locked: true,
         order: 3,
       },
-      {
-        title: "Phase V",
-        description: undefined,
-        locked: true,
-        order: 4,
-      },
     ];
 
     const insertedIds = [];

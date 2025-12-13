@@ -149,7 +149,9 @@ export default function AdminCampaignsPage() {
       const nmkrData = await response.json();
       console.log('[NMKR Sync] NMKR Summary:', nmkrData.summary);
 
-      const discrepancies = await convex.query(api.nmkrSync.getInventoryDiscrepancies, {
+      // CRITICAL: Use sturgeonClient to query PRODUCTION inventory, not Trout
+      const client = sturgeonClient || convex;
+      const discrepancies = await client.query(api.nmkrSync.getInventoryDiscrepancies, {
         campaignId: campaignId as Id<"commemorativeCampaigns">,
         nmkrStatuses: nmkrData.statuses,
       });
