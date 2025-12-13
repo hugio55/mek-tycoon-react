@@ -1,5 +1,6 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
+import { internal, api } from "./_generated/api";
 
 /**
  * NMKR Studio API Integration
@@ -489,5 +490,151 @@ export const parseNMKRCSV = action({
 
     console.log("[🔨NMKR] Parsed", nfts.length, "NFTs from CSV");
     return nfts;
+  },
+});
+
+/**
+ * DIRECT NMKR PAYMENT CHECK - Webhook Fallback
+ *
+ * This action directly queries NMKR API to check if an NFT was sold.
+ * Use this when webhooks fail or as a backup payment detection method.
+ *
+ * Flow:
+ * 1. Query NMKR API for NFT details by UID
+ * 2. If status is "sold", sync our inventory
+ * 3. Return payment status
+ */
+export const checkNFTPaymentDirect = action({
+  args: {
+    inventoryId: v.id("commemorativeNFTInventory"),
+  },
+  handler: async (ctx, args): Promise<{
+    isPaid: boolean;
+    nmkrStatus: string | null;
+    synced: boolean;
+    error?: string;
+    nftName?: string;
+  }> => {
+    const apiKey = process.env.NMKR_API_KEY;
+
+    console.log("[🔨NMKR-DIRECT] Checking payment status for inventory:", args.inventoryId);
+
+    if (!apiKey) {
+      console.error("[🔨NMKR-DIRECT] NMKR_API_KEY not configured");
+      return {
+        isPaid: false,
+        nmkrStatus: null,
+        synced: false,
+        error: "NMKR API key not configured",
+      };
+    }
+
+    // Get inventory item to find NFT UID
+    const inventory = await ctx.runQuery(
+      api.commemorativeNFTInventorySetup.getInventoryById,
+      { inventoryId: args.inventoryId }
+    );
+
+    if (!inventory) {
+      console.error("[🔨NMKR-DIRECT] Inventory item not found:", args.inventoryId);
+      return {
+        isPaid: false,
+        nmkrStatus: null,
+        synced: false,
+        error: "Inventory item not found",
+      };
+    }
+
+    // If already sold in our database, no need to check NMKR
+    if (inventory.status === "sold") {
+      console.log("[🔨NMKR-DIRECT] Already marked as sold in database");
+      return {
+        isPaid: true,
+        nmkrStatus: "sold",
+        synced: true,
+        nftName: inventory.name,
+      };
+    }
+
+    const nftUid = inventory.nftUid;
+    console.log("[🔨NMKR-DIRECT] Checking NMKR for NFT UID:", nftUid);
+
+    try {
+      // Query NMKR API for NFT details
+      const url = `${NMKR_API_BASE}/v2/GetNftDetailsById/${nftUid}`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Accept": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("[🔨NMKR-DIRECT] API Error:", response.status, errorText);
+        return {
+          isPaid: false,
+          nmkrStatus: null,
+          synced: false,
+          error: `NMKR API error: ${response.status}`,
+        };
+      }
+
+      const nftDetails = await response.json();
+      console.log("[🔨NMKR-DIRECT] NMKR NFT status:", nftDetails.state);
+
+      // If NMKR says sold, sync our inventory
+      if (nftDetails.state === "sold") {
+        console.log("[🔨NMKR-DIRECT] ✅ NMKR confirms SOLD! Syncing inventory...");
+
+        // Update our inventory to match NMKR
+        try {
+          await ctx.runMutation(
+            api.commemorativeCampaigns.markInventoryAsSoldByUid,
+            {
+              nftUid: nftUid,
+              transactionHash: "nmkr-direct-sync",
+              soldTo: inventory.reservedBy || "unknown",
+            }
+          );
+          console.log("[🔨NMKR-DIRECT] ✅ Inventory synced successfully!");
+
+          return {
+            isPaid: true,
+            nmkrStatus: "sold",
+            synced: true,
+            nftName: inventory.name,
+          };
+        } catch (syncError) {
+          console.error("[🔨NMKR-DIRECT] Failed to sync inventory:", syncError);
+          // Still return isPaid=true since NMKR confirmed sale
+          return {
+            isPaid: true,
+            nmkrStatus: "sold",
+            synced: false,
+            error: "NMKR confirms sold but failed to sync inventory",
+            nftName: inventory.name,
+          };
+        }
+      }
+
+      // NFT not sold on NMKR
+      return {
+        isPaid: false,
+        nmkrStatus: nftDetails.state,
+        synced: false,
+        nftName: inventory.name,
+      };
+
+    } catch (error) {
+      console.error("[🔨NMKR-DIRECT] Failed to check NMKR:", error);
+      return {
+        isPaid: false,
+        nmkrStatus: null,
+        synced: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
   },
 });

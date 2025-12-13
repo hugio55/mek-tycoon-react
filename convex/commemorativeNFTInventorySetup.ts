@@ -125,6 +125,19 @@ export const getInventoryUids = query({
 });
 
 /**
+ * Get single inventory item by ID
+ * Used by direct NMKR payment check
+ */
+export const getInventoryById = query({
+  args: {
+    inventoryId: v.id("commemorativeNFTInventory"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.inventoryId);
+  },
+});
+
+/**
  * Mark NFT inventory as sold by UID (called by webhook when no reservation found)
  *
  * This is a CRITICAL fallback function for external sales or when reservations expire.

@@ -112,6 +112,8 @@ export default function NMKRPayLightbox({
   const [resumeValidating, setResumeValidating] = useState(false);
   const [isVerifyingClosedWindowPayment, setIsVerifyingClosedWindowPayment] = useState(false);
   const [isCreatingMobileReservation, setIsCreatingMobileReservation] = useState(false);
+  const [isCheckingNMKRDirect, setIsCheckingNMKRDirect] = useState(false);
+  const [nmkrDirectError, setNmkrDirectError] = useState<string | null>(null);
 
   // Backend verification state (cryptographic proof of wallet ownership)
   const [backendVerificationStatus, setBackendVerificationStatus] = useState<'idle' | 'generating_nonce' | 'awaiting_signature' | 'verifying' | 'success' | 'failed'>('idle');
@@ -306,6 +308,50 @@ export default function NMKRPayLightbox({
       return await sturgeonHttpClient.mutation(api.commemorativeNFTReservationsCampaign.markPaymentWindowClosed, args);
     }
     return await fallbackMarkPaymentWindowClosed(args);
+  };
+
+  // Direct NMKR API check - bypasses webhook, queries NMKR directly to detect payment
+  // This is the NUCLEAR OPTION when webhook fails
+  const checkNMKRDirectPayment = async () => {
+    if (!reservationId) {
+      console.log('[🔨NMKR-DIRECT] No reservation ID, cannot check');
+      return;
+    }
+
+    setIsCheckingNMKRDirect(true);
+    setNmkrDirectError(null);
+    console.log('[🔨NMKR-DIRECT] Starting direct NMKR payment check for:', reservationId);
+
+    try {
+      // Use sturgeonHttpClient if available (localhost), otherwise fall back to sturgeonClient
+      const client = sturgeonHttpClient;
+      if (!client) {
+        throw new Error('Production client not available');
+      }
+
+      const result = await client.action(api.nmkr.checkNFTPaymentDirect, {
+        inventoryId: reservationId,
+      });
+
+      console.log('[🔨NMKR-DIRECT] Result:', result);
+
+      if (result.isPaid) {
+        console.log('[🔨NMKR-DIRECT] ✅ PAYMENT CONFIRMED BY NMKR! Transitioning to success...');
+        // Transition to success state
+        setState('success');
+      } else if (result.error) {
+        console.error('[🔨NMKR-DIRECT] Error:', result.error);
+        setNmkrDirectError(result.error);
+      } else {
+        console.log('[🔨NMKR-DIRECT] Payment not detected. NMKR status:', result.nmkrStatus);
+        setNmkrDirectError(`NMKR shows status: ${result.nmkrStatus || 'unknown'}. Payment not detected yet.`);
+      }
+    } catch (error) {
+      console.error('[🔨NMKR-DIRECT] Failed to check NMKR:', error);
+      setNmkrDirectError(error instanceof Error ? error.message : 'Failed to check NMKR');
+    } finally {
+      setIsCheckingNMKRDirect(false);
+    }
   };
 
   // Query active reservation (campaign-aware) - skip in preview mode
@@ -2068,16 +2114,26 @@ export default function NMKRPayLightbox({
                 Re-open Payment Window
               </button>
 
-              {/* Primary action: Check if payment was made */}
+              {/* Show error if direct NMKR check failed */}
+              {nmkrDirectError && (
+                <div className="p-3 mb-2 rounded-xl text-sm text-yellow-400"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.1), rgba(234, 179, 8, 0.05))',
+                    border: '1px solid rgba(234, 179, 8, 0.3)',
+                  }}
+                >
+                  {nmkrDirectError}
+                </div>
+              )}
+
+              {/* Primary action: Check NMKR directly for payment */}
               <button
-                onClick={() => {
-                  setIsVerifyingClosedWindowPayment(true);
-                  // Will auto-clear after 8 seconds if no payment detected
-                }}
-                className="w-full py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200"
+                onClick={checkNMKRDirectPayment}
+                disabled={isCheckingNMKRDirect}
+                className="w-full py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200 disabled:opacity-50"
                 style={{ fontFamily: 'Inter, sans-serif', background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)', color: '#ffffff', boxShadow: '0 6px 24px rgba(6, 182, 212, 0.4)', border: 'none' }}
               >
-                Refresh
+                {isCheckingNMKRDirect ? 'Checking NMKR...' : 'Verify Payment with NMKR'}
               </button>
 
               {/* Tertiary action: Cancel the reservation entirely */}
