@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 interface FillTextButtonProps {
   text?: string;
@@ -21,6 +21,7 @@ const FillTextButton = ({
 }: FillTextButtonProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
+  const clickHandledRef = useRef(false);
 
   // Force animation restart on hover by changing key
   useEffect(() => {
@@ -28,6 +29,31 @@ const FillTextButton = ({
       setAnimationKey(prev => prev + 1);
     }
   }, [isHovered]);
+
+  // Stable click handler that works on both touch and mouse
+  const handleClick = useCallback(() => {
+    // Prevent double-firing from touch + click events
+    if (clickHandledRef.current) return;
+    clickHandledRef.current = true;
+
+    // Reset after a short delay to allow future clicks
+    setTimeout(() => {
+      clickHandledRef.current = false;
+    }, 300);
+
+    onClick?.();
+  }, [onClick]);
+
+  // Handle touch events for mobile - ensures click fires reliably
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    // Trigger click on touch end for mobile reliability
+    // This ensures the click happens even if mouse events are flaky
+    handleClick();
+    // Start the animation on touch
+    setIsHovered(true);
+    // Reset hover state after animation completes
+    setTimeout(() => setIsHovered(false), 600);
+  }, [handleClick]);
 
   return (
     <button
@@ -41,7 +67,8 @@ const FillTextButton = ({
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
+      onClick={handleClick}
+      onTouchEnd={handleTouchEnd}
     >
       <style>
         {`
