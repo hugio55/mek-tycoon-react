@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useConvex } from 'convex/react';
+import { useConvex } from 'convex/react';
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
@@ -81,15 +81,16 @@ export default function AdminCampaignsPage() {
     return () => clearInterval(interval);
   }, [sturgeonClient]);
 
-  const toggleCleanup = useMutation(api.commemorativeNFTReservationsCampaign.toggleCampaignReservationCleanup);
-  const runCleanup = useMutation(api.commemorativeNFTReservationsCampaign.cleanupExpiredCampaignReservationsMutation);
-  const syncCounters = useMutation(api.commemorativeCampaigns.syncCampaignCounters);
-  const syncCampaignInventory = useMutation(api.nmkrSync.syncCampaignInventory);
-  const syncSingleNFT = useMutation(api.nmkrSync.syncSingleNFT);
+  // NOTE: All mutations must use sturgeonClient.mutation() to target PRODUCTION
+  // The useMutation hooks would go to Trout (dev) instead
 
   const handleToggleCleanup = async (campaignId: string, enabled: boolean) => {
+    if (!sturgeonClient) {
+      alert('Production client not available');
+      return;
+    }
     try {
-      await toggleCleanup({ campaignId, enabled });
+      await sturgeonClient.mutation(api.commemorativeNFTReservationsCampaign.toggleCampaignReservationCleanup, { campaignId, enabled });
     } catch (error: any) {
       console.error('[AdminCampaigns] Error toggling cleanup:', error);
       alert(`Error: ${error.message}`);
@@ -97,10 +98,14 @@ export default function AdminCampaignsPage() {
   };
 
   const handleRunCleanup = async (campaignId: string) => {
+    if (!sturgeonClient) {
+      alert('Production client not available');
+      return;
+    }
     setCleaningCampaignId(campaignId);
     try {
-      await runCleanup({ campaignId });
-      await syncCounters({ campaignId });
+      await sturgeonClient.mutation(api.commemorativeNFTReservationsCampaign.cleanupExpiredCampaignReservationsMutation, { campaignId });
+      await sturgeonClient.mutation(api.commemorativeCampaigns.syncCampaignCounters, { campaignId });
     } catch (error: any) {
       console.error('[AdminCampaigns] Error running cleanup:', error);
       alert(`Error: ${error.message}`);
@@ -110,9 +115,13 @@ export default function AdminCampaignsPage() {
   };
 
   const handleSyncCounters = async (campaignId: string) => {
+    if (!sturgeonClient) {
+      alert('Production client not available');
+      return;
+    }
     setSyncingCampaignId(campaignId);
     try {
-      await syncCounters({ campaignId });
+      await sturgeonClient.mutation(api.commemorativeCampaigns.syncCampaignCounters, { campaignId });
     } catch (error: any) {
       console.error('[AdminCampaigns] Error syncing counters:', error);
       alert(`Error: ${error.message}`);
@@ -173,6 +182,10 @@ export default function AdminCampaignsPage() {
       alert('No campaign selected');
       return;
     }
+    if (!sturgeonClient) {
+      alert('Production client not available');
+      return;
+    }
 
     setIsSyncingNMKR(true);
     try {
@@ -188,14 +201,17 @@ export default function AdminCampaignsPage() {
       if (!response.ok) throw new Error('Failed to fetch from NMKR');
       const nmkrData = await response.json();
 
-      const result = await syncCampaignInventory({
+      // CRITICAL: Use sturgeonClient to sync PRODUCTION inventory
+      const result = await sturgeonClient.mutation(api.nmkrSync.syncCampaignInventory, {
         campaignId: syncCampaignId as Id<"commemorativeCampaigns">,
         nmkrStatuses: nmkrData.statuses,
       });
 
       console.log('[NMKR Sync] Sync result:', result);
 
-      const newDiscrepancies = await convex.query(api.nmkrSync.getInventoryDiscrepancies, {
+      // CRITICAL: Use sturgeonClient to query PRODUCTION inventory after sync
+      const client = sturgeonClient || convex;
+      const newDiscrepancies = await client.query(api.nmkrSync.getInventoryDiscrepancies, {
         campaignId: syncCampaignId as Id<"commemorativeCampaigns">,
         nmkrStatuses: nmkrData.statuses,
       });
@@ -220,6 +236,10 @@ export default function AdminCampaignsPage() {
       alert('No campaign selected');
       return;
     }
+    if (!sturgeonClient) {
+      alert('Production client not available');
+      return;
+    }
 
     try {
       const campaign = campaigns.find((c: any) => c._id === syncCampaignId);
@@ -237,13 +257,16 @@ export default function AdminCampaignsPage() {
       const nftStatus = nmkrData.statuses.find((s: any) => s.nftUid === nftUid);
       if (!nftStatus) throw new Error('NFT not found in NMKR data');
 
-      await syncSingleNFT({
+      // CRITICAL: Use sturgeonClient to sync PRODUCTION inventory
+      await sturgeonClient.mutation(api.nmkrSync.syncSingleNFT, {
         nftUid,
         nmkrStatus: nftStatus.nmkrStatus,
         soldTo: nftStatus.soldTo,
       });
 
-      const newDiscrepancies = await convex.query(api.nmkrSync.getInventoryDiscrepancies, {
+      // CRITICAL: Use sturgeonClient to query PRODUCTION inventory after sync
+      const client = sturgeonClient || convex;
+      const newDiscrepancies = await client.query(api.nmkrSync.getInventoryDiscrepancies, {
         campaignId: syncCampaignId as Id<"commemorativeCampaigns">,
         nmkrStatuses: nmkrData.statuses,
       });

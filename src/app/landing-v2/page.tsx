@@ -9,6 +9,7 @@ import { getMediaUrl } from '@/lib/media-url';
 import { useLandingStateMachine, TIMINGS } from './hooks/useLandingStateMachine';
 import { useBackgroundAudio } from './hooks/useBackgroundAudio';
 import { useClickSound } from './hooks/useClickSound';
+import { useMobileResume } from './hooks/useMobileResume';
 import LandingContainer from './components/LandingContainer';
 import SoundSelectionState from './components/states/SoundSelectionState';
 import FinalContentState from './components/states/FinalContentState';
