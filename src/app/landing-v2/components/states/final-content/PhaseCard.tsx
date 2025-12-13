@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import PhaseOneIndicator, { LoadingSpinner } from './PhaseOneIndicator';
 import NMKRPayLightbox from '@/components/NMKRPayLightbox';
 import { getMediaUrl } from '@/lib/media-url';
+import { useMobileResume } from '../../../hooks/useMobileResume';
 
 interface PhaseCardData {
   _id: string;
@@ -63,6 +64,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
   const [showClaimLightbox, setShowClaimLightbox] = useState(false);
   const [mounted, setMounted] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const { isResume: isMobileResume } = useMobileResume();
   const phaseLabel = `Phase ${PHASE_LABELS[index]}`;
   const styles = getPhaseStyles(index);
   const isPhaseTwo = index === 1;
@@ -74,29 +76,13 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
     setMounted(true);
   }, []);
 
-  // AUTO-OPEN LIGHTBOX: Detect mobile resume URL params and auto-open claim lightbox
-  // This runs ONLY for Phase I (index 0) since that's where the claim button is
+  // AUTO-OPEN LIGHTBOX: For Phase I when mobile resume is detected
   useEffect(() => {
-    if (!mounted || !isPhaseOne) return;
-
-    const params = new URLSearchParams(window.location.search);
-    const isResume = params.get('claimResume') === 'true';
-
-    if (isResume) {
-      const rid = params.get('rid');
-      const addr = params.get('addr');
-      const cid = params.get('cid');
-
-      // Validate all required params exist
-      if (rid && rid.length > 0 && addr && addr.length > 0 && cid && cid.length > 0) {
-        console.log('[🔐RESUME] Mobile resume detected in PhaseCard - auto-opening claim lightbox');
-        console.log('[🔐RESUME] Resume params:', { rid, addr, cid });
-
-        // Auto-open the lightbox - NMKRPayLightbox will handle the rest
-        setShowClaimLightbox(true);
-      }
+    if (mounted && isPhaseOne && isMobileResume) {
+      console.log('[🔐RESUME] Mobile resume detected in PhaseCard - auto-opening claim lightbox');
+      setShowClaimLightbox(true);
     }
-  }, [mounted, isPhaseOne]);
+  }, [mounted, isPhaseOne, isMobileResume]);
 
   useEffect(() => {
     if (isPhaseTwo) {

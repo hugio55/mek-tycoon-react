@@ -24,7 +24,7 @@ export default function LandingV2() {
   const { isLoading, registerCriticalAsset, markCriticalAssetLoaded } = useLoaderContext();
   const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'android' | 'other'>('other');
   const [mounted, setMounted] = useState(false);
-  const [isMobileResume, setIsMobileResume] = useState(false);
+  const { isResume: isMobileResume } = useMobileResume();
 
   const [revealStarted, setRevealStarted] = useState(false);
   const [backgroundFadedIn, setBackgroundFadedIn] = useState(false);
@@ -37,25 +37,17 @@ export default function LandingV2() {
   const { audioPlaying, toggleAudio, startAudio } = useBackgroundAudio();
   const { playClickSound } = useClickSound();
 
-  // Detect device type and mobile resume on mount
+  // Handle mobile resume - skip intro and go directly to REVEAL
   useEffect(() => {
-    setMounted(true);
-
-    // Check for mobile resume URL params FIRST
-    const params = new URLSearchParams(window.location.search);
-    const isResume = params.get('claimResume') === 'true';
-    const rid = params.get('rid');
-    const addr = params.get('addr');
-    const cid = params.get('cid');
-
-    if (isResume && rid && rid.length > 0 && addr && addr.length > 0 && cid && cid.length > 0) {
-      console.log('[🔐RESUME] Mobile resume URL detected at page level');
-      console.log('[🔐RESUME] Skipping intro animations...');
-      setIsMobileResume(true);
-      // Skip sound selection - go directly to REVEAL state
+    if (isMobileResume) {
+      console.log('[🔐RESUME] Mobile resume detected - skipping intro animations');
       transitionTo('REVEAL');
     }
+  }, [isMobileResume, transitionTo]);
 
+  // Detect device type on mount
+  useEffect(() => {
+    setMounted(true);
     const userAgent = navigator.userAgent.toLowerCase();
 
     // Detect device type and store in local variable for immediate use
