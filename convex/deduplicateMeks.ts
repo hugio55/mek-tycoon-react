@@ -151,11 +151,6 @@ export const removeDuplicates = mutation({
       // Now we prefer records with "Mekanism" in the name (correct on-chain naming)
       const mekanismFormat = meks.filter(m => m.assetName?.toLowerCase().includes('mekanism'));
 
-      if (meks.length === 0) {
-        console.log(`[Dedup] Mek #${mekNumber}: unexpected format distribution, skipping`);
-        continue;
-      }
-
       // Keep the Mekanism format entry (correct data), or fall back to first entry
       const keepEntry = mekanismFormat[0] || meks[0];
       const deleteEntries = meks.filter(m => m._id !== keepEntry._id);

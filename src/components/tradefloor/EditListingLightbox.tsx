@@ -404,9 +404,9 @@ export default function EditListingLightbox({
                 const isAtLimit = selectedVariations.length >= 6;
                 // Randomly assign one of 3 sample images based on variation id
                 const sampleImages = [
-                  '/variation-images-art-400px/webp/ae1-gn3-ev1.webp',
-                  '/variation-images-art-400px/webp/ar1-at1-nm1.webp',
-                  '/variation-images-art-400px/webp/ak3-aa5-mo1.webp',
+                  '/variation-images-art-400px/webp-uniform/checkers-1.webp',
+                  '/variation-images-art-400px/webp-uniform/shark-1.webp',
+                  '/variation-images-art-400px/webp-uniform/flash-1.webp',
                 ];
                 const imageIndex = v.id % 3;
                 const imageSrc = sampleImages[imageIndex];

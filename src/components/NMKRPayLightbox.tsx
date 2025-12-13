@@ -365,6 +365,8 @@ export default function NMKRPayLightbox({
 
       if (result.isPaid) {
         console.log('[🔨NMKR-DIRECT] ✅ PAYMENT CONFIRMED BY NMKR! Transitioning to success...');
+        // Clear localStorage session backup on success
+        clearSession();
         // Transition to success state
         setState('success');
         return true;
@@ -761,14 +763,16 @@ export default function NMKRPayLightbox({
         console.log('[🔐RESUME] Reservation invalid or expired after 5s - resetting');
         setIsResumingFromMobile(false);
         setResumeValidating(false);
-        setErrorMessage('Your reservation has expired or is invalid. Please start again.');
+        // Clear the localStorage backup since it's no longer valid
+        clearSession();
+        setErrorMessage('Your NFT reservation has expired. Reservations last about 10-15 minutes. Please enter your address again to reserve a new NFT.');
         setState('address_entry');
         setReservationId(null);
       }
     }, 5000);
 
     return () => clearTimeout(timeout);
-  }, [isResumingFromMobile, resumeValidating, activeReservation, mounted]);
+  }, [isResumingFromMobile, resumeValidating, activeReservation, mounted, clearSession]);
 
   // Format milliseconds to MM:SS string (or "Expired" if 0)
   const formatTimeRemaining = (ms: number): string => {
@@ -1371,9 +1375,11 @@ export default function NMKRPayLightbox({
       if (paymentWindow && !paymentWindow.closed) {
         paymentWindow.close();
       }
+      // Clear localStorage session backup on success
+      clearSession();
       setState('success');
     }
-  }, [state, reservationPaymentStatus, paymentWindow]);
+  }, [state, reservationPaymentStatus, paymentWindow, clearSession]);
 
   // Auto-release when timer expires
   useEffect(() => {
@@ -1399,6 +1405,8 @@ export default function NMKRPayLightbox({
             paymentWindow.close();
           }
 
+          // Clear localStorage session backup since reservation expired
+          clearSession();
           setState('timeout');
 
           releaseReservation({ reservationId, reason: 'expired' })
@@ -1409,7 +1417,7 @@ export default function NMKRPayLightbox({
     }, 100);
 
     return () => clearInterval(intervalId);
-  }, [activeReservation, state, reservationId, releaseReservation, paymentWindow]);
+  }, [activeReservation, state, reservationId, releaseReservation, paymentWindow, clearSession]);
 
   // Close payment window on unmount
   useEffect(() => {
