@@ -623,7 +623,7 @@ export const addUserToWhitelistByAddress = mutation({
       if (!resolvedDisplayName) {
         const user = await ctx.db
           .query("users")
-          .withIndex("by_stakeAddress", (q) => q.eq("stakeAddress", normalizedAddress))
+          .withIndex("by_stake_address", (q) => q.eq("stakeAddress", normalizedAddress))
           .first();
         if (user?.corporationName) {
           resolvedDisplayName = user.corporationName;

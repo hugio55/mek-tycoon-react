@@ -1032,7 +1032,6 @@ export const investigateNFTOwnership = query({
         webhookData = {
           nftUid: webhook.nftUid,
           stakeAddress: webhook.stakeAddress,
-          paymentAddress: webhook.paymentAddress,
           transactionHash: webhook.transactionHash,
           processedAt: webhook.processedAt ? new Date(webhook.processedAt).toISOString() : null,
         };

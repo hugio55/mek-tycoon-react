@@ -487,7 +487,7 @@ export default function EditListingLightbox({
         document.body
       )}
 
-      {/* Variation Hover Tooltip - Shows name and details on hover */}
+      {/* Variation Hover Tooltip - Text only */}
       {hoveredVariation && createPortal(
         <div
           className="fixed z-[99999] pointer-events-none"
@@ -498,39 +498,41 @@ export default function EditListingLightbox({
           }}
         >
           <div
-            className="px-4 py-2.5 rounded-xl text-sm"
+            className="px-3 py-2 rounded-lg"
             style={{
-              background: 'linear-gradient(135deg, rgba(30, 35, 45, 0.98) 0%, rgba(40, 45, 55, 0.98) 50%, rgba(30, 35, 45, 0.98) 100%)',
+              background: 'linear-gradient(135deg, rgba(30,30,40,0.95), rgba(20,20,30,0.95))',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
-              border: `1px solid ${variationTypeColors[hoveredVariation.variation.type].border}`,
-              fontFamily: "'Play', sans-serif",
-              boxShadow: `0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px ${variationTypeColors[hoveredVariation.variation.type].border}`,
+              border: '1px solid rgba(255,255,255,0.15)',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
             }}
           >
             <div
-              className="font-bold text-base mb-1"
-              style={{ color: variationTypeColors[hoveredVariation.variation.type].text }}
+              className="text-sm font-medium text-center"
+              style={{ fontFamily: 'Saira, sans-serif', color: '#22d3ee' }}
             >
               {hoveredVariation.variation.name}
             </div>
-            <div className="flex items-center gap-3 text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
-              <span className="capitalize">{hoveredVariation.variation.type}</span>
-              <span>•</span>
-              <span>Rank #{hoveredVariation.variation.rank}</span>
-              <span>•</span>
-              <span className="capitalize">{hoveredVariation.variation.tier}</span>
+            <div
+              className="text-xs text-center mt-1"
+              style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+            >
+              {hoveredVariation.variation.type.charAt(0).toUpperCase() + hoveredVariation.variation.type.slice(1)} | Rank #{hoveredVariation.variation.rank}
+            </div>
+            <div
+              className="text-xs text-center"
+              style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
+            >
+              {hoveredVariation.variation.count} exist ({hoveredVariation.variation.percentage}%)
             </div>
           </div>
           {/* Arrow */}
           <div
-            className="mx-auto"
+            className="w-0 h-0 mx-auto"
             style={{
-              width: 0,
-              height: 0,
               borderLeft: '8px solid transparent',
               borderRight: '8px solid transparent',
-              borderTop: `8px solid ${variationTypeColors[hoveredVariation.variation.type].border}`,
+              borderTop: '8px solid rgba(30,30,40,0.95)',
             }}
           />
         </div>,

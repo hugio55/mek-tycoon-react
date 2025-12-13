@@ -802,7 +802,7 @@ export default function CreateListingLightbox({
           )}
         </div>
 
-        {/* Variation Hover Tooltip with Image Preview - Rendered via portal to fix positioning */}
+        {/* Variation Hover Tooltip - Text only */}
         {mounted && hoveredVariation && createPortal(
           <div
             className="fixed z-[99999] pointer-events-none"
@@ -813,7 +813,7 @@ export default function CreateListingLightbox({
             }}
           >
             <div
-              className="p-3 rounded-xl"
+              className="px-3 py-2 rounded-lg"
               style={{
                 background: 'linear-gradient(135deg, rgba(30,30,40,0.95), rgba(20,20,30,0.95))',
                 backdropFilter: 'blur(20px)',
@@ -822,14 +822,6 @@ export default function CreateListingLightbox({
                 boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
               }}
             >
-              <img
-                src="/variation-images-art-400px/ae1-gn3-ev1.png"
-                alt={hoveredVariation.variation.name}
-                className="w-32 h-32 object-contain mb-2"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
               <div
                 className="text-sm font-medium text-center"
                 style={{ fontFamily: 'Saira, sans-serif', color: '#22d3ee' }}
