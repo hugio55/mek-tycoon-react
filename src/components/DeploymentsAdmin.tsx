@@ -745,45 +745,18 @@ export default function DeploymentsAdmin() {
         ) : (
           /* Confirmation States */
           <div className="text-center">
-            <div className="text-4xl mb-4">
-              {prodConfirmStep === 1 ? '⚠️' : '‼️'}
-            </div>
+            <div className="text-4xl mb-4">⚠️</div>
             <h2 className="text-xl font-bold text-red-400 mb-4">
-              {prodConfirmStep === 1 ? 'Production Deployment' : 'Final Confirmation'}
+              Production Deployment
             </h2>
 
-            {prodConfirmStep === 1 && (
+            {prodConfirmStep >= 1 && (
               <>
                 <p className="text-gray-300 mb-4">
                   You are about to deploy to <span className="text-red-400 font-bold">PRODUCTION</span>.
                 </p>
                 <p className="text-gray-400 text-sm mb-6">
                   This will affect the live website (mek.overexposed.io) and all active players.
-                </p>
-                <div className="flex gap-4 justify-center">
-                  <button
-                    onClick={() => { setShowProdConfirm(false); setProdConfirmStep(0); setWillDoFullDeploy(false); }}
-                    className="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => setProdConfirmStep(2)}
-                    className="px-6 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-bold"
-                  >
-                    Continue
-                  </button>
-                </div>
-              </>
-            )}
-
-            {prodConfirmStep === 2 && (
-              <>
-                <p className="text-gray-300 mb-4">
-                  Are you <span className="text-red-400 font-bold">ABSOLUTELY SURE</span>?
-                </p>
-                <p className="text-gray-400 text-sm mb-6">
-                  Changes will go live immediately. This cannot be undone without another deployment.
                 </p>
                 <div className="flex gap-4 justify-center">
                   <button
