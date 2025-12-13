@@ -259,6 +259,27 @@ export const syncCampaignInventory = mutation({
 
             if (buyerWallet) {
               updateData.soldTo = buyerWallet;
+
+              // Look up corporation name from users table
+              let user;
+              if (buyerWallet.startsWith('stake1') || buyerWallet.startsWith('stake_test1')) {
+                user = await ctx.db
+                  .query("users")
+                  .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", buyerWallet))
+                  .first();
+              } else {
+                user = await ctx.db
+                  .query("users")
+                  .withIndex("by_wallet", (q: any) => q.eq("walletAddress", buyerWallet))
+                  .first();
+              }
+
+              if (user?.corporationName) {
+                updateData.companyNameAtSale = user.corporationName;
+                console.log('[🔄SYNC] Found corporation name:', user.corporationName);
+              } else {
+                console.log('[🔄SYNC] ⚠️ No corporation found for wallet:', buyerWallet?.substring(0, 20) + '...');
+              }
             } else {
               console.log('[🔄SYNC] ⚠️ No buyer info found for', item.name, '- marking as sold without buyer');
             }
@@ -463,6 +484,27 @@ export const syncSingleNFT = mutation({
 
       if (buyerWallet) {
         updateData.soldTo = buyerWallet;
+
+        // Look up corporation name from users table
+        let user;
+        if (buyerWallet.startsWith('stake1') || buyerWallet.startsWith('stake_test1')) {
+          user = await ctx.db
+            .query("users")
+            .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", buyerWallet))
+            .first();
+        } else {
+          user = await ctx.db
+            .query("users")
+            .withIndex("by_wallet", (q: any) => q.eq("walletAddress", buyerWallet))
+            .first();
+        }
+
+        if (user?.corporationName) {
+          updateData.companyNameAtSale = user.corporationName;
+          console.log('[🔄SYNC] Found corporation name:', user.corporationName);
+        } else {
+          console.log('[🔄SYNC] ⚠️ No corporation found for wallet:', buyerWallet?.substring(0, 20) + '...');
+        }
       } else {
         console.log('[🔄SYNC] ⚠️ No buyer info found for', nft.name, '- marking as sold without buyer');
       }

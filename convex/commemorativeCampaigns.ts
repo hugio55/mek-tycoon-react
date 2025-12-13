@@ -809,6 +809,77 @@ export const backfillSoldNFTData = mutation({
 });
 
 /**
+ * Backfill corporation names for sold NFTs that have soldTo but missing companyNameAtSale
+ *
+ * This is useful when the sync/sale recorded the stake address but not the corporation name.
+ * Looks up corporation names from the users table.
+ */
+export const backfillCorporationNames = mutation({
+  args: {},
+  handler: async (ctx) => {
+    console.log('[BACKFILL-CORP] Starting backfill of corporation names...');
+
+    // Find all sold NFTs that have soldTo but are missing companyNameAtSale
+    const soldNFTs = await ctx.db
+      .query("commemorativeNFTInventory")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("status"), "sold"),
+          q.neq(q.field("soldTo"), undefined)
+        )
+      )
+      .collect();
+
+    // Filter to only those missing companyNameAtSale
+    const nftsNeedingCorpName = soldNFTs.filter((nft: any) => !nft.companyNameAtSale);
+
+    console.log('[BACKFILL-CORP] Found', nftsNeedingCorpName.length, 'sold NFTs with soldTo but missing companyNameAtSale');
+
+    let updated = 0;
+    let noCorpFound = 0;
+
+    for (const nft of nftsNeedingCorpName) {
+      const walletAddress = nft.soldTo;
+      if (!walletAddress) continue;
+
+      // Look up corporation name from users table
+      let user;
+      if (walletAddress.startsWith('stake1') || walletAddress.startsWith('stake_test1')) {
+        user = await ctx.db
+          .query("users")
+          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
+          .first();
+      } else {
+        user = await ctx.db
+          .query("users")
+          .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
+          .first();
+      }
+
+      if (user?.corporationName) {
+        await ctx.db.patch(nft._id, {
+          companyNameAtSale: user.corporationName,
+        });
+        console.log('[BACKFILL-CORP] Updated', nft.name, '- corp:', user.corporationName);
+        updated++;
+      } else {
+        console.log('[BACKFILL-CORP] No corporation found for', nft.name, '- wallet:', walletAddress.substring(0, 20) + '...');
+        noCorpFound++;
+      }
+    }
+
+    console.log('[BACKFILL-CORP] Complete:', updated, 'updated,', noCorpFound, 'no corp found');
+
+    return {
+      success: true,
+      updated,
+      noCorpFound,
+      total: nftsNeedingCorpName.length,
+    };
+  },
+});
+
+/**
  * Debug query to see all reservations
  */
 export const debugReservations = query({
