@@ -1323,6 +1323,28 @@ export default function MessagingSystem({ walletAddress, companyName, initialCon
                 // Check if this is a support conversation for read receipt hiding
                 const isInSupportConversation = currentConversation && isSupportConversation(currentConversation);
                 const isSupportMessage = msg.senderId === SUPPORT_WALLET_ID;
+                const isSystemMessage = msg.isSystemMessage === true;
+
+                // System messages render centered with special styling
+                if (isSystemMessage) {
+                  return (
+                    <div key={msg._id} id={`message-${msg._id}`}>
+                      {/* Date Divider */}
+                      {showDateDivider && (
+                        <div className="flex items-center gap-3 my-4">
+                          <div className="flex-1 h-px bg-white/10" />
+                          <span className="text-xs text-gray-500 px-2">{formatDateDivider(msg.createdAt)}</span>
+                          <div className="flex-1 h-px bg-white/10" />
+                        </div>
+                      )}
+                      <div className="flex justify-center my-3">
+                        <div className="px-4 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-200/80 text-sm text-center max-w-[85%]">
+                          {msg.content}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
 
                 return (
                   <div key={msg._id} id={`message-${msg._id}`}>

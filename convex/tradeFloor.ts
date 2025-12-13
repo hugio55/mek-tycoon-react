@@ -780,59 +780,117 @@ export const startTradeConversation = mutation({
       conversationId = conversation._id;
     }
 
-    // Build the auto-message content
-    // Format Mek image paths for display
-    const offeredMekKey = offeredMek?.sourceKey?.replace(/-[A-Z]$/i, "").toLowerCase() || "";
-    const listedMekKey = listedMek?.sourceKey?.replace(/-[A-Z]$/i, "").toLowerCase() || "";
+    // Build verified Mek attachments for both parties
+    // Message 1: FROM the lister showing their listed Mek
+    const listedMekAttachment = listedMek ? {
+      assetId: listedMek.assetId,
+      assetName: listedMek.assetName,
+      sourceKey: listedMek.sourceKey || "",
+      sourceKeyBase: listedMek.sourceKeyBase,
+      headVariation: listedMek.headVariation,
+      bodyVariation: listedMek.bodyVariation,
+      itemVariation: listedMek.itemVariation,
+      customName: listedMek.customName,
+      rarityRank: listedMek.rarityRank,
+      gameRank: listedMek.gameRank,
+      verifiedOwner: args.listerStakeAddress,
+      verifiedAt: now,
+    } : undefined;
 
-    const messageContent = `🔄 Trade Discussion
+    // Message 2: FROM the offerer showing their offered Mek
+    const offeredMekAttachment = offeredMek ? {
+      assetId: offeredMek.assetId,
+      assetName: offeredMek.assetName,
+      sourceKey: offeredMek.sourceKey || "",
+      sourceKeyBase: offeredMek.sourceKeyBase,
+      headVariation: offeredMek.headVariation,
+      bodyVariation: offeredMek.bodyVariation,
+      itemVariation: offeredMek.itemVariation,
+      customName: offeredMek.customName,
+      rarityRank: offeredMek.rarityRank,
+      gameRank: offeredMek.gameRank,
+      verifiedOwner: args.offererStakeAddress,
+      verifiedAt: now + 1, // +1ms to ensure ordering
+    } : undefined;
 
-📦 Offered Mek:
-${offeredMek?.assetName || "Unknown Mek"} (from ${offerer?.corporationName || "Unknown Corp"})
-[Image: /mek-images/150px/${offeredMekKey}.webp]
-
-↔️ for ↔️
-
-📦 Listed Mek:
-${listedMek?.assetName || "Unknown Mek"} (from ${lister?.corporationName || "Unknown Corp"})
-[Image: /mek-images/150px/${listedMekKey}.webp]
-
----
-⚠️ Safe Trading Reminder: If a trade were to take place, we highly encourage using a safe system such as Trading Tent: https://app.tradingtent.io/connect-wallet`;
-
-    // Insert the message
+    // Insert Message 1: FROM lister with their listed Mek
     await ctx.db.insert("messages", {
       conversationId,
       senderId: args.listerStakeAddress,
       recipientId: args.offererStakeAddress,
-      content: messageContent,
+      content: "",
       status: "sent",
       createdAt: now,
       isDeleted: false,
+      mekAttachment: listedMekAttachment,
+    });
+
+    // Insert Message 2: FROM offerer with their offered Mek
+    await ctx.db.insert("messages", {
+      conversationId,
+      senderId: args.offererStakeAddress,
+      recipientId: args.listerStakeAddress,
+      content: "",
+      status: "sent",
+      createdAt: now + 1,
+      isDeleted: false,
+      mekAttachment: offeredMekAttachment,
+    });
+
+    // Insert Message 3: System message (centered) with trading reminder
+    await ctx.db.insert("messages", {
+      conversationId,
+      senderId: "system",
+      recipientId: "system",
+      content: "We encourage using third-party trading systems if a deal were to occur. Happy trading!",
+      status: "sent",
+      createdAt: now + 2,
+      isDeleted: false,
+      isSystemMessage: true,
     });
 
     // Update conversation last message
     await ctx.db.patch(conversationId, {
-      lastMessageAt: now,
+      lastMessageAt: now + 2,
       lastMessagePreview: "[Trade Discussion]",
       lastMessageSender: args.listerStakeAddress,
     });
 
-    // Create/update unread count for recipient
-    const existingUnread = await ctx.db
+    // Create/update unread count for offerer (receives message 1 from lister)
+    const offererUnread = await ctx.db
       .query("messageUnreadCounts")
       .withIndex("by_wallet_conversation", (q) =>
         q.eq("walletAddress", args.offererStakeAddress).eq("conversationId", conversationId)
       )
       .first();
 
-    if (existingUnread) {
-      await ctx.db.patch(existingUnread._id, {
-        count: existingUnread.count + 1,
+    if (offererUnread) {
+      await ctx.db.patch(offererUnread._id, {
+        count: offererUnread.count + 1,
       });
     } else {
       await ctx.db.insert("messageUnreadCounts", {
         walletAddress: args.offererStakeAddress,
+        conversationId,
+        count: 1,
+      });
+    }
+
+    // Create/update unread count for lister (receives message 2 from offerer)
+    const listerUnread = await ctx.db
+      .query("messageUnreadCounts")
+      .withIndex("by_wallet_conversation", (q) =>
+        q.eq("walletAddress", args.listerStakeAddress).eq("conversationId", conversationId)
+      )
+      .first();
+
+    if (listerUnread) {
+      await ctx.db.patch(listerUnread._id, {
+        count: listerUnread.count + 1,
+      });
+    } else {
+      await ctx.db.insert("messageUnreadCounts", {
+        walletAddress: args.listerStakeAddress,
         conversationId,
         count: 1,
       });

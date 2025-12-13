@@ -10,7 +10,7 @@ export interface MobileResumeData {
   addr: string | null;
   cid: string | null;
   // Specific failure reasons for better error messages
-  failureReason: 'none' | 'expired' | 'invalid_params' | 'no_reservation' | null;
+  failureReason: 'expired' | 'invalid_params' | 'no_reservation' | null;
 }
 
 interface StoredSession {
@@ -18,7 +18,7 @@ interface StoredSession {
   addr: string;
   cid: string;
   createdAt: number;
-  expiresAt: number; // When the reservation expires
+  expiresAt: number;
 }
 
 /**
@@ -183,25 +183,9 @@ export function useMobileResume(): MobileResumeData & {
 
 /**
  * Simple hook for components that just need to know if this is a resume
- * (Lighter weight, doesn't include storage functions)
+ * Uses the same logic as useMobileResume (including localStorage fallback)
  */
 export function useIsMobileResume(): boolean {
-  const [isResume, setIsResume] = useState(false);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const claimResume = params.get('claimResume') === 'true';
-    const rid = params.get('rid');
-    const addr = params.get('addr');
-    const cid = params.get('cid');
-
-    const isValidResume = claimResume &&
-      rid && rid.length > 0 &&
-      addr && addr.length > 0 &&
-      cid && cid.length > 0;
-
-    setIsResume(!!isValidResume);
-  }, []);
-
+  const { isResume } = useMobileResume();
   return isResume;
 }
