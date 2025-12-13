@@ -970,6 +970,133 @@ export const resyncCorporationNames = mutation({
 });
 
 /**
+ * Diagnostic function to investigate an NFT's ownership data from all sources.
+ * Use this to verify if the correct buyer was recorded.
+ */
+export const investigateNFTOwnership = query({
+  args: {
+    nftName: v.optional(v.string()), // e.g., "Lab Rat #2"
+    nftUid: v.optional(v.string()),  // Alternative: use nftUid directly
+  },
+  handler: async (ctx, args) => {
+    // Find the NFT
+    let nft;
+    if (args.nftName) {
+      nft = await ctx.db
+        .query("commemorativeNFTInventory")
+        .filter((q) => q.eq(q.field("name"), args.nftName))
+        .first();
+    } else if (args.nftUid) {
+      nft = await ctx.db
+        .query("commemorativeNFTInventory")
+        .withIndex("by_uid", (q: any) => q.eq("nftUid", args.nftUid))
+        .first();
+    }
+
+    if (!nft) {
+      return { error: "NFT not found", args };
+    }
+
+    // Current inventory record
+    const inventoryData = {
+      name: nft.name,
+      nftUid: nft.nftUid,
+      status: nft.status,
+      soldTo: nft.soldTo,
+      companyNameAtSale: nft.companyNameAtSale,
+      soldAt: nft.soldAt ? new Date(nft.soldAt).toISOString() : null,
+      transactionHash: nft.transactionHash,
+    };
+
+    // Source 1: Check reservations
+    const reservations = await ctx.db
+      .query("commemorativeNFTReservations")
+      .filter((q) => q.eq(q.field("nftInventoryId"), nft._id))
+      .collect();
+
+    const reservationData = reservations.map((r: any) => ({
+      status: r.status,
+      reservedBy: r.reservedBy,
+      reservedAt: r.reservedAt ? new Date(r.reservedAt).toISOString() : null,
+      completedAt: r.completedAt ? new Date(r.completedAt).toISOString() : null,
+    }));
+
+    // Source 2: Check processedWebhooks (by nftUid)
+    let webhookData = null;
+    if (nft.nftUid) {
+      const webhook = await ctx.db
+        .query("processedWebhooks")
+        .withIndex("by_nft_uid", (q: any) => q.eq("nftUid", nft.nftUid))
+        .first();
+      if (webhook) {
+        webhookData = {
+          nftUid: webhook.nftUid,
+          stakeAddress: webhook.stakeAddress,
+          paymentAddress: webhook.paymentAddress,
+          transactionHash: webhook.transactionHash,
+          processedAt: webhook.processedAt ? new Date(webhook.processedAt).toISOString() : null,
+        };
+      }
+    }
+
+    // Source 3: Check claims table
+    let claimData = null;
+    if (nft.nftUid) {
+      const claim = await ctx.db
+        .query("commemorativeNFTClaims")
+        .withIndex("by_asset_id", (q: any) => q.eq("nftAssetId", nft.nftUid))
+        .first();
+      if (claim) {
+        claimData = {
+          walletAddress: claim.walletAddress,
+          claimedAt: claim.claimedAt ? new Date(claim.claimedAt).toISOString() : null,
+        };
+      }
+    }
+
+    // Look up corporation for the soldTo address
+    let corporationLookup = null;
+    if (nft.soldTo) {
+      const normalizedWallet = nft.soldTo.toLowerCase().trim();
+
+      // Check users table
+      let user = await ctx.db
+        .query("users")
+        .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", normalizedWallet))
+        .first();
+      if (!user) {
+        user = await ctx.db
+          .query("users")
+          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", nft.soldTo))
+          .first();
+      }
+
+      // Check phase1Veterans
+      const veteran = await ctx.db
+        .query("phase1Veterans")
+        .withIndex("by_stakeAddress", (q: any) => q.eq("stakeAddress", normalizedWallet))
+        .first();
+
+      corporationLookup = {
+        fromUsers: user?.corporationName || null,
+        fromVeterans: veteran ? {
+          originalName: veteran.originalCorporationName,
+          reservedName: veteran.reservedCorporationName || null,
+        } : null,
+      };
+    }
+
+    return {
+      inventory: inventoryData,
+      reservations: reservationData,
+      webhook: webhookData,
+      claim: claimData,
+      corporationLookup,
+    };
+  },
+});
+
+/**
  * Backfill corporation names for sold NFTs that have soldTo but missing companyNameAtSale
  *
  * Lookup priority:

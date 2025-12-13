@@ -216,7 +216,7 @@ const StarField = () => {
         const opacity = fadeInProgress * 1.0;
 
         ctx.strokeStyle = getRGBA(opacity);
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(trailX, trailY);
         ctx.lineTo(screenX, screenY);
