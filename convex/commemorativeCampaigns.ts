@@ -811,8 +811,12 @@ export const backfillSoldNFTData = mutation({
 /**
  * Backfill corporation names for sold NFTs that have soldTo but missing companyNameAtSale
  *
- * This is useful when the sync/sale recorded the stake address but not the corporation name.
- * Looks up corporation names from the users table.
+ * Lookup priority:
+ * 1. Users table (Phase II users who have signed up)
+ * 2. Phase1Veterans table (snapshot with stake address → corporation name mapping)
+ *
+ * IMPORTANT: Addresses are normalized to lowercase for comparison because
+ * phase1Veterans stores addresses in lowercase.
  */
 export const backfillCorporationNames = mutation({
   args: {},
@@ -837,42 +841,86 @@ export const backfillCorporationNames = mutation({
 
     let updated = 0;
     let noCorpFound = 0;
+    let fromUsers = 0;
+    let fromVeterans = 0;
 
     for (const nft of nftsNeedingCorpName) {
       const walletAddress = nft.soldTo;
       if (!walletAddress) continue;
 
-      // Look up corporation name from users table
-      let user;
+      // Normalize address to lowercase for comparison
+      const normalizedAddress = walletAddress.toLowerCase().trim();
+      let corporationName: string | null = null;
+      let source = '';
+
+      // First try: Users table (Phase II users)
       if (walletAddress.startsWith('stake1') || walletAddress.startsWith('stake_test1')) {
-        user = await ctx.db
+        // Try with normalized lowercase first
+        let user = await ctx.db
           .query("users")
-          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
+          .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", normalizedAddress))
           .first();
+
+        // Fallback to original case
+        if (!user) {
+          user = await ctx.db
+            .query("users")
+            .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", walletAddress))
+            .first();
+        }
+
+        if (user?.corporationName) {
+          corporationName = user.corporationName;
+          source = 'users';
+        }
       } else {
-        user = await ctx.db
+        const user = await ctx.db
           .query("users")
           .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
           .first();
+
+        if (user?.corporationName) {
+          corporationName = user.corporationName;
+          source = 'users';
+        }
       }
 
-      if (user?.corporationName) {
+      // Second try: Phase1Veterans table (snapshot fallback)
+      if (!corporationName && (walletAddress.startsWith('stake1') || walletAddress.startsWith('stake_test1'))) {
+        // phase1Veterans stores addresses in lowercase
+        const veteran = await ctx.db
+          .query("phase1Veterans")
+          .withIndex("by_stakeAddress", (q: any) => q.eq("stakeAddress", normalizedAddress))
+          .first();
+
+        if (veteran?.originalCorporationName) {
+          // Use reserved name if they set one, otherwise use original
+          corporationName = veteran.reservedCorporationName || veteran.originalCorporationName;
+          source = 'phase1Veterans';
+        }
+      }
+
+      if (corporationName) {
         await ctx.db.patch(nft._id, {
-          companyNameAtSale: user.corporationName,
+          companyNameAtSale: corporationName,
         });
-        console.log('[BACKFILL-CORP] Updated', nft.name, '- corp:', user.corporationName);
+        console.log('[BACKFILL-CORP] Updated', nft.name, '- corp:', corporationName, '(from', source + ')');
         updated++;
+        if (source === 'users') fromUsers++;
+        if (source === 'phase1Veterans') fromVeterans++;
       } else {
         console.log('[BACKFILL-CORP] No corporation found for', nft.name, '- wallet:', walletAddress.substring(0, 20) + '...');
         noCorpFound++;
       }
     }
 
-    console.log('[BACKFILL-CORP] Complete:', updated, 'updated,', noCorpFound, 'no corp found');
+    console.log('[BACKFILL-CORP] Complete:', updated, 'updated (', fromUsers, 'from users,', fromVeterans, 'from veterans),', noCorpFound, 'no corp found');
 
     return {
       success: true,
       updated,
+      fromUsers,
+      fromVeterans,
       noCorpFound,
       total: nftsNeedingCorpName.length,
     };

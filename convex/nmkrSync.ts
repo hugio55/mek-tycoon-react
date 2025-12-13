@@ -260,23 +260,55 @@ export const syncCampaignInventory = mutation({
             if (buyerWallet) {
               updateData.soldTo = buyerWallet;
 
-              // Look up corporation name from users table
-              let user;
+              // Look up corporation name - try users table first, then phase1Veterans
+              const normalizedWallet = buyerWallet.toLowerCase().trim();
+              let corporationName: string | undefined;
+
               if (buyerWallet.startsWith('stake1') || buyerWallet.startsWith('stake_test1')) {
-                user = await ctx.db
+                // Try users table with normalized address first
+                let user = await ctx.db
                   .query("users")
-                  .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", buyerWallet))
+                  .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", normalizedWallet))
                   .first();
+
+                // Fallback to original case
+                if (!user) {
+                  user = await ctx.db
+                    .query("users")
+                    .withIndex("by_stake_address", (q: any) => q.eq("stakeAddress", buyerWallet))
+                    .first();
+                }
+
+                if (user?.corporationName) {
+                  corporationName = user.corporationName;
+                  console.log('[🔄SYNC] Found corporation name from users:', corporationName);
+                }
+
+                // Fallback to phase1Veterans (snapshot data)
+                if (!corporationName) {
+                  const veteran = await ctx.db
+                    .query("phase1Veterans")
+                    .withIndex("by_stakeAddress", (q: any) => q.eq("stakeAddress", normalizedWallet))
+                    .first();
+
+                  if (veteran?.originalCorporationName) {
+                    corporationName = veteran.reservedCorporationName || veteran.originalCorporationName;
+                    console.log('[🔄SYNC] Found corporation name from veterans:', corporationName);
+                  }
+                }
               } else {
-                user = await ctx.db
+                const user = await ctx.db
                   .query("users")
                   .withIndex("by_wallet", (q: any) => q.eq("walletAddress", buyerWallet))
                   .first();
+                if (user?.corporationName) {
+                  corporationName = user.corporationName;
+                  console.log('[🔄SYNC] Found corporation name from users:', corporationName);
+                }
               }
 
-              if (user?.corporationName) {
-                updateData.companyNameAtSale = user.corporationName;
-                console.log('[🔄SYNC] Found corporation name:', user.corporationName);
+              if (corporationName) {
+                updateData.companyNameAtSale = corporationName;
               } else {
                 console.log('[🔄SYNC] ⚠️ No corporation found for wallet:', buyerWallet?.substring(0, 20) + '...');
               }
