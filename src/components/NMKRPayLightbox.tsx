@@ -331,6 +331,7 @@ export default function NMKRPayLightbox({
 
     const fetchReservation = async () => {
       try {
+        if (!sturgeonHttpClient) return; // TypeScript guard
         const result = await sturgeonHttpClient.query(
           api.commemorativeNFTReservationsCampaign.getActiveCampaignReservation,
           { campaignId: activeCampaignId, walletAddress: effectiveWalletAddress }
@@ -442,6 +443,7 @@ export default function NMKRPayLightbox({
 
     const fetchPaymentStatus = async () => {
       try {
+        if (!sturgeonHttpClient) return; // TypeScript guard
         const result = await sturgeonHttpClient.query(
           api.commemorativeNFTClaims.checkReservationPaid,
           { reservationId, walletAddress: effectiveWalletAddress || undefined }
@@ -813,7 +815,7 @@ export default function NMKRPayLightbox({
 
     console.log('[🔐WALLET-DETECT] Starting detection, window.cardano exists:', !!hasCardano);
     if (hasCardano) {
-      console.log('[🔐WALLET-DETECT] window.cardano keys:', Object.keys(window.cardano));
+      console.log('[🔐WALLET-DETECT] window.cardano keys:', Object.keys(window.cardano as object));
     }
 
     if (!hasCardano) {
