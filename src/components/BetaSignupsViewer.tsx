@@ -32,6 +32,7 @@ export default function BetaSignupsViewer() {
   const [signups, setSignups] = useState<BetaSignup[] | null>(null);
   const [veterans, setVeterans] = useState<VeteranInfo[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Name change history lightbox state
   const [historyLightbox, setHistoryLightbox] = useState<{
@@ -123,6 +124,29 @@ export default function BetaSignupsViewer() {
     });
   };
 
+  const handleDelete = async (signupId: string, stakeAddress: string) => {
+    if (!client) return;
+
+    const confirmed = window.confirm(
+      `Delete beta signup for:\n${stakeAddress}\n\nThis will remove them from the ${selectedDatabase} database.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(signupId);
+    try {
+      await client.mutation(api.betaSignups.deleteBetaSignup, {
+        signupId: signupId as any,
+      });
+      // Refresh the list by removing from local state
+      setSignups(prev => prev ? prev.filter(s => s._id !== signupId) : null);
+    } catch (error) {
+      console.error('[🎮BETA-VIEWER] Error deleting signup:', error);
+      alert('Failed to delete signup: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (loading || !signups) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -205,12 +229,15 @@ export default function BetaSignupsViewer() {
               <th className="px-4 py-3 text-left text-xs font-semibold text-yellow-400 uppercase tracking-wider">
                 Submitted At
               </th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-yellow-400 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {signups.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-white/50">
+                <td colSpan={7} className="px-6 py-8 text-center text-white/50">
                   No signups yet
                 </td>
               </tr>
@@ -261,6 +288,15 @@ export default function BetaSignupsViewer() {
                     </td>
                     <td className="px-4 py-3 text-sm text-white/70">
                       {formatDate(signup.submittedAt)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => handleDelete(signup._id, signup.stakeAddress)}
+                        disabled={deletingId === signup._id}
+                        className="px-3 py-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/50 rounded text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {deletingId === signup._id ? 'Deleting...' : 'Delete'}
+                      </button>
                     </td>
                   </tr>
                 );
