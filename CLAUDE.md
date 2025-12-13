@@ -3,7 +3,7 @@
 ## Primary Working Directory
 **`mek-tycoon-react-staging` is the PRIMARY working directory** (ignore "staging" in name).
 - **Path**: `C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react-staging`
-- **Database**: `fabulous-sturgeon-691.convex.cloud` (production)
+- **Production Database**: `fabulous-sturgeon-691.convex.cloud` (Sturgeon - see Dual Database section)
 - **Port**: localhost:3200
 
 ---
@@ -101,7 +101,7 @@ Use searchable tags: `[🔨MINT]`, `[💎ESSENCE]`, `[👛WALLET]`, `[🗄️CON
 ## Design System
 
 **Industrial Style** (game UI, cards, navigation):
-- Reference: `/contracts/single-missions` page
+- Reference: `localhost:3200/contracts/single-missions`
 - Files: `/src/styles/global-design-system.css`, `/src/lib/design-system.ts`
 - Yellow/gold borders, glass-morphism, hazard stripes, Orbitron font
 
