@@ -3,6 +3,7 @@
 import { action, internalAction, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
+import { recalculateUserMekCount } from "./lib/userMekCountHelpers";
 
 // MEK NFT Policy ID
 const MEK_POLICY_ID = "ffa56051fda3d106a96f09c3d209d4bf24a117406fb813fb8b4548e3";

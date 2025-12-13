@@ -620,37 +620,55 @@ export default function CreateListingLightbox({
         {/* Step 2: Select Variations */}
         {step === "select-variations" && selectedMek && (
           <div className="flex-1 overflow-hidden flex flex-col p-4">
-            {/* Compact Controls Row */}
-            <div className="flex items-center gap-3 mb-3">
-              {/* Selected Variations Pills */}
-              <div className="flex items-center gap-2 flex-1 min-w-0 overflow-x-auto">
-                <span
-                  className="text-xs whitespace-nowrap"
-                  style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
-                >
-                  ({selectedVariations.length}/6)
-                </span>
-                {selectedVariations.map((v, i) => {
-                  const colors = variationTypeColors[v.variationType];
-                  return (
-                    <span
-                      key={i}
-                      className="px-2 py-1 text-xs rounded flex items-center gap-1.5 whitespace-nowrap"
-                      style={{
-                        background: colors.bg,
-                        border: `1px solid ${colors.border}`,
-                        color: colors.text,
-                        fontFamily: 'Play, sans-serif',
-                      }}
-                    >
-                      {v.variationName}
-                      <button onClick={() => handleRemoveVariation(i)} className="hover:opacity-70">
-                        &times;
-                      </button>
-                    </span>
-                  );
-                })}
-              </div>
+            {/* Compact Controls Row - Selected Variations as Images */}
+            <div className="flex items-center gap-2 mb-3">
+              <span
+                className="text-xs whitespace-nowrap"
+                style={{ fontFamily: 'Play, sans-serif', color: 'rgba(255,255,255,0.4)' }}
+              >
+                ({selectedVariations.length}/6)
+              </span>
+              {selectedVariations.map((v, i) => {
+                const sampleImages = [
+                  '/variation-images-art-400px/webp-uniform/checkers-1.webp',
+                  '/variation-images-art-400px/webp-uniform/shark-1.webp',
+                  '/variation-images-art-400px/webp-uniform/flash-1.webp',
+                ];
+                const imageIndex = (v.variationId || i) % 3;
+                const imageSrc = sampleImages[imageIndex];
+                return (
+                  <button
+                    key={i}
+                    onClick={() => handleRemoveVariation(i)}
+                    className="relative group w-12 h-12 rounded-lg overflow-hidden transition-all hover:scale-105"
+                    style={{
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                    }}
+                    title={`Remove ${v.variationName}`}
+                  >
+                    <img
+                      src={imageSrc}
+                      alt={v.variationName}
+                      className="w-full h-full object-contain transition-all group-hover:opacity-30 group-hover:scale-90"
+                    />
+                    {/* Hover overlay with X */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#ef4444"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                      >
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      </svg>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Search and Filter Row */}

@@ -341,6 +341,7 @@ export default defineSchema({
     // GAME RESOURCES (Aggregate Stats)
     // ═══════════════════════════════════════════════════════════════════════════
     gold: v.number(), // Current gold balance (always needed, stays here)
+    mekCount: v.optional(v.number()), // Cached count of owned meks (updated by syncMekOwnership)
 
     // ═══════════════════════════════════════════════════════════════════════════
     // DEPRECATED: totalEssence - DO NOT USE FOR NEW CODE

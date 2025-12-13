@@ -584,21 +584,71 @@ export const checkNFTPaymentDirect = action({
       const nftDetails = await response.json();
       console.log("[🔨NMKR-DIRECT] NMKR NFT status:", nftDetails.state);
 
+      // Log full response to see what fields NMKR provides (helps debug buyer address issues)
+      console.log("[🔨NMKR-DIRECT] Full NMKR response:", JSON.stringify({
+        state: nftDetails.state,
+        soldAddress: nftDetails.soldAddress,
+        receiverAddress: nftDetails.receiverAddress,
+        receiverStakeAddress: nftDetails.receiverStakeAddress,
+        txHash: nftDetails.txHash,
+        transactionHash: nftDetails.transactionHash,
+        mintingTxHash: nftDetails.mintingTxHash,
+      }));
+
       // If NMKR says sold, sync our inventory
       if (nftDetails.state === "sold") {
         console.log("[🔨NMKR-DIRECT] ✅ NMKR confirms SOLD! Syncing inventory...");
 
-        // Update our inventory to match NMKR
+        // Determine the best source for buyer address (with blockchain verification)
+        let verifiedBuyerAddress = inventory.reservedBy || "unknown";
+        let transactionHash = "nmkr-direct-sync";
+
+        // Extract any available data from NMKR response
+        const nmkrTxHash = nftDetails.txHash || nftDetails.transactionHash || nftDetails.mintingTxHash;
+        const nmkrBuyerAddress = nftDetails.receiverStakeAddress || nftDetails.soldAddress || nftDetails.receiverAddress;
+
+        if (nmkrBuyerAddress) {
+          // NMKR provided buyer address directly - use it!
+          console.log("[🔨NMKR-DIRECT] ✅ NMKR provided buyer address:", nmkrBuyerAddress);
+          verifiedBuyerAddress = nmkrBuyerAddress;
+        }
+
+        if (nmkrTxHash) {
+          transactionHash = nmkrTxHash;
+          console.log("[🔨NMKR-DIRECT] ✅ NMKR provided transaction hash:", nmkrTxHash);
+
+          // BLOCKCHAIN VERIFICATION: Ultimate source of truth
+          // If we have a transaction hash, verify the buyer on the blockchain
+          try {
+            console.log("[🔨NMKR-DIRECT] 🔍 Verifying buyer on blockchain...");
+            const blockchainResult = await ctx.runAction(
+              api.blockfrostService.verifyTransactionBuyer,
+              { transactionHash: nmkrTxHash }
+            );
+
+            if (blockchainResult.success && blockchainResult.buyerStakeAddress) {
+              console.log("[🔨NMKR-DIRECT] ✅✅ BLOCKCHAIN VERIFIED buyer:", blockchainResult.buyerStakeAddress);
+              verifiedBuyerAddress = blockchainResult.buyerStakeAddress;
+            } else {
+              console.log("[🔨NMKR-DIRECT] ⚠️ Blockchain verification failed, using NMKR/reservation data");
+            }
+          } catch (verifyError) {
+            console.error("[🔨NMKR-DIRECT] ⚠️ Blockchain verification error (using fallback):", verifyError);
+            // Continue with NMKR or reservation data
+          }
+        }
+
+        // Update our inventory to match NMKR with verified buyer
         try {
           await ctx.runMutation(
             api.commemorativeCampaigns.markInventoryAsSoldByUid,
             {
               nftUid: nftUid,
-              transactionHash: "nmkr-direct-sync",
-              soldTo: inventory.reservedBy || "unknown",
+              transactionHash: transactionHash,
+              soldTo: verifiedBuyerAddress,
             }
           );
-          console.log("[🔨NMKR-DIRECT] ✅ Inventory synced successfully!");
+          console.log("[🔨NMKR-DIRECT] ✅ Inventory synced successfully with buyer:", verifiedBuyerAddress);
 
           return {
             isPaid: true,
