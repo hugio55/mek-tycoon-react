@@ -184,13 +184,17 @@ export const createCampaignReservation = mutation({
     }
 
     // Find the lowest available NFT in this campaign
-    const availableNFT = await ctx.db
+    // NOTE: by_campaign_and_status index orders by _creationTime, not nftNumber
+    // So we collect all available NFTs and find the one with lowest nftNumber
+    const availableNFTs = await ctx.db
       .query("commemorativeNFTInventory")
       .withIndex("by_campaign_and_status", (q: any) =>
         q.eq("campaignId", args.campaignId).eq("status", "available")
       )
-      .order("asc") // Get lowest number first
-      .first();
+      .collect();
+
+    // Sort by nftNumber to get the lowest numbered available NFT
+    const availableNFT = availableNFTs.sort((a, b) => a.nftNumber - b.nftNumber)[0] || null;
 
     if (!availableNFT) {
       console.log('[CAMPAIGN RESERVATION] No available NFTs in campaign:', campaign.name);
