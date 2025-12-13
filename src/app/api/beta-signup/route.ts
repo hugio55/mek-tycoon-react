@@ -48,25 +48,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
 
   } catch (error: any) {
-    console.error('[🎮BETA-API] Error:', error);
-    console.log('[🎮BETA-API] Error type:', typeof error);
+    // Log everything about the error to understand its structure
+    console.error('[🎮BETA-API] Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+    console.log('[🎮BETA-API] Error keys:', error ? Object.keys(error) : 'null');
     console.log('[🎮BETA-API] Error message:', error?.message);
     console.log('[🎮BETA-API] Error data:', error?.data);
+    console.log('[🎮BETA-API] Error toString:', error?.toString?.());
 
-    // Extract error message from Convex error format
-    // Convex errors can come in format: "[Request ID: xxx] Error message"
-    let errorMessage = error instanceof Error ? error.message : 'Failed to submit signup';
+    let errorMessage = 'Failed to submit signup';
 
-    // Try to extract the actual message if it's in Convex format
-    // Format: "[Request ID: xxx] Actual error message"
-    const convexMatch = errorMessage.match(/\[Request ID: [^\]]+\]\s*(.+)/);
-    if (convexMatch) {
-      errorMessage = convexMatch[1];
+    // Try multiple ways to extract the error message
+    if (error?.data?.message) {
+      // Convex often puts the actual message in data.message
+      errorMessage = error.data.message;
+    } else if (error?.message) {
+      errorMessage = error.message;
+      // Try to extract from "[Request ID: xxx] Actual message" format
+      const convexMatch = errorMessage.match(/\[Request ID: [^\]]+\]\s*(.+)/);
+      if (convexMatch && convexMatch[1] !== 'Server Error') {
+        errorMessage = convexMatch[1];
+      }
     }
 
-    // Also check error.data.message for Convex errors
-    if (error?.data?.message) {
-      errorMessage = error.data.message;
+    // If we still have generic "Server Error", try to get more info
+    if (errorMessage === 'Server Error' || errorMessage.includes('Server Error')) {
+      // Check if there's more detail in the error
+      if (error?.data) {
+        errorMessage = typeof error.data === 'string' ? error.data : JSON.stringify(error.data);
+      }
     }
 
     console.log('[🎮BETA-API] Final error message:', errorMessage);
