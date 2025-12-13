@@ -382,8 +382,11 @@ export const verifyTransactionBuyer = action({
         const address = output.address;
 
         // Skip script addresses (they can't be NFT buyers in our context)
-        // Script addresses: addr1w (pointer), addr1z (script), addr1x (bootstrap)
-        if (address.startsWith('addr1w') || address.startsWith('addr1z') || address.startsWith('addr1x')) {
+        // Mainnet script addresses: addr1w (pointer), addr1z (script), addr1x (bootstrap)
+        // Testnet script addresses: addr_test1w, addr_test1z, addr_test1x
+        const isMainnetScript = address.startsWith('addr1w') || address.startsWith('addr1z') || address.startsWith('addr1x');
+        const isTestnetScript = address.startsWith('addr_test1w') || address.startsWith('addr_test1z') || address.startsWith('addr_test1x');
+        if (isMainnetScript || isTestnetScript) {
           console.log('[🔍BLOCKCHAIN-VERIFY] Skipping script address:', address.substring(0, 20) + '...');
           continue;
         }

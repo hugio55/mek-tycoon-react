@@ -638,6 +638,14 @@ export const checkNFTPaymentDirect = action({
           }
         }
 
+        // CRITICAL WARNING: Flag if we're about to record with unknown buyer
+        if (verifiedBuyerAddress === "unknown") {
+          console.error("[🔨NMKR-DIRECT] ⚠️⚠️⚠️ CRITICAL: Recording sale with UNKNOWN buyer!");
+          console.error("[🔨NMKR-DIRECT] NFT:", inventory.name, "UID:", nftUid);
+          console.error("[🔨NMKR-DIRECT] This needs manual verification via blockchain explorer!");
+          console.error("[🔨NMKR-DIRECT] Transaction hash for lookup:", transactionHash);
+        }
+
         // Update our inventory to match NMKR with verified buyer
         try {
           await ctx.runMutation(

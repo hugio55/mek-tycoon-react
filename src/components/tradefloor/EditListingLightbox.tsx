@@ -141,6 +141,26 @@ export default function EditListingLightbox({
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+      {/* Cyan flash animation for new selections */}
+      <style>{`
+        @keyframes cyanFlash {
+          0% {
+            box-shadow: 0 0 30px rgba(34, 211, 238, 0.8), 0 0 60px rgba(34, 211, 238, 0.4), inset 0 0 20px rgba(34, 211, 238, 0.3);
+            border-color: rgba(34, 211, 238, 0.8);
+            transform: scale(1.1);
+          }
+          50% {
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.5), 0 0 40px rgba(34, 211, 238, 0.2);
+            border-color: rgba(34, 211, 238, 0.5);
+            transform: scale(1.02);
+          }
+          100% {
+            box-shadow: 0 0 10px rgba(34, 211, 238, 0.2);
+            border-color: rgba(34, 211, 238, 0.3);
+            transform: scale(1);
+          }
+        }
+      `}</style>
       {/* Backdrop */}
       <div
         className="absolute inset-0"
@@ -221,12 +241,14 @@ export default function EditListingLightbox({
               const imageSrc = sampleImages[imageIndex];
               return (
                 <button
-                  key={i}
+                  key={`${v.variationName}-${i}`}
                   onClick={() => handleRemoveVariation(i)}
                   className="relative group w-12 h-12 rounded-lg overflow-hidden transition-all hover:scale-105"
                   style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    background: 'rgba(34, 211, 238, 0.1)',
+                    border: '1px solid rgba(34, 211, 238, 0.3)',
+                    boxShadow: '0 0 10px rgba(34, 211, 238, 0.2)',
+                    animation: 'cyanFlash 1.5s ease-out',
                   }}
                   title={`Remove ${v.variationName}`}
                 >
