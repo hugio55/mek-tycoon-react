@@ -8,6 +8,7 @@ import type { Id } from '@/convex/_generated/dataModel';
 import { ensureBech32StakeAddress } from '@/lib/cardanoAddressConverter';
 import { getMediaUrl } from '@/lib/media-url';
 import { sturgeonClient, sturgeonHttpClient } from '@/lib/sturgeonClient';
+import { useMobileResume } from '@/hooks/useMobileResume';
 import { ConvexHttpClient } from 'convex/browser';
 import CubeSpinner from '@/components/loaders/CubeSpinner';
 
@@ -98,6 +99,17 @@ export default function NMKRPayLightbox({
   );
   const [activeCampaignId, setActiveCampaignId] = useState<Id<"commemorativeCampaigns"> | null>(propCampaignId || null);
   const [corporationName, setCorporationName] = useState<string | null>(previewMode ? previewCorporationName : null);
+
+  // Mobile resume hook - handles URL parsing and localStorage backup
+  const {
+    isResume: hookIsResume,
+    rid: hookRid,
+    addr: hookAddr,
+    cid: hookCid,
+    failureReason: resumeFailureReason,
+    saveSession,
+    clearSession,
+  } = useMobileResume();
 
   // Wallet verification state - use mock wallets in preview mode
   const [availableWallets, setAvailableWallets] = useState<Array<{ name: string; icon: string; api: any }>>(
@@ -681,61 +693,50 @@ export default function NMKRPayLightbox({
     }
   }, [previewMode, previewState]);
 
-  // Detect and handle mobile resume from URL parameters
+  // Detect and handle mobile resume using the shared hook
   // This allows mobile users to continue their session in wallet browser
-  // Compatible with: iOS Safari 11+, Chrome Mobile, Firefox Mobile, Samsung Internet
   useEffect(() => {
     if (!mounted || previewMode) return;
 
-    // URLSearchParams is supported in all modern browsers (iOS 11+, Android 5+)
-    const params = new URLSearchParams(window.location.search);
-    const isResume = params.get('claimResume') === 'true';
+    // Use hook data instead of parsing URL directly
+    if (hookIsResume && hookRid && hookAddr && hookCid) {
+      console.log('[🔐RESUME] Mobile resume detected via hook:', {
+        rid: hookRid.substring(0, 10) + '...',
+        addr: hookAddr.substring(0, 20) + '...',
+        cid: hookCid.substring(0, 10) + '...'
+      });
 
-    if (isResume) {
-      const rid = params.get('rid');
-      const addr = params.get('addr');
-      const cid = params.get('cid');
+      setIsResumingFromMobile(true);
+      setResumeValidating(true);
 
-      // Validate all required params exist and are non-empty
-      if (rid && rid.length > 0 && addr && addr.length > 0 && cid && cid.length > 0) {
-        console.log('[🔐RESUME] Mobile resume detected from URL:', {
-          rid: rid.substring(0, 10) + '...',
-          addr: addr.substring(0, 20) + '...',
-          cid: cid.substring(0, 10) + '...'
-        });
+      // Set state from hook data to resume session
+      setReservationId(hookRid as Id<"commemorativeNFTInventory">);
+      setManualAddress(hookAddr);
+      setActiveCampaignId(hookCid as Id<"commemorativeCampaigns">);
 
-        setIsResumingFromMobile(true);
-        setResumeValidating(true);
+      // Skip directly to reserved state - the activeReservation query will validate
+      setState('reserved');
 
-        // Set state from URL params to resume session
-        setReservationId(rid as Id<"commemorativeNFTInventory">);
-        setManualAddress(addr);
-        setActiveCampaignId(cid as Id<"commemorativeCampaigns">);
-
-        // Skip directly to reserved state - the activeReservation query will validate
-        setState('reserved');
-
-        // Clean up URL (remove query params for cleaner display)
-        // history.replaceState is supported in all modern browsers
-        try {
-          const cleanUrl = window.location.origin + window.location.pathname;
-          window.history.replaceState({}, '', cleanUrl);
-        } catch (historyError) {
-          // Some browsers restrict history manipulation in certain contexts
-          console.warn('[🔐RESUME] Could not clean URL:', historyError);
-        }
-
-        console.log('[🔐RESUME] Session restored, validating reservation...');
-      } else {
-        console.warn('[🔐RESUME] Incomplete or invalid resume params, starting fresh');
-        // Clean up malformed URL
-        try {
-          const cleanUrl = window.location.origin + window.location.pathname;
-          window.history.replaceState({}, '', cleanUrl);
-        } catch (e) { /* ignore */ }
+      // Clean up URL (remove query params for cleaner display)
+      try {
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, '', cleanUrl);
+      } catch (historyError) {
+        console.warn('[🔐RESUME] Could not clean URL:', historyError);
       }
+
+      console.log('[🔐RESUME] Session restored, validating reservation...');
+    } else if (resumeFailureReason === 'invalid_params') {
+      // Resume was attempted but params were invalid/missing
+      console.warn('[🔐RESUME] Resume failed - invalid or incomplete params');
+      setErrorMessage('Your session link was incomplete. Please try copying the link again from your original browser.');
+      // Clean up malformed URL
+      try {
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, '', cleanUrl);
+      } catch (e) { /* ignore */ }
     }
-  }, [mounted]);
+  }, [mounted, hookIsResume, hookRid, hookAddr, hookCid, resumeFailureReason, previewMode]);
 
   // Handle mobile resume validation - watch for query to populate
   // Uses reactive approach instead of fixed timeout for better reliability
@@ -1266,6 +1267,10 @@ export default function NMKRPayLightbox({
       cid: activeCampaignId,
     });
     const resumeUrl = `${baseUrl}?${params.toString()}`;
+
+    // Save session to localStorage as backup (in case URL gets corrupted)
+    const expiresAt = activeReservation?.expiresAt || (Date.now() + 600000); // Default 10 min
+    saveSession(reservationId, effectiveWalletAddress, activeCampaignId, expiresAt);
 
     try {
       // Try modern Clipboard API first (requires HTTPS or localhost)

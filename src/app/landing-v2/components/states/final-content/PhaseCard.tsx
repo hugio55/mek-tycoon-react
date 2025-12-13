@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import PhaseOneIndicator, { LoadingSpinner } from './PhaseOneIndicator';
 import NMKRPayLightbox from '@/components/NMKRPayLightbox';
 import { getMediaUrl } from '@/lib/media-url';
-import { useMobileResume } from '../../../hooks/useMobileResume';
+import { useIsMobileResume } from '@/hooks/useMobileResume';
 
 interface PhaseCardData {
   _id: string;
@@ -64,7 +64,7 @@ export default function PhaseCard({ card, index, isExpanded, shouldShow, onToggl
   const [showClaimLightbox, setShowClaimLightbox] = useState(false);
   const [mounted, setMounted] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const { isResume: isMobileResume } = useMobileResume();
+  const isMobileResume = useIsMobileResume();
   const phaseLabel = `Phase ${PHASE_LABELS[index]}`;
   const styles = getPhaseStyles(index);
   const isPhaseTwo = index === 1;

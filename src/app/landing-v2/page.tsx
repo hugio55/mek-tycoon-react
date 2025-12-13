@@ -9,7 +9,7 @@ import { getMediaUrl } from '@/lib/media-url';
 import { useLandingStateMachine, TIMINGS } from './hooks/useLandingStateMachine';
 import { useBackgroundAudio } from './hooks/useBackgroundAudio';
 import { useClickSound } from './hooks/useClickSound';
-import { useMobileResume } from './hooks/useMobileResume';
+import { useIsMobileResume } from '@/hooks/useMobileResume';
 import LandingContainer from './components/LandingContainer';
 import SoundSelectionState from './components/states/SoundSelectionState';
 import FinalContentState from './components/states/FinalContentState';
@@ -24,7 +24,7 @@ export default function LandingV2() {
   const { isLoading, registerCriticalAsset, markCriticalAssetLoaded } = useLoaderContext();
   const [deviceType, setDeviceType] = useState<'macos' | 'iphone' | 'android' | 'other'>('other');
   const [mounted, setMounted] = useState(false);
-  const { isResume: isMobileResume } = useMobileResume();
+  const isMobileResume = useIsMobileResume();
 
   const [revealStarted, setRevealStarted] = useState(false);
   const [backgroundFadedIn, setBackgroundFadedIn] = useState(false);
