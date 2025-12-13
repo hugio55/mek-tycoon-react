@@ -17,17 +17,8 @@ export const getAllUsersForAdmin = query({
     const now = Date.now();
     const allUsers = await ctx.db.query("users").collect();
 
-    // Get all meks once for efficiency
-    const allMeks = await ctx.db.query("meks").collect();
-
-    // Create a map of wallet -> mek count
-    const mekCountByWallet = new Map<string, number>();
-    for (const mek of allMeks) {
-      const owner = mek.owner;
-      if (owner) {
-        mekCountByWallet.set(owner, (mekCountByWallet.get(owner) || 0) + 1);
-      }
-    }
+    // OPTIMIZATION: mekCount is now cached on user record (updated by syncMekOwnership)
+    // No longer need to fetch all 4000 meks just to count them!
 
     // Get all userEssence records and sum by stakeAddress (Phase II)
     const allEssence = await ctx.db.query("userEssence").collect();
@@ -63,7 +54,7 @@ export const getAllUsersForAdmin = query({
         walletAddress: user.walletAddress,
         walletType: user.walletType || user.lastWalletType || "Unknown",
         companyName: user.corporationName || null,
-        mekCount: mekCountByWallet.get(user.walletAddress) || 0,
+        mekCount: user.mekCount || 0, // Cached count, updated by syncMekOwnership
         totalGoldPerHour: 0, // Phase II: Passive gold income removed - income comes from Job Slots
         currentGold: Math.floor((user.gold || 0) * 100) / 100,
         totalCumulativeGold: Math.floor((user.gold || 0) * 100) / 100, // In Phase II, gold IS the balance
@@ -1906,6 +1897,63 @@ export const diagnoseMekDuplicates = query({
       recommendation: totalDuplicateRecords > 0
         ? `Found ${totalDuplicateRecords} duplicate records. ${duplicateAssetIds.length} unique assetIds are duplicated. ${invalidAssetIds.length} meks have invalid assetIds. Consider running deleteInvalidMeks first, then investigate duplicate removal.`
         : `Database is clean - ${assetIdMap.size} unique meks, no duplicates.`,
+    };
+  },
+});
+
+/**
+ * Migration: Recalculate mekCount for all users
+ * Run this once after deploying the mekCount field to initialize values.
+ * Can also be used to fix count drift if it ever occurs.
+ */
+export const recalculateAllMekCounts = mutation({
+  args: {},
+  handler: async (ctx) => {
+    console.log('[MIGRATION] Starting mekCount recalculation for all users...');
+
+    // Fetch all meks once
+    const allMeks = await ctx.db.query("meks").collect();
+
+    // Build map of stakeAddress -> mek count
+    const mekCountByStake = new Map<string, number>();
+    for (const mek of allMeks) {
+      const owner = mek.ownerStakeAddress;
+      if (owner) {
+        mekCountByStake.set(owner, (mekCountByStake.get(owner) || 0) + 1);
+      }
+    }
+
+    // Fetch all users
+    const allUsers = await ctx.db.query("users").collect();
+
+    let updated = 0;
+    let unchanged = 0;
+
+    // Update each user's mekCount
+    for (const user of allUsers) {
+      const stakeAddress = user.stakeAddress;
+      const actualCount = stakeAddress ? (mekCountByStake.get(stakeAddress) || 0) : 0;
+      const currentCount = user.mekCount || 0;
+
+      if (actualCount !== currentCount) {
+        await ctx.db.patch(user._id, {
+          mekCount: actualCount,
+        });
+        updated++;
+        console.log(`[MIGRATION] Updated ${user.corporationName || user.walletAddress.substring(0, 15)}: ${currentCount} -> ${actualCount}`);
+      } else {
+        unchanged++;
+      }
+    }
+
+    console.log(`[MIGRATION] Complete: ${updated} updated, ${unchanged} unchanged`);
+
+    return {
+      success: true,
+      totalUsers: allUsers.length,
+      updated,
+      unchanged,
+      totalMeksWithOwners: Array.from(mekCountByStake.values()).reduce((a, b) => a + b, 0),
     };
   },
 });

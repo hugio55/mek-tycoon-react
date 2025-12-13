@@ -324,9 +324,16 @@ export const testBlockfrostConnection = action({
  *
  * Given a transaction hash, this function:
  * 1. Fetches transaction UTXOs from Blockfrost
- * 2. Finds the output that received the NFT
+ * 2. Finds the output that received the NFT (filtering out script addresses)
  * 3. Looks up the stake address for that address
  * 4. Returns the verified buyer information
+ *
+ * Handles edge cases:
+ * - Multiple outputs (picks the one with NFT going to a regular address)
+ * - Script addresses (filters them out)
+ * - Enterprise addresses (returns error with payment address for manual lookup)
+ * - Mobile/Desktop: Not relevant (server-side blockchain query)
+ * - Wallet types: Not relevant (verifying on-chain data, not wallet)
  */
 export const verifyTransactionBuyer = action({
   args: {
@@ -361,29 +368,62 @@ export const verifyTransactionBuyer = action({
         };
       }
 
-      // Get the first NFT output (usually the buyer)
-      const buyerOutput = nftOutputs[0];
-      const buyerPaymentAddress = buyerOutput.address;
+      console.log('[🔍BLOCKCHAIN-VERIFY] Found', nftOutputs.length, 'outputs with native tokens');
 
-      console.log('[🔍BLOCKCHAIN-VERIFY] Buyer payment address:', buyerPaymentAddress);
+      // Filter to find the BUYER's output (not script addresses, not NMKR addresses)
+      // Regular user addresses on mainnet start with: addr1q (base), addr1v (enterprise)
+      // Script addresses start with: addr1w, addr1z, addr1x
+      // We want base addresses (addr1q) which have stake keys
+      let buyerOutput = null;
+      let buyerPaymentAddress = null;
+      let buyerStakeAddress = null;
 
-      // Look up the stake address for this payment address
-      await rateLimiter.waitForSlot();
-      const addressInfo = await blockfrostRequest(`/addresses/${buyerPaymentAddress}`);
+      for (const output of nftOutputs) {
+        const address = output.address;
 
-      const buyerStakeAddress = addressInfo.stake_address;
+        // Skip script addresses (they can't be NFT buyers in our context)
+        // Script addresses: addr1w (pointer), addr1z (script), addr1x (bootstrap)
+        if (address.startsWith('addr1w') || address.startsWith('addr1z') || address.startsWith('addr1x')) {
+          console.log('[🔍BLOCKCHAIN-VERIFY] Skipping script address:', address.substring(0, 20) + '...');
+          continue;
+        }
 
+        // This looks like a potential buyer address - try to get stake address
+        try {
+          await rateLimiter.waitForSlot();
+          const addressInfo = await blockfrostRequest(`/addresses/${address}`);
+
+          if (addressInfo.stake_address) {
+            // Found a valid buyer with stake address!
+            buyerOutput = output;
+            buyerPaymentAddress = address;
+            buyerStakeAddress = addressInfo.stake_address;
+            console.log('[🔍BLOCKCHAIN-VERIFY] ✅ Found buyer with stake address:', buyerStakeAddress);
+            break; // Use the first valid buyer we find
+          } else {
+            // Enterprise address (no stake key) - log but continue looking
+            console.log('[🔍BLOCKCHAIN-VERIFY] ⚠️ Enterprise address (no stake key):', address.substring(0, 20) + '...');
+          }
+        } catch (addrError: any) {
+          console.log('[🔍BLOCKCHAIN-VERIFY] ⚠️ Could not lookup address:', addrError.message);
+          continue;
+        }
+      }
+
+      // If we didn't find any buyer with stake address, return what we have
       if (!buyerStakeAddress) {
+        // Fall back to first NFT output's payment address (for manual verification)
+        const fallbackAddress = nftOutputs[0].address;
+        console.log('[🔍BLOCKCHAIN-VERIFY] ⚠️ No stake address found, returning payment address for manual lookup');
         return {
           success: false,
-          error: "Could not determine stake address from payment address",
-          paymentAddress: buyerPaymentAddress,
+          error: "Could not determine stake address (enterprise address or script)",
+          paymentAddress: fallbackAddress,
+          hint: "This may be an enterprise address without a stake key. Check manually on CardanoScan.",
         };
       }
 
-      console.log('[🔍BLOCKCHAIN-VERIFY] ✅ Verified buyer stake address:', buyerStakeAddress);
-
-      // Extract NFT info from the output
+      // Extract NFT info from the buyer's output
       const nfts = buyerOutput.amount
         .filter((amt: any) => amt.unit !== 'lovelace')
         .map((amt: any) => ({

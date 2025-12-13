@@ -402,6 +402,9 @@ export const syncMekOwnership = mutation({
     let created = 0;
     let cleared = 0;
 
+    // Track previous owners whose mekCount needs recalculation
+    const affectedPreviousOwners = new Set<string>();
+
     // Get current meks owned by this stake address
     const currentlyOwnedMeks = await ctx.db
       .query("meks")
@@ -433,6 +436,11 @@ export const syncMekOwnership = mutation({
       if (existingMek) {
         // Mek exists - update ownership if different
         if (existingMek.ownerStakeAddress !== args.stakeAddress) {
+          // Track previous owner for mekCount update (if they had one)
+          if (existingMek.ownerStakeAddress) {
+            affectedPreviousOwners.add(existingMek.ownerStakeAddress);
+          }
+
           // Ownership changed - reset accumulated gold for corp
           await ctx.db.patch(existingMek._id, {
             ownerStakeAddress: args.stakeAddress,
@@ -463,14 +471,26 @@ export const syncMekOwnership = mutation({
       }
     }
 
-    console.log('[🔄SYNC] Sync complete:', { updated, created, cleared });
+    // 3. Update mekCount for affected users
+    // Always recalculate for the current user (their count may have changed)
+    const newMekCount = await recalculateUserMekCount(ctx, args.stakeAddress);
+    console.log(`[🔄SYNC] Updated mekCount for current user: ${newMekCount}`);
+
+    // Recalculate for previous owners who lost meks to this user
+    for (const previousOwner of affectedPreviousOwners) {
+      const prevOwnerCount = await recalculateUserMekCount(ctx, previousOwner);
+      console.log(`[🔄SYNC] Updated mekCount for previous owner ${previousOwner.substring(0, 15)}...: ${prevOwnerCount}`);
+    }
+
+    console.log('[🔄SYNC] Sync complete:', { updated, created, cleared, mekCount: newMekCount });
 
     return {
       success: true,
       updated,
       created,
       cleared,
-      totalVerified: args.verifiedMeks.length
+      totalVerified: args.verifiedMeks.length,
+      mekCount: newMekCount
     };
   }
 });
